@@ -79,7 +79,8 @@ SELECT id
                   ' AND'
               ).'
   LIMIT 1';
-            if (pwg_db_num_rows(pwg_query($query)) == 0) {
+            if (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                    ->executeQuery($query)->fetchOne() === false) {
                 access_denied();
             } else {
                 if ('best_rated' == $page['section']) {

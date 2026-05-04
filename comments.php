@@ -350,40 +350,34 @@ $comments = array();
 $element_ids = array();
 $category_ids = array();
 
-$query = '
-SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-       com.image_id,
-       ic.category_id,
-       com.author,
-       com.author_id,
-       u.'.\Piwigo\Config\Config::userFields()['email'].' AS user_email,
-       com.email,
-       com.date,
-       com.website_url,
-       com.content,
-       com.validated
-  FROM '.IMAGE_CATEGORY_TABLE.' AS ic
-    INNER JOIN '.COMMENTS_TABLE.' AS com
-    ON ic.image_id = com.image_id
-    LEFT JOIN '.USERS_TABLE.' As u
-    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = com.author_id
-  WHERE '.implode('
-    AND ', $page['where_clauses']).'
+$userEmailField = \Piwigo\Config\Config::userFields()['email'];
+$userIdField = \Piwigo\Config\Config::userFields()['id'];
+$joinBase = '
+  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
+    INNER JOIN ' . COMMENTS_TABLE . ' AS com ON ic.image_id = com.image_id
+    LEFT JOIN ' . USERS_TABLE . ' AS u ON u.' . $userIdField . ' = com.author_id
+  WHERE ' . implode("\n    AND ", $page['where_clauses']);
+
+$conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+
+$counter = $conn->executeQuery(
+    'SELECT COUNT(DISTINCT com.id)' . $joinBase
+)->fetchOne();
+
+$dataQuery = 'SELECT com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,' .
+    " u.$userEmailField AS user_email, com.email, com.date, com.website_url, com.content, com.validated" .
+    $joinBase . '
   GROUP BY comment_id
-  ORDER BY '.$page['sort_by'].' '.$page['sort_order'];
+  ORDER BY ' . $page['sort_by'] . ' ' . $page['sort_order'];
 if ('all' != $page['items_number']) {
-    $query .= '
-  LIMIT '.$page['items_number'].' OFFSET '.$start;
+    $dataQuery .= '
+  LIMIT ' . $page['items_number'] . ' OFFSET ' . $start;
 }
-$query .= '
-;';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach ($conn->executeQuery($dataQuery)->fetchAllAssociative() as $row) {
     $comments[] = $row;
     $element_ids[] = $row['image_id'];
     $category_ids[] = $row['category_id'];
 }
-list($counter) = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
 
 $url = PHPWG_ROOT_PATH.'comments.php'
   .get_query_string_diff(array('start','edit','delete','validate','pwg_token'));

@@ -118,9 +118,10 @@ SELECT SQL_CALC_FOUND_ROWS i.*
   LIMIT '. $per_page .'
   OFFSET '. ($per_page * $page) .'
 ;';
-        $result = pwg_query($query);
+        $catImgConn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+        $catImgRows = $catImgConn->executeQuery($query)->fetchAllAssociative();
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach ($catImgRows as $row) {
             $image_ids[] = $row['id'];
 
             $image = [];
@@ -145,7 +146,7 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $images[] = $image;
         }
 
-        [$total_images] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
+        $total_images = $catImgConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         $total_images = (int)$total_images;
 
         // let's take care of adding the related albums to each photo
@@ -337,10 +338,11 @@ SELECT SQL_CALC_FOUND_ROWS
 
     $query .= '
 ;';
-    $result = pwg_query($query);
+    $getListConn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $getListRows = $getListConn->executeQuery($query)->fetchAllAssociative();
 
     if (isset($params['limit'])) {
-        [$result_count] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
+        $result_count = $getListConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         $result_count_int = is_numeric($result_count) ? (int) $result_count : 0;
         if ($cat_id_param > 0) {
             $result_count_int = $result_count_int - 1;
@@ -359,7 +361,7 @@ SELECT SQL_CALC_FOUND_ROWS
     // management of the album thumbnail -- stops here
 
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($getListRows as $row) {
         $row['url'] = make_index_url(
             [
             'category' => $row,
@@ -606,12 +608,12 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
     $query .= '
 ;';
-    $result = pwg_query($query);
-
-    [$counter] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
+    $searchConn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $searchRows = $searchConn->executeQuery($query)->fetchAllAssociative();
+    $counter = $searchConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($searchRows as $row) {
         $id = is_scalar($row['id']) ? (string) $row['id'] : '';
         $row['nb_images'] = $nb_images_of[$id] ?? 0;
 

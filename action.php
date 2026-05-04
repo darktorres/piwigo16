@@ -119,7 +119,8 @@ SELECT id
 ).'
   LIMIT 1
 ;';
-if (!$is_admin_download and pwg_db_num_rows(pwg_query($query)) < 1) {
+if (!$is_admin_download and \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchOne() === false) {
     do_error(401, 'Access denied');
 }
 

@@ -235,16 +235,15 @@ SELECT DISTINCT ';
     ;';
     }
     $users = [];
-    $result = pwg_query($query);
+    $usersConn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $usersRows = $usersConn->executeQuery($query)->fetchAllAssociative();
     $total_count = 0;
 
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested*/
     if (isset($params['display']['total_count'])) {
-        $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
-        [$total_count] = pwg_db_fetch_row($total_count_query_result) ?? [null];
-        $total_count = (int)$total_count;
+        $total_count = (int) $usersConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
     }
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($usersRows as $row) {
         $row['id'] = intval($row['id']);
         if (isset($params['display']['groups'])) {
             $row['groups'] = []; // will be filled later

@@ -79,15 +79,16 @@ $query .= '
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
-$result = pwg_query($query);
-[$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()')) ?? [null];
+$conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+$catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
+$page['total_categories'] = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
 $categories = [];
 $category_ids = [];
 $image_ids = [];
 $user_representative_updates_for = [];
 
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach ($catCatsRows as $row) {
     $row['is_child_date_last'] = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
 
     if (!empty($row['user_representative_picture_id'])) {

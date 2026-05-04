@@ -419,7 +419,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
     'AND'
 ).'
 ;';
-$related_categories = query2array($query);
+$related_categories = \Piwigo\Db\QueryHelper::fetch($query);
 usort($related_categories, global_rank_compare(...));
 //-------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -599,7 +599,7 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.(is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0).'
 ;';
-        $formats = query2array($query);
+        $formats = \Piwigo\Db\QueryHelper::fetch($query);
 
         // let's add the original as a format among others. It will just have a
         // specific download URL
@@ -884,7 +884,7 @@ if (count($related_categories) == 1 and
 SELECT id, name, permalink
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $ids).')';
-    $cat_map = query2array($query, 'id');
+    $cat_map = \Piwigo\Db\QueryHelper::fetch($query, 'id');
     foreach ($related_categories as $category) {
         $cats = [];
         foreach (explode(',', (string) $category['uppercats']) as $id) {

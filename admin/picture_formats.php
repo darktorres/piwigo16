@@ -32,7 +32,7 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id = '.$picFmtId.'
 ;';
-$images = query2array($query);
+$images = \Piwigo\Db\QueryHelper::fetch($query);
 $image = $images[0];
 
 $query = '
@@ -42,7 +42,7 @@ SELECT
   WHERE image_id = '.$picFmtId.'
 ;';
 
-$formats = query2array($query);
+$formats = \Piwigo\Db\QueryHelper::fetch($query);
 
 foreach ($formats as &$format) {
     $format['download_url'] = 'action.php?format='.$format['format_id'].'&amp;download';

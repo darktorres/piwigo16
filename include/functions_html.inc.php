@@ -98,7 +98,7 @@ function get_cat_display_name_cache(
 SELECT id, name, permalink
   FROM '.CATEGORIES_TABLE.'
 ;';
-        return query2array($query, 'id');
+        return \Piwigo\Db\QueryHelper::fetch($query, 'id');
     });
     /** @var array<int|string, array<string,mixed>> $catNames */
     $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];

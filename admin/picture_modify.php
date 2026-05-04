@@ -43,7 +43,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE representative_picture_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
 ;';
-$represented_albums = query2array($query, null, 'id');
+$represented_albums = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
 // +-----------------------------------------------------------------------+
 // |                             delete photo                              |
@@ -293,7 +293,7 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.$row['id'].'
 ;';
-$formats = query2array($query);
+$formats = \Piwigo\Db\QueryHelper::fetch($query);
 
 if (!empty($formats)) {
     $format_strings = [];
@@ -360,7 +360,7 @@ SELECT category_id
 ;';
 
     $authorizeds = array_diff(
-        query2array($query, null, 'category_id'),
+        \Piwigo\Db\QueryHelper::fetch($query, null, 'category_id'),
         explode(
             ',',
             calculate_permissions($user['id'], $user['status'])
@@ -371,7 +371,7 @@ SELECT category_id
         $category = $authorizeds[array_rand($authorizeds)];
 
         $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return query2array('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+            return \Piwigo\Db\QueryHelper::fetch('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
         });
         $url_img = make_picture_url(
             [
@@ -392,7 +392,7 @@ SELECT id
     INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id = category_id
   WHERE image_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
 ;';
-$associated_albums = query2array($query, null, 'id');
+$associated_albums = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
 $cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
 $picture_modify_page_data = [

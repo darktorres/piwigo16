@@ -431,7 +431,7 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
 SELECT
   '.implode(', ', $duration).'
 ;';
-    $result = query2array($query)[0];
+    $result = \Piwigo\Db\QueryHelper::fetch($query)[0];
     foreach ($result as $day => $date) {
         $display_duration[ $day ] = l10n('%d days', $day) . ' (' . format_date((string)$date, ['day', 'month', 'year']) . ')';
     }

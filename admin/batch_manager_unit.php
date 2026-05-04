@@ -232,7 +232,7 @@ SELECT *
   '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
-    $images = query2array($query);
+    $images = \Piwigo\Db\QueryHelper::fetch($query);
     $added_by_ids = array_unique(array_column($images, 'added_by'));
     if (count($added_by_ids) > 0) {
         $query = '
@@ -242,7 +242,7 @@ SELECT
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
 ;';
-        $added_by_username_of = query2array($query, 'id', 'username');
+        $added_by_username_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
     }
 
     $storage_category_id = null;
@@ -309,7 +309,7 @@ SELECT
     WHERE image_id = '.$row['id'].'
     ;';
         $authorizeds = array_diff(
-            query2array($query, null, 'category_id'),
+            \Piwigo\Db\QueryHelper::fetch($query, null, 'category_id'),
             explode(
                 ',',
                 calculate_permissions($user['id'], $user['status'])
@@ -317,7 +317,7 @@ SELECT
         );
 
         $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return query2array('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+            return \Piwigo\Db\QueryHelper::fetch('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
         });
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {

@@ -75,7 +75,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE file LIKE '.get_dbal_connection()->quote(is_scalar($fields['filename']) ? (string)$fields['filename'] : '').'
 ;';
-        $search['image_ids'] = query2array($query, null, 'id');
+        $search['image_ids'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     // echo '<pre>'; print_r($search); echo '</pre>';
@@ -185,7 +185,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-    $summary_lines = query2array($query);
+    $summary_lines = \Piwigo\Db\QueryHelper::fetch($query);
 
     $history_min_id = 0;
     if (count($summary_lines) > 0) {
@@ -200,7 +200,7 @@ SELECT
     MIN(id) AS min_id
   FROM '.HISTORY_TABLE.'
 ;';
-        $history_lines = query2array($query);
+        $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
         if (count($history_lines) > 0) {
             $history_min_id = (int) $history_lines[0]['min_id'] - 1;
         }
@@ -395,7 +395,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-    $summary_lines = query2array($query);
+    $summary_lines = \Piwigo\Db\QueryHelper::fetch($query);
     if (count($summary_lines) == 0) {
         return; // lines not summarized, no purge
     }
@@ -410,7 +410,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-    $history_lines = query2array($query);
+    $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
     if (count($history_lines) == 0) {
         return;
     }
@@ -425,7 +425,7 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-    $history_lines = query2array($query);
+    $history_lines = \Piwigo\Db\QueryHelper::fetch($query);
     $history_id_oldest = (int) $history_lines[0]['id'];
 
     $search_min = [

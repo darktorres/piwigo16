@@ -73,7 +73,7 @@ WHERE ';
         $query .= '
     date_available >= '.\Piwigo\Db\SqlExpr::recentPeriodExpr($filter['recent_period']);
 
-        $filter['visible_images'] = implode(',', query2array($query, null, 'image_id'));
+        $filter['visible_images'] = implode(',', \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id'));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty

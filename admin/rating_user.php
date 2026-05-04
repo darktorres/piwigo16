@@ -107,7 +107,7 @@ $query = 'SELECT id
   FROM '.IMAGES_TABLE.'
   ORDER by rating_score DESC
   LIMIT '.$consensus_top_number;
-$best_rated = array_flip(array_map(static fn ($id) => (int)$id, query2array($query, null, 'id')));
+$best_rated = array_flip(array_map(static fn ($id) => (int)$id, \Piwigo\Db\QueryHelper::fetch($query, null, 'id')));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {

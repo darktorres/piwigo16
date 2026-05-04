@@ -407,7 +407,7 @@ SELECT
     $query .= '
   ORDER BY name
 ;';
-    $admins = query2array($query);
+    $admins = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (empty($admins)) {
         return $return;
@@ -461,7 +461,7 @@ SELECT DISTINCT language
 
     $query .= '
 ;';
-    $languages = query2array($query, null, 'language');
+    $languages = \Piwigo\Db\QueryHelper::fetch($query, null, 'language');
 
     if (empty($languages)) {
         return $return;
@@ -485,7 +485,7 @@ SELECT
     AND '.\Piwigo\Config\Config::userFields()['email'].' <> ""
     AND language = \''.$language.'\'
 ;';
-        $users = query2array($query);
+        $users = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (empty($users)) {
             continue;

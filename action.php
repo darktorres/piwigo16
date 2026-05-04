@@ -65,7 +65,7 @@ SELECT
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE format_id = '.$get_format.'
 ;';
-    $formats = query2array($query);
+    $formats = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (count($formats) == 0) {
         do_error(400, 'Invalid request - format');

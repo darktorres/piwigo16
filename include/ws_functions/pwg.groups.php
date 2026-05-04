@@ -58,7 +58,7 @@ SELECT
   OFFSET '. ($per_page * $page) .'
 ;';
 
-    $groups = query2array($query);
+    $groups = \Piwigo\Db\QueryHelper::fetch($query);
 
     return [
       'paging' => new PwgNamedStruct([
@@ -274,7 +274,7 @@ SELECT DISTINCT(user_id)
   WHERE
     group_id IN ('.implode(',', $merge_group) .')
 ;';
-    $user_in_merge_groups = query2array($query, null, 'user_id');
+    $user_in_merge_groups = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
     $query = '
 SELECT user_id
@@ -282,7 +282,7 @@ SELECT user_id
   WHERE group_id = '.$dest_group_id.'
 ;';
 
-    $user_in_dest = query2array($query, null, 'user_id');
+    $user_in_dest = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
     $user_to_add = array_diff($user_in_merge_groups, $user_in_dest);
 
@@ -365,7 +365,7 @@ function ws_groups_duplicate(array $params, \Piwigo\Ws\PwgServer &$service): mix
     WHERE group_id = '.$dup_group_id.'
   ;';
 
-    $users = query2array($query, null, 'user_id');
+    $users = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
     $inserts = [];
     foreach ($users as $user) {

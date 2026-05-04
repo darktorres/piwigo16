@@ -474,7 +474,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-        $protected_users = array_merge($protected_users, query2array($query, null, 'user_id'));
+        $protected_users = array_merge($protected_users, \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id'));
     }
 
     // protect some users

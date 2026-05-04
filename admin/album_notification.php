@@ -109,7 +109,7 @@ SELECT
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE ui.user_id IN ('.implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])).')
 ;';
-        $users = query2array($query);
+        $users = \Piwigo\Db\QueryHelper::fetch($query);
         $usernames = [];
 
         foreach ($users as $u) {
@@ -208,7 +208,7 @@ SELECT
     id AS group_id
   FROM `'.GROUPS_TABLE.'`
 ;';
-$all_group_ids = query2array($query, null, 'group_id');
+$all_group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
 
 if (count($all_group_ids) == 0) {
     $template->assign('no_group_in_gallery', true);
@@ -222,7 +222,7 @@ SELECT
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-        $group_ids = query2array($query, null, 'group_id');
+        $group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
     } else {
         $group_ids = $all_group_ids;
     }
@@ -238,7 +238,7 @@ SELECT
 ;';
         $template->assign(
             'group_mail_options',
-            query2array($query, 'id', 'name')
+            \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name')
         );
     }
 }
@@ -252,7 +252,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status != \'guest\'
 ;';
-$all_user_ids = query2array($query, null, 'user_id');
+$all_user_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
 if ('private' == $category['status']) {
     $user_ids_access_indirect = [];
@@ -264,7 +264,7 @@ SELECT
   FROM '.USER_GROUP_TABLE.'
   WHERE group_id IN ('.implode(',', $group_ids).') 
 ';
-        $user_ids_access_indirect = query2array($query, null, 'user_id');
+        $user_ids_access_indirect = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
     }
 
     $query = '
@@ -273,7 +273,7 @@ SELECT
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$category['id'].'
 ;';
-    $user_ids_access_direct = query2array($query, null, 'user_id');
+    $user_ids_access_direct = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
     $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
 
@@ -291,7 +291,7 @@ SELECT
   WHERE id IN ('.implode(',', $user_ids).')
 ;';
 
-    $users = query2array($query, 'id', 'username');
+    $users = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
 
     $template->assign('user_options', $users);
 }

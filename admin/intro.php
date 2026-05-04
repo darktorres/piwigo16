@@ -211,7 +211,7 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
     WHERE occured_on >= \''.$date_string.'\'
     GROUP BY activity_day, object, action
   ;';
-    $activity_actions = query2array($query);
+    $activity_actions = \Piwigo\Db\QueryHelper::fetch($query);
 
     foreach ($activity_actions as $action) {
         // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
@@ -353,7 +353,7 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = query2array($query, 'ext');
+$file_extensions = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
@@ -384,7 +384,7 @@ SELECT
   GROUP BY ext
 ;';
 
-$file_extensions = query2array($query, 'ext');
+$file_extensions = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
 foreach ($file_extensions as $ext => $ext_details) {
     $type = 'Formats';
 

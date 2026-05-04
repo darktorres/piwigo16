@@ -66,7 +66,7 @@ SELECT id
   WHERE id_uppercat '.
       (($post_id_str === '-1') ? 'IS NULL' : '= '.$post_id_str).'
 ;';
-    $category_ids = query2array($query, null, 'id');
+    $category_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     $category_ids = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $category_ids);
 
     if (isset($_POST['recursiveAutoOrder'])) {
@@ -145,7 +145,7 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
   FROM '.CATEGORIES_TABLE.'
 ;';
 
-$allAlbum = query2array($query);
+$allAlbum = \Piwigo\Db\QueryHelper::fetch($query);
 
 //Make an id tree
 $associatedTree = [];
@@ -232,7 +232,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-$nb_photos_in = query2array($query, 'category_id', 'nb_photos');
+$nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
 
 $query = '
 SELECT
@@ -240,7 +240,7 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
 ;';
-$all_categories = query2array($query, 'id', 'uppercats');
+$all_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
 
 $subcats_of = [];
 
@@ -346,7 +346,7 @@ SELECT
   WHERE category_id IN ('.implode(',', $category_ids).')
   GROUP BY category_id
 ;';
-    $ref_dates = query2array($query, 'category_id', 'ref_date');
+    $ref_dates = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'ref_date');
 
     // the iterate on all albums (having a ref_date or not) to find the
     // reference_date, with a search on sub-albums
@@ -357,7 +357,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')
 ;';
-    $uppercats_of = query2array($query, 'id', 'uppercats');
+    $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats

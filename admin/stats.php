@@ -55,18 +55,18 @@ ORDER BY
         $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
         $query .=
 ' LIMIT '.$limit;
-        $result = query2array($query.';');
+        $result = \Piwigo\Db\QueryHelper::fetch($query.';');
         $lastDate = $date->sub(new DateInterval('P'.((int) $last - 1).'Y'.((int) $date->format('n') - 1).'M'));
         return set_missing_values('month', $result, $lastDate, new DateTime());
     }
 
-    if (count(query2array($query.';')) > 1) {
-        return set_missing_values('month', query2array($query.';'));
+    if (count(\Piwigo\Db\QueryHelper::fetch($query.';')) > 1) {
+        return set_missing_values('month', \Piwigo\Db\QueryHelper::fetch($query.';'));
     } else {
         $last_year_date = new DateTime();
         return set_missing_values(
             'month',
-            query2array($query.';'),
+            \Piwigo\Db\QueryHelper::fetch($query.';'),
             $last_year_date->sub(new DateInterval('P1Y')),
             new DateTime()
         );
@@ -105,7 +105,7 @@ ORDER BY
   month DESC
 ;';
 
-    foreach (query2array($query) as $value) {
+    foreach (\Piwigo\Db\QueryHelper::fetch($query) as $value) {
         $date = get_date_object($value);
         $months[$date->format('Y/m/1')][] = $value;
     }

@@ -225,7 +225,7 @@ function check_upgrade_feed(): bool
 SELECT id
   FROM '.UPGRADE_TABLE.'
 ;';
-    $applied = query2array($query, null, 'id');
+    $applied = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
     // retrieve existing upgrades
     $existing = get_available_upgrade_ids();

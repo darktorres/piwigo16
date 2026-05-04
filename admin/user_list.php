@@ -86,7 +86,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-    $admin_ids = query2array($query, null, 'user_id');
+    $admin_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
     $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -101,7 +101,7 @@ SELECT
     WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.\Piwigo\Config\Config::webmasterId().'
 ;';
 
-$owner_username = query2array($query, null, 'username');
+$owner_username = \Piwigo\Db\QueryHelper::fetch($query, null, 'username');
 
 $template->assign(
     [

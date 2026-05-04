@@ -87,7 +87,7 @@ SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
   WHERE image_id = '.$fmtId.'
 ;';
-        $formats = query2array($query);
+        $formats = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (!empty($formats)) {
             $format_strings = [];

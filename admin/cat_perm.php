@@ -66,7 +66,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-        $groups_granted = query2array($query, null, 'group_id');
+        $groups_granted = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
 
         if (!isset($_POST['groups'])) {
             $_POST['groups'] = [];
@@ -106,7 +106,7 @@ SELECT id
   WHERE id IN ('.implode(',', array_map(fn ($v) => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
-            $private_cats = query2array($query, null, 'id');
+            $private_cats = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -134,7 +134,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-        $users_granted = query2array($query, null, 'user_id');
+        $users_granted = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
         if (!isset($_POST['users'])) {
             $_POST['users'] = [];
@@ -208,7 +208,7 @@ SELECT id, name
   FROM `'.GROUPS_TABLE.'`
   ORDER BY name ASC
 ;';
-$groups = query2array($query, 'id', 'name');
+$groups = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name');
 $template->assign('groups', $groups);
 
 // groups granted to access the category
@@ -217,7 +217,7 @@ SELECT group_id
   FROM '.GROUP_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-$group_granted_ids = query2array($query, null, 'group_id');
+$group_granted_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'group_id');
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
@@ -228,7 +228,7 @@ SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id,
        '.\Piwigo\Config\Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
-$users = query2array($query, 'id', 'username');
+$users = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
 $template->assign('users', $users);
 
 
@@ -237,7 +237,7 @@ SELECT user_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE cat_id = '.$pageCat.'
 ;';
-$user_granted_direct_ids = query2array($query, null, 'user_id');
+$user_granted_direct_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 $template->assign('users_selected', $user_granted_direct_ids);
 
 

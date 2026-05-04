@@ -226,7 +226,7 @@ $this->inner_sql.
 $this->get_date_where($level).'
   GROUP BY period;';
 
-        $level_items = query2array($query, 'period', 'nb_images');
+        $level_items = \Piwigo\Db\QueryHelper::fetch($query, 'period', 'nb_images');
 
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
@@ -309,7 +309,7 @@ GROUP BY period';
             $stringDate[] = is_string($d) ? $d : (is_int($d) ? (string) $d : '');
         }
         $current = implode('-', $stringDate);
-        $upper_items = query2array($query, null, 'period');
+        $upper_items = \Piwigo\Db\QueryHelper::fetch($query, null, 'period');
 
         usort($upper_items, fn ($a, $b): int => version_compare((string) $a, (string) $b));
         $upper_items_str = array_map(fn ($x): string => (string) $x, $upper_items);

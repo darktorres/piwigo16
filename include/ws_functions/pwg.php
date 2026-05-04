@@ -279,7 +279,7 @@ SELECT id
   WHERE id IN ('. implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) .')
     AND element_id IS NULL
 ;';
-    $result = query2array($query, null, 'id');
+    $result = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
     $datas = [];
     foreach ($result as $id) {
@@ -535,7 +535,7 @@ SELECT
   ORDER BY activity_id DESC
   LIMIT '.$nb_rows_to_fetch.' OFFSET '.$page_offset.'
 ;';
-        $rows = query2array($query);
+        $rows = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (count($rows) < $nb_rows_to_fetch) {
             $more_rows_available = false;
@@ -622,7 +622,7 @@ SELECT
   FROM '.USERS_TABLE.'
   WHERE `'.\Piwigo\Config\Config::userFields()['id'].'` IN ('.implode(',', array_keys($user_ids)).')
 ;';
-        $username_of = query2array($query, 'user_id', 'username');
+        $username_of = \Piwigo\Db\QueryHelper::fetch($query, 'user_id', 'username');
     }
 
     foreach ($output_lines as $idx => $output_line) {
@@ -874,7 +874,7 @@ SELECT
   FROM '.SEARCH_TABLE.'
   WHERE id IN ('.implode(',', $search_ids_str).')
 ;';
-        $search_details = query2array($query, 'id', 'rules');
+        $search_details = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'rules');
 
         foreach ($search_details as $id_search => $rules_search) {
             $rules_arr = safe_unserialize(is_scalar($rules_search) ? (string) $rules_search : '');
@@ -929,7 +929,7 @@ SELECT id, uppercats
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids_str).')
 ;';
-        $uppercats_of = query2array($query, 'id', 'uppercats');
+        $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
 
         $full_cat_path = [];
         $name_of_category = [];
@@ -961,7 +961,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', array_keys($image_ids)).')
 ;';
-        $image_infos = query2array($query, 'id');
+        $image_infos = \Piwigo\Db\QueryHelper::fetch($query, 'id');
     }
 
     $name_of_tag = [];

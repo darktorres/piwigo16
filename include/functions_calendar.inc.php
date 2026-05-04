@@ -288,7 +288,7 @@ WHERE id IN (' . implode(',', $items) .')';
               .$calendar->inner_sql.'
   '.$calendar->get_date_where().'
   '.$order_by;
-            $page['items'] = query2array($query, null, 'id');
+            $page['items'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
             if (isset($cache_key)) {
                 $persistent_cache->set($cache_key, $page['items']);
             }

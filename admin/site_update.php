@@ -157,7 +157,7 @@ SELECT id, uppercats, global_rank, status, visible
 ';
         }
     }
-    $db_categories = query2array($query, 'id');
+    $db_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id');
 
     // get categort full directories in an array for comparison with file
     // system directory tree
@@ -434,7 +434,7 @@ SELECT id, path
               160,
               "\n"
           ).')';
-        $db_elements = query2array($query, 'id', 'path');
+        $db_elements = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'path');
     }
 
     // next element id available

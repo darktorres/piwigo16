@@ -119,7 +119,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   WHERE c.site_id IS NOT NULL
   GROUP BY c.site_id
 ;';
-$sites_detail = query2array($query, 'site_id');
+$sites_detail = \Piwigo\Db\QueryHelper::fetch($query, 'site_id');
 
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->findAll() as $row) {
     $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';

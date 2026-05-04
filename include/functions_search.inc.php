@@ -43,7 +43,7 @@ SELECT *
   FROM '.SEARCH_TABLE.'
   WHERE '.sprintf($clause_pattern, $candidate).'
 ;';
-    $searches = query2array($query);
+    $searches = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (count($searches) > 0) {
         // we don't want spies to be able to see the search rules of any prior search (performed
@@ -214,7 +214,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE '.implode(' OR ', $cat_word_clauses).'
 ;';
-                $cat_ids = query2array($query, null, 'id');
+                $cat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
                 $cat_ids_by_word[$word] = $cat_ids;
                 if (count($cat_ids) > 0) {
                     $query = '
@@ -223,7 +223,7 @@ SELECT
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $cat_ids).')
 ;';
-                    $cat_image_ids = query2array($query, null, 'image_id');
+                    $cat_image_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
                     if (count($cat_image_ids) > 0) {
                         $field_clauses[] = 'id IN ('.implode(',', $cat_image_ids).')';
@@ -239,7 +239,7 @@ SELECT
   FROM '.TAGS_TABLE.'
   WHERE name LIKE \'%'.$word.'%\'
 ;';
-                $tag_ids = query2array($query, null, 'id');
+                $tag_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
                 $tag_ids_by_word[$word] = $tag_ids;
                 if (count($tag_ids) > 0) {
                     $query = '
@@ -248,7 +248,7 @@ SELECT
   FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id IN ('.implode(',', $tag_ids).')
 ;';
-                    $tag_image_ids = query2array($query, null, 'image_id');
+                    $tag_image_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
                     if (count($tag_image_ids) > 0) {
                         $field_clauses[] = 'id IN ('.implode(',', $tag_image_ids).')';
@@ -293,7 +293,7 @@ SELECT
   WHERE '.$filter_clause.'
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['allwords'] = query2array($query, null, 'id');
+        $image_ids_for_filter['allwords'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
         if (count($cat_ids_by_word) > 0) {
             $matching_cat_ids = null;
@@ -346,7 +346,7 @@ SELECT
   WHERE ('.implode(' OR ', $author_clauses).')
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['author'] = query2array($query, null, 'id');
+        $image_ids_for_filter['author'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -370,7 +370,7 @@ SELECT
   WHERE ('.implode(' OR ', $filetypes_clauses).')
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['filetypes'] = query2array($query, null, 'id');
+        $image_ids_for_filter['filetypes'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -388,7 +388,7 @@ SELECT
   WHERE added_by IN ('.implode(',', $added_by_list).')
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['added_by'] = query2array($query, null, 'id');
+        $image_ids_for_filter['added_by'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -420,7 +420,7 @@ SELECT
   WHERE category_id IN ('.implode(',', $cat_ids).')
   '.$forbidden.'
 ;';
-            $image_ids_for_filter['cat'] = query2array($query, null, 'id');
+            $image_ids_for_filter['cat'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
         }
     }
 
@@ -494,7 +494,7 @@ SELECT
   '.$forbidden.'
 ;';
 
-        $image_ids_for_filter['date_posted'] = query2array($query, null, 'id');
+        $image_ids_for_filter['date_posted'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -567,7 +567,7 @@ SELECT
   '.$forbidden.'
 ;';
 
-        $image_ids_for_filter['date_created'] = query2array($query, null, 'id');
+        $image_ids_for_filter['date_created'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -598,7 +598,7 @@ SELECT
   WHERE ('.implode(' OR ', $ratios_clauses).')
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['ratios'] = query2array($query, null, 'id');
+        $image_ids_for_filter['ratios'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -626,7 +626,7 @@ SELECT
   WHERE ('.implode(' OR ', $filter_clauses).')
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['ratings'] = query2array($query, null, 'id');
+        $image_ids_for_filter['ratings'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -647,7 +647,7 @@ SELECT
   WHERE filesize BETWEEN '.($filesize_min - 100).' AND '.($filesize_max + 100).'
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['filesize'] = query2array($query, null, 'id');
+        $image_ids_for_filter['filesize'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -666,7 +666,7 @@ SELECT
   WHERE height BETWEEN '.$height_min.' AND '.$height_max.'
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['height'] = query2array($query, null, 'id');
+        $image_ids_for_filter['height'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -685,7 +685,7 @@ SELECT
   WHERE width BETWEEN '.$width_min.' AND '.$width_max.'
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['width'] = query2array($query, null, 'id');
+        $image_ids_for_filter['width'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     //
@@ -715,7 +715,7 @@ SELECT
   WHERE '.$images_where.'
   '.$forbidden.'
 ;';
-        $image_ids_for_filter['custom'] = query2array($query, null, 'id');
+        $image_ids_for_filter['custom'] = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     $items = [];
@@ -745,7 +745,7 @@ SELECT
   WHERE id IN ('.implode(',', $items).')
   '.\Piwigo\Config\Config::orderBy();
 
-        $items = query2array($query, null, 'id');
+        $items = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
     }
 
     return [
@@ -1602,7 +1602,7 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
         }
         if (!empty($clauses)) {
             $query = $query_base.'('.implode("\n OR ", $clauses).')';
-            $qsr->images_iids[$i] = array_map('intval', query2array($query, null, 'id'));
+            $qsr->images_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
         }
     }
 }
@@ -1654,7 +1654,7 @@ function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResu
 SELECT image_id FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id IN ('.implode(',', $tag_ids).')
   GROUP BY image_id';
-            $qsr->tag_iids[$i] = array_map('intval', query2array($query, null, 'image_id'));
+            $qsr->tag_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
@@ -1664,9 +1664,9 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
             }
         } elseif (isset($token->scope) && 'tag' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = array_map('intval', query2array('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE, null, 'image_id'));
+                $qsr->tag_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE, null, 'image_id'));
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = array_map('intval', query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
+                $qsr->tag_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -1736,14 +1736,14 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$userId.'
   WHERE id IN ('.implode(',', get_subcat_ids($cat_ids)) .')
 ;';
-                $cat_ids = array_map('intval', query2array($query, null, 'id'));
+                $cat_ids = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
             }
 
             $query = '
 SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $cat_ids).')
   GROUP BY image_id';
-            $qsr->cat_iids[$i] = array_map('intval', query2array($query, null, 'image_id'));
+            $qsr->cat_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
@@ -1753,9 +1753,9 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
             }
         } elseif (isset($token->scope) && 'category' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = array_map('intval', query2array('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE, null, 'image_id'));
+                $qsr->cat_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE, null, 'image_id'));
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = array_map('intval', query2array('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
+                $qsr->cat_iids[$i] = array_map('intval', \Piwigo\Db\QueryHelper::fetch('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL', null, 'id'));
             }
         }
     }
@@ -2014,7 +2014,7 @@ SELECT DISTINCT(id) FROM '.IMAGES_TABLE.' i';
   WHERE '.implode("\n AND ", $where_clauses)."\n".
     \Piwigo\Config\Config::orderBy();
 
-    $ids = query2array($query, null, 'id');
+    $ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
     $debug[] = count($ids).' final photo count -->';
     \Piwigo\Template\TemplateRegistry::current()->append('footer_elements', implode("\n", $debug));

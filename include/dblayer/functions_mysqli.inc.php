@@ -13,8 +13,9 @@ declare(strict_types=1);
  *
  * Compatibility shim — all functions are now backed by Doctrine DBAL.
  * Legacy globals (pwg_query, pwg_db_*, mysqli helpers) are fully removed.
- * Permanent API: get_dbal_connection(), query2array(), mass_inserts(),
- * mass_updates(), single_insert(), single_update(), protect_column_name().
+ * Permanent API: get_dbal_connection(), mass_inserts(), mass_updates(),
+ * single_insert(), single_update(), protect_column_name().
+ * Query results: use \Piwigo\Db\QueryHelper::fetch().
  */
 
 define('DB_ENGINE', 'MySQL');
@@ -287,47 +288,3 @@ function protect_column_name(string $column_name): string
     return $column_name;
 }
 
-// ---------------------------------------------------------------------------
-// query2array — convenience wrapper backed by DBAL
-// ---------------------------------------------------------------------------
-
-/**
- * Executes $query and returns the result as a PHP array.
- *
- * @phpstan-return (
- *   $key_name is null
- *     ? ($value_name is null ? list<array<string, float|int|string|null>> : list<float|int|string|null>)
- *     : ($value_name is null ? array<string, array<string, float|int|string|null>> : array<string, float|int|string|null>)
- * )
- */
-function query2array(string $query, ?string $key_name = null, ?string $value_name = null): array
-{
-    $rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-    $data = [];
-
-    $sv = fn(mixed $v): float|int|string|null => (is_float($v) || is_int($v) || is_string($v)) ? $v : null;
-    /** @param array<string,mixed> $row @return array<string,float|int|string|null> */
-    $sr = fn(array $row): array => array_map($sv, $row);
-
-    if (isset($key_name)) {
-        if (isset($value_name)) {
-            foreach ($rows as $row) {
-                $data[is_scalar($row[$key_name]) ? (string) $row[$key_name] : ''] = $sv($row[$value_name]);
-            }
-        } else {
-            foreach ($rows as $row) {
-                $data[is_scalar($row[$key_name]) ? (string) $row[$key_name] : ''] = $sr($row);
-            }
-        }
-    } else {
-        if (isset($value_name)) {
-            foreach ($rows as $row) {
-                $data[] = $sv($row[$value_name]);
-            }
-        } else {
-            $data = array_map($sr, $rows);
-        }
-    }
-
-    return $data;
-}

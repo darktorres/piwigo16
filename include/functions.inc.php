@@ -1084,7 +1084,7 @@ function get_pwg_themes(bool $show_mobile = false): array
         $rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class)->findAll();
     } else {
         // Fallback for pre-boot context
-        $rows = query2array('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;');
+        $rows = \Piwigo\Db\QueryHelper::fetch('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;');
     }
 
     foreach ($rows as $row) {
@@ -1173,7 +1173,7 @@ SELECT element_id
   FROM '.CADDIE_TABLE.'
   WHERE user_id = '.$userId.'
 ;';
-    $in_caddie = query2array($query, null, 'element_id');
+    $in_caddie = \Piwigo\Db\QueryHelper::fetch($query, null, 'element_id');
 
     $caddiables = array_diff($elements_id, $in_caddie);
 
@@ -1570,7 +1570,7 @@ function prepend_append_array_items(array $array, string $prepend_str, string $a
 #[\Deprecated(message: '2.6')]
 function simple_hash_from_query(string $query, string $keyname, string $valuename): array
 {
-    return query2array($query, $keyname, $valuename);
+    return \Piwigo\Db\QueryHelper::fetch($query, $keyname, $valuename);
 }
 
 /**
@@ -1583,7 +1583,7 @@ function simple_hash_from_query(string $query, string $keyname, string $valuenam
 #[\Deprecated(message: '2.6')]
 function hash_from_query(string $query, string $keyname): array
 {
-    return query2array($query, $keyname);
+    return \Piwigo\Db\QueryHelper::fetch($query, $keyname);
 }
 
 /**
@@ -1598,9 +1598,9 @@ function hash_from_query(string $query, string $keyname): array
 function array_from_query(string $query, string|false $fieldname = false): array
 {
     if (false === $fieldname) {
-        return query2array($query);
+        return \Piwigo\Db\QueryHelper::fetch($query);
     } else {
-        return query2array($query, null, $fieldname);
+        return \Piwigo\Db\QueryHelper::fetch($query, null, $fieldname);
     }
 }
 
@@ -2261,7 +2261,7 @@ SELECT
   ORDER BY image_id ASC
   LIMIT 1
 ;';
-    $voyagers = query2array($query);
+    $voyagers = \Piwigo\Db\QueryHelper::fetch($query);
     if (count($voyagers)) {
         $voyager = $voyagers[0];
         $age = strtotime((string) $voyager['dbnow']) - strtotime((string) $voyager['date_available']);
@@ -2365,7 +2365,7 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   WHERE storage_category_id IS NOT NULL
 ;';
-        if (query2array($query, null, 'counter')[0] > 0) {
+        if (\Piwigo\Db\QueryHelper::fetch($query, null, 'counter')[0] > 0) {
             // slow SQL query, but necessary if you have files added by sync
             $query = '
 SELECT
@@ -2375,7 +2375,7 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   GROUP BY add_method
 ;';
-            $files_added_by = query2array($query, 'add_method');
+            $files_added_by = \Piwigo\Db\QueryHelper::fetch($query, 'add_method');
 
             $piwigo_infos['general_stats']['nb_photos_synced'] = $files_added_by['sync']['nb_files'];
             $piwigo_infos['general_stats']['last_photo_synced'] = $files_added_by['sync']['last_added_on'];
@@ -2394,7 +2394,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-            $images = query2array($query);
+            $images = \Piwigo\Db\QueryHelper::fetch($query);
             if (count($images) > 0) {
                 $piwigo_infos['general_stats']['last_photo'] = $images[0]['date_available'];
             }
@@ -2408,7 +2408,7 @@ SELECT
   FROM `'.IMAGES_TABLE.'`
   GROUP BY ext
 ;';
-        $piwigo_infos['file_extensions'] = query2array($query, 'ext');
+        $piwigo_infos['file_extensions'] = \Piwigo\Db\QueryHelper::fetch($query, 'ext');
     }
 
     // \Piwigo\Config\Config::override('pem_plugins_category', 12);
@@ -2526,7 +2526,7 @@ SELECT
   GROUP BY theme
   ORDER BY theme
 ;';
-    $themes_used = query2array($query, 'theme', 'theme_counter');
+    $themes_used = \Piwigo\Db\QueryHelper::fetch($query, 'theme', 'theme_counter');
     foreach ($themes_used as $theme_used => $counter) {
         if (isset($private_themes[$theme_used])) {
             $theme_used = 'private theme';
@@ -2545,7 +2545,7 @@ SELECT
   GROUP BY language
   ORDER BY language
 ;';
-    $piwigo_infos['languages_usage'] = query2array($query, 'language', 'language_counter');
+    $piwigo_infos['languages_usage'] = \Piwigo\Db\QueryHelper::fetch($query, 'language', 'language_counter');
 
     $piwigo_infos['activities'] = [];
     $piwigo_infos['general_stats']['nb_activities'] = 0;
@@ -2559,7 +2559,7 @@ SELECT
   WHERE object != \'system\'
   GROUP BY object, action
 ;';
-    $activities = query2array($query);
+    $activities = \Piwigo\Db\QueryHelper::fetch($query);
     foreach ($activities as $activity) {
         $piwigo_infos['general_stats']['nb_activities'] += (int)$activity['counter'];
         $object_key = (string)$activity['object'];
@@ -2586,7 +2586,7 @@ SELECT
   WHERE object = \'system\'
   GROUP BY object, object_id, action
 ;';
-    $activities = query2array($query);
+    $activities = \Piwigo\Db\QueryHelper::fetch($query);
     $system_activities = [];
     foreach ($activities as $activity) {
         $object_id_key = (int)$activity['object_id'];
@@ -2610,7 +2610,7 @@ SELECT
     AND action IN (\'update\', \'autoupdate\')
   ORDER BY activity_id ASC
 ;';
-    $updates = query2array($query);
+    $updates = \Piwigo\Db\QueryHelper::fetch($query);
     foreach ($updates as $update) {
         $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
         if (isset($details['from_version']) and isset($details['to_version'])) {
@@ -2642,7 +2642,7 @@ SELECT
   WHERE user_agent NOT LIKE \'Mozilla/5%\'
   GROUP BY user_agent
 ;';
-    $activities = query2array($query);
+    $activities = \Piwigo\Db\QueryHelper::fetch($query);
     $apps = [];
 
     $apps_pattern = [

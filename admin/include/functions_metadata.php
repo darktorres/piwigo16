@@ -357,7 +357,7 @@ SELECT id, path, representative_ext
     }
     $query .= '
 ;';
-    return query2array($query, 'id');
+    return \Piwigo\Db\QueryHelper::fetch($query, 'id');
 }
 
 /**

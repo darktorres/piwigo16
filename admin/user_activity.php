@@ -116,7 +116,7 @@ SELECT
   GROUP BY performed_by
 ;';
 
-$nb_lines_for_user = query2array($query, 'performed_by', 'counter');
+$nb_lines_for_user = \Piwigo\Db\QueryHelper::fetch($query, 'performed_by', 'counter');
 
 if (count($nb_lines_for_user) > 0) {
     $query = '
@@ -127,7 +127,7 @@ if (count($nb_lines_for_user) > 0) {
     WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
 }
 
-$username_of = query2array($query, 'id', 'username');
+$username_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'username');
 
 $filterable_users = [];
 
@@ -177,7 +177,7 @@ SELECT
   FROM '.$filter_table.'
   WHERE id = '.$filterId.'
 ;';
-        $rows = query2array($query);
+        $rows = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (count($rows) == 0) {
             fatal_error($filter_key.' #'.$filterId.' does not exist');
@@ -218,7 +218,7 @@ $query .= '
   ;';
 
 
-$actions = query2array($query);
+$actions = \Piwigo\Db\QueryHelper::fetch($query);
 foreach ($actions as &$action) {
     $action['value'] = $action['object'].'/'.$action['action'];
 }

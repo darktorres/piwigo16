@@ -200,7 +200,7 @@ function get_cat_info(int|string $id): ?array
     FROM '.CATEGORIES_TABLE.'
     WHERE id IN ('.(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '').')
   ;';
-        $names = query2array($query, 'id');
+        $names = \Piwigo\Db\QueryHelper::fetch($query, 'id');
 
         // category names must be in the same order than uppercats list
         $cat['upper_names'] = [];
@@ -299,7 +299,7 @@ function display_select_cat_wrapper(
     string $blockname,
     bool|string $fullname = true
 ): void {
-    $categories = query2array($query);
+    $categories = \Piwigo\Db\QueryHelper::fetch($query);
     usort($categories, global_rank_compare(...));
     display_select_categories($categories, $selecteds, $blockname, $fullname);
 }
@@ -333,7 +333,7 @@ SELECT DISTINCT(id)
     }
     $query .= '
 ;';
-    return array_map(fn ($v) => (int) $v, query2array($query, null, 'id'));
+    return array_map(fn ($v) => (int) $v, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
 }
 
 /**
@@ -361,7 +361,7 @@ SELECT id, permalink, 0 AS is_old
   FROM '.CATEGORIES_TABLE.'
   WHERE permalink IN ('.$in.')
 ;';
-    $perma_hash = query2array($query, 'permalink');
+    $perma_hash = \Piwigo\Db\QueryHelper::fetch($query, 'permalink');
 
     if (empty($perma_hash)) {
         return null;
@@ -644,7 +644,7 @@ SELECT id
     }
     $query .= "\n".(empty($order_by) ? \Piwigo\Config\Config::orderBy() : $order_by);
 
-    return array_map(fn ($v) => (int) $v, query2array($query, null, 'id'));
+    return array_map(fn ($v) => (int) $v, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
 }
 
 /**
@@ -747,7 +747,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', array_keys($cat_ids)).')
 ;';
-    $cats = query2array($query);
+    $cats = \Piwigo\Db\QueryHelper::fetch($query);
     usort($cats, global_rank_compare(...));
 
     $index_of_cat = [];

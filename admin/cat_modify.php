@@ -227,7 +227,7 @@ SELECT DISTINCT
   WHERE 
     category_id IN ('.implode(',', $subcat_ids).')
   ;';
-$image_ids_recursive = query2array($query, null, 'image_id');
+$image_ids_recursive = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
 $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -239,7 +239,7 @@ SELECT occured_on
     AND object = "album"
     AND action = "add"
 ';
-$result = query2array($query);
+$result = \Piwigo\Db\QueryHelper::fetch($query);
 
 if (count($result) > 0) {
     $occurred_on = (string)$result[0]['occured_on'];
@@ -257,7 +257,7 @@ SELECT COUNT(*)
   FROM `'.CATEGORIES_TABLE.'`
   WHERE id_uppercat = '.$category['id'].'
 ';
-$result = query2array($query);
+$result = \Piwigo\Db\QueryHelper::fetch($query);
 
 
 $template->assign(

@@ -850,7 +850,7 @@ SELECT
   WHERE user_id = '.\Piwigo\Users\CurrentUser::get()->id.'
 ';
 
-    $raw = query2array($query, 'image_id', 'fake_value');
+    $raw = \Piwigo\Db\QueryHelper::fetch($query, 'image_id', 'fake_value');
     $result = [];
     foreach ($raw as $image_id => $val) {
         $result[(int) $image_id] = true;

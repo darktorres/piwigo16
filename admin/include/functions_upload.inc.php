@@ -163,7 +163,7 @@ SELECT
   FROM '. IMAGES_TABLE .'
   WHERE md5sum = \''.$md5sum.'\'
 ;';
-        $images_found = query2array($query);
+        $images_found = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (count($images_found) > 0) {
             // SQL fetches return strings in PHP; cast for the int-typed callees below.
@@ -447,7 +447,7 @@ SELECT
   FROM '.IMAGES_TABLE.'
   WHERE id = '.$format_of.'
 ;';
-    $images = query2array($query);
+    $images = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (!isset($images[0])) {
         throw new \Piwigo\Exception\NotFoundException('['.__FUNCTION__.'] this photo does not exist in the database');
@@ -489,7 +489,7 @@ SELECT
   AND ext = "'.$format_ext.'"
 ;';
 
-    $formats = query2array($query);
+    $formats = \Piwigo\Db\QueryHelper::fetch($query);
     if ($formats) {
         $set_fields = [
           'filesize' => $file_infos['filesize'],

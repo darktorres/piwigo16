@@ -425,7 +425,7 @@ switch ($page['section']) {
         name
       FROM `'.GROUPS_TABLE.'`
     ;';
-            $groups = query2array($query, 'id', 'name');
+            $groups = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'name');
             natcasesort($groups);
 
             $template->assign(

@@ -429,7 +429,7 @@ SELECT DISTINCT(id)
   FROM '.IMAGES_TABLE.' INNER JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id
   WHERE category_id NOT IN ('.$ud_forbidden_cats.')
     AND level>'.$ud_level;
-            $forbidden_ids = query2array($query, null, 'id');
+            $forbidden_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
             if (empty($forbidden_ids)) {
                 $forbidden_ids[] = 0;
@@ -551,14 +551,14 @@ SELECT DISTINCT f.image_id
         'AND'
     ).'
 ;';
-    $authorizeds = query2array($query, null, 'image_id');
+    $authorizeds = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
     $query = '
 SELECT image_id
   FROM '.FAVORITES_TABLE.'
   WHERE user_id = '.$currentUser->id.'
 ;';
-    $favorites = query2array($query, null, 'image_id');
+    $favorites = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
     $to_deletes = array_diff($favorites, $authorizeds);
     if (count($to_deletes) > 0) {
@@ -586,7 +586,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE status = \'private\'
 ;';
-    $private_array = query2array($query, null, 'id');
+    $private_array = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
     // retrieve category ids directly authorized to the user
     $query = '
@@ -594,7 +594,7 @@ SELECT cat_id
   FROM '.USER_ACCESS_TABLE.'
   WHERE user_id = '.$user_id.'
 ;';
-    $authorized_array = query2array($query, null, 'cat_id');
+    $authorized_array = \Piwigo\Db\QueryHelper::fetch($query, null, 'cat_id');
 
     // retrieve category ids authorized to the groups the user belongs to
     $query = '
@@ -606,7 +606,7 @@ SELECT cat_id
     $authorized_array =
       array_merge(
           $authorized_array,
-          query2array($query, null, 'cat_id')
+          \Piwigo\Db\QueryHelper::fetch($query, null, 'cat_id')
       );
 
     // uniquify ids : some private categories might be authorized for the
@@ -623,7 +623,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE visible = \'false\'
 ;';
-        $forbidden_array = array_merge($forbidden_array, query2array($query, null, 'id'));
+        $forbidden_array = array_merge($forbidden_array, \Piwigo\Db\QueryHelper::fetch($query, null, 'id'));
         $forbidden_array = array_unique($forbidden_array);
     }
 
@@ -1507,7 +1507,7 @@ SELECT
     JOIN '.USERS_TABLE.' AS u ON u.'.\Piwigo\Config\Config::userFields()['id'].' = ui.user_id
   WHERE auth_key = '.get_dbal_connection()->quote((string) $auth_key).'
 ;';
-    $keys = query2array($query);
+    $keys = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (count($keys) == 0) {
         return false;
@@ -1611,7 +1611,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE user_id = '.$user_id.'
 ;';
-        $user_infos = query2array($query);
+        $user_infos = \Piwigo\Db\QueryHelper::fetch($query);
 
         if (count($user_infos) == 0) {
             return false;
@@ -1961,7 +1961,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-                $admin_ids = query2array($query, null, 'user_id');
+                $admin_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id');
 
                 // we add all admin+webmaster users BUT the user herself
                 $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$currentUser->id]));
@@ -2016,7 +2016,7 @@ SELECT
   FROM '.USER_INFOS_TABLE.'
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-            $protected_users = array_merge($protected_users, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'user_id')));
+            $protected_users = array_merge($protected_users, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, \Piwigo\Db\QueryHelper::fetch($query, null, 'user_id')));
         }
 
         // status update query is separated from the rest as not applying to the same
@@ -2160,7 +2160,7 @@ SELECT
   FROM `'.GROUPS_TABLE.'`
   WHERE id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_group_id)).')
 ;';
-        $group_ids = query2array($query, null, 'id');
+        $group_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
         // if only -1 (a group id that can't exist) is in the list, then no
         // group is associated
@@ -2296,7 +2296,7 @@ SELECT *
   AND key_type = "api_key"
 ;';
 
-    $api_keys = query2array($query);
+    $api_keys = \Piwigo\Db\QueryHelper::fetch($query);
     if (!$api_keys) {
         return false;
     }

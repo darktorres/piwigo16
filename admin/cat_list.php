@@ -66,7 +66,7 @@ SELECT
   WHERE category_id IN ('.implode(',', $category_ids).')
   GROUP BY category_id
 ;';
-    $ref_dates = query2array($query, 'category_id', 'ref_date');
+    $ref_dates = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'ref_date');
 
     // the iterate on all albums (having a ref_date or not) to find the
     // reference_date, with a search on sub-albums
@@ -77,7 +77,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $category_ids).')
 ;';
-    $uppercats_of = query2array($query, 'id', 'uppercats');
+    $uppercats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
 
     foreach (array_keys($uppercats_of) as $cat_id) {
         // find the subcats
@@ -219,7 +219,7 @@ if (!isset($_GET['parent_id'])) {
 $query .= '
   ORDER BY `rank` ASC
 ;';
-$categories = query2array($query, 'id');
+$categories = \Piwigo\Db\QueryHelper::fetch($query, 'id');
 
 // get the categories containing images directly
 $categories_with_images = [];
@@ -233,7 +233,7 @@ SELECT
 ;';
     // WHERE category_id IN ('.implode(',', array_keys($categories)).')
 
-    $nb_photos_in = query2array($query, 'category_id', 'nb_photos');
+    $nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
 
     $query = '
 SELECT
@@ -241,7 +241,7 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
 ;';
-    $all_categories = query2array($query, 'id', 'uppercats');
+    $all_categories = \Piwigo\Db\QueryHelper::fetch($query, 'id', 'uppercats');
     $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {

@@ -162,7 +162,7 @@ SELECT
         ).'
   GROUP BY category_id
 ;';
-        $dates_of_category = query2array($query, 'category_id');
+        $dates_of_category = \Piwigo\Db\QueryHelper::fetch($query, 'category_id');
     }
 }
 

@@ -44,7 +44,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $cat_ids).')
 ;';
-        $db_cat_ids = query2array($query, null, 'id');
+        $db_cat_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
         $missing_cat_ids = array_diff($cat_ids, array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $db_cat_ids));
 
         if (count($missing_cat_ids) > 0) {
@@ -182,7 +182,7 @@ SELECT
   FROM '. CATEGORIES_TABLE .'
   WHERE id IN ('. implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) .')
 ;';
-                $details_for_category = query2array($query, 'id');
+                $details_for_category = \Piwigo\Db\QueryHelper::fetch($query, 'id');
             }
 
             foreach ($images as $idx => $image) {
@@ -573,7 +573,7 @@ SELECT category_id, COUNT(*) AS counter
   FROM '. IMAGE_CATEGORY_TABLE .'
   GROUP BY category_id
 ;';
-    $nb_images_of = query2array($query, 'category_id', 'counter');
+    $nb_images_of = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'counter');
 
     // pwg_db_real_escape_string
 
@@ -663,7 +663,7 @@ SELECT
   GROUP BY id_uppercat
 ';
 
-            $nb_subcats_of = query2array($query, 'id_uppercat', 'nb_subcats');
+            $nb_subcats_of = \Piwigo\Db\QueryHelper::fetch($query, 'id_uppercat', 'nb_subcats');
         }
 
         foreach ($cats as $idx => $cat) {
@@ -766,7 +766,7 @@ SELECT id, id_uppercat, `rank`
   FROM '.CATEGORIES_TABLE.'
   WHERE id IN ('.implode(',', $setrank_category_ids).')
 ;';
-    $categories = query2array($query);
+    $categories = \Piwigo\Db\QueryHelper::fetch($query);
 
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');
@@ -787,7 +787,7 @@ SELECT id
   ORDER BY `id` ASC
 ;';
 
-        $cat_asc = query2array($query, null, 'id');
+        $cat_asc = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
         $cat_asc_str = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $cat_asc);
         $order_new_str = array_map(fn (int $v): string => (string) $v, $order_new_by_id);
@@ -807,7 +807,7 @@ SELECT id
   ORDER BY `rank` ASC
 ;';
 
-        $order_old = query2array($query, null, 'id');
+        $order_old = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
         $rank_target = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
         $order_new = [];
         $was_inserted = false;
@@ -860,7 +860,7 @@ SELECT *
   FROM '.CATEGORIES_TABLE.'
   WHERE id = '.$category_id.'
 ;';
-    $categories = query2array($query);
+    $categories = \Piwigo\Db\QueryHelper::fetch($query);
     if (count($categories) == 0) {
         return new PwgError(404, 'category_id not found');
     }
@@ -1094,7 +1094,7 @@ SELECT id
   FROM '. CATEGORIES_TABLE .'
   WHERE id IN ('. implode(',', $category_ids) .')
 ;';
-    $raw_category_ids = query2array($query, null, 'id');
+    $raw_category_ids = \Piwigo\Db\QueryHelper::fetch($query, null, 'id');
 
     if (count($raw_category_ids) == 0) {
         return null;
@@ -1234,7 +1234,7 @@ SELECT
   GROUP BY category_id
 ;';
 
-    $nb_photos_in = query2array($query, 'category_id', 'nb_photos');
+    $nb_photos_in = \Piwigo\Db\QueryHelper::fetch($query, 'category_id', 'nb_photos');
 
     $update_cats = [];
     foreach (array_unique($update_cat_ids) as $update_cat) {
@@ -1287,7 +1287,7 @@ SELECT DISTINCT
   WHERE 
     category_id IN ('.implode(',', $subcat_ids).')
   ;';
-    $image_ids_recursive = query2array($query, null, 'image_id');
+    $image_ids_recursive = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
 
     $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1313,7 +1313,7 @@ SELECT DISTINCT
       ('.implode(',', $image_ids_recursive).')
   ;';
 
-            $image_ids_associated_outside = query2array($query, null, 'image_id');
+            $image_ids_associated_outside = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
             $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
             $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
@@ -1333,7 +1333,7 @@ SELECT DISTINCT
     NOT IN 
       ('.implode(',', $subcat_ids).')
   ;';
-            $image_ids_associated_outside = query2array($query, null, 'image_id');
+            $image_ids_associated_outside = \Piwigo\Db\QueryHelper::fetch($query, null, 'image_id');
             $image_ids_not_orphan = [];
 
             foreach ($image_ids_associated_outside as $image_id) {

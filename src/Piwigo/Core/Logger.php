@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Psr\Log\InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level as MonologLevel;
@@ -36,11 +37,11 @@ class Logger extends AbstractLogger
 
     public const ARCHIVE_NO_PURGE = -1;
 
-    private MonologLogger $mono;
-    private int $configuredSeverity;
-    private string $logDir;
-    private string $globPattern;
-    private int $archiveDays;
+    private readonly MonologLogger $mono;
+    private readonly int $configuredSeverity;
+    private readonly string $logDir;
+    private readonly string $globPattern;
+    private readonly int $archiveDays;
 
     /** @param array<string,mixed> $options */
     public function __construct(array $options)
@@ -150,7 +151,7 @@ class Logger extends AbstractLogger
     private function psrLevelToMonolog(mixed $level): MonologLevel
     {
         if (!is_string($level) && !($level instanceof \Stringable)) {
-            throw new \Psr\Log\InvalidArgumentException('Log level must be a string, got: ' . gettype($level));
+            throw new InvalidArgumentException('Log level must be a string, got: ' . gettype($level));
         }
         $levelStr = (string) $level;
         return match ($levelStr) {
@@ -162,7 +163,7 @@ class Logger extends AbstractLogger
             LogLevel::NOTICE    => MonologLevel::Notice,
             LogLevel::INFO      => MonologLevel::Info,
             LogLevel::DEBUG     => MonologLevel::Debug,
-            default             => throw new \Psr\Log\InvalidArgumentException('Unknown log level: ' . $levelStr),
+            default             => throw new InvalidArgumentException('Unknown log level: ' . $levelStr),
         };
     }
 

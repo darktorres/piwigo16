@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Template\TemplateRegistry;
+
 class Tabsheet
 {
     /** @var array<string, array<string, bool|string>> */
     public array $sheets = [];
-    /**
-     * @var null
-     */
     public ?string $uniqid = null;
     public string $selected = '';
 
@@ -113,7 +112,7 @@ class Tabsheet
      */
     public function assign(): void
     {
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
         $template->assign('tabsheet', $this->sheets);

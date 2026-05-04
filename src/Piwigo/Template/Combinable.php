@@ -16,7 +16,6 @@ class Combinable
 
     /**
      * @param string $id
-     * @param string|null $path
      * @param string|int $version
      */
     public function __construct(public $id, ?string $path, public $version = 0)
@@ -25,9 +24,6 @@ class Combinable
         $this->is_template = false;
     }
 
-    /**
-     * @param string|null $path
-     */
     public function set_path(?string $path): void
     {
         if (!empty($path)) {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Filesystem;
 use Piwigo\Users\CurrentUser;
 
 class Languages
@@ -30,7 +33,7 @@ class Languages
      */
     public function perform_action($action, string $language_id): array
     {
-        if (!\Piwigo\Config\Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -105,7 +108,7 @@ UPDATE '.USER_INFOS_TABLE.'
                 $query = '
 UPDATE '.USER_INFOS_TABLE.'
   SET language = \''.$language_id.'\'
-  WHERE user_id IN ('.\Piwigo\Config\Config::defaultUserId().', '.\Piwigo\Config\Config::guestId().')
+  WHERE user_id IN ('.Config::defaultUserId().', '.Config::guestId().')
 ;';
                 pwg_query($query);
                 break;
@@ -200,7 +203,7 @@ UPDATE '.USER_INFOS_TABLE.'
     public function get_server_languages(bool $new = false): bool
     {
         $get_data = [
-          'category_id' => \Piwigo\Config\Config::pemLanguagesCategory(),
+          'category_id' => Config::pemLanguagesCategory(),
           'format' => 'php',
         ];
 
@@ -272,9 +275,7 @@ UPDATE '.USER_INFOS_TABLE.'
                     $this->server_languages[$langExtId] = $language;
                 }
             }
-            uasort($this->server_languages, function (mixed $a, mixed $b): int {
-                return $this->extension_name_compare($a, $b);
-            });
+            uasort($this->server_languages, fn(mixed $a, mixed $b): int => $this->extension_name_compare($a, $b));
             return true;
         }
         return false;
@@ -286,7 +287,7 @@ UPDATE '.USER_INFOS_TABLE.'
      */
     public function extract_language_files(string $action, string $revision, string $dest = ''): string
     {
-        $logger = \Piwigo\Core\LoggerRegistry::current();
+        $logger = LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) {
             $url = PEM_URL . '/download.php';
@@ -295,7 +296,7 @@ UPDATE '.USER_INFOS_TABLE.'
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
+            $handle = Filesystem::tryFopen($archive, 'wb');
             $fh = $handle;
             if (is_resource($fh) && fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
@@ -371,7 +372,7 @@ UPDATE '.USER_INFOS_TABLE.'
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            \Piwigo\Core\Filesystem::tryUnlink($path);
+                                            Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_ROOT_PATH.'language/trash');
                                         }
@@ -397,7 +398,7 @@ UPDATE '.USER_INFOS_TABLE.'
         }
 
         if (is_string($archive)) {
-            \Piwigo\Core\Filesystem::tryUnlink($archive);
+            Filesystem::tryUnlink($archive);
         }
         return $status;
     }

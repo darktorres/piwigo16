@@ -17,18 +17,18 @@ use Piwigo\Image\SizingParams;
  */
 
 
-define('IMG_SQUARE', 'square');
-define('IMG_THUMB', 'thumb');
-define('IMG_XXSMALL', '2small');
-define('IMG_XSMALL', 'xsmall');
-define('IMG_SMALL', 'small');
-define('IMG_MEDIUM', 'medium');
-define('IMG_LARGE', 'large');
-define('IMG_XLARGE', 'xlarge');
-define('IMG_XXLARGE', 'xxlarge');
-define('IMG_3XLARGE', '3xlarge');
-define('IMG_4XLARGE', '4xlarge');
-define('IMG_CUSTOM', 'custom');
+define('IMG_SQUARE', \Piwigo\Image\DerivativeSize::Square->value);
+define('IMG_THUMB', \Piwigo\Image\DerivativeSize::Thumb->value);
+define('IMG_XXSMALL', \Piwigo\Image\DerivativeSize::TwoSmall->value);
+define('IMG_XSMALL', \Piwigo\Image\DerivativeSize::XSmall->value);
+define('IMG_SMALL', \Piwigo\Image\DerivativeSize::Small->value);
+define('IMG_MEDIUM', \Piwigo\Image\DerivativeSize::Medium->value);
+define('IMG_LARGE', \Piwigo\Image\DerivativeSize::Large->value);
+define('IMG_XLARGE', \Piwigo\Image\DerivativeSize::XLarge->value);
+define('IMG_XXLARGE', \Piwigo\Image\DerivativeSize::TwoXLarge->value);
+define('IMG_3XLARGE', \Piwigo\Image\DerivativeSize::ThreeXLarge->value);
+define('IMG_4XLARGE', \Piwigo\Image\DerivativeSize::FourXLarge->value);
+define('IMG_CUSTOM', \Piwigo\Image\DerivativeSize::Custom->value);
 
 
 /**

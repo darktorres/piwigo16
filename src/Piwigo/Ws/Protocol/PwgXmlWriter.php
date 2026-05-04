@@ -6,16 +6,11 @@ namespace Piwigo\Ws\Protocol;
 
 class PwgXmlWriter
 {
-    /** @var bool */
-    private $_indent;
-    /** @var string */
-    private $_indentStr;
+    private readonly string $_indentStr;
     /** @var array<mixed> */
     private array $_elementStack = [];
-    /** @var bool */
-    private $_lastTagOpen;
-    /** @var int */
-    private $_indentLevel;
+    private bool $_lastTagOpen;
+    private int $_indentLevel;
 
     private string $_encodedXml = '';
 
@@ -26,7 +21,6 @@ class PwgXmlWriter
         $this->_indentLevel = 0;
 
         $this->_encodedXml = '';
-        $this->_indent = true;
         $this->_indentStr = "\t";
     }
 
@@ -113,15 +107,12 @@ class PwgXmlWriter
 
     public function _eol_indent(): void
     {
-        if ($this->_indent) {
-            $this->_output("\n");
-        }
+        $this->_output("\n");
     }
 
     public function _indent(): void
     {
-        if ($this->_indent and
-            $this->_indentLevel > count($this->_elementStack)) {
+        if ($this->_indentLevel > count($this->_elementStack)) {
             $this->_output(
                 str_repeat((string) $this->_indentStr, count($this->_elementStack))
             );

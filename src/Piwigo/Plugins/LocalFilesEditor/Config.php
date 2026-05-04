@@ -23,7 +23,7 @@ final class Config
     /**
      * @var array<string, array{type: string, default: mixed, method: string}>
      */
-    public const SCHEMA = [
+    public const array SCHEMA = [
         'LocalFilesEditor_tabs' => [
             'type'    => 'array',
             'default' => ['localconf', 'css', 'tpl', 'lang', 'plug'],

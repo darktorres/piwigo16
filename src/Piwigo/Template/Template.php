@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Config\Config;
+use Smarty\Debug;
+use Piwigo\Core\Lang;
+use Smarty\TemplateBase;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Smarty;
 
@@ -51,7 +55,6 @@ class Template
     /**
      * @param string $root
      * @param string $theme
-     * @param string $path
      */
     public function __construct($root = '.', $theme = '', string $path = 'template')
     {
@@ -63,22 +66,22 @@ class Template
         $this->cssLoader = new CssLoader();
         $this->smarty = new Smarty();
         $this->smarty->escape_html = false;
-        $this->smarty->debugging = \Piwigo\Config\Config::debugTemplate();
+        $this->smarty->debugging = Config::debugTemplate();
         if (!$this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
-        $this->smarty->compile_check = (int)\Piwigo\Config\Config::templateCompileCheck();
-        $this->smarty->force_compile = \Piwigo\Config\Config::templateForceCompile();
+        $this->smarty->compile_check = (int)Config::templateCompileCheck();
+        $this->smarty->force_compile = Config::templateForceCompile();
 
-        if (!\Piwigo\Config\Config::has('data_dir_checked')) {
-            $dir = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation();
+        if (!Config::has('data_dir_checked')) {
+            $dir = PHPWG_ROOT_PATH.Config::dataLocation();
             mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (!is_writable($dir)) {
                 load_language('admin.lang');
                 fatal_error(
                     l10n(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
-                        \Piwigo\Config\Config::dataLocation()
+                        Config::dataLocation()
                     ),
                     l10n('an error happened'),
                     false // show trace
@@ -89,7 +92,7 @@ class Template
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'templates_c';
+        $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
         mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
@@ -141,7 +144,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
+        if (Config::compiledTemplateCacheLanguage()) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
@@ -157,18 +160,14 @@ class Template
 
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (!defined('IN_ADMIN') and \Piwigo\Config\Config::extentsForTemplates() !== null) {
-            $tpl_extents = unserialize((string)\Piwigo\Config\Config::extentsForTemplates());
+        if (!defined('IN_ADMIN') and Config::extentsForTemplates() !== null) {
+            $tpl_extents = unserialize((string)Config::extentsForTemplates());
             $this->set_extents(is_array($tpl_extents) ? $tpl_extents : [], './template-extension/', true, $theme);
         }
     }
 
     /**
      * Loads theme's parameters.
-     *
-     * @param string $theme
-     * @param bool $load_css
-     * @param bool $load_local_head
      */
     public function set_theme(string $root, string $theme, string $path, bool $load_css = true, bool $load_local_head = true, string $colorscheme = 'dark'): void
     {
@@ -262,7 +261,6 @@ class Template
      * Returns theme's parameter.
      *
      * @param string $val
-     * @return mixed
      */
     public function get_themeconf($val): mixed
     {
@@ -285,7 +283,6 @@ class Template
      * Sets the template filenames for handles.
      *
      * @param string[] $filename_array hashmap of handle=>filename
-     * @return bool
      */
     public function set_filenames($filename_array): bool
     {
@@ -381,11 +378,11 @@ class Template
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
-     * @param string $varname
+     * @param string|string[] $varname
      * @param string $handle
      * @return true
      */
-    public function assign_var_from_handle($varname, $handle): bool
+    public function assign_var_from_handle(string|array $varname, $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
         return true;
@@ -462,7 +459,7 @@ class Template
         $this->load_external_filters($handle);
 
         $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
-        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
+        if (Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
             $this->smarty->compile_id .= '_'.$lang_info['code'];
         }
 
@@ -566,14 +563,12 @@ class Template
         'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
         ]
             );
-            (new \Smarty\Debug())->display_debug($this->smarty);
+            new Debug()->display_debug($this->smarty);
         }
     }
 
     /**
      * Eval a temp string to retrieve the original PHP value.
-     *
-     * @return string|null
      */
     public static function get_php_str_val(string $str): ?string
     {
@@ -601,18 +596,18 @@ class Template
         $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
         switch (count($params)) {
             case 1:
-                if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()
+                if (Config::compiledTemplateCacheLanguage()
                   && ($key = self::get_php_str_val($p0)) !== null
-                  && \Piwigo\Core\Lang::has($key)
+                  && Lang::has($key)
                 ) {
-                    return var_export(\Piwigo\Core\Lang::t($key), true);
+                    return var_export(Lang::t($key), true);
                 }
                 return 'l10n('.$p0.')';
 
             default:
                 $rest = array_slice($params, 1);
                 $restStr = array_map(fn ($x): string => is_string($x) ? $x : (is_int($x) || is_float($x) ? (string) $x : ''), $rest);
-                if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
+                if (Config::compiledTemplateCacheLanguage()) {
                     $ret = 'sprintf(';
                     $ret .= self::modcompiler_translate([$p0]);
                     $ret .= ','. implode(',', $restStr);
@@ -636,7 +631,7 @@ class Template
         $p0 = is_string($params[0] ?? null) ? (string) $params[0] : '';
         $p1 = is_string($params[1] ?? null) ? (string) $params[1] : '';
         $p2 = is_string($params[2] ?? null) ? (string) $params[2] : '';
-        if (\Piwigo\Config\Config::compiledTemplateCacheLanguage()) {
+        if (Config::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
             if (!empty($lang_info['zero_plural'])) {
                 $ret .= '($tmp=('.$p0.'))>1||$tmp==0';
@@ -737,7 +732,7 @@ class Template
             $typeVal = $params['type'];
             $typeStr = is_string($typeVal) ? $typeVal : '';
             $derivative = ImageStdParams::get_by_type($typeStr);
-            if ($smarty instanceof \Smarty\Smarty) {
+            if ($smarty instanceof Smarty) {
                 $nameVal = $params['name'];
                 $nameStr = is_string($nameVal) ? $nameVal : '';
                 $smarty->assign($nameStr, $derivative);
@@ -775,7 +770,7 @@ class Template
             }
         }
 
-        if ($smarty instanceof \Smarty\Smarty) {
+        if ($smarty instanceof Smarty) {
             $nameVal2 = $params['name'];
             $nameStr2 = is_string($nameVal2) ? $nameVal2 : '';
             $smarty->assign($nameStr2, ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
@@ -800,17 +795,12 @@ class Template
         if (!isset($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
         }
-        $load = 0;
-        if (isset($params['load'])) {
-            switch ($params['load']) {
-                case 'header': break;
-                case 'footer': $load = 1;
-                    break;
-                case 'async': $load = 2;
-                    break;
-                default: trigger_error("combine_script: invalid 'load' parameter", E_USER_ERROR);
-            }
-        }
+        $load = match ($params['load'] ?? 'header') {
+            'header' => 0,
+            'footer' => 1,
+            'async'  => 2,
+            default  => throw new \ValueError("combine_script: invalid 'load' parameter"),
+        };
 
         $scriptId = $params['id'];
         $scriptIdStr = is_string($scriptId) ? $scriptId : '';
@@ -1006,9 +996,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.prefilters.php
      *
-     * @param string $handle
      * @param Callable $callback
-     * @param int $weight
      */
     public function set_prefilter(string $handle, mixed $callback, int $weight = 50): void
     {
@@ -1021,9 +1009,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.postfilters.php
      *
-     * @param string $handle
      * @param Callable $callback
-     * @param int $weight
      */
     public function set_postfilter(string $handle, mixed $callback, int $weight = 50): void
     {
@@ -1036,9 +1022,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.outputfilters.php
      *
-     * @param string $handle
      * @param Callable $callback
-     * @param int $weight
      */
     public function set_outputfilter(string $handle, mixed $callback, int $weight = 50): void
     {
@@ -1048,8 +1032,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
     /**
      * Register the filters for the tpl file.
-     *
-     * @param string $handle
      */
     public function load_external_filters(string $handle): void
     {
@@ -1077,8 +1059,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
     /**
      * Unregister the filters for the tpl file.
-     *
-     * @param string $handle
      */
     public function unload_external_filters(string $handle): void
     {
@@ -1090,7 +1070,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                     if (is_string($callback)) {
                         $this->smarty->unregisterFilter($type, $callback);
                     } elseif (is_array($callback) && count($callback) >= 2) {
-                        $cls = is_object($callback[0]) ? get_class($callback[0]) : (is_string($callback[0]) ? $callback[0] : '');
+                        $cls = is_object($callback[0]) ? $callback[0]::class : (is_string($callback[0]) ? $callback[0] : '');
                         $meth = is_string($callback[1]) ? $callback[1] : '';
                         if ($cls !== '' && $meth !== '') {
                             $this->smarty->unregisterFilter($type, $cls.'_'.$meth);
@@ -1111,8 +1091,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /** @return string|array<mixed>|null */
     public static function prefilter_white_space(string $source, mixed $smarty): string|array|null
     {
-        $ld = ($smarty instanceof \Smarty\Smarty) ? $smarty->getLeftDelimiter() : '{';
-        $rd = ($smarty instanceof \Smarty\Smarty) ? $smarty->getRightDelimiter() : '}';
+        $ld = ($smarty instanceof Smarty) ? $smarty->getLeftDelimiter() : '{';
+        $rd = ($smarty instanceof Smarty) ? $smarty->getRightDelimiter() : '}';
         // $ld = $smarty->left_delimiter;
         // $rd = $smarty->right_delimiter;
         $ldq = preg_quote($ld, '#');
@@ -1159,11 +1139,8 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * Smarty 5 passes Smarty\Template here (not Smarty\Smarty); both
      * extend Smarty\TemplateBase, which exposes getTemplateVars().
-     *
-     * @param string                $source
-     * @param \Smarty\TemplateBase  $smarty
      */
-    public static function prefilter_local_css(string $source, \Smarty\TemplateBase $smarty): string
+    public static function prefilter_local_css(string $source, TemplateBase $smarty): string
     {
         $css = [];
         $themes = $smarty->getTemplateVars('themes');
@@ -1217,7 +1194,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Registers a button to be displayed on picture page.
      *
      * @param string $content
-     * @param int $rank
      */
     public function add_picture_button(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {
@@ -1228,7 +1204,6 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Registers a button to be displayed on index pages.
      *
      * @param string $content
-     * @param int $rank
      */
     public function add_index_button(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
     {

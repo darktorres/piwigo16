@@ -63,17 +63,17 @@ final class PageState
         $p = is_array($raw) ? $raw : [];
 
         $errors = $p['errors'] ?? [];
-        $inst->errors = is_array($errors) ? array_values(array_filter($errors, 'is_string')) : [];
+        $inst->errors = is_array($errors) ? array_values(array_filter($errors, is_string(...))) : [];
         $warnings = $p['warnings'] ?? [];
-        $inst->warnings = is_array($warnings) ? array_values(array_filter($warnings, 'is_string')) : [];
+        $inst->warnings = is_array($warnings) ? array_values(array_filter($warnings, is_string(...))) : [];
         $messages = $p['messages'] ?? [];
-        $inst->messages = is_array($messages) ? array_values(array_filter($messages, 'is_string')) : [];
+        $inst->messages = is_array($messages) ? array_values(array_filter($messages, is_string(...))) : [];
         $infos = $p['infos'] ?? [];
-        $inst->infos = is_array($infos) ? array_values(array_filter($infos, 'is_string')) : [];
+        $inst->infos = is_array($infos) ? array_values(array_filter($infos, is_string(...))) : [];
         $bodyClasses = $p['body_classes'] ?? [];
-        $inst->bodyClasses = is_array($bodyClasses) ? array_values(array_filter($bodyClasses, 'is_string')) : [];
+        $inst->bodyClasses = is_array($bodyClasses) ? array_values(array_filter($bodyClasses, is_string(...))) : [];
         $bodyData = $p['body_data'] ?? [];
-        $inst->bodyData = is_array($bodyData) ? array_filter($bodyData, fn ($v, $k) => is_string($k) && is_string($v), ARRAY_FILTER_USE_BOTH) : [];
+        $inst->bodyData = is_array($bodyData) ? array_filter($bodyData, fn ($v, $k): bool => is_string($k) && is_string($v), ARRAY_FILTER_USE_BOTH) : [];
         $execUuid = $p['execution_uuid'] ?? '';
         $inst->executionUuid = is_string($execUuid) ? $execUuid : '';
 

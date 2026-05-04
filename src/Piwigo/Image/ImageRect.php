@@ -30,17 +30,11 @@ final class ImageRect
         $this->b = (int) $l[1];
     }
 
-    /**
-     * @return int
-     */
     public function width(): int
     {
         return $this->r - $this->l;
     }
 
-    /**
-     * @return int
-     */
     public function height(): int
     {
         return $this->b - $this->t;

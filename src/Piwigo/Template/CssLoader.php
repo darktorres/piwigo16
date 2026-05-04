@@ -30,7 +30,7 @@ class CssLoader
      */
     public function get_css(): array
     {
-        uasort($this->registered_css, [self::class, 'cmp_by_order']);
+        uasort($this->registered_css, self::cmp_by_order(...));
         $combiner = new FileCombiner('css', $this->registered_css);
         return $combiner->combine();
     }

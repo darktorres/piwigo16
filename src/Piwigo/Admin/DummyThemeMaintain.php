@@ -15,19 +15,18 @@ namespace Piwigo\Admin;
 class DummyThemeMaintain extends ThemeMaintain
 {
     /** @param string $theme_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function activate($theme_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function activate($theme_version, &$errors = []): null
     {
         if (!function_exists('theme_activate')) {
             return null;
         }
         trigger_error('theme_activate() is deprecated; extend ThemeMaintain instead', E_USER_DEPRECATED);
-        return \theme_activate($this->theme_id, $theme_version, $errors);
+        \theme_activate($this->theme_id, $theme_version, $errors);
+        return null;
     }
 
-    /** @return void */
-    public function deactivate()
+    public function deactivate(): void
     {
         if (!function_exists('theme_deactivate')) {
             return;
@@ -36,8 +35,7 @@ class DummyThemeMaintain extends ThemeMaintain
         \theme_deactivate($this->theme_id);
     }
 
-    /** @return void */
-    public function delete()
+    public function delete(): void
     {
         if (!function_exists('theme_delete')) {
             return;

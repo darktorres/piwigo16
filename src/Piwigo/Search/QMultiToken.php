@@ -39,7 +39,6 @@ class QMultiToken implements \Stringable
 
     private function push(string &$token, int &$modifier, mixed &$scope): void
     {
-        /** @var QSearchScope|null $typedScope */
         $typedScope = $scope instanceof QSearchScope ? $scope : null;
         if (strlen((string) $token) || ($typedScope !== null && $typedScope->nullable)) {
             if ($typedScope !== null) {

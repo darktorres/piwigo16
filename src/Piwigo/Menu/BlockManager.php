@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Config\Config;
+use Piwigo\Template\TemplateRegistry;
+
 /**
  * @package functions\menubar
  */
-
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
@@ -71,7 +73,7 @@ class BlockManager
     public function prepare_display(): void
     {
         $conf_id = 'blk_'.$this->id;
-        $mb_conf_raw = \Piwigo\Config\Config::raw($conf_id);
+        $mb_conf_raw = Config::raw($conf_id);
         if (is_array($mb_conf_raw)) {
             $mb_conf = $mb_conf_raw;
         } elseif (is_string($mb_conf_raw)) {
@@ -158,12 +160,12 @@ class BlockManager
     /**
      * Parse the menu and assign the result in a template variable.
      *
-     * @param string $var
+     * @param string|string[] $var
      * @param string $file
      */
-    public function apply($var, $file): void
+    public function apply(string|array $var, string $file): void
     {
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
 
         $template->set_filename('menubar', $file);
         trigger_notify('blockmanager_apply', [$this]);

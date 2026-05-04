@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
+
 /**
   Implementation of a persistent cache using files.
 */
@@ -13,7 +16,7 @@ class PersistentFileCache extends PersistentCache
 
     public function __construct()
     {
-        $this->dir = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'cache/';
+        $this->dir = PHPWG_ROOT_PATH.Config::dataLocation().'cache/';
     }
 
     public function get($key, &$value): bool
@@ -63,9 +66,9 @@ class PersistentFileCache extends PersistentCache
 
         $limit = time() - $this->default_lifetime;
         foreach ($files as $file) {
-            $mtime = \Piwigo\Core\Filesystem::tryFileMtime($file);
+            $mtime = Filesystem::tryFileMtime($file);
             if ($all || $mtime === false || $mtime < $limit) {
-                \Piwigo\Core\Filesystem::tryUnlink($file);
+                Filesystem::tryUnlink($file);
             }
         }
         return true;

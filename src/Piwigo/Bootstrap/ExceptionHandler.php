@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\HttpException;
 use Piwigo\Exception\NotFoundException;
@@ -13,8 +14,8 @@ class ExceptionHandler
 {
     public static function handle(\Throwable $e): void
     {
-        if (\Piwigo\Core\LoggerRegistry::isInitialized()) {
-            \Piwigo\Core\LoggerRegistry::current()->error(
+        if (LoggerRegistry::isInitialized()) {
+            LoggerRegistry::current()->error(
                 $e->getMessage(),
                 ['file' => $e->getFile() . ':' . $e->getLine(), 'code' => $e->getCode()]
             );
@@ -43,6 +44,6 @@ class ExceptionHandler
 
     public static function register(): void
     {
-        set_exception_handler([self::class, 'handle']);
+        set_exception_handler(self::handle(...));
     }
 }

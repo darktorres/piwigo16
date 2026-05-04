@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Encoder;
 
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
+
 /**
  *
  * Base class for web service response encoder.
@@ -44,9 +47,9 @@ abstract class PwgResponseEncoder
 
     private static function flatten(mixed &$value): void
     {
-        if ($value instanceof \Piwigo\Ws\PwgNamedArray) {
+        if ($value instanceof PwgNamedArray) {
             $value = $value->getContent();
-        } elseif ($value instanceof \Piwigo\Ws\PwgNamedStruct) {
+        } elseif ($value instanceof PwgNamedStruct) {
             $value = $value->getContent();
         }
 

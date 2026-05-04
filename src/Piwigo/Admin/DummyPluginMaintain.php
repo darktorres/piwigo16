@@ -18,31 +18,30 @@ namespace Piwigo\Admin;
 class DummyPluginMaintain extends PluginMaintain
 {
     /** @param string $plugin_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function install($plugin_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function install($plugin_version, &$errors = []): null
     {
         if (!function_exists('plugin_install')) {
             return null;
         }
         trigger_error('plugin_install() is deprecated; extend PluginMaintain instead', E_USER_DEPRECATED);
-        return \plugin_install($this->plugin_id, $plugin_version, $errors);
+        \plugin_install($this->plugin_id, $plugin_version, $errors);
+        return null;
     }
 
     /** @param string $plugin_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function activate($plugin_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function activate($plugin_version, &$errors = []): null
     {
         if (!function_exists('plugin_activate')) {
             return null;
         }
         trigger_error('plugin_activate() is deprecated; extend PluginMaintain instead', E_USER_DEPRECATED);
-        return \plugin_activate($this->plugin_id, $plugin_version, $errors);
+        \plugin_activate($this->plugin_id, $plugin_version, $errors);
+        return null;
     }
 
-    /** @return void */
-    public function deactivate()
+    public function deactivate(): void
     {
         if (!function_exists('plugin_deactivate')) {
             return;
@@ -51,8 +50,7 @@ class DummyPluginMaintain extends PluginMaintain
         \plugin_deactivate($this->plugin_id);
     }
 
-    /** @return void */
-    public function uninstall()
+    public function uninstall(): void
     {
         if (!function_exists('plugin_uninstall')) {
             return;
@@ -63,9 +61,8 @@ class DummyPluginMaintain extends PluginMaintain
 
     /** @param string $old_version
      *  @param string $new_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function update($old_version, $new_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function update($old_version, $new_version, &$errors = []): null
     {
         return null;
     }

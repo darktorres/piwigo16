@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Filesystem;
 use Piwigo\Users\CurrentUser;
 
 class Themes
@@ -33,7 +36,7 @@ class Themes
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $theme_id): \Piwigo\Admin\ThemeMaintain
+    private static function build_maintain_class(string $theme_id): ThemeMaintain
     {
         $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
@@ -41,7 +44,7 @@ class Themes
         if (file_exists($file_to_include)) {
             include_once($file_to_include);
 
-            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\ThemeMaintain::class, true)) {
+            if (class_exists($classname) && is_a($classname, ThemeMaintain::class, true)) {
                 return instantiate_theme_maintain($classname, $theme_id);
             }
         }
@@ -51,12 +54,11 @@ class Themes
 
     /**
      * Perform requested actions
-     * @param string $action
      * @return list<mixed>
      */
     public function perform_action(string $action, string $theme_id): array
     {
-        if (!\Piwigo\Config\Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -93,8 +95,8 @@ class Themes
                 }
 
                 if ($this->fs_themes[$theme_id]['mobile']
-                    and !empty(\Piwigo\Config\Config::mobilTheme())
-                    and \Piwigo\Config\Config::mobilTheme() != $theme_id) {
+                    and !empty(Config::mobilTheme())
+                    and Config::mobilTheme() != $theme_id) {
                     $errors[] = l10n('You can activate only one mobile theme.');
                     break;
                 }
@@ -259,7 +261,7 @@ SELECT
         $user_ids = array_unique(
             array_merge(
                 query2array($query, null, 'user_id'),
-                [\Piwigo\Config\Config::guestId(), \Piwigo\Config\Config::defaultUserId()]
+                [Config::guestId(), Config::defaultUserId()]
             )
         );
 
@@ -423,7 +425,7 @@ SELECT
     public function get_server_themes(bool $new = false): bool
     {
         $get_data = [
-          'category_id' => \Piwigo\Config\Config::pemThemesCategory(),
+          'category_id' => Config::pemThemesCategory(),
           'format' => 'php',
         ];
 
@@ -525,7 +527,7 @@ SELECT
      */
     public function extract_theme_files(string $action, string $revision, string $dest, ?string &$theme_id = null): string
     {
-        $logger = \Piwigo\Core\LoggerRegistry::current();
+        $logger = LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
             $url = PEM_URL . '/download.php';
@@ -534,7 +536,7 @@ SELECT
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
+            $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
                 if (fetchRemote($url, $handle, $get_data)) {
@@ -606,7 +608,7 @@ SELECT
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            \Piwigo\Core\Filesystem::tryUnlink($path);
+                                            Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_THEMES_PATH . 'trash');
                                         }
@@ -632,7 +634,7 @@ SELECT
         }
 
         if (is_string($archive)) {
-            \Piwigo\Core\Filesystem::tryUnlink($archive);
+            Filesystem::tryUnlink($archive);
         }
         return $status;
     }

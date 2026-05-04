@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Config\Config;
+
 /**
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
  * and later on by combining them in a unique file respecting at the same time dependencies.
@@ -143,7 +145,7 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($this->registered_scripts, [self::class, 'cmp_by_mode_and_order']);
+        uasort($this->registered_scripts, self::cmp_by_mode_and_order(...));
 
         foreach ($this->registered_scripts as $id => $script) {
             if ($script->load_mode > 0) {
@@ -181,7 +183,7 @@ class ScriptLoader
             $this->compute_script_topological_order($id);
         }
 
-        uasort($todo, [self::class, 'cmp_by_mode_and_order']);
+        uasort($todo, self::cmp_by_mode_and_order(...));
 
         $result = [ [], [] ];
         foreach ($todo as $id => $script) {
@@ -220,7 +222,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or !\Piwigo\Config\Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or !Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -234,7 +236,7 @@ class ScriptLoader
      *
      * @param string $id in FileCombiner::$known_paths
      */
-    private static function fill_well_known($id, Script $script): void
+    private static function fill_well_known(string $id, Script $script): void
     {
         if (empty($script->path) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
@@ -245,9 +247,8 @@ class ScriptLoader
      * Add a known script to loaded scripts if it appears in known_paths.
      *
      * @param string $id in FileCombiner::$known_paths
-     * @param int $load_mode
      */
-    private function load_known_required_script($id, $load_mode): bool
+    private function load_known_required_script($id, int $load_mode): bool
     {
         if (isset(self::$known_paths[$id])) {
             $this->add($id, $load_mode, [], null);
@@ -259,10 +260,6 @@ class ScriptLoader
     /**
      * Compute script order depending on dependencies.
      * Assigned to $script->extra['order'].
-     *
-     * @param string $script_id
-     * @param int $recursion_limiter
-     * @return int
      */
     private function compute_script_topological_order(string $script_id, int $recursion_limiter = 0): int
     {

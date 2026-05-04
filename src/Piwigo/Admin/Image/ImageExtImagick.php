@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+
 class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
@@ -18,7 +21,7 @@ class ImageExtImagick implements ImageInterface
 
     public function __construct(public string $source_filepath)
     {
-        $this->imagickdir = \Piwigo\Config\Config::extImagickDir();
+        $this->imagickdir = Config::extImagickDir();
 
         $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
         if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
@@ -106,7 +109,7 @@ class ImageExtImagick implements ImageInterface
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $quality = min($quality, \Piwigo\Config\Config::animatedWebpCompressionQuality());
+            $quality = min($quality, Config::animatedWebpCompressionQuality());
         }
 
         $this->add_command('quality', $quality);
@@ -153,7 +156,7 @@ class ImageExtImagick implements ImageInterface
 
     public function write(string $destination_filepath): bool
     {
-        $logger = \Piwigo\Core\LoggerRegistry::current();
+        $logger = LoggerRegistry::current();
 
         $this->add_command('interlace', 'line'); // progressive rendering
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

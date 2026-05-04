@@ -6,9 +6,6 @@ namespace Piwigo\Admin\Image;
 
 class ImageImagick implements ImageInterface
 {
-    /**
-     * @var \Imagick
-     */
     public \Imagick $image;
 
     private bool $alphaRepeatApplied = false;

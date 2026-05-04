@@ -36,7 +36,7 @@ final class ConfigLoader
      * Env var → SCHEMA key. Only keys that benefit from runtime env override.
      * Validated against SCHEMA in apply() — typos in this map fail fast.
      */
-    private const ENV_MAPPING = [
+    private const array ENV_MAPPING = [
         'PIWIGO_DB_HOST'     => 'db_host',
         'PIWIGO_DB_USER'     => 'db_user',
         'PIWIGO_DB_PASSWORD' => 'db_password',

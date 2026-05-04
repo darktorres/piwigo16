@@ -35,7 +35,7 @@ final class Config
     /**
      * @var array<string, array{type: string, default: mixed, method: string}>
      */
-    public const SCHEMA = [
+    public const array SCHEMA = [
         'osm_conf' => [
             'type'    => 'array',
             'default' => [],

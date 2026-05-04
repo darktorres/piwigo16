@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Config\Config;
+
 /**
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
@@ -15,9 +17,7 @@ final class SrcImage
     public const int IS_MIMETYPE = 0x02;
     public const int DIM_NOT_GIVEN = 0x04;
 
-    /** @var int */
-    public int $id = 0;
-    /** @var string */
+    public readonly int $id;
     public string $rel_path = '';
     /** @var int */
     public $rotation = 0;
@@ -40,7 +40,7 @@ final class SrcImage
         $ext = strtolower(get_extension($path));
         $infos['file_ext'] = strtolower(get_extension($file));
         $infos['path_ext'] = $ext;
-        if (in_array($ext, \Piwigo\Config\Config::pictureExtensions())) {
+        if (in_array($ext, Config::pictureExtensions())) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {

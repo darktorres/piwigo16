@@ -12,7 +12,7 @@ class QSearchScope
     /**
      * @param string[] $aliases
      */
-    public function __construct(public string $id, public array $aliases, public bool $nullable = false, public bool $is_text = true)
+    public function __construct(public readonly string $id, public readonly array $aliases, public readonly bool $nullable = false, public readonly bool $is_text = true)
     {
     }
 

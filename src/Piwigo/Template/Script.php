@@ -15,9 +15,7 @@ final class Script extends Combinable
 
     /**
      * @param int $load_mode 0, 1, or 2
-     * @param string $id
      * @param string $path
-     * @param string|int $version
      * @param string[] $precedents
      */
     public function __construct(

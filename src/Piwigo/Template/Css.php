@@ -15,7 +15,7 @@ final class Css extends Combinable
      * @param string|int $version
      * @param int $order
      */
-    public function __construct($id, $path, $version = 0, public $order = 0)
+    public function __construct($id, ?string $path, $version = 0, public $order = 0)
     {
         parent::__construct($id, $path, $version);
     }

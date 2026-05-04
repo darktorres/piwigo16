@@ -7,7 +7,7 @@ namespace Piwigo\Search;
 class QNumericRangeScope extends QSearchScope
 {
     /** @param string[] $aliases */
-    public function __construct(string $id, array $aliases, bool $nullable = false, private int|float $epsilon = 0)
+    public function __construct(string $id, array $aliases, bool $nullable = false, private readonly int|float $epsilon = 0)
     {
         parent::__construct($id, $aliases, $nullable, false);
     }
@@ -77,6 +77,7 @@ class QNumericRangeScope extends QSearchScope
         return true;
     }
 
+    #[\Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
         $clauses = [];

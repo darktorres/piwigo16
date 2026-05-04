@@ -22,9 +22,8 @@ class ThemeMaintain
     }
 
     /** @param string $theme_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function activate($theme_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function activate($theme_version, &$errors = []): null
     {
         return null;
     }

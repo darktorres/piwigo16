@@ -21,7 +21,7 @@ class PwgNamedArray
      * @param array $xmlAttributes sub-item attributes that will be encoded as xml attributes
      */
     /** @param string[] $xmlAttributes */
-    public function __construct(private mixed $_content, private string $_itemName, array $xmlAttributes = [])
+    public function __construct(private mixed $_content, private readonly string $_itemName, array $xmlAttributes = [])
     {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }

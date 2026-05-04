@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
@@ -32,8 +33,8 @@ class PwgTemplateAdapter
         return call_user_func_array(sprintf(...), $args);
     }
 
-    /** @param array<mixed>|\Piwigo\Image\SrcImage $img */
-    public function derivative(string|\Piwigo\Image\DerivativeParams $type, array|\Piwigo\Image\SrcImage $img): DerivativeImage
+    /** @param array<mixed>|SrcImage $img */
+    public function derivative(string|DerivativeParams $type, array|SrcImage $img): DerivativeImage
     {
         $src_image = ($img instanceof SrcImage) ? $img : new SrcImage($img);
         return new DerivativeImage($type, $src_image);

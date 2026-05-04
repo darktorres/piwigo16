@@ -22,17 +22,15 @@ class PluginMaintain
     }
 
     /** @param string $plugin_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function install($plugin_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function install($plugin_version, &$errors = []): null
     {
         return null;
     }
 
     /** @param string $plugin_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function activate($plugin_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function activate($plugin_version, &$errors = []): null
     {
         return null;
     }
@@ -49,9 +47,8 @@ class PluginMaintain
 
     /** @param string $old_version
      *  @param string $new_version
-     *  @param array<mixed> $errors
-     *  @return mixed */
-    public function update($old_version, $new_version, &$errors = [])
+     *  @param array<mixed> $errors */
+    public function update($old_version, $new_version, &$errors = []): null
     {
         return null;
     }

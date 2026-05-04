@@ -849,7 +849,7 @@ npx playwright test                       # green (no behavioral regression)
 
 ## #13 — PHP 8.1–8.5 features: readonly, enum, match
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -872,7 +872,7 @@ Adopt PHP 8.1–8.5 language features where they tighten invariants without chan
 
 3. **Match expressions.** Replace exhaustive `switch ($x) { case A: return 1; case B: return 2; default: throw }` blocks with `match`. Focus on `src/Piwigo/Template/ScriptLoader.php` and `src/Piwigo/Ws/` protocol dispatchers.
 
-4. **Rector sweep.** After manual candidates are done, run Rector with `->withPhpSets(php81: true, php82: true, php83: true, php84: true, php85: true)` in dry-run mode — accept only the readonly and match rewrites; reject any that change public API.
+4. **Rector sweep.** After manual candidates are done, run Rector with `->withPhpSets(php85: true)` in dry-run mode — accept only the readonly and match rewrites; reject any that change public API.
 
 ### Verification
 

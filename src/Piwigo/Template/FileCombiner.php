@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 use JShrink\Minifier;
 use MatthiasMullie\Minify\CSS;
 
@@ -18,7 +20,7 @@ final class FileCombiner
      * @param string $type 'js' or 'css'
      * @param Combinable[] $combinables
      */
-    public function __construct(private string $type, private array $combinables = [])
+    public function __construct(private readonly string $type, private array $combinables = [])
     {
         $this->is_css = $this->type == 'css';
     }
@@ -58,9 +60,9 @@ final class FileCombiner
     public function combine(): array
     {
         $force = false;
-        if (is_admin() && ($this->is_css || !\Piwigo\Config\Config::templateCompileCheck())) {
+        if (is_admin() && ($this->is_css || !Config::templateCompileCheck())) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache') !== false);
+              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && str_contains($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
         $result = [];
@@ -75,14 +77,14 @@ final class FileCombiner
                 $key = $ini_key;
                 $result[] = $combinable;
                 continue;
-            } elseif (!\Piwigo\Config\Config::templateCombineFiles()) {
+            } elseif (!Config::templateCombineFiles()) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
-            if (\Piwigo\Config\Config::templateCompileCheck()) {
+            if (Config::templateCompileCheck()) {
                 $mtime = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 $key[] = $mtime !== false ? (string) $mtime : '0';
             }
@@ -118,7 +120,7 @@ final class FileCombiner
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
                 mkgetdir(dirname(PHPWG_ROOT_PATH.$file));
                 file_put_contents(PHPWG_ROOT_PATH.$file, $output);
-                \Piwigo\Core\Filesystem::tryChmod(PHPWG_ROOT_PATH.$file, 0644);
+                Filesystem::tryChmod(PHPWG_ROOT_PATH.$file, 0644);
             }
             $result[] = new Combinable('combi', $file, 0);
         } elseif (count($pending) == 1) {
@@ -144,7 +146,7 @@ final class FileCombiner
         if ($combinable->is_template) {
             if (!$return_content) {
                 $key = [$combinable->path, $combinable->version];
-                if (\Piwigo\Config\Config::templateCompileCheck()) {
+                if (Config::templateCompileCheck()) {
                     $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 }
                 $file = PWG_COMBINED_DIR . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
@@ -196,7 +198,7 @@ final class FileCombiner
      * @param string $js file content
      * @param string $file
      */
-    private static function process_js($js, $file): string
+    private static function process_js(string $js, $file): string
     {
         if (!str_contains($file, '.min') and !str_contains($file, '.packed')) {
             try {
@@ -219,7 +221,7 @@ final class FileCombiner
      *                       the minified file.
      * @return string
      */
-    private static function process_css($css, $file, string &$header)
+    private static function process_css(string $css, $file, string &$header)
     {
         $css = self::process_css_rec($css, dirname($file), $header);
         if (!str_contains($file, '.min')) {

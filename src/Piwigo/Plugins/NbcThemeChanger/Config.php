@@ -19,7 +19,7 @@ final class Config
     /**
      * @var array<string, array{type: string, default: mixed, method: string}>
      */
-    public const SCHEMA = [
+    public const array SCHEMA = [
         'nbc_ThemeChanger' => [
             'type'    => 'string',
             'default' => '',
@@ -48,7 +48,7 @@ final class Config
         if ($raw === '') {
             return [];
         }
-        return array_values(array_filter(array_map('trim', explode(';', $raw)), static fn (string $s): bool => $s !== ''));
+        return array_values(array_filter(array_map(trim(...), explode(';', $raw)), static fn (string $s): bool => $s !== ''));
     }
 
     /** @param list<string> $themes */

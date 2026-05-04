@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Config\Config;
+use Piwigo\Template\TemplateRegistry;
+
 /**
  * @package functions\calendar
  */
-
 /**
  * Base class for monthly and weekly calendar styles
  */
@@ -56,8 +58,6 @@ abstract class CalendarBase
 
     /**
      * Returns the calendar title (with HTML).
-     *
-     * @return string
      */
     public function get_display_name(): string
     {
@@ -67,7 +67,7 @@ abstract class CalendarBase
         $res = '';
 
         for ($i = 0; $i < count($chronologyDate); $i++) {
-            $res .= \Piwigo\Config\Config::levelSeparator();
+            $res .= Config::levelSeparator();
             $component = $chronologyDate[$i];
             $componentTyped = is_int($component) ? $component : (is_string($component) ? $component : '');
             if (isset($chronologyDate[$i + 1])) {
@@ -92,8 +92,6 @@ abstract class CalendarBase
 
     /**
      * Returns a display name for a date component optionally using labels.
-     *
-     * @return string
      */
     protected function get_date_component_label(int $level, int|string $date_component): string
     {
@@ -113,9 +111,6 @@ abstract class CalendarBase
 
     /**
      * Gets a nice display name for a date to be shown in previous/next links
-     *
-     * @param string $date
-     * @return string
      */
     protected function get_date_nice_name(string $date): string
     {
@@ -158,7 +153,7 @@ abstract class CalendarBase
     ): array {
         $nav_bar_datas = [];
 
-        if (\Piwigo\Config\Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
+        if (Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -193,7 +188,7 @@ abstract class CalendarBase
 
         }
 
-        if (\Piwigo\Config\Config::calendarShowAny() and $show_any and count($items) > 1 and
+        if (Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
             $url = duplicate_index_url(
                 ['chronology_date' => array_merge($date_components, ['any'])],
@@ -216,7 +211,7 @@ abstract class CalendarBase
     /** @param array<mixed>|null $labels */
     protected function build_nav_bar(int $level, ?array $labels = null): void
     {
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
 
@@ -280,7 +275,7 @@ $this->get_date_where($level).'
      */
     protected function build_next_prev(): void
     {
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
 
@@ -320,7 +315,7 @@ GROUP BY period';
         $upper_items_rank = array_flip($upper_items_str);
         if (!isset($upper_items_rank[$current])) {
             $upper_items_str[] = $current;// just in case (external link)
-            usort($upper_items_str, fn ($a, $b): int => version_compare($a, $b));
+            usort($upper_items_str, fn (string $a, string $b): int => version_compare($a, $b));
             $upper_items_rank = array_flip($upper_items_str);
         }
         $current_rank = $upper_items_rank[$current];

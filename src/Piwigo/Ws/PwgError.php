@@ -9,8 +9,8 @@ namespace Piwigo\Ws;
  */
 class PwgError
 {
-    private int|null $_code;
-    private string $_codeText;
+    private readonly int|null $_code;
+    private readonly string $_codeText;
 
     public function __construct(int|null $code, string $codeText)
     {

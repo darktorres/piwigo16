@@ -12,7 +12,7 @@ namespace Piwigo\Plugins;
  */
 final class EventDispatcher
 {
-    public const NEUTRAL_PRIORITY = 50;
+    public const int NEUTRAL_PRIORITY = 50;
 
     /**
      * @var array<string, array<int, list<array{function: mixed, include_path: string|null}>>>

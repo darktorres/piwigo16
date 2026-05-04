@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Config\Config;
+
 /**
  * Container for standard derivatives parameters.
  */
@@ -21,7 +23,7 @@ final class ImageStdParams
     /** @var DerivativeParams[] */
     private static $type_map = [];
     /** @var DerivativeParams[] */
-    private static $disabled_type_map = [];
+    private static array $disabled_type_map = [];
     /** @var string[] maps undefined type names to defined type names */
     private static $undefined_type_map = [];
     /** @var WatermarkParams */
@@ -64,7 +66,7 @@ final class ImageStdParams
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return \Piwigo\Config\Config::disabledDerivatives() ?? '';
+        return Config::disabledDerivatives() ?? '';
     }
 
     /**
@@ -75,9 +77,6 @@ final class ImageStdParams
         return self::$undefined_type_map;
     }
 
-    /**
-     * @return DerivativeParams
-     */
     public static function get_by_type(string $type): DerivativeParams
     {
         return self::$all_type_map[$type];
@@ -118,7 +117,7 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        $derivatives = \Piwigo\Config\Config::derivatives();
+        $derivatives = Config::derivatives();
         $arr = \safe_unserialize(is_string($derivatives) ? $derivatives : '');
         if ($arr !== []) {
             $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Filesystem;
 use Piwigo\Users\CurrentUser;
 
 class Plugins
@@ -47,7 +50,7 @@ class Plugins
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
             include_once($file_to_include.'.class.php');
-            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
+            if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                 return instantiate_plugin_maintain($classname, $plugin_id);
             }
         }
@@ -56,7 +59,7 @@ class Plugins
         if (file_exists($file_to_include.'.inc.php')) {
             include_once($file_to_include.'.inc.php');
 
-            if (class_exists($classname) && is_a($classname, \Piwigo\Admin\PluginMaintain::class, true)) {
+            if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                 return instantiate_plugin_maintain($classname, $plugin_id);
             }
         }
@@ -69,12 +72,11 @@ class Plugins
      * @param string $action
      */
     /**
- * @param array<mixed> $options
- * @return mixed
- */
+     * @param array<mixed> $options
+     */
     public function perform_action(string $action, string $plugin_id, array $options = []): mixed
     {
-        if (!\Piwigo\Config\Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -335,7 +337,7 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
 
             // IMPORTANT SECURITY !
-            $plugin = array_map(fn ($v) => is_string($v) ? htmlspecialchars($v) : $v, $plugin);
+            $plugin = array_map(fn (bool|string $v): string|bool => is_string($v) ? htmlspecialchars($v) : $v, $plugin);
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;
@@ -373,7 +375,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Config\Config::pemPluginsCategory() .'&format=php';
+        $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
         if (fetchRemote($url, $result) and $pem_versions = safe_unserialize($result)) {
             $i = 0;
 
@@ -437,7 +439,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = [
-          'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
+          'category_id' => Config::pemPluginsCategory(),
           'format' => 'php',
           'last_revision_only' => 'true',
           'version' => implode(',', $versions_to_check),
@@ -495,7 +497,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         // Retrieve PEM plugins infos
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = [
-          'category_id' => \Piwigo\Config\Config::pemPluginsCategory(),
+          'category_id' => Config::pemPluginsCategory(),
           'format' => 'php',
           'version' => implode(',', $versions_to_check),
           'extension_include' => implode(',', $plugins_to_check),
@@ -570,7 +572,7 @@ DELETE FROM '. PLUGINS_TABLE .'
      */
     public function extract_plugin_files(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
     {
-        $logger = \Piwigo\Core\LoggerRegistry::current();
+        $logger = LoggerRegistry::current();
 
         if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
             $url = PEM_URL . '/download.php';
@@ -579,7 +581,7 @@ DELETE FROM '. PLUGINS_TABLE .'
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
+            $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
                 if (fetchRemote($url, $handle, $get_data)) {
@@ -648,7 +650,7 @@ DELETE FROM '. PLUGINS_TABLE .'
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            \Piwigo\Core\Filesystem::tryUnlink($path);
+                                            Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_PLUGINS_PATH . 'trash');
                                         }
@@ -674,7 +676,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
 
         if (is_string($archive)) {
-            \Piwigo\Core\Filesystem::tryUnlink($archive);
+            Filesystem::tryUnlink($archive);
         }
         return $status;
     }

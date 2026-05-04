@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
+
 /**
  * Holds information (path, url, dimensions) about a derivative image.
  * A derivative image is constructed from a source image (SrcImage class)
@@ -21,7 +24,7 @@ final class DerivativeImage
      *    or a DerivativeParams object
      * @param SrcImage $src_image the source image of this derivative
      */
-    public function __construct(string|\Piwigo\Image\DerivativeParams $type, public SrcImage $src_image)
+    public function __construct(string|DerivativeParams $type, public readonly SrcImage $src_image)
     {
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
@@ -59,7 +62,7 @@ final class DerivativeImage
      * @param array<mixed>|SrcImage $infos
      * @return string|array<mixed>
      */
-    public static function url(string|\Piwigo\Image\DerivativeParams $type, array|SrcImage $infos): string|array
+    public static function url(string|DerivativeParams $type, array|SrcImage $infos): string|array
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
         $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
@@ -187,9 +190,9 @@ final class DerivativeImage
 
         $rel_path = PWG_DERIVATIVE_DIR.$loc;
 
-        $url_style = \Piwigo\Config\Config::derivativeUrlStyle();
+        $url_style = Config::derivativeUrlStyle();
         if (!$url_style) {
-            $mtime = \Piwigo\Core\Filesystem::tryFileMtime(PHPWG_ROOT_PATH.$rel_path);
+            $mtime = Filesystem::tryFileMtime(PHPWG_ROOT_PATH.$rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
                 $url_style = 2;
@@ -200,10 +203,10 @@ final class DerivativeImage
 
         if ($url_style == 2) {
             $rel_url = 'i';
-            if (\Piwigo\Config\Config::phpExtensionInUrls()) {
+            if (Config::phpExtensionInUrls()) {
                 $rel_url .= '.php';
             }
-            if (\Piwigo\Config\Config::questionMarkInUrls()) {
+            if (Config::questionMarkInUrls()) {
                 $rel_url .= '?';
             }
             $rel_url .= '/'.$loc;
@@ -261,13 +264,11 @@ final class DerivativeImage
         }
         $floatSize = array_map(static fn (int $v): float => (float) $v, $srcSize);
         $result = $this->params->compute_final_size($floatSize);
-        return array_map('intval', $result);
+        return array_map(intval(...), $result);
     }
 
     /**
      * Returns the size as CSS rule.
-     *
-     * @return string
      */
     public function get_size_css(): string
     {
@@ -280,8 +281,6 @@ final class DerivativeImage
 
     /**
      * Returns the size as HTML attributes.
-     *
-     * @return string
      */
     public function get_size_htm(): string
     {
@@ -294,8 +293,6 @@ final class DerivativeImage
 
     /**
      * Returns literal size: $widthx$height.
-     *
-     * @return string
      */
     public function get_size_hr(): string
     {
@@ -332,9 +329,6 @@ final class DerivativeImage
 
     /**
      * Returns the scaled size as HTML attributes.
-     *
-     * @param int $maxw
-     * @return string
      */
     public function get_scaled_size_htm(int $maxw = 9999, int $maxh = 9999): string
     {

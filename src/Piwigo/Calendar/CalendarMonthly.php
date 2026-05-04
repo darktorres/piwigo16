@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -61,7 +63,7 @@ class CalendarMonthly extends CalendarBase
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
         if ($view_type == CAL_VIEW_CALENDAR) {
-            $template = \Piwigo\Template\TemplateRegistry::current();
+            $template = TemplateRegistry::current();
             $tpl_var = [];
             if (count($chronologyDate) == 0) {//case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
@@ -188,10 +190,6 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Returns an array with all the days in a given month.
-     *
-     * @param int $year
-     * @param int $month
-     * @return int
      */
     protected function get_all_days_in_month(int $year, int $month): int
     {
@@ -345,7 +343,7 @@ class CalendarMonthly extends CalendarBase
                 false
             );
 
-            $monthLabelRaw = isset($monthLabels[$month]) ? $monthLabels[$month] : null;
+            $monthLabelRaw = $monthLabels[$month] ?? null;
             $monthLabel = is_string($monthLabelRaw) ? $monthLabelRaw : (string) $month;
 
             if (!isset($tpl_var['calendar_bars']) || !is_array($tpl_var['calendar_bars'])) {
@@ -436,7 +434,7 @@ class CalendarMonthly extends CalendarBase
             $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
             $wday_labels = $dayLabels;
 
-            if ('monday' == \Piwigo\Config\Config::weekStartsOn()) {
+            if ('monday' == Config::weekStartsOn()) {
                 if ($first_day_dow == 0) {
                     $first_day_dow = 6;
                 } else {

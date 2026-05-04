@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Template\TemplateRegistry;
+
 class CheckIntegrity
 {
     /** @var array<string> */
@@ -28,7 +32,7 @@ class CheckIntegrity
     public function check(): void
     {
         // Ignore list
-        $conf_c13y_ignore = unserialize(\Piwigo\Config\Config::c13yIgnore() ?? '');
+        $conf_c13y_ignore = unserialize(Config::c13yIgnore() ?? '');
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
@@ -36,7 +40,7 @@ class CheckIntegrity
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
-            $this->ignore_list = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $conf_c13y_ignore['list']);
+            $this->ignore_list = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $conf_c13y_ignore['list']);
         } else {
             $ignore_list_changed = true;
             $this->ignore_list = [];
@@ -89,14 +93,14 @@ class CheckIntegrity
             }
 
             if ($corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                PageState::current()->addInfo(l10n_dec(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
                 ));
             }
             if ($not_corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addError(l10n_dec(
+                PageState::current()->addError(l10n_dec(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
@@ -115,7 +119,7 @@ class CheckIntegrity
                 }
 
                 if ($ignored_count > 0) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n_dec(
+                    PageState::current()->addInfo(l10n_dec(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count
@@ -143,7 +147,7 @@ class CheckIntegrity
      */
     public function display(): void
     {
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
 
         $check_automatic_correction = false;
         $submit_automatic_correction = false;

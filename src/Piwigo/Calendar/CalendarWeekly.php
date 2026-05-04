@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Piwigo\Config\Config;
+
 /**
  * @package functions\calendar
  */
-
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
  */
@@ -18,7 +19,7 @@ class CalendarWeekly extends CalendarBase
      * @param string $inner_sql
      */
     #[\Override]
-    public function initialize($inner_sql): void
+    public function initialize(mixed $inner_sql): void
     {
         parent::initialize($inner_sql);
         $lang = &$GLOBALS['lang'];
@@ -46,7 +47,7 @@ class CalendarWeekly extends CalendarBase
          ];
         //Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         //WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
-        if ('monday' == \Piwigo\Config\Config::weekStartsOn()) {
+        if ('monday' == Config::weekStartsOn()) {
             $this->calendar_levels[CWEEK]['sql'] = pwg_db_get_week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = pwg_db_get_weekday($this->date_field);
             $dayLabelsArr = $this->calendar_levels[CDAY]['labels'];

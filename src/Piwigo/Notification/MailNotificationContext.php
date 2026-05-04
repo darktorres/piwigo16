@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Piwigo\Config\Config;
 use Piwigo\Template\Template;
 
 /**
@@ -42,8 +43,8 @@ final class MailNotificationContext
     private function __construct()
     {
         $this->startTime = get_moment();
-        $timeout = intval(ini_get('max_execution_time')) * \Piwigo\Config\Config::nbmMaxTreatmentTimeoutPercent();
-        $this->sendmailTimeout = $timeout > 0 ? $timeout : \Piwigo\Config\Config::nbmTreatmentTimeoutDefault();
+        $timeout = intval(ini_get('max_execution_time')) * Config::nbmMaxTreatmentTimeoutPercent();
+        $this->sendmailTimeout = $timeout > 0 ? $timeout : Config::nbmTreatmentTimeoutDefault();
     }
 
     public static function init(): self

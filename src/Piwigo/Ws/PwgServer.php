@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Config\Config;
+
 /**
- * @phpstan-type WsParam array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
- * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParam>, include: string, options: array<string, mixed>}
+ * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
+ * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParamDef>, include: string, options: array<string, mixed>}
  */
 class PwgServer
 {
     private ?PwgRequestHandler $_requestHandler = null;
     private string $_requestFormat = '';
-    private ?\Piwigo\Ws\Encoder\PwgResponseEncoder $_responseEncoder = null;
+    private ?PwgResponseEncoder $_responseEncoder = null;
     private string $_responseFormat = '';
 
     /** @var array<string, WsMethod> */
@@ -45,7 +49,7 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setEncoder(string $responseFormat, ?\Piwigo\Ws\Encoder\PwgResponseEncoder $encoder): void
+    public function setEncoder(string $responseFormat, ?PwgResponseEncoder $encoder): void
     {
         $this->_responseEncoder = $encoder;
         $this->_responseFormat = $responseFormat;
@@ -65,7 +69,7 @@ class PwgServer
             echo('Cannot process your request. Unknown response format.
 Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFormat."\n");
             var_export($this);
-            throw new \Piwigo\Exception\ConfigException('Cannot process request: unknown response format');
+            throw new ConfigException('Cannot process request: unknown response format');
         }
 
         $handler = $this->_requestHandler;
@@ -77,11 +81,11 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         // add reflection methods
         $this->addMethod(
             'reflection.getMethodList',
-            [self::class, 'ws_getMethodList']
+            self::ws_getMethodList(...)
         );
         $this->addMethod(
             'reflection.getMethodDetails',
-            [self::class, 'ws_getMethodDetails'],
+            self::ws_getMethodDetails(...),
             ['methodName']
         );
 
@@ -132,7 +136,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             $params = $keyed;
         }
 
-        /** @var array<string, WsParam> $signature */
+        /** @var array<string, WsParamDef> $signature */
         $signature = [];
         foreach ($params as $param => $data) {
             $param = (string) $param;
@@ -177,7 +181,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['description'] : '';
     }
 
-    /** @return array<string, WsParam> */
+    /** @return array<string, WsParamDef> */
     public function getMethodSignature(string $methodName): array
     {
         return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['signature'] : [];
@@ -279,7 +283,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
      *  a PwgError object if the method is not found)
      * @param string $methodName the name of the method to invoke
      * @param array<mixed> $params array of parameters to pass to the invoked method
-     * @return mixed
      */
     public function invoke(string $methodName, array $params): mixed
     {
@@ -456,7 +459,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             defined('PWG_API_KEY_REQUEST')
             or (isset($_SESSION['connected_with']) and 'ws_session_login_api_key' === $_SESSION['connected_with'])
         ) {
-            if (in_array($_REQUEST['method'], \Piwigo\Config\Config::apiKeyForbiddenMethods())) {
+            if (in_array($_REQUEST['method'], Config::apiKeyForbiddenMethods())) {
                 return false;
             }
         }

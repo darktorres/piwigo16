@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 
@@ -128,9 +130,9 @@ class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             case 'object':
-                if ($data instanceof \Piwigo\Ws\PwgNamedArray) {
+                if ($data instanceof PwgNamedArray) {
                     $this->encode_array($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
-                } elseif ($data instanceof \Piwigo\Ws\PwgNamedStruct) {
+                } elseif ($data instanceof PwgNamedStruct) {
                     $content = $data->getContent();
                     $this->encode_struct(is_array($content) ? $content : [], false, $data->getXmlAttributes());
                 } else {

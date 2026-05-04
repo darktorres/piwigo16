@@ -417,10 +417,10 @@ function get_languages(): array
     }
 
     // Fallback for pre-boot context (install, early bootstrap)
-    $query = 'SELECT id, name FROM ' . LANGUAGES_TABLE . ' ORDER BY name ASC;';
-    $result = pwg_query($query);
     $languages = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Db\DbConnection::build()
+        ->executeQuery('SELECT id, name FROM ' . LANGUAGES_TABLE . ' ORDER BY name ASC')
+        ->fetchAllAssociative() as $row) {
         $lang_id = is_scalar($row['id']) ? (string) $row['id'] : '';
         $lang_name = is_scalar($row['name']) ? (string) $row['name'] : '';
         if ($lang_id !== '' && is_dir(PHPWG_ROOT_PATH.'language/'.$lang_id)) {
@@ -1334,18 +1334,22 @@ function get_webmaster_mail_address(): string
  */
 function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_no_result = true): void
 {
-    $query = '
-SELECT param, value
- FROM '.CONFIG_TABLE.'
- '.(!empty($condition) ? 'WHERE '.$condition : '').'
-;';
-    $result = pwg_query($query);
+    $sql = 'SELECT param, value FROM ' . CONFIG_TABLE .
+        (!empty($condition) ? ' WHERE ' . $condition : '');
 
-    if ((pwg_db_num_rows($result) == 0) and !empty($condition) and $die_on_condition_with_no_result) {
+    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
+        $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    } else {
+        $conn = \Piwigo\Db\DbConnection::build();
+    }
+
+    $rows = $conn->executeQuery($sql)->fetchAllAssociative();
+
+    if (count($rows) === 0 && !empty($condition) && $die_on_condition_with_no_result) {
         fatal_error('No configuration data');
     }
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($rows as $row) {
         $val = $row['value'] ?? '';
         // If the field is true or false, the variable is transformed into a boolean value.
         if ($val == 'true') {
@@ -1405,9 +1409,10 @@ function conf_update_param(string $param, mixed $value, bool $updateGlobal = fal
             [$param, $dbValue, $dbValue]
         );
     } else {
-        pwg_query('INSERT INTO ' . CONFIG_TABLE . ' (param, value)' .
-            " VALUES('" . $param . "', '" . $dbValue . "')" .
-            " ON DUPLICATE KEY UPDATE value = '" . $dbValue . "'");
+        \Piwigo\Db\DbConnection::build()->executeStatement(
+            'INSERT INTO ' . CONFIG_TABLE . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+            [$param, $dbValue, $dbValue]
+        );
     }
 
     if ($updateGlobal) {
@@ -1437,7 +1442,10 @@ function conf_delete_param($params): void
            ->setParameter('params', $params, \Doctrine\DBAL\ArrayParameterType::STRING);
         $qb->executeStatement();
     } else {
-        pwg_query("DELETE FROM " . CONFIG_TABLE . " WHERE param IN('" . implode("','", $params) . "')");
+        $qb = \Piwigo\Db\DbConnection::build()->createQueryBuilder()->delete(CONFIG_TABLE);
+        $qb->where($qb->expr()->in('param', ':params'))
+           ->setParameter('params', $params, \Doctrine\DBAL\ArrayParameterType::STRING);
+        $qb->executeStatement();
     }
 
     foreach ($params as $param) {

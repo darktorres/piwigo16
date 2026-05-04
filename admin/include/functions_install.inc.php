@@ -29,6 +29,12 @@ use Piwigo\Admin\Themes;
  */
 function execute_sqlfile(string $filepath, string $replaced, string $replacing, string $dblayer): void
 {
+    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
+        $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    } else {
+        $conn = \Piwigo\Db\DbConnection::build();
+    }
+
     $sql_lines = file($filepath) ?: [];
     $query = '';
     foreach ($sql_lines as $sql_line) {
@@ -47,7 +53,7 @@ function execute_sqlfile(string $filepath, string $replaced, string $replacing, 
                     $query = $matches[1].' DEFAULT CHARACTER SET utf8'.';';
                 }
             }
-            pwg_query($query);
+            $conn->executeStatement($query);
             $query = '';
         }
     }

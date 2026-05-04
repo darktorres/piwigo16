@@ -6,6 +6,7 @@ global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\Logger;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
 
@@ -397,30 +398,14 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
     $timing[$k] = '';
 }
 
-include_once(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
 include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 
-try {
-    pwg_db_connect(
-        \Piwigo\Config\Config::dbHost(),
-        \Piwigo\Config\Config::dbUser(),
-        \Piwigo\Config\Config::dbPassword(),
-        \Piwigo\Config\Config::dbName()
-    );
-} catch (Exception $e) {
-    $logger->error($e->getMessage());
-}
-pwg_db_check_charset();
+$conn = DbConnection::build();
 
-$query = '
-SELECT param, value
-  FROM '.$prefixeTable.'config
-  WHERE param IN (\'derivatives\', \'disabled_derivatives\')
-;';
-
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach ($conn->executeQuery(
+    'SELECT param, value FROM ' . $prefixeTable . "config WHERE param IN ('derivatives', 'disabled_derivatives')"
+)->fetchAllAssociative() as $row) {
     if (is_string($row['param'] ?? null)) {
         \Piwigo\Config\Config::override($row['param'], $row['value']);
     }
@@ -476,7 +461,8 @@ SELECT *
   WHERE path=\''.addslashes($ctx->srcLocation).'\'
 ;';
 
-        if (($row = pwg_db_fetch_assoc(pwg_query($query)))) {
+        $row = $conn->executeQuery($query)->fetchAssociative() ?: null;
+        if ($row !== null) {
             if (isset($row['width'])) {
                 $ctx->originalSize = [is_numeric($row['width']) ? (int)$row['width'] : 0, is_numeric($row['height']) ? (int)$row['height'] : 0];
             }
@@ -485,10 +471,10 @@ SELECT *
             if (!isset($row['rotation'])) {
                 $ctx->rotationAngle = PwgImage::get_rotation_angle($ctx->srcPath);
 
-                single_update(
-                    $prefixeTable.'images',
-                    array('rotation' => PwgImage::get_rotation_code_from_angle($ctx->rotationAngle ?? 0)),
-                    array('id' => $row['id'])
+                $conn->update(
+                    $prefixeTable . 'images',
+                    ['rotation' => PwgImage::get_rotation_code_from_angle($ctx->rotationAngle ?? 0)],
+                    ['id' => $row['id']]
                 );
             } else {
                 $ctx->rotationAngle = PwgImage::get_rotation_angle_from_code((int) $row['rotation']);
@@ -503,7 +489,7 @@ SELECT *
 } else {
     $ctx->rotationAngle = 0;
 }
-pwg_db_close();
+$conn->close();
 
 if (!try_switch_source($params, $src_mtime, $ctx) && $params->type == IMG_CUSTOM) {
     $sharpen = 0;

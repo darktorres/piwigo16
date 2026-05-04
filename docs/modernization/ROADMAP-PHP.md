@@ -1134,19 +1134,28 @@ vendor/bin/phpstan analyse   # 0 errors at level 9
 
 ## #18 — i18n format migration
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** L
+**Status:** ✅ Complete &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
 Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/MO. Lazy-loaded via `Piwigo\Lang\Translator` service. Plurals supported via `ngettext()`. Translator-friendly: PO files are the standard input format for Crowdin, Weblate, Pootle, and other collaboration platforms.
 
-### Current state
+### What was done
 
-- **324 `.lang.php` files** across **73 locales** in `language/<locale>/{common,admin,upgrade}.lang.php` (down from 388 — ~16% reduction, likely from dropped `upgrade.lang.php` files for pre-16 versions).
-- Format: `$lang['key_name'] = 'translated value';`. No plural handling beyond ad-hoc `if ($n == 1)` in callers.
-- Active locale picked via `include()` of the right `.lang.php` files in `common.inc.php`.
-- Free function `l10n($key)` looks up from the global `$lang` array.
-- No tooling integration with translation platforms; translators submit PHP files.
+- **322 PO files generated** across 72 locales (2 empty PHP files skipped). All 324 `.lang.php` files deleted immediately after parity verification.
+- **Packages added:** `gettext/gettext` (PO parser) + `gettext/translator` (pure-PHP runtime — no `ext-gettext` required).
+- **`src/Piwigo/Lang/Translator`** — new service wrapping `Gettext\Translator`; handles plural forms via proper `ngettext()` with per-locale plural-form rules; mirrors strings into `$GLOBALS['lang']` for plugin/theme backward compat.
+- **`Lang::t()`** delegates to `Translator::get()->translate()`.
+- **`l10n_dec()`** uses `Translator::get()->plural()` — proper ngettext plural evaluation replaces the hand-rolled `zero_plural` flag logic; supports all 6 plural-form tiers across 72 locales (Arabic, Slavic, Romance, etc.).
+- **`load_language()`** loads `.po` via `Translator::load()`; falls back to PHP `include` for plugins/themes that don't ship PO files yet.
+- **`tools/i18n/` suite:**
+  - `extract-pairs.php` — scans codebase for static `l10n_dec()` singular/plural pairs
+  - `plural-forms.php` — plural-form rule database for all 72 Piwigo locales
+  - `php-to-po-fn.php` — converts one `.lang.php` to PO string; known pairs become `msgid_plural` entries
+  - `convert-all.php` — batch runner
+  - `verify-parity.php` — confirms every PHP key is present in the generated PO
+- Parity verified: 322 file pairs, 0 missing keys.
+- PHPStan level 9: **0 errors**.
 
 ### Steps
 

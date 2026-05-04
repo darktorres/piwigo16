@@ -48,7 +48,7 @@ final class GroupRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**
@@ -120,7 +120,7 @@ final class GroupRepository extends AbstractRepository
              WHERE ug.group_id = ?",
             [$groupId]
         )->fetchFirstColumn();
-        return array_map('strval', $rows);
+        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }
 
     /** Return the name of a group by id, or null if not found. */
@@ -201,7 +201,7 @@ final class GroupRepository extends AbstractRepository
             ->setParameter('pattern', '%' . $nameLike . '%')
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map('intval', $rows);
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**

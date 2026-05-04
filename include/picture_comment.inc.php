@@ -87,14 +87,13 @@ if ($page['show_comments']) {
 
     $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
     // number of comments for this picture
-    $query = '
-SELECT
-    COUNT(*) AS nb_comments
-  FROM '.COMMENTS_TABLE.'
-  WHERE image_id = '.$imageId
-    .$validated_clause.'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery(
+            'SELECT COUNT(*) AS nb_comments FROM ' . COMMENTS_TABLE .
+            ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
+            [$imageId]
+        )
+        ->fetchAssociative() ?: [];
 
     // navigation bar creation
     if (!isset($page['start']) || !is_numeric($page['start'])) {
@@ -153,9 +152,11 @@ SELECT
   ORDER BY com.date '.$comments_order.'
   LIMIT '.\Piwigo\Config\Config::nbCommentPage().' OFFSET '.$startOffset.'
 ;';
-        $result = pwg_query($query);
+        $commentRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)
+            ->fetchAllAssociative();
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach ($commentRows as $row) {
             if ($row['author'] == 'guest') {
                 $row['author'] = l10n('guest');
             }

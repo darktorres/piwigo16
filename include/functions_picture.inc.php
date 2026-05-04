@@ -109,7 +109,7 @@ function increase_image_visit_counter($image_id): void
 {
     // avoiding auto update of "lastmodified" field
     \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-        ->incrementHit(is_numeric($image_id) ? (int) $image_id : 0);
+        ->incrementHit($image_id);
 }
 
 /**

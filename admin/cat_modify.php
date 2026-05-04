@@ -110,7 +110,7 @@ foreach (['comment','dir','site_id', 'id_uppercat'] as $nullable) {
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
 $category['has_images'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-    ->hasCategoryImages(is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0);
+    ->hasCategoryImages((int) $_GET['cat_id']);
 
 // number of sub-categories
 $subcat_ids = get_subcat_ids([$category['id']]);

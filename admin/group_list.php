@@ -108,11 +108,12 @@ $toggle_is_default_url     = $admin_url.'group_list&amp;toggle_is_default=';
 $group_counter = 0;
 
 foreach ($groupRepo->findAllOrdered() as $row) {
+    $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
     $members = $groupRepo->findMemberUsernamesByGroupId(
         $userFields['username'],
         $userFields['id'],
         USERS_TABLE,
-        (int) $row['id']
+        is_numeric($row['id']) ? (int) $row['id'] : 0
     );
     $template->append(
         'groups',
@@ -123,10 +124,10 @@ foreach ($groupRepo->findAllOrdered() as $row) {
         'NB_MEMBERS' => count($members),
         'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
         'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),
-        'U_DELETE' => $del_url.$row['id'].'&amp;pwg_token='.get_pwg_token(),
-        'U_PERM' => $perm_url.$row['id'],
-        'U_USERS' => $users_url.$row['id'],
-        'U_ISDEFAULT' => $toggle_is_default_url.$row['id'].'&amp;pwg_token='.get_pwg_token(),
+        'U_DELETE' => $del_url.$row_id_str.'&amp;pwg_token='.get_pwg_token(),
+        'U_PERM' => $perm_url.$row_id_str,
+        'U_USERS' => $users_url.$row_id_str,
+        'U_ISDEFAULT' => $toggle_is_default_url.$row_id_str.'&amp;pwg_token='.get_pwg_token(),
         ]
     );
 

@@ -161,9 +161,8 @@ SELECT
 
     // LIMIT '.\Piwigo\Config\Config::nbLogsPage().' OFFSET '.$page['start'].'
 
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $data[] = $row;
     }
 
@@ -230,14 +229,15 @@ SELECT
     date ASC,
     hour ASC
 ;';
-    $result = pwg_query($query);
+    $historyRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative();
 
     $need_update = [];
 
     $is_first = true;
     $first_time_key = null;
 
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($historyRows as $row) {
         $time_keys = [
           substr((string) $row['date'], 0, 4), //yyyy
           substr((string) $row['date'], 0, 7), //yyyy-mm
@@ -309,8 +309,8 @@ SELECT *
       )
     )
 ;';
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $row) {
             $key = sprintf('%4u', $row['year']);
             if (isset($row['month'])) {
                 $key .= sprintf('-%02u', $row['month']);

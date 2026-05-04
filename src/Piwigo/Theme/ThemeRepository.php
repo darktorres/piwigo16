@@ -60,7 +60,7 @@ final class ThemeRepository extends AbstractRepository
             ->setParameter('theme', $theme)
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map('intval', $rows);
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -108,7 +108,7 @@ final class ThemeRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**
@@ -125,7 +125,7 @@ final class ThemeRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(string) $row['id']] = (string) $row['name'];
+            $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
         return $result;
     }

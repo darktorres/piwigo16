@@ -336,10 +336,9 @@ SELECT id
 ';
         }
     }
-    $query .= '
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    $query .= ';';
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $cat_ids[] = $row['id'];
     }
 

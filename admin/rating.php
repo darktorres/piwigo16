@@ -221,14 +221,15 @@ foreach ($images as $image) {
      ];
 
     foreach ($all_rates as $row) {
-        $user_id = (int)$row['user_id'];
+        $user_id = is_numeric($row['user_id']) ? (int)$row['user_id'] : 0;
         if (isset($users[$user_id])) {
             $user_rate = $users[$user_id];
         } else {
             $user_rate = '? '. $user_id;
         }
-        if (strlen((string) $row['anonymous_id']) > 0) {
-            $user_rate .= '('.$row['anonymous_id'].')';
+        $anon_id_str = is_scalar($row['anonymous_id']) ? (string) $row['anonymous_id'] : '';
+        if (strlen($anon_id_str) > 0) {
+            $user_rate .= '('.$anon_id_str.')';
         }
 
         $row['USER'] = $user_rate;

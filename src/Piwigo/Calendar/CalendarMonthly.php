@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -228,9 +230,8 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY '.pwg_db_get_year($this->date_field).' DESC, '.pwg_db_get_month($this->date_field).' ASC';
 
-        $result = pwg_query($query);
         $items = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_string($periodRaw) ? $periodRaw : (string) $periodRaw;
             $y = substr($periodStr, 0, 4);
@@ -305,9 +306,8 @@ class CalendarMonthly extends CalendarBase
     GROUP BY period
     ORDER BY period ASC';
 
-        $result = pwg_query($query);
         $items = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_string($periodRaw) ? $periodRaw : (string) $periodRaw;
             $m = (int) substr($periodStr, 0, 2);
@@ -381,8 +381,7 @@ class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $day_counts = [];
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? 0;
             $d = is_int($periodRaw) ? $periodRaw : (is_numeric($periodRaw) ? (int) $periodRaw : 0);
             $day_counts[$d] = $row['count'];
@@ -408,7 +407,7 @@ class CalendarMonthly extends CalendarBase
                 $page['chronology_date'] = $cdTmp2;
             }
 
-            $row = pwg_db_fetch_assoc(pwg_query($query));
+            $row = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative() ?: null;
             if ($row === null) {
                 continue;
             }

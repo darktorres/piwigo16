@@ -212,8 +212,8 @@ final class UserRepository extends AbstractRepository
              ORDER BY registration_date'
         )->fetchAllAssociative();
         return array_map(fn (array $r): array => [
-            'registration_month' => (int) $r['registration_month'],
-            'registration_year'  => (int) $r['registration_year'],
+            'registration_month' => is_numeric($r['registration_month']) ? (int) $r['registration_month'] : 0,
+            'registration_year'  => is_numeric($r['registration_year']) ? (int) $r['registration_year'] : 0,
         ], $rows);
     }
 
@@ -234,7 +234,7 @@ final class UserRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(string) $row['status']] = (int) $row['nb_users_of'];
+            $result[is_scalar($row['status']) ? (string) $row['status'] : ''] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
         }
         return $result;
     }
@@ -256,7 +256,7 @@ final class UserRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(int) $row['level']] = (int) $row['nb_users_of'];
+            $result[is_numeric($row['level']) ? (int) $row['level'] : 0] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
         }
         return $result;
     }
@@ -432,7 +432,7 @@ final class UserRepository extends AbstractRepository
         )->fetchFirstColumn();
         $result = [];
         foreach ($rows as $id) {
-            $result[(string) $id] = null;
+            $result[is_scalar($id) ? (string) $id : ''] = null;
         }
         return $result;
     }
@@ -450,7 +450,7 @@ final class UserRepository extends AbstractRepository
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(int) $row['id']] = (string) $row['username'];
+            $result[is_numeric($row['id']) ? (int) $row['id'] : 0] = is_scalar($row['username']) ? (string) $row['username'] : '';
         }
         return $result;
     }
@@ -539,7 +539,7 @@ final class UserRepository extends AbstractRepository
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(string) $row['id']] = (string) $row['username'];
+            $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = is_scalar($row['username']) ? (string) $row['username'] : '';
         }
         return $result;
     }
@@ -593,7 +593,7 @@ final class UserRepository extends AbstractRepository
         $rows = $this->conn->executeQuery(
             "SELECT $usernameField FROM $usersTable"
         )->fetchFirstColumn();
-        return array_map('strval', $rows);
+        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }
 
     /**
@@ -610,7 +610,7 @@ final class UserRepository extends AbstractRepository
             ->orderBy('id', 'ASC')
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map('intval', $rows);
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -678,7 +678,13 @@ final class UserRepository extends AbstractRepository
             "SELECT $usernameField AS username, $passwordField AS password FROM $usersTable WHERE $idField = ?",
             [$userId]
         )->fetchAssociative();
-        return $row !== false ? $row : null;
+        if ($row === false) {
+            return null;
+        }
+        return [
+            'username' => is_string($row['username']) ? $row['username'] : '',
+            'password' => is_string($row['password']) ? $row['password'] : '',
+        ];
     }
 
     /**

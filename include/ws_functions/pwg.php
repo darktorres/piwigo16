@@ -73,10 +73,10 @@ function ws_directory_size_bytes(string $path): ?int
         return [];
     }
 
-    $image_count_int = is_numeric($image_count) ? (int) $image_count : 0;
+    $image_count_int = $image_count;
     $start_id = is_numeric($params['prev_page']) ? (int) $params['prev_page'] : 0;
     if ($start_id <= 0) {
-        $start_id = is_numeric($max_id) ? (int) $max_id : 0;
+        $start_id = $max_id;
     }
 
     $uid = '&b='.time();
@@ -103,12 +103,14 @@ SELECT id, path, representative_ext, width, height, rotation
   LIMIT '. $qlimit .'
 ;';
 
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
     $urls = [];
     do {
-        $result = pwg_query(str_replace('start_id', (string) $start_id, $query_model));
-        $is_last = pwg_db_num_rows($result) < $qlimit;
+        $rows = $conn->executeQuery(str_replace('start_id', (string) $start_id, $query_model))
+            ->fetchAllAssociative();
+        $is_last = count($rows) < $qlimit;
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach ($rows as $row) {
             $start_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $src_image = new SrcImage($row);
             if ($src_image->is_mimetype()) {

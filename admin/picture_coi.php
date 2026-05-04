@@ -76,7 +76,7 @@ $tpl_var = [
   ];
 
 if (!empty($row['coi'])) {
-    $coi = (string)$row['coi'];
+    $coi = is_scalar($row['coi']) ? (string)$row['coi'] : '';
     $tpl_var['coi'] = [
       'l' => char_to_fraction($coi[0]),
       't' => char_to_fraction($coi[1]),

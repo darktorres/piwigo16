@@ -1089,11 +1089,11 @@ function get_pwg_themes(bool $show_mobile = false): array
             if (!$show_mobile) {
                 continue;
             }
-            $row['name'] .= ' ('.l10n('Mobile').')';
+            $row['name'] = (is_scalar($row['name']) ? (string) $row['name'] : '').(' ('.l10n('Mobile').')');
         }
-        $theme_id = (string) $row['id'];
+        $theme_id = is_scalar($row['id']) ? (string) $row['id'] : '';
         if (check_theme_installed($theme_id)) {
-            $themes[ $theme_id ] = (string) $row['name'];
+            $themes[ $theme_id ] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
     }
 
@@ -2167,14 +2167,11 @@ function get_nb_available_comments(): int
             true
         );
 
-        $query = '
-SELECT COUNT(DISTINCT(com.id))
-  FROM '.IMAGE_CATEGORY_TABLE.' AS ic
-    INNER JOIN '.COMMENTS_TABLE.' AS com
-    ON ic.image_id = com.image_id
-  WHERE '.implode('
-    AND ', $where);
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic' .
+            ' INNER JOIN ' . COMMENTS_TABLE . ' AS com ON ic.image_id = com.image_id' .
+            ' WHERE ' . implode(' AND ', $where);
+        $count = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchOne();
         $nb = is_numeric($count) ? (int) $count : 0;
 
         single_update(
@@ -2724,15 +2721,16 @@ function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|st
         }
     }
 
-    $query = '
-INSERT IGNORE
-  INTO '.CONFIG_TABLE.'
-  SET param="'.$token_name.'_running"
-    , value="'.$exec_id.'-'.time().'"
-;';
-    pwg_query($query);
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $conn->executeStatement(
+        'INSERT IGNORE INTO ' . CONFIG_TABLE . ' SET param=?, value=?',
+        [$token_name . '_running', $exec_id . '-' . time()]
+    );
 
-    [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "'.$token_name.'_running"')) ?? [null];
+    $running_exec = $conn->executeQuery(
+        'SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = ?',
+        [$token_name . '_running']
+    )->fetchOne();
     list($running_exec_id, ) = explode('-', (string) $running_exec);
 
     if ($running_exec_id != $exec_id) {
@@ -2746,15 +2744,14 @@ INSERT IGNORE
 
 function pwg_unique_exec_is_running(string $token_name): bool
 {
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.CONFIG_TABLE.'
-  WHERE param = "'.$token_name.'_running"
-;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $counter = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery(
+            'SELECT COUNT(*) FROM ' . CONFIG_TABLE . ' WHERE param = ?',
+            [$token_name . '_running']
+        )
+        ->fetchOne();
 
-    return $counter > 0;
+    return (int) $counter > 0;
 }
 
 function pwg_unique_exec_ends(string $token_name): void

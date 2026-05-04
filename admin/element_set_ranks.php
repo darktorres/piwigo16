@@ -129,7 +129,7 @@ $template->set_filenames(
 $base_url = get_root_url().'admin.php';
 
 $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-    ->findCategoryById(is_numeric($page['category_id']) ? (int) $page['category_id'] : 0);
+    ->findCategoryById((int) $page['category_id']);
 
 if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC')) {
     $image_order_choice = 'rank';
@@ -139,7 +139,7 @@ if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['
 
 // Navigation path
 $navigation = get_cat_display_name_cache(
-    (string)($category['uppercats'] ?? ''),
+    is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '',
     get_root_url().'admin.php?page=album-'
 );
 
@@ -155,7 +155,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 $imgRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-    ->findByCategoryIdOrdered(is_numeric($page['category_id']) ? (int) $page['category_id'] : 0);
+    ->findByCategoryIdOrdered((int) $page['category_id']);
 if (count($imgRows) > 0) {
     // template thumbnail initialization
     $current_rank = 1;
@@ -166,7 +166,7 @@ if (count($imgRows) > 0) {
         if (!empty($row['name'])) {
             $thumbnail_name = $row['name'];
         } else {
-            $file_wo_ext = get_filename_wo_extension((string)$row['file']);
+            $file_wo_ext = get_filename_wo_extension(is_scalar($row['file']) ? (string)$row['file'] : '');
             $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
         }
         $current_rank++;
@@ -185,7 +185,7 @@ if (count($imgRows) > 0) {
 // image order management
 $template->assign('image_order_options', $sort_fields);
 
-$image_order = explode(',', (string)($category['image_order'] ?? ''));
+$image_order = explode(',', is_scalar($category['image_order'] ?? null) ? (string) $category['image_order'] : '');
 
 for ($i = 0; $i < 3; $i++) { // 3 fields
     if (isset($image_order[$i])) {

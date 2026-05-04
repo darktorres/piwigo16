@@ -858,13 +858,13 @@ final class CategoryRepository extends AbstractRepository
         if ($ids === []) {
             return [];
         }
-        $ids = array_map('intval', $ids);
+        $ids = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
         $qb = $this->conn->createQueryBuilder()
             ->select('uppercats')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map('strval', $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $qb->executeQuery()->fetchFirstColumn());
     }
 
     /** Record a hit on an old permalink entry. */

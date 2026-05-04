@@ -68,7 +68,7 @@ final class NotificationRepository extends AbstractRepository
             ->setParameter('key', $key)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**

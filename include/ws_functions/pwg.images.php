@@ -673,7 +673,7 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
             }
 
             $name_raw = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
-            $image['name'] = strip_tags(is_string($name_raw) ? $name_raw : (string) $name_raw);
+            $image['name'] = strip_tags(is_string($name_raw) ? $name_raw : (is_scalar($name_raw) ? (string) $name_raw : ''));
             $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
@@ -1300,13 +1300,10 @@ function ws_images_add(array $params, \Piwigo\Ws\PwgServer $service): PwgError|a
             $where_clause = "file = '".(is_scalar($params['original_filename']) ? (string) $params['original_filename'] : '')."'";
         }
 
-        $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE '. $where_clause .'
-;';
-        [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($counter != 0) {
+        $counter = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ' WHERE ' . $where_clause)
+            ->fetchOne();
+        if ((int) $counter !== 0) {
             return new PwgError(500, 'file already exists');
         }
     }
@@ -1706,17 +1703,16 @@ SELECT
 
         $catRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
         $image_infos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-            ->findById(is_numeric($image_id) ? (int) $image_id : 0);
+            ->findById($image_id);
         $category_infos = ['nb_photos' => $catRepo2->countImagesByCategoryId($p_category_first)];
 
-        $query = '
-SELECT
-    COUNT(*)
-  FROM '.LOUNGE_TABLE.'
-  WHERE category_id = '.$p_category_first.'
-  AND image_id NOT IN (Select image_id from '.IMAGE_CATEGORY_TABLE.')
-;';
-        [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $nb_photos_lounge = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery(
+                'SELECT COUNT(*) FROM ' . LOUNGE_TABLE .
+                ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ')',
+                [$p_category_first]
+            )
+            ->fetchOne();
 
         $category_name = get_cat_display_name_from_id($p_category_first, null);
 
@@ -1731,7 +1727,7 @@ SELECT
           'name' => $image_infos['name'],
           'category' => [
             'id' => $p_category_first,
-            'nb_photos' => (int)($category_infos['nb_photos'] ?? 0) + (is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0),
+            'nb_photos' => (int)$category_infos['nb_photos'] + (is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0),
             'label' => $category_name,
           ],
           'add_status' => $add_status,
@@ -2101,7 +2097,7 @@ function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $serv
     $unique_filenames_db = [];
 
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findAllIdFilename() as $row) {
-        $filename_wo_ext = get_filename_wo_extension((string) ($row['file'] ?? ''));
+        $filename_wo_ext = get_filename_wo_extension(is_scalar($row['file']) ? (string) $row['file'] : '');
         $unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }
 
@@ -2613,7 +2609,7 @@ function ws_images_uploadCompleted(array $params, \Piwigo\Ws\PwgServer $service)
       'moved_from_lounge' => $moved_from_lounge,
       'category' => [
         'id' => $uc_category_id,
-        'nb_photos' => $category_infos['nb_photos'] ?? 0,
+        'nb_photos' => $category_infos['nb_photos'],
         'label' => $category_name,
       ],
     ];

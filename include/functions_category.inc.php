@@ -185,7 +185,7 @@ function get_cat_info(int|string $id): ?array
         }
     }
 
-    $upper_ids = explode(',', (string) $cat['uppercats']);
+    $upper_ids = explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '');
     if (count($upper_ids) == 1) {// no need to make a query for level 1
         $cat['upper_names'] = [
             [
@@ -198,7 +198,7 @@ function get_cat_info(int|string $id): ?array
         $query = '
   SELECT id, name, permalink
     FROM '.CATEGORIES_TABLE.'
-    WHERE id IN ('.$cat['uppercats'].')
+    WHERE id IN ('.(is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '').')
   ;';
         $names = query2array($query, 'id');
 

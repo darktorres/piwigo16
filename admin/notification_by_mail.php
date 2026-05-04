@@ -137,7 +137,7 @@ function insert_new_data_user_mail_notification(): void
 
             \Piwigo\Core\PageState::current()->addInfo(l10n(
                 'User %s [%s] added.',
-                stripslashes((string) $nbm_user['username']),
+                stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''),
                 $nbm_user['mail_address']
             ));
         }
@@ -265,7 +265,7 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                         $return_list[] = (string) $nbm_user['check_key'];
 
                         $last_send = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
-                        $dbnow_str = is_scalar($dbnow) ? (string) $dbnow : null;
+                        $dbnow_str = $dbnow;
                         if (\Piwigo\Config\Config::nbmSendDetailedContent()) {
                             $news = news($last_send, $dbnow_str, false, \Piwigo\Config\Config::nbmSendHtmlMail(), $auth);
                             $exist_data = count($news) > 0;

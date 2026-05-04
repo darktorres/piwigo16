@@ -303,7 +303,7 @@ SELECT id, uppercats, global_rank, status, visible
                 if (!empty($groupAccessRows)) {
                     $granted_grps = [];
                     foreach ($groupAccessRows as $row) {
-                        $cat_id_key = (string) ($row['cat_id'] ?? '');
+                        $cat_id_key = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
                         if (!isset($granted_grps[$cat_id_key])) {
                             $granted_grps[$cat_id_key] = [];
                         }
@@ -320,7 +320,7 @@ SELECT id, uppercats, global_rank, status, visible
                 if (!empty($userAccessRows)) {
                     $granted_users = [];
                     foreach ($userAccessRows as $row) {
-                        $cat_id_key = (string) ($row['cat_id'] ?? '');
+                        $cat_id_key = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
                         if (!isset($granted_users[$cat_id_key])) {
                             $granted_users[$cat_id_key] = [];
                         }
@@ -528,8 +528,8 @@ SELECT id, path
             // find formats for existing photos (already in database)
             foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
                 ->findFormatsByImageIds(array_map('intval', $existing_ids)) as $row) {
-                $row_image_id = (string) ($row['image_id'] ?? '');
-                $row_ext = (string) ($row['ext'] ?? '');
+                $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
+                $row_ext = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
                 if (!isset($db_formats[$row_image_id])) {
                     $db_formats[$row_image_id] = [];
                 }

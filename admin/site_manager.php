@@ -122,18 +122,19 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
 $sites_detail = query2array($query, 'site_id');
 
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->findAll() as $row) {
-    $is_remote = url_is_remote((string)$row['galleries_url']);
+    $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
+    $is_remote = url_is_remote(is_scalar($row['galleries_url']) ? (string)$row['galleries_url'] : '');
     $base_url = PHPWG_ROOT_PATH.'admin.php';
     $base_url .= '?page=site_manager';
-    $base_url .= '&amp;site='.$row['id'];
+    $base_url .= '&amp;site='.$row_id_str;
     $base_url .= '&amp;pwg_token='.get_pwg_token();
     $base_url .= '&amp;action=';
 
     $update_url = PHPWG_ROOT_PATH.'admin.php';
     $update_url .= '?page=site_update';
-    $update_url .= '&amp;site='.$row['id'];
+    $update_url .= '&amp;site='.$row_id_str;
 
-    $site_id = (int)$row['id'];
+    $site_id = is_numeric($row['id']) ? (int)$row['id'] : 0;
     $tpl_var =
       [
         'NAME' => $row['galleries_url'],

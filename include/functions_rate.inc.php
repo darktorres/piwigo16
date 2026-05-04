@@ -92,8 +92,8 @@ function update_rating_score(int|false $element_id = false): array
     $by_item = [];
 
     foreach ($rateRepo->getSumsByElement() as $row) {
-        $all_rates_count += (int) $row['rcount'];
-        $all_rates_avg += (float) $row['rsum'];
+        $all_rates_count += is_numeric($row['rcount']) ? (int) $row['rcount'] : 0;
+        $all_rates_avg += is_numeric($row['rsum']) ? (float) $row['rsum'] : 0.0;
         $element_id_key = is_numeric($row['element_id']) ? (int) $row['element_id'] : (is_scalar($row['element_id']) ? (string) $row['element_id'] : 0);
         $by_item[$element_id_key] = $row;
     }
@@ -105,8 +105,8 @@ function update_rating_score(int|false $element_id = false): array
 
     $updates = [];
     foreach ($by_item as $id => $rate_summary) {
-        $rsum = (float) $rate_summary['rsum'];
-        $rcount = (int) $rate_summary['rcount'];
+        $rsum = is_numeric($rate_summary['rsum']) ? (float) $rate_summary['rsum'] : 0.0;
+        $rcount = is_numeric($rate_summary['rcount']) ? (int) $rate_summary['rcount'] : 0;
         $score = ($item_ratecount_avg * $all_rates_avg + $rsum) / ($item_ratecount_avg + $rcount);
         $score = round($score, 2);
         if ($id == $element_id) {

@@ -916,9 +916,9 @@ function calculate_auto_login_key($user_id, $time, &$username): string|false
             (int) $user_id
         );
     if ($row !== null) {
-        $username = stripslashes($row['username'] ?? '');
+        $username = stripslashes($row['username']);
         $data = $time.$user_id.$username;
-        return base64_encode(hash_hmac('sha1', $data, \Piwigo\Config\Config::secretKey().($row['password'] ?? ''), true));
+        return base64_encode(hash_hmac('sha1', $data, \Piwigo\Config\Config::secretKey().$row['password'], true));
     }
     return false;
 }
@@ -2157,9 +2157,8 @@ UPDATE '. USER_INFOS_TABLE .' SET ';
         }
 
         $query .= '
-  WHERE user_id IN('. implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)) .')
-;';
-        pwg_query($query);
+  WHERE user_id IN('. implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $param_user_id)) .')';
+        \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement($query);
     }
 
     // manage association to groups

@@ -75,7 +75,7 @@ use Piwigo\Ws\PwgNamedStruct;
         pwg_db_real_escape_string($filter_str).'%\'';
 
         if (!empty($filtered_groups)) {
-            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $filtered_groups)).')';
+            $filter_where_clause .= 'OR ug.group_id IN ('. implode(',', array_map(fn (int $v): string => (string) $v, $filtered_groups)).')';
         }
         $where_clauses[] =  $filter_where_clause.')';
     }
@@ -255,13 +255,13 @@ SELECT DISTINCT ';
     $users_id_arr = [];
     if (count($users) > 0) {
         if (array_key_exists('groups', $params['display'])) {
-            $query = '
-  SELECT user_id, group_id
-  FROM '. USER_GROUP_TABLE .'
-  WHERE user_id IN ('. implode(',', array_keys($users)) .')
-;';
-            $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+            $qb = $conn->createQueryBuilder()
+                ->select('user_id', 'group_id')
+                ->from(USER_GROUP_TABLE);
+            $qb->where($qb->expr()->in('user_id', ':ids'))
+               ->setParameter('ids', array_keys($users), \Doctrine\DBAL\ArrayParameterType::INTEGER);
+            foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
                 $grp_uid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
                 if (!isset($users[$grp_uid]['groups']) || !is_array($users[$grp_uid]['groups'])) {
                     $users[$grp_uid]['groups'] = [];

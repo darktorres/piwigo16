@@ -463,7 +463,7 @@ SELECT representative_picture_id
         $imgRepoWsCats = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
         foreach ($imgRepoWsCats->findByIds(array_map('intval', $image_ids)) as $row) {
             if ($row['level'] <= $user['level']) {
-                $thumbnail_src_of[(string) $row['id']] = DerivativeImage::url($thumbnail_size, $row);
+                $thumbnail_src_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnail_size, $row);
             } else {
                 // problem: we must not display the thumbnail of a photo which has a
                 // higher privacy level than user privacy level
@@ -493,7 +493,7 @@ SELECT representative_picture_id
 
         if (count($new_image_ids) > 0) {
             foreach ($imgRepoWsCats->findByIds(array_map('intval', $new_image_ids)) as $row) {
-                $thumbnail_src_of[(string) $row['id']] = DerivativeImage::url($thumbnail_size, $row);
+                $thumbnail_src_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnail_size, $row);
             }
         }
     }
@@ -1035,7 +1035,7 @@ SELECT *
     $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
         ->findCategoryById($category_id);
 
-    $rep_id = isset($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
+    $rep_id = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
     return get_category_representant_properties($rep_id, IMG_SMALL);
 }
 
@@ -1162,7 +1162,7 @@ SELECT id, name, dir, uppercats
         ->findByIds(array_map('intval', $category_ids)) as $row) {
         $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
         $categories_in_db[$row_id] = $row;
-        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
+        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', is_scalar($row['uppercats']) ? (string) $row['uppercats'] : ''), 0, -1));
 
         // we break on error at first physical category detected
         if (!empty($row['dir'])) {
@@ -1178,7 +1178,7 @@ SELECT id, name, dir, uppercats
                 sprintf(
                     'Category %s (%u) is not a virtual category, you cannot move it',
                     $row['name'],
-                    (int) $row['id']
+                    is_numeric($row['id']) ? (int) $row['id'] : 0
                 )
             );
         }

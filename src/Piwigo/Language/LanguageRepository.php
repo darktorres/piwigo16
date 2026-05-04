@@ -92,7 +92,7 @@ final class LanguageRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[(string) $row['id']] = (string) $row['name'];
+            $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = is_scalar($row['name']) ? (string) $row['name'] : '';
         }
         return $result;
     }

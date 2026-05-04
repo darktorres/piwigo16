@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 
 class C13yInternal
 {
@@ -96,20 +99,17 @@ class C13yInternal
           'l10n_non_existent' => 'Main "webmaster" user does not exist',
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
-        $query = '
-  select u.'.Config::userFields()['id'].' as id, ui.status
-  from '.USERS_TABLE.' as u
-    left join '.USER_INFOS_TABLE.' as ui
-        on u.'.Config::userFields()['id'].' = ui.user_id
-  where
-    u.'.Config::userFields()['id'].' in ('.implode(',', array_keys($c13y_users)).')
-  ;';
-
+        $idField = Config::userFields()['id'];
+        $conn = ServiceLocator::get(Connection::class);
+        $qb = $conn->createQueryBuilder()
+            ->select("u.$idField AS id", 'ui.status')
+            ->from(USERS_TABLE, 'u')
+            ->leftJoin('u', USER_INFOS_TABLE, 'ui', "u.$idField = ui.user_id");
+        $qb->where($qb->expr()->in("u.$idField", ':ids'))
+           ->setParameter('ids', array_keys($c13y_users), ArrayParameterType::INTEGER);
 
         $status = [];
-
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $status[(int)$row['id']] = $row['status'];
         }
 

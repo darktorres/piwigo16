@@ -254,8 +254,9 @@ final class ImageStdParams
             $disabled = addslashes(serialize(self::$disabled_type_map));
             conf_update_param('disabled_derivatives', $disabled);
         } else {
-            $query = 'DELETE FROM '.CONFIG_TABLE.' WHERE param = \'disabled_derivatives\'';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+                'DELETE FROM ' . CONFIG_TABLE . " WHERE param = 'disabled_derivatives'"
+            );
         }
     }
 

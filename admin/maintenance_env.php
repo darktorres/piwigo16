@@ -112,9 +112,9 @@ switch ($action) {
 
             $sessions_to_delete = [];
             foreach ($sessions as $session) {
-                if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
+                if (preg_match('/pwg_uid\|i:(\d+);/', is_scalar($session['data']) ? (string) $session['data'] : '', $matches)) {
                     if (!isset($all_user_ids[ $matches[1] ])) {
-                        $sessions_to_delete[] = (string) $session['id'];
+                        $sessions_to_delete[] = is_scalar($session['id']) ? (string) $session['id'] : '';
                     }
                 }
             }

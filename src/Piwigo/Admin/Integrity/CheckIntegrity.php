@@ -252,8 +252,7 @@ class CheckIntegrity
         $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        $query = 'update '.CONFIG_TABLE.' set value =\''.serialize($conf_c13y_ignore).'\'where param = \'c13y_ignore\';';
-        pwg_query($query);
+        conf_update_param('c13y_ignore', serialize($conf_c13y_ignore));
     }
 
     /**

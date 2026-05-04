@@ -50,7 +50,10 @@ final class ImageRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
         return array_map(
-            fn (array $r): array => ['width' => (int) $r['width'], 'height' => (int) $r['height']],
+            fn (array $r): array => [
+                'width'  => is_numeric($r['width']) ? (int) $r['width'] : 0,
+                'height' => is_numeric($r['height']) ? (int) $r['height'] : 0,
+            ],
             $rows
         );
     }
@@ -250,7 +253,7 @@ final class ImageRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**
@@ -285,7 +288,13 @@ final class ImageRepository extends AbstractRepository
              ORDER BY i.id DESC
              LIMIT 1'
         )->fetchAssociative();
-        return $row !== false ? $row : null;
+        if ($row === false) {
+            return null;
+        }
+        return [
+            'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
+            'uppercats'   => is_string($row['uppercats']) ? $row['uppercats'] : '',
+        ];
     }
 
     /**
@@ -561,7 +570,7 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('storage_category_id', ':ids'))
            ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        return array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**

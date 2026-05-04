@@ -163,8 +163,9 @@ function custom_notification_query(string $action, string $type, ?string $start 
                         $field_id = 'user_id';
                         break;
                 }
-                $query = 'SELECT COUNT(DISTINCT '.$field_id.') '.$query.';';
-                [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+                $count = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                    ->executeQuery('SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query)
+                    ->fetchOne();
                 return $count;
 
             }

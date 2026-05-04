@@ -398,12 +398,9 @@ SELECT
         $orphans = array_unique(query2array($query, null, $column));
 
         if (count($orphans) > 0) {
-            $query = '
-DELETE
-  FROM '.$table.'
-  WHERE '.$column.' IN ('.implode(',', $orphans).')
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+                'DELETE FROM ' . $table . ' WHERE ' . $column . ' IN (' . implode(',', $orphans) . ')'
+            );
         }
     }
 }
@@ -715,13 +712,11 @@ SELECT '.$field.'
                 }
 
                 // step 3, remove the inconsistant permissions from sub-albums
-                $query = '
-DELETE
-  FROM '.$table.'
-  WHERE '.$field.' NOT IN ('.implode(',', $ref_access).')
-    AND cat_id IN ('.implode(',', $subcats).')
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+                    'DELETE FROM ' . $table . ' WHERE ' . $field .
+                    ' NOT IN (' . implode(',', $ref_access) . ')' .
+                    ' AND cat_id IN (' . implode(',', $subcats) . ')'
+                );
             }
         }
     }
@@ -1614,15 +1609,15 @@ function empty_lounge(bool $invalidate_user_cache = true): ?array
     $logger->debug(__FUNCTION__.(isset($_REQUEST['method']) ? ' (API:'.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').')' : '').', exec='.$exec_id.', begins');
 
     // if lounge is already being emptied, skip
-    $query = '
-INSERT IGNORE
-  INTO '.CONFIG_TABLE.'
-  SET param="empty_lounge_running"
-    , value="'.$exec_id.'-'.time().'"
-;';
-    pwg_query($query);
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $conn->executeStatement(
+        'INSERT IGNORE INTO ' . CONFIG_TABLE . ' SET param="empty_lounge_running", value=?',
+        [$exec_id . '-' . time()]
+    );
 
-    [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM '.CONFIG_TABLE.' WHERE param = "empty_lounge_running"')) ?? [null];
+    $empty_lounge_running = $conn->executeQuery(
+        'SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'
+    )->fetchOne();
     list($running_exec_id, ) = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
@@ -1816,9 +1811,8 @@ DELETE '.IMAGE_CATEGORY_TABLE.'.*
     }
 
     $query .= '
-    AND (storage_category_id IS NULL OR storage_category_id != category_id)
-;';
-    pwg_query($query);
+    AND (storage_category_id IS NULL OR storage_category_id != category_id)';
+    \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement($query);
 
     if (count($categories) > 0) {
         associate_images_to_categories($images, $categories);
@@ -2792,16 +2786,11 @@ function get_admin_client_cache_keys(array $requested = []): array
       '_hash' => md5((string) get_absolute_root_url()),
       ];
 
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
     foreach ($requested as $item) {
-        $query = '
-SELECT CONCAT(
-    UNIX_TIMESTAMP(MAX(lastmodified)),
-    "_",
-    COUNT(*)
-  )
-  FROM `'. $tables[$item] .'`
-;';
-        [$keys[$item]] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $keys[$item] = $conn->executeQuery(
+            'SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*)) FROM `' . $tables[$item] . '`'
+        )->fetchOne();
     }
 
     return $keys;

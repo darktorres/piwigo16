@@ -61,8 +61,8 @@ $category_name = trigger_change(
     'get_cat_display_name_cache'
 );
 $template->assign([
-  'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.(string) $category_name.'</strong>',
-  'ADMIN_PAGE_OBJECT_ID' => '#'.(string) $category['id'],
+  'ADMIN_PAGE_TITLE' => l10n('Edit album').' <strong>'.(is_scalar($category_name) ? (string) $category_name : '').'</strong>',
+  'ADMIN_PAGE_OBJECT_ID' => '#'.(is_scalar($category['id']) ? (string) $category['id'] : ''),
 ]);
 
 if ('properties' == $page['tab']) {

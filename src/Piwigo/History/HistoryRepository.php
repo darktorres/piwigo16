@@ -77,7 +77,13 @@ final class HistoryRepository extends AbstractRepository
             ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
-        return $row !== false ? $row : null;
+        if ($row === false) {
+            return null;
+        }
+        return [
+            'date' => is_string($row['date']) ? $row['date'] : '',
+            'time' => is_string($row['time']) ? $row['time'] : '',
+        ];
     }
 
     /** Total number of history rows (used to decide if autopurge is needed). */
@@ -144,7 +150,7 @@ final class HistoryRepository extends AbstractRepository
     public function summarizedColumnExists(): bool
     {
         $sm = $this->conn->createSchemaManager();
-        $columns = $sm->listTableColumns($this->table('history'));
+        $columns = $sm->introspectTableColumns($this->table('history'));
         return isset($columns['summarized']);
     }
 

@@ -40,36 +40,36 @@ function ws_permissions_getList(array $params, \Piwigo\Ws\PwgServer &$service): 
 
     $permRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
     $catIdsFilter = !empty($params['cat_id'])
-        ? array_map('intval', is_array($params['cat_id']) ? $params['cat_id'] : [])
+        ? array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : [])
         : null;
 
     $perms = [];
 
     // direct users
     foreach ($permRepo->findUserCategoryAccess($catIdsFilter) as $row) {
-        $cat_id = (int)$row['cat_id'];
+        $cat_id = is_numeric($row['cat_id']) ? (int)$row['cat_id'] : 0;
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $cat_id ]['users'][] = (int)$row['user_id'];
+        $perms[ $cat_id ]['users'][] = is_numeric($row['user_id']) ? (int)$row['user_id'] : 0;
     }
 
     // indirect users
     foreach ($permRepo->findGroupUserCategoryAccess($catIdsFilter) as $row) {
-        $cat_id = (int)$row['cat_id'];
+        $cat_id = is_numeric($row['cat_id']) ? (int)$row['cat_id'] : 0;
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $cat_id ]['users_indirect'][] = (int)$row['user_id'];
+        $perms[ $cat_id ]['users_indirect'][] = is_numeric($row['user_id']) ? (int)$row['user_id'] : 0;
     }
 
     // groups
     foreach ($permRepo->findGroupCategoryAccess($catIdsFilter) as $row) {
-        $cat_id = (int)$row['cat_id'];
+        $cat_id = is_numeric($row['cat_id']) ? (int)$row['cat_id'] : 0;
         if (!isset($perms[ $cat_id ])) {
             $perms[ $cat_id ]['id'] = $cat_id;
         }
-        $perms[ $cat_id ]['groups'][] = (int)$row['group_id'];
+        $perms[ $cat_id ]['groups'][] = is_numeric($row['group_id']) ? (int)$row['group_id'] : 0;
     }
 
     // filter by group and user
@@ -203,12 +203,12 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     $cat_ids_str = array_map(fn ($v) => (string) $v, $cat_ids);
 
     $permRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
-    $cat_ids_int = array_map('intval', $cat_ids_str);
+    $cat_ids_int = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_ids_str);
 
     if (!empty($params['group_id'])) {
         $group_id_rem = is_array($params['group_id']) ? $params['group_id'] : [];
         $permRepo2->deleteGroupAccess(
-            array_map('intval', $group_id_rem),
+            array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_id_rem),
             $cat_ids_int
         );
     }
@@ -216,7 +216,7 @@ function ws_permissions_remove(array $params, \Piwigo\Ws\PwgServer &$service): m
     if (!empty($params['user_id'])) {
         $user_id_rem = is_array($params['user_id']) ? $params['user_id'] : [];
         $permRepo2->deleteUserAccess(
-            array_map('intval', $user_id_rem),
+            array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $user_id_rem),
             $cat_ids_int
         );
     }

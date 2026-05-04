@@ -241,7 +241,7 @@ class Themes
     }
 
     /**
-     * @return list<array<string, float|int|string|null>>
+     * @return list<array<string, mixed>>
      */
     public function get_db_themes(?string $id = ''): array
     {

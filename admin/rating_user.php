@@ -39,9 +39,9 @@ $userFields = \Piwigo\Config\Config::userFields();
 $users_by_id = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
     ->findAllWithStatus($userFields['id'], $userFields['username'], USERS_TABLE) as $row) {
-    $users_by_id[(int)$row['id']] = [
-        'name' => (string) $row['username'],
-        'anon' => is_autorize_status(ACCESS_CLASSIC, (string) $row['status']) ? false : true,
+    $users_by_id[is_numeric($row['id']) ? (int)$row['id'] : 0] = [
+        'name' => is_scalar($row['username']) ? (string) $row['username'] : '',
+        'anon' => is_autorize_status(ACCESS_CLASSIC, is_scalar($row['status']) ? (string) $row['status'] : '') ? false : true,
     ];
 }
 
@@ -54,19 +54,19 @@ foreach (\Piwigo\Config\Config::rateItems() as $rate) {
 $image_ids = [];
 $by_user_ratings = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAllOrderedByDate() as $row) {
-    $user_id = (int)$row['user_id'];
+    $user_id = is_numeric($row['user_id']) ? (int)$row['user_id'] : 0;
     if (!isset($users_by_id[$user_id])) {
         $users_by_id[$user_id] = ['name' => '???'.$user_id, 'anon' => false];
     }
     $usr = $users_by_id[$user_id];
     if ($usr['anon']) {
-        $user_key = $usr['name'].'('.(string)$row['anonymous_id'].')';
+        $user_key = $usr['name'].'('.(is_scalar($row['anonymous_id']) ? (string)$row['anonymous_id'] : '').')';
     } else {
         $user_key = $usr['name'];
     }
     if (!isset($by_user_ratings[$user_key])) {
         $by_user_ratings[$user_key] = $by_user_rating_model;
-        $by_user_ratings[$user_key]['uid'] = (int)$row['user_id'];
+        $by_user_ratings[$user_key]['uid'] = $user_id;
         $by_user_ratings[$user_key]['aid'] = $usr['anon'] ? $row['anonymous_id'] : '';
         $by_user_ratings[$user_key]['last_date'] = $row['date'];
         $by_user_ratings[$user_key]['first_date'] = $row['date'];
@@ -74,8 +74,8 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->f
         $by_user_ratings[$user_key]['first_date'] = $row['date'];
     }
 
-    $rate = (int)$row['rate'];
-    $element_id = (int)$row['element_id'];
+    $rate = is_numeric($row['rate']) ? (int)$row['rate'] : 0;
+    $element_id = is_numeric($row['element_id']) ? (int)$row['element_id'] : 0;
     $by_user_ratings[$user_key]['rates'][$rate][] = [
       'id' => $element_id,
       'date' => $row['date'],
@@ -89,7 +89,7 @@ if (count($image_ids) > 0) {
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
         ->findByIds(array_map('intval', array_keys($image_ids))) as $row) {
-        $id = (int) $row['id'];
+        $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
         $image_urls[$id] = [
             'tn'   => DerivativeImage::url($params, $row),
             'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']]),
@@ -100,7 +100,7 @@ if (count($image_ids) > 0) {
 //all image averages
 $all_img_sum = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAverageByElement() as $row) {
-    $all_img_sum[(int) $row['element_id']] = ['avg' => (float) $row['avg_rate']];
+    $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
 }
 
 $query = 'SELECT id

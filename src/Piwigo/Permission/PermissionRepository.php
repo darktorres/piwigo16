@@ -109,7 +109,7 @@ final class PermissionRepository extends AbstractRepository
             ->setParameter('groupId', $groupId)
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map('intval', $rows);
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -145,7 +145,7 @@ final class PermissionRepository extends AbstractRepository
              WHERE c.status = ? AND ga.group_id = ?',
             ['private', $groupId]
         )->fetchFirstColumn();
-        return array_map('intval', $rows);
+        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**

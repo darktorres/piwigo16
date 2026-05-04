@@ -81,7 +81,8 @@ FROM '.COMMENTS_TABLE.'
 WHERE '.implode(' AND ', $where_clauses).'
 ;';
 
-    $summary = pwg_db_fetch_assoc(pwg_query($query)) ?? [];
+    $summary = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAssociative() ?: [];
     $total_comments = $summary['all_comments'] ?? null;
 
     switch ($params['status']) {
@@ -127,10 +128,9 @@ SELECT
   ORDER BY c.date DESC
   LIMIT '.($per_page * $page_num).', '.$per_page.'
 ;';
-    $result = pwg_query($query);
-
     $list = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
 
         $medium_derivative = DerivativeImage::get_one(
             IMG_MEDIUM,
@@ -172,7 +172,8 @@ FROM '.COMMENTS_TABLE.'
 WHERE '.implode(' AND ', $where_clauses).'
 ;';
 
-    $dates = pwg_db_fetch_assoc(pwg_query($query)) ?? [];
+    $dates = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAssociative() ?: [];
 
     unset($where_clauses['author_id']);
     $query = '

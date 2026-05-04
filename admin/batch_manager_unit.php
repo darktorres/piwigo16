@@ -48,13 +48,14 @@ if (isset($_POST['submit'])) {
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
         ->findByIds(array_map('intval', $collection)) as $row) {
         $data = [];
+        $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
 
         $data['id'] = $row['id'];
-        $data['name'] = $_POST['name-'.$row['id']];
-        $data['author'] = $_POST['author-'.$row['id']];
-        $data['level'] = $_POST['level-'.$row['id']];
+        $data['name'] = $_POST['name-'.$row_id_str];
+        $data['author'] = $_POST['author-'.$row_id_str];
+        $data['level'] = $_POST['level-'.$row_id_str];
 
-        $desc_key = 'description-'.(is_scalar($row['id']) ? (string) $row['id'] : '');
+        $desc_key = 'description-'.$row_id_str;
         if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
             $data['comment'] = $_POST[$desc_key] ?? null;
         } else {
@@ -62,8 +63,8 @@ if (isset($_POST['submit'])) {
             $data['comment'] = strip_tags(is_scalar($desc_val) ? (string) $desc_val : '');
         }
 
-        if (!empty($_POST['date_creation-'.$row['id']])) {
-            $data['date_creation'] = $_POST['date_creation-'.$row['id']];
+        if (!empty($_POST['date_creation-'.$row_id_str])) {
+            $data['date_creation'] = $_POST['date_creation-'.$row_id_str];
         } else {
             $data['date_creation'] = null;
         }

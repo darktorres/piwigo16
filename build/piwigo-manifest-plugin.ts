@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite';
-import type { OutputChunk } from 'rollup';
+import type { OutputChunk } from 'rolldown';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 

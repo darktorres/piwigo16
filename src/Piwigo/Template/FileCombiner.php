@@ -238,9 +238,8 @@ final class FileCombiner
      * @param string $css file content
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
-     * @return string
      */
-    private static function process_css_rec($css, string $dir, string &$header)
+    private static function process_css_rec(string $css, string $dir, string &$header): string
     {
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";

@@ -161,7 +161,6 @@ class BlockManager
      * Parse the menu and assign the result in a template variable.
      *
      * @param string|string[] $var
-     * @param string $file
      */
     public function apply(string|array $var, string $file): void
     {

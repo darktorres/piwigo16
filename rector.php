@@ -30,6 +30,11 @@ return RectorConfig::configure()
         \Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector::class => [
             __DIR__ . '/src/Piwigo/Template/Template.php',
         ],
+        // version_compare() first-class callable has a multi-overload type PHPStan rejects for usort.
+        // The explicit closure fn(string $a, string $b): int => version_compare($a, $b) is correct.
+        \Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector::class => [
+            __DIR__ . '/src/Piwigo/Calendar/CalendarBase.php',
+        ],
     ])
     ->withPhpSets(php85: true)
     ->withSets([SetList::TYPE_DECLARATION])

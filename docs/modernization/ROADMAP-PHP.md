@@ -1157,32 +1157,9 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 - Parity verified: 322 file pairs, 0 missing keys.
 - PHPStan level 9: **0 errors**.
 
-### Steps
+### Deferred
 
-1. **Decide format.** Recommend gettext PO/MO via `gettext/gettext` (a pure-PHP gettext implementation that doesn't require the `ext-gettext` extension). PO carries plural forms, context (`msgctxt`), and translator notes — JSON does none of these without extension.
-
-2. **Build a converter.** `tools/i18n/php-to-po.php` reads a `.lang.php` file, extracts each `$lang['key'] = 'value'` assignment, and emits a `.po` entry. Output: `language/<locale>/<domain>.po`. Compile to `<domain>.mo` for runtime.
-
-3. **Implement `Piwigo\Lang\Translator`** in `src/Piwigo/Lang/Translator.php`:
-
-   ```php
-   public function translate(string $key, array $params = [], ?string $locale = null): string;
-   public function translatePlural(string $key, string $keyPlural, int $count, array $params = [], ?string $locale = null): string;
-   ```
-
-   Backed by `Gettext\Translator` reading the compiled `.mo` files. Registered in DI.
-
-4. **Replace `l10n()` free function** with a one-line wrapper that delegates to the service. Same for `l10n_dec()`.
-
-5. **Lazy-load.** Boot only loads the active locale's `common.mo`. Admin pages load `admin.mo` on demand. The 73 locales never all load at once.
-
-6. **Migrate template syntax** (depends on items #23 Latte and #26 plugin/theme):
-   - Smarty: `{translate $key}` and `{$key|translate}` already exist — point both at the new service.
-   - Latte: `{$key|translate}` filter already planned in item #23 step 4.
-
-7. **Document the translator workflow** in `CONTRIBUTING.md` and a new `docs/I18N.md`. Cover: how to add a new key, how to push/pull from Crowdin (or chosen platform), how to compile MO files locally for testing.
-
-8. **Decommission `.lang.php`.** Delete the legacy PHP files immediately once the converter has run and parity is verified — no transitional release window.
+- **Template syntax (step 6):** Smarty `{translate}` / Latte `{|translate}` filter wiring depends on #23 (Latte migration) and #26 (plugin/theme compat). The free function `l10n()` already delegates to Translator, so templates that call it via the registered modifier continue to work.
 
 ### Verification
 

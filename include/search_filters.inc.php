@@ -242,11 +242,15 @@ SELECT
 
             foreach (array_keys($date_posted['list_of_dates'][$y]['months'] ?? []) as $ym) {
                 list(, $m) = explode('-', (string) $ym);
+                $month_days = $date_posted['list_of_dates'][$y]['months'][$ym]['days'] ?? null;
                 $date_posted['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int)$m].' '.$y;
 
-                foreach (array_keys($date_posted['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    list(, , $d) = explode('-', (string) $ymd);
-                    $date_posted['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
+                if (is_array($month_days)) {
+                    foreach (array_keys($month_days) as $ymd) {
+                        list(, , $d) = explode('-', (string) $ymd);
+                        $month_days[$ymd]['label'] = format_date($ymd);
+                    }
+                    $date_posted['list_of_dates'][$y]['months'][$ym]['days'] = $month_days;
                 }
             }
         }
@@ -342,11 +346,15 @@ SELECT
 
             foreach (array_keys($date_created['list_of_dates'][$y]['months'] ?? []) as $ym) {
                 list(, $m) = explode('-', (string) $ym);
+                $month_days = $date_created['list_of_dates'][$y]['months'][$ym]['days'] ?? null;
                 $date_created['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int)$m].' '.$y;
 
-                foreach (array_keys($date_created['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    list(, , $d) = explode('-', (string) $ymd);
-                    $date_created['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
+                if (is_array($month_days)) {
+                    foreach (array_keys($month_days) as $ymd) {
+                        list(, , $d) = explode('-', (string) $ymd);
+                        $month_days[$ymd]['label'] = format_date($ymd);
+                    }
+                    $date_created['list_of_dates'][$y]['months'][$ym]['days'] = $month_days;
                 }
             }
         }

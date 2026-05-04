@@ -1475,7 +1475,7 @@ function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, a
 
         if ($use_ft) {
             $parts = preg_split('/['.preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/').']+/', (string) $variant);
-            $max = ($parts !== false && count($parts) > 0) ? max(array_map(mb_strlen(...), $parts)) : 0;
+            $max = ($parts !== false) ? max(array_map(mb_strlen(...), $parts)) : 0;
             if ($max < 4) {
                 $use_ft = false;
             }

@@ -498,16 +498,20 @@ while ($row = pwg_db_fetch_assoc($result)) {
         ]
     );
 
+    $row['TITLE'] = render_element_name($row);
+    $row['TITLE_ESC'] = str_replace('"', '&quot;', $row['TITLE']);
     $picture[$i] = $row;
-    $picture[$i]['TITLE'] = render_element_name($row);
-    $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
     if ('previous' == $i and $page['previous_item'] == $page['first_item']) {
-        $picture['first'] = $picture[$i];
+        $picture['first'] = $row;
     }
     if ('next' == $i and $page['next_item'] == $page['last_item']) {
-        $picture['last'] = $picture[$i];
+        $picture['last'] = $row;
     }
+}
+
+if (!isset($picture['current'])) {
+    throw new \Piwigo\Exception\NotFoundException('Current picture not found.');
 }
 
 $slideshow_params = [];
@@ -531,7 +535,7 @@ if ($get_slideshow !== null) {
             }
         }
 
-        if (!empty($id_pict_redirect)) {
+        if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
             // $refresh, $url_link and $title are required for creating
             // an automated refresh page in header.tpl
             $refresh = $slideshow_params['period'];

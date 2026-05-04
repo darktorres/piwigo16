@@ -195,7 +195,7 @@ $page['where_clauses'][] = get_sql_condition_FandF(
 // |                         comments management                           |
 // +-----------------------------------------------------------------------+
 
-$comment_id = null;
+$comment_id = 0;
 $action = null;
 
 $actions = array('delete', 'validate', 'edit');

@@ -776,7 +776,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
 
     // Send content to PHPMailer
     $htmlContent = is_string($contents['text/html'] ?? null) ? $contents['text/html'] : null;
-    $plainContent = is_string($contents['text/plain'] ?? null) ? $contents['text/plain'] : '';
+    $plainContent = $contents['text/plain'];
     if ($htmlContent !== null) {
         $mail->isHTML(true);
         $mail->Body = move_css_to_body($htmlContent);

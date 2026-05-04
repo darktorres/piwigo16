@@ -217,7 +217,7 @@ DELETE
                 }
                 // concatenation needed to avoid automatic transformation by release
                 // script generator
-                elseif ('%'.'PWGVERSION'.'%' == $versions['current']) {
+                elseif (str_contains((string) ($versions['current'] ?? ''), '%')) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
                 } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                     \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));

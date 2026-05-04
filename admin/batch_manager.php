@@ -803,9 +803,9 @@ $template->assign('filesize', $filesize);
 // +-----------------------------------------------------------------------+
 
 // Build typed slider data for batchManagerFilter JSON block
-$dim_widths  = is_string($dimensions['widths']) ? $dimensions['widths'] : '';
-$dim_heights = is_string($dimensions['heights']) ? $dimensions['heights'] : '';
-$dim_ratios  = is_string($dimensions['ratios']) ? $dimensions['ratios'] : '';
+$dim_widths  = $dimensions['widths'];
+$dim_heights = $dimensions['heights'];
+$dim_ratios  = $dimensions['ratios'];
 $sliders_json = [
     'widths' => [
         'values'   => array_map('floatval', explode(',', $dim_widths)),

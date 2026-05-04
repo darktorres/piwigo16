@@ -2100,8 +2100,7 @@ function ws_images_formats_searchImage(array $params, \Piwigo\Ws\PwgServer $serv
 
     $unique_filenames_db = [];
 
-    $query = '
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findAllIdFilename() as $row) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findAllIdFilename() as $row) {
         $filename_wo_ext = get_filename_wo_extension((string) ($row['file'] ?? ''));
         $unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }

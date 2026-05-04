@@ -633,4 +633,63 @@ final class ImageRepository extends AbstractRepository
         )->fetchOne();
         return is_numeric($value) ? (int) $value : null;
     }
+
+    /** Count how many caddie entries the given user has. */
+    public function countCaddieByUserId(int $userId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('caddie'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Find a single image row where file LIKE $pattern ESCAPE '/'.
+     * Caller must pre-escape '_' and '%' in the base name, then append '.%'.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByFilePattern(string $pattern): ?array
+    {
+        $row = $this->conn->executeQuery(
+            "SELECT * FROM {$this->table('images')} WHERE file LIKE ? ESCAPE '/' LIMIT 1",
+            [$pattern]
+        )->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /** Update width and height for a single image. */
+    public function updateDimensions(int $id, int $width, int $height): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->set('width', ':width')
+            ->set('height', ':height')
+            ->where('id = :id')
+            ->setParameter('width', $width)
+            ->setParameter('height', $height)
+            ->setParameter('id', $id)
+            ->executeStatement();
+    }
+
+    /**
+     * Find a single image by its path column (exact match), or null if not found.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByPath(string $path): ?array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('images'))
+            ->where('path = :path')
+            ->setParameter('path', $path)
+            ->executeQuery()
+            ->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
 }

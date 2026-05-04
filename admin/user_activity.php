@@ -38,26 +38,19 @@ include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
     $output_lines = [];
 
-    $query = '
-SELECT
-    activity_id,
-    performed_by,
-    object,
-    object_id,
-    action,
-    ip_address,
-    occured_on,
-    details,
-    '.\Piwigo\Config\Config::userFields()['username'].' AS username
-  FROM '.ACTIVITY_TABLE.'
-    JOIN '.USERS_TABLE.' AS u ON performed_by = u.'.\Piwigo\Config\Config::userFields()['id'].'
-    WHERE object = \'user\'
-  ORDER BY activity_id DESC
-;';
+    $usernameField = \Piwigo\Config\Config::userFields()['username'];
+    $idField = \Piwigo\Config\Config::userFields()['id'];
+    $activityRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery(
+            "SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details,
+             $usernameField AS username
+             FROM " . ACTIVITY_TABLE . ' JOIN ' . USERS_TABLE .
+            " AS u ON performed_by = u.$idField WHERE object = 'user' ORDER BY activity_id DESC"
+        )
+        ->fetchAllAssociative();
 
-    $result = pwg_query($query);
     array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($activityRows as $row) {
         $row['details'] = str_replace('`groups`', 'groups', (string)$row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 

@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Auth\AuthKeyRepository;
+use Piwigo\Feed\FeedRepository;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permalink\PermalinkRepository;
@@ -67,4 +68,5 @@ return [
     SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository         => new SiteRepository($conn, Config::dbPrefix())),
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository     => new ActivityRepository($conn, Config::dbPrefix())),
     AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository      => new AuthKeyRepository($conn, Config::dbPrefix())),
+    FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository         => new FeedRepository($conn, Config::dbPrefix())),
 ];

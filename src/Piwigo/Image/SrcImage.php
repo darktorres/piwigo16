@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -142,7 +143,8 @@ final class SrcImage
                 $hi = is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0);
                 $this->size = [$wi, $hi];
                 if ($this->id !== 0) {
-                    pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$wi.', height='.$hi.' WHERE id='.$this->id);
+                    \Piwigo\Core\ServiceLocator::get(ImageRepository::class)
+                        ->updateDimensions($this->id, $wi, $hi);
                 }
                 return $this->size;
             }

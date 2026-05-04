@@ -17,12 +17,8 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-$query = '
-SELECT
-    COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-;';
-[$albums_counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$albums_counter = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    ->countAll();
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -93,13 +89,8 @@ SELECT id
         );
     }
 
-    $query = '
-SELECT id, name, id_uppercat
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $category_ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findByIds(array_map('intval', $category_ids)) as $row) {
         $row['name'] = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
         if ($order_by_date) {

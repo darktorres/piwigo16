@@ -59,13 +59,8 @@ $image_only = input_string('image_only', null, $_GET) !== null;
 // echo '<pre>'.generate_key(50).'</pre>';
 $feed_row = [];
 if (!empty($feed_id)) {
-    $query = '
-SELECT user_id,
-       last_check
-  FROM '.USER_FEED_TABLE.'
-  WHERE id = \''.$feed_id.'\'
-;';
-    $feed_row = pwg_db_fetch_assoc(pwg_query($query));
+    $feed_row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class)
+        ->findById((string) $feed_id);
     if (empty($feed_row)) {
         page_not_found(l10n('Unknown feed identifier'));
     }
@@ -82,8 +77,7 @@ SELECT user_id,
 // Check the status now after the user has been loaded
 check_status(ACCESS_GUEST);
 
-list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-$dbnow = $dbnow ? (string)$dbnow : date('Y-m-d H:i:s');
+$dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
 set_make_full_url();
 
@@ -129,24 +123,17 @@ if (!$image_only) {
 
         $rss->addItem($item);
 
-        $query = '
-UPDATE '.USER_FEED_TABLE.'
-  SET last_check = \''.$dbnow.'\'
-  WHERE id = \''.$feed_id.'\'
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class)
+            ->updateLastCheck((string) $feed_id, $dbnow);
     }
 }
 
 if (!empty($feed_id) and empty($news)) {// update the last check from time to time to avoid deletion by maintenance tasks
     if (!isset($feed_row['last_check'])
       or time() - datetime_to_ts((string)$feed_row['last_check']) > 30 * 24 * 3600) {
-        $query = '
-UPDATE '.USER_FEED_TABLE.'
-  SET last_check = '.pwg_db_get_recent_period_expression(-15, $dbnow).'
-  WHERE id = \''.$feed_id.'\'
-;';
-        pwg_query($query);
+        $keepAliveDate = (new \DateTimeImmutable($dbnow))->modify('+15 days')->format('Y-m-d H:i:s');
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class)
+            ->updateLastCheck((string) $feed_id, $keepAliveDate);
     }
 }
 

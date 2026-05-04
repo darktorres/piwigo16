@@ -234,18 +234,9 @@ function check_password_reset_key(string $reset_key): int|false
         return false;
     }
 
-    $query = '
-SELECT
-    user_id,
-    status,
-    activation_key
-  FROM '.USER_INFOS_TABLE.'
-  WHERE activation_key IS NOT NULL
-    AND activation_key_expire > NOW()
-;';
-    $result = pwg_query($query);
     $user_id = null;
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findByActiveActivationKey() as $row) {
         $activation_key = isset($row['activation_key']) ? (string)$row['activation_key'] : '';
         $row_status = isset($row['status']) ? (string)$row['status'] : '';
         if (password_verify($key, $activation_key)) {

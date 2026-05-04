@@ -25,24 +25,19 @@ if (is_webmaster()) {
         $response = [];
         $data = [];
 
-        $query = '
-  SELECT
-      activity_id,
-      object,
-      object_id,
-      action,
-      performed_by,
-      occured_on,
-      details,
-  IF(performed_by = 0, \'System\', '.\Piwigo\Config\Config::userFields()['username'].') AS username
-  FROM '.ACTIVITY_TABLE.'
-  LEFT JOIN '.USERS_TABLE.' ON performed_by = '.\Piwigo\Config\Config::userFields()['id'].'
-  WHERE object = \'system\'
-  ORDER BY activity_id DESC';
+        $usernameField = \Piwigo\Config\Config::userFields()['username'];
+        $idField = \Piwigo\Config\Config::userFields()['id'];
+        $activityRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery(
+                "SELECT activity_id, object, object_id, action, performed_by, occured_on, details,
+                 IF(performed_by = 0, 'System', $usernameField) AS username
+                 FROM " . ACTIVITY_TABLE . ' LEFT JOIN ' . USERS_TABLE .
+                " ON performed_by = $idField WHERE object = 'system' ORDER BY activity_id DESC"
+            )
+            ->fetchAllAssociative();
 
         // Format our data for frontend
-        $result = pwg_query($query);
-        while ($rows = pwg_db_fetch_assoc($result)) {
+        foreach ($activityRows as $rows) {
             $major_infos = false;
             $object = '';
             $object_icon = '';

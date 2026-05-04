@@ -135,12 +135,7 @@ if (isset($_POST['submit']) and is_webmaster()) {
     //var_export( $best_slice ); var_export($mb_conf);  var_export($mb_conf_db);
     // END OPTIM
     */
-    $query = '
-UPDATE '.CONFIG_TABLE.'
-  SET value=\''.addslashes(serialize($mb_conf_db)).'\'
-  WHERE param=\'blk_'.addslashes($menu->get_id()).'\'
-  ';
-    pwg_query($query);
+    conf_update_param('blk_' . $menu->get_id(), serialize($mb_conf_db));
 
     $template->assign(
         [

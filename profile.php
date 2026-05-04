@@ -39,13 +39,8 @@ if (!defined('PHPWG_ROOT_PATH')) {//direct script access
       ];
 
     // Get the Guest custom settings
-    $query = '
-SELECT '.implode(',', $fields).'
-  FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
-;';
-    $result = pwg_query($query);
-    $default_user = pwg_db_fetch_assoc($result);
+    $default_user = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->getDefaultUserInfo(\Piwigo\Config\Config::defaultUserId());
     $template->assign('DEFAULT_USER_VALUES', $default_user);
 
     // Reset to default (Guest) custom settings
@@ -241,12 +236,13 @@ function save_profile_from_post(array $userdata, array &$errors): bool
         }
 
         if (!defined('IN_ADMIN')) {// changing password requires old password
-            $query = '
-  SELECT '.\Piwigo\Config\Config::userFields()['password'].' AS password
-    FROM '.USERS_TABLE.'
-    WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.(is_scalar($userdata['id'] ?? null) ? (int) $userdata['id'] : 0).'\'
-  ;';
-            [$current_password] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+            $current_password = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ->findPasswordById(
+                    \Piwigo\Config\Config::userFields()['password'],
+                    \Piwigo\Config\Config::userFields()['id'],
+                    USERS_TABLE,
+                    is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0
+                );
 
             if (!password_verify(is_scalar($_POST['password']) ? (string) $_POST['password'] : '', is_string($current_password) ? $current_password : '')) {
                 $errors[] = l10n('Current password is wrong');
@@ -416,8 +412,8 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
     $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
     // api key expiration choice
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);')) ?? [null];
-    $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
+    $dbnow = (new \DateTimeImmutable('+1 day'))->format('Y-m-d H:i:s');
+    $template->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);
 
     $duration = [];
     $display_duration = [];

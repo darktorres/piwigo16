@@ -177,21 +177,15 @@ SELECT id, uppercats, global_rank, status, visible
     // has 1 for next rank on its sub-categories to create
     $next_rank['NULL'] = 1;
 
-    $query = '
-SELECT id
-  FROM '.CATEGORIES_TABLE;
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    foreach ($conn->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE)->fetchAllAssociative() as $row) {
         $next_rank[$row['id']] = 1;
     }
 
     // let's see if some categories already have some sub-categories...
-    $query = '
-SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
-  FROM '.CATEGORIES_TABLE.'
-  GROUP BY id_uppercat';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($conn->executeQuery(
+        'SELECT id_uppercat, MAX(`rank`)+1 AS next_rank FROM ' . CATEGORIES_TABLE . ' GROUP BY id_uppercat'
+    )->fetchAllAssociative() as $row) {
         // for the id_uppercat NULL, we write 'NULL' and not the empty string
         if (!isset($row['id_uppercat']) or $row['id_uppercat'] == '') {
             $row['id_uppercat'] = 'NULL';

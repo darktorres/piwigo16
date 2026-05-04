@@ -47,28 +47,19 @@ if (isset($_POST['submitEmail'])) {
     /* TODO: if $category['representative_picture_id']
       is empty find child representative_picture_id */
     if (!empty($category['representative_picture_id'])) {
-        $query = '
-SELECT id, file, path, representative_ext
-  FROM '.IMAGES_TABLE.'
-  WHERE id = '.$category['representative_picture_id'].'
-;';
-
-        $result = pwg_query($query);
-        if (pwg_db_num_rows($result) > 0) {
-            $element = pwg_db_fetch_assoc($result);
-
-            if ($element !== null) {
-                $img = [
-                  'link' => make_picture_url(
-                      [
-                      'image_id' => $element['id'],
-                      'image_file' => $element['file'],
-                      'category' => $category,
-                      ]
-                  ),
-                  'src' => DerivativeImage::url(IMG_THUMB, $element),
-                  ];
-            }
+        $element = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findById(is_numeric($category['representative_picture_id']) ? (int) $category['representative_picture_id'] : 0);
+        if ($element !== null) {
+            $img = [
+              'link' => make_picture_url(
+                  [
+                  'image_id' => $element['id'],
+                  'image_file' => $element['file'],
+                  'category' => $category,
+                  ]
+              ),
+              'src' => DerivativeImage::url(IMG_THUMB, $element),
+              ];
         }
     }
 
@@ -163,13 +154,8 @@ SELECT
         pwg_mail_group(is_numeric($_POST['group']) ? (int) $_POST['group'] : 0, $args, $tpl);
 
         $post_group_str = is_scalar($_POST['group']) ? (string) $_POST['group'] : '0';
-        $query = '
-SELECT
-    name
-  FROM `'.GROUPS_TABLE.'`
-  WHERE id = '.$post_group_str.'
-;';
-        [$group_name] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $group_name = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+            ->findNameById((int) $post_group_str);
 
         $template->assign(
             [

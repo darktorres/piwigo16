@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 
 /**
  * Container for standard derivatives parameters.
@@ -205,8 +207,9 @@ final class ImageStdParams
             $disabled = addslashes(serialize(self::$disabled_type_map));
             conf_update_param('disabled_derivatives', $disabled);
         } else {
-            $query = 'DELETE FROM '.CONFIG_TABLE.' WHERE param = \'disabled_derivatives\'';
-            pwg_query($query);
+            ServiceLocator::get(Connection::class)->executeStatement(
+                'DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\''
+            );
         }
     }
 

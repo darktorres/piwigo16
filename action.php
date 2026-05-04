@@ -87,12 +87,8 @@ if ($get_id === null
     do_error(400, 'Invalid request - id/part');
 }
 
-$query = '
-SELECT * FROM '. IMAGES_TABLE.'
-  WHERE id='.$get_id.'
-;';
-
-$element_info = pwg_db_fetch_assoc(pwg_query($query));
+$element_info = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+    ->findById(is_numeric($get_id) ? (int) $get_id : 0);
 if (empty($element_info)) {
     do_error(404, 'Requested id not found');
 }

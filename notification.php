@@ -25,15 +25,10 @@ include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
  */
 function find_available_feed_id()
 {
+    $feedRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class);
     while (true) {
         $key = generate_key(50);
-        $query = '
-SELECT COUNT(*)
-  FROM '.USER_FEED_TABLE.'
-  WHERE id = \''.$key.'\'
-;';
-        list($count) = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if (0 == $count) {
+        if (!$feedRepo->existsById($key)) {
             return $key;
         }
     }
@@ -52,13 +47,8 @@ trigger_notify('loc_begin_notification');
 
 $page['feed'] = find_available_feed_id();
 
-$query = '
-INSERT INTO '.USER_FEED_TABLE.'
-  (id, user_id, last_check)
-  VALUES
-  (\''.$page['feed'].'\', '.$user['id'].', NULL)
-;';
-pwg_query($query);
+\Piwigo\Core\ServiceLocator::get(\Piwigo\Feed\FeedRepository::class)
+    ->insert((string) $page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
 
 $feed_url = PHPWG_ROOT_PATH.'feed.php';

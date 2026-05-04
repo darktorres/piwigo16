@@ -138,14 +138,8 @@ if (isset($_POST['submit'])) {
     }
     \Piwigo\Config\Config::override('extents_for_templates', serialize($replacements));
     $tpl_extension = $replacements;
-    /* ecrire la nouvelle conf */
-    $query = '
-UPDATE '.CONFIG_TABLE.'
-  SET value = \''. \Piwigo\Config\Config::extentsForTemplates() .'\'
-WHERE param = \'extents_for_templates\';';
-    if (pwg_query($query)) {
-        \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
-    }
+    conf_update_param('extents_for_templates', \Piwigo\Config\Config::extentsForTemplates());
+    \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
 }
 
 // +-----------------------------------------------------------------------+

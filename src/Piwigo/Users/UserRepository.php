@@ -705,4 +705,57 @@ final class UserRepository extends AbstractRepository
 
         return $row !== false ? $row : null;
     }
+
+    /** Add an image to a user's favorites. */
+    public function addFavorite(int $userId, int $imageId): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . $this->table('favorites') . ' (image_id, user_id) VALUES (?, ?)',
+            [$imageId, $userId]
+        );
+    }
+
+    /** Return true when the given image is in the user's favorites. */
+    public function isFavorite(int $userId, int $imageId): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('favorites'))
+            ->where('image_id = :imageId')
+            ->andWhere('user_id = :userId')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
+    /** Count how many images the given user has in their caddie. */
+    public function countCaddieByUserId(int $userId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('caddie'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Return all user_infos rows that have a non-null, non-expired activation key.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByActiveActivationKey(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('user_id', 'status', 'activation_key')
+            ->from($this->table('user_infos'))
+            ->where('activation_key IS NOT NULL')
+            ->andWhere('activation_key_expire > NOW()')
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
 }

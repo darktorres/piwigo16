@@ -458,8 +458,10 @@ switch ($page['mode']) {
 
                 $updated_param_count = 0;
                 // Update param
-                $result = pwg_query('select param, value from '.CONFIG_TABLE.' where param like \'nbm\\_%\'');
-                while ($nbm_user = pwg_db_fetch_assoc($result)) {
+                $nbmParams = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                    ->executeQuery('SELECT param, value FROM ' . CONFIG_TABLE . " WHERE param LIKE 'nbm\\_%'")
+                    ->fetchAllAssociative();
+                foreach ($nbmParams as $nbm_user) {
                     $param = (string)$nbm_user['param'];
                     if (isset($_POST[$param])) {
                         conf_update_param($param, $_POST[$param], true);

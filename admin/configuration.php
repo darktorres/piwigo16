@@ -288,9 +288,11 @@ if (isset($_POST['submit'])) {
     // updating configuration if no error found
     if (!in_array($page['section'], ['sizes', 'watermark']) and count($page['errors']) == 0 and is_webmaster()) {
         //echo '<pre>'; print_r($_POST); echo '</pre>';
-        $result = pwg_query('SELECT param FROM '.CONFIG_TABLE);
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $row_param = is_scalar($row['param']) ? (string) $row['param'] : '';
+        $allParams = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery('SELECT param FROM ' . CONFIG_TABLE)
+            ->fetchFirstColumn();
+        foreach ($allParams as $row_param) {
+            $row_param = is_scalar($row_param) ? (string) $row_param : '';
             if (isset($_POST[$row_param])) {
                 $value = is_scalar($_POST[$row_param]) ? (string) $_POST[$row_param] : '';
 
@@ -300,12 +302,7 @@ if (isset($_POST['submit'])) {
                     }
                 }
 
-                $query = '
-UPDATE '.CONFIG_TABLE.'
-SET value = \''. str_replace("\'", "''", $value).'\'
-WHERE param = \''.$row_param.'\'
-;';
-                pwg_query($query);
+                conf_update_param($row_param, $value);
             }
         }
         $template->assign(

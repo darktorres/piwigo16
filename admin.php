@@ -222,13 +222,8 @@ if (\Piwigo\Config\Config::enableCoreUpdate()) {
 if (\Piwigo\Config\Config::activateComments()) {
     $template->assign('U_COMMENTS', $link_start.'comments');
 
-    // pending comments
-    $query = '
-SELECT COUNT(*)
-  FROM '.COMMENTS_TABLE.'
-  WHERE validated=\'false\'
-;';
-    list($nb_comments) = pwg_db_fetch_row(pwg_query($query));
+    $nb_comments = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)
+        ->countUnvalidated();
 
     if ($nb_comments > 0) {
         $template->assign('NB_PENDING_COMMENTS', $nb_comments);
@@ -237,12 +232,8 @@ SELECT COUNT(*)
 }
 
 // any photo in the caddie?
-$query = '
-SELECT COUNT(*)
-  FROM '.CADDIE_TABLE.'
-  WHERE user_id = '.$user['id'].'
-;';
-list($nb_photos_in_caddie) = pwg_db_fetch_row(pwg_query($query));
+$nb_photos_in_caddie = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    ->countCaddieByUserId(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0);
 
 if ($nb_photos_in_caddie > 0) {
     $template->assign(
@@ -272,7 +263,8 @@ if (in_array($page['page'], array('site_update', 'batch_manager'))) {
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-list($page['nb_photos_total']) = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM '.IMAGES_TABLE));
+$page['nb_photos_total'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+    ->countAll();
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
     $page['nb_orphans'] = count_orphans();
 }

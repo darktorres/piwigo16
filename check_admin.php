@@ -4,9 +4,8 @@ define('PHPWG_ROOT_PATH', './');
 include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 
-$query = 'SELECT id, username, password FROM ' . USERS_TABLE . ' WHERE id = 1';
-$result = pwg_query($query);
-$user = pwg_db_fetch_assoc($result);
+$user = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    ->fetchAssociative('SELECT id, username, password FROM ' . USERS_TABLE . ' WHERE id = 1') ?: [];
 
 echo "Admin user:\n";
 echo 'ID: ' . $user['id'] . "\n";

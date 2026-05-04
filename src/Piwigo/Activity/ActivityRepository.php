@@ -23,7 +23,7 @@ final class ActivityRepository extends AbstractRepository
             ->setParameter('userId', $userId)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**

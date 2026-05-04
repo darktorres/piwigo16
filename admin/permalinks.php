@@ -134,18 +134,14 @@ $sort_by = parse_sort_variables(
     'SORT_'
 );
 
-$query = '
-SELECT id, permalink, uppercats, global_rank
-  FROM '.CATEGORIES_TABLE.'
-  WHERE permalink IS NOT NULL
-';
 $sortBy0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
-if ($sortBy0 == 'id' or $sortBy0 == 'permalink') {
-    $query .= ' ORDER BY '.$sortBy0;
+$permalinkQuery = 'SELECT id, permalink, uppercats, global_rank FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL';
+if ($sortBy0 === 'id' || $sortBy0 === 'permalink') {
+    $permalinkQuery .= ' ORDER BY ' . $sortBy0;
 }
 $categories = [];
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    ->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
     $row['name'] = get_cat_display_name_cache((string)($row['uppercats'] ?? ''));
     $categories[] = $row;
 }
@@ -167,14 +163,14 @@ $sort_by = parse_sort_variables(
 );
 
 $url_del_base = get_root_url().'admin.php?page=permalinks';
-$query = 'SELECT * FROM '.OLD_PERMALINKS_TABLE;
 $sortByOld0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
+$oldPermalinkQuery = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
 if (count($sort_by) && $sortByOld0 !== '') {
-    $query .= ' ORDER BY '.$sortByOld0;
+    $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0;
 }
-$result = pwg_query($query);
 $deleted_permalinks = [];
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    ->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
     $row['name'] = get_cat_display_name_cache((string)(int)$row['cat_id']);
     $row['U_DELETE'] =
         add_url_params(

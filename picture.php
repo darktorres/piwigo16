@@ -36,19 +36,14 @@ $page['rank_of'] = array_flip($page['items']);
 // if this image_id doesn't correspond to this category, an error message is
 // displayed, and execution is stopped
 if (!isset($page['rank_of'][$page['image_id']])) {
-    $query = '
-SELECT id, file, level
-  FROM '.IMAGES_TABLE.'
-  WHERE ';
+    $imageRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
     if ($page['image_id'] > 0) {
-        $query .= 'id = '.$page['image_id'];
+        $row = $imageRepo->findById($page['image_id']);
     } else {// url given by file name
         assert(!empty($page['image_file']));
-        $query .= 'file LIKE \'' .
-          str_replace(['_','%'], ['/_','/%'], $page['image_file']).
-          '.%\' ESCAPE \'/\' LIMIT 1';
+        $pattern = str_replace(['_','%'], ['/_','/%'], $page['image_file']) . '.%';
+        $row = $imageRepo->findByFilePattern($pattern);
     }
-    $row = pwg_db_fetch_assoc(pwg_query($query));
     if ($row === null) {// element does not exist
         page_not_found(
             'The requested image does not exist',
@@ -249,13 +244,11 @@ if ($get_action !== null) {
     switch ($get_action) {
         case 'add_to_favorites':
             {
-                $query = '
-INSERT INTO '.FAVORITES_TABLE.'
-  (image_id,user_id)
-  VALUES
-  ('.$page['image_id'].','.$user['id'].')
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                    ->addFavorite(
+                        is_numeric($user['id']) ? (int) $user['id'] : 0,
+                        is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
+                    );
 
                 redirect($url_self);
 
@@ -263,12 +256,11 @@ INSERT INTO '.FAVORITES_TABLE.'
             }
         case 'remove_from_favorites':
             {
-                $query = '
-DELETE FROM '.FAVORITES_TABLE.'
-  WHERE user_id = '.$user['id'].'
-    AND image_id = '.$page['image_id'].'
-;';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                    ->deleteFavorite(
+                        is_numeric($user['id']) ? (int) $user['id'] : 0,
+                        is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
+                    );
 
                 if ('favorites' == $page['section']) {
                     redirect($url_up);
@@ -281,12 +273,11 @@ DELETE FROM '.FAVORITES_TABLE.'
         case 'set_as_representative':
             {
                 if (is_admin() and isset($page['category'])) {
-                    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET representative_picture_id = '.$page['image_id'].'
-  WHERE id = '.$page['category']['id'].'
-;';
-                    pwg_query($query);
+                    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                        ->setRepresentativePicture(
+                            [is_numeric($page['category']['id']) ? (int) $page['category']['id'] : 0],
+                            is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
+                        );
                     pwg_activity('album', $page['category']['id'], 'edit', ['action' => $get_action, 'image_id' => $page['image_id']]);
 
                     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -442,15 +433,8 @@ if (isset($page['next_item'])) {
     $ids[] = $page['last_item'];
 }
 
-$query = '
-SELECT *
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $ids).')
-;';
-
-$result = pwg_query($query);
-
-while ($row = pwg_db_fetch_assoc($result)) {
+foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+    ->findByIds(array_map('intval', $ids)) as $row) {
     if (isset($page['previous_item']) and $row['id'] == $page['previous_item']) {
         $i = 'previous';
     } elseif (isset($page['next_item']) and $row['id'] == $page['next_item']) {
@@ -761,15 +745,11 @@ if (is_admin()) {
 
 // favorite manipulation
 if (!is_a_guest() and \Piwigo\Config\Config::pictureFavoriteIcon()) {
-    // verify if the picture is already in the favorite of the user
-    $query = '
-SELECT COUNT(*) AS nb_fav
-  FROM '.FAVORITES_TABLE.'
-  WHERE image_id = '.$page['image_id'].'
-    AND user_id = '.$user['id'].'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
-    $is_favorite = ($row['nb_fav'] ?? 0) != 0;
+    $is_favorite = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->isFavorite(
+            is_numeric($user['id']) ? (int) $user['id'] : 0,
+            is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
+        );
 
     $template->assign(
         'favorite',

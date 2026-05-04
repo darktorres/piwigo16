@@ -19,7 +19,7 @@ final class AuthKeyRepository extends AbstractRepository
             ->setParameter('key', $key)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /** Return true if the given key belongs to the given user. */
@@ -34,7 +34,7 @@ final class AuthKeyRepository extends AbstractRepository
             ->setParameter('userId', $userId)
             ->executeQuery()
             ->fetchOne();
-        return (int) $count > 0;
+        return is_numeric($count) ? (int) $count > 0 : false;
     }
 
     /**

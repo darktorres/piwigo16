@@ -510,11 +510,13 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   '.\Piwigo\Config\Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
-    $result = pwg_query($query);
+    $batchRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)
+        ->fetchAllAssociative();
 
     $thumb_params = ImageStdParams::get_by_type(IMG_SQUARE);
     // template thumbnail initialization
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($batchRows as $row) {
         $nb_thumbs_page++;
         $src_image = new SrcImage($row);
 

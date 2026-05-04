@@ -45,13 +45,8 @@ $selection = array_values(array_filter(
 if (count($selection) > 0) {
     $rank_of = array_flip($selection);
 
-    $query = '
-SELECT *
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(strval(...), $selection)).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findByIds(array_map('intval', $selection)) as $row) {
         $row['rank'] = $rank_of[ (int)$row['id'] ];
         $pictures[] = $row;
     }

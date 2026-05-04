@@ -21,7 +21,7 @@ class PwgTemplateAdapter
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec(string $s, string $p, int $v): string
+    public function l10n_dec(string $s, string $p, int|float|null $v): string
     {
         return l10n_dec($s, $p, $v);
     }

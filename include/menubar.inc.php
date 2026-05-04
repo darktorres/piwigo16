@@ -92,7 +92,7 @@ function initialize_menu(): void
 
     if ($block != null) {
         $block->data = [
-          'NB_PICTURE' => $user['nb_total_images'],
+          'NB_PICTURE' => $user['nb_total_images'] ?? 0,
           'MENU_CATEGORIES' => get_categories_menu(),
           'U_CATEGORIES' => make_index_url(['section' => 'categories']),
         ];

@@ -1225,7 +1225,7 @@ function l10n(?string $key): string
  * @param string $plural_key
  * @param int $decimal
  */
-function l10n_dec(string $singular_key, string $plural_key, int|float $decimal): string
+function l10n_dec(string $singular_key, string $plural_key, int|float|null $decimal): string
 {
     return \Piwigo\Lang\Translator::get()->plural($singular_key, $plural_key, (int) $decimal);
 }

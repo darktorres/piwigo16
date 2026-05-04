@@ -38,6 +38,10 @@ final class Translator
     {
         $this->inner     = new GettextTranslator();
         $this->generator = new ArrayGenerator();
+        // Seed an empty domain so GettextTranslator::$domain is never null,
+        // which would trigger "Using null as array offset" deprecation in PHP 8.x
+        // when translate() is called before any PO file has been loaded.
+        $this->inner->addTranslations(['domain' => '', 'messages' => [], 'plural-forms' => '']);
     }
 
     public static function get(): self

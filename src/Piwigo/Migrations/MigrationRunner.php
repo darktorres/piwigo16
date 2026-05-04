@@ -48,7 +48,7 @@ final class MigrationRunner
             return;
         }
 
-        $migratorConfig = (new MigratorConfiguration())->setAllOrNothing(true);
+        $migratorConfig = new MigratorConfiguration()->setAllOrNothing(true);
         $factory->getMigrator()->migrate($plan, $migratorConfig);
     }
 }

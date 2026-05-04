@@ -87,7 +87,9 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     if (\Piwigo\Config\Config::has('show_php_errors') && !empty(\Piwigo\Config\Config::showPhpErrors()) && function_exists('ini_set')) {
         ini_set('error_reporting', (string) \Piwigo\Config\Config::showPhpErrors());
         if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
-            ini_set('display_errors', '1');
+            // Route errors to DevTools (X-PHP-Error-N response headers) instead of
+            // inline output, which corrupts JSON/XML/binary responses.
+            \Piwigo\Core\ErrorCollector::install();
         }
     }
 

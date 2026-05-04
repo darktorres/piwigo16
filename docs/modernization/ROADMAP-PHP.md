@@ -831,7 +831,7 @@ Replace the static `ServiceLocator` registry with a real PSR-11 dependency-injec
 
 5. **Bootstrap.** `Kernel::boot()` builds the container and stashes it on a single static accessor: `Kernel::container()`. `ServiceLocator::get($id)` is rewritten to `Kernel::container()->get($id)`.
 
-6. **Migrate to constructor injection.** New service classes from item #17 receive their dependencies via constructor parameters instead of pulling from the locator. Existing services migrate opportunistically when touched.
+6. **Migrate to constructor injection.** New service classes from item #19 receive their dependencies via constructor parameters instead of pulling from the locator. Existing services migrate opportunistically when touched.
 
 ### Verification
 
@@ -847,7 +847,120 @@ npx playwright test                       # green (no behavioral regression)
 
 ---
 
-## #13 — PSR-6 / PSR-16 cache + Redis support
+## #13 — PHP 8.1–8.5 features: readonly, enum, match
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Goal
+
+Adopt PHP 8.1–8.5 language features where they tighten invariants without changing public API. Targets: `readonly` properties on value objects, `enum` for flag/constant sets, `match` in place of exhaustive `switch` value maps.
+
+### Current state
+
+- `src/` has 68 classes/interfaces; `include/` free functions are out of scope (covered by item #19).
+- 3 `readonly` declarations exist in `src/` so far; 0 enums, no `match` adoption beyond a few isolated uses.
+- `include/ws_core.inc.php` has 10 `define()` bitmask constants — enum candidates (linked to #8).
+
+### Steps
+
+1. **Readonly properties.** Audit `src/` for classes whose constructor assigns properties that are never written again. Candidates: `Piwigo\Ws\PwgError` (`$_code`, `$_codeText`), `Piwigo\Cache\PersistentFileCache` (path properties), all search Q-token classes. Apply `readonly` to each confirmed write-once property.
+
+2. **Backed enums.** Replace `define()` bitmask constants with `enum` backed by `int`:
+   - `WsType: int` — `BOOL = 0x01`, `INT = 0x02`, `FLOAT = 0x04`, `POSITIVE = 0x10`, `NEGATIVE = 0x20`, `NOTNULL = 0x40` (linked to #8).
+   - `GraphicsLibrary: string` — `'auto'`, `'imagick'`, `'ext_imagick'`, `'gd'` (from `Config` typed getter).
+   - `DerivativeSize: string` — `'small'`, `'medium'`, `'large'`, `'thumb'`, `'xsmall'`, `'xxsmall'`.
+
+3. **Match expressions.** Replace exhaustive `switch ($x) { case A: return 1; case B: return 2; default: throw }` blocks with `match`. Focus on `src/Piwigo/Template/ScriptLoader.php` and `src/Piwigo/Ws/` protocol dispatchers.
+
+4. **Rector sweep.** After manual candidates are done, run Rector with `->withPhpSets(php81: true, php82: true, php83: true, php84: true, php85: true)` in dry-run mode — accept only the readonly and match rewrites; reject any that change public API.
+
+### Verification
+
+```bash
+vendor/bin/rector process --dry-run   # "0 files would be changed" after manual pass
+vendor/bin/phpstan analyse            # still green
+vendor/bin/phpunit --testsuite Unit   # still green
+```
+
+---
+
+## #14 — Schema migrations as code
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Goal
+
+Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migration classes. A `phpwg_migration_versions` table tracks applied migrations. Migrations are runnable forward (`migrate`) and backward (`rollback`). Bootstrap auto-applies pending migrations on first request after upgrade — or via CLI.
+
+### Current state
+
+- **23 hand-written `install/upgrade_*.php` scripts** (1.3.0 → 15.0.0). Each is a top-level PHP file calling `pwg_query()` directly.
+- The 16.x modernization floor is 16.0.0 (see auto-memory `project_modernization_floor.md`) — every script for a pre-16 version (1.3.0 through 15.0.0, all 23 of them) is unreachable and should be **deleted outright** before this item starts. Doctrine Migrations only needs to track schema changes from 16.0.0 forward, so the conversion list shrinks to whatever 16.x adds.
+- No version tracking table. No rollback. No migration runner class.
+- Upgrade flow: `upgrade.php` includes each file in version order based on installed version.
+
+### Steps
+
+1. **Add Doctrine Migrations.**
+
+   ```bash
+   composer require doctrine/migrations doctrine/dbal
+   ```
+
+   (DBAL is needed by both this item and item #17 — install once.)
+
+2. **Configure `migrations.php`** at the repo root:
+
+   ```php
+   return [
+       'table_storage' => [
+           'table_name' => 'phpwg_migration_versions',
+           'version_column_name' => 'version',
+           'version_column_length' => 191,
+           'executed_at_column_name' => 'executed_at',
+           'execution_time_column_name' => 'execution_time',
+       ],
+       'migrations_paths' => [
+           'Piwigo\\Migrations' => 'src/Piwigo/Migrations',
+       ],
+       'all_or_nothing' => true,
+       'check_database_platform' => false,
+   ];
+   ```
+
+3. **Convert legacy upgrades.** Each `install/upgrade_*.php` becomes a `Version<YYYYMMDDHHMMSS>` class:
+
+   ```php
+   namespace Piwigo\Migrations;
+
+   final class Version20260101000000 extends AbstractMigration {
+       public function up(Schema $schema): void { /* original upgrade SQL via $this->addSql(...) */ }
+       public function down(Schema $schema): void { /* reverse where possible; throw IrreversibleMigration where not */ }
+   }
+   ```
+
+4. **`Piwigo\Migrations\MigrationRunner`.** `run()` method calls `DependencyFactory::getMigrator()->migrate()`. Hooked into `Kernel::boot()` — auto-applies pending migrations on first request after upgrade (only if `Config::get('auto_migrate', true)`).
+
+5. **CLI entrypoint.** `bin/piwigo` is a Symfony Console application registering the standard Doctrine Migrations commands (`migrations:migrate`, `migrations:status`, `migrations:rollback`, `migrations:diff`).
+
+6. **Decommission legacy files.** Once the migration runner has caught up to the current schema, delete the `install/upgrade_*.php` files. Document the cutover release.
+
+### Verification
+
+```bash
+bin/piwigo migrations:status                      # all applied; pending = 0
+bin/piwigo migrations:migrate --dry-run           # no changes on a current DB
+
+# On a test DB, rollback + re-apply:
+bin/piwigo migrations:execute --down Piwigo\\Migrations\\Version20260101000000
+bin/piwigo migrations:execute --up   Piwigo\\Migrations\\Version20260101000000
+
+vendor/bin/phpunit --testsuite Integration
+```
+
+---
+
+## #15 — PSR-6 / PSR-16 cache + Redis support
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 
@@ -903,7 +1016,7 @@ PIWIGO_CACHE_BACKEND=redis PIWIGO_CACHE_REDIS_URL=redis://localhost:6379 vendor/
 
 ---
 
-## #14 — File storage abstraction (Flysystem)
+## #16 — File storage abstraction (Flysystem)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 
@@ -980,83 +1093,7 @@ npx playwright test
 
 ---
 
-## #15 — Schema migrations as code
-
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
-
-### Goal
-
-Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migration classes. A `phpwg_migration_versions` table tracks applied migrations. Migrations are runnable forward (`migrate`) and backward (`rollback`). Bootstrap auto-applies pending migrations on first request after upgrade — or via CLI.
-
-### Current state
-
-- **23 hand-written `install/upgrade_*.php` scripts** (1.3.0 → 15.0.0). Each is a top-level PHP file calling `pwg_query()` directly.
-- The 16.x modernization floor is 16.0.0 (see auto-memory `project_modernization_floor.md`) — every script for a pre-16 version (1.3.0 through 15.0.0, all 23 of them) is unreachable and should be **deleted outright** before this item starts. Doctrine Migrations only needs to track schema changes from 16.0.0 forward, so the conversion list shrinks to whatever 16.x adds.
-- No version tracking table. No rollback. No migration runner class.
-- Upgrade flow: `upgrade.php` includes each file in version order based on installed version.
-
-### Steps
-
-1. **Add Doctrine Migrations.**
-
-   ```bash
-   composer require doctrine/migrations doctrine/dbal
-   ```
-
-   (DBAL is needed by both this item and item #16 — install once.)
-
-2. **Configure `migrations.php`** at the repo root:
-
-   ```php
-   return [
-       'table_storage' => [
-           'table_name' => 'phpwg_migration_versions',
-           'version_column_name' => 'version',
-           'version_column_length' => 191,
-           'executed_at_column_name' => 'executed_at',
-           'execution_time_column_name' => 'execution_time',
-       ],
-       'migrations_paths' => [
-           'Piwigo\\Migrations' => 'src/Piwigo/Migrations',
-       ],
-       'all_or_nothing' => true,
-       'check_database_platform' => false,
-   ];
-   ```
-
-3. **Convert legacy upgrades.** Each `install/upgrade_*.php` becomes a `Version<YYYYMMDDHHMMSS>` class:
-
-   ```php
-   namespace Piwigo\Migrations;
-
-   final class Version20260101000000 extends AbstractMigration {
-       public function up(Schema $schema): void { /* original upgrade SQL via $this->addSql(...) */ }
-       public function down(Schema $schema): void { /* reverse where possible; throw IrreversibleMigration where not */ }
-   }
-   ```
-
-4. **`Piwigo\Migrations\MigrationRunner`.** `run()` method calls `DependencyFactory::getMigrator()->migrate()`. Hooked into `Kernel::boot()` — auto-applies pending migrations on first request after upgrade (only if `Config::get('auto_migrate', true)`).
-
-5. **CLI entrypoint.** `bin/piwigo` is a Symfony Console application registering the standard Doctrine Migrations commands (`migrations:migrate`, `migrations:status`, `migrations:rollback`, `migrations:diff`).
-
-6. **Decommission legacy files.** Once the migration runner has caught up to the current schema, delete the `install/upgrade_*.php` files. Document the cutover release.
-
-### Verification
-
-```bash
-bin/piwigo migrations:status                      # all applied; pending = 0
-bin/piwigo migrations:migrate --dry-run           # no changes on a current DB
-
-# On a test DB, rollback + re-apply:
-bin/piwigo migrations:execute --down Piwigo\\Migrations\\Version20260101000000
-bin/piwigo migrations:execute --up   Piwigo\\Migrations\\Version20260101000000
-
-vendor/bin/phpunit --testsuite Integration
-```
-
----
-
-## #16 — DB layer modernization (Doctrine DBAL + repositories)
+## #17 — DB layer modernization (Doctrine DBAL + repositories)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** XL
 
@@ -1073,7 +1110,7 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
 
 ### Steps
 
-1. **Add Doctrine DBAL.** Already required by item #15 if landed first; otherwise `composer require doctrine/dbal`.
+1. **Add Doctrine DBAL.** Already required by item #14 if landed first; otherwise `composer require doctrine/dbal`.
 
 2. **Wrap connection.** `Piwigo\Db\Connection` factory builds DBAL `Connection` from existing config (`db_host`, `db_user`, `db_password`, `db_base`). Registered in DI.
 
@@ -1088,7 +1125,7 @@ Replace 583 raw `pwg_query()` calls with Doctrine DBAL's query builder. Reposito
    - `Piwigo\History\HistoryRepository`
    - `Piwigo\Notification\NotificationRepository`
 
-4. **Method-by-method, port the queries.** For each function in the per-module migration (item #17), the repository method that backs it uses DBAL's query builder:
+4. **Method-by-method, port the queries.** For each function in the per-module migration (item #19), the repository method that backs it uses DBAL's query builder:
 
    ```php
    public function findByIds(array $ids): array {
@@ -1122,115 +1159,6 @@ grep -rc 'pwg_query\(' include/ admin/ src/ --include='*.php' | awk -F: '{s+=$2}
 vendor/bin/phpstan analyse           # green at level 9, eventually level 10 (item #27)
 vendor/bin/phpunit --testsuite Integration   # green
 npx playwright test                  # green
-```
-
----
-
-## #17 — Migrate `include/functions_*.inc.php` to typed service classes
-
-**Status:** Not started &nbsp;|&nbsp; **Size:** XL
-
-### Goal
-
-Move all 366 free functions across the 19 `functions_*.inc.php` modules into typed, namespaced classes under `src/Piwigo/<domain>/`. Each migrated function becomes a static or instance method on a domain class. Free-function wrappers stay during the transition (one-line delegates) so call sites keep working without a sweep.
-
-### Current state
-
-- **19 `functions_*.inc.php` modules** in `include/`, ~366 free functions total.
-- Three modules already mix one class with their free functions (`ws_core.inc.php` — covered by item #8; `functions_search.inc.php`; `functions_plugins.inc.php`).
-- 9 legacy `.class.php` files are migrated to `src/` by item #3 — they're the home for the new domain classes here.
-- DB-layer plumbing (`functions_mysqli.inc.php`, `pwg_query`) is migrated to repositories by item #16.
-
-### Per-module checklist
-
-Counts re-measured against the current tree.
-
-| Module                                                 | Lines | Funcs | Target namespace                                         |
-| ------------------------------------------------------ | ----- | ----- | -------------------------------------------------------- |
-| `functions_user.inc.php`                               | 2,711 | 63    | `Piwigo\Users\`, `Piwigo\Auth\`                          |
-| `functions.inc.php`                                    | 2,820 | 81    | spread by domain — split first                           |
-| `functions_search.inc.php`                             | 2,101 | 17    | `Piwigo\Search\`                                         |
-| `functions_mail.inc.php`                               | 1,054 | 22    | `Piwigo\Mail\`                                           |
-| `functions_url.inc.php`                                | 846   | 21    | `Piwigo\Url\`                                            |
-| `functions_category.inc.php`                           | 799   | 17    | `Piwigo\Category\`                                       |
-| `functions_html.inc.php`                               | 659   | 23    | `Piwigo\Html\`                                           |
-| `functions_notification.inc.php`                       | 615   | 18    | `Piwigo\Notification\`                                   |
-| `functions_comment.inc.php`                            | 501   | 8     | `Piwigo\Comment\`                                        |
-| `functions_plugins.inc.php`                            | 458   | 12    | `Piwigo\Plugin\`                                         |
-| `functions_tag.inc.php`                                | 370   | 9     | `Piwigo\Tag\`                                            |
-| `functions_session.inc.php`                            | ?     | 12    | `Piwigo\Session\`                                        |
-| `functions_picture.inc.php`                            | ?     | 6     | `Piwigo\Picture\`                                        |
-| `functions_metadata.inc.php`                           | ?     | 5     | `Piwigo\Metadata\`                                       |
-| `functions_cookie.inc.php`                             | ?     | 3     | `Piwigo\Auth\`                                           |
-| `functions_rate.inc.php`                               | ?     | 2     | `Piwigo\Rate\`                                           |
-| `functions_filter.inc.php`                             | ?     | 1     | `Piwigo\Filter\`                                         |
-| `functions_calendar.inc.php`                           | ?     | 1     | `Piwigo\Calendar\`                                       |
-| `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | `Piwigo\Db\` (item #16)                                  |
-| `ws_functions/*.php`                                   | —     | —     | `Piwigo\Ws\Method\` — 9 files in `include/ws_functions/` |
-| `admin/include/functions.php`                          | 3,671 | ?     | spread by admin domain                                   |
-| `admin/include/functions_upload.inc.php`               | 1,033 | ?     | `Piwigo\Admin\Upload\`                                   |
-| `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | `Piwigo\Admin\Mail\`                                     |
-
-### Steps (per module)
-
-1. **Inventory.** `grep -c '^function ' include/functions_<x>.inc.php`. Group functions by logical cluster (lookup/hydration, mutation, validation, etc.).
-
-2. **Map clusters → classes.** Example for `functions_user`:
-   - `get_user_by_id`, `get_user_array`, `build_user`, `create_user`, `delete_user` → `Piwigo\Users\UserRepository`
-   - `log_user`, `login_user`, `logout_user`, `verify_login` → `Piwigo\Auth\AuthService`
-   - `remember_me_token`, `set_remember_me_cookie`, `delete_remember_me_cookie` → `Piwigo\Auth\RememberMeService`
-   - `get_user_permissions`, `is_admin`, `is_webmaster`, `can_manage_user` → `Piwigo\Users\PermissionService`
-   - `update_user_preferences`, `apply_user_theme` → `Piwigo\Users\PreferencesService`
-
-3. **Move one cluster at a time, leaf-first.**
-   a. Create the class under `src/Piwigo/<Domain>/`.
-   b. Move the function bodies as instance methods (DI-friendly) or static methods (transitional).
-   c. Leave the original free function in `functions_*.inc.php` as a one-line delegate: `function get_user_by_id(int $id) { return Piwigo\Users\UserRepository::get($id); }`.
-   d. Add unit tests for the new class.
-
-4. **Tighten types.** Free functions with `@param mixed` get narrowed signatures (`int`, `string`, `int|false`) on the new class methods.
-
-5. **Wire DI.** New class is registered in `config/container.php` (item #12). Constructor takes its dependencies (Config, Logger, repositories from item #16, etc.).
-
-6. **Remove wrappers** once all callers in `include/`, `admin/`, and `src/` have been migrated to the new class.
-
-7. **PHPStan.** New classes are clean at level 9 from day one — write them typed, don't retrofit.
-
-### Pre-boot and admin includes → services
-
-In addition to the `functions_*.inc.php` modules above, several `include/*.inc.php` and `admin/include/*.inc.php` files are procedural scripts that read file-top globals (`$template`, `$user`, `$page`, `$persistent_cache`, `$lang`). They're in scope for this item because the work is identical: extract the body into a typed service class, leave a one-line delegate behind. Once the service exists, the `global` declaration at the top of the file is replaced by constructor-injected (or `Kernel::container()->get(...)`) dependencies.
-
-| File | Becomes | Notes |
-|---|---|---|
-| `include/section_init.inc.php` | `Piwigo\Section\SectionInitializer::initialize()` | Owns the PATH_INFO / `$page['section']` parsing — also touched by item #22. |
-| `include/user.inc.php` | `Piwigo\Users\UserBootstrap` | Builds the `CurrentUser` from session + cookies on each request. |
-| `include/filter.inc.php` | `Piwigo\Filter\FilterResolver` | Resolves the active filter from session + URL. |
-| `include/ws_core.inc.php` | merge into `Piwigo\Ws\PwgServer` | Already partially classed (item #8). |
-| `include/ws_init.inc.php` | merge into `Piwigo\Ws\PwgServer::boot()` | |
-| `include/ws_functions/pwg.{categories,extensions,images,php,tags,users}.php` | `Piwigo\Ws\Method\{Categories,Extensions,Images,General,Tags,Users}Endpoints` | One class per file. Coordinate with item #20 if the OpenAPI work lands first. |
-| `admin/include/albums_tab.inc.php` | `Piwigo\Admin\Album\AlbumsTabRenderer` | |
-| `admin/include/batch_manager_filters.inc.php` | `Piwigo\Admin\BatchManager\FilterResolver` | |
-| `admin/include/configuration_sizes_process.inc.php` | `Piwigo\Admin\Config\SizesProcessor` | |
-| `admin/include/configuration_watermark_process.inc.php` | `Piwigo\Admin\Config\WatermarkProcessor` | |
-| `admin/include/photos_add_direct_prepare.inc.php` | `Piwigo\Admin\Upload\DirectPreparer` | |
-| `admin/include/user_tabs.inc.php` | `Piwigo\Admin\Users\UserTabRenderer` | |
-| `include/constants.php` | `Piwigo\Core\Config::dbPrefix()` | One typed accessor; `$prefixeTable` global retires. |
-
-Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `include/picture_comment.inc.php`, `include/picture_metadata.inc.php`, `include/picture_rate.inc.php`, `include/no_photo_yet.inc.php`, `include/search_filters.inc.php`, `include/selected_tags.inc.php`, `include/category_cats.inc.php`, `include/category_default.inc.php`) are **not** in scope here — they become Latte partials under item #24.
-
-### Verification (per module)
-
-```bash
-grep -c "^function " include/functions_<x>.inc.php   # shrinking each PR
-vendor/bin/phpunit --testsuite Unit                  # new class tests green
-npx playwright test                                  # behavioral parity
-```
-
-### Verification (track-wide)
-
-```bash
-grep -c "^function " include/functions_*.inc.php | awk -F: '{s+=$NF} END {print s}'
-# target: 0 (modules become empty shells, eventually deleted)
 ```
 
 ---
@@ -1270,9 +1198,9 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 5. **Lazy-load.** Boot only loads the active locale's `common.mo`. Admin pages load `admin.mo` on demand. The 73 locales never all load at once.
 
-6. **Migrate template syntax** (depends on items #24 Latte and #26 plugin/theme):
+6. **Migrate template syntax** (depends on items #23 Latte and #26 plugin/theme):
    - Smarty: `{translate $key}` and `{$key|translate}` already exist — point both at the new service.
-   - Latte: `{$key|translate}` filter already planned in item #24 step 4.
+   - Latte: `{$key|translate}` filter already planned in item #23 step 4.
 
 7. **Document the translator workflow** in `CONTRIBUTING.md` and a new `docs/I18N.md`. Cover: how to add a new key, how to push/pull from Crowdin (or chosen platform), how to compile MO files locally for testing.
 
@@ -1294,111 +1222,116 @@ npx playwright test                        # all locales render
 
 ---
 
-## #19 — PHP 8.1–8.5 features: readonly, enum, match
+## #19 — Migrate `include/functions_*.inc.php` to typed service classes
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** Not started &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
-Adopt PHP 8.1–8.5 language features where they tighten invariants without changing public API. Targets: `readonly` properties on value objects, `enum` for flag/constant sets, `match` in place of exhaustive `switch` value maps.
+Move all 366 free functions across the 19 `functions_*.inc.php` modules into typed, namespaced classes under `src/Piwigo/<domain>/`. Each migrated function becomes a static or instance method on a domain class. Free-function wrappers stay during the transition (one-line delegates) so call sites keep working without a sweep.
 
 ### Current state
 
-- `src/` has 68 classes/interfaces; `include/` free functions are out of scope (covered by item #17).
-- 3 `readonly` declarations exist in `src/` so far; 0 enums, no `match` adoption beyond a few isolated uses.
-- `include/ws_core.inc.php` has 10 `define()` bitmask constants — enum candidates (linked to #8).
+- **19 `functions_*.inc.php` modules** in `include/`, ~366 free functions total.
+- Three modules already mix one class with their free functions (`ws_core.inc.php` — covered by item #8; `functions_search.inc.php`; `functions_plugins.inc.php`).
+- 9 legacy `.class.php` files are migrated to `src/` by item #3 — they're the home for the new domain classes here.
+- DB-layer plumbing (`functions_mysqli.inc.php`, `pwg_query`) is migrated to repositories by item #17.
 
-### Steps
+### Per-module checklist
 
-1. **Readonly properties.** Audit `src/` for classes whose constructor assigns properties that are never written again. Candidates: `Piwigo\Ws\PwgError` (`$_code`, `$_codeText`), `Piwigo\Cache\PersistentFileCache` (path properties), all search Q-token classes. Apply `readonly` to each confirmed write-once property.
+Counts re-measured against the current tree.
 
-2. **Backed enums.** Replace `define()` bitmask constants with `enum` backed by `int`:
-   - `WsType: int` — `BOOL = 0x01`, `INT = 0x02`, `FLOAT = 0x04`, `POSITIVE = 0x10`, `NEGATIVE = 0x20`, `NOTNULL = 0x40` (linked to #8).
-   - `GraphicsLibrary: string` — `'auto'`, `'imagick'`, `'ext_imagick'`, `'gd'` (from `Config` typed getter).
-   - `DerivativeSize: string` — `'small'`, `'medium'`, `'large'`, `'thumb'`, `'xsmall'`, `'xxsmall'`.
+| Module                                                 | Lines | Funcs | Target namespace                                         |
+| ------------------------------------------------------ | ----- | ----- | -------------------------------------------------------- |
+| `functions_user.inc.php`                               | 2,711 | 63    | `Piwigo\Users\`, `Piwigo\Auth\`                          |
+| `functions.inc.php`                                    | 2,820 | 81    | spread by domain — split first                           |
+| `functions_search.inc.php`                             | 2,101 | 17    | `Piwigo\Search\`                                         |
+| `functions_mail.inc.php`                               | 1,054 | 22    | `Piwigo\Mail\`                                           |
+| `functions_url.inc.php`                                | 846   | 21    | `Piwigo\Url\`                                            |
+| `functions_category.inc.php`                           | 799   | 17    | `Piwigo\Category\`                                       |
+| `functions_html.inc.php`                               | 659   | 23    | `Piwigo\Html\`                                           |
+| `functions_notification.inc.php`                       | 615   | 18    | `Piwigo\Notification\`                                   |
+| `functions_comment.inc.php`                            | 501   | 8     | `Piwigo\Comment\`                                        |
+| `functions_plugins.inc.php`                            | 458   | 12    | `Piwigo\Plugin\`                                         |
+| `functions_tag.inc.php`                                | 370   | 9     | `Piwigo\Tag\`                                            |
+| `functions_session.inc.php`                            | ?     | 12    | `Piwigo\Session\`                                        |
+| `functions_picture.inc.php`                            | ?     | 6     | `Piwigo\Picture\`                                        |
+| `functions_metadata.inc.php`                           | ?     | 5     | `Piwigo\Metadata\`                                       |
+| `functions_cookie.inc.php`                             | ?     | 3     | `Piwigo\Auth\`                                           |
+| `functions_rate.inc.php`                               | ?     | 2     | `Piwigo\Rate\`                                           |
+| `functions_filter.inc.php`                             | ?     | 1     | `Piwigo\Filter\`                                         |
+| `functions_calendar.inc.php`                           | ?     | 1     | `Piwigo\Calendar\`                                       |
+| `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | `Piwigo\Db\` (item #17)                                  |
+| `ws_functions/*.php`                                   | —     | —     | `Piwigo\Ws\Method\` — 9 files in `include/ws_functions/` |
+| `admin/include/functions.php`                          | 3,671 | ?     | spread by admin domain                                   |
+| `admin/include/functions_upload.inc.php`               | 1,033 | ?     | `Piwigo\Admin\Upload\`                                   |
+| `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | `Piwigo\Admin\Mail\`                                     |
 
-3. **Match expressions.** Replace exhaustive `switch ($x) { case A: return 1; case B: return 2; default: throw }` blocks with `match`. Focus on `src/Piwigo/Template/ScriptLoader.php` and `src/Piwigo/Ws/` protocol dispatchers.
+### Steps (per module)
 
-4. **Rector sweep.** After manual candidates are done, run Rector with `->withPhpSets(php81: true, php82: true, php83: true, php84: true, php85: true)` in dry-run mode — accept only the readonly and match rewrites; reject any that change public API.
+1. **Inventory.** `grep -c '^function ' include/functions_<x>.inc.php`. Group functions by logical cluster (lookup/hydration, mutation, validation, etc.).
 
-### Verification
+2. **Map clusters → classes.** Example for `functions_user`:
+   - `get_user_by_id`, `get_user_array`, `build_user`, `create_user`, `delete_user` → `Piwigo\Users\UserRepository`
+   - `log_user`, `login_user`, `logout_user`, `verify_login` → `Piwigo\Auth\AuthService`
+   - `remember_me_token`, `set_remember_me_cookie`, `delete_remember_me_cookie` → `Piwigo\Auth\RememberMeService`
+   - `get_user_permissions`, `is_admin`, `is_webmaster`, `can_manage_user` → `Piwigo\Users\PermissionService`
+   - `update_user_preferences`, `apply_user_theme` → `Piwigo\Users\PreferencesService`
+
+3. **Move one cluster at a time, leaf-first.**
+   a. Create the class under `src/Piwigo/<Domain>/`.
+   b. Move the function bodies as instance methods (DI-friendly) or static methods (transitional).
+   c. Leave the original free function in `functions_*.inc.php` as a one-line delegate: `function get_user_by_id(int $id) { return Piwigo\Users\UserRepository::get($id); }`.
+   d. Add unit tests for the new class.
+
+4. **Tighten types.** Free functions with `@param mixed` get narrowed signatures (`int`, `string`, `int|false`) on the new class methods.
+
+5. **Wire DI.** New class is registered in `config/container.php` (item #12). Constructor takes its dependencies (Config, Logger, repositories from item #17, etc.).
+
+6. **Remove wrappers** once all callers in `include/`, `admin/`, and `src/` have been migrated to the new class.
+
+7. **PHPStan.** New classes are clean at level 9 from day one — write them typed, don't retrofit.
+
+### Pre-boot and admin includes → services
+
+In addition to the `functions_*.inc.php` modules above, several `include/*.inc.php` and `admin/include/*.inc.php` files are procedural scripts that read file-top globals (`$template`, `$user`, `$page`, `$persistent_cache`, `$lang`). They're in scope for this item because the work is identical: extract the body into a typed service class, leave a one-line delegate behind. Once the service exists, the `global` declaration at the top of the file is replaced by constructor-injected (or `Kernel::container()->get(...)`) dependencies.
+
+| File | Becomes | Notes |
+|---|---|---|
+| `include/section_init.inc.php` | `Piwigo\Section\SectionInitializer::initialize()` | Owns the PATH_INFO / `$page['section']` parsing — also touched by item #22. |
+| `include/user.inc.php` | `Piwigo\Users\UserBootstrap` | Builds the `CurrentUser` from session + cookies on each request. |
+| `include/filter.inc.php` | `Piwigo\Filter\FilterResolver` | Resolves the active filter from session + URL. |
+| `include/ws_core.inc.php` | merge into `Piwigo\Ws\PwgServer` | Already partially classed (item #8). |
+| `include/ws_init.inc.php` | merge into `Piwigo\Ws\PwgServer::boot()` | |
+| `include/ws_functions/pwg.{categories,extensions,images,php,tags,users}.php` | `Piwigo\Ws\Method\{Categories,Extensions,Images,General,Tags,Users}Endpoints` | One class per file. Coordinate with item #21 if the OpenAPI work lands first. |
+| `admin/include/albums_tab.inc.php` | `Piwigo\Admin\Album\AlbumsTabRenderer` | |
+| `admin/include/batch_manager_filters.inc.php` | `Piwigo\Admin\BatchManager\FilterResolver` | |
+| `admin/include/configuration_sizes_process.inc.php` | `Piwigo\Admin\Config\SizesProcessor` | |
+| `admin/include/configuration_watermark_process.inc.php` | `Piwigo\Admin\Config\WatermarkProcessor` | |
+| `admin/include/photos_add_direct_prepare.inc.php` | `Piwigo\Admin\Upload\DirectPreparer` | |
+| `admin/include/user_tabs.inc.php` | `Piwigo\Admin\Users\UserTabRenderer` | |
+| `include/constants.php` | `Piwigo\Core\Config::dbPrefix()` | One typed accessor; `$prefixeTable` global retires. |
+
+Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `include/picture_comment.inc.php`, `include/picture_metadata.inc.php`, `include/picture_rate.inc.php`, `include/no_photo_yet.inc.php`, `include/search_filters.inc.php`, `include/selected_tags.inc.php`, `include/category_cats.inc.php`, `include/category_default.inc.php`) are **not** in scope here — they become Latte partials under item #23.
+
+### Verification (per module)
 
 ```bash
-vendor/bin/rector process --dry-run   # "0 files would be changed" after manual pass
-vendor/bin/phpstan analyse            # still green
-vendor/bin/phpunit --testsuite Unit   # still green
+grep -c "^function " include/functions_<x>.inc.php   # shrinking each PR
+vendor/bin/phpunit --testsuite Unit                  # new class tests green
+npx playwright test                                  # behavioral parity
+```
+
+### Verification (track-wide)
+
+```bash
+grep -c "^function " include/functions_*.inc.php | awk -F: '{s+=$NF} END {print s}'
+# target: 0 (modules become empty shells, eventually deleted)
 ```
 
 ---
 
-## #20 — OpenAPI 3.1 spec for the WS layer
-
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
-
-### Goal
-
-An OpenAPI 3.1 specification describes every method registered with `PwgServer::addMethod()`. The spec is auto-generated from the registration metadata — no hand-maintained YAML. Served at `/ws/openapi.json`; Swagger UI at `/ws/docs`. With the spec in place, client SDKs (TypeScript, Python, etc.) can be generated via `openapi-generator-cli`.
-
-### Current state
-
-- 100+ WS methods registered procedurally with array literals in `include/ws_functions/*.php`.
-- Documentation exists only in PHP docblocks above the handler functions.
-- No machine-readable schema; every external integrator hand-rolls request/response shapes.
-
-### Steps
-
-1. **Typed registration.** Introduce `Piwigo\Ws\MethodDefinition` DTO:
-
-   ```php
-   final class MethodDefinition {
-       public function __construct(
-           public readonly string $name,
-           public readonly string $description,
-           public readonly array $params,           // ParamDefinition[]
-           public readonly string $returns,         // class-string|literal
-           public readonly array $tags = [],
-           public readonly bool $requiresAuth = false,
-       ) {}
-   }
-   ```
-
-   `PwgServer::addMethod()` accepts both the legacy array shape (BC) and `MethodDefinition` (new). The legacy shape is internally normalized to a `MethodDefinition`.
-
-2. **`Piwigo\Ws\OpenApi\SpecBuilder`.** Walks the registered methods, emits an OpenAPI 3.1 document:
-   - Each WS method becomes a path `/ws.json#<methodName>` (or `/ws/<methodName>` if routing supports it post-#22).
-   - Param types map from `WsType` enum (item #19) to OpenAPI primitives.
-   - Response shapes derived from a per-method response class (typed object the handler returns).
-
-3. **Routes.** `/ws/openapi.json` returns `SpecBuilder::build()->json()`. `/ws/docs` serves the Swagger UI bundle (CDN or vendored).
-
-4. **Per-method enrichment.** PHP attribute on each handler:
-
-   ```php
-   #[OpenApi\Method(
-       summary: 'Search images by tag, date, or filename.',
-       responseClass: ImageSearchResponse::class,
-       tags: ['images']
-   )]
-   public function search(...): ImageSearchResponse { … }
-   ```
-
-5. **CI gate.** `vendor/bin/openapi-spec-validator _data/openapi.json` (or equivalent) validates the emitted spec on every push.
-
-6. **Optional: client SDKs.** Document `openapi-generator-cli generate -i /ws/openapi.json -g typescript-axios -o sdk/ts` for downstream integrators.
-
-### Verification
-
-```bash
-curl -s http://localhost/ws/openapi.json | jq '.info.title'   # "Piwigo Web Services"
-curl -s http://localhost/ws/docs | grep -q 'swagger-ui'        # serves Swagger UI HTML
-
-# Spec is well-formed
-vendor/bin/openapi-spec-validator _data/openapi.json           # exits 0
-```
-
----
-
-## #21 — Background job queue (Symfony Messenger)
+## #20 — Background job queue (Symfony Messenger)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** L
 
@@ -1491,6 +1424,73 @@ mysql piwigo_test -e "SELECT id, queue_name, body FROM messenger_messages;"
 # Consume and verify handler ran
 bin/piwigo messenger:consume async --limit=1
 mysql piwigo_test -e "SELECT * FROM messenger_messages;"  # row removed (or moved to failed)
+```
+
+---
+
+## #21 — OpenAPI 3.1 spec for the WS layer
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Goal
+
+An OpenAPI 3.1 specification describes every method registered with `PwgServer::addMethod()`. The spec is auto-generated from the registration metadata — no hand-maintained YAML. Served at `/ws/openapi.json`; Swagger UI at `/ws/docs`. With the spec in place, client SDKs (TypeScript, Python, etc.) can be generated via `openapi-generator-cli`.
+
+### Current state
+
+- 100+ WS methods registered procedurally with array literals in `include/ws_functions/*.php`.
+- Documentation exists only in PHP docblocks above the handler functions.
+- No machine-readable schema; every external integrator hand-rolls request/response shapes.
+
+### Steps
+
+1. **Typed registration.** Introduce `Piwigo\Ws\MethodDefinition` DTO:
+
+   ```php
+   final class MethodDefinition {
+       public function __construct(
+           public readonly string $name,
+           public readonly string $description,
+           public readonly array $params,           // ParamDefinition[]
+           public readonly string $returns,         // class-string|literal
+           public readonly array $tags = [],
+           public readonly bool $requiresAuth = false,
+       ) {}
+   }
+   ```
+
+   `PwgServer::addMethod()` accepts both the legacy array shape (BC) and `MethodDefinition` (new). The legacy shape is internally normalized to a `MethodDefinition`.
+
+2. **`Piwigo\Ws\OpenApi\SpecBuilder`.** Walks the registered methods, emits an OpenAPI 3.1 document:
+   - Each WS method becomes a path `/ws.json#<methodName>` (or `/ws/<methodName>` if routing supports it post-#22).
+   - Param types map from `WsType` enum (item #13) to OpenAPI primitives.
+   - Response shapes derived from a per-method response class (typed object the handler returns).
+
+3. **Routes.** `/ws/openapi.json` returns `SpecBuilder::build()->json()`. `/ws/docs` serves the Swagger UI bundle (CDN or vendored).
+
+4. **Per-method enrichment.** PHP attribute on each handler:
+
+   ```php
+   #[OpenApi\Method(
+       summary: 'Search images by tag, date, or filename.',
+       responseClass: ImageSearchResponse::class,
+       tags: ['images']
+   )]
+   public function search(...): ImageSearchResponse { … }
+   ```
+
+5. **CI gate.** `vendor/bin/openapi-spec-validator _data/openapi.json` (or equivalent) validates the emitted spec on every push.
+
+6. **Optional: client SDKs.** Document `openapi-generator-cli generate -i /ws/openapi.json -g typescript-axios -o sdk/ts` for downstream integrators.
+
+### Verification
+
+```bash
+curl -s http://localhost/ws/openapi.json | jq '.info.title'   # "Piwigo Web Services"
+curl -s http://localhost/ws/docs | grep -q 'swagger-ui'        # serves Swagger UI HTML
+
+# Spec is well-formed
+vendor/bin/openapi-spec-validator _data/openapi.json           # exits 0
 ```
 
 ---
@@ -1598,14 +1598,14 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
    | `AdminListContext` | generic — `Admin\UserListController`, `Admin\GroupListController`, `Admin\TagsController`, `Admin\PluginsController`, `Admin\ThemesController`, etc. | `items`, `pagination`, `filters`, `baseUrl` |
    | `AdminPageContext` | base class — `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages` | inherited by all admin contexts |
 
-   DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #24 receive these DTOs as `{templateType}` declarations.
+   DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #23 receive these DTOs as `{templateType}` declarations.
 
 6. **Middleware pipeline.** `Piwigo\Http\MiddlewarePipeline` runs:
    1. `ExceptionHandlerMiddleware` (catches `PiwigoException`, renders error response — depends on item #10)
-   2. `SecurityHeadersMiddleware` (CSP, X-Frame-Options, etc. — see item #23)
+   2. `SecurityHeadersMiddleware` (CSP, X-Frame-Options, etc. — see item #24)
    3. `SessionMiddleware` (start session, attach to request attributes)
    4. `AuthMiddleware` (resolve `CurrentUser`, attach to request)
-   5. `CsrfMiddleware` (verify pwg_token on state-changing requests — see item #23)
+   5. `CsrfMiddleware` (verify pwg_token on state-changing requests — see item #24)
    6. `RoutingMiddleware` (FastRoute dispatch)
    7. `ControllerInvokerMiddleware` (calls `__invoke` with route args, returns response)
 
@@ -1633,7 +1633,84 @@ npx playwright test
 
 ---
 
-## #23 — Security hardening (CSP, rate limiting, brute-force, CSRF)
+## #23 — Replace Smarty with Latte
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** XL
+
+### Goal
+
+Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). Latte buys: native PHP expressions in the syntax, compile-time syntax checking, type-safe templates, escape-by-default with context-aware escaping, sandbox mode for untrusted templates, much better IDE support, and faster compilation. End state: zero `.tpl` files compiled by Smarty; `smarty/smarty` removed from `composer.json`; all templates are `.latte`.
+
+### Current state
+
+- **`smarty/smarty: ^5.0`** in `composer.json`.
+- **169 `.tpl` files**: `admin/themes/default/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
+- **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
+  - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
+  - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
+  - **Compilers:** `get_combined_css`.
+  - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/default/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
+  - **Filters:** `prefilter_white_space` (whitespace stripper).
+- **Bundled plugin templates** under `plugins/*/template/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags` ship their own `.tpl` files and rely on the Smarty plugin API.
+- **No `.css.tpl` files remain** — the original modus theme that carried `themes/modus/css/base.css.tpl` is no longer in the codebase. Step 4 of "convert templates in waves" below referenced it; that wave is now empty.
+
+### Steps
+
+1. **Add `latte/latte` to `composer.json`.** Keep `smarty/smarty` for the transition window.
+
+2. **Define a `Piwigo\Template\TemplateEngine` interface** with the contract both engines must satisfy: `assign(string $name, mixed $value): void`, `render(string $template, array $params = []): string`, `parse(string $template): string`. Both `Piwigo\Template\SmartyEngine` (existing wrapper, renamed) and `Piwigo\Template\LatteEngine` (new) implement it. `TemplateRegistry::current()` returns the interface.
+
+3. **Implement `LatteEngine`.** Configure Latte with:
+   - Strict types in compiled templates (`Latte\Engine::setStrictTypes(true)`).
+   - Escape-by-default with HTML context inferred per attribute.
+   - Tempdir set to `_data/templates_c/latte/`.
+   - Sandbox mode + `Piwigo\Template\Latte\PiwigoPolicy` for plugin-supplied templates that come from untrusted sources.
+
+4. **Port Smarty extensions to Latte equivalents.** Map each registered Smarty plugin to a Latte filter/function/extension:
+   - **Most modifiers** (`sprintf`, `urlencode`, `intval`, `htmlspecialchars`, `trim`, `md5`, etc.) — Latte already has these built-in or via filter aliases.
+   - **`translate`/`translate_dec`** — Latte filter `|translate` backed by `Piwigo\Lang\Translator` (item #18 will create this).
+   - **`l10n`** — same as translate; one filter, one alias.
+   - **`combine_script`/`combine_css`/`get_combined_scripts`/`get_combined_css`** — Latte function tags. Implement as `Piwigo\Template\Latte\Extension\AssetExtension`.
+   - **`define_derivative`** — Latte function tag in a `DerivativeExtension`.
+   - **`html_head`** — Latte `{block}` extension or custom tag. Wire to the existing buffering logic in `Template.php`. Only `themes/default/template/notification.tpl` uses it.
+   - **`html_style`/`footer_script`** — zero in-scope callers post-template-extraction; the Latte port can defer porting these until the `{html_style}` + nonce path (per `PLAN-inline-assets-extraction.md`) materializes.
+   - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
+
+5. **Convert templates in waves.** Order risk-low → risk-high:
+   - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/default/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
+   - **Wave 1 — admin templates** (lowest risk, 69 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
+   - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
+   - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.
+   - **Wave 4 — plugin templates** (31 files across 5 bundled plugins). Each plugin gets its own commit.
+
+6. **Mechanical conversion helpers.** Most Smarty-to-Latte syntax is regex-replaceable:
+   - `{if $foo}` → `{if $foo}` (compatible)
+   - `{foreach from=$arr item=x}` → `{foreach $arr as $x}`
+   - `{$x|escape}` → `{$x}` (Latte escapes by default)
+   - `{$x|escape:'none'}` → `{$x|noescape}`
+   - `{include file=foo.tpl}` → `{include 'foo.latte'}`
+   - `{$x|@count}` → `{count($x)}`
+   - `{section name=i loop=$arr}` → `{foreach $arr as $i => $val}`
+   - Build `tools/smarty-to-latte/convert.php` to apply these rewrites file-by-file. Hand-fix the residue.
+
+7. **Compatibility shim for 3rd-party plugins.** Plugins that haven't migrated their `.tpl` files yet still get rendered by `SmartyEngine`. The dispatcher in `TemplateRegistry::current()` picks the engine based on file extension (`.latte` vs `.tpl`).
+
+8. **Drop Smarty.** Once all bundled `.tpl` files are converted and at least the top-3 plugins have shipped Latte versions: remove `smarty/smarty` from `composer.json`, delete `Piwigo\Template\SmartyEngine`, mark plugins still using Smarty as legacy with a deprecation notice.
+
+### Verification
+
+```bash
+find . -name "*.tpl" -not -path "*/_data/*" -not -path "*/vendor/*" -not -path "*/node_modules/*" | wc -l
+# baseline: 169 today; target: 0 (all converted to .latte) — or only inside legacy plugin directories during transition
+
+composer show smarty/smarty 2>&1 | grep "not installed"   # after final removal
+vendor/bin/phpunit                                         # green
+npx playwright test                                        # green (no visual regression)
+```
+
+---
+
+## #24 — Security hardening (CSP, rate limiting, brute-force, CSRF)
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** M
 
@@ -1723,95 +1800,18 @@ curl -sw '%{http_code}\n' -o /dev/null \
 
 ---
 
-## #24 — Replace Smarty with Latte
-
-**Status:** Not started &nbsp;|&nbsp; **Size:** XL
-
-### Goal
-
-Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). Latte buys: native PHP expressions in the syntax, compile-time syntax checking, type-safe templates, escape-by-default with context-aware escaping, sandbox mode for untrusted templates, much better IDE support, and faster compilation. End state: zero `.tpl` files compiled by Smarty; `smarty/smarty` removed from `composer.json`; all templates are `.latte`.
-
-### Current state
-
-- **`smarty/smarty: ^5.0`** in `composer.json`.
-- **169 `.tpl` files**: `admin/themes/default/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
-- **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
-  - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
-  - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
-  - **Compilers:** `get_combined_css`.
-  - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/default/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
-  - **Filters:** `prefilter_white_space` (whitespace stripper).
-- **Bundled plugin templates** under `plugins/*/template/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags` ship their own `.tpl` files and rely on the Smarty plugin API.
-- **No `.css.tpl` files remain** — the original modus theme that carried `themes/modus/css/base.css.tpl` is no longer in the codebase. Step 4 of "convert templates in waves" below referenced it; that wave is now empty.
-
-### Steps
-
-1. **Add `latte/latte` to `composer.json`.** Keep `smarty/smarty` for the transition window.
-
-2. **Define a `Piwigo\Template\TemplateEngine` interface** with the contract both engines must satisfy: `assign(string $name, mixed $value): void`, `render(string $template, array $params = []): string`, `parse(string $template): string`. Both `Piwigo\Template\SmartyEngine` (existing wrapper, renamed) and `Piwigo\Template\LatteEngine` (new) implement it. `TemplateRegistry::current()` returns the interface.
-
-3. **Implement `LatteEngine`.** Configure Latte with:
-   - Strict types in compiled templates (`Latte\Engine::setStrictTypes(true)`).
-   - Escape-by-default with HTML context inferred per attribute.
-   - Tempdir set to `_data/templates_c/latte/`.
-   - Sandbox mode + `Piwigo\Template\Latte\PiwigoPolicy` for plugin-supplied templates that come from untrusted sources.
-
-4. **Port Smarty extensions to Latte equivalents.** Map each registered Smarty plugin to a Latte filter/function/extension:
-   - **Most modifiers** (`sprintf`, `urlencode`, `intval`, `htmlspecialchars`, `trim`, `md5`, etc.) — Latte already has these built-in or via filter aliases.
-   - **`translate`/`translate_dec`** — Latte filter `|translate` backed by `Piwigo\Lang\Translator` (item #18 will create this).
-   - **`l10n`** — same as translate; one filter, one alias.
-   - **`combine_script`/`combine_css`/`get_combined_scripts`/`get_combined_css`** — Latte function tags. Implement as `Piwigo\Template\Latte\Extension\AssetExtension`.
-   - **`define_derivative`** — Latte function tag in a `DerivativeExtension`.
-   - **`html_head`** — Latte `{block}` extension or custom tag. Wire to the existing buffering logic in `Template.php`. Only `themes/default/template/notification.tpl` uses it.
-   - **`html_style`/`footer_script`** — zero in-scope callers post-template-extraction; the Latte port can defer porting these until the `{html_style}` + nonce path (per `PLAN-inline-assets-extraction.md`) materializes.
-   - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
-
-5. **Convert templates in waves.** Order risk-low → risk-high:
-   - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/default/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
-   - **Wave 1 — admin templates** (lowest risk, 69 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
-   - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
-   - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.
-   - **Wave 4 — plugin templates** (31 files across 5 bundled plugins). Each plugin gets its own commit.
-
-6. **Mechanical conversion helpers.** Most Smarty-to-Latte syntax is regex-replaceable:
-   - `{if $foo}` → `{if $foo}` (compatible)
-   - `{foreach from=$arr item=x}` → `{foreach $arr as $x}`
-   - `{$x|escape}` → `{$x}` (Latte escapes by default)
-   - `{$x|escape:'none'}` → `{$x|noescape}`
-   - `{include file=foo.tpl}` → `{include 'foo.latte'}`
-   - `{$x|@count}` → `{count($x)}`
-   - `{section name=i loop=$arr}` → `{foreach $arr as $i => $val}`
-   - Build `tools/smarty-to-latte/convert.php` to apply these rewrites file-by-file. Hand-fix the residue.
-
-7. **Compatibility shim for 3rd-party plugins.** Plugins that haven't migrated their `.tpl` files yet still get rendered by `SmartyEngine`. The dispatcher in `TemplateRegistry::current()` picks the engine based on file extension (`.latte` vs `.tpl`).
-
-8. **Drop Smarty.** Once all bundled `.tpl` files are converted and at least the top-3 plugins have shipped Latte versions: remove `smarty/smarty` from `composer.json`, delete `Piwigo\Template\SmartyEngine`, mark plugins still using Smarty as legacy with a deprecation notice.
-
-### Verification
-
-```bash
-find . -name "*.tpl" -not -path "*/_data/*" -not -path "*/vendor/*" -not -path "*/node_modules/*" | wc -l
-# baseline: 169 today; target: 0 (all converted to .latte) — or only inside legacy plugin directories during transition
-
-composer show smarty/smarty 2>&1 | grep "not installed"   # after final removal
-vendor/bin/phpunit                                         # green
-npx playwright test                                        # green (no visual regression)
-```
-
----
-
 ## #25 — Pre-compile templates as a deploy step
 
 **Status:** Not started &nbsp;|&nbsp; **Size:** S
 
 ### Goal
 
-Eliminate first-request compile latency by warming `_data/templates_c/` at deploy time instead of on first hit. Ship `tools/precompile_templates.php`, a CLI entrypoint that walks every active theme + admin context and compiles every template ahead of time. End state: the first request after a deploy serves cached PHP without invoking the template compiler. Depends on #24 — Latte is the primary target post-migration; legacy Smarty templates are covered for the duration of the compatibility shim.
+Eliminate first-request compile latency by warming `_data/templates_c/` at deploy time instead of on first hit. Ship `tools/precompile_templates.php`, a CLI entrypoint that walks every active theme + admin context and compiles every template ahead of time. End state: the first request after a deploy serves cached PHP without invoking the template compiler. Depends on #23 — Latte is the primary target post-migration; legacy Smarty templates are covered for the duration of the compatibility shim.
 
 ### Current state
 
 - Smarty 5 lazy-compiles `.tpl` → `_data/templates_c/<hash>_0.file_<name>.tpl.php` on first render of each template; the gallery + admin first-walk emits 100+ compiled files.
-- Latte (post-#24) lazy-compiles `.latte` → `_data/templates_c/latte/` with the same first-hit penalty.
+- Latte (post-#23) lazy-compiles `.latte` → `_data/templates_c/latte/` with the same first-hit penalty.
 - `template_compile_check` is on by default — Smarty `stat`s every source on every render. `Piwigo\Core\Config::templateCompileCheck()` reads it from config; there is no CLI override and no production-time flip.
 - No `tools/precompile_*` script exists today.
 
@@ -1819,7 +1819,7 @@ Eliminate first-request compile latency by warming `_data/templates_c/` at deplo
 
 1. **Add `tools/precompile_templates.php`.** Boot Piwigo (`include/common.inc.php`) in CLI mode without emitting output, then for each engine instance:
    - **Smarty path** (during the transition window): call `$engine->smarty->compileAllTemplates('.tpl', force: true)` per `template_dir` push (gallery context, admin context).
-   - **Latte path** (primary post-#24): iterate every `.latte` under the active theme + admin dirs and call the engine's compile-only API (`Latte\Engine::warmupCache($name)` or equivalent — settle the call site against the Latte version pinned in #24 step 1).
+   - **Latte path** (primary post-#23): iterate every `.latte` under the active theme + admin dirs and call the engine's compile-only API (`Latte\Engine::warmupCache($name)` or equivalent — settle the call site against the Latte version pinned in #23 step 1).
 
    Report counts and any compile error on stderr; exit non-zero if any template fails to compile. This catches syntax regressions before they reach the gallery.
 
@@ -1831,7 +1831,7 @@ Eliminate first-request compile latency by warming `_data/templates_c/` at deplo
 
 5. **OPcache guidance.** `_data/templates_c/` holds plain PHP. Document that hosters should leave OPcache enabled with a generous `opcache.max_accelerated_files` (file count is high — ~150 today, similar post-Latte) and may use `opcache.preload` for the truly hot files.
 
-6. **CI hook.** Add a job that runs the precompile against a representative theme + plugin set on every PR. Acts as a second syntax gate beyond #24's verification — catches Latte regressions in plugin templates that don't have unit-test coverage.
+6. **CI hook.** Add a job that runs the precompile against a representative theme + plugin set on every PR. Acts as a second syntax gate beyond #23's verification — catches Latte regressions in plugin templates that don't have unit-test coverage.
 
 ### Verification
 
@@ -1892,7 +1892,7 @@ The work splits into two phases. Phase 1 lands the event-bus and plugin foundati
 
 2. **Adopt PSR-14 events.** `composer require psr/event-dispatcher symfony/event-dispatcher`. Replace string events with typed event objects under `src/Piwigo/Event/`:
    - `PictureRendered`, `CategoryRendered`, `UserAuthenticated`, `UserLoggedOut`, `CommentSubmitted`, `ImageUploaded`, `PluginActivated`, `ThemeActivated`, etc.
-   - Event objects are `readonly` data classes (item #19). Listeners receive the typed object; can mutate `mixed $data` properties via `with*()` clone-and-modify methods for the `trigger_change` use case.
+   - Event objects are `readonly` data classes (item #13). Listeners receive the typed object; can mutate `mixed $data` properties via `with*()` clone-and-modify methods for the `trigger_change` use case.
    - `Piwigo\Event\EventDispatcher` is registered in the DI container (item #12) as the `Psr\EventDispatcher\EventDispatcherInterface` implementation.
 
 3. **Build the legacy compatibility layer.** `add_event_handler('user_login', $callback)` keeps working — both for plugins and for themes that register handlers from `themeconf.inc.php`. The legacy bridge maps the string event names to the new typed events; when a typed `UserAuthenticated` is dispatched, registered legacy listeners are also invoked with the bridged args. Document the deprecation in `src/Piwigo/Compat/LegacyEvents.php` with `trigger_error(E_USER_DEPRECATED, …)` on first call.
@@ -1919,7 +1919,7 @@ The work splits into two phases. Phase 1 lands the event-bus and plugin foundati
    - Convert `main.inc.php` event-handler registrations to a `Plugin` class with `subscribedEvents()`.
    - Convert `maintain.inc.php` to `Maintain` class implementing the lifecycle methods.
    - Add `plugin.json`.
-   - Convert templates to Latte (item #24).
+   - Convert templates to Latte (item #23).
 
 7. **Plugin admin UI.** The "Plugins" admin page reads `plugin.json` instead of parsing `main.inc.php` headers. Activation/deactivation calls the lifecycle methods.
 
@@ -2022,7 +2022,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
    - Add `Theme` class under `themes/<id>/src/` (or `admin/themes/<id>/src/`).
    - Move `themeconf.inc.php` side-effects into `boot()`.
    - Convert `ThemeMaintain` callers to the new lifecycle methods.
-   - Convert templates to Latte (item #24).
+   - Convert templates to Latte (item #23).
    - Replace `themeconf.inc.php` with a one-liner that throws `E_USER_DEPRECATED` if any legacy code reaches for `$themeconf` directly.
 
 9. **`Piwigo\Theme\ThemeChanged` event.** Theme switch fires a typed event so plugins (and other themes) can react (rebuild combined CSS, invalidate template cache, etc.). The `nbc_ThemeChanger` plugin migrates from procedural hooks to listening for this event.
@@ -2174,7 +2174,7 @@ Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` stat
 ### Current state
 
 - **218 test methods** across `tests/Unit/` (Auth, Cache, Core, Image, Menu, Search, Session, Template, Users, Ws). 28 test files.
-- Largest untested areas in `src/`: `Admin/` (image backends, `plugins`, `themes`, `updates`), `Calendar/`. (The `Db/` namespace doesn't exist yet — gated by item #16.)
+- Largest untested areas in `src/`: `Admin/` (image backends, `plugins`, `themes`, `updates`), `Calendar/`. (The `Db/` namespace doesn't exist yet — gated by item #17.)
 
 ### Steps
 

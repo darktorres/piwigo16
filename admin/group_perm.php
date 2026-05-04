@@ -54,14 +54,8 @@ if (isset($_POST['falsify'])
     // automatically forbidden
     $post_cat_true_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
     $subcats = get_subcat_ids($post_cat_true_ids);
-    $subcats_str = array_map(fn ($v) => (string) $v, $subcats);
-    $query = '
-DELETE
-  FROM '.GROUP_ACCESS_TABLE.'
-  WHERE group_id = '.$group_id.'
-  AND cat_id IN ('.implode(',', $subcats_str).')
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+        ->deleteGroupAccessForGroup((int) $group_id, array_map('intval', $subcats));
 } elseif (isset($_POST['trueify'])
          and count($post_cat_false) > 0) {
     $post_cat_false_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
@@ -69,32 +63,14 @@ DELETE
     $uppercats_str = array_map(fn ($v) => (string) $v, $uppercats);
     $private_uppercats = [];
 
-    $query = '
-SELECT id
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $uppercats_str).')
-  AND status = \'private\'
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $private_uppercats[] = $row['id'];
-    }
+    $permRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
+    $catRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+
+    $private_uppercats = $catRepo->findPrivateByIds(array_map('intval', $uppercats_str));
 
     // retrying to authorize a category which is already authorized may cause
-    // an error (in SQL statement), so we need to know which categories are
-    // accesible
-    $authorized_ids = [];
-
-    $query = '
-SELECT cat_id
-  FROM '.GROUP_ACCESS_TABLE.'
-  WHERE group_id = '.$group_id.'
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $authorized_ids[] = $row['cat_id'];
-    }
+    // an error (in SQL statement), so we need to know which categories are accessible
+    $authorized_ids = $permRepo->findAuthorizedCatIdsByGroup((int) $group_id);
 
     $inserts = [];
     $to_autorize_ids = array_diff($private_uppercats, $authorized_ids);
@@ -146,11 +122,8 @@ SELECT id,name,uppercats,global_rank
 ;';
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$result = pwg_query($query_true);
-$authorized_ids = [];
-while ($row = pwg_db_fetch_assoc($result)) {
-    $authorized_ids[] = $row['id'];
-}
+$authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+    ->findAuthorizedPrivateCatIdsByGroup((int) $group_id);
 
 $query_false = '
 SELECT id,name,uppercats,global_rank

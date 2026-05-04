@@ -50,13 +50,8 @@ if (isset($_POST['falsify'])
     // automatically forbidden
     $post_cat_true_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
     $subcats = get_subcat_ids($post_cat_true_ids);
-    $subcats_str = array_map(fn ($v) => (string) $v, $subcats);
-    $query = '
-DELETE FROM '.USER_ACCESS_TABLE.'
-  WHERE user_id = '.$page['user'].'
-    AND cat_id IN ('.implode(',', $subcats_str).')
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+        ->deleteUserAccessForUser((int) $page['user'], array_map('intval', $subcats));
 } elseif (isset($_POST['trueify'])
     and count($post_cat_false) > 0) {
     $post_cat_false_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
@@ -95,20 +90,12 @@ $template->assign(
 // retrieve category ids authorized to the groups the user belongs to
 $group_authorized = [];
 
-$query = '
-SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM '.USER_GROUP_TABLE.' AS ug
-    INNER JOIN '.GROUP_ACCESS_TABLE.' AS ga
-      ON ug.group_id = ga.group_id
-    INNER JOIN '.CATEGORIES_TABLE.' AS c
-      ON c.id = ga.cat_id
-  WHERE ug.user_id = '.$page['user'].'
-;';
-$result = pwg_query($query);
+$groupAuthorizedRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+    ->findGroupAuthorizedCategoriesForUser((int) $page['user']);
 
-if (pwg_db_num_rows($result) > 0) {
+if (count($groupAuthorizedRows) > 0) {
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($groupAuthorizedRows as $row) {
         $cats[] = $row;
         $group_authorized[] = $row['cat_id'];
     }
@@ -136,11 +123,8 @@ $query_true .= '
 ;';
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$result = pwg_query($query_true);
-$authorized_ids = [];
-while ($row = pwg_db_fetch_assoc($result)) {
-    $authorized_ids[] = $row['id'];
-}
+$authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+    ->findDirectUserCatIds((int) $page['user'], array_map('intval', $group_authorized));
 
 $query_false = '
 SELECT id,name,uppercats,global_rank

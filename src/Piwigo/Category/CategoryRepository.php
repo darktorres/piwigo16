@@ -178,6 +178,26 @@ final class CategoryRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /**
+     * Return ids from the given list that belong to private categories.
+     *
+     * @param int[] $ids
+     * @return int[]
+     */
+    public function findPrivateByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->where("status = 'private'");
+        $qb->andWhere($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        return array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+    }
+
     /** Count hidden (locked) albums (visible = 'false'). */
     public function countHidden(): int
     {

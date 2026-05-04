@@ -25,11 +25,8 @@ global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_p
 if (isset($_GET['batch'])) {
     check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
-    $query = '
-DELETE FROM '.CADDIE_TABLE.'
-  WHERE user_id = '.$user['id'].'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
 
     $inserts = [];
     foreach (array_unique(explode(',', is_scalar($_GET['batch']) ? (string) $_GET['batch'] : '')) as $image_id) {
@@ -48,26 +45,10 @@ DELETE FROM '.CADDIE_TABLE.'
 }
 
 if (userprefs_get_param('promote-mobile-apps', true)) {
-    $query = '
-SELECT registration_date 
-  FROM '.USER_INFOS_TABLE.'
-  WHERE registration_date IS NOT NULL  
-  ORDER BY user_id ASC
-  LIMIT 1
-;';
-    [$register_date] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-;';
-    [$nb_cats] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT COUNT(*)
-  FROM '.IMAGES_TABLE.'
-;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $register_date = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findEarliestRegistrationDate();
+    $nb_cats   = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countAll();
+    $nb_images = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
 
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded

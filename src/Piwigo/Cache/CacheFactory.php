@@ -29,13 +29,13 @@ final class CacheFactory
         $defaultTtl  = Config::cacheDefaultTtl();
 
         return match ($backend) {
-            'apcu'  => new ApcuAdapter($namespace, $defaultTtl),
+            'apcu'  => self::buildApcu($namespace, $defaultTtl),
             'redis' => self::buildRedis($namespace, $defaultTtl),
-            'chain' => new ChainAdapter([
-                new ApcuAdapter($namespace, $defaultTtl),
+            'chain' => new ChainAdapter(array_filter([
+                function_exists('apcu_enabled') && apcu_enabled() ? new ApcuAdapter($namespace, $defaultTtl) : null,
                 self::buildRedis($namespace, $defaultTtl),
                 self::buildFile($namespace, $defaultTtl),
-            ]),
+            ])),
             default => self::buildFile($namespace, $defaultTtl),
         };
     }
@@ -46,6 +46,14 @@ final class CacheFactory
             ? PHPWG_ROOT_PATH . Config::dataLocation() . 'cache/'
             : sys_get_temp_dir() . '/piwigo/cache/';
         return new FilesystemAdapter($namespace, $defaultTtl, $directory);
+    }
+
+    private static function buildApcu(string $namespace, int $defaultTtl): ApcuAdapter
+    {
+        if (!function_exists('apcu_enabled') || !apcu_enabled()) {
+            throw new \RuntimeException('APCu extension is not available. Install/enable ext-apcu or choose a different cache.backend.');
+        }
+        return new ApcuAdapter($namespace, $defaultTtl);
     }
 
     private static function buildRedis(string $namespace, int $defaultTtl): RedisAdapter

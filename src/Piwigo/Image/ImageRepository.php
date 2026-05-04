@@ -124,6 +124,24 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Update lastmodified to NOW() for the given image ids.
+     *
+     * @param int[] $ids
+     */
+    public function touchLastModified(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->set('lastmodified', 'NOW()');
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Delete lounge rows with image_id <= $maxId.
      * Called by empty_lounge() after moving all images to their categories.
      */

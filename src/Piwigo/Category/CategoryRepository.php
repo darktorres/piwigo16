@@ -274,6 +274,15 @@ final class CategoryRepository extends AbstractRepository
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
+    /** Count distinct image_ids linked to any category (i.e. non-orphan images). */
+    public function countLinkedImages(): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(DISTINCT image_id) FROM ' . $this->table('image_category')
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /** Count images linked to the given category. */
     public function countImagesByCategoryId(int $catId): int
     {

@@ -2257,19 +2257,12 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
  */
 function get_groupname($group_id)
 {
-    $query = '
-SELECT name
-  FROM `'.GROUPS_TABLE.'`
-  WHERE id = '.intval($group_id).'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        [$groupname] = pwg_db_fetch_row($result) ?? [null];
-    } else {
+    $groupname = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+        ->findNameById((int) $group_id);
+    if ($groupname === null) {
         return false;
     }
-
-    return is_scalar($groupname) ? (string) $groupname : '';
+    return $groupname;
 }
 
 /**
@@ -2297,21 +2290,14 @@ function delete_groups(array|int $group_ids): false|array
 
     $group_id_string = implode(',', $group_ids);
 
+    $permRepo3 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
+    $groupRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
+
     // destruction of the access linked to the group
-    $query = '
-DELETE
-  FROM '. GROUP_ACCESS_TABLE .'
-  WHERE group_id IN ('. $group_id_string  .')
-;';
-    pwg_query($query);
+    $permRepo3->deleteGroupAccessByGroups($group_ids);
 
     // destruction of the users links for this group
-    $query = '
-DELETE
-  FROM '. USER_GROUP_TABLE .'
-  WHERE group_id IN ('. $group_id_string  .')
-;';
-    pwg_query($query);
+    $groupRepo2->deleteUserGroupByGroupIds($group_ids);
 
     $query = '
 SELECT id, name
@@ -2323,12 +2309,7 @@ SELECT id, name
     $groupids = array_map(fn ($v): int => (int) $v, array_keys($group_list));
 
     // destruction of the group
-    $query = '
-DELETE
-  FROM `'. GROUPS_TABLE .'`
-  WHERE id IN ('. $group_id_string  .')
-;';
-    pwg_query($query);
+    $groupRepo2->deleteByIds($group_ids);
 
     trigger_notify('delete_group', $groupids);
     pwg_activity('group', $groupids, 'delete');
@@ -2345,15 +2326,10 @@ DELETE
  */
 function get_username($user_id): false|string
 {
-    $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['username'].'
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.intval($user_id).'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        [$username] = pwg_db_fetch_row($result) ?? [null];
-    } else {
+    $userFields = \Piwigo\Config\Config::userFields();
+    $username = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findUsernameById($userFields['id'], $userFields['username'], USERS_TABLE, (int) $user_id);
+    if ($username === null) {
         return false;
     }
 
@@ -2891,21 +2867,8 @@ function count_orphans(): int
     if (is_null(conf_get_param('count_orphans'))) {
         // we don't care about the list of image_ids, we only care about the number
         // of orphans, so let's use a faster method than calling count(get_orphans())
-        $query = '
-SELECT
-    COUNT(*)
-  FROM '.IMAGES_TABLE.'
-;';
-        [$image_counter_all_raw] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        $image_counter_all = is_numeric($image_counter_all_raw) ? (int) $image_counter_all_raw : 0;
-
-        $query = '
-SELECT
-    COUNT(DISTINCT(image_id))
-  FROM '.IMAGE_CATEGORY_TABLE.'
-;';
-        [$image_counter_in_categories_raw] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        $image_counter_in_categories = is_numeric($image_counter_in_categories_raw) ? (int) $image_counter_in_categories_raw : 0;
+        $image_counter_all = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+        $image_counter_in_categories = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countLinkedImages();
 
         $counter = $image_counter_all - $image_counter_in_categories;
         conf_update_param('count_orphans', $counter, true);
@@ -2990,12 +2953,8 @@ function update_images_lastmodified(array $image_ids): void
         return;
     }
 
-    $query = '
-UPDATE '.IMAGES_TABLE.'
-  SET lastmodified = NOW()
-  WHERE id IN ('.implode(',', $image_ids).')
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->touchLastModified($image_ids);
 }
 
 /**

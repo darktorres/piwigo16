@@ -123,6 +123,53 @@ final class GroupRepository extends AbstractRepository
         return array_map('strval', $rows);
     }
 
+    /** Return the name of a group by id, or null if not found. */
+    public function findNameById(int $id): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('name')
+            ->from($this->table('groups'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Delete user_group rows for the given group ids.
+     *
+     * @param int[] $groupIds
+     */
+    public function deleteUserGroupByGroupIds(array $groupIds): void
+    {
+        if ($groupIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('user_group'));
+        $qb->where($qb->expr()->in('group_id', ':groupIds'))
+           ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Delete group rows by ids.
+     *
+     * @param int[] $ids
+     */
+    public function deleteByIds(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('groups'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
     /**
      * Return ids of groups whose name matches the given LIKE pattern.
      *

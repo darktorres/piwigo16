@@ -204,4 +204,75 @@ final class ImageRepository extends AbstractRepository
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
+
+    /**
+     * Return image ids whose storage_category_id is one of the given values.
+     * Used by delete_categories() to find physically-linked images.
+     *
+     * @param int[] $categoryIds
+     * @return int[]
+     */
+    public function findIdsByStorageCategoryIds(array $categoryIds): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('storage_category_id', ':ids'))
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
+        return array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Set rating_score to NULL for the given image ids.
+     * Called when all rates for an image have been removed.
+     *
+     * @param int[] $ids
+     */
+    public function clearRatingScoreByIds(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->set('rating_score', 'NULL');
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Return (id, representative_ext, path) for a single image, or null if not found.
+     * Used by get_category_representant_properties().
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findById(int $id): ?array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('id', 'representative_ext', 'path')
+            ->from($this->table('images'))
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * Return a random image_id from the given category, or null if empty.
+     * Uses MySQL RAND() — project is MySQL-only (16.x floor).
+     */
+    public function findRandomIdByCategoryId(int $categoryId): ?int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT image_id FROM ' . $this->table('image_category') .
+            ' WHERE category_id = ? ORDER BY RAND() LIMIT 1',
+            [$categoryId]
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
 }

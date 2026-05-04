@@ -28,12 +28,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_metadata.php');
 function delete_site($id): void
 {
     // destruction of the categories of the site
-    $query = '
-SELECT id
-  FROM '.CATEGORIES_TABLE.'
-  WHERE site_id = '.$id.'
-;';
-    $category_ids = array_map('intval', query2array($query, null, 'id'));
+    $category_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findIdsBySiteId((int) $id);
     delete_categories($category_ids);
 
     // destruction of the site
@@ -65,35 +61,19 @@ function delete_categories($ids, $photo_deletion_mode = 'no_delete'): void
     $ids = get_subcat_ids($ids);
 
     // destruction of all photos physically linked to the category
-    $query = '
-SELECT id
-  FROM '.IMAGES_TABLE.'
-  WHERE storage_category_id IN (
-'.wordwrap(implode(', ', $ids), 80, "\n").')
-;';
-    $element_ids = array_map('intval', query2array($query, null, 'id'));
+    $element_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findIdsByStorageCategoryIds($ids);
     delete_elements($element_ids);
 
     // now, should we delete photos that are virtually linked to the category?
     if ('delete_orphans' == $photo_deletion_mode or 'force_delete' == $photo_deletion_mode) {
-        $query = '
-SELECT
-    DISTINCT(image_id)
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id IN ('.implode(',', $ids).')
-;';
-        $image_ids_linked = array_map('intval', query2array($query, null, 'image_id'));
+        $image_ids_linked = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->findLinkedImageIdsByCategoryIds($ids);
 
         if (count($image_ids_linked) > 0) {
             if ('delete_orphans' == $photo_deletion_mode) {
-                $query = '
-SELECT
-    DISTINCT(image_id)
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('.implode(',', $image_ids_linked).')
-    AND category_id NOT IN ('.implode(',', $ids).')
-;';
-                $image_ids_not_orphans = array_map('intval', query2array($query, null, 'image_id'));
+                $image_ids_not_orphans = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ->findLinkedImageIdsNotIn($image_ids_linked, $ids);
                 $image_ids_to_delete = array_diff($image_ids_linked, $image_ids_not_orphans);
             }
 
@@ -233,13 +213,8 @@ function delete_elements($ids, $physical_deletion = false): int
     $delImgRepo->deleteByIds($ids);             // images
 
     // are the photo used as category representant?
-    $query = '
-SELECT
-    id
-  FROM '.CATEGORIES_TABLE.'
-  WHERE representative_picture_id IN ('. $ids_str .')
-;';
-    $category_ids = array_map('intval', query2array($query, null, 'id'));
+    $category_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findIdsByRepresentativePicture($ids);
     if (count($category_ids) > 0) {
         update_category($category_ids);
     }
@@ -388,22 +363,11 @@ SELECT DISTINCT id
  */
 function images_integrity(): void
 {
-    $query = '
-SELECT
-    image_id
-  FROM '.IMAGE_CATEGORY_TABLE.'
-    LEFT JOIN '.IMAGES_TABLE.' ON id = image_id
-  WHERE id IS NULL
-;';
-    $orphan_image_ids = query2array($query, null, 'image_id');
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $orphan_image_ids = $catRepo->findOrphanImageCategoryLinks();
 
     if (count($orphan_image_ids) > 0) {
-        $query = '
-DELETE
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('.implode(',', $orphan_image_ids).')
-;';
-        pwg_query($query);
+        $catRepo->deleteOrphanImageCategoryLinks($orphan_image_ids);
     }
 }
 
@@ -530,18 +494,12 @@ function save_categories_order(array $categories): void
  */
 function update_global_rank(): int
 {
-    $query = '
-SELECT id, id_uppercat, uppercats, `rank`, global_rank
-  FROM '.CATEGORIES_TABLE.'
-  ORDER BY id_uppercat, `rank`, name';
-
     $cat_map = [];
 
     $current_rank = 0;
     $current_uppercat = '';
 
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->getAllForRankUpdate() as $row) {
         if ($row['id_uppercat'] != $current_uppercat) {
             $current_rank = 0;
             $current_uppercat = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : '';
@@ -609,26 +567,19 @@ function set_cat_visible(array|int|string $categories, bool|string $value, bool 
         return;
     }
 
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
     // unlocking a category => all its parent categories become unlocked
     if ($value) {
         $cats = get_uppercat_ids($categories);
         if ($unlock_child) {
             $cats = array_merge($cats, get_subcat_ids($categories));
         }
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET visible = \'true\'
-  WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cats)).')';
-        pwg_query($query);
+        $catRepo->setVisible(array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $cats), true);
     }
     // locking a category   => all its child categories become locked
     else {
         $subcats = get_subcat_ids($categories);
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET visible = \'false\'
-  WHERE id IN ('.implode(',', array_map(fn ($v): string => (string) $v, $subcats)).')';
-        pwg_query($query);
+        $catRepo->setVisible(array_map(fn ($v): int => (int) $v, $subcats), false);
     }
 }
 
@@ -648,26 +599,18 @@ function set_cat_status(array|int|string $categories, string $value): void
         return;
     }
 
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+
     // make public a category => all its parent categories become public
     if ($value == 'public') {
         $uppercats = get_uppercat_ids($categories);
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET status = \'public\'
-  WHERE id IN ('.implode(',', array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $uppercats)).')
-;';
-        pwg_query($query);
+        $catRepo->setStatus(array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $uppercats), 'public');
     }
 
     // make a category private => all its child categories become private
     if ($value == 'private') {
         $subcats = get_subcat_ids($categories);
-
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET status = \'private\'
-  WHERE id IN ('.implode(',', $subcats).')';
-        pwg_query($query);
+        $catRepo->setStatus(array_map(fn (mixed $v): int => (int) $v, $subcats), 'private');
 
         // We have to keep permissions consistant: a sub-album can't be
         // permitted to a user or group if its parent album is not permitted to
@@ -705,17 +648,7 @@ UPDATE '.CATEGORIES_TABLE.'
         $top_categories = [];
         $parent_ids = [];
 
-        $query = '
-SELECT
-    id,
-    name,
-    id_uppercat,
-    uppercats,
-    global_rank
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $categories).')
-;';
-        $all_categories = query2array($query);
+        $all_categories = $catRepo->findDetailsByIds($categories);
         usort($all_categories, global_rank_compare(...));
 
         foreach ($all_categories as $cat) {
@@ -746,14 +679,7 @@ SELECT
         $parent_cats = [];
 
         if (count($parent_ids) > 0) {
-            $query = '
-SELECT
-    id,
-    status
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $parent_ids).')
-;';
-            $parent_cats = query2array($query, 'id');
+            $parent_cats = $catRepo->findStatusByIds($parent_ids);
         }
 
         $tables = [
@@ -818,18 +744,10 @@ function get_uppercat_ids(array|int|string $cat_ids): array
     }
 
     $uppercats = [];
-
-    $query = '
-SELECT uppercats
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', $cat_ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $uppercats = array_merge(
-            $uppercats,
-            explode(',', (string) $row['uppercats'])
-        );
+    $uppercat_strings = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findUppercatsByIds($cat_ids);
+    foreach ($uppercat_strings as $uppercats_str) {
+        $uppercats = array_merge($uppercats, explode(',', $uppercats_str));
     }
     $uppercats = array_unique($uppercats);
 
@@ -841,13 +759,8 @@ SELECT uppercats
 /** @return array<mixed> */
 function get_category_representant_properties(string $image_id, ?string $size = null): array
 {
-    $query = '
-SELECT id,representative_ext,path
-  FROM '.IMAGES_TABLE.'
-  WHERE id = '.$image_id.'
-;';
-
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findById((int) $image_id);
     if ($row === null) {
         return [];
     }
@@ -874,16 +787,10 @@ function set_random_representant(array|int $categories): void
     if (!is_array($categories)) {
         $categories = [$categories];
     }
+    $imgRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
     $datas = [];
     foreach ($categories as $category_id) {
-        $query = '
-SELECT image_id
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$category_id.'
-  ORDER BY '.DB_RANDOM_FUNCTION.'()
-  LIMIT 1
-;';
-        [$representative] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $representative = $imgRepo->findRandomIdByCategoryId((int) $category_id);
 
         $datas[] = [
           'id' => $category_id,

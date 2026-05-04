@@ -116,16 +116,8 @@ function get_remote_addr_session_hash(): string
  */
 function pwg_session_read(string $session_id)
 {
-    $query = '
-SELECT data
-  FROM '.SESSIONS_TABLE.'
-  WHERE id = \''.get_remote_addr_session_hash().$session_id.'\'
-;';
-    $result = pwg_query($query);
-    if (($row = pwg_db_fetch_assoc($result))) {
-        return (string)$row['data'];
-    }
-    return '';
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
+        ->read(get_remote_addr_session_hash().$session_id);
 }
 
 /**
@@ -142,12 +134,8 @@ function pwg_session_write(string $session_id, $data): bool
     if (defined('PWG_API_KEY_REQUEST')) {
         return true;
     }
-    $query = '
-REPLACE INTO '.SESSIONS_TABLE.'
-  (id,data,expiration)
-  VALUES(\''.get_remote_addr_session_hash().$session_id.'\',\''.pwg_db_real_escape_string($data).'\',now())
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
+        ->write(get_remote_addr_session_hash().$session_id, (string) $data);
     return true;
 }
 
@@ -158,12 +146,8 @@ REPLACE INTO '.SESSIONS_TABLE.'
  */
 function pwg_session_destroy(string $session_id): bool
 {
-    $query = '
-DELETE
-  FROM '.SESSIONS_TABLE.'
-  WHERE id = \''.get_remote_addr_session_hash().$session_id.'\'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
+        ->destroy(get_remote_addr_session_hash().$session_id);
     return true;
 }
 
@@ -174,13 +158,8 @@ DELETE
  */
 function pwg_session_gc(): bool
 {
-    $query = '
-DELETE
-  FROM '.SESSIONS_TABLE.'
-  WHERE '.pwg_db_date_to_ts('NOW()').' - '.pwg_db_date_to_ts('expiration').' > '
-    .\Piwigo\Config\Config::sessionLength().'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
+        ->gc(\Piwigo\Config\Config::sessionLength());
     return true;
 }
 
@@ -229,10 +208,6 @@ function pwg_unset_session_var(string $var): bool
  */
 function delete_user_sessions($user_id): void
 {
-    $query = '
-DELETE
-  FROM '.SESSIONS_TABLE.'
-  WHERE data LIKE \'%pwg_uid|i:'.(int)$user_id.';%\'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
+        ->deleteByUserId((int) $user_id);
 }

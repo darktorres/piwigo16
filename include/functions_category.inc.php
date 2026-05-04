@@ -171,12 +171,8 @@ WHERE '.$where.'
 /** @return array<mixed>|null */
 function get_cat_info(int|string $id): ?array
 {
-    $query = '
-SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$id.'
-;';
-    $cat = pwg_db_fetch_assoc(pwg_query($query));
+    $cat = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findCategoryById((int) $id);
     if (empty($cat)) {
         return null;
     }
@@ -375,11 +371,8 @@ SELECT id, permalink, 0 AS is_old
             $idx = $i;
             $cat_id = (int) $perma_hash[ $permalinks[$i] ]['id'];
             if ($perma_hash[ $permalinks[$i] ]['is_old']) {
-                $query = '
-UPDATE '.OLD_PERMALINKS_TABLE.' SET last_hit=NOW(), hit=hit+1
-  WHERE permalink=\''.$permalinks[$i].'\' AND cat_id='.$cat_id.'
-  LIMIT 1';
-                pwg_query($query);
+                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ->updatePermalinkHit($cat_id, $permalinks[$i]);
             }
             return $cat_id;
         }

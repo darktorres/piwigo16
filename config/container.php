@@ -15,7 +15,9 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Users\UserRepository;
@@ -47,4 +49,6 @@ return [
     PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository       => new PluginRepository($conn, Config::dbPrefix())),
     HistoryRepository::class      => factory(static fn (Connection $conn): HistoryRepository      => new HistoryRepository($conn, Config::dbPrefix())),
     NotificationRepository::class => factory(static fn (Connection $conn): NotificationRepository => new NotificationRepository($conn, Config::dbPrefix())),
+    SessionRepository::class      => factory(static fn (Connection $conn): SessionRepository      => new SessionRepository($conn, Config::dbPrefix())),
+    RateRepository::class         => factory(static fn (Connection $conn): RateRepository         => new RateRepository($conn, Config::dbPrefix())),
 ];

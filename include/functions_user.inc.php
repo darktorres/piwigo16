@@ -37,13 +37,15 @@ function validate_mail_address(?int $user_id, ?string $mail_address)
     }
 
     if (\Piwigo\Core\InstallSentinel::isInstalled() and !empty($mail_address)) {
-        $query = '
-SELECT count(*)
-FROM '.USERS_TABLE.'
-WHERE upper('.\Piwigo\Config\Config::userFields()['email'].') = upper(\''.$mail_address.'\')
-'.(is_numeric($user_id) ? 'AND '.\Piwigo\Config\Config::userFields()['id'].' != \''.$user_id.'\'' : '').'
-;';
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+        $userFields = \Piwigo\Config\Config::userFields();
+        $count = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->countByEmail(
+                $userFields['email'],
+                $userFields['id'],
+                USERS_TABLE,
+                $mail_address,
+                is_numeric($user_id) ? (int) $user_id : null
+            );
         if ($count != 0) {
             return l10n('this email address is already in use');
         }
@@ -60,13 +62,12 @@ WHERE upper('.\Piwigo\Config\Config::userFields()['email'].') = upper(\''.$mail_
 function validate_login_case($login)
 {
     if (\Piwigo\Core\InstallSentinel::isInstalled()) {
-        $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['username'].'
-FROM '.USERS_TABLE.'
-WHERE LOWER('.stripslashes((string) \Piwigo\Config\Config::userFields()['username']).") = '".strtolower($login)."'
-;";
-
-        $count = pwg_db_num_rows(pwg_query($query));
+        $count = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->countByUsernameInsensitive(
+                \Piwigo\Config\Config::userFields()['username'],
+                USERS_TABLE,
+                (string) $login
+            );
 
         if ($count > 0) {
             return l10n('this login is already used');
@@ -83,14 +84,12 @@ function search_case_username($username)
 {
     $username_lo = strtolower($username);
 
-    $SCU_users = [];
+    $allUsernames = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findAllUsernames(\Piwigo\Config\Config::userFields()['username'], USERS_TABLE);
 
-    $q = pwg_query('
-    SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
-    FROM `'.USERS_TABLE.'`;
-  ');
-    while ($r = pwg_db_fetch_assoc($q)) {
-        $SCU_users[(string) $r['username']] = strtolower((string) $r['username']);
+    $SCU_users = [];
+    foreach ($allUsernames as $u) {
+        $SCU_users[$u] = strtolower($u);
     }
     // $SCU_users is now an associative table where the key is the account as
     // registered in the DB, and the value is this same account, in lower case
@@ -168,20 +167,9 @@ function register_user(string $login, string $password, ?string $mail_address = 
         $user_id = pwg_db_insert_id();
 
         // Assign by default groups
-        $query = '
-SELECT id
-  FROM `'.GROUPS_TABLE.'`
-  WHERE is_default = \'true\'
-  ORDER BY id ASC
-;';
-        $result = pwg_query($query);
-
         $inserts = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $inserts[] = [
-              'user_id' => $user_id,
-              'group_id' => $row['id'],
-              ];
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->findDefaultGroupIds() as $groupId) {
+            $inserts[] = ['user_id' => $user_id, 'group_id' => $groupId];
         }
 
         if (count($inserts) != 0) {
@@ -668,21 +656,9 @@ SELECT id
  */
 function get_userid(string $username): int|false
 {
-    $username = pwg_db_real_escape_string($username);
-
-    $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['id'].'
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['username'].' = \''.$username.'\'
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return false;
-    } else {
-        [$user_id] = pwg_db_fetch_row($result) ?? [null];
-        return is_numeric($user_id) ? (int) $user_id : false;
-    }
+    $userFields = \Piwigo\Config\Config::userFields();
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findIdByUsername($userFields['username'], $userFields['id'], USERS_TABLE, $username);
 }
 
 /**
@@ -692,22 +668,9 @@ SELECT '.\Piwigo\Config\Config::userFields()['id'].'
  */
 function get_userid_by_email(string $email): int|false
 {
-    $email = pwg_db_real_escape_string($email);
-
-    $query = '
-SELECT
-    '.\Piwigo\Config\Config::userFields()['id'].'
-  FROM '.USERS_TABLE.'
-  WHERE UPPER('.\Piwigo\Config\Config::userFields()['email'].') = UPPER(\''.$email.'\')
-;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return false;
-    } else {
-        [$user_id] = pwg_db_fetch_row($result) ?? [null];
-        return is_numeric($user_id) ? (int) $user_id : false;
-    }
+    $userFields = \Piwigo\Config\Config::userFields();
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findIdByEmail($userFields['email'], $userFields['id'], USERS_TABLE, $email);
 }
 
 /**
@@ -725,22 +688,12 @@ function get_default_user_info(bool $convert_str = true): ?array
     }
 
     if (!isset($cache['default_user'])) {
-        $query = '
-SELECT *
-  FROM '.USER_INFOS_TABLE.'
-  WHERE user_id = '.\Piwigo\Config\Config::defaultUserId().'
-;';
+        $row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->getDefaultUserInfo(\Piwigo\Config\Config::defaultUserId());
 
-        $result = pwg_query($query);
-
-        if (pwg_db_num_rows($result) > 0) {
-            $cache['default_user'] = pwg_db_fetch_assoc($result);
-
-            unset($cache['default_user']['user_id']);
-            unset($cache['default_user']['status']);
-            unset($cache['default_user']['registration_date']);
-            unset($cache['default_user']['last_visit']);
-            unset($cache['default_user']['last_visit_from_history']);
+        if ($row !== null) {
+            unset($row['user_id'], $row['status'], $row['registration_date'], $row['last_visit'], $row['last_visit_from_history']);
+            $cache['default_user'] = $row;
         } else {
             $cache['default_user'] = false; // sentinel: queried, no row found
         }
@@ -900,7 +853,7 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
 
     if (!empty($user_ids)) {
         $inserts = [];
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
+        $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
         $default_user = get_default_user_info(false);
         if ($default_user === null) {
@@ -953,18 +906,19 @@ function create_user_infos(array|int $user_ids, ?array $override_values = null):
  */
 function calculate_auto_login_key($user_id, $time, &$username): string|false
 {
-    $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['username'].' AS username
-  , '.\Piwigo\Config\Config::userFields()['password'].' AS password
-FROM '.USERS_TABLE.'
-WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id;
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result) > 0) {
-        $row = pwg_db_fetch_assoc($result);
-        $username = stripslashes((string) ($row['username'] ?? ''));
+    $userFields = \Piwigo\Config\Config::userFields();
+    $row = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findAuthFieldsById(
+            $userFields['username'],
+            $userFields['password'],
+            $userFields['id'],
+            USERS_TABLE,
+            (int) $user_id
+        );
+    if ($row !== null) {
+        $username = stripslashes($row['username'] ?? '');
         $data = $time.$user_id.$username;
-        $key = base64_encode(hash_hmac('sha1', $data, \Piwigo\Config\Config::secretKey().($row['password'] ?? ''), true));
-        return $key;
+        return base64_encode(hash_hmac('sha1', $data, \Piwigo\Config\Config::secretKey().($row['password'] ?? ''), true));
     }
     return false;
 }
@@ -1166,25 +1120,16 @@ function pwg_login(bool $success, string $username, string $password, bool $reme
 /** @return array<string,mixed>|null */
 function find_user_by_username_or_email(string $username_or_email): ?array
 {
-    $username_or_email = pwg_db_real_escape_string($username_or_email);
-
-    $query = '
-SELECT 
-  '.\Piwigo\Config\Config::userFields()['id'].' AS id,
-  '.\Piwigo\Config\Config::userFields()['username'].' AS username,
-  '.\Piwigo\Config\Config::userFields()['email'].' AS email,
-  '.\Piwigo\Config\Config::userFields()['password'].' AS password,
-  status
-FROM '.USERS_TABLE.' AS u
-  LEFT JOIN '.USER_INFOS_TABLE.' AS i
-    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = i.user_id
-  WHERE ';
-
-    $where_username = \Piwigo\Config\Config::userFields()['username'].' = \'' . $username_or_email . '\'';
-    $where_email = \Piwigo\Config\Config::userFields()['email'].' = \'' . $username_or_email . '\'';
-
-    $user = pwg_db_fetch_assoc(pwg_query($query.$where_username))
-      ?: pwg_db_fetch_assoc(pwg_query($query.$where_email));
+    $userFields = \Piwigo\Config\Config::userFields();
+    $user = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->findByUsernameOrEmail(
+            $userFields['username'],
+            $userFields['email'],
+            $userFields['id'],
+            $userFields['password'],
+            USERS_TABLE,
+            $username_or_email
+        );
 
     if (!empty($user)) {
         // The user may not exist in the user_infos table, so we consider it's a "normal" user by default

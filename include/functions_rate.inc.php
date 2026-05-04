@@ -44,65 +44,27 @@ function rate_picture(int $image_id, float|int|null $rate): array|false
     }
     $anonymous_id = implode('.', $ip_components);
 
+    $rateRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class);
+
     if ($user_anonymous) {
         $save_anonymous_id_raw = pwg_get_cookie_var('anonymous_rater', $anonymous_id);
         $save_anonymous_id = is_scalar($save_anonymous_id_raw) ? (string) $save_anonymous_id_raw : $anonymous_id;
 
-        if ($anonymous_id != $save_anonymous_id) { // client has changed his IP adress or he's trying to fool us
-            $query = '
-SELECT element_id
-  FROM '.RATE_TABLE.'
-  WHERE user_id = '.$userId.'
-    AND anonymous_id = \''.$anonymous_id.'\'
-;';
-            $already_there = query2array($query, null, 'element_id');
+        if ($anonymous_id != $save_anonymous_id) { // client has changed his IP address or he's trying to fool us
+            $already_there = $rateRepo->findElementIdsByUserAndAnonId($userId, $anonymous_id);
 
             if (count($already_there) > 0) {
-                $query = '
-DELETE
-  FROM '.RATE_TABLE.'
-  WHERE user_id = '.$userId.'
-    AND anonymous_id = \''.$save_anonymous_id.'\'
-    AND element_id IN ('.implode(',', $already_there).')
-;';
-                pwg_query($query);
+                $rateRepo->deleteByUserAnonElements($userId, $save_anonymous_id, $already_there);
             }
 
-            $query = '
-UPDATE '.RATE_TABLE.'
-  SET anonymous_id = \'' .$anonymous_id.'\'
-  WHERE user_id = '.$userId.'
-    AND anonymous_id = \'' . $save_anonymous_id.'\'
-;';
-            pwg_query($query);
+            $rateRepo->updateAnonId($userId, $save_anonymous_id, $anonymous_id);
         } // end client changed ip
 
         pwg_set_cookie_var('anonymous_rater', $anonymous_id);
     } // end anonymous user
 
-    $query = '
-DELETE
-  FROM '.RATE_TABLE.'
-  WHERE element_id = '.$image_id.'
-    AND user_id = '.$userId.'
-';
-    if ($user_anonymous) {
-        $query .= ' AND anonymous_id = \''.$anonymous_id.'\'';
-    }
-    pwg_query($query);
-    $query = '
-INSERT
-  INTO '.RATE_TABLE.'
-  (user_id,anonymous_id,element_id,rate,date)
-  VALUES
-  ('
-      .$userId.','
-      .'\''.$anonymous_id.'\','
-      .$image_id.','
-      .$rate
-      .',NOW())
-;';
-    pwg_query($query);
+    $rateRepo->deleteByElementAndUser($image_id, $userId, $user_anonymous ? $anonymous_id : null);
+    $rateRepo->insert($userId, $anonymous_id, $image_id, (float) $rate);
 
     return update_rating_score($image_id);
 }
@@ -122,20 +84,14 @@ function update_rating_score(int|false $element_id = false): array
 {
     $_ = trigger_change('update_rating_score', false, $element_id);
 
-    $query = '
-SELECT element_id,
-    COUNT(rate) AS rcount,
-    SUM(rate) AS rsum
-  FROM '.RATE_TABLE.'
-  GROUP by element_id';
+    $rateRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class);
 
     $all_rates_count = 0;
     $all_rates_avg = 0;
     $item_ratecount_avg = 0;
     $by_item = [];
 
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($rateRepo->getSumsByElement() as $row) {
         $all_rates_count += (int) $row['rcount'];
         $all_rates_avg += (float) $row['rsum'];
         $element_id_key = is_numeric($row['element_id']) ? (int) $row['element_id'] : (is_scalar($row['element_id']) ? (string) $row['element_id'] : 0);
@@ -173,19 +129,11 @@ SELECT element_id,
 
     //set to null all items with no rate
     if (!isset($by_item[$element_id])) {
-        $query = '
-SELECT id FROM '.IMAGES_TABLE .'
-  LEFT JOIN '.RATE_TABLE.' ON id=element_id
-  WHERE element_id IS NULL AND rating_score IS NOT NULL';
-
-        $to_update = query2array($query, null, 'id');
+        $to_update = $rateRepo->findImageIdsWithNoRates();
 
         if (!empty($to_update)) {
-            $query = '
-UPDATE '.IMAGES_TABLE .'
-  SET rating_score=NULL
-  WHERE id IN (' . implode(',', $to_update) . ')';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+                ->clearRatingScoreByIds($to_update);
         }
     }
 

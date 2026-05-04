@@ -87,7 +87,7 @@ class Template
                     false // show trace
                 );
             }
-            if (function_exists('pwg_query')) {
+            if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
                 conf_update_param('data_dir_checked', 1);
             }
         }

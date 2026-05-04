@@ -190,7 +190,7 @@ ON u.'.\Piwigo\Config\Config::userFields()['id'].'=ui.user_id
 WHERE '.\Piwigo\Config\Config::userFields()['username'].'=\''.$username.'\'
 ;';
     }
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $row = get_dbal_connection()->executeQuery($query)->fetchAssociative() ?: null;
 
     if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
         \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
@@ -246,15 +246,7 @@ SELECT id
 
 function upgrade_db_connect(): void
 {
-    try {
-        pwg_db_connect(
-            \Piwigo\Config\Config::dbHost(),
-            \Piwigo\Config\Config::dbUser(),
-            \Piwigo\Config\Config::dbPassword(),
-            \Piwigo\Config\Config::dbName()
-        );
-        pwg_db_check_version();
-    } catch (Exception $e) {
-        my_error(l10n($e->getMessage()), true);
-    }
+    // Force a connection early so errors surface before rendering begins.
+    // get_dbal_connection() caches the connection for the lifetime of the request.
+    get_dbal_connection();
 }

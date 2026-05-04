@@ -105,19 +105,13 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $persistent_cache = new PersistentFileCache($pool);
     \Piwigo\Cache\PersistentCacheRegistry::set($persistent_cache);
 
-    // Database connection
+    // Database connection — DBAL connects lazily on first use.
+    // Force it now so a bad config surfaces a clean error before rendering.
     try {
-        pwg_db_connect(
-            \Piwigo\Config\Config::dbHost(),
-            \Piwigo\Config\Config::dbUser(),
-            \Piwigo\Config\Config::dbPassword(),
-            \Piwigo\Config\Config::dbName()
-        );
+        get_dbal_connection();
     } catch (Exception $e) {
         my_error(l10n($e->getMessage()), true);
     }
-
-    pwg_db_check_charset();
 
     // in Piwigo 15, configuration setting webmaster_id is moved from config files
     // to database. It may be undefined at some point, with Piwigo 15+ scripts and

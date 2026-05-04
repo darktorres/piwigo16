@@ -43,18 +43,7 @@ define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 // +-----------------------------------------------------------------------+
 // |                         Database connection                           |
 // +-----------------------------------------------------------------------+
-try {
-    pwg_db_connect(
-        \Piwigo\Config\Config::dbHost(),
-        \Piwigo\Config\Config::dbUser(),
-        \Piwigo\Config\Config::dbPassword(),
-        \Piwigo\Config\Config::dbName()
-    );
-} catch (Exception $e) {
-    my_error(l10n($e->getMessage(), true));
-}
-
-pwg_db_check_charset();
+// Connection is established lazily by get_dbal_connection() on first use.
 
 // +-----------------------------------------------------------------------+
 // |                              Upgrades                                 |
@@ -88,13 +77,11 @@ foreach ($to_apply as $upgrade_id) {
     include(UPGRADES_PATH.'/'.$upgrade_id.'-database.php');
 
     // notify upgrade
-    $query = '
-INSERT INTO '.PREFIX_TABLE.'upgrade
-  (id, applied, description)
-  VALUES
-  (\''.$upgrade_id.'\', NOW(), \''.$upgrade_description.'\')
-;';
-    pwg_query($query);
+    single_insert(PREFIX_TABLE . 'upgrade', [
+        'id'          => $upgrade_id,
+        'applied'     => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+        'description' => is_string($upgrade_description ?? null) ? $upgrade_description : '',
+    ]);
 }
 
 echo '</pre>';

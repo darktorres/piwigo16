@@ -35,7 +35,6 @@ final class NoGlobalInSrcRule implements Rule
         'lang' => 'Lang::t()',
         'template' => 'TemplateRegistry::current()',
         'logger' => 'LoggerRegistry::current()',
-        'mysqli' => 'MysqliRegistry::current()',
         'persistent_cache' => 'PersistentCacheRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
         'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',

@@ -11,9 +11,8 @@ use Piwigo\Config\Config;
 /**
  * Factory for the shared Doctrine DBAL connection.
  *
- * Applies the same session tweaks as pwg_db_connect() so DBAL queries
- * behave consistently with the legacy mysqli layer:
- *   - utf8mb4 charset
+ * Session tweaks applied on every new connection:
+ *   - utf8mb4 charset (via driver 'charset' option)
  *   - ONLY_FULL_GROUP_BY removed from SESSION sql_mode
  */
 final class DbConnection
@@ -29,7 +28,7 @@ final class DbConnection
             'charset'  => 'utf8mb4',
         ]);
 
-        // Mirror pwg_db_connect(): remove ONLY_FULL_GROUP_BY so queries that
+        // Remove ONLY_FULL_GROUP_BY so queries that
         // use SELECT t.*, COUNT(*) … GROUP BY t.id work without errors.
         $currentMode = $conn->executeQuery('SELECT @@SESSION.sql_mode')->fetchOne();
         if (is_string($currentMode) && str_contains($currentMode, 'ONLY_FULL_GROUP_BY')) {

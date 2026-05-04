@@ -56,18 +56,11 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 function get_tables(): array
 {
     $tables = [];
-
-    $query = '
-SHOW TABLES
-;';
-    $result = pwg_query($query);
-
-    while ($row = pwg_db_fetch_row($result)) {
-        if (preg_match('/^'.PREFIX_TABLE.'/', (string) $row[0])) {
-            $tables[] = (string)$row[0];
+    foreach (get_dbal_connection()->executeQuery('SHOW TABLES')->fetchFirstColumn() as $tableName) {
+        if (preg_match('/^' . PREFIX_TABLE . '/', (string) $tableName)) {
+            $tables[] = (string) $tableName;
         }
     }
-
     return $tables;
 }
 
@@ -85,16 +78,9 @@ function get_columns_of(array $tables): array
     $columns_of = [];
 
     foreach ($tables as $table) {
-        $query = '
-DESC `'.$table.'`
-;';
-        $result = pwg_query($query);
-
-        $columns_of[$table] = [];
-
-        while ($row = pwg_db_fetch_row($result)) {
-            $columns_of[$table][] = (string)$row[0];
-        }
+        $columns_of[$table] = get_dbal_connection()
+            ->executeQuery('DESC `' . $table . '`')
+            ->fetchFirstColumn();
     }
 
     return $columns_of;
@@ -188,10 +174,8 @@ include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
 include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
 upgrade_db_connect();
-pwg_db_check_charset();
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-define('CURRENT_DATE', $dbnow);
+define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
 
 // +-----------------------------------------------------------------------+
 // |                        template initialization                        |
@@ -213,10 +197,8 @@ $template->assign(
 
 $has_remote_site = false;
 
-$query = 'SELECT galleries_url FROM '.SITES_TABLE.';';
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
-    if (url_is_remote((string)$row['galleries_url'])) {
+foreach (query2array('SELECT galleries_url FROM ' . SITES_TABLE) as $row) {
+    if (url_is_remote((string) $row['galleries_url'])) {
         $has_remote_site = true;
     }
 }

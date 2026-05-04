@@ -103,7 +103,7 @@ function install_db_connect(array &$infos, array &$errors): void
     $pass   = is_scalar($_POST['dbpasswd'] ?? null) ? (string) $_POST['dbpasswd'] : '';
     $dbname = is_scalar($_POST['dbname'] ?? null) ? (string) $_POST['dbname'] : '';
 
-    // Parse host/port/socket the same way pwg_db_connect does.
+    // Parse host/port/socket.
     $port   = null;
     $socket = null;
     $h      = $host;
@@ -137,8 +137,14 @@ function install_db_connect(array &$infos, array &$errors): void
         return;
     }
 
+    // Prime Config so get_dbal_connection() uses the install credentials.
+    \Piwigo\Config\Config::override('db_host', $host);
+    \Piwigo\Config\Config::override('db_user', $user);
+    \Piwigo\Config\Config::override('db_password', $pass);
+    \Piwigo\Config\Config::override('db_base', $dbname);
+
     try {
-        pwg_db_connect($host, $user, $pass, $dbname);
+        get_dbal_connection();
         pwg_db_check_version();
     } catch (Exception $e) {
         $errors[] = l10n($e->getMessage());

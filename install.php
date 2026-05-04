@@ -144,8 +144,6 @@ if (isset($_POST['install'])) {
         print_r($errors);
     }
 
-    pwg_db_check_charset();
-
     if (
         strlen((string) $prefixeTable) > 20
         or preg_match('/^\d/', (string) $prefixeTable)
@@ -216,11 +214,11 @@ if (isset($_POST['install'])) {
             'mysql'
         );
 
-        $query = '
-INSERT INTO '.$prefixeTable.'config (param,value,comment) 
-   VALUES (\'secret_key\',\''.sha1(random_bytes(1000)).'\',
-   \'a secret key specific to the gallery for internal use\');';
-        pwg_query($query);
+        single_insert($prefixeTable . 'config', [
+            'param'   => 'secret_key',
+            'value'   => sha1(random_bytes(1000)),
+            'comment' => 'a secret key specific to the gallery for internal use',
+        ]);
 
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
         conf_update_param('gallery_title', pwg_db_real_escape_string(l10n('Just another Piwigo gallery')));
@@ -265,8 +263,7 @@ INSERT INTO '.$prefixeTable.'config (param,value,comment)
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-        define('CURRENT_DATE', $dbnow);
+        define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
         $datas = [];
         foreach (get_available_upgrade_ids() as $upgrade_id) {
             $datas[] = [

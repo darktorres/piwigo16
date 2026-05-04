@@ -322,8 +322,8 @@ DELETE FROM '. RATE_TABLE .'
         $query .= ' AND element_id='. (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
     }
 
-    $changes = pwg_db_changes();
-    if ($changes) {
+    $changes = get_dbal_connection()->executeStatement($query);
+    if ($changes > 0) {
         include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
         update_rating_score();
     }

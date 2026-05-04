@@ -256,6 +256,87 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return true if the given image is associated with the given category.
+     */
+    public function hasImageInCategory(int $imageId, int $catId): bool
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('image_category'))
+            ->where('image_id = :imageId')
+            ->andWhere('category_id = :catId')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('catId', $catId)
+            ->executeQuery()
+            ->fetchOne();
+        return (int) $count > 0;
+    }
+
+    /**
+     * Return the maximum rank in the given category, or null if empty.
+     */
+    public function findMaxRankInCategory(int $catId): ?int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('MAX(`rank`)')
+            ->from($this->table('image_category'))
+            ->where('category_id = :catId')
+            ->setParameter('catId', $catId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Increment rank for all images in $catId with rank >= $fromRank.
+     * Used when inserting a photo at a specific position.
+     */
+    public function incrementRanksFrom(int $catId, int $fromRank): void
+    {
+        $this->conn->executeStatement(
+            'UPDATE ' . $this->table('image_category') .
+            ' SET `rank` = `rank` + 1 WHERE category_id = ? AND `rank` IS NOT NULL AND `rank` >= ?',
+            [$catId, $fromRank]
+        );
+    }
+
+    /**
+     * Set the rank for a specific image-category association.
+     */
+    public function setImageRank(int $imageId, int $catId, int $rank): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('image_category'))
+            ->set('`rank`', ':rank')
+            ->where('image_id = :imageId')
+            ->andWhere('category_id = :catId')
+            ->setParameter('rank', $rank)
+            ->setParameter('imageId', $imageId)
+            ->setParameter('catId', $catId)
+            ->executeStatement();
+    }
+
+    /**
+     * Delete image_category links for a single image and specific category ids.
+     * Used when removing an image from certain categories in replace mode.
+     *
+     * @param int[] $catIds
+     */
+    public function removeImageFromCategories(int $imageId, array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('image_category'))
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId);
+        $qb->andWhere($qb->expr()->in('category_id', ':catIds'))
+           ->setParameter('catIds', $catIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Set the commentable flag on the given category ids.
      *
      * @param int[] $ids

@@ -42,12 +42,8 @@ function ws_add_image_category_relations($image_id, $categories_string, $replace
 
     if (empty($categories_string)) {
         if ($replace_mode) {
-            $query = '
-DELETE
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id = '.$image_id.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ->deleteImageCategoryByImageIds([(int) $image_id]);
             update_category([]);
         }
         return true;
@@ -78,12 +74,8 @@ DELETE
 
     if (count($cat_ids) == 0) {
         if ($replace_mode) {
-            $query = '
-DELETE
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id = '.$image_id.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ->deleteImageCategoryByImageIds([(int) $image_id]);
             update_category([]);
         }
         return true;
@@ -117,13 +109,8 @@ SELECT category_id
     if ($replace_mode) {
         $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
         if (count($to_remove_cat_ids) > 0) {
-            $query = '
-DELETE
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id = '.$image_id.'
-    AND category_id IN ('.implode(', ', $to_remove_cat_ids).')
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ->removeImageFromCategories((int) $image_id, array_map('intval', $to_remove_cat_ids));
             update_category(array_map(fn ($v) => (int) $v, $to_remove_cat_ids));
         }
     }
@@ -1100,65 +1087,36 @@ SELECT
         return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
     }
 
+    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+
     // does the image really exist?
-    $query = '
-SELECT COUNT(*)
-  FROM '. IMAGES_TABLE .'
-  WHERE id = '. $p_image_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->existsById($p_image_id)) {
         return new PwgError(404, 'image_id not found');
     }
 
     // is the image associated to this category?
-    $query = '
-SELECT COUNT(*)
-  FROM '. IMAGE_CATEGORY_TABLE .'
-  WHERE image_id = '. $p_image_id .'
-    AND category_id = '. $p_category_id .'
-;';
-    [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-    if ($count == 0) {
+    if (!$catRepo->hasImageInCategory($p_image_id, $p_category_id)) {
         return new PwgError(404, 'This image is not associated to this category');
     }
 
     $p_rank = is_numeric($params['rank']) ? (int) $params['rank'] : 1;
 
     // what is the current higher rank for this category?
-    $query = '
-SELECT MAX(`rank`) AS max_rank
-  FROM '. IMAGE_CATEGORY_TABLE .'
-  WHERE category_id = '. $p_category_id .'
-;';
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $max_rank = $catRepo->findMaxRankInCategory($p_category_id);
 
-    if ($row !== null && is_numeric($row['max_rank'])) {
-        if ($p_rank > (int) $row['max_rank']) {
-            $p_rank = (int) $row['max_rank'] + 1;
+    if ($max_rank !== null) {
+        if ($p_rank > $max_rank) {
+            $p_rank = $max_rank + 1;
         }
     } else {
         $p_rank = 1;
     }
 
     // update rank for all other photos in the same category
-    $query = '
-UPDATE '. IMAGE_CATEGORY_TABLE .'
-  SET `rank` = `rank` + 1
-  WHERE category_id = '. $p_category_id .'
-    AND `rank` IS NOT NULL
-    AND `rank` >= '. $p_rank .'
-;';
-    pwg_query($query);
+    $catRepo->incrementRanksFrom($p_category_id, $p_rank);
 
     // set the new rank for the photo
-    $query = '
-UPDATE '. IMAGE_CATEGORY_TABLE .'
-  SET `rank` = '. $p_rank .'
-  WHERE image_id = '. $p_image_id .'
-    AND category_id = '. $p_category_id .'
-;';
-    pwg_query($query);
+    $catRepo->setImageRank($p_image_id, $p_category_id, $p_rank);
 
     // return data for client
     return [

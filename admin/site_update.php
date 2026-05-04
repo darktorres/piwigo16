@@ -35,19 +35,15 @@ if (!is_numeric($_GET['site'])) {
 }
 $site_id = $_GET['site'];
 
-$query = '
-SELECT galleries_url
-  FROM '.SITES_TABLE.'
-  WHERE id = '.$site_id;
-[$site_url] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$site_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)
+    ->findGalleriesUrlById((int) $site_id);
 if (!isset($site_url)) {
     throw new \Piwigo\Exception\NotFoundException('site '.$site_id.' does not exist');
 }
 $site_url_str = (string) $site_url;
 $site_is_remote = url_is_remote($site_url_str);
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();')) ?? [null];
-define('CURRENT_DATE', $dbnow);
+define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
 
 $error_labels = [
   'PWG-UPDATE-1' => [

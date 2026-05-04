@@ -253,8 +253,8 @@ SELECT id, path, representative_ext
 )
 ;';
 
-    $result = pwg_query($query);
-    while ($data = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ->findByIds(array_map('intval', $ids)) as $data) {
         $data = get_sync_metadata($data);
         if ($data === false) {
             continue;

@@ -117,26 +117,17 @@ $template->assign('message_tags', $message_tags);
 // +-----------------------------------------------------------------------+
 $per_page = 100;
 
-// tag counters
-$query = '
-SELECT tag_id, COUNT(image_id) AS counter
-  FROM '.IMAGE_TAG_TABLE.'
-  GROUP BY tag_id';
-$tag_counters = query2array($query, 'tag_id', 'counter');
+$_tagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+$tag_counters = $_tagRepo->getTagCounters();
 
 // all tags
-$query = '
-SELECT name, id, url_name
-  FROM '.TAGS_TABLE.'
-;';
-$result = pwg_query($query);
 $all_tags = [];
-while ($tag = pwg_db_fetch_assoc($result)) {
+foreach ($_tagRepo->findAll() as $tag) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
     $tag['name'] = trigger_change('render_tag_name', $raw_name, $tag);
     $tag_id_key = is_scalar($tag['id']) ? (string) $tag['id'] : '';
-    $counter = intval($tag_counters[$tag_id_key] ?? 0);
+    $counter = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
     if ($counter > 0) {
         $tag['counter'] = $counter;
     }

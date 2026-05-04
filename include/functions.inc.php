@@ -472,13 +472,8 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
     $update_last_visit = trigger_change('pwg_log_update_last_visit', $update_last_visit);
 
     if ($update_last_visit) {
-        $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET last_visit = NOW(),
-      lastmodified = lastmodified
-  WHERE user_id = '.$userId.'
-';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->updateLastVisit($userId);
     }
 
     if (!do_log($image_id, $image_type)) {
@@ -1333,16 +1328,18 @@ function get_themeconf($key): mixed
  */
 function get_webmaster_mail_address(): string
 {
-    $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['email'].'
-  FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.\Piwigo\Config\Config::webmasterId().'
-;';
-    [$email] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $userFields = \Piwigo\Config\Config::userFields();
+    $email = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        ->getWebmasterEmail(
+            $userFields['email'],
+            $userFields['id'],
+            USERS_TABLE,
+            \Piwigo\Config\Config::webmasterId()
+        );
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
-    return is_scalar($email) ? (string) $email : '';
+    return (string) $email;
 }
 
 /**
@@ -2326,7 +2323,7 @@ function send_piwigo_infos(): void
 
     include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-    [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
+    $db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
     if (!\Piwigo\Config\Config::has('send_piwigo_infos_origin_hash')) {
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);

@@ -265,16 +265,10 @@ SELECT
 
 
 
-        $query = '
-SELECT
-    id,
-    name
-  FROM '.IMAGE_TAG_TABLE.' AS it
-    JOIN '.TAGS_TABLE.' AS t ON t.id = it.tag_id
-  WHERE image_id = '.$row['id'].'
-;';
-
-        $tag_selection = get_taglist($query);
+        $tag_selection = get_taglist_from_rows(
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+                ->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0)
+        );
 
         $legend = render_element_name($row);
         $row_file_str = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';

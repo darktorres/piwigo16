@@ -198,6 +198,24 @@ final class CommentRepository extends AbstractRepository
     }
 
     /**
+     * Delete all comments on the given images.
+     * Called when images are permanently deleted.
+     *
+     * @param int[] $imageIds
+     */
+    public function deleteByImageIds(array $imageIds): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('comments'));
+        $qb->where($qb->expr()->in('image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
      * Clear the nb_available_comments cache for all users so the next
      * request recomputes it from the live comment count.
      */

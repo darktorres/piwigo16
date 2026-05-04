@@ -37,11 +37,8 @@ SELECT id
     delete_categories($category_ids);
 
     // destruction of the site
-    $query = '
-DELETE FROM '.SITES_TABLE.'
-  WHERE id = '.$id.'
-;';
-    pwg_query($query);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->deleteSiteById((int) $id);
 }
 
 /**
@@ -108,46 +105,15 @@ SELECT
         }
     }
 
-    // destruction of the links between images and this category
-    $query = '
-DELETE FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id IN (
-'.wordwrap(implode(', ', $ids), 80, "\n").')
-;';
-    pwg_query($query);
+    $delCatRepo2  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $delUserRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
 
-    // destruction of the access linked to the category
-    $query = '
-DELETE FROM '.USER_ACCESS_TABLE.'
-  WHERE cat_id IN (
-'.wordwrap(implode(', ', $ids), 80, "\n").')
-;';
-    pwg_query($query);
-
-    $query = '
-DELETE FROM '.GROUP_ACCESS_TABLE.'
-  WHERE cat_id IN (
-'.wordwrap(implode(', ', $ids), 80, "\n").')
-;';
-    pwg_query($query);
-
-    // destruction of the category
-    $query = '
-DELETE FROM '.CATEGORIES_TABLE.'
-  WHERE id IN (
-'.wordwrap(implode(', ', $ids), 80, "\n").')
-;';
-    pwg_query($query);
-
-    $query = '
-DELETE FROM '.OLD_PERMALINKS_TABLE.'
-  WHERE cat_id IN ('.implode(',', $ids).')';
-    pwg_query($query);
-
-    $query = '
-DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
-  WHERE cat_id IN ('.implode(',', $ids).')';
-    pwg_query($query);
+    $delCatRepo2->deleteImageCategoryByCategoryIds($ids);
+    $delUserRepo2->deleteUserAccessByCategoryIds($ids);
+    $delCatRepo2->deleteGroupAccessByCategoryIds($ids);
+    $delCatRepo2->deleteByIds($ids);
+    $delCatRepo2->deletePermalinksByCategoryIds($ids);
+    $delUserRepo2->deleteUserCacheByCategoryIds($ids);
 
     trigger_notify('delete_categories', $ids);
     pwg_activity('album', $ids, 'delete', ['photo_deletion_mode' => $photo_deletion_mode]);
@@ -172,33 +138,16 @@ function delete_element_files(array $ids): array
     $new_ids = [];
     $formats_of = [];
 
-    $query = '
-SELECT
-    image_id,
-    ext
-  FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id IN ('.implode(',', $ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    $delFilesRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+    foreach ($delFilesRepo->findFormatsByImageIds($ids) as $row) {
         $fmt_image_id = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
         if (!isset($formats_of[$fmt_image_id])) {
             $formats_of[$fmt_image_id] = [];
         }
-
         $formats_of[$fmt_image_id][] = is_scalar($row['ext']) ? (string) $row['ext'] : '';
     }
 
-    $query = '
-SELECT
-    id,
-    path,
-    representative_ext
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', $ids).')
-;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($delFilesRepo->findPathsByIds($ids) as $row) {
         $row_path = is_scalar($row['path']) ? (string) $row['path'] : '';
         if (url_is_remote($row_path)) {
             continue;
@@ -208,7 +157,7 @@ SELECT
         $files[] = get_element_path($row);
 
         if (!empty($row['representative_ext'])) {
-            $rep_ext = (string) $row['representative_ext'];
+            $rep_ext = is_scalar($row['representative_ext']) ? (string) $row['representative_ext'] : '';
             $files[] = original_to_representative($files[0], $rep_ext);
         }
 
@@ -268,61 +217,20 @@ function delete_elements($ids, $physical_deletion = false): int
 
     $ids_str = wordwrap(implode(', ', $ids), 80, "\n");
 
-    // destruction of the comments on the image
-    $query = '
-DELETE FROM '.COMMENTS_TABLE.'
-  WHERE image_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
+    $delImgRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+    $delCatRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $delComRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class);
+    $delUserRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+    $delTagRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
 
-    // destruction of the links between images and categories
-    $query = '
-DELETE FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the formats
-    $query = '
-DELETE FROM '.IMAGE_FORMAT_TABLE.'
-  WHERE image_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the links between images and tags
-    $query = '
-DELETE FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the favorites associated with the picture
-    $query = '
-DELETE FROM '.FAVORITES_TABLE.'
-  WHERE image_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the rates associated to this element
-    $query = '
-DELETE FROM '.RATE_TABLE.'
-  WHERE element_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the caddie associated to this element
-    $query = '
-DELETE FROM '.CADDIE_TABLE.'
-  WHERE element_id IN ('. $ids_str .')
-;';
-    pwg_query($query);
-
-    // destruction of the image
-    $query = '
-DELETE FROM '.IMAGES_TABLE.'
-  WHERE id IN ('. $ids_str .')
-;';
-    pwg_query($query);
+    $delComRepo->deleteByImageIds($ids);        // comments
+    $delCatRepo->deleteImageCategoryByImageIds($ids); // image_category links
+    $delImgRepo->deleteFormatsByImageIds($ids); // alternate formats
+    $delTagRepo->deleteImageTagsByImageIds($ids); // tag links
+    $delUserRepo->deleteFavoritesByImageIds($ids); // favorites
+    $delImgRepo->deleteRatingsByImageIds($ids); // ratings
+    $delImgRepo->deleteCaddieByImageIds($ids);  // caddie
+    $delImgRepo->deleteByIds($ids);             // images
 
     // are the photo used as category representant?
     $query = '
@@ -372,23 +280,18 @@ function delete_user($user_id): void
       USER_AUTH_KEYS_TABLE,
       ];
 
-    foreach ($tables as $table) {
-        $query = '
-DELETE FROM '.$table.'
-  WHERE user_id = '.$user_id.'
-;';
-        pwg_query($query);
-    }
+    $delURepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+    $delURepo->deleteAllRelatedData((int) $user_id);
 
     // purge of sessions
     delete_user_sessions($user_id);
 
     // destruction of the user
-    $query = '
-DELETE FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.$user_id.'
-;';
-    pwg_query($query);
+    $delURepo->deleteByUserId(
+        (int) $user_id,
+        USERS_TABLE,
+        \Piwigo\Config\Config::userFields()['id']
+    );
 
     trigger_notify('delete_user', $user_id);
     pwg_activity('user', $user_id, 'delete');
@@ -419,16 +322,8 @@ function delete_orphan_tags(): void
 /** @return array<mixed> */
 function get_orphan_tags(): array
 {
-    $query = '
-SELECT
-    id,
-    name
-  FROM '.TAGS_TABLE.'
-    LEFT JOIN '.IMAGE_TAG_TABLE.' ON id = tag_id
-  WHERE tag_id IS NULL
-    AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
-;';
-    return query2array($query);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findOrphanTags();
 }
 
 /**
@@ -464,12 +359,8 @@ SELECT DISTINCT c.id
     $wrong_representant = query2array($query, null, 'id');
 
     if (count($wrong_representant) > 0) {
-        $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET representative_picture_id = NULL
-  WHERE id IN ('.wordwrap(implode(', ', $wrong_representant), 120, "\n").')
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->clearRepresentatives(array_map('intval', $wrong_representant));
     }
 
     if (!\Piwigo\Config\Config::allowRandomRepresentative()) {
@@ -1205,12 +1096,8 @@ SELECT DISTINCT user_id
         );
 
         if (count($to_delete) > 0) {
-            $query = '
-DELETE
-  FROM '.$table.'
-  WHERE user_id in ('.implode(',', $to_delete).')
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ->deleteOrphanedFromTable($table, array_map('intval', $to_delete));
         }
     }
 }
@@ -1265,12 +1152,8 @@ SELECT DISTINCT(storage_category_id)
 
     foreach ($cat_ids as $cat_id) {
         $fulldir = $fulldirs[$cat_id] ?? '';
-        $query = '
-UPDATE '.IMAGES_TABLE.'
-  SET path = '.pwg_db_concat(["'".$fulldir."/'",'file']).'
-  WHERE storage_category_id = '.$cat_id.'
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->updatePathByStorageCategoryId($cat_id, $fulldir);
     }
 }
 
@@ -1556,13 +1439,9 @@ function add_tags($tags, $images): void
 
     // we can't insert twice the same {image_id,tag_id} so we must first
     // delete lines we'll insert later
-    $query = '
-DELETE
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('.implode(',', $images).')
-    AND tag_id IN ('.implode(',', $tags).')
-;';
-    pwg_query($query);
+    $tagInts = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $tags);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->deleteImageTagsByImageIdsAndTagIds($images, $tagInts);
 
     $inserts = [];
     foreach ($images as $image_id) {
@@ -1599,28 +1478,13 @@ function delete_tags(array|int $tag_ids): void
         $tag_ids = [$tag_ids];
     }
 
+    $tagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+
     // we need the list of impacted images, to update their lastmodified
-    $query = '
-SELECT
-    image_id
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE tag_id IN ('.implode(',', $tag_ids).')
-;';
-    $image_ids = array_map('intval', query2array($query, null, 'image_id'));
+    $image_ids = $tagRepo->findDistinctImageIdsByTagIds($tag_ids);
 
-    $query = '
-DELETE
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE tag_id IN ('.implode(',', $tag_ids).')
-;';
-    pwg_query($query);
-
-    $query = '
-DELETE
-  FROM '.TAGS_TABLE.'
-  WHERE id IN ('.implode(',', $tag_ids).')
-;';
-    pwg_query($query);
+    $tagRepo->deleteImageTagsByTagIds($tag_ids);
+    $tagRepo->deleteByIds($tag_ids);
 
     trigger_notify('delete_tags', $tag_ids);
     pwg_activity('tag', $tag_ids, 'delete');
@@ -1651,21 +1515,17 @@ function tag_id_from_tag_name(string $tag_name): int|string
         return is_scalar($cached) ? (string) $cached : '';
     }
 
-    // search existing by exact name
-    $query = '
-SELECT id
-  FROM '.TAGS_TABLE.'
-  WHERE name = \''.$tag_name.'\'
-;';
-    if (count($existing_tags = query2array($query, null, 'id')) == 0) {
+    $tagNameRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+
+    // search existing by exact name (parameter-bound — was injecting $tag_name directly)
+    $foundId = $tagNameRepo->findIdByExactName($tag_name);
+    $existing_tags = $foundId !== null ? [$foundId] : [];
+    if (count($existing_tags) == 0) {
         $url_name = (string) trigger_change('render_tag_url', $tag_name);
         // search existing by url name
-        $query = '
-SELECT id
-  FROM '.TAGS_TABLE.'
-  WHERE url_name = \''.$url_name.'\'
-;';
-        if (count($existing_tags = query2array($query, null, 'id')) == 0) {
+        $foundUrlId = $tagNameRepo->findIdByUrlName($url_name);
+        $existing_tags = $foundUrlId !== null ? [$foundUrlId] : [];
+        if (count($existing_tags) == 0) {
             // search by extended description (plugin sub name)
             $extra_where_clauses = trigger_change('get_tag_name_like_where', [], $tag_name);
             if (count($extra_where_clauses) > 0) {
@@ -1723,12 +1583,8 @@ function set_tags_of(array $tags_of): void
         $taglist_before = get_image_tag_ids(array_keys($tags_of));
         $logger->debug('taglist_before', $taglist_before);
 
-        $query = '
-DELETE
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('.implode(',', array_keys($tags_of)).')
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+            ->deleteImageTagsByImageIds(array_keys($tags_of));
 
         $inserts = [];
 
@@ -1778,16 +1634,9 @@ function get_image_tag_ids(array $image_ids): array
         return [];
     }
 
-    $query = '
-SELECT
-    image_id,
-    tag_id
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('.implode(',', $image_ids).')
-;';
-
     $tags_of = array_fill_keys($image_ids, []);
-    $image_tags = query2array($query);
+    $image_tags = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findImageTagPairs($image_ids);
     foreach ($image_tags as $image_tag) {
         $img_id_key = is_numeric($image_tag['image_id']) ? (int) $image_tag['image_id'] : 0;
         if (isset($tags_of[$img_id_key])) {
@@ -1970,18 +1819,9 @@ function associate_images_to_categories(array $images, array $categories): void
     }
 
     // get existing associations
-    $query = '
-SELECT
-    image_id,
-    category_id
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('.implode(',', $images).')
-    AND category_id IN ('.implode(',', $categories).')
-;';
-    $result = pwg_query($query);
-
     $existing = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findExistingImageCategoryLinks($images, $categories) as $row) {
         $cat_key = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
         $existing[$cat_key][] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
     }
@@ -2060,13 +1900,8 @@ SELECT id
     $dissociables = query2array($query, null, 'id');
 
     if (!empty($dissociables)) {
-        $query = '
-DELETE
-  FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE category_id = '.$category.'
-    AND image_id IN ('.implode(',', $dissociables).')
-';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->deleteImageCategoryByCategoryAndImageIds((int) $category, array_map('intval', $dissociables));
     }
 
     return count($dissociables);
@@ -2287,15 +2122,11 @@ function create_tag(string $tag_name): array
     // clean the tag, no html/js allowed in tag name
     $tag_name = strip_tags($tag_name);
 
-    // does the tag already exists?
-    $query = '
-SELECT id
-  FROM '.TAGS_TABLE.'
-  WHERE name = \''.$tag_name.'\'
-;';
-    $existing_tags = query2array($query, null, 'id');
+    // does the tag already exist? (parameter-bound — was injecting $tag_name directly)
+    $existing_id = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findIdByExactName($tag_name);
 
-    if (count($existing_tags) == 0) {
+    if ($existing_id === null) {
         single_insert(
             TAGS_TABLE,
             [
@@ -2717,36 +2548,46 @@ function get_active_menu($menu_page)
 function get_taglist(string $query, bool $only_user_language = true): array
 {
     $result = pwg_query($query);
+    $rows = [];
+    while ($row = pwg_db_fetch_assoc($result)) {
+        $rows[] = $row;
+    }
+    return get_taglist_from_rows($rows, $only_user_language);
+}
 
+/**
+ * Build the admin tag-selection list from pre-fetched tag rows.
+ * Each row must contain at least 'id' and 'name'.
+ *
+ * @param list<array<string, mixed>> $rows
+ * @return list<array<string, mixed>>
+ */
+function get_taglist_from_rows(array $rows, bool $only_user_language = true): array
+{
     $taglist = [];
     $altlist = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $raw_name = $row['name'];
+    foreach ($rows as $row) {
+        $raw_name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
         $name = trigger_change('render_tag_name', $raw_name, $row);
-
-        $taglist[] =  [
+        $taglist[] = [
             'name' => $name,
-            'id' => '~~'.$row['id'].'~~',
-          ];
-
+            'id'   => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~',
+        ];
         if (!$only_user_language) {
             $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
-
             foreach (array_diff(array_unique($alt_names), [$name]) as $alt) {
-                $altlist[] =  [
+                $altlist[] = [
                     'name' => $alt,
-                    'id' => '~~'.$row['id'].'~~',
-                  ];
+                    'id'   => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~',
+                ];
             }
         }
     }
-
     usort($taglist, tag_alpha_compare(...));
     if (count($altlist)) {
         usort($altlist, tag_alpha_compare(...));
         $taglist = array_merge($taglist, $altlist);
     }
-
     return $taglist;
 }
 
@@ -3585,80 +3426,27 @@ function get_pwg_general_statitics(): array
 {
     $stats = [];
 
-    $query = '
-SELECT COUNT(*)
-  FROM '.IMAGES_TABLE.'
-;';
-    [$stats['nb_photos']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $statsImgRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+    $statsCatRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $statsTagRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+    $statsUserRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+    $statsHistRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class);
 
-    $query = '
-SELECT COUNT(*)
-  FROM '.CATEGORIES_TABLE.'
-;';
-    [$stats['nb_categories']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $stats['nb_photos']    = $statsImgRepo->countAll();
+    $stats['nb_categories'] = $statsCatRepo->countAll();
+    $stats['nb_tags']      = $statsTagRepo->countAll();
+    $stats['nb_image_tag'] = $statsTagRepo->countImageTags();
+    $stats['nb_users']     = $statsUserRepo->countAll(USERS_TABLE);
+    $stats['nb_admins']    = $statsUserRepo->countByStatus(['webmaster', 'admin']);
+    $stats['nb_groups']    = $statsUserRepo->countGroups();
+    $stats['nb_rates']     = $statsImgRepo->countRatings();
+    $stats['nb_views']     = $statsHistRepo->sumPageViews();
+    $stats['disk_usage']   = $statsImgRepo->sumFilesizeKb();
 
-    $query = '
-SELECT COUNT(*)
-  FROM '.TAGS_TABLE.'
-;';
-    [$stats['nb_tags']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $stats['nb_formats']         = $statsImgRepo->countFormats();
+    $stats['formats_disk_usage'] = $statsImgRepo->sumFormatFilesizeKb();
 
-    $query = '
-SELECT COUNT(*)
-  FROM '.IMAGE_TAG_TABLE.'
-;';
-    [$stats['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT COUNT(*)
-  FROM '.USERS_TABLE.'
-;';
-    [$stats['nb_users']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.USER_INFOS_TABLE.'
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
-    [$stats['nb_admins']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT COUNT(*)
-  FROM `'.GROUPS_TABLE.'`
-;';
-    [$stats['nb_groups']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT COUNT(*)
-  FROM '.RATE_TABLE.'
-;';
-    [$stats['nb_rates']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT
-    SUM(nb_pages)
-  FROM '.HISTORY_SUMMARY_TABLE.'
-  WHERE month IS NULL
-;';
-    [$stats['nb_views']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT
-    SUM(filesize)
-  FROM '.IMAGES_TABLE.'
-;';
-    [$stats['disk_usage']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-
-    $query = '
-SELECT
-    COUNT(*),
-    SUM(filesize)
-  FROM '.IMAGE_FORMAT_TABLE.'
-;';
-    [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query)) ?? [null, null];
-
-    $stats['disk_usage'] = (int)$stats['disk_usage'] + (int)$stats['formats_disk_usage'];
+    $stats['disk_usage'] = $stats['disk_usage'] + $stats['formats_disk_usage'];
 
     return $stats;
 }

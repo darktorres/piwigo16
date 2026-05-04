@@ -272,4 +272,212 @@ final class TagRepository extends AbstractRepository
 
         return $qb->executeQuery()->fetchAllAssociative();
     }
+
+    // -------------------------------------------------------------------------
+    // Write operations
+    // -------------------------------------------------------------------------
+
+    /**
+     * Delete all image→tag links for the given image ids.
+     * Called when images are deleted or when tag assignments are overwritten.
+     *
+     * @param int[] $imageIds
+     */
+    public function deleteImageTagsByImageIds(array $imageIds): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('image_tag'));
+        $qb->where($qb->expr()->in('image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Delete image→tag links restricted to both a set of images AND a set of tags.
+     * Used by add_tags() to clear existing rows before re-inserting.
+     *
+     * @param int[] $imageIds
+     * @param int[] $tagIds
+     */
+    public function deleteImageTagsByImageIdsAndTagIds(array $imageIds, array $tagIds): void
+    {
+        if ($imageIds === [] || $tagIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('image_tag'));
+        $qb->where($qb->expr()->in('image_id', ':imageIds'))
+           ->andWhere($qb->expr()->in('tag_id', ':tagIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+           ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Delete all image→tag links for the given tag ids.
+     *
+     * @param int[] $tagIds
+     */
+    public function deleteImageTagsByTagIds(array $tagIds): void
+    {
+        if ($tagIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('image_tag'));
+        $qb->where($qb->expr()->in('tag_id', ':tagIds'))
+           ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Delete tags by id.
+     *
+     * @param int[] $ids
+     */
+    public function deleteByIds(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('tags'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $qb->executeStatement();
+    }
+
+    /**
+     * Return the id of the tag whose name exactly matches $name, or null.
+     */
+    public function findIdByExactName(string $name): ?int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('tags'))
+            ->where('name = :name')
+            ->setParameter('name', $name)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Return the id of the tag whose url_name exactly matches $urlName, or null.
+     */
+    public function findIdByUrlName(string $urlName): ?int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('tags'))
+            ->where('url_name = :urlName')
+            ->setParameter('urlName', $urlName)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Return (image_id, tag_id) pairs for the given image ids.
+     * Used to track which tag assignments changed (before/after comparison).
+     *
+     * @param int[] $imageIds
+     * @return list<array<string, mixed>>
+     */
+    public function findImageTagPairs(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id', 'tag_id')
+            ->from($this->table('image_tag'));
+        $qb->where($qb->expr()->in('image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Return tags (id, name) that have no associated images and whose
+     * last-modified date is older than 24 hours.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findOrphanTags(): array
+    {
+        $yesterday = (new \DateTimeImmutable())->modify('-1 day')->format('Y-m-d H:i:s');
+        return $this->conn->createQueryBuilder()
+            ->select('t.id', 't.name')
+            ->from($this->table('tags'), 't')
+            ->leftJoin('t', $this->table('image_tag'), 'it', 't.id = it.tag_id')
+            ->where('it.tag_id IS NULL')
+            ->andWhere('t.lastmodified < :yesterday')
+            ->setParameter('yesterday', $yesterday)
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Return id+name rows for tags assigned to a single image.
+     * Used by the batch-manager and picture-modify admin pages.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findTagsByImageId(int $imageId): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('t.id', 't.name')
+            ->from($this->table('image_tag'), 'it')
+            ->innerJoin('it', $this->table('tags'), 't', 't.id = it.tag_id')
+            ->where('it.image_id = :imageId')
+            ->setParameter('imageId', $imageId)
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /** Total number of tags. */
+    public function countAll(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('tags'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Total number of image–tag associations. */
+    public function countImageTags(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('image_tag'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Return per-tag image counts as a map of tag_id → counter.
+     *
+     * @return array<string, mixed>
+     */
+    public function getTagCounters(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('tag_id', 'COUNT(image_id) AS counter')
+            ->from($this->table('image_tag'))
+            ->groupBy('tag_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            $key = is_scalar($row['tag_id']) ? (string) $row['tag_id'] : '';
+            $result[$key] = $row['counter'];
+        }
+        return $result;
+    }
 }

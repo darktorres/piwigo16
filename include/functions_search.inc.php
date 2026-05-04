@@ -2077,14 +2077,8 @@ function split_allwords(string $raw_allwords): ?array
 function get_available_search_uuid(): string
 {
     $candidate = 'psk-'.date('Ymd').'-'.generate_key(10);
-
-    $query = '
-SELECT
-    COUNT(*)
-  FROM '.SEARCH_TABLE.'
-  WHERE search_uuid = \''.$candidate.'\'
-;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+    $counter = \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class)
+        ->countByUuid($candidate);
     if (0 == $counter) {
         return $candidate;
     } else {
@@ -2100,7 +2094,7 @@ function save_search(array $rules, int|string|null $forked_from = null): array
 {
     $createdBy = \Piwigo\Users\CurrentUser::get()->id;
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()')) ?? [null];
+    $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
     $search_uuid = get_available_search_uuid();
 
     single_insert(

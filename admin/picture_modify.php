@@ -169,15 +169,10 @@ UPDATE '.CATEGORIES_TABLE.'
 }
 
 // tags
-$query = '
-SELECT
-    id,
-    name
-  FROM '.IMAGE_TAG_TABLE.' AS it
-    JOIN '.TAGS_TABLE.' AS t ON t.id = it.tag_id
-  WHERE image_id = '.(is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0).'
-;';
-$tag_selection = get_taglist($query);
+$tag_selection = get_taglist_from_rows(
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findTagsByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)
+);
 
 $row = $page['image'];
 

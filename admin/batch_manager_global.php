@@ -138,13 +138,8 @@ DELETE
         if (count($del_tags_int) > 0) {
             $taglist_before = get_image_tag_ids($collection_int);
 
-            $query = '
-DELETE
-  FROM '.IMAGE_TAG_TABLE.'
-  WHERE image_id IN ('.implode(',', $collection_int).')
-    AND tag_id IN ('.implode(',', $del_tags_int).')
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+                ->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
 
             $taglist_after = get_image_tag_ids($collection_int);
             $images_to_update_raw = compare_image_tag_lists($taglist_before, $taglist_after);

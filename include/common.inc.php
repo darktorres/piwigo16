@@ -142,6 +142,11 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
     ImageStdParams::load_from_db();
 
+    // Boot the container before session_start() so the session handler callbacks
+    // (pwg_session_read, pwg_session_write, etc.) can resolve SessionRepository
+    // from ServiceLocator. Entry-point Kernel::boot() calls remain idempotent.
+    \Piwigo\Core\Kernel::boot();
+
     session_start();
     \Piwigo\Plugins\EventDispatcher::init();
     load_plugins();

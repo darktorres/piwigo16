@@ -47,7 +47,7 @@ if (count($selection) > 0) {
 
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
         ->findByIds(array_map('intval', $selection)) as $row) {
-        $row['rank'] = $rank_of[ (int)$row['id'] ];
+        $row['rank'] = $rank_of[ is_numeric($row['id']) ? (int)$row['id'] : 0 ];
         $pictures[] = $row;
     }
 
@@ -127,13 +127,13 @@ foreach ($pictures as $row) {
     switch ($page['section']) {
         case 'best_rated':
             {
-                $name = '('.$row['rating_score'].') '.$name;
+                $name = '('.(is_scalar($row['rating_score']) ? (string) $row['rating_score'] : '').') '.$name;
                 break;
             }
         case 'most_visited':
             {
                 if (!$user['show_nb_hits']) {
-                    $name = '('.$row['hit'].') '.$name;
+                    $name = '('.(is_scalar($row['hit']) ? (string) $row['hit'] : '').') '.$name;
                 }
                 break;
             }

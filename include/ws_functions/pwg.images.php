@@ -298,7 +298,8 @@ SELECT DISTINCT image_id
       ).'
 ;';
 
-    if (!pwg_db_num_rows(pwg_query($query))) {
+    if (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchOne() === false) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
     }
 
@@ -357,14 +358,9 @@ SELECT *
       ).'
 LIMIT 1
 ;';
-    $result = pwg_query($query);
-
-    if (pwg_db_num_rows($result) == 0) {
-        return new PwgError(404, 'image_id not found');
-    }
-
-    $image_row = pwg_db_fetch_assoc($result);
-    if ($image_row === null) {
+    $image_row = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAssociative();
+    if ($image_row === false) {
         return new PwgError(404, 'image_id not found');
     }
     /** @var array<string, mixed> $image_row */
@@ -394,11 +390,10 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
           ' AND'
       ).'
 ;';
-    $result = pwg_query($query);
-
     $is_commentable = false;
     $related_categories = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         if ($row['commentable'] == 'true') {
             $is_commentable = true;
         }
@@ -494,9 +489,8 @@ SELECT id, date, author, content
   LIMIT '. $p_comments_per_page .'
   OFFSET '. ($p_comments_per_page * $p_comments_page) .'
 ;';
-        $result = pwg_query($query);
-
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $row) {
             $row['id'] = (int) $row['id'];
             $related_comments[] = $row;
         }
@@ -593,7 +587,8 @@ SELECT DISTINCT id
       ).'
   LIMIT 1
 ;';
-    if (pwg_db_num_rows(pwg_query($query)) == 0) {
+    if (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchOne() === false) {
         return new PwgError(404, 'Invalid image_id or access denied');
     }
 

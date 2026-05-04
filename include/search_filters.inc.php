@@ -192,8 +192,8 @@ SELECT
             $list_of_dates = [];
             $pre_counters = [];
 
-            $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                ->executeQuery($query)->fetchAllAssociative() as $row) {
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($row['date'] > $date_limit) {
                         $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
@@ -294,8 +294,8 @@ SELECT
             $list_of_dates = [];
             $pre_counters = [];
 
-            $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                ->executeQuery($query)->fetchAllAssociative() as $row) {
                 if (!empty($row['date'])) {
                     foreach ($thresholds as $threshold => $date_limit) {
                         if ($row['date'] > $date_limit) {
@@ -443,9 +443,8 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id AND user_id = '.$user['id'].'
   WHERE id IN ('.implode(',', array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $cat_words)).')
 ;';
-            $result = pwg_query($query);
-
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                ->executeQuery($query)->fetchAllAssociative() as $row) {
                 $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
                     is_scalar($uppercats_val) ? (string) $uppercats_val : '',
@@ -590,8 +589,8 @@ SELECT
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$filter_clause.'
 ;';
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $row) {
             $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
             $key_fs = sprintf('%.1f', $fs_val / 1024);
             $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;

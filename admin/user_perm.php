@@ -97,14 +97,14 @@ if (count($groupAuthorizedRows) > 0) {
     $cats = [];
     foreach ($groupAuthorizedRows as $row) {
         $cats[] = $row;
-        $group_authorized[] = $row['cat_id'];
+        $group_authorized[] = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
     }
     usort($cats, global_rank_compare(...));
 
     foreach ($cats as $category) {
         $template->append(
             'categories_because_of_groups',
-            get_cat_display_name_cache((string)($category['uppercats'] ?? ''), null)
+            get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)
         );
     }
 }
@@ -124,7 +124,7 @@ $query_true .= '
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
 $authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
-    ->findDirectUserCatIds((int) $page['user'], array_map('intval', $group_authorized));
+    ->findDirectUserCatIds((int) $page['user'], array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_authorized));
 
 $query_false = '
 SELECT id,name,uppercats,global_rank

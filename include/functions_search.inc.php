@@ -1622,10 +1622,9 @@ function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResu
         }
 
         $clauses = qsearch_get_text_token_search_sql($token, ['name']);
-        $query = 'SELECT * FROM '.TAGS_TABLE.'
-WHERE ('. implode("\n OR ", $clauses) .')';
-        $result = pwg_query($query);
-        while ($tag = pwg_db_fetch_assoc($result)) {
+        $query = 'SELECT * FROM ' . TAGS_TABLE . ' WHERE (' . implode("\n OR ", $clauses) . ')';
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $tag) {
             $tag_id = (int) $tag['id'];
             $token_tag_ids[$i][] = $tag_id;
             $all_tags[$tag_id] = $tag;
@@ -1699,14 +1698,11 @@ function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search
         }
 
         $clauses = qsearch_get_text_token_search_sql($token, ['name', 'comment']);
-        $query = '
-SELECT
-    *
-  FROM '.CATEGORIES_TABLE.'
-    INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$userId.'
-  WHERE ('. implode("\n OR ", $clauses) .')';
-        $result = pwg_query($query);
-        while ($cat = pwg_db_fetch_assoc($result)) {
+        $query = 'SELECT * FROM ' . CATEGORIES_TABLE .
+            ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $userId .
+            ' WHERE (' . implode("\n OR ", $clauses) . ')';
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $cat) {
             $cat_id = (int) $cat['id'];
             $token_cat_ids[$i][] = $cat_id;
             $all_cats[$cat_id] = $cat;

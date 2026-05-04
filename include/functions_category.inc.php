@@ -115,10 +115,10 @@ FROM '.CATEGORIES_TABLE.' INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.'
 WHERE '.$where.'
 ;';
 
-    $result = pwg_query($query);
     $cats = [];
     $selected_category = is_array($page['category'] ?? null) ? $page['category'] : null;
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $child_date_last = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
         $row = array_merge(
             $row,
@@ -451,10 +451,10 @@ SELECT image_id
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-        $result = pwg_query($query);
-        if (pwg_db_num_rows($result) > 0) {
-            $row = pwg_db_fetch_row($result) ?? [null];
-            $image_id = is_numeric($row[0]) ? (int) $row[0] : null;
+        $val = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchOne();
+        if ($val !== false) {
+            $image_id = is_numeric($val) ? (int) $val : null;
         }
     }
 
@@ -496,11 +496,10 @@ FROM '.CATEGORIES_TABLE.' as c
     $query .= '
   GROUP BY c.id';
 
-    $result = pwg_query($query);
-
     $userdata['last_photo_date'] = null;
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $row['user_id'] = is_scalar($userdata['id']) ? $userdata['id'] : 0;
         $row['nb_categories'] = 0;
         $row['count_categories'] = 0;
@@ -701,9 +700,9 @@ SELECT
         $query .= 'NULL';
     }
 
-    $result = pwg_query($query);
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $cats[ (string) $row['id'] ] = $row;
     }
 

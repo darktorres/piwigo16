@@ -81,10 +81,9 @@ SELECT
   FROM '. CATEGORIES_TABLE .'
   WHERE '. implode("\n    AND ", $where_clauses) .'
 ;';
-    $result = pwg_query($query);
-
     $cats = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $row['id'] = (int)$row['id'];
         $cats[ $row['id'] ] = $row;
     }
@@ -162,8 +161,8 @@ SELECT
   WHERE image_id IN ('.implode(',', $image_ids).')
     AND '.get_sql_condition_FandF(['forbidden_categories' => 'category_id'], null, true).'
 ;';
-            $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
+            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                ->executeQuery($query)->fetchAllAssociative() as $row) {
                 $category_ids[] = $row['category_id'];
                 $row_image_id = is_scalar($row['image_id']) ? (string) $row['image_id'] : '';
                 if ($row_image_id !== '') {
@@ -426,10 +425,10 @@ SELECT representative_picture_id
   ORDER BY '. DB_RANDOM_FUNCTION .'()
   LIMIT 1
 ;';
-                $subresult = pwg_query($query);
-
-                if (pwg_db_num_rows($subresult) > 0) {
-                    [$image_id] = pwg_db_fetch_row($subresult) ?? [null];
+                $subval = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+                    ->executeQuery($query)->fetchOne();
+                if ($subval !== false) {
+                    $image_id = is_numeric($subval) ? (int) $subval : null;
                 }
             }
         }

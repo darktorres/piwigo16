@@ -92,8 +92,8 @@ if (!empty($page['cat_filter'])) {
 
 $query .= '
 WHERE 1=1'. $page['user_filter'];
-[$nb_images] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-$nb_images = (int)$nb_images;
+$nb_images = (int) \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    ->executeQuery($query)->fetchOne();
 
 $nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
 
@@ -190,11 +190,9 @@ $query .= '
   LIMIT '.$elements_per_page.' OFFSET '.$start.'
 ;';
 
-$images = [];
-$result = pwg_query($query);
-while ($row = pwg_db_fetch_assoc($result)) {
-    $images[] = $row;
-}
+$images = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    ->executeQuery($query)
+    ->fetchAllAssociative();
 
 $template->assign('images', []);
 foreach ($images as $image) {

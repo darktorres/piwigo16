@@ -776,8 +776,8 @@ SELECT
     '.$order_by.'
 ;';
     $images = [];
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         $image = [];
 
         foreach (['id', 'width', 'height', 'hit'] as $k) {

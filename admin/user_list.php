@@ -32,7 +32,7 @@ $groups = [];
 $groups_for_filter = [];
 
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findWithMemberCounts() as $row) {
-    $groups[(int)$row['id']] = $row['name'];
+    $groups[is_numeric($row['id']) ? (int)$row['id'] : 0] = $row['name'];
     $groups_for_filter[] = [
       'id' => $row['id'],
       'name' => $row['name'],
@@ -182,8 +182,8 @@ $template->assign('nb_users_by_level', $nb_users_by_level);
 $groups_arr_id = [];
 $groups_arr_name = [];
 foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findAllOrdered() as $row) {
-    $groups_arr_name[] = '"' . addslashes((string) $row['name']) . '"';
-    $groups_arr_id[] = $row['id'];
+    $groups_arr_name[] = '"' . addslashes(is_scalar($row['name']) ? (string) $row['name'] : '') . '"';
+    $groups_arr_id[] = is_scalar($row['id']) ? (string) $row['id'] : '';
 }
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));

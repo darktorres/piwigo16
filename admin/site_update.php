@@ -620,7 +620,7 @@ SELECT id, path
 
         if (count($formats_to_delete) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-                ->deleteFormatsByFormatIds(array_map('intval', $formats_to_delete));
+                ->deleteFormatsByFormatIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
         }
     }
 

@@ -652,7 +652,7 @@ function set_cat_status(array|int|string $categories, string $value): void
             $is_top = true;
 
             if (!empty($cat['id_uppercat'])) {
-                foreach (explode(',', (string) $cat['uppercats']) as $id_uppercat) {
+                foreach (explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') as $id_uppercat) {
                     if (isset($top_categories[$id_uppercat])) {
                         $is_top = false;
                         break;
@@ -665,7 +665,7 @@ function set_cat_status(array|int|string $categories, string $value): void
                 $top_categories[$cat_id_key] = $cat;
 
                 if (!empty($cat['id_uppercat'])) {
-                    $parent_ids[] = (string) $cat['id_uppercat'];
+                    $parent_ids[] = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
                 }
             }
         }
@@ -687,13 +687,13 @@ function set_cat_status(array|int|string $categories, string $value): void
         foreach ($top_categories as $top_category) {
             // what is the "reference" for list of permissions? The parent album
             // if it is private, else the album itself
-            $ref_cat_id = $top_category['id'];
+            $ref_cat_id = is_scalar($top_category['id']) ? (string) $top_category['id'] : '0';
 
             $top_cat_uppercat = is_scalar($top_category['id_uppercat']) ? (string) $top_category['id_uppercat'] : '';
             if (!empty($top_category['id_uppercat'])
                 and isset($parent_cats[$top_cat_uppercat])
                 and 'private' == $parent_cats[$top_cat_uppercat]['status']) {
-                $ref_cat_id = $top_category['id_uppercat'];
+                $ref_cat_id = $top_cat_uppercat;
             }
 
             $subcats = get_subcat_ids([is_scalar($top_category['id']) ? (string) $top_category['id'] : '0']);
@@ -1214,7 +1214,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
 
         if ($parent !== null) {
             $insert['id_uppercat'] = $parent['id'];
-            $insert['global_rank'] = $parent['global_rank'].'.'.$insert['rank'];
+            $insert['global_rank'] = (is_scalar($parent['global_rank']) ? (string) $parent['global_rank'] : '').'.'.(is_scalar($insert['rank']) ? (string) $insert['rank'] : '');
 
             // at creation, must a category be visible or not ? Warning : if the
             // parent category is invisible, the category is automatically create
@@ -1230,7 +1230,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
                 $insert['status'] = 'private';
             }
 
-            $uppercats_prefix = $parent['uppercats'].',';
+            $uppercats_prefix = (is_scalar($parent['uppercats']) ? (string) $parent['uppercats'] : '').',';
         } else {
             $uppercats_prefix = '';
         }
@@ -1250,11 +1250,12 @@ function create_virtual_category(string $category_name, int|string|null $parent_
 
     update_global_rank();
 
+    $id_uppercat_str = is_scalar($insert['id_uppercat'] ?? null) ? (string) $insert['id_uppercat'] : '0';
     if ('private' == $insert['status'] and !empty($insert['id_uppercat']) and ((isset($options['inherit']) and $options['inherit']) or \Piwigo\Config\Config::inheritanceByDefault())) {
         $query = '
       SELECT group_id
       FROM '.GROUP_ACCESS_TABLE.'
-      WHERE cat_id = '.$insert['id_uppercat'].'
+      WHERE cat_id = '.$id_uppercat_str.'
     ;';
         $granted_grps =  query2array($query, null, 'group_id');
         $inserts = [];
@@ -1269,9 +1270,9 @@ function create_virtual_category(string $category_name, int|string|null $parent_
         $query = '
       SELECT user_id
       FROM '.USER_ACCESS_TABLE.'
-      WHERE cat_id = '.$insert['id_uppercat'].'
+      WHERE cat_id = '.$id_uppercat_str.'
     ;';
-        $granted_users = array_map('intval', query2array($query, null, 'user_id'));
+        $granted_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, query2array($query, null, 'user_id'));
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
         $userId = \Piwigo\Users\CurrentUser::get()->id;
@@ -1641,8 +1642,8 @@ SELECT
     /** @var array<int> $images */
     $images = [];
     foreach ($rows as $idx => $row) {
-        if ($row['image_id'] > $max_image_id) {
-            $max_image_id = $row['image_id'];
+        if (is_numeric($row['image_id']) && (int) $row['image_id'] > $max_image_id) {
+            $max_image_id = (int) $row['image_id'];
         }
 
         $images[] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
@@ -2385,11 +2386,9 @@ function get_active_menu($menu_page)
 /** @return array<mixed> */
 function get_taglist(string $query, bool $only_user_language = true): array
 {
-    $result = pwg_query($query);
-    $rows = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $rows[] = $row;
-    }
+    $rows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)
+        ->fetchAllAssociative();
     return get_taglist_from_rows($rows, $only_user_language);
 }
 

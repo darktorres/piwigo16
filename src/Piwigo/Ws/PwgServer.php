@@ -36,7 +36,7 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setHandler(string $requestFormat, PwgRequestHandler $requestHandler): void
+    public function setHandler(string $requestFormat, ?PwgRequestHandler $requestHandler): void
     {
         $this->_requestHandler = $requestHandler;
         $this->_requestFormat = $requestFormat;

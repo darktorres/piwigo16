@@ -128,11 +128,11 @@ class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             case 'object':
-                if ($data instanceof \PwgNamedArray) {
-                    $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
-                } elseif ($data instanceof \PwgNamedStruct) {
-                    $content = $data->_content;
-                    $this->encode_struct(is_array($content) ? $content : [], false, $data->_xmlAttributes);
+                if ($data instanceof \Piwigo\Ws\PwgNamedArray) {
+                    $this->encode_array($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
+                } elseif ($data instanceof \Piwigo\Ws\PwgNamedStruct) {
+                    $content = $data->getContent();
+                    $this->encode_struct(is_array($content) ? $content : [], false, $data->getXmlAttributes());
                 } else {
                     $this->encode_struct(get_object_vars($data), true);
                 }

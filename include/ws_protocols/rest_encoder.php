@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgNamedStruct;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -267,10 +269,10 @@ class PwgRestEncoder extends PwgResponseEncoder
                 break;
             case 'object':
                 if ($data instanceof PwgNamedArray) {
-                    $this->encode_array($data->_content, $data->_itemName, $data->_xmlAttributes);
+                    $this->encode_array($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
                 } elseif ($data instanceof PwgNamedStruct) {
-                    $content = $data->_content;
-                    $this->encode_struct(is_array($content) ? $content : [], false, $data->_xmlAttributes);
+                    $content = $data->getContent();
+                    $this->encode_struct(is_array($content) ? $content : [], false, $data->getXmlAttributes());
                 } else {
                     $this->encode_struct(get_object_vars($data), true);
                 }

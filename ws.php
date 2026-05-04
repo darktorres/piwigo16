@@ -5,6 +5,7 @@ declare(strict_types=1);
 global $template, $user, $page, $persistent_cache, $lang, $service;
 
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\PwgServer;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -607,37 +607,22 @@ grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|instal
 
 ## #8 — Remove class duplication in `ws_core.inc.php`
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
-### Goal
+### What was done
 
-`include/ws_core.inc.php` currently defines `PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgRequestHandler`, `PwgResponseEncoder`, and `PwgServer` — the same six classes that live under `src/Piwigo/Ws/` and are loaded by Composer autoload. The include file is the authoritative source today; `src/Piwigo/Ws/` holds the PSR-4 copies. The task is to invert this: make `src/` canonical and reduce `include/ws_core.inc.php` to just the `WS_TYPE_*` / `WS_PARAM_*` constants.
+`include/ws_core.inc.php` shrunk from 676 lines to 27 lines (constants only). The six class bodies (`PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgRequestHandler`, `PwgResponseEncoder`, `PwgServer`) were deleted; `src/Piwigo/Ws/` is now the single authoritative source, loaded by Composer PSR-4 autoload.
 
-### Current state
+| Change | Detail |
+|---|---|
+| `include/ws_core.inc.php` | Class bodies stripped; only `define()` constants remain |
+| `src/Piwigo/Ws/PwgServer.php` | `setHandler()` made nullable (consistent with `setEncoder()`); properties private |
+| `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` | Dual `instanceof` guards collapsed to single namespaced check |
+| `src/Piwigo/Ws/Protocol/PwgRestEncoder.php` | Direct `->_content`/`->_itemName`/`->_xmlAttributes` replaced with `getContent()`/`getItemName()`/`getXmlAttributes()` |
+| `include/ws_protocols/rest_encoder.php` | Same getter migration; added `use Piwigo\Ws\PwgNamedArray` + `PwgNamedStruct` |
+| `ws.php` | Added `use Piwigo\Ws\PwgServer` |
 
-- `include/ws_core.inc.php`: **676 lines** — defines all 6 classes (`PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgRequestHandler`, `PwgResponseEncoder`, `PwgServer`) + the 9 `define()` constants (`WS_PARAM_*`, `WS_TYPE_*`, `WS_ERR_*`, `WS_XML_ATTRIBUTES`).
-- PSR-4 copies under `src/Piwigo/Ws/` exist (`PwgError.php`, `PwgNamedArray.php`, `PwgNamedStruct.php`, `PwgRequestHandler.php`, `PwgServer.php`) plus `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` and 5 protocol encoders/handlers under `src/Piwigo/Ws/Protocol/`. They're not yet the canonical source — `ws_core.inc.php` redeclares the same class bodies and is `include_once`-loaded at boot. Removing the redundant declarations is the bulk of this item.
-- No `src/Piwigo/Compat/aliases.php` exists (the original plan referenced one as a fallback). All in-tree callers reference the namespaced versions via `use Piwigo\Ws\…;`.
-
-### Steps
-
-1. **Verify `src/Piwigo/Ws/` is feature-complete.** Diff each class in `include/ws_core.inc.php` against its `src/` counterpart (including `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` for the abstract base). Confirm all methods, properties, and typed annotations are present in the `src/` version. If anything is missing, backport it.
-
-2. **Convert `WS_TYPE_*` constants to an enum (bonus — ties into #19).** The 10 `define()` constants (`WS_TYPE_BOOL`, `WS_TYPE_INT`, `WS_TYPE_FLOAT`, `WS_TYPE_POSITIVE`, `WS_TYPE_NEGATIVE`, `WS_TYPE_NOTNULL`, `WS_PARAM_ACCEPT_ARRAY`, `WS_PARAM_FORCE_ARRAY`, `WS_PARAM_OPTIONAL`) are bitmask flags used in `addMethod()` call sites. Introduce `Piwigo\Ws\WsType` and `Piwigo\Ws\WsParam` backed integer enums (or flag constants on the class). Update `ws_functions.inc.php` registration sites.
-
-3. **Strip the class bodies from `include/ws_core.inc.php`.** Delete each class definition (PSR-4 autoload resolves `Piwigo\Ws\PwgError` etc. directly — no `class_alias` chain needed because in-tree callers already `use Piwigo\Ws\…;`). Keep only the `define()` constants (or forward them from the new enum) and the `global` declaration at the top. The file shrinks from 676 to ~30 lines.
-
-4. **Confirm `ws.php` still boots.** `ws.php` includes `ws_core.inc.php` before using any WS types. With the class bodies removed, it must receive the PSR-4 autoloaded versions instead. Run the Playwright suite — the WS-API specs exercise the live WS layer.
-
-5. **PHPStan.** Level-9 is already clean. Re-run after this lands to confirm no regression.
-
-### Verification
-
-```bash
-grep -c "^class " include/ws_core.inc.php   # must be 0
-vendor/bin/phpunit --testsuite Integration  # WsApiTest green
-npx playwright test                         # e2e green
-```
+Enum conversion of `WS_TYPE_*` / `WS_PARAM_*` constants deferred to task #19.
 
 ---
 

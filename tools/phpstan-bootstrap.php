@@ -80,3 +80,4 @@ if (!function_exists('theme_activate')) {
         return null;
     }
 }
+

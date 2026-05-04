@@ -7,6 +7,7 @@ namespace Piwigo\Core;
 use Piwigo\Bootstrap\Container;
 use Piwigo\Config\Config;
 use Piwigo\Migrations\MigrationRunner;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
 
@@ -43,6 +44,10 @@ final class Kernel
         self::$container = Container::build();
         ServiceLocator::setContainer(self::$container);
 
+        // Eagerly wire the StorageRegistry so StorageRegistry::disk() works
+        // from procedural upload code without going through the container.
+        self::$container->get(StorageRegistry::class);
+
         if (Config::autoMigrate()) {
             MigrationRunner::migrate();
         }
@@ -72,6 +77,7 @@ final class Kernel
         Lang::reset();
         LanguageStack::reset();
         CurrentUser::reset();
+        StorageRegistry::reset();
         ServiceLocator::reset();
     }
 }

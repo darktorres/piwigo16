@@ -69,10 +69,16 @@ if (!empty($watermarkImage['tmp_name'])) {
 
             $file_path = $upload_dir.'/'.get_watermark_filename($watermark_files, $new_name);
 
-            if (move_uploaded_file($tmp_name, $file_path)) {
+            $wmStream = fopen($tmp_name, 'rb');
+            if ($wmStream !== false) {
+                \Piwigo\Storage\StorageRegistry::disk('watermarks')->writeStream(
+                    basename($file_path),
+                    $wmStream
+                );
+                fclose($wmStream);
                 $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
-                \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "$file_path " .l10n('no write access'));
+                \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "$file_path " . l10n('no write access'));
             }
         } else {
             \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));

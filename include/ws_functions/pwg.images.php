@@ -1926,7 +1926,14 @@ SELECT COUNT(*)
     // move uploaded file
     $filesFile2 = is_array($_FILES['file'] ?? null) ? $_FILES['file'] : [];
     $filesFile2TmpName = is_scalar($filesFile2['tmp_name'] ?? null) ? (string) $filesFile2['tmp_name'] : '';
-    move_uploaded_file($filesFile2TmpName, $chunkfile_path);
+    $chunkRoot   = PHPWG_ROOT_PATH . \Piwigo\Config\Config::uploadDir();
+    $chunkAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path), '/');
+    $chunkRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($chunkRoot, $chunkAbsPath);
+    $chunkStream  = fopen($filesFile2TmpName, 'rb');
+    if ($chunkStream !== false) {
+        \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($chunkRelPath, $chunkStream);
+        fclose($chunkStream);
+    }
     $logger->debug(__FUNCTION__.' uploaded '.$chunkfile_path);
 
     // MD5 checksum

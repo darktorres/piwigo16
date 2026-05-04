@@ -273,10 +273,15 @@ SELECT
         } while (file_exists($file_path));
     }
 
-    if (is_uploaded_file($source_filepath)) {
-        move_uploaded_file($source_filepath, $file_path);
-    } else {
-        rename($source_filepath, $file_path);
+    $uploadRoot   = PHPWG_ROOT_PATH . \Piwigo\Config\Config::uploadDir();
+    $uploadRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($uploadRoot, $file_path);
+    $uploadStream  = fopen($source_filepath, 'rb');
+    if ($uploadStream !== false) {
+        \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($uploadRelPath, $uploadStream);
+        fclose($uploadStream);
+        if (!is_uploaded_file($source_filepath)) {
+            \Piwigo\Core\Filesystem::tryUnlink($source_filepath);
+        }
     }
     \Piwigo\Core\Filesystem::tryChmod($file_path, 0644);
 
@@ -469,10 +474,16 @@ SELECT
 
     prepare_directory(dirname($format_path));
 
-    if (is_uploaded_file($source_filepath)) {
-        move_uploaded_file($source_filepath, $format_path);
-    } else {
-        rename($source_filepath, $format_path);
+    $fmtRoot    = PHPWG_ROOT_PATH . \Piwigo\Config\Config::uploadDir();
+    $fmtAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
+    $fmtRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($fmtRoot, $fmtAbsPath);
+    $fmtStream  = fopen($source_filepath, 'rb');
+    if ($fmtStream !== false) {
+        \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($fmtRelPath, $fmtStream);
+        fclose($fmtStream);
+        if (!is_uploaded_file($source_filepath)) {
+            \Piwigo\Core\Filesystem::tryUnlink($source_filepath);
+        }
     }
     \Piwigo\Core\Filesystem::tryChmod($format_path, 0644);
 

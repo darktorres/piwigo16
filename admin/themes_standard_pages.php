@@ -101,13 +101,19 @@ if (isset($_FILES['std_pgs_logo']) and !empty($std_pgs_logo_tmp)) {
 
             conf_update_param('standard_pages_selected_logo_path', $file_path, true);
 
-            if (move_uploaded_file($std_pgs_logo_tmp, $file_path)) {
+            $logoStream = fopen($std_pgs_logo_tmp, 'rb');
+            if ($logoStream !== false) {
+                \Piwigo\Storage\StorageRegistry::disk('local')->writeStream(
+                    'logo/' . basename($file_path),
+                    $logoStream
+                );
+                fclose($logoStream);
                 $logo['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 $template->assign(
                     [
                     'save_error' => "$file_path " . l10n('no write access'),
-          ]
+                    ]
                 );
             }
         } else {

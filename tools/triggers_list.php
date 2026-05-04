@@ -1021,7 +1021,7 @@ array(
         }
         echo '
       </td>
-      <td>'.@$trigger['infos'].'</td>
+      <td>'.($trigger['infos'] ?? '').'</td>
     </tr>';
     }
 ?>

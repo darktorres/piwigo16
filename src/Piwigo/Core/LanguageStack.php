@@ -152,7 +152,9 @@ final class LanguageStack
     {
         $lang = [];
         $lang_info = [];
-        @include($path);
+        if (is_readable($path)) {
+            include $path;
+        }
         self::mergeLang($lang);
         self::mergeInfo($lang_info);
     }

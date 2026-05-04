@@ -123,7 +123,7 @@ SELECT COUNT(*) AS user_exists
         $comment_action = 'reject';
     }
 
-    if (!verify_ephemeral_key(@$key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
+    if (!verify_ephemeral_key($key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
         $comment_action = 'reject';
         if (!is_array($_POST['cr'] ?? null)) {
             $_POST['cr'] = [];

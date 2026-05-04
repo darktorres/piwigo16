@@ -1,533 +1,474 @@
-# `@` Error Suppression Audit
+# `@` Error Suppression Audit — completed 2026-05-03
 
-Every `@` operator in the PHP code, grouped by file. Each box represents one suppression site — replace with explicit handling (`isset()` / null-coalescing / try-catch / scoped `error_reporting`) or document the reason.
+All 263 sites across 51 files have been removed (roadmap task #9).
+Replacement patterns are documented in
+[`ROADMAP-PHP.md`](ROADMAP-PHP.md#9----error-suppression-cleanup).
 
-Total: 254 suppressions across 73 files (excludes `vendor/` and commented-out code).
+The list below is preserved as historical reference for what changed.
+The lint rule `Piwigo\Tools\PhpStan\NoErrorSuppressionRule` (registered
+in `phpstan.neon`) fails on any future `@` use — there is no allowlist.
 
-## Entry points / bootstrap
+**Total at start: 263 sites / 51 files.**
+**Total now: 0.**
 
-### `action.php`
+### action.php
 
-- [ ] L169 — `@is_readable($file)`
-- [ ] L172 — `@filesize($file)`
-- [ ] L215 — `@set_time_limit(0)`
-- [ ] L224 — `@readfile($file)`
+- [ ] L169 — `if (!@is_readable($file)) {`
+- [ ] L215 — `@set_time_limit(0);`
+- [ ] L224 — `@readfile($file);`
 
-### `i.php`
+### admin/albums.php
 
-- [ ] L24 — `@include(PHPWG_ROOT_PATH.'local/config/config.inc.php')`
-- [ ] L29 — `@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR.'config/database.inc.php')`
-- [ ] L70 — `@mkdir($dir, ...)`
-- [ ] L77 — `@file_put_contents($file, 'Not allowed!')`
-- [ ] L324 — `@filemtime($candidate_path)`
-- [ ] L450 — `@filemtime($page['src_path'])`
-- [ ] L456 — `@filemtime($page['derivative_path'])`
-- [ ] L537 — `@set_time_limit(0)`
-- [ ] L634 — `@chmod($page['derivative_path'], 0644)`
+- [ ] L179 — `array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1)`
+- [ ] L258 — `@$subcats_of[$uppercat_id][] = $id;`
 
-### `index.php`
+### admin/batch_manager_unit.php
 
-- [ ] L242 — `@$page['qsearch_details']['matching_cats_no_images']`
-- [ ] L243 — `@$page['qsearch_details']['matching_cats']`
-- [ ] L254 — `@$page['qsearch_details']['matching_tags']`
+- [ ] L65 — `$data['comment'] = @$_POST[$desc_key];`
+- [ ] L67 — `$desc_val = @$_POST[$desc_key];`
+- [ ] L384 — `'DIMENSIONS' => @$row['width'].'x'.@$row['height'].' px',`
 
-### `install.php`
+### admin/cat_list.php
 
-- [ ] L34 — `@include(...)`
-- [ ] L82 — `@file_exists($config_file)`
-- [ ] L105 — `@substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)`
-- [ ] L214 — `@umask(0111)`
-- [ ] L216 — `@fopen($config_file, 'w')`
-- [ ] L221 — `@fopen(...)`
-- [ ] L223 — `@fputs($fh, ...)`
-- [ ] L224 — `@fclose($fh)`
-- [ ] L236 — `@fputs($fp, ...)`
-- [ ] L237 — `@fclose($fp)`
+- [ ] L249 — `@$subcats_of[$uppercat_id][] = $id;`
 
-### `install/upgrade_1.3.1.php`
+### admin/cat_modify.php
 
-- [ ] L553 — `@file_get_contents($config_file)`
+- [ ] L177 — `'CAT_NAME'    => @htmlspecialchars((string) $category['name']),`
+- [ ] L178 — `'CAT_COMMENT' => @htmlspecialchars((string) $category['comment']),`
 
-### `install/upgrade_1.5.0.php`
+### admin/configuration.php
 
-- [ ] L307 — `@include(...)`
+- [ ] L382 — `$content = @file_get_contents($real);`
+- [ ] L514 — `'picture_informations' => @unserialize(...)`
 
-### `profile.php`
+### admin/history.php
 
-- [ ] L390 — `@$userdata['email']`
+- [ ] L131 — `'USER_NAME' => @$form_param['user_name'],`
+- [ ] L135 — `'START' => @$form['start'],`
+- [ ] L136 — `'END' => @$form['end'],`
+- [ ] L147 — `'filter_user_name' => @$form_param['user_name'],`
 
-### `upgrade.php`
+### admin/include/functions.php
 
-- [ ] L22 — `@ini_set('opcache.enable', 0)`
-- [ ] L29 — `@include(...)`
-- [ ] L33 — `@file_get_contents($config_file)`
-- [ ] L150 — `@substr($httpAccLang, 0, 2)`
+- [ ] L2333 — `if (in_array($category_id, @explode(',', $forbidden))) {`
+- [ ] L2358 — `$content = @file_get_contents($src);`
+- [ ] L2360 — `is_resource($dest) ? @fwrite($dest, $content) : ...`
+- [ ] L2391 — `$ch = @curl_init();`
+- [ ] L2394–2412 — 9× `@curl_setopt(...)` / `@curl_setopt(...)`
+- [ ] L2414 — `$content = @curl_exec($ch);`
+- [ ] L2415 — `$header_length = @curl_getinfo($ch, CURLINFO_HEADER_SIZE);`
+- [ ] L2416 — `$status = @curl_getinfo($ch, CURLINFO_HTTP_CODE);`
+- [ ] L2423 — `is_resource($dest) ? @fwrite(...) : ...`
+- [ ] L2442 — `$context = @stream_context_create($opts);`
+- [ ] L2443 — `$content = @file_get_contents($src, false, $context);`
+- [ ] L2445 — `is_resource($dest) ? @fwrite(...) : ...`
+- [ ] L2462 — `if (($s = @fsockopen($host, 80, $errno, $errstr, 5)) === false)`
+- [ ] L2891 — `if ($contents = @opendir(PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR))`
+- [ ] L2937 — `@rmdir($path);`
+- [ ] L2973 — `@unlink($file);`
+- [ ] L3017 — `@unlink($pathfile);`
+- [ ] L3024 — `if (@rmdir($path)) {`
+- [ ] L3028 — `@mkgetdir($trash_path, ...)`
+- [ ] L3032 — `@rename($path, $r);`
+- [ ] L3343 — `@$msizes[$size_code] += filesize(...);`
+- [ ] L3347 — `@$msizes[$size_key] += $value;`
 
-### `upgrade_feed.php`
+### admin/include/functions_history.inc.php
 
-- [ ] L13 — `@include(...)`
+- [ ] L339 — `'month' => @$time_tokens[1],`
+- [ ] L340 — `'day'   => @$time_tokens[2],`
+- [ ] L341 — `'hour'  => @$time_tokens[3],`
 
-## `admin/`
+### admin/include/functions_install.inc.php
 
-### `admin/albums.php`
+- [ ] L114 — `$tmp = @new mysqli($h, $user, $pass, '', $port, $socket);`
 
-- [ ] L179 — `@explode(',', (string) $user['forbidden_categories'])`
-- [ ] L256 — `@$subcats_of[$uppercat_id][]`
+### admin/include/functions_metadata.php
 
-### `admin/batch_manager_unit.php`
+- [ ] L142 — `$fs = @filesize($file);`
+- [ ] L153 — `if ($image_size = @getimagesize($file)) {`
+- [ ] L198 — `if ($image_size = @getimagesize($file)) {`
 
-- [ ] L65 — `@$_POST[$desc_key]`
-- [ ] L67 — `@$_POST[$desc_key]`
-- [ ] L384 — `@$row['width']` and `@$row['height']`
+### admin/include/functions_upgrade.php
 
-### `admin/cat_list.php`
+- [ ] L204 — `if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc())`
 
-- [ ] L249 — `@$subcats_of[$uppercat_id][]`
+### admin/include/functions_upload.inc.php
 
-### `admin/cat_modify.php`
+- [ ] L281 — `@chmod($file_path, 0644);`
+- [ ] L477 — `@chmod($format_path, 0644);`
+- [ ] L560 — `@exec($exec, $returnarray);`
+- [ ] L605 — `@exec($exec, $returnarray);`
+- [ ] L654 — `@exec($exec, $returnarray);`
+- [ ] L720 — `@exec($ffmpeg.' 2>&1', $FO, $FS);`
+- [ ] L730 — `@exec($avconv.' 2>&1', $AO, $AS);`
+- [ ] L783 — `@exec($exec, $returnarray);`
+- [ ] L838 — `@exec($exec, $returnarray);`
+- [ ] L856 — `if (!@mkdir($directory, 0777, $recursive)) {`
+- [ ] L863 — `@chmod($directory, 0777);`
+- [ ] L993 — `@chmod($upload_dir, 0777);`
 
-- [ ] L175 — `@htmlspecialchars((string) $category['name'])`
-- [ ] L176 — `@htmlspecialchars((string) $category['comment'])`
+### admin/intro.php
 
-### `admin/configuration.php`
+- [ ] L253 — `@$activity_last_weeks[$week][$day_nb]['details'][...]`
+- [ ] L255 — `@$activity_last_weeks[$week][$day_nb]['date'] = ...`
+- [ ] L393 — `@$data_storage[$type]['total']['filesize'] += ...`
+- [ ] L396 — `@$data_storage[$type]['details'][strtoupper((string) $ext)] = [...]`
+- [ ] L416 — `@$data_storage[$type]['total']['filesize'] += ...`
+- [ ] L419 — `@$data_storage[$type]['details'][strtoupper((string) $ext)] = [...]`
+- [ ] L430 — `@$data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;`
 
-- [ ] L367 — `@include(...)`
-- [ ] L369 — `@include(...)`
-- [ ] L494 — `@unserialize(...)`
+### admin/maintenance_actions.php
 
-### `admin/history.php`
+- [ ] L211 — `$lines = @explode("\r\n", $result);`
 
-- [ ] L131 — `@$form_param['user_name']`
-- [ ] L135 — `@$form['start']`
-- [ ] L136 — `@$form['end']`
-- [ ] L147 — `@$form_param['user_name']`
+### admin/maintenance_env.php
 
-### `admin/intro.php`
+- [ ] L198 — `$lines = @explode("\r\n", $result);`
 
-- [ ] L249 — `@$activity_last_weeks[$week][$day_nb]['details'][...]`
-- [ ] L251 — `@$activity_last_weeks[$week][$day_nb]['date']`
-- [ ] L386 — `@$data_storage[$type]['total']['filesize']`
-- [ ] L389 — `@$data_storage[$type]['details'][strtoupper($ext)]`
-- [ ] L409 — `@$data_storage[$type]['total']['filesize']`
-- [ ] L412 — `@$data_storage[$type]['details'][strtoupper($ext)]`
-- [ ] L423 — `@$data_storage['Cache']['total']['filesize']`
+### admin/permalinks.php
 
-### `admin/maintenance_actions.php`
+- [ ] L54 — `if ($field !== @$_GET[$get_param]) {`
 
-- [ ] L211 — `@explode("\r\n", $result)`
-- [ ] L346 — `@$gd_info['GD Version']`
+### admin/picture_modify.php
 
-### `admin/maintenance_env.php`
+- [ ] L92 — `$post_field = @$_POST[$field];`
+- [ ] L230 — `... ? (string) $_POST['name'] : '') : @$row['name'],`
+- [ ] L234 — `'DIMENSIONS' => @$row['width'].' * '.@$row['height'],`
+- [ ] L238 — `'FILESIZE' => @$row['filesize'].' KB',`
 
-- [ ] L198 — `@explode("\r\n", $result)`
+### admin/plugins_installed.php
 
-### `admin/permalinks.php`
+- [ ] L123 — `'AUTHOR_URL' => @$fs_plugin['author uri'],`
 
-- [ ] L55 — `@$_GET[$get_param]`
+### admin/rating.php
 
-### `admin/picture_modify.php`
+- [ ] L167 — `$template->assign('user_options_selected', [@$_GET['users']]);`
 
-- [ ] L92 — `@$_POST[$field]`
-- [ ] L230 — `@$row['name']`
-- [ ] L234 — `@$row['width']` and `@$row['height']`
-- [ ] L238 — `@$row['filesize']`
+### admin/stats.php
 
-### `admin/plugins_installed.php`
+- [ ] L170 — `@$months[$date->format('Y/m/1')][] = $value;`
+- [ ] L175 — `@$months[$actual_date->format('Y/m/1')][] = [...]`
 
-- [ ] L123 — `@$fs_plugin['author uri']`
+### admin/tags.php
 
-### `admin/rating.php`
+- [ ] L139 — `$counter = intval(@$tag_counters[$tag_id_key]);`
+- [ ] L141 — `$tag['counter'] = intval(@$tag_counters[$tag_id_key]);`
 
-- [ ] L166 — `@$_GET['users']`
+### admin/themes_installed.php
 
-### `admin/site_manager.php`
+- [ ] L74 — `'AUTHOR_URL' => @$fs_theme['author uri'],`
+- [ ] L75 — `'PARENT' => @$fs_theme['parent'],`
+- [ ] L78 — `'ADMIN_URI' => @$fs_theme['admin_uri'],`
+- [ ] L142 — `if (@$a['IS_DEFAULT']) {`
+- [ ] L145 — `if (@$b['IS_DEFAULT']) {`
 
-- [ ] L159 — `@$sites_detail[(string)$site_id]['nb_categories']`
-- [ ] L160 — `@$sites_detail[(string)$site_id]['nb_images']`
+### admin/user_list.php
 
-### `admin/stats.php`
+- [ ] L264 — `$content = @file_get_contents($real);`
 
-- [ ] L170 — `@$months[$date->format('Y/m/1')][]`
-- [ ] L175 — `@$months[$actual_date->format('Y/m/1')][]`
+### i.php
 
-### `admin/tags.php`
+- [ ] L73 — `$mkd = @mkdir($dir, ..., true);`
+- [ ] L80 — `file_exists($file) or @file_put_contents($file, 'Not allowed!');`
+- [ ] L314 — `$candidate_mtime = @filemtime($candidate_path);`
+- [ ] L422 — `$src_mtime = @filemtime($ctx->srcPath);`
+- [ ] L428 — `$derivative_mtime = @filemtime($ctx->derivativePath);`
+- [ ] L509 — `@set_time_limit(0);`
+- [ ] L606 — `@chmod($ctx->derivativePath, 0644);`
 
-- [ ] L139 — `@$tag_counters[$tag_id_key]`
-- [ ] L141 — `@$tag_counters[$tag_id_key]`
+### include/category_cats.inc.php
 
-### `admin/themes_installed.php`
+- [ ] L92 — `$row['is_child_date_last'] = @$row['max_date_last'] > @$row['date_last'];`
+- [ ] L307 — `@$category['comment'],`
 
-- [ ] L74 — `@$fs_theme['author uri']`
-- [ ] L75 — `@$fs_theme['parent']`
-- [ ] L78 — `@$fs_theme['admin_uri']`
-- [ ] L142 — `@$a['IS_DEFAULT']`
-- [ ] L145 — `@$b['IS_DEFAULT']`
+### include/common.inc.php
 
-### `admin/user_list.php`
+- [ ] L34 — `if (!function_exists('get_magic_quotes_gpc') or !@get_magic_quotes_gpc())`
+- [ ] L90 — `@ini_set('error_reporting', ...)`
+- [ ] L92 — `@ini_set('display_errors', true);`
+- [ ] L97 — `@ini_set('session.gc_divisor', 100);`
+- [ ] L98 — `@ini_set('session.gc_probability', ...);`
+- [ ] L292 — `@header('Retry-After: 900');`
 
-- [ ] L253 — `@include(...)`
-- [ ] L255 — `@include(...)`
+### include/derivative_std_params.inc.php
 
-### `admin/include/functions.php`
+- [ ] L169 — `$arr = @unserialize(...);`
 
-- [ ] L2330 — `@explode(',', (string) $user['forbidden_categories'])`
-- [ ] L2355 — `@file_get_contents($src)`
-- [ ] L2357 — `@fwrite($dest, $content)`
-- [ ] L2388 — `@curl_init()`
-- [ ] L2391 — `@curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, false)`
-- [ ] L2392 — `@curl_setopt($ch, CURLOPT_PROXY, ...)`
-- [ ] L2395 — `@curl_setopt($ch, CURLOPT_PROXYUSERPWD, ...)`
-- [ ] L2400 — `@curl_setopt($ch, CURLOPT_URL, $src)`
-- [ ] L2402 — `@curl_setopt($ch, CURLOPT_HEADER, true)`
-- [ ] L2404 — `@curl_setopt($ch, CURLOPT_USERAGENT, ...)`
-- [ ] L2406 — `@curl_setopt($ch, CURLOPT_RETURNTRANSFER, true)`
-- [ ] L2408 — `@curl_setopt($ch, CURLOPT_POST, true)`
-- [ ] L2409 — `@curl_setopt($ch, CURLOPT_POSTFIELDS, $request)`
-- [ ] L2411 — `@curl_exec($ch)`
-- [ ] L2412 — `@curl_getinfo($ch, CURLINFO_HEADER_SIZE)`
-- [ ] L2413 — `@curl_getinfo($ch, CURLINFO_HTTP_CODE)`
-- [ ] L2420 — `@fwrite($dest, $content)`
-- [ ] L2439 — `@stream_context_create($opts)`
-- [ ] L2440 — `@file_get_contents($src, false, $context)`
-- [ ] L2442 — `@fwrite($dest, $content)`
-- [ ] L2459 — `@fsockopen($host, 80, $errno, $errstr, 5)`
-- [ ] L2508 — `@fwrite($dest, $line)`
-- [ ] L2882 — `@opendir(PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR)`
-- [ ] L2928 — `@rmdir($path)`
-- [ ] L2964 — `@unlink($file)`
-- [ ] L3008 — `@unlink($pathfile)`
-- [ ] L3015 — `@rmdir($path)`
-- [ ] L3019 — `@mkgetdir($trash_path, ...)`
-- [ ] L3023 — `@rename($path, $r)`
-- [ ] L3334 — `@$msizes[$size_code] += filesize(...)`
-- [ ] L3338 — `@$msizes[$size_key] += $value`
-- [ ] L3520 — `@$gd_info['GD Version']`
+### include/functions.inc.php
 
-### `admin/include/functions_history.inc.php`
+- [ ] L151 — `$mkd = @mkdir($dir, ..., ($flags & MKGETDIR_RECURSIVE) ? true : false);`
+- [ ] L159 — `file_exists($file) or @file_put_contents($file, 'deny from all');`
+- [ ] L163 — `file_exists($file) or @file_put_contents($file, 'Not allowed!');`
+- [ ] L1654 — `if (!empty($dirname) && !empty($filename) && !@$options['return']`
+- [ ] L1659 — `if (!@$options['return']) {`
+- [ ] L1689 — `if (!@$options['no_fallback']) {`
+- [ ] L1700 — `$f = @$options['local'] ? ... : ...;`
+- [ ] L1712 — `if (!@$options['return']) {`
+- [ ] L1716 — `@include(str_replace($selected_language, $forceFallback, $source_file));`
+- [ ] L1722 — `@include($source_file);`
+- [ ] L1741 — `$content = @file_get_contents($source_file);`
+- [ ] L1784 — `@file_put_contents($file, 'Not allowed!');`
+- [ ] L1813 — `$key = explode(':', @$key);`
+- [ ] L2362 — `... ? @unserialize($result) : false;`
+- [ ] L2371 — `@$official_exts[$idxCat][...] = $eid;`
+- [ ] L2479 — `@$piwigo_infos['themes_usage'][$theme_used] += $counter;`
+- [ ] L2561 — `@$piwigo_infos['updates'][] = [...];`
+- [ ] L2609 — `@$apps[$app_name]['counter'] += $activity['counter'];`
+- [ ] L2765 — `$file_lines = @file($info_file_path);`
 
-- [ ] L336 — `@$time_tokens[1]`
-- [ ] L337 — `@$time_tokens[2]`
-- [ ] L338 — `@$time_tokens[3]`
+### include/functions_category.inc.php
 
-### `admin/include/functions_install.inc.php`
+- [ ] L122 — `$child_date_last = @$row['max_date_last'] > @$row['date_last'];`
+- [ ] L743 — `@$cat_ids[$uppercat]++;`
+- [ ] L795 — `if (!empty($cat['id_uppercat']) and @$cats[$idx]['count_images'] > 0)`
 
-- [ ] L114 — `@new mysqli($h, $user, $pass, '', $port, $socket)`
+### include/functions_comment.inc.php
 
-### `admin/include/functions_metadata.php`
+- [ ] L126 — `if (!verify_ephemeral_key(@$key, ...))`
 
-- [ ] L142 — `@filesize($file)`
-- [ ] L153 — `@getimagesize($file)`
-- [ ] L198 — `@getimagesize($file)`
+### include/functions_html.inc.php
 
-### `admin/include/functions_upgrade.php`
+- [ ] L356 — `$class = isset($bt[$i]['class']) ? (@$bt[$i]['class'].'::') : '';`
+- [ ] L370 — `@set_status_header(500);`
 
-- [ ] L209 — `@get_magic_quotes_gpc()`
+### include/functions_mail.inc.php
 
-### `admin/include/functions_upload.inc.php`
+- [ ] L613 — `$Bcc = get_clean_recipients_list(@$args['Bcc']);`
+- [ ] L656 — `if (... and @$args['email_format'] != 'text/plain')`
 
-- [ ] L282 — `@chmod($file_path, 0644)`
-- [ ] L478 — `@chmod($format_path, 0644)`
-- [ ] L561 — `@exec($exec, $returnarray)`
-- [ ] L606 — `@exec($exec, $returnarray)`
-- [ ] L655 — `@exec($exec, $returnarray)`
-- [ ] L721 — `@exec($ffmpeg.' 2>&1', $FO, $FS)`
-- [ ] L731 — `@exec($avconv.' 2>&1', $AO, $AS)`
-- [ ] L784 — `@exec($exec, $returnarray)`
-- [ ] L839 — `@exec($exec, $returnarray)`
-- [ ] L857 — `@mkdir($directory, 0777, $recursive)`
-- [ ] L864 — `@chmod($directory, 0777)`
-- [ ] L994 — `@chmod($upload_dir, 0777)`
+### include/functions_metadata.inc.php
 
-## `include/`
+- [ ] L28 — `if (false == @getimagesize($filename, $imginfo)) {`
+- [ ] L124 — `$exif = @exif_read_data($filename) ?: null;`
 
-### `include/category_cats.inc.php`
+### include/functions_search.inc.php
 
-- [ ] L82 — `@$row['max_date_last']` and `@$row['date_last']`
-- [ ] L297 — `@$category['comment']`
+- [ ] L902 — `} elseif ('>' == @$str[0]) {`
+- [ ] L905 — `} elseif ('<' == @$str[0]) {`
+- [ ] L1003 — `} elseif ('>' == @$str[0]) {`
+- [ ] L1006 — `} elseif ('<' == @$str[0]) {`
 
-### `include/category_default.inc.php`
+### include/functions_url.inc.php
 
-- [ ] L96 — `@$nb_comments_of[$row['id']]`
+- [ ] L288 — `$section = @$params['section'];`
+- [ ] L521, 555, 558, 561, 564, 567, 570, 574, 576, 584 — 10× `... == @$tokens[$next_token]`
 
-### `include/common.inc.php`
+### include/functions_user.inc.php
 
-- [ ] L34 — `@get_magic_quotes_gpc()`
-- [ ] L74 — `@include(...)`
-- [ ] L78 — `@include(...)`
-- [ ] L88 — `@ini_set('error_reporting', ...)`
-- [ ] L90 — `@ini_set('display_errors', true)`
-- [ ] L95 — `@ini_set('session.gc_divisor', 100)`
-- [ ] L96 — `@ini_set('session.gc_probability', ...)`
-- [ ] L296 — `@header('Retry-After: 900')`
+- [ ] L420 — `@header('Retry-After: 900');`
+- [ ] L817 — `$language_header_raw = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];`
+- [ ] L1032 — `and is_numeric(@$cookie[0])`
+- [ ] L1033 — `and is_numeric(@$cookie[1])`
+- [ ] L1034 — `and time() - ... <= @$cookie[1]`
+- [ ] L1035 — `and time() >= @$cookie[1]`
+- [ ] L2125 — `if (!empty($params['level']) or @$params['level'] === 0)`
+- [ ] L2168 — `... or @$params['recent_period'] === 0`
+- [ ] L2172 — `... or @$params['expand'] === false`
+- [ ] L2177 — `... or @$params['show_nb_comments'] === false`
+- [ ] L2182 — `... or @$params['show_nb_hits'] === false`
+- [ ] L2187 — `... or @$params['enabled_high'] === false`
+- [ ] L2544 — `$result = @pwg_mail(...);`
 
-### `include/derivative_std_params.inc.php`
+### include/menubar.inc.php
 
-- [ ] L149 — `@self::$custom[$key]`
-- [ ] L169 — `@unserialize(...)`
+- [ ] L38 — `if (@$page['section'] == 'search' && ...)`
 
-### `include/functions.inc.php`
+### include/picture_comment.inc.php
 
-- [ ] L151 — `@mkdir($dir, ..., $recursive)`
-- [ ] L159 — `@file_put_contents($file, 'deny from all')`
-- [ ] L163 — `@file_put_contents($file, 'Not allowed!')`
-- [ ] L477 — `@$page['section']`
-- [ ] L1650 — `@$options['return']`
-- [ ] L1655 — `@$options['return']`
-- [ ] L1685 — `@$options['no_fallback']`
-- [ ] L1695 — `@$options['local']`
-- [ ] L1707 — `@$options['return']`
-- [ ] L1710 — `@include(str_replace($selected_language, ..., $source_file))`
-- [ ] L1716 — `@include($source_file)`
-- [ ] L1737 — `@include(str_replace($selected_language, $parent_language, $source_file))`
-- [ ] L1745 — `@file_get_contents($source_file)`
-- [ ] L1788 — `@file_put_contents($file, 'Not allowed!')`
-- [ ] L1817 — `@$key` (passed to explode)
-- [ ] L2364 — `@unserialize($result)`
-- [ ] L2373 — `@$official_exts[$idxCat][$archiveDir]`
-- [ ] L2481 — `@$piwigo_infos['themes_usage'][$theme_used] += $counter`
-- [ ] L2563 — `@$piwigo_infos['updates'][]`
-- [ ] L2611 — `@$apps[$app_name]['counter'] += $activity['counter']`
-- [ ] L2767 — `@file($info_file_path)`
+- [ ] L249 — `if ('reject' == @$comment_action) {`
 
-### `include/functions_category.inc.php`
+### include/search_filters.inc.php
 
-- [ ] L115 — `@$row['max_date_last']` and `@$row['date_last']`
-- [ ] L141 — `@$page['category']['id']`
-- [ ] L737 — `@$cat_ids[$uppercat]++`
-- [ ] L788 — `@$cats[$idx]['count_images']`
+- [ ] L199 — `@$pre_counters[$threshold]++;`
+- [ ] L298 — `@$pre_counters[$threshold]++;`
+- [ ] L588 — `@$filesizes[sprintf('%.1f', $fs_val / 1024)]++;`
 
-### `include/functions_comment.inc.php`
+### include/section_init.inc.php
 
-- [ ] L129 — `@$key`
+- [ ] L563 — `@$page['hit_by']['cat_url_name'] !== str2url($page['category']['name'])`
+- [ ] L567 — `if ($page['category']['permalink'] !== @$page['hit_by']['cat_permalink'])`
 
-### `include/functions_html.inc.php`
+### include/ws_functions/pwg.groups.php
 
-- [ ] L359 — `@$bt[$i]['class']`
-- [ ] L373 — `@set_status_header(500)`
+- [ ] L193 — `if (!empty($params['is_default']) or @$params['is_default'] === false)`
 
-### `include/functions_mail.inc.php`
+### include/ws_functions/pwg.images.php
 
-- [ ] L637 — `@$args['Bcc']`
-- [ ] L680 — `@$args['email_format']`
+- [ ] L910 — `@$search['fields']['date_posted']['custom'][] = $date_str;`
+- [ ] L920 — `@$search['fields']['date_created']['preset'] = $p_date_created_preset;`
+- [ ] L962 — `@$search['fields']['date_created']['custom'][] = $date_str;`
+- [ ] L1704 — `if (!$out = @fopen("{$filePath}.part", $chunks ? 'ab' : 'wb')) {`
+- [ ] L1717 — `if (!$in = @fopen($filesFileTmpName, 'rb')) {`
+- [ ] L1721 — `if (!$in = @fopen('php://input', 'rb')) {`
+- [ ] L1730 — `@fclose($out);`
+- [ ] L1731 — `@fclose($in);`
+- [ ] L2001 — `@unlink($output_filepath);`
+- [ ] L2219 — `@$unique_filenames_db[ $filename_wo_ext ][] = $row['id'];`
 
-### `include/functions_metadata.inc.php`
+### include/ws_functions/pwg.php
 
-- [ ] L28 — `@getimagesize($filename, $imginfo)`
-- [ ] L124 — `@exif_read_data($filename)`
+- [ ] L123 — `if (@filemtime($derivative->get_path()) === false) {`
+- [ ] L251 — `$infos['msizes'][$size_type] += @$msizes[derivative_to_url($size_type)];`
+- [ ] L576 — `$details_raw = @unserialize($row_details_str);`
+- [ ] L1041 — `$summary['total_filesize'] += @intval($image_infos[...]['filesize'] ?? 0);`
+- [ ] L1153 — `@$sorted_members[$user_name] += 1;`
 
-### `include/functions_search.inc.php`
+### include/ws_functions/pwg.users.php
 
-- [ ] L822 — `@$page['search_details'][__FUNCTION__][$cache_key]`
-- [ ] L877 — `@$str[0]`
-- [ ] L880 — `@$str[0]`
-- [ ] L978 — `@$str[0]`
-- [ ] L981 — `@$str[0]`
+- [ ] L899 — `if (@pwg_mail($user_lost_email, $email_params)) {`
 
-### `include/functions_url.inc.php`
+### install.php
 
-- [ ] L20 — `@$page['root_path']`
-- [ ] L290 — `@$params['section']`
-- [ ] L523 — `@$tokens[$next_token]` ('tags')
-- [ ] L557 — `@$tokens[$next_token]` ('favorites')
-- [ ] L560 — `@$tokens[$next_token]` ('most_visited')
-- [ ] L563 — `@$tokens[$next_token]` ('best_rated')
-- [ ] L566 — `@$tokens[$next_token]` ('recent_pics')
-- [ ] L569 — `@$tokens[$next_token]` ('recent_cats')
-- [ ] L572 — `@$tokens[$next_token]` ('search')
-- [ ] L576 — `@$tokens[$next_token]` (psk regex)
-- [ ] L578 — `@$tokens[$next_token]` (digit regex)
-- [ ] L586 — `@$tokens[$next_token]` ('list')
+- [ ] L84 — `... == @substr(...)`
+- [ ] L192 — `@unlink($envTmp);`
 
-### `include/functions_user.inc.php`
+### install/upgrade_1.3.1.php
 
-- [ ] L419 — `@header('Retry-After: 900')`
-- [ ] L812 — `@$_SERVER['HTTP_ACCEPT_LANGUAGE']`
-- [ ] L1033 — `@$cookie[0]`
-- [ ] L1034 — `@$cookie[1]`
-- [ ] L1035 — `@$cookie[1]`
-- [ ] L1036 — `@$cookie[1]`
-- [ ] L2205 — `@$params['level']`
-- [ ] L2248 — `@$params['recent_period']`
-- [ ] L2252 — `@$params['expand']`
-- [ ] L2257 — `@$params['show_nb_comments']`
-- [ ] L2262 — `@$params['show_nb_hits']`
-- [ ] L2267 — `@$params['enabled_high']`
-- [ ] L2624 — `@pwg_mail(...)`
+- [ ] L553 — `$config_file_contents = @file_get_contents($config_file);`
 
-### `include/menubar.inc.php`
+### profile.php
 
-- [ ] L35 — `@$page['section']`
+- [ ] L388 — `$template_prefixe.'EMAIL' => @$userdata['email'],`
 
-### `include/picture_comment.inc.php`
+### src/Piwigo/Admin/Image/ImageExtImagick.php
 
-- [ ] L237 — `@$comment_action`
+- [ ] L23 — `$script_filename = @$_SERVER['SCRIPT_FILENAME'];`
+- [ ] L25 — `@putenv('MAGICK_THREAD_LIMIT=1');`
+- [ ] L45 — `@exec($command, $returnarray);`
+- [ ] L186 — `@exec($exec, $returnarray);`
 
-### `include/search_filters.inc.php`
+### src/Piwigo/Admin/Image/PwgImage.php
 
-- [ ] L199 — `@$pre_counters[$threshold]++`
-- [ ] L298 — `@$pre_counters[$threshold]++`
-- [ ] L588 — `@$filesizes[sprintf('%.1f', $fs_val / 1024)]++`
+- [ ] L277 — `$exif = @exif_read_data($source_filepath);`
+- [ ] L387 — `@exec(... .' -version', $returnarray);`
 
-### `include/section_init.inc.php`
+### src/Piwigo/Admin/Languages.php
 
-- [x] L324 — `@$page['super_order_by']`
-- [ ] L563 — `@$page['hit_by']['cat_url_name']`
-- [ ] L567 — `@$page['hit_by']['cat_permalink']`
+- [ ] L176 — `@uasort($this->fs_languages, name_compare(...));`
+- [ ] L211 — `... and $pem_versions = @unserialize($result)`
+- [ ] L264 — `$pem_languages = @unserialize($result);`
+- [ ] L278 — `@uasort($this->server_languages, function (...) ...)`
+- [ ] L301 — `$handle = @fopen($archive, 'wb');`
+- [ ] L377 — `@unlink($path);`
+- [ ] L403 — `@unlink($archive);`
 
-### `include/ws_core.inc.php`
+### src/Piwigo/Admin/Plugins.php
 
-- [ ] L271 — `@header('Content-Type: text/plain')`
-- [ ] L273 — `@$this->_requestFormat` and `@$this->_responseFormat`
-- [ ] L316 — `@header('Content-Type: ...; charset=...')`
+- [ ] L377 — `... and $pem_versions = @unserialize($result)`
+- [ ] L459 — `$pem_plugins = @unserialize($result);`
+- [ ] L508 — `$pem_plugins = @unserialize($result);`
+- [ ] L585 — `$handle = @fopen($archive, 'wb');`
+- [ ] L654 — `@unlink($path);`
+- [ ] L680 — `@unlink($archive);`
 
-### `include/ws_functions/pwg.groups.php`
+### src/Piwigo/Admin/Themes.php
 
-- [ ] L193 — `@$params['is_default']`
+- [ ] L434 — `... and $pem_versions = @unserialize($result)`
+- [ ] L487 — `$pem_themes = @unserialize($result);`
+- [ ] L540 — `$handle = @fopen($archive, 'wb');`
+- [ ] L612 — `@unlink($path);`
+- [ ] L638 — `@unlink($archive);`
 
-### `include/ws_functions/pwg.images.php`
+### src/Piwigo/Admin/Updates.php
 
-- [ ] L914 — `@$search['fields']['date_posted']['custom'][]`
-- [ ] L924 — `@$search['fields']['date_created']['preset']`
-- [ ] L966 — `@$search['fields']['date_created']['custom'][]`
-- [ ] L1708 — `@fopen("{$filePath}.part", ...)`
-- [ ] L1721 — `@fopen($filesFileTmpName, 'rb')`
-- [ ] L1725 — `@fopen('php://input', 'rb')`
-- [ ] L1734 — `@fclose($out)`
-- [ ] L1735 — `@fclose($in)`
-- [ ] L2005 — `@unlink($output_filepath)`
-- [ ] L2222 — `@$unique_filenames_db[$filename_wo_ext][]`
+- [ ] L54 — `and @fetchRemote(PHPWG_URL.'/download/all_versions.php?...', $result)`
+- [ ] L55 — `$all_versions = @explode("\n", $result);`
+- [ ] L95 — `if (@fetchRemote($url, $result)) {`
+- [ ] L259 — `... and $pem_versions = @unserialize($result)`
+- [ ] L313 — `$pem_exts = @unserialize($result);`
+- [ ] L467 — `@unlink($path);`
+- [ ] L510 — `@mkgetdir($path);`
+- [ ] L514 — `$zip = @fopen($filename, 'w');`
+- [ ] L518 — `if (@fetchRemote(PHPWG_URL.'/download/dlcounter.php?...', $result)`
+- [ ] L519 — `and $input = @unserialize($result))`
+- [ ] L528 — `@fwrite($zip, base64_decode(...));`
+- [ ] L536 — `@fclose($zip);`
+- [ ] L539 — `if (@filesize($filename)) {`
+- [ ] L560 — `if (@chmod(PHPWG_ROOT_PATH.$extractFilename, 0777)`
 
-### `include/ws_functions/pwg.php`
+### src/Piwigo/Auth/PwgBase32.php
 
-- [ ] L100 — `@filemtime($derivative->get_path())`
-- [ ] L218 — `@exec('du -sk '.$path_cache, $return_array_cache)`
-- [ ] L237 — `@$msizes[derivative_to_url($size_type)]`
-- [ ] L246 — `@exec('du -sk '.$path_template_c, $return_array_template_c)`
-- [ ] L572 — `@unserialize($row_details_str)`
-- [ ] L1037 — `@intval($image_infos[$line_image_id_str]['filesize'] ?? 0)`
-- [ ] L1149 — `@$sorted_members[$user_name] += 1`
+- [ ] L98 — `(string) @self::$flippedMap[@$input[$i + $j]]`
 
-### `include/ws_functions/pwg.users.php`
+### src/Piwigo/Cache/PersistentFileCache.php
 
-- [ ] L904 — `@pwg_mail($user_lost_email, $email_params)`
+- [ ] L21 — `$fileContent = @file_get_contents($this->dir.$key.'.cache');`
+- [ ] L49 — `if (false === @file_put_contents($this->dir.$key.'.cache', $serialized))`
+- [ ] L68 — `if ($all || @filemtime($file) < $limit)`
+- [ ] L69 — `@unlink($file);`
 
-## `src/Piwigo/`
+### src/Piwigo/Core/InstallSentinel.php
 
-### `src/Piwigo/Admin/Image/image_ext_imagick.php`
+- [ ] L39 — `@mkdir($dir, 0o755, true);`
+- [ ] L41 — `@touch($path);`
+- [ ] L49 — `@unlink($path);`
 
-- [ ] L23 — `@$_SERVER['SCRIPT_FILENAME']`
-- [ ] L25 — `@putenv('MAGICK_THREAD_LIMIT=1')`
-- [ ] L45 — `@exec($command, $returnarray)`
-- [ ] L186 — `@exec($exec, $returnarray)`
+### src/Piwigo/Core/LanguageStack.php
 
-### `src/Piwigo/Admin/Image/pwg_image.php`
+- [ ] L155 — `@include($path);`
 
-- [ ] L277 — `@exif_read_data($source_filepath)`
-- [ ] L387 — `@exec(...' -version', $returnarray)`
+### src/Piwigo/Core/Logger.php
 
-### `src/Piwigo/Admin/languages.php`
+- [ ] L302 — `if (@filemtime($file) < $limit)`
+- [ ] L303 — `@unlink($file);`
 
-- [ ] L176 — `@uasort($this->fs_languages, name_compare(...))`
-- [ ] L211 — `@unserialize($result)`
-- [ ] L264 — `@unserialize($result)`
-- [ ] L278 — `@uasort($this->server_languages, ...)`
-- [ ] L301 — `@fopen($archive, 'wb')`
-- [ ] L377 — `@unlink($path)`
-- [ ] L403 — `@unlink($archive)`
+### src/Piwigo/Image/DerivativeImage.php
 
-### `src/Piwigo/Admin/plugins.php`
+- [ ] L192 — `$mtime = @filemtime(PHPWG_ROOT_PATH.$rel_path);`
 
-- [ ] L377 — `@unserialize($result)`
-- [ ] L459 — `@unserialize($result)`
-- [ ] L508 — `@unserialize($result)`
-- [ ] L585 — `@fopen($archive, 'wb')`
-- [ ] L654 — `@unlink($path)`
-- [ ] L680 — `@unlink($archive)`
+### src/Piwigo/Image/ImageStdParams.php
 
-### `src/Piwigo/Admin/themes.php`
+- [ ] L121 — `$arr = @unserialize(...);`
 
-- [ ] L434 — `@unserialize($result)`
-- [ ] L486 — `@unserialize($result)`
-- [ ] L539 — `@fopen($archive, 'wb')`
-- [ ] L611 — `@unlink($path)`
-- [ ] L637 — `@unlink($archive)`
+### src/Piwigo/Image/SrcImage.php
 
-### `src/Piwigo/Admin/updates.php`
+- [ ] L41 — `$infos['file_ext'] = @strtolower(get_extension($file));`
+- [ ] L54 — `if (($size = @getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false)`
+- [ ] L132 — `if (is_readable($path) && ($size = @getimagesize($path)) !== false)`
 
-- [ ] L55 — `@fetchRemote(PHPWG_URL.'/download/all_versions.php?...', $result)`
-- [ ] L56 — `@explode("\n", $result)`
-- [ ] L96 — `@fetchRemote($url, $result)`
-- [ ] L260 — `@unserialize($result)`
-- [ ] L314 — `@unserialize($result)`
-- [ ] L468 — `@unlink($path)`
-- [ ] L510 — `@mkgetdir($path)`
-- [ ] L514 — `@fopen($filename, 'w')`
-- [ ] L518 — `@fetchRemote(PHPWG_URL.'/download/dlcounter.php?...', $result)`
-- [ ] L519 — `@unserialize($result)`
-- [ ] L528 — `@fwrite($zip, base64_decode(...))`
-- [ ] L536 — `@fclose($zip)`
-- [ ] L539 — `@filesize($filename)`
-- [ ] L560 — `@chmod(PHPWG_ROOT_PATH.$extractFilename, 0777)`
+### src/Piwigo/Plugins/PiwigoOpenstreetmap/Config.php
 
-### `src/Piwigo/Auth/PwgBase32.php`
+- [ ] L56 — `$raw = @unserialize($raw);`
 
-- [ ] L98 — `@self::$flippedMap[@$input[$i + $j]]` (two suppressions on one line)
+### src/Piwigo/Plugins/PiwigoVideojs/Config.php
 
-### `src/Piwigo/Cache/PersistentFileCache.php`
+- [ ] L60 — `$raw = @unserialize($raw);`
 
-- [ ] L21 — `@file_get_contents($this->dir.$key.'.cache')`
-- [ ] L49 — `@file_put_contents($this->dir.$key.'.cache', $serialized)`
-- [ ] L68 — `@filemtime($file)`
-- [ ] L69 — `@unlink($file)`
+### src/Piwigo/Search/QDateRangeScope.php
 
-### `src/Piwigo/Core/Logger.php`
+- [ ] L22 — `} elseif ('>' == @$str[0]) {`
+- [ ] L25 — `} elseif ('<' == @$str[0]) {`
 
-- [ ] L302 — `@filemtime($file)`
-- [ ] L303 — `@unlink($file)`
+### src/Piwigo/Search/QNumericRangeScope.php
 
-### `src/Piwigo/Image/DerivativeImage.php`
+- [ ] L23 — `} elseif ('>' == @$str[0]) {`
+- [ ] L26 — `} elseif ('<' == @$str[0]) {`
 
-- [ ] L192 — `@filemtime(PHPWG_ROOT_PATH.$rel_path)`
+### src/Piwigo/Template/FileCombiner.php
 
-### `src/Piwigo/Image/ImageStdParams.php`
+- [ ] L121 — `@chmod(PHPWG_ROOT_PATH.$file, 0644);`
 
-- [ ] L101 — `@self::$custom[$key]`
-- [ ] L121 — `@unserialize(...)`
+### src/Piwigo/Ws/PwgServer.php
 
-### `src/Piwigo/Image/SrcImage.php`
+- [ ] L62 — `@header('Content-Type: text/plain');`
+- [ ] L102 — `@header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());`
 
-- [ ] L41 — `@strtolower(get_extension($file))`
-- [ ] L54 — `@getimagesize(PHPWG_ROOT_PATH.$this->rel_path)`
+### tests/Unit/Cache/PersistentFileCacheTest.php
 
-### `src/Piwigo/Search/QDateRangeScope.php`
+- [ ] L45 — `@rmdir($this->cacheDir);`
+- [ ] L46 — `@rmdir($this->tmpRoot);`
 
-- [ ] L22 — `@$str[0]`
-- [ ] L25 — `@$str[0]`
+### tests/Unit/Config/ConfigLoaderTest.php
 
-### `src/Piwigo/Search/QNumericRangeScope.php`
+- [ ] L43 — `@rmdir($this->tmpDir);`
 
-- [ ] L23 — `@$str[0]`
-- [ ] L26 — `@$str[0]`
+### tests/Unit/Core/InstallSentinelTest.php
 
-### `src/Piwigo/Template/FileCombiner.php`
+- [ ] L22 — `@mkdir(dirname($this->stampPath), 0o755, true);`
 
-- [ ] L121 — `@chmod(PHPWG_ROOT_PATH.$file, 0644)`
+### upgrade.php
 
-### `src/Piwigo/Ws/PwgServer.php`
-
-- [ ] L62 — `@header('Content-Type: text/plain')`
-- [ ] L64 — `@$this->_requestFormat` and `@$this->_responseFormat`
-- [ ] L102 — `@header('Content-Type: ...; charset=...')`
-
-## `tests/`
-
-### `tests/Unit/Cache/PersistentFileCacheTest.php`
-
-- [ ] L45 — `@rmdir($this->cacheDir)`
-- [ ] L46 — `@rmdir($this->tmpRoot)`
-
-## `tools/`
-
-### `tools/triggers_list.php`
-
-- [ ] L1024 — `@$trigger['infos']`
+- [ ] L22 — `@ini_set('opcache.enable', 0);`
+- [ ] L145 — `... == @substr($httpAccLang, 0, 2)`

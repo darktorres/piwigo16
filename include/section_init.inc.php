@@ -560,11 +560,11 @@ if ('categories' == $page['section'] and isset($page['category']) and !isset($pa
     $need_redirect = false;
     if (empty($page['category']['permalink'])) {
         if (\Piwigo\Config\Config::categoryUrlStyle() == 'id-name' and
-            @$page['hit_by']['cat_url_name'] !== str2url($page['category']['name'])) {
+            ($page['hit_by']['cat_url_name'] ?? null) !== str2url($page['category']['name'])) {
             $need_redirect = true;
         }
     } else {
-        if ($page['category']['permalink'] !== @$page['hit_by']['cat_permalink']) {
+        if ($page['category']['permalink'] !== ($page['hit_by']['cat_permalink'] ?? null)) {
             $need_redirect = true;
         }
     }

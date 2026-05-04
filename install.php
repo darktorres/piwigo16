@@ -81,7 +81,7 @@ if (isset($_GET['language'])) {
     $language = 'en_UK';
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr((string) $language_code, 0, 2) == @substr(is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', 0, 2)) {
+        if (substr((string) $language_code, 0, 2) == substr(is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -189,7 +189,7 @@ if (isset($_POST['install'])) {
                  . "PIWIGO_DB_PREFIX={$prefixeTable}\n";
         $envTmp = $envPath . '.tmp.' . bin2hex(random_bytes(4));
         if (file_put_contents($envTmp, $envBody) === false || !rename($envTmp, $envPath)) {
-            @unlink($envTmp);
+            \Piwigo\Core\Filesystem::tryUnlink($envTmp);
             fatal_error('Could not write ' . $envPath . ' — check filesystem permissions on the repository root.');
         }
 

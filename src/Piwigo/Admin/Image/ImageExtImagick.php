@@ -20,9 +20,11 @@ class ImageExtImagick implements ImageInterface
     {
         $this->imagickdir = \Piwigo\Config\Config::extImagickDir();
 
-        $script_filename = @$_SERVER['SCRIPT_FILENAME'];
+        $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
         if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
-            @putenv('MAGICK_THREAD_LIMIT=1');
+            if (function_exists('putenv')) {
+                putenv('MAGICK_THREAD_LIMIT=1');
+            }
         }
 
         if ('webp' == strtolower(get_extension($this->source_filepath))) {
@@ -42,7 +44,7 @@ class ImageExtImagick implements ImageInterface
 
         $identify = PwgImage::get_ext_imagick_command() === 'magick' ? 'magick identify' : 'identify';
         $command = $this->imagickdir.$identify.' -format "%wx%h" "'.realpath($this->source_filepath).'"';
-        @exec($command, $returnarray);
+        exec($command, $returnarray);
         if (empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
@@ -183,7 +185,7 @@ class ImageExtImagick implements ImageInterface
         $dirname = isset($dest['dirname']) ? (realpath($dest['dirname']) ?: $dest['dirname']) : '';
         $exec .= ' "'.$dirname.'/'.$dest['basename'].'" 2>&1';
         $logger->debug($exec, 'i.php');
-        @exec($exec, $returnarray);
+        exec($exec, $returnarray);
 
         if (count($returnarray) > 0) {
             $logger->error('', 'i.php', $returnarray);

@@ -95,7 +95,9 @@ class PwgBase32
                 return false;
             }
             for ($j = 0; $j < 8; $j++) {
-                $x .= str_pad(base_convert((string) @self::$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+                $ch = $input[$i + $j] ?? null;
+                $mapped = ($ch !== null && isset(self::$flippedMap[$ch])) ? self::$flippedMap[$ch] : 0;
+                $x .= str_pad(base_convert((string) $mapped, 10, 2), 5, '0', STR_PAD_LEFT);
             }
             $eightBits = str_split($x, 8);
             for ($z = 0; $z < count($eightBits); $z++) {

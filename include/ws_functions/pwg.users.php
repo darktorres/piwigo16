@@ -896,7 +896,7 @@ SELECT
             $email_params = pwg_generate_reset_password_mail($user_lost_username, $gen_password_link, \Piwigo\Config\Config::galleryTitle(), $gen_time_validation);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
-        if (@pwg_mail($user_lost_email, $email_params)) {
+        if (pwg_mail($user_lost_email, $email_params)) {
             $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
         } else {
             $send_by_mail_response = false;

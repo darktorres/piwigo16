@@ -57,7 +57,7 @@ final class Config
     {
         $raw = self::confArray()[$key] ?? [];
         if (is_string($raw) && $raw !== '') {
-            $raw = @unserialize($raw);
+            $raw = safe_unserialize($raw);
         }
         if (!is_array($raw)) {
             return [];

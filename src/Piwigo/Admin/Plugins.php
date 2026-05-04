@@ -374,10 +374,7 @@ DELETE FROM '. PLUGINS_TABLE .'
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. \Piwigo\Config\Config::pemPluginsCategory() .'&format=php';
-        if (fetchRemote($url, $result) and $pem_versions = @unserialize($result)) {
-            if (!is_array($pem_versions)) {
-                return $versions_to_check;
-            }
+        if (fetchRemote($url, $result) and $pem_versions = safe_unserialize($result)) {
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
@@ -456,8 +453,8 @@ DELETE FROM '. PLUGINS_TABLE .'
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
-            if (!is_array($pem_plugins)) {
+            $pem_plugins = safe_unserialize($result);
+            if ($pem_plugins === []) {
                 return false;
             }
             foreach ($pem_plugins as $plugin) {
@@ -505,8 +502,8 @@ DELETE FROM '. PLUGINS_TABLE .'
         ];
 
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = @unserialize($result);
-            if (!is_array($pem_plugins)) {
+            $pem_plugins = safe_unserialize($result);
+            if ($pem_plugins === []) {
                 return false;
             }
 
@@ -582,8 +579,8 @@ DELETE FROM '. PLUGINS_TABLE .'
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = @fopen($archive, 'wb');
-            if ($handle !== false) {
+            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
+            if (is_resource($handle)) {
                 $fh = $handle;
                 if (fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
@@ -651,7 +648,7 @@ DELETE FROM '. PLUGINS_TABLE .'
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            @unlink($path);
+                                            \Piwigo\Core\Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_PLUGINS_PATH . 'trash');
                                         }
@@ -677,7 +674,7 @@ DELETE FROM '. PLUGINS_TABLE .'
         }
 
         if (is_string($archive)) {
-            @unlink($archive);
+            \Piwigo\Core\Filesystem::tryUnlink($archive);
         }
         return $status;
     }

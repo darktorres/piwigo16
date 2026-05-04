@@ -385,7 +385,7 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
     $template->assign(
         [
         $template_prefixe.'USERNAME' => stripslashes(is_scalar($userdata['username'] ?? null) ? (string) $userdata['username'] : ''),
-        $template_prefixe.'EMAIL' => @$userdata['email'],
+        $template_prefixe.'EMAIL' => $userdata['email'] ?? null,
         $template_prefixe.'ALLOW_USER_CUSTOMIZATION' => \Piwigo\Config\Config::allowUserCustomization(),
         $template_prefixe.'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
         $template_prefixe.'NB_IMAGE_PAGE' => $userdata['nb_image_page'],

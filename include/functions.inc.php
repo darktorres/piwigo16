@@ -148,7 +148,12 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, \Piwigo\Config\Config::chmodValue(), ($flags & MKGETDIR_RECURSIVE) ? true : false);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $mkd = mkdir($dir, \Piwigo\Config\Config::chmodValue(), ($flags & MKGETDIR_RECURSIVE) ? true : false);
+        } finally {
+            restore_error_handler();
+        }
         umask($umask);
         if ($mkd == false) {
             !($flags & MKGETDIR_DIE_ON_ERROR) or fatal_error("$dir ".l10n('no write access'));
@@ -156,11 +161,15 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
         }
         if ($flags & MKGETDIR_PROTECT_HTACCESS) {
             $file = $dir.'/.htaccess';
-            file_exists($file) or @file_put_contents($file, 'deny from all');
+            if (!file_exists($file) && is_writable($dir)) {
+                file_put_contents($file, 'deny from all');
+            }
         }
         if ($flags & MKGETDIR_PROTECT_INDEX) {
             $file = $dir.'/index.htm';
-            file_exists($file) or @file_put_contents($file, 'Not allowed!');
+            if (!file_exists($file) && is_writable($dir)) {
+                file_put_contents($file, 'Not allowed!');
+            }
         }
     }
     if (!is_writable($dir)) {
@@ -1478,6 +1487,49 @@ function safe_unserialize(array|string $value): array
 }
 
 /**
+ * `getimagesize` wrapper that silences PHP warnings (corrupt JPEG, missing
+ * APP markers, etc.) without polluting the global error stream. Returns
+ * the array on success or false on failure — matching native semantics.
+ *
+ * @param array<string, mixed>|null $image_info
+ * @param-out array<string, mixed> $image_info
+ * @return array<int|string, mixed>|false
+ */
+function pwg_safe_getimagesize(string $filename, ?array &$image_info = null): array|false
+{
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = getimagesize($filename, $image_info);
+    } finally {
+        restore_error_handler();
+    }
+    if ($image_info === null) {
+        $image_info = [];
+    }
+    return $result;
+}
+
+/**
+ * `exif_read_data` wrapper that silences PHP warnings (truncated header,
+ * missing extension, etc.). Returns the array on success or false on
+ * failure — matching native semantics.
+ *
+ * @return array<string, mixed>|false
+ */
+function pwg_safe_exif_read_data(string $filename): array|false
+{
+    if (!function_exists('exif_read_data')) {
+        return false;
+    }
+    set_error_handler(static fn (): bool => true);
+    try {
+        return exif_read_data($filename);
+    } finally {
+        restore_error_handler();
+    }
+}
+
+/**
  * Apply *json_decode* on a value only if it is a string
  * @since 2.7
  *
@@ -1651,12 +1703,12 @@ function load_language(string $filename, string $dirname = '', array $options = 
         : (is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : []);
 
     // keep trace of plugins loaded files for switch_lang_to() function
-    if (!empty($dirname) && !empty($filename) && !@$options['return']
+    if (!empty($dirname) && !empty($filename) && empty($options['return'])
       && !\Piwigo\Core\LanguageStack::hasPluginFile($dirname, $filename)) {
         \Piwigo\Core\LanguageStack::trackPluginFile($dirname, $filename, $options);
     }
 
-    if (!@$options['return']) {
+    if (empty($options['return'])) {
         $filename .= '.php';
     }
     if (empty($dirname)) {
@@ -1686,7 +1738,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
         }
         $languages[] = $options['force_fallback'];
     }
-    if (!@$options['no_fallback']) { // default language
+    if (empty($options['no_fallback'])) { // default language
         $languages[] = $default_language;
     }
 
@@ -1697,7 +1749,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     $source_file       = '';
     $selected_language = '';
     foreach ($languages_typed as $language) {
-        $f = @$options['local'] ?
+        $f = !empty($options['local']) ?
           $dirname.$language.'.'.$filename :
           $dirname.$language.'/'.$filename;
 
@@ -1709,17 +1761,22 @@ function load_language(string $filename, string $dirname = '', array $options = 
     }
 
     if (!empty($source_file)) {
-        if (!@$options['return']) {
+        if (empty($options['return'])) {
             // load forced fallback — sets local $lang/$lang_info which are reset below
             if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
                 $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
-                @include(str_replace($selected_language, $forceFallback, $source_file));
+                $fallback_file = str_replace($selected_language, $forceFallback, $source_file);
+                if (is_readable($fallback_file)) {
+                    include $fallback_file;
+                }
             }
 
             // load language content into local variables
             $lang = null;
             $lang_info = null;
-            @include($source_file);
+            if (is_readable($source_file)) {
+                include $source_file;
+            }
             $load_lang = $lang;
             $load_lang_info = $lang_info;
 
@@ -1738,7 +1795,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
             \Piwigo\Core\LanguageStack::mergeInfo((array)$load_lang_info);
             return true;
         } else {
-            $content = @file_get_contents($source_file);
+            $content = is_readable($source_file) ? file_get_contents($source_file) : false;
             //Note: target charset is always utf-8 $content = convert_charset($content, 'utf-8', $target_charset);
             return $content;
         }
@@ -1780,8 +1837,8 @@ function convert_charset(string $str, string $source_charset, string $dest_chars
 function secure_directory(string $dir): void
 {
     $file = $dir.'/index.htm';
-    if (!file_exists($file)) {
-        @file_put_contents($file, 'Not allowed!');
+    if (!file_exists($file) && is_writable($dir)) {
+        file_put_contents($file, 'Not allowed!');
     }
 }
 
@@ -1810,7 +1867,7 @@ function get_ephemeral_key(int $valid_after_seconds, string $aditionnal_data_to_
 function verify_ephemeral_key(string $key, string $aditionnal_data_to_hash = ''): bool
 {
     $time = microtime(true);
-    $key = explode(':', @$key);
+    $key = explode(':', $key);
     $remote_addr = is_scalar($_SERVER['REMOTE_ADDR'] ?? '') ? (string) ($_SERVER['REMOTE_ADDR'] ?? '') : '';
     if (count($key) != 3
         or $key[0] > $time - (float)$key[1] // page must have been retrieved more than X sec ago
@@ -2359,8 +2416,9 @@ SELECT
     // \Piwigo\Config\Config::override('pem_plugins_category', 12);
     // \Piwigo\Config\Config::override('pem_themes_category', 10);
     $url = PEM_URL . '/api/get_extension_list.php';
-    $pem_extensions_raw = fetchRemote($url, $result) ? @unserialize($result) : false;
-    $pem_extensions = is_array($pem_extensions_raw) ? $pem_extensions_raw : [];
+    $pem_extensions = fetchRemote($url, $result)
+        ? safe_unserialize($result)
+        : [];
     if ($pem_extensions !== []) {
         $official_exts = [];
         foreach ($pem_extensions as $eid => $ext) {
@@ -2368,7 +2426,7 @@ SELECT
                 $idxCat = $ext['idx_category'] ?? null;
                 $archiveDir = $ext['archive_root_dir'];
                 if (is_string($idxCat) || is_int($idxCat)) {
-                    @$official_exts[$idxCat][is_string($archiveDir) ? $archiveDir : ''] = $eid;
+                    $official_exts[$idxCat][is_string($archiveDir) ? $archiveDir : ''] = $eid;
                 }
             }
         }
@@ -2476,7 +2534,7 @@ SELECT
             $theme_used = 'private theme';
         }
 
-        @$piwigo_infos['themes_usage'][$theme_used] += $counter;
+        $piwigo_infos['themes_usage'][$theme_used] = ($piwigo_infos['themes_usage'][$theme_used] ?? 0) + $counter;
     }
 
     $piwigo_infos['general_stats']['default_language'] = get_default_language();
@@ -2558,7 +2616,7 @@ SELECT
     foreach ($updates as $update) {
         $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
         if (isset($details['from_version']) and isset($details['to_version'])) {
-            @$piwigo_infos['updates'][] = [
+            $piwigo_infos['updates'][] = [
               'action' => $update['action'],
               'occured_on' => $update['occured_on'],
               'from_version' => $details['from_version'],
@@ -2606,7 +2664,7 @@ SELECT
     foreach ($activities as $activity) {
         foreach ($apps_pattern as $app_name => $pattern) {
             if (preg_match($pattern, (string) $activity['user_agent'])) {
-                @$apps[$app_name]['counter'] += $activity['counter'];
+                $apps[$app_name]['counter'] = ($apps[$app_name]['counter'] ?? 0) + $activity['counter'];
 
                 if (!isset($apps[$app_name]['first_encounter']) or strtotime($apps[$app_name]['first_encounter']) > strtotime((string) $activity['first_encounter'])) {
                     $apps[$app_name]['first_encounter'] = $activity['first_encounter'];
@@ -2762,7 +2820,7 @@ function get_container_info(): array
 
         // Check for official container tagfile
         if (is_readable($info_file_path)) {
-            $file_lines = @file($info_file_path);
+            $file_lines = file($info_file_path);
             if (is_array($file_lines) and 'Official Piwigo container' === trim($file_lines[0])) {
                 $container_version = null;
                 // Take the last line and remove prefix (Build Version)

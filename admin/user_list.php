@@ -261,7 +261,7 @@ function webmaster_id_is_local(): bool
         if ($real === false) {
             continue;
         }
-        $content = @file_get_contents($real);
+        $content = is_readable($real) ? file_get_contents($real) : false;
         if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"]webmaster_id[\'"]\s*\]\s*=/', $content) === 1) {
             return true;
         }

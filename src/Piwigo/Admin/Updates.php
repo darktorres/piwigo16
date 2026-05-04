@@ -51,8 +51,8 @@ class Updates
         $_SESSION['need_update'.PHPWG_VERSION] = null;
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
-          and @fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
-            $all_versions = @explode("\n", $result);
+          and fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
+            $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
         }
@@ -92,7 +92,7 @@ class Updates
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1(\Piwigo\Config\Config::secretKey().get_absolute_root_url());
 
-            if (@fetchRemote($url, $result)) {
+            if (fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -256,10 +256,7 @@ class Updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
-            if (!is_array($pem_versions)) {
-                return false;
-            }
+        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -310,8 +307,8 @@ class Updates
         }
 
         if (fetchRemote($url, $result, $get_data, $post_data)) {
-            $pem_exts = @unserialize($result);
-            if (!is_array($pem_exts)) {
+            $pem_exts = safe_unserialize($result);
+            if ($pem_exts === []) {
                 return false;
             }
 
@@ -464,7 +461,7 @@ class Updates
             foreach ($old_files as $old_file) {
                 $path = PHPWG_ROOT_PATH.$old_file;
                 if (is_file($path)) {
-                    @unlink($path);
+                    \Piwigo\Core\Filesystem::tryUnlink($path);
                 } elseif (is_dir($path)) {
                     deltree($path, PHPWG_ROOT_PATH.'_trash');
                 }
@@ -507,36 +504,32 @@ class Updates
         if (empty($pageErrors)) {
             $path = PHPWG_ROOT_PATH.\Piwigo\Config\Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
-            @mkgetdir($path);
+            mkgetdir($path);
 
             $chunk_num = 0;
             $end = false;
-            $zip = @fopen($filename, 'w');
+            $zip = \Piwigo\Core\Filesystem::tryFopen($filename, 'w');
 
             while (!$end) {
                 $chunk_num++;
-                if (@fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
-                  and $input = @unserialize($result)) {
-                    if (!is_array($input)) {
+                if (fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
+                  and $input = safe_unserialize($result)) {
+                    if (0 == ($input['remaining'] ?? -1)) {
                         $end = true;
-                    } else {
-                        if (0 == ($input['remaining'] ?? -1)) {
-                            $end = true;
-                        }
-                        if ($zip !== false) {
-                            $inputData = $input['data'] ?? '';
-                            @fwrite($zip, base64_decode(is_scalar($inputData) ? (string) $inputData : ''));
-                        }
+                    }
+                    if (is_resource($zip)) {
+                        $inputData = $input['data'] ?? '';
+                        fwrite($zip, base64_decode(is_scalar($inputData) ? (string) $inputData : ''));
                     }
                 } else {
                     $end = true;
                 }
             }
-            if ($zip !== false) {
-                @fclose($zip);
+            if (is_resource($zip)) {
+                fclose($zip);
             }
 
-            if (@filesize($filename)) {
+            if (\Piwigo\Core\Filesystem::tryFilesize($filename)) {
                 $zip = new \PclZip($filename);
                 if ($result = $zip->extract(
                     PCLZIP_OPT_PATH,
@@ -557,7 +550,7 @@ class Updates
                         $extractFilename = is_scalar($extract['filename'] ?? null) ? (string) $extract['filename'] : '';
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            if (@chmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
+                            if (\Piwigo\Core\Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
                               and ($res = $zip->extract(
                                   PCLZIP_OPT_BY_NAME,
                                   $remove_path.'/'.$extractFilename,

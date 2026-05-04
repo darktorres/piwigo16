@@ -431,10 +431,7 @@ SELECT
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
-            if (!is_array($pem_versions)) {
-                return false;
-            }
+        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -484,8 +481,8 @@ SELECT
             }
         }
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_themes = @unserialize($result);
-            if (!is_array($pem_themes)) {
+            $pem_themes = safe_unserialize($result);
+            if ($pem_themes === []) {
                 return false;
             }
             foreach ($pem_themes as $theme) {
@@ -537,8 +534,8 @@ SELECT
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = @fopen($archive, 'wb');
-            if ($handle !== false) {
+            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
+            if (is_resource($handle)) {
                 $fh = $handle;
                 if (fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
@@ -609,7 +606,7 @@ SELECT
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            @unlink($path);
+                                            \Piwigo\Core\Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_THEMES_PATH . 'trash');
                                         }
@@ -635,7 +632,7 @@ SELECT
         }
 
         if (is_string($archive)) {
-            @unlink($archive);
+            \Piwigo\Core\Filesystem::tryUnlink($archive);
         }
         return $status;
     }

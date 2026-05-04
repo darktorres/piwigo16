@@ -299,8 +299,9 @@ class Logger
         $limit = time() - $archiveDays * 86400;
 
         foreach ($files ?: [] as $file) {
-            if (@filemtime($file) < $limit) {
-                @unlink($file);
+            $mtime = Filesystem::tryFileMtime($file);
+            if ($mtime !== false && $mtime < $limit) {
+                Filesystem::tryUnlink($file);
             }
         }
     }

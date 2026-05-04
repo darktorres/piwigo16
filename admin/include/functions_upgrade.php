@@ -201,9 +201,7 @@ SELECT status
     $username = is_scalar($_POST['username']) ? (string) $_POST['username'] : '';
     $password = is_scalar($_POST['password']) ? (string) $_POST['password'] : '';
 
-    if (function_exists('get_magic_quotes_gpc') && !@get_magic_quotes_gpc()) {
-        $username = pwg_db_real_escape_string($username);
-    }
+    $username = pwg_db_real_escape_string($username);
 
     if (version_compare($current_release, '2.0', '<')) {
         $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');

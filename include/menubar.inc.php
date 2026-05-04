@@ -35,7 +35,7 @@ function initialize_menu(): void
     }
     $menu->prepare_display();
 
-    if (@$page['section'] == 'search' && isset($page['qsearch_details']) && is_array($page['qsearch_details'])) {
+    if (($page['section'] ?? null) == 'search' && isset($page['qsearch_details']) && is_array($page['qsearch_details'])) {
         $qsearchQ = is_scalar($page['qsearch_details']['q'] ?? null) ? (string) $page['qsearch_details']['q'] : '';
         $template->assign('QUERY_SEARCH', htmlspecialchars($qsearchQ));
     }

@@ -31,6 +31,7 @@ parameters:
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
+    - Piwigo\Tools\PhpStan\NoErrorSuppressionRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
     - Piwigo\Tools\PhpStan\StrictTypesRequiredRule
 services:

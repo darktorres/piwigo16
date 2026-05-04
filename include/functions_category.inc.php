@@ -119,7 +119,7 @@ WHERE '.$where.'
     $cats = [];
     $selected_category = is_array($page['category'] ?? null) ? $page['category'] : null;
     while ($row = pwg_db_fetch_assoc($result)) {
-        $child_date_last = @$row['max_date_last'] > @$row['date_last'];
+        $child_date_last = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
         $row = array_merge(
             $row,
             [
@@ -740,7 +740,7 @@ function get_related_categories_menu(array $items, array $excluded_cat_ids = [])
     // now we add the upper categories and useful values such as depth level and url
     foreach ($common_cats as $cat) {
         foreach (explode(',', (string) $cat['uppercats']) as $uppercat) {
-            @$cat_ids[$uppercat]++;
+            $cat_ids[$uppercat] = ($cat_ids[$uppercat] ?? 0) + 1;
         }
     }
 
@@ -792,7 +792,7 @@ SELECT
         // 3. number of sub-albums containing photos
         //
         // Option 3 seems more appropriate here.
-        if (!empty($cat['id_uppercat']) and @$cats[$idx]['count_images'] > 0) {
+        if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {
             foreach (array_slice(explode(',', (string) $cat['uppercats']), 0, -1) as $uppercat_id) {
                 $upper_idx = $index_of_cat[$uppercat_id] ?? null;
                 if ($upper_idx !== null) {

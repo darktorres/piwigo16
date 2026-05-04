@@ -36,17 +36,27 @@ final class InstallSentinel
         $path = self::stampFile();
         $dir  = dirname($path);
         if (!is_dir($dir)) {
-            @mkdir($dir, 0o755, true);
+            set_error_handler(static fn (): bool => true);
+            try {
+                mkdir($dir, 0o755, true);
+            } finally {
+                restore_error_handler();
+            }
         }
-        @touch($path);
+        set_error_handler(static fn (): bool => true);
+        try {
+            touch($path);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /** Test helper. Removes the stamp file if it exists. */
     public static function markUninstalled(): void
     {
         $path = self::stampFile();
-        if (file_exists($path)) {
-            @unlink($path);
+        if (is_file($path)) {
+            unlink($path);
         }
     }
 

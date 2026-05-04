@@ -610,7 +610,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     }
 
     // Bcc
-    $Bcc = get_clean_recipients_list(@$args['Bcc']);
+    $Bcc = get_clean_recipients_list($args['Bcc'] ?? '');
     if (\Piwigo\Config\Config::sendBccMailWebmaster()) {
         $Bcc[] = [
           'email' => get_webmaster_mail_address(),
@@ -653,7 +653,7 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
     }
 
     $content_type_list = [];
-    if (\Piwigo\Config\Config::mailAllowHtml() and @$args['email_format'] != 'text/plain') {
+    if (\Piwigo\Config\Config::mailAllowHtml() and ($args['email_format'] ?? null) != 'text/plain') {
         $content_type_list[] = 'text/html';
     }
     $content_type_list[] = 'text/plain';

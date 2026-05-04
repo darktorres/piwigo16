@@ -196,7 +196,7 @@ SELECT
             while ($row = pwg_db_fetch_assoc($result)) {
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($row['date'] > $date_limit) {
-                        @$pre_counters[$threshold]++;
+                        $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
                     }
                 }
 
@@ -295,7 +295,7 @@ SELECT
                 if (!empty($row['date'])) {
                     foreach ($thresholds as $threshold => $date_limit) {
                         if ($row['date'] > $date_limit) {
-                            @$pre_counters[$threshold]++;
+                            $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
                         }
                     }
 
@@ -585,7 +585,8 @@ SELECT
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
             $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
-            @$filesizes[sprintf('%.1f', $fs_val / 1024)]++;
+            $key_fs = sprintf('%.1f', $fs_val / 1024);
+            $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
         }
 
         if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery

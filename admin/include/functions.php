@@ -2330,7 +2330,7 @@ function cat_admin_access($category_id): bool
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
     $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';
-    if (in_array($category_id, @explode(',', $forbidden))) {
+    if (in_array($category_id, explode(',', $forbidden))) {
         return false;
     }
     return true;
@@ -2355,11 +2355,13 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
 {
     // Try to retrieve data from local file?
     if (!url_is_remote($src)) {
-        $content = @file_get_contents($src);
+        $content = is_readable($src) ? file_get_contents($src) : false;
         if ($content !== false) {
-            is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
             if (is_resource($dest)) {
+                fwrite($dest, $content);
                 $dest = '';
+            } else {
+                $dest = $content;
             }
             return true;
         } else {
@@ -2385,44 +2387,57 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
         $dest = '';
     }
 
-    // Try curl to read remote file
-    // TODO : remove all these @
+    // Try curl to read remote file. Network failures and curl-not-built
+    // edge cases legitimately surface as PHP warnings; suppress those for
+    // the duration of the curl call so callers see the boolean result.
     if (function_exists('curl_init') && function_exists('curl_exec')) {
-        $ch = @curl_init();
+        set_error_handler(static fn (): bool => true);
+        try {
+            $ch = curl_init();
+            if ($ch !== false) {
+                if (\Piwigo\Config\Config::has('use_proxy') && \Piwigo\Config\Config::useProxy()) {
+                    curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, false);
+                    curl_setopt($ch, CURLOPT_PROXY, \Piwigo\Config\Config::proxyServer());
+                    $proxy_auth = \Piwigo\Config\Config::proxyAuth();
+                    if (\Piwigo\Config\Config::has('proxy_auth') && !empty($proxy_auth)) {
+                        curl_setopt($ch, CURLOPT_PROXYUSERPWD, (string)$proxy_auth);
+                    }
+                }
 
-        if (\Piwigo\Config\Config::has('use_proxy') && \Piwigo\Config\Config::useProxy()) {
-            @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, false);
-            @curl_setopt($ch, CURLOPT_PROXY, \Piwigo\Config\Config::proxyServer());
-            $proxy_auth = \Piwigo\Config\Config::proxyAuth();
-            if (\Piwigo\Config\Config::has('proxy_auth') && !empty($proxy_auth)) {
-                @curl_setopt($ch, CURLOPT_PROXYUSERPWD, (string)$proxy_auth);
+                if (!empty($src)) {
+                    curl_setopt($ch, CURLOPT_URL, $src);
+                }
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                if (!empty($user_agent)) {
+                    curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+                }
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                if ($method == 'POST') {
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+                }
+                $content = curl_exec($ch);
+                $header_length = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+                $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            } else {
+                $content = false;
+                $header_length = 0;
+                $status = 0;
             }
+            unset($ch);
+        } finally {
+            restore_error_handler();
         }
-
-        if (!empty($src)) {
-            @curl_setopt($ch, CURLOPT_URL, $src);
-        }
-        @curl_setopt($ch, CURLOPT_HEADER, true);
-        if (!empty($user_agent)) {
-            @curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-        }
-        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        if ($method == 'POST') {
-            @curl_setopt($ch, CURLOPT_POST, true);
-            @curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-        }
-        $content = @curl_exec($ch);
-        $header_length = @curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $status = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        unset($ch);
         if (is_string($content) and $status >= 200 and $status < 400) {
             if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m)) {
                 return fetchRemote($m[1], $dest, [], [], $user_agent, $step + 1);
             }
             $content = substr($content, $header_length);
-            is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
             if (is_resource($dest)) {
+                fwrite($dest, $content);
                 $dest = '';
+            } else {
+                $dest = $content;
             }
             return true;
         }
@@ -2439,12 +2454,19 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
         if ($method == 'POST') {
             $opts['http']['content'] = $request;
         }
-        $context = @stream_context_create($opts);
-        $content = @file_get_contents($src, false, $context);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $context = stream_context_create($opts);
+            $content = file_get_contents($src, false, $context);
+        } finally {
+            restore_error_handler();
+        }
         if ($content !== false) {
-            is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
             if (is_resource($dest)) {
+                fwrite($dest, $content);
                 $dest = '';
+            } else {
+                $dest = $content;
             }
             return true;
         }
@@ -2459,7 +2481,13 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
     $path = $src_parsed['path'] ?? '/';
     $path .= isset($src_parsed['query']) ? '?'.$src_parsed['query'] : '';
 
-    if (($s = @fsockopen($host, 80, $errno, $errstr, 5)) === false) {
+    set_error_handler(static fn (): bool => true);
+    try {
+        $s = fsockopen($host, 80, $errno, $errstr, 5);
+    } finally {
+        restore_error_handler();
+    }
+    if ($s === false) {
         return false;
     }
 
@@ -2508,7 +2536,11 @@ function fetchRemote(string $src, mixed &$dest, array $get_data = [], array $pos
             $i++;
             continue;
         }
-        is_resource($dest) ? @fwrite($dest, $line) : $dest .= $line;
+        if (is_resource($dest)) {
+            fwrite($dest, $line);
+        } else {
+            $dest .= $line;
+        }
         $i++;
     }
     fclose($s);
@@ -2888,7 +2920,8 @@ function clear_derivative_cache($types = 'all'): void
     }
     $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-    if ($contents = @opendir(PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR)) {
+    $derivative_dir = PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR;
+    if (is_dir($derivative_dir) && ($contents = opendir($derivative_dir)) !== false) {
         while (($node = readdir($contents)) !== false) {
             if ($node != '.'
                 and $node != '..'
@@ -2934,7 +2967,7 @@ function clear_derivative_cache_rec(string $path, string $pattern): bool
                 unlink($path.'/index.htm');
             }
             clearstatcache();
-            @rmdir($path);
+            \Piwigo\Core\Filesystem::tryRmdir($path);
         }
         return $rmdir;
     }
@@ -2970,7 +3003,7 @@ function delete_element_derivatives(array $infos, string|int $type = 'all'): voi
     $path = substr_replace($path, $pattern, $dot, 0);
     if (($glob = glob(PHPWG_ROOT_PATH.PWG_DERIVATIVE_DIR.$path)) !== false) {
         foreach ($glob as $file) {
-            @unlink($file);
+            \Piwigo\Core\Filesystem::tryUnlink($file);
         }
     }
 }
@@ -3014,22 +3047,22 @@ function deltree(string $path, ?string $trash_path = null): bool
                     if (is_dir($pathfile)) {
                         deltree($pathfile, $trash_path);
                     } else {
-                        @unlink($pathfile);
+                        \Piwigo\Core\Filesystem::tryUnlink($pathfile);
                     }
                 }
             }
             closedir($fh);
         }
 
-        if (@rmdir($path)) {
+        if (\Piwigo\Core\Filesystem::tryRmdir($path)) {
             return true;
         } elseif (!empty($trash_path)) {
             if (!is_dir($trash_path)) {
-                @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
+                mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
             while ($r = $trash_path . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                 if (!is_dir($r)) {
-                    @rename($path, $r);
+                    \Piwigo\Core\Filesystem::tryRename($path, $r);
                     break;
                 }
             }
@@ -3340,11 +3373,11 @@ function get_cache_size_derivatives(string $path): array
                 if (is_file($path.'/'.$node)) {
                     $split = explode('-', $node);
                     $size_code = substr(end($split), 0, 2);
-                    @$msizes[$size_code] += filesize($path.'/'.$node);
+                    $msizes[$size_code] = ($msizes[$size_code] ?? 0) + filesize($path.'/'.$node);
                 } elseif (is_dir($path.'/'.$node)) {
                     $tmp_msizes = get_cache_size_derivatives($path.'/'.$node);
                     foreach ($tmp_msizes as $size_key => $value) {
-                        @$msizes[$size_key] += $value;
+                        $msizes[$size_key] = ($msizes[$size_key] ?? 0) + $value;
                     }
                 }
             }
@@ -3527,7 +3560,7 @@ function get_graphics_library(): string
 
         case 'gd':
             $gd_info = gd_info();
-            $library .= '/'.@$gd_info['GD Version'];
+            $library .= '/'.($gd_info['GD Version'] ?? '');
             break;
     }
 

@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
 // PHP engine might still have old files in cache. We do not want to use the cache and
 // force reload of all application files. Thus we disable opcache.
 if (function_exists('ini_set')) {
-    @ini_set('opcache.enable', 0);
+    ini_set('opcache.enable', '0');
 }
 
 define('PHPWG_ROOT_PATH', './');
@@ -142,7 +142,7 @@ if ($get_language !== null) {
     // Try to get browser language
     foreach ($languages->fs_languages as $language_code => $fs_language) {
         $httpAccLang = is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
-        if (substr((string) $language_code, 0, 2) == @substr($httpAccLang, 0, 2)) {
+        if (substr((string) $language_code, 0, 2) == substr($httpAccLang, 0, 2)) {
             $language = $language_code;
             break;
         }

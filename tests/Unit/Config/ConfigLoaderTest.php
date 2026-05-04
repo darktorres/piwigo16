@@ -40,7 +40,7 @@ final class ConfigLoaderTest extends TestCase
                 unlink($this->tmpDir . DIRECTORY_SEPARATOR . $f);
             }
         }
-        @rmdir($this->tmpDir);
+        \Piwigo\Core\Filesystem::tryRmdir($this->tmpDir);
 
         // Restore env vars to their pre-test values.
         foreach (self::TOUCHED_VARS as $k) {

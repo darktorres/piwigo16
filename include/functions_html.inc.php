@@ -353,7 +353,7 @@ function fatal_error(string $msg, $title = null, $show_trace = true): never
     if ($show_trace and function_exists('debug_backtrace')) {
         $bt = debug_backtrace();
         for ($i = 1; $i < count($bt); $i++) {
-            $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'].'::') : '';
+            $class = isset($bt[$i]['class']) ? ($bt[$i]['class'].'::') : '';
             $btrace_msg .= "#$i\t".$class.$bt[$i]['function'].' '.($bt[$i]['file'] ?? '').'('.($bt[$i]['line'] ?? '').")\n";
         }
         $btrace_msg = trim($btrace_msg);
@@ -367,7 +367,9 @@ function fatal_error(string $msg, $title = null, $show_trace = true): never
 $btrace_msg
 </pre>\n";
 
-    @set_status_header(500);
+    if (!headers_sent()) {
+        set_status_header(500);
+    }
     echo $display.str_repeat(' ', 300); //IE6 doesn't error output if below a size
 
     if (function_exists('ini_set')) {// if possible turn off error display (we display it)

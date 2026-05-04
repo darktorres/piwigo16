@@ -120,7 +120,7 @@ SELECT id, path, representative_ext, width, height, rotation
                 if ($type != $derivative->get_type()) {
                     continue;
                 }
-                if (@filemtime($derivative->get_path()) === false) {
+                if (\Piwigo\Core\Filesystem::tryFileMtime($derivative->get_path()) === false) {
                     $url = $derivative->get_url();
                     $urls[] = (is_string($url) ? $url : '').$uid;
                 }
@@ -248,7 +248,7 @@ function ws_getCacheSize(array $params, \Piwigo\Ws\PwgServer &$service): array
     $all = 0;
 
     foreach (array_keys($infos['msizes']) as $size_type) {
-        $infos['msizes'][$size_type] += @$msizes[derivative_to_url($size_type)];
+        $infos['msizes'][$size_type] += $msizes[derivative_to_url($size_type)] ?? 0;
         $all += $infos['msizes'][$size_type];
     }
     $infos['msizes']['all'] = $all;
@@ -573,8 +573,7 @@ SELECT
                     $row_details_str = is_scalar($row['details']) ? (string) $row['details'] : '';
                     $row_details_str = str_replace('`groups`', 'groups', $row_details_str);
                     $row_details_str = str_replace('`rank`', 'rank', $row_details_str);
-                    $details_raw = @unserialize($row_details_str);
-                    $details = is_array($details_raw) ? $details_raw : [];
+                    $details = safe_unserialize($row_details_str);
 
                     if (isset($row['user_agent'])) {
                         $details['agent'] = $row['user_agent'];
@@ -1038,7 +1037,7 @@ SELECT
         $line_section = is_scalar($line['section']) ? (string) $line['section'] : '';
 
         if ($line_image_type === 'high' && $line_image_id_str !== '') {
-            $summary['total_filesize'] += @intval($image_infos[$line_image_id_str]['filesize'] ?? 0);
+            $summary['total_filesize'] += intval($image_infos[$line_image_id_str]['filesize'] ?? 0);
         }
 
         if ($line_user_id_str === (string) \Piwigo\Config\Config::guestId()) {
@@ -1120,7 +1119,12 @@ SELECT
             $image_string = '';
             $image_id = $line_image_id;
 
-            $img_url = @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element);
+            set_error_handler(static fn (): bool => true);
+            try {
+                $img_url = DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element);
+            } finally {
+                restore_error_handler();
+            }
             $image_string =
             '<span><img src="'.(is_string($img_url) ? $img_url : '')
             .'" alt="'.$image_title.'" title="'.$image_title.'">';
@@ -1150,7 +1154,7 @@ SELECT
             $search_detail = null;
         }
 
-        @$sorted_members[$user_name] += 1;
+        $sorted_members[$user_name] = ($sorted_members[$user_name] ?? 0) + 1;
 
         $line_date = is_scalar($line['date'] ?? null) ? $line['date'] : null;
         array_push(

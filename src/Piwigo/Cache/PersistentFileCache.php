@@ -18,7 +18,8 @@ class PersistentFileCache extends PersistentCache
 
     public function get($key, &$value): bool
     {
-        $fileContent = @file_get_contents($this->dir.$key.'.cache');
+        $path = $this->dir.$key.'.cache';
+        $fileContent = is_file($path) ? file_get_contents($path) : false;
         if ($fileContent !== false) {
             $loaded = unserialize($fileContent);
             if (is_array($loaded) && isset($loaded['expire']) && is_int($loaded['expire'])) {
@@ -46,14 +47,11 @@ class PersistentFileCache extends PersistentCache
             'data' => $value,
           ]);
 
-        if (false === @file_put_contents($this->dir.$key.'.cache', $serialized)) {
+        $path = $this->dir.$key.'.cache';
+        if (!is_dir($this->dir)) {
             mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
-            $retried = file_put_contents($this->dir.$key.'.cache', $serialized);
-            if ($retried === false) {
-                return false;
-            }
         }
-        return true;
+        return file_put_contents($path, $serialized) !== false;
     }
 
     public function purge(bool $all): bool
@@ -65,8 +63,9 @@ class PersistentFileCache extends PersistentCache
 
         $limit = time() - $this->default_lifetime;
         foreach ($files as $file) {
-            if ($all || @filemtime($file) < $limit) {
-                @unlink($file);
+            $mtime = \Piwigo\Core\Filesystem::tryFileMtime($file);
+            if ($all || $mtime === false || $mtime < $limit) {
+                \Piwigo\Core\Filesystem::tryUnlink($file);
             }
         }
         return true;

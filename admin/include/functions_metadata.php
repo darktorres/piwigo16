@@ -139,7 +139,7 @@ function get_sync_metadata_attributes(): array
 function get_sync_metadata(array $infos): array|false
 {
     $file = PHPWG_ROOT_PATH.(is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
-    $fs = @filesize($file);
+    $fs = \Piwigo\Core\Filesystem::tryFilesize($file);
 
     if ($fs === false) {
         return false;
@@ -150,7 +150,7 @@ function get_sync_metadata(array $infos): array|false
     $is_tiff = false;
 
     if (isset($infos['representative_ext'])) {
-        if ($image_size = @getimagesize($file)) {
+        if (is_readable($file) && ($image_size = pwg_safe_getimagesize($file))) {
             $type = $image_size[2];
 
             if (IMAGETYPE_TIFF_MM == $type or IMAGETYPE_TIFF_II == $type) {
@@ -195,7 +195,7 @@ function get_sync_metadata(array $infos): array|false
                     $infos['height'] = round((float)explode(' ', $vb)[3]);
                 }
             }
-            if ($image_size = @getimagesize($file)) {
+            if (is_readable($file) && ($image_size = pwg_safe_getimagesize($file))) {
                 $infos['width'] = $image_size[0];
                 $infos['height'] = $image_size[1];
             }

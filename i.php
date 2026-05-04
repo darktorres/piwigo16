@@ -70,14 +70,26 @@ function mkgetdir(string $dir, int $flags = 0): bool
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
-        $mkd = @mkdir($dir, \Piwigo\Config\Config::chmodValue(), true);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $mkd = mkdir($dir, \Piwigo\Config\Config::chmodValue(), true);
+        } finally {
+            restore_error_handler();
+        }
         umask($umask);
         if ($mkd == false && !is_dir($dir) /* retest existence because of potential concurrent i.php with slow file systems*/) {
             return false;
         }
 
         $file = $dir.'/index.htm';
-        file_exists($file) or @file_put_contents($file, 'Not allowed!');
+        if (!file_exists($file)) {
+            set_error_handler(static fn (): bool => true);
+            try {
+                file_put_contents($file, 'Not allowed!');
+            } finally {
+                restore_error_handler();
+            }
+        }
     }
     if (!is_writable($dir)) {
         return false;
@@ -311,7 +323,7 @@ function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $origina
 
     foreach (array_reverse($candidates) as $candidate) {
         $candidate_path = str_replace('-'.derivative_to_url($params->type), '-'.derivative_to_url($candidate->type), $ctx->derivativePath);
-        $candidate_mtime = @filemtime($candidate_path);
+        $candidate_mtime = \Piwigo\Core\Filesystem::tryFileMtime($candidate_path);
         if ($candidate_mtime === false
           || $candidate_mtime < $original_mtime
           || $candidate_mtime < $candidate->last_mod_time) {
@@ -419,13 +431,13 @@ ImageStdParams::load_from_db();
 $dpRaw = parse_request($ctx);
 $params = trigger_change('derivative_params_get', $dpRaw);
 
-$src_mtime = @filemtime($ctx->srcPath);
+$src_mtime = \Piwigo\Core\Filesystem::tryFileMtime($ctx->srcPath);
 if ($src_mtime === false) {
     ierror('Source not found', 404);
 }
 
 $need_generate = false;
-$derivative_mtime = @filemtime($ctx->derivativePath);
+$derivative_mtime = \Piwigo\Core\Filesystem::tryFileMtime($ctx->derivativePath);
 if ($derivative_mtime === false or
     $derivative_mtime < $src_mtime or
     $derivative_mtime < $params->last_mod_time) {
@@ -506,7 +518,9 @@ if (!mkgetdir(dirname($ctx->derivativePath))) {
 }
 
 ignore_user_abort(true);
-@set_time_limit(0);
+if (function_exists('set_time_limit')) {
+    set_time_limit(0);
+}
 
 $image = new PwgImage($ctx->srcPath);
 $timing['load'] = time_step($step);
@@ -603,7 +617,7 @@ if (in_array($ctx->derivativeType, [IMG_4XLARGE, IMG_3XLARGE])) {
 
 $image->write($ctx->derivativePath);
 $image->destroy();
-@chmod($ctx->derivativePath, 0644);
+\Piwigo\Core\Filesystem::tryChmod($ctx->derivativePath, 0644);
 $timing['save'] = time_step($step);
 
 send_derivative($expires, $ctx);

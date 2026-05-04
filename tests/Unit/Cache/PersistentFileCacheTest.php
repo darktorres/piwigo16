@@ -42,8 +42,8 @@ final class PersistentFileCacheTest extends TestCase
         foreach (glob($this->cacheDir . '*.cache') ?: [] as $f) {
             unlink($f);
         }
-        @rmdir($this->cacheDir);
-        @rmdir($this->tmpRoot);
+        \Piwigo\Core\Filesystem::tryRmdir($this->cacheDir);
+        \Piwigo\Core\Filesystem::tryRmdir($this->tmpRoot);
     }
 
     public function test_get_returns_false_for_missing_key(): void

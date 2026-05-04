@@ -190,7 +190,7 @@ SELECT COUNT(*)
         $updates['name'] = $params['name'];
     }
 
-    if (!empty($params['is_default']) or @$params['is_default'] === false) {
+    if (!empty($params['is_default']) or ($params['is_default'] ?? null) === false) {
         $is_default_upd = $params['is_default'];
         $updates['is_default'] = boolean_to_string(is_bool($is_default_upd) ? $is_default_upd : (is_string($is_default_upd) ? $is_default_upd : ''));
     }

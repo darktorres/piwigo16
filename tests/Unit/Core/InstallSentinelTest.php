@@ -19,7 +19,9 @@ final class InstallSentinelTest extends TestCase
         // tests/bootstrap.php sets test mode → InstallSentinel uses
         // local/.installed.test instead of local/.installed.
         $this->stampPath = PHPWG_ROOT_PATH . 'local/.installed.test';
-        @mkdir(dirname($this->stampPath), 0o755, true);
+        if (!is_dir(dirname($this->stampPath))) {
+            mkdir(dirname($this->stampPath), 0o755, true);
+        }
         InstallSentinel::markUninstalled();
     }
 

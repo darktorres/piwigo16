@@ -105,7 +105,7 @@ foreach ($pictures as $row) {
     );
 
     if (isset($nb_comments_of)) {
-        $row['NB_COMMENTS'] = $row['nb_comments'] = (int)@$nb_comments_of[$row['id']];
+        $row['NB_COMMENTS'] = $row['nb_comments'] = (int) ($nb_comments_of[$row['id']] ?? 0);
     }
 
     $name = render_element_name($row);

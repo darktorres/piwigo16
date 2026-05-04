@@ -38,7 +38,7 @@ final class SrcImage
         $fileRaw = $infos['file'] ?? '';
         $file = is_scalar($fileRaw) ? (string) $fileRaw : '';
         $ext = strtolower(get_extension($path));
-        $infos['file_ext'] = @strtolower(get_extension($file));
+        $infos['file_ext'] = strtolower(get_extension($file));
         $infos['path_ext'] = $ext;
         if (in_array($ext, \Piwigo\Config\Config::pictureExtensions())) {
             $this->rel_path = $path;
@@ -51,15 +51,20 @@ final class SrcImage
             $triggerResult = trigger_change('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
             $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = @getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
+            if (($size = pwg_safe_getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
-                $size = getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
+                $size = pwg_safe_getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
-            $this->size = $size !== false ? [(int) $size[0], (int) $size[1]] : null;
+            if ($size === false) {
+                $this->size = null;
+            } else {
+                $w = $size[0]; $h = $size[1];
+                $this->size = [is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0), is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0)];
+            }
         }
 
         if (!$this->size) {
@@ -129,10 +134,13 @@ final class SrcImage
             // giving up. Covers e.g. the dupe-image upload path where the
             // returning record only carries id, not width/height.
             $path = $this->get_path();
-            if (is_readable($path) && ($size = @getimagesize($path)) !== false) {
-                $this->size = [$size[0], $size[1]];
+            if (is_readable($path) && ($size = pwg_safe_getimagesize($path)) !== false) {
+                $w = $size[0]; $h = $size[1];
+                $wi = is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0);
+                $hi = is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0);
+                $this->size = [$wi, $hi];
                 if ($this->id !== 0) {
-                    pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$size[0].', height='.$size[1].' WHERE id='.$this->id);
+                    pwg_query('UPDATE '.IMAGES_TABLE.' SET width='.$wi.', height='.$hi.' WHERE id='.$this->id);
                 }
                 return $this->size;
             }

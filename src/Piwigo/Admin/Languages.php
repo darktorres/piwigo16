@@ -173,7 +173,7 @@ UPDATE '.USER_INFOS_TABLE.'
             }
         }
         closedir($dir);
-        @uasort($this->fs_languages, name_compare(...));
+        uasort($this->fs_languages, name_compare(...));
     }
 
     public function get_db_languages(): void
@@ -208,10 +208,7 @@ UPDATE '.USER_INFOS_TABLE.'
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = @unserialize($result)) {
-            if (!is_array($pem_versions)) {
-                return false;
-            }
+        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -261,8 +258,8 @@ UPDATE '.USER_INFOS_TABLE.'
         }
 
         if (fetchRemote($url, $result, $get_data)) {
-            $pem_languages = @unserialize($result);
-            if (!is_array($pem_languages)) {
+            $pem_languages = safe_unserialize($result);
+            if ($pem_languages === []) {
                 return false;
             }
             foreach ($pem_languages as $language) {
@@ -275,7 +272,7 @@ UPDATE '.USER_INFOS_TABLE.'
                     $this->server_languages[$langExtId] = $language;
                 }
             }
-            @uasort($this->server_languages, function (mixed $a, mixed $b): int {
+            uasort($this->server_languages, function (mixed $a, mixed $b): int {
                 return $this->extension_name_compare($a, $b);
             });
             return true;
@@ -298,7 +295,7 @@ UPDATE '.USER_INFOS_TABLE.'
               'origin' => 'piwigo_'.$action,
             ];
 
-            $handle = @fopen($archive, 'wb');
+            $handle = \Piwigo\Core\Filesystem::tryFopen($archive, 'wb');
             $fh = $handle;
             if (is_resource($fh) && fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
@@ -374,7 +371,7 @@ UPDATE '.USER_INFOS_TABLE.'
                                         $logger->debug(__FUNCTION__.', to delete = '.$path);
 
                                         if (is_file($path)) {
-                                            @unlink($path);
+                                            \Piwigo\Core\Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
                                             deltree($path, PHPWG_ROOT_PATH.'language/trash');
                                         }
@@ -400,7 +397,7 @@ UPDATE '.USER_INFOS_TABLE.'
         }
 
         if (is_string($archive)) {
-            @unlink($archive);
+            \Piwigo\Core\Filesystem::tryUnlink($archive);
         }
         return $status;
     }

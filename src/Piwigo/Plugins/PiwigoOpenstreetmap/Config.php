@@ -53,7 +53,7 @@ final class Config
     {
         $raw = PiwigoConfig::all()['osm_conf'] ?? [];
         if (is_string($raw) && $raw !== '') {
-            $raw = @unserialize($raw);
+            $raw = safe_unserialize($raw);
         }
         if (!is_array($raw)) {
             return [];

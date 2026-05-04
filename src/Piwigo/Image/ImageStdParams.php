@@ -98,7 +98,7 @@ final class ImageStdParams
         $key = [];
         $params->add_url_tokens($key);
         $key = implode('_', $key);
-        if (@self::$custom[$key] < time() - 24 * 3600) {
+        if ((self::$custom[$key] ?? 0) < time() - 24 * 3600) {
             self::$custom[$key] = time();
             self::save();
         }
@@ -118,8 +118,9 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        $arr = @unserialize(\Piwigo\Config\Config::derivatives() ?? '');
-        if (is_array($arr)) {
+        $derivatives = \Piwigo\Config\Config::derivatives();
+        $arr = \safe_unserialize(is_string($derivatives) ? $derivatives : '');
+        if ($arr !== []) {
             $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
             $typeMap = [];
             foreach ($typeMapRaw as $k => $v) {

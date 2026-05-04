@@ -166,10 +166,10 @@ $http_headers = array();
 
 $ctype = null;
 if (!url_is_remote($file)) {
-    if (!@is_readable($file)) {
+    if (!is_readable($file)) {
         do_error(404, "Requested file not found - $file");
     }
-    $http_headers[] = 'Content-Length: '.@filesize($file);
+    $http_headers[] = 'Content-Length: '.filesize($file);
     if (function_exists('mime_content_type')) {
         $ctype = mime_content_type($file);
     }
@@ -212,7 +212,9 @@ foreach ($http_headers as $header) {
 
 // Looking at the safe_mode configuration for execution time
 if (ini_get('safe_mode') == 0) {
-    @set_time_limit(0);
+    if (function_exists('set_time_limit')) {
+        set_time_limit(0);
+    }
 }
 
 // Without clean and flush there may be some image download problems, or image can be corrupted after download
@@ -221,4 +223,4 @@ if (ob_get_length() !== false) {
 }
 flush();
 
-@readfile($file);
+readfile($file);

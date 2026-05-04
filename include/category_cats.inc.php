@@ -113,9 +113,10 @@ SELECT representative_picture_id
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-        $subresult = pwg_query($query);
-        if (pwg_db_num_rows($subresult) > 0) {
-            [$image_id] = pwg_db_fetch_row($subresult) ?? [null];
+        $subval = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchOne();
+        if ($subval !== false) {
+            $image_id = is_numeric($subval) ? (int) $subval : null;
         }
     }
 
@@ -177,8 +178,8 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $image_ids).')
 ;';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        ->executeQuery($query)->fetchAllAssociative() as $row) {
         if ($row['level'] <= $user['level']) {
             $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
         } else {
@@ -216,8 +217,8 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $new_image_ids).')
 ;';
-        $result = pwg_query($query);
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            ->executeQuery($query)->fetchAllAssociative() as $row) {
             $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
         }
     }

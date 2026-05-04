@@ -664,16 +664,11 @@ function ws_images_search(array $params, \Piwigo\Ws\PwgServer $service): array
 
     if (count($image_ids)) {
         $image_ids_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $image_ids);
-        $query = '
-SELECT *
-  FROM '. IMAGES_TABLE .'
-  WHERE id IN ('. implode(',', $image_ids_int) .')
-;';
-        $result = pwg_query($query);
         $image_ids_flip = array_flip($image_ids_int);
         $favorite_ids = get_user_favorites();
 
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ->findByIds($image_ids_int) as $row) {
             $image = [];
             $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
             $image['is_favorite'] = $row_id !== '' && isset($favorite_ids[$row_id]);
@@ -1517,13 +1512,8 @@ function ws_images_addSimple(array $params, \Piwigo\Ws\PwgServer $service): PwgE
     if (!empty($p_category_as)) {
         $first_cat = $p_category_as[0] ?? null;
         $first_cat_id = is_numeric($first_cat) ? (int) $first_cat : 0;
-        $query = '
-SELECT id, name, permalink
-  FROM '. CATEGORIES_TABLE .'
-  WHERE id = '. $first_cat_id .'
-;';
-        $result = pwg_query($query);
-        $category = pwg_db_fetch_assoc($result);
+        $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+            ->findCategoryById((int) $first_cat_id);
 
         $url_params['section'] = 'categories';
         $url_params['category'] = $category;
@@ -2135,16 +2125,9 @@ SELECT
     $format_extensions = \Piwigo\Config\Config::formatExtensions();
     usort($format_extensions, fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
 
-    $query = '
-SELECT
-    image_id,
-    ext
-  FROM '.IMAGE_FORMAT_TABLE.'
-;';
-    $result = pwg_query($query);
     /** @var array<string, list<string>> $format_db */
     $format_db = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findAllFormats() as $row) {
         $format_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
         $format_ext_val = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
         $format_db[$format_image_id][] = $format_ext_val;

@@ -255,6 +255,25 @@ final class CategoryRepository extends AbstractRepository
         )->fetchAllAssociative();
     }
 
+    /**
+     * Return all columns for the given category ids.
+     *
+     * @param int[] $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
     /** Count images linked to the given category. */
     public function countImagesByCategoryId(int $catId): int
     {

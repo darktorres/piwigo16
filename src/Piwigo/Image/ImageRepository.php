@@ -73,6 +73,21 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return all (image_id, ext) rows from image_format.
+     * Used to build a map of alternate format extensions per image.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllFormats(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('image_id', 'ext')
+            ->from($this->table('image_format'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
      * Set the privacy level for the given image ids and return the number of affected rows.
      *
      * @param int[] $ids

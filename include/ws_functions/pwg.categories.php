@@ -1045,12 +1045,8 @@ SELECT *
     pwg_activity('album', $category_id, 'edit');
 
     // return url of the new representative
-    $query = '
-SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$category_id.'
-;';
-    $category = pwg_db_fetch_assoc(pwg_query($query));
+    $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findCategoryById($category_id);
 
     $rep_id = isset($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
     return get_category_representant_properties($rep_id, IMG_SMALL);
@@ -1175,8 +1171,8 @@ SELECT id, name, dir, uppercats
 ;';
     $parent_id = is_numeric($params['parent']) ? (int) $params['parent'] : 0;
 
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findByIds(array_map('intval', $category_ids)) as $row) {
         $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
         $categories_in_db[$row_id] = $row;
         $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
@@ -1233,9 +1229,8 @@ SELECT id, name, dir, uppercats
     WHERE id IN ('. implode(',', $category_ids) .')
   ;';
     $cat_display_name = '';
-    $result = pwg_query($query);
-    while ($row = pwg_db_fetch_assoc($result)) {
-        $uppercats_str = is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '';
+    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->findUppercatsByIds(array_map('intval', $category_ids)) as $uppercats_str) {
         $cat_display_name = get_cat_display_name_cache(
             $uppercats_str,
             'admin.php?page=album-'
@@ -1287,16 +1282,8 @@ SELECT
     $param_cat_id = is_array($param['category_id']) ? $param['category_id'] : [];
     $category_id = is_numeric($param_cat_id[0] ?? null) ? (int) $param_cat_id[0] : 0;
 
-    $query = '
-SELECT DISTINCT
-    category_id
-  FROM
-    '.IMAGE_CATEGORY_TABLE.'
-  WHERE
-    category_id = '.$category_id.'
-  LIMIT 1';
-    $result = pwg_query($query);
-    $category['has_images'] = pwg_db_num_rows($result) > 0 ? true : false;
+    $category['has_images'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ->hasCategoryImages($category_id);
 
     // number of sub-categories
     $subcat_ids = get_subcat_ids([$category_id]);

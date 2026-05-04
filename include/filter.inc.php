@@ -73,7 +73,7 @@ WHERE ';
         $query .= '
     date_available >= '.\Piwigo\Db\SqlExpr::recentPeriodExpr($filter['recent_period']);
 
-        $filter['visible_images'] = implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id')));
+        $filter['visible_images'] = implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id')));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty

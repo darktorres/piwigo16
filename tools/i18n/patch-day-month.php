@@ -70,21 +70,21 @@ foreach (scandir($langDir) ?: [] as $locale) {
     // Build PO entries to append
     $extra = '';
     foreach ($days as $idx => $name) {
-        $extra .= "msgid " . po_q("piwigo_day_{$idx}") . "\n";
-        $extra .= "msgstr " . po_q($name) . "\n";
+        $extra .= 'msgid ' . po_q("piwigo_day_{$idx}") . "\n";
+        $extra .= 'msgstr ' . po_q($name) . "\n";
         $extra .= "\n";
     }
     foreach ($months as $idx => $name) {
-        $extra .= "msgid " . po_q("piwigo_month_{$idx}") . "\n";
-        $extra .= "msgstr " . po_q($name) . "\n";
+        $extra .= 'msgid ' . po_q("piwigo_month_{$idx}") . "\n";
+        $extra .= 'msgstr ' . po_q($name) . "\n";
         $extra .= "\n";
     }
 
     if ($dryRun) {
-        echo "  [DRY] Would append " . (count($days) + count($months)) . " entries to $locale/common.po\n";
+        echo '  [DRY] Would append ' . (count($days) + count($months)) . " entries to $locale/common.po\n";
     } else {
         file_put_contents($poFile, $extra, FILE_APPEND);
-        echo "  OK: $locale — " . count($days) . " day + " . count($months) . " month entries added\n";
+        echo "  OK: $locale — " . count($days) . ' day + ' . count($months) . " month entries added\n";
     }
     $patched++;
 }

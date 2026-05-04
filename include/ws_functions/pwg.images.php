@@ -88,7 +88,7 @@ SELECT id
 ;';
     $db_cat_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 
-    $unknown_cat_ids = array_diff($cat_ids, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_cat_ids));
+    $unknown_cat_ids = array_diff($cat_ids, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_cat_ids));
     if (count($unknown_cat_ids) != 0) {
         return new PwgError(
             500,
@@ -104,14 +104,14 @@ SELECT category_id
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE image_id = '.$image_id.'
 ;';
-    $existing_cat_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id'));
+    $existing_cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id'));
 
     if ($replace_mode) {
         $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
         if (count($to_remove_cat_ids) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-                ->removeImageFromCategories((int) $image_id, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
-            update_category(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
+                ->removeImageFromCategories((int) $image_id, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
+            update_category(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $to_remove_cat_ids));
         }
     }
 

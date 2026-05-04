@@ -200,7 +200,7 @@ function insert_user_comment(array &$comm, string $key, array &$infos): string
             ->insert([
                 'author'      => is_scalar($comm['author']) ? (string) $comm['author'] : '',
                 'author_id'   => (int) $comm['author_id'],
-                'anonymous_id'=> is_scalar($comm['ip']) ? (string) $comm['ip'] : '',
+                'anonymous_id' => is_scalar($comm['ip']) ? (string) $comm['ip'] : '',
                 'content'     => is_scalar($comm['content']) ? (string) $comm['content'] : '',
                 'validated'   => $comment_action === 'validate',
                 'image_id'    => is_scalar($comm['image_id']) ? (int) $comm['image_id'] : 0,

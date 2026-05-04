@@ -448,7 +448,7 @@ SELECT id, path
     $insert_formats = [];
     $formats_to_delete = [];
 
-    foreach (array_diff(array_keys($fs), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements)) as $path) {
+    foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements)) as $path) {
         $insert = [];
         // storage category must exist
         $dirname = dirname((string) $path);
@@ -622,7 +622,7 @@ SELECT id, path
 
         if (count($formats_to_delete) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-                ->deleteFormatsByFormatIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
+                ->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
         }
     }
 
@@ -630,7 +630,7 @@ SELECT id, path
 
     // delete elements that are in database but not in the filesystem
     $to_delete_elements = [];
-    foreach (array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements), array_keys($fs)) as $path) {
+    foreach (array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements), array_keys($fs)) as $path) {
         $found = array_search($path, $db_elements);
         if ($found !== false) {
             $to_delete_elements[] = (int) $found;

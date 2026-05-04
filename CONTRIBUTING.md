@@ -123,12 +123,13 @@ to an array via a private `confArray()` helper; writes go through
 for the in-memory bridge.
 
 Existing examples:
-  - `Piwigo\Plugins\LocalFilesEditor\Config` — single string-list key
-  - `Piwigo\Plugins\NbcThemeChanger\Config` — semicolon-encoded list
-  - `Piwigo\Plugins\PiwigoOpenstreetmap\Config` — single deeply-nested
-    array stored serialized; section-level accessors
-  - `Piwigo\Plugins\PiwigoVideojs\Config` — five keys (player config,
-    sync probes, custom CSS, mediainfo/exiftool path overrides)
+
+- `Piwigo\Plugins\LocalFilesEditor\Config` — single string-list key
+- `Piwigo\Plugins\NbcThemeChanger\Config` — semicolon-encoded list
+- `Piwigo\Plugins\PiwigoOpenstreetmap\Config` — single deeply-nested
+  array stored serialized; section-level accessors
+- `Piwigo\Plugins\PiwigoVideojs\Config` — five keys (player config,
+  sync probes, custom CSS, mediainfo/exiftool path overrides)
 
 The PHPStan `ConfigKeyExistsRule` skips files under `src/Piwigo/Plugins/`
 since plugin Config classes legitimately call

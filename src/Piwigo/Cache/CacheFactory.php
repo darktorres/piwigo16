@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Config\Config;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\ChainAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Piwigo\Config\Config;
 
 /**
  * Creates PSR-6 cache pools for the requested (or configured) backend.

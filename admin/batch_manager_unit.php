@@ -233,7 +233,7 @@ SELECT *
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-    $added_by_ids = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
+    $added_by_ids = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
     if (count($added_by_ids) > 0) {
         $query = '
 SELECT
@@ -310,7 +310,7 @@ SELECT
     WHERE image_id = '.$row_id_str.'
     ;';
         $authorizeds = array_diff(
-            array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
+            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
             explode(
                 ',',
                 calculate_permissions($user['id'], $user['status'])

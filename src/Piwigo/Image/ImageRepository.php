@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Db\AbstractRepository;
-
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
@@ -570,7 +569,7 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('storage_category_id', ':ids'))
            ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**

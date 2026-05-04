@@ -76,7 +76,7 @@ if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
     $f = fopen('php://output', 'w');
     if ($f !== false) {
         foreach ($output_lines as $line) {
-            fputcsv($f, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $line), ';', '"', '\\');
+            fputcsv($f, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $line), ';', '"', '\\');
         }
         fclose($f);
     }

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Core\BoolUtil;
 
 class Themes
 {

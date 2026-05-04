@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Piwigo\Db\SqlExpr;
 use Piwigo\Config\Config;
+use Piwigo\Db\SqlExpr;
 
 /**
  * @package functions\calendar

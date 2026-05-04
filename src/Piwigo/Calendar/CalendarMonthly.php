@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Db\SqlExpr;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;

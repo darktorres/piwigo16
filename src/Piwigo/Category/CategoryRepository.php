@@ -471,7 +471,7 @@ final class CategoryRepository extends AbstractRepository
             ->where("status = 'private'");
         $qb->andWhere($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /** Count hidden (locked) albums (visible = 'false'). */
@@ -651,7 +651,7 @@ final class CategoryRepository extends AbstractRepository
             ->setParameter('siteId', $siteId)
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -670,7 +670,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('image_category'));
         $qb->where($qb->expr()->in('category_id', ':ids'))
            ->setParameter('ids', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**
@@ -693,7 +693,7 @@ final class CategoryRepository extends AbstractRepository
            ->andWhere($qb->expr()->notIn('category_id', ':catIds'))
            ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER)
            ->setParameter('catIds', $excludedCategoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**
@@ -712,7 +712,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('representative_picture_id', ':imageIds'))
            ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**
@@ -727,7 +727,7 @@ final class CategoryRepository extends AbstractRepository
              LEFT JOIN ' . $this->table('images') . ' i ON i.id = ic.image_id
              WHERE i.id IS NULL'
         )->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -858,13 +858,13 @@ final class CategoryRepository extends AbstractRepository
         if ($ids === []) {
             return [];
         }
-        $ids = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
+        $ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
         $qb = $this->conn->createQueryBuilder()
             ->select('uppercats')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
-        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $qb->executeQuery()->fetchFirstColumn());
     }
 
     /** Record a hit on an old permalink entry. */

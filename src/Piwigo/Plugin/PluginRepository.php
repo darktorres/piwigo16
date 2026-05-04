@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Plugin;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the plugin domain. */

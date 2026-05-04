@@ -717,7 +717,7 @@ SELECT
         $heights = $filter_rows;
 
         $height = [
-          'list' => implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $heights)),
+          'list' => implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $heights)),
           'bounds' => [
             'min' => $heights[0],
             'max' => end($heights),
@@ -763,7 +763,7 @@ SELECT
         $widths = $filter_rows;
 
         $width = [
-          'list' => implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $widths)),
+          'list' => implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $widths)),
           'bounds' => [
             'min' => $widths[0],
             'max' => end($widths),

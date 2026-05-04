@@ -265,13 +265,13 @@ causing an immediate fatal error.
 
 Voluntary migration to typed getters (use the FQN to avoid alias dependency):
 
-| Was                       | Now                                                      |
-| ------------------------- | -------------------------------------------------------- |
-| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                     |
-| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`         |
-| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`              |
+| Was                       | Now                                                        |
+| ------------------------- | ---------------------------------------------------------- |
+| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                       |
+| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`           |
+| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                |
 | `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request) |
-| `conf_update_param(...)`  | unchanged — still the right way to persist               |
+| `conf_update_param(...)`  | unchanged — still the right way to persist                 |
 
 ### Database layer
 
@@ -324,16 +324,16 @@ $data = $disk->read('MyPlugin/data.json');
 
 Available disks and their roots (configured in `config/storage.php`):
 
-| Disk          | Default root                        | Use for                              |
-| ------------- | ----------------------------------- | ------------------------------------ |
-| `uploads`     | `Config::uploadDir()`               | Original user photos                 |
-| `derivatives` | `_data/i/`                          | Thumbnails / resized variants        |
-| `watermarks`  | `local/watermarks/`                 | Watermark PNG files                  |
-| `themes`      | `themes/`                           | Theme assets                         |
-| `plugins`     | `plugins/`                          | Plugin data files                    |
-| `exports`     | `_data/exports/`                    | Generated export archives            |
-| `local`       | `local/`                            | Site-local overrides & uploads       |
-| `temp`        | `sys_get_temp_dir() . '/piwigo'`    | Scratch / chunk assembly             |
+| Disk          | Default root                     | Use for                        |
+| ------------- | -------------------------------- | ------------------------------ |
+| `uploads`     | `Config::uploadDir()`            | Original user photos           |
+| `derivatives` | `_data/i/`                       | Thumbnails / resized variants  |
+| `watermarks`  | `local/watermarks/`              | Watermark PNG files            |
+| `themes`      | `themes/`                        | Theme assets                   |
+| `plugins`     | `plugins/`                       | Plugin data files              |
+| `exports`     | `_data/exports/`                 | Generated export archives      |
+| `local`       | `local/`                         | Site-local overrides & uploads |
+| `temp`        | `sys_get_temp_dir() . '/piwigo'` | Scratch / chunk assembly       |
 
 The disk behind each name can be swapped to S3, SFTP, or any other
 Flysystem adapter by editing `config/storage.php` — plugin code does not

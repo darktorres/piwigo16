@@ -159,7 +159,7 @@ SELECT
     image_id,
     category_id
   FROM '.IMAGE_CATEGORY_TABLE.'
-  WHERE image_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)).')
+  WHERE image_id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)).')
     AND '.get_sql_condition_FandF(['forbidden_categories' => 'category_id'], null, true).'
 ;';
             foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
@@ -180,7 +180,7 @@ SELECT
     name,
     permalink
   FROM '. CATEGORIES_TABLE .'
-  WHERE id IN ('. implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) .')
+  WHERE id IN ('. implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) .')
 ;';
                 $details_for_category = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             }
@@ -462,7 +462,7 @@ SELECT representative_picture_id
 
         $thumbnail_size = is_scalar($params['thumbnail_size']) ? (string) $params['thumbnail_size'] : '';
         $imgRepoWsCats = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
-        foreach ($imgRepoWsCats->findByIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids)) as $row) {
+        foreach ($imgRepoWsCats->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids)) as $row) {
             if ($row['level'] <= $user['level']) {
                 $thumbnail_src_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnail_size, $row);
             } else {
@@ -1310,18 +1310,18 @@ SELECT DISTINCT
     AND 
       image_id 
     IN 
-      ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive)).')
+      ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive)).')
   ;';
 
-            $image_ids_associated_outside = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
+            $image_ids_associated_outside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
             $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
-            $image_ids_becoming_orphan = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), $image_ids_associated_outside);
+            $image_ids_becoming_orphan = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), $image_ids_associated_outside);
             $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
         }
         // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
         else {
-            $image_ids_recursive_keys = array_flip(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids_recursive));
+            $image_ids_recursive_keys = array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids_recursive));
 
             $query = '
   SELECT
@@ -1342,8 +1342,8 @@ SELECT DISTINCT
                 }
             }
 
-            $category['nb_images_associated_outside'] = count(array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan)));
-            $image_ids_becoming_orphan = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan));
+            $category['nb_images_associated_outside'] = count(array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan)));
+            $image_ids_becoming_orphan = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_recursive), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids_not_orphan));
             $category['nb_images_becoming_orphan'] = count($image_ids_becoming_orphan);
         }
     }

@@ -335,7 +335,7 @@ SELECT DISTINCT c.id
 
     if (count($wrong_representant) > 0) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-            ->clearRepresentatives(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $wrong_representant));
+            ->clearRepresentatives(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $wrong_representant));
     }
 
     if (!\Piwigo\Config\Config::allowRandomRepresentative()) {
@@ -350,7 +350,7 @@ SELECT DISTINCT id
   WHERE representative_picture_id IS NULL
     AND '.sprintf($where_cats, 'category_id').'
 ;';
-        $to_rand = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        $to_rand = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
         if (count($to_rand) > 0) {
             set_random_representant($to_rand);
         }
@@ -395,7 +395,7 @@ SELECT
     LEFT JOIN '.CATEGORIES_TABLE.' ON id = '.$column.'
   WHERE id IS NULL
 ;';
-        $orphans = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $column)));
+        $orphans = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $column)));
 
         if (count($orphans) > 0) {
             \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
@@ -714,7 +714,7 @@ SELECT '.$field.'
                 // step 3, remove the inconsistant permissions from sub-albums
                 \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
                     'DELETE FROM ' . $table . ' WHERE ' . $field .
-                    ' NOT IN (' . implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $ref_access)) . ')' .
+                    ' NOT IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $ref_access)) . ')' .
                     ' AND cat_id IN (' . implode(',', $subcats) . ')'
                 );
             }
@@ -960,13 +960,13 @@ function sync_users(): void
 SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
 ;';
-    $base_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+    $base_users = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
 
     $query = '
 SELECT user_id
   FROM '.USER_INFOS_TABLE.'
 ;';
-    $infos_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
+    $infos_users = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
 
     // users present in $base_users and not in $infos_users must be added
     $to_create = array_diff($base_users, $infos_users);
@@ -993,7 +993,7 @@ SELECT DISTINCT user_id
   FROM '.$table.'
 ;';
         $to_delete = array_diff(
-            array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id')),
+            array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id')),
             $base_users
         );
 
@@ -1272,7 +1272,7 @@ function create_virtual_category(string $category_name, int|string|null $parent_
       FROM '.USER_ACCESS_TABLE.'
       WHERE cat_id = '.$id_uppercat_str.'
     ;';
-        $granted_users = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
+        $granted_users = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id'));
         add_permission_on_category($inserted_id, $granted_users);
     } elseif ('private' == $insert['status']) {
         $userId = \Piwigo\Users\CurrentUser::get()->id;
@@ -1771,7 +1771,7 @@ SELECT id
 
     if (!empty($dissociables)) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-            ->deleteImageCategoryByCategoryAndImageIds((int) $category, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $dissociables));
+            ->deleteImageCategoryByCategoryAndImageIds((int) $category, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $dissociables));
     }
 
     return count($dissociables);
@@ -2887,7 +2887,7 @@ SELECT
 
     if (count($lounged_ids) > 0) {
         $query .= '
-    AND id NOT IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $lounged_ids)).')';
+    AND id NOT IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $lounged_ids)).')';
     }
 
     $query .= '
@@ -3080,11 +3080,11 @@ SELECT
   FROM '.IMAGES_TABLE.'
   LIMIT 5000
 ;';
-    $random_image_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+    $random_image_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
     shuffle($random_image_ids);
     $random_image_ids = array_slice($random_image_ids, 0, 50);
 
-    $fs_quick_check_ids = array_unique(array_merge(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $issue1827_ids), $random_image_ids));
+    $fs_quick_check_ids = array_unique(array_merge(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $issue1827_ids), $random_image_ids));
 
     if (count($fs_quick_check_ids) < 1) {
         return;

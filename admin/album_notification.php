@@ -233,7 +233,7 @@ SELECT
     id,
     name
   FROM `'.GROUPS_TABLE.'`
-  WHERE id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
   ORDER BY name ASC
 ;';
         $template->assign(
@@ -262,7 +262,7 @@ if ('private' == $category['status']) {
 SELECT
     user_id
   FROM '.USER_GROUP_TABLE.'
-  WHERE group_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
+  WHERE group_id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)).')
 ';
         $user_ids_access_indirect = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
     }
@@ -275,11 +275,11 @@ SELECT
 ;';
     $user_ids_access_direct = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
-    $user_ids_access = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_merge($user_ids_access_direct, $user_ids_access_indirect)));
+    $user_ids_access = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_merge($user_ids_access_direct, $user_ids_access_indirect)));
 
-    $user_ids = array_intersect($user_ids_access, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids));
+    $user_ids = array_intersect($user_ids_access, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids));
 } else {
-    $user_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids);
+    $user_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids);
 }
 
 if (count($user_ids) > 0) {

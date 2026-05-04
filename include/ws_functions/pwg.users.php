@@ -479,7 +479,7 @@ SELECT
 
     // protect some users
     $user_id_arr = is_array($params['user_id']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
-    $user_id_arr = array_diff($user_id_arr, array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $protected_users));
+    $user_id_arr = array_diff($user_id_arr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protected_users));
 
     $counter = 0;
 

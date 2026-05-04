@@ -35,7 +35,7 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
 
     $po = '';
     $po .= "# Piwigo translation — {$locale}\n";
-    $po .= "# Source: " . basename($phpFile) . "\n";
+    $po .= '# Source: ' . basename($phpFile) . "\n";
     $po .= "msgid \"\"\n";
     $po .= "msgstr \"\"\n";
     $po .= "\"Content-Type: text/plain; charset=UTF-8\\n\"\n";
@@ -80,10 +80,10 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
                 ? $lang[$pluralKey]
                 : $pluralKey;
 
-            $po .= "msgid " . po_quote_fn($msgid) . "\n";
-            $po .= "msgid_plural " . po_quote_fn($pluralKey) . "\n";
-            $po .= "msgstr[0] " . po_quote_fn($msgstrSingular) . "\n";
-            $po .= "msgstr[1] " . po_quote_fn($msgstrPlural) . "\n";
+            $po .= 'msgid ' . po_quote_fn($msgid) . "\n";
+            $po .= 'msgid_plural ' . po_quote_fn($pluralKey) . "\n";
+            $po .= 'msgstr[0] ' . po_quote_fn($msgstrSingular) . "\n";
+            $po .= 'msgstr[1] ' . po_quote_fn($msgstrPlural) . "\n";
             $po .= "\n";
 
             $emitted[$msgid]    = true;
@@ -98,8 +98,8 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
         }
 
         // Standalone entry
-        $po .= "msgid " . po_quote_fn($msgid) . "\n";
-        $po .= "msgstr " . po_quote_fn($msgstr) . "\n";
+        $po .= 'msgid ' . po_quote_fn($msgid) . "\n";
+        $po .= 'msgstr ' . po_quote_fn($msgstr) . "\n";
         $po .= "\n";
         $emitted[$msgid] = true;
     }

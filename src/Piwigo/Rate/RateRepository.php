@@ -27,7 +27,7 @@ final class RateRepository extends AbstractRepository
             ->setParameter('anonId', $anonId)
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -231,6 +231,6 @@ final class RateRepository extends AbstractRepository
              LEFT JOIN ' . $this->table('rate') . ' r ON i.id = r.element_id
              WHERE r.element_id IS NULL AND i.rating_score IS NOT NULL'
         )->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 }

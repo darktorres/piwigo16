@@ -214,7 +214,7 @@ SELECT
   FROM '.CATEGORIES_TABLE.'
   WHERE '.implode(' OR ', $cat_word_clauses).'
 ;';
-                $cat_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+                $cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
                 $cat_ids_by_word[$word] = $cat_ids;
                 if (count($cat_ids) > 0) {
                     $query = '
@@ -226,7 +226,7 @@ SELECT
                     $cat_image_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
                     if (count($cat_image_ids) > 0) {
-                        $field_clauses[] = 'id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_image_ids)).')';
+                        $field_clauses[] = 'id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_image_ids)).')';
                     }
                 }
             }
@@ -239,7 +239,7 @@ SELECT
   FROM '.TAGS_TABLE.'
   WHERE name LIKE \'%'.$word.'%\'
 ;';
-                $tag_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+                $tag_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
                 $tag_ids_by_word[$word] = $tag_ids;
                 if (count($tag_ids) > 0) {
                     $query = '
@@ -251,7 +251,7 @@ SELECT
                     $tag_image_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
                     if (count($tag_image_ids) > 0) {
-                        $field_clauses[] = 'id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $tag_image_ids)).')';
+                        $field_clauses[] = 'id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tag_image_ids)).')';
                     }
                 }
             }
@@ -1602,7 +1602,7 @@ function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QRe
         }
         if (!empty($clauses)) {
             $query = $query_base.'('.implode("\n OR ", $clauses).')';
-            $qsr->images_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+            $qsr->images_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
         }
     }
 }
@@ -1654,7 +1654,7 @@ function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResu
 SELECT image_id FROM '.IMAGE_TAG_TABLE.'
   WHERE tag_id IN ('.implode(',', $tag_ids).')
   GROUP BY image_id';
-            $qsr->tag_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
+            $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
@@ -1664,9 +1664,9 @@ SELECT image_id FROM '.IMAGE_TAG_TABLE.'
             }
         } elseif (isset($token->scope) && 'tag' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE)->fetchAllAssociative(), 'image_id'));
+                $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT image_id FROM '.IMAGE_TAG_TABLE)->fetchAllAssociative(), 'image_id'));
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_TAG_TABLE.' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
             }
         }
     }
@@ -1736,14 +1736,14 @@ SELECT
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id and user_id = '.$userId.'
   WHERE id IN ('.implode(',', get_subcat_ids($cat_ids)) .')
 ;';
-                $cat_ids = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+                $cat_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
             }
 
             $query = '
 SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id IN ('.implode(',', $cat_ids).')
   GROUP BY image_id';
-            $qsr->cat_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
+            $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'));
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
@@ -1753,9 +1753,9 @@ SELECT image_id FROM '.IMAGE_CATEGORY_TABLE.'
             }
         } elseif (isset($token->scope) && 'category' == $token->scope->id && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE)->fetchAllAssociative(), 'image_id'));
+                $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT image_id FROM '.IMAGE_CATEGORY_TABLE)->fetchAllAssociative(), 'image_id'));
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT id FROM '.IMAGES_TABLE.' LEFT JOIN '.IMAGE_CATEGORY_TABLE.' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
             }
         }
     }

@@ -54,7 +54,7 @@ $zeroPl     = !empty($lang_info['zero_plural']) ? 'true' : 'false';
 // PO header
 $po = '';
 $po .= "# Piwigo translation — {$locale}\n";
-$po .= "# Source: " . basename($sourceFile) . "\n";
+$po .= '# Source: ' . basename($sourceFile) . "\n";
 $po .= "msgid \"\"\n";
 $po .= "msgstr \"\"\n";
 $po .= "\"Content-Type: text/plain; charset=UTF-8\\n\"\n";
@@ -104,10 +104,10 @@ foreach ($lang as $msgid => $msgstr) {
             ? $lang[$pluralKey]
             : $pluralKey;
 
-        $po .= "msgid " . po_quote($msgid) . "\n";
-        $po .= "msgid_plural " . po_quote($pluralKey) . "\n";
-        $po .= "msgstr[0] " . po_quote($msgstrSingular) . "\n";
-        $po .= "msgstr[1] " . po_quote($msgstrPlural) . "\n";
+        $po .= 'msgid ' . po_quote($msgid) . "\n";
+        $po .= 'msgid_plural ' . po_quote($pluralKey) . "\n";
+        $po .= 'msgstr[0] ' . po_quote($msgstrSingular) . "\n";
+        $po .= 'msgstr[1] ' . po_quote($msgstrPlural) . "\n";
         $po .= "\n";
 
         $emitted[$msgid] = true;
@@ -129,8 +129,8 @@ foreach ($lang as $msgid => $msgstr) {
     }
 
     // Standalone entry
-    $po .= "msgid " . po_quote($msgid) . "\n";
-    $po .= "msgstr " . po_quote($msgstr) . "\n";
+    $po .= 'msgid ' . po_quote($msgid) . "\n";
+    $po .= 'msgstr ' . po_quote($msgstr) . "\n";
     $po .= "\n";
     $emitted[$msgid] = true;
 }

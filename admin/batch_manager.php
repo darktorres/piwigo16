@@ -380,14 +380,14 @@ SELECT id
                 $query = '
  SELECT DISTINCT(image_id)
    FROM '.IMAGE_CATEGORY_TABLE.'
-   WHERE category_id IN ('.implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)).')
+   WHERE category_id IN ('.implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)).')
  ;';
                 $linked_to_virtual = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
             }
 
             $filter_sets[] = array_diff(
-                array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements),
-                array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual)
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements),
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual)
             );
 
             break;

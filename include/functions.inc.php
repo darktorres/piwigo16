@@ -530,7 +530,7 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
 
             // alter history table structure, to include a new section
             \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
-                "ALTER TABLE " . HISTORY_TABLE . " CHANGE section section enum('" .
+                'ALTER TABLE ' . HISTORY_TABLE . " CHANGE section section enum('" .
                 implode("','", array_unique($history_sections)) . "') DEFAULT NULL"
             );
 
@@ -1175,7 +1175,7 @@ SELECT element_id
 ;';
     $in_caddie = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'element_id');
 
-    $caddiables = array_diff($elements_id, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $in_caddie));
+    $caddiables = array_diff($elements_id, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $in_caddie));
 
     $datas = [];
 

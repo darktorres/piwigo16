@@ -7,8 +7,8 @@ namespace Piwigo\Lang;
 use Gettext\Generator\ArrayGenerator;
 use Gettext\Loader\PoLoader;
 use Gettext\Translation;
-use Gettext\Translator as GettextTranslator;
 use Gettext\Translations;
+use Gettext\Translator as GettextTranslator;
 
 /**
  * Piwigo translation service backed by gettext PO files.

@@ -60,7 +60,7 @@ final class ThemeRepository extends AbstractRepository
             ->setParameter('theme', $theme)
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**

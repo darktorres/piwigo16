@@ -7,11 +7,7 @@ import { attachMonitor } from './helpers/page-monitor';
 test('upload photo page loads via admin.php', async ({ page }) => {
     const monitor = attachMonitor(page);
     await loginAsAdmin(page);
-    await gotoOk(
-        page,
-        pwgUrl('/admin.php?page=photos_add&tab=direct'),
-        'photos_add tab=direct'
-    );
+    await gotoOk(page, pwgUrl('/admin.php?page=photos_add&tab=direct'), 'photos_add tab=direct');
     monitor.assertClean('photos_add tab=direct');
 });
 

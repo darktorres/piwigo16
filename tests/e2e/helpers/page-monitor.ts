@@ -92,16 +92,12 @@ export function attachMonitor(page: Page): PageMonitor {
                 );
             }
             if (consoleErrors.length > 0) {
-                parts.push(
-                    `console.error×${consoleErrors.length}: ` + consoleErrors.join(' | ')
-                );
+                parts.push(`console.error×${consoleErrors.length}: ` + consoleErrors.join(' | '));
             }
             if (failedRequests.length > 0) {
                 parts.push(
                     `http-fail×${failedRequests.length}: ` +
-                        failedRequests
-                            .map((r) => `${r.method} ${r.status} ${r.url}`)
-                            .join(' | ')
+                        failedRequests.map((r) => `${r.method} ${r.status} ${r.url}`).join(' | ')
                 );
             }
             if (parts.length > 0) {

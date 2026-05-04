@@ -66,9 +66,16 @@ export async function loginAsAdmin(page: Page): Promise<void> {
     ]);
 
     if (outcome === 'error-block' || outcome === 'invalid-text') {
-        const errText = (await errorBlock.first().textContent().catch(() => null))
-            ?? (await invalidText.first().textContent().catch(() => null))
-            ?? '(no error text captured)';
+        const errText =
+            (await errorBlock
+                .first()
+                .textContent()
+                .catch(() => null)) ??
+            (await invalidText
+                .first()
+                .textContent()
+                .catch(() => null)) ??
+            '(no error text captured)';
         throw new Error(
             `loginAsAdmin: server rejected credentials. Form error: "${errText.trim()}". ` +
                 `Username='${TEST_DATA.admin.username}'. Check tests/e2e/helpers/test-data.ts.`
@@ -79,7 +86,12 @@ export async function loginAsAdmin(page: Page): Promise<void> {
         // the form POST hung or returned a 500 with no body. Surface the
         // current URL and any visible body text to help debugging.
         const here = page.url();
-        const bodyExcerpt = (await page.locator('body').textContent().catch(() => null))
+        const bodyExcerpt = (
+            await page
+                .locator('body')
+                .textContent()
+                .catch(() => null)
+        )
             ?.replace(/\s+/g, ' ')
             .trim()
             .slice(0, 300);

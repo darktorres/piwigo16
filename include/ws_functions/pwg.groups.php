@@ -285,8 +285,8 @@ SELECT user_id
     $user_in_dest = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
     $user_to_add = array_diff(
-        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_merge_groups),
-        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_dest)
+        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_merge_groups),
+        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_in_dest)
     );
 
     $inserts = [];

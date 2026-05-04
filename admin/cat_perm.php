@@ -246,7 +246,7 @@ if (count($group_granted_ids) > 0) {
     $granted_groups = [];
 
     foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
-        ->findUserGroupMembersByGroupIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
+        ->findUserGroupMembersByGroupIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
         $row_group_id = is_scalar($row['group_id']) ? (string) $row['group_id'] : '';
         if (!isset($granted_groups[$row_group_id])) {
             $granted_groups[$row_group_id] = [];
@@ -264,7 +264,7 @@ if (count($group_granted_ids) > 0) {
 
     $user_granted_indirect_ids = array_diff(
         $user_granted_by_group_ids,
-        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $user_granted_direct_ids)
+        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $user_granted_direct_ids)
     );
 
     $template->assign('nb_users_granted_indirect', count($user_granted_indirect_ids));

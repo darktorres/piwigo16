@@ -287,4 +287,3 @@ function protect_column_name(string $column_name): string
     }
     return $column_name;
 }
-

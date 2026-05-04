@@ -5,31 +5,31 @@ declare(strict_types=1);
 use function DI\factory;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
+use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
-use Piwigo\Group\GroupRepository;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Auth\AuthKeyRepository;
-use Piwigo\Feed\FeedRepository;
-use Piwigo\Language\LanguageRepository;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Permalink\PermalinkRepository;
-use Piwigo\Site\SiteRepository;
-use Piwigo\Theme\ThemeRepository;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
+use Piwigo\Feed\FeedRepository;
+use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Lang\Translator;
+use Piwigo\Language\LanguageRepository;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
-use Piwigo\Lang\Translator;
+use Piwigo\Site\SiteRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -51,24 +51,24 @@ return [
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
-    TagRepository::class          => factory(static fn (Connection $conn): TagRepository          => new TagRepository($conn, Config::dbPrefix())),
-    CommentRepository::class      => factory(static fn (Connection $conn): CommentRepository      => new CommentRepository($conn, Config::dbPrefix())),
-    SearchRepository::class       => factory(static fn (Connection $conn): SearchRepository       => new SearchRepository($conn, Config::dbPrefix())),
-    CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository     => new CategoryRepository($conn, Config::dbPrefix())),
-    ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository        => new ImageRepository($conn, Config::dbPrefix())),
-    UserRepository::class         => factory(static fn (Connection $conn): UserRepository         => new UserRepository($conn, Config::dbPrefix())),
-    PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository       => new PluginRepository($conn, Config::dbPrefix())),
-    HistoryRepository::class      => factory(static fn (Connection $conn): HistoryRepository      => new HistoryRepository($conn, Config::dbPrefix())),
+    TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),
+    CommentRepository::class      => factory(static fn (Connection $conn): CommentRepository => new CommentRepository($conn, Config::dbPrefix())),
+    SearchRepository::class       => factory(static fn (Connection $conn): SearchRepository => new SearchRepository($conn, Config::dbPrefix())),
+    CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository => new CategoryRepository($conn, Config::dbPrefix())),
+    ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository => new ImageRepository($conn, Config::dbPrefix())),
+    UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),
+    PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository => new PluginRepository($conn, Config::dbPrefix())),
+    HistoryRepository::class      => factory(static fn (Connection $conn): HistoryRepository => new HistoryRepository($conn, Config::dbPrefix())),
     NotificationRepository::class => factory(static fn (Connection $conn): NotificationRepository => new NotificationRepository($conn, Config::dbPrefix())),
-    SessionRepository::class      => factory(static fn (Connection $conn): SessionRepository      => new SessionRepository($conn, Config::dbPrefix())),
-    RateRepository::class         => factory(static fn (Connection $conn): RateRepository         => new RateRepository($conn, Config::dbPrefix())),
-    GroupRepository::class        => factory(static fn (Connection $conn): GroupRepository        => new GroupRepository($conn, Config::dbPrefix())),
-    ThemeRepository::class        => factory(static fn (Connection $conn): ThemeRepository        => new ThemeRepository($conn, Config::dbPrefix())),
-    LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository     => new LanguageRepository($conn, Config::dbPrefix())),
-    PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository    => new PermalinkRepository($conn, Config::dbPrefix())),
-    PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository   => new PermissionRepository($conn, Config::dbPrefix())),
-    SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository         => new SiteRepository($conn, Config::dbPrefix())),
-    ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository     => new ActivityRepository($conn, Config::dbPrefix())),
-    AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository      => new AuthKeyRepository($conn, Config::dbPrefix())),
-    FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository         => new FeedRepository($conn, Config::dbPrefix())),
+    SessionRepository::class      => factory(static fn (Connection $conn): SessionRepository => new SessionRepository($conn, Config::dbPrefix())),
+    RateRepository::class         => factory(static fn (Connection $conn): RateRepository => new RateRepository($conn, Config::dbPrefix())),
+    GroupRepository::class        => factory(static fn (Connection $conn): GroupRepository => new GroupRepository($conn, Config::dbPrefix())),
+    ThemeRepository::class        => factory(static fn (Connection $conn): ThemeRepository => new ThemeRepository($conn, Config::dbPrefix())),
+    LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository => new LanguageRepository($conn, Config::dbPrefix())),
+    PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository => new PermalinkRepository($conn, Config::dbPrefix())),
+    PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository => new PermissionRepository($conn, Config::dbPrefix())),
+    SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository => new SiteRepository($conn, Config::dbPrefix())),
+    ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository => new ActivityRepository($conn, Config::dbPrefix())),
+    AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository => new AuthKeyRepository($conn, Config::dbPrefix())),
+    FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository => new FeedRepository($conn, Config::dbPrefix())),
 ];

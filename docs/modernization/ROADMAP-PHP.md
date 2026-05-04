@@ -80,21 +80,21 @@ All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been rename
 
 **Renames applied:**
 
-| Old | New |
-|---|---|
-| `Piwigo\Admin\plugins` | `Piwigo\Admin\Plugins` |
-| `Piwigo\Admin\themes` | `Piwigo\Admin\Themes` |
-| `Piwigo\Admin\languages` | `Piwigo\Admin\Languages` |
-| `Piwigo\Admin\tabsheet` | `Piwigo\Admin\Tabsheet` |
-| `Piwigo\Admin\updates` | `Piwigo\Admin\Updates` |
-| `Piwigo\Admin\DummyPlugin_maintain` | `Piwigo\Admin\DummyPluginMaintain` |
-| `Piwigo\Admin\DummyTheme_maintain` | `Piwigo\Admin\DummyThemeMaintain` |
-| `Piwigo\Admin\Image\pwg_image` | `Piwigo\Admin\Image\PwgImage` |
-| `Piwigo\Admin\Image\image_gd` | `Piwigo\Admin\Image\ImageGd` |
-| `Piwigo\Admin\Image\image_imagick` | `Piwigo\Admin\Image\ImageImagick` |
-| `Piwigo\Admin\Image\image_ext_imagick` | `Piwigo\Admin\Image\ImageExtImagick` |
-| `Piwigo\Admin\Image\imageInterface` | `Piwigo\Admin\Image\ImageInterface` |
-| `Piwigo\Admin\Integrity\c13y_internal` | `Piwigo\Admin\Integrity\C13yInternal` |
+| Old                                      | New                                     |
+| ---------------------------------------- | --------------------------------------- |
+| `Piwigo\Admin\plugins`                   | `Piwigo\Admin\Plugins`                  |
+| `Piwigo\Admin\themes`                    | `Piwigo\Admin\Themes`                   |
+| `Piwigo\Admin\languages`                 | `Piwigo\Admin\Languages`                |
+| `Piwigo\Admin\tabsheet`                  | `Piwigo\Admin\Tabsheet`                 |
+| `Piwigo\Admin\updates`                   | `Piwigo\Admin\Updates`                  |
+| `Piwigo\Admin\DummyPlugin_maintain`      | `Piwigo\Admin\DummyPluginMaintain`      |
+| `Piwigo\Admin\DummyTheme_maintain`       | `Piwigo\Admin\DummyThemeMaintain`       |
+| `Piwigo\Admin\Image\pwg_image`           | `Piwigo\Admin\Image\PwgImage`           |
+| `Piwigo\Admin\Image\image_gd`            | `Piwigo\Admin\Image\ImageGd`            |
+| `Piwigo\Admin\Image\image_imagick`       | `Piwigo\Admin\Image\ImageImagick`       |
+| `Piwigo\Admin\Image\image_ext_imagick`   | `Piwigo\Admin\Image\ImageExtImagick`    |
+| `Piwigo\Admin\Image\imageInterface`      | `Piwigo\Admin\Image\ImageInterface`     |
+| `Piwigo\Admin\Integrity\c13y_internal`   | `Piwigo\Admin\Integrity\C13yInternal`   |
 | `Piwigo\Admin\Integrity\check_integrity` | `Piwigo\Admin\Integrity\CheckIntegrity` |
 
 `rector.php`'s `RenameClassRector` map keeps the legacy unqualified names as **keys** pointing to the new FQN values, so any leftover bare reference (e.g. inside an out-of-tree plugin) gets rewritten correctly when rector is run on it. No `src/Piwigo/Compat/aliases.php` shim is needed — first-party code is fully migrated.
@@ -225,7 +225,7 @@ was actually exercised end-to-end:
 - `pwg_password_hash` / `pwg_password_verify` / `phpass_verify` deleted.
   `Config::passwordHash()` / `Config::passwordVerify()` accessors and
   their SCHEMA entries deleted. All callsites use native `password_hash($pw,
-  PASSWORD_BCRYPT)` and `password_verify($pw, $hash)` directly. Legacy
+PASSWORD_BCRYPT)` and `password_verify($pw, $hash)` directly. Legacy
   `$P$` phpass support intentionally dropped (modernization upgrade
   floor is 16.x; users with phpass hashes need a password reset).
 - 4 bundled plugins get per-plugin typed Config classes under
@@ -309,7 +309,7 @@ runs (none of which actually invoke `Plugins::perform_action('activate', …)`):
   signatures.**~~ `include/functions_plugins.inc.php` defined a second
   root-namespace `\PluginMaintain` (and `\ThemeMaintain`) with typed `: void`
   return signatures. Vendor plugins do `class foo_maintain extends
-  PluginMaintain` with no namespace prefix, so they extended the legacy
+PluginMaintain` with no namespace prefix, so they extended the legacy
   duplicate — not the relaxed `\Piwigo\Admin\PluginMaintain` from the
   PSR-4 layout. Result: every OO vendor plugin (piwigo-openstreetmap,
   piwigo-videojs) fataled at file-load with an LSP signature mismatch.
@@ -360,7 +360,7 @@ want them, not held against #5:
 7. No `MissingRequiredConfigException`, no `'required' => true` SCHEMA
    field (Plan Step 4 step 5).
 8. No `'description'` or `'sensitive'` SCHEMA fields. `docs/config-
-   reference.md` therefore has no descriptions, and there's no
+reference.md` therefore has no descriptions, and there's no
    sensitive-masking for logging.
 9. `Config::dumpForLog(): array` (sensitive-masked) listed in Plan
    Step 2 — doesn't exist.
@@ -461,7 +461,7 @@ Themes don't touch `$conf` and need no Config class. Extension code that lives i
 - `Config::register()` runtime extension API: rejected. Plugins ship their own typed Config class instead — symmetric with how Piwigo's Config is structured. Considered three workarounds and rejected each:
   - Magic `__callStatic`: breaks PHPStan/IDE/autocomplete entirely.
   - Eval / write-PHP-on-activation: filesystem writes from activation hooks are fragile and break read-only deployments.
-  - Build-time aggregation that scans plugins/*/schema.php and bakes plugin keys into Piwigo's Config.php: tightly couples core to the installed plugin set, breaks the "ship Piwigo as an immutable artifact" deployment story.
+  - Build-time aggregation that scans plugins/\*/schema.php and bakes plugin keys into Piwigo's Config.php: tightly couples core to the installed plugin set, breaks the "ship Piwigo as an immutable artifact" deployment story.
 - AST-harvest schema generation: rejected. Hand-written SCHEMA constant is more honest about what metadata we want to carry (`sensitive`, `env`, `description` aren't expressible from accessor signatures alone). The CI guard covers the drift risk.
 - Splitting into 5a/5b: rejected. One coherent shipment — strict mode, PHPStan rule, and the per-plugin Config pattern all depend on SCHEMA being the canonical surface, no benefit from staging.
 
@@ -516,25 +516,25 @@ Zero function-internal `global $x;` declarations anywhere in `src/`, `include/`,
 
 **Tier 1 — 5 typed-class refactors (33 function-internal sites)**
 
-| New class | Sites removed | Variables replaced |
-|---|---|---|
-| `Piwigo\Plugins\EventDispatcher` | 4 | `$pwg_event_handlers` |
-| `Piwigo\Plugins\LoadedPluginRegistry` | 4 | `$pwg_loaded_plugins` |
-| `Piwigo\Notification\MailNotificationContext` | 13 | `$env_nbm` |
-| `Piwigo\Cache\RequestCache` | 5 | `$cache` |
-| `Piwigo\Core\PageState::addKeyedError` | 5 | `$page['errors']['key']` in `password.php` |
-| `Piwigo\Image\ImageDerivativeContext` | 3 | `$page` in `i.php` derivative pipeline |
+| New class                                     | Sites removed | Variables replaced                         |
+| --------------------------------------------- | ------------- | ------------------------------------------ |
+| `Piwigo\Plugins\EventDispatcher`              | 4             | `$pwg_event_handlers`                      |
+| `Piwigo\Plugins\LoadedPluginRegistry`         | 4             | `$pwg_loaded_plugins`                      |
+| `Piwigo\Notification\MailNotificationContext` | 13            | `$env_nbm`                                 |
+| `Piwigo\Cache\RequestCache`                   | 5             | `$cache`                                   |
+| `Piwigo\Core\PageState::addKeyedError`        | 5             | `$page['errors']['key']` in `password.php` |
+| `Piwigo\Image\ImageDerivativeContext`         | 3             | `$page` in `i.php` derivative pipeline     |
 
 `add_event_handler()`, `trigger_change/notify()`, `set/get_plugin_data()`, `load_plugin/plugins()` kept as thin wrappers — third-party plugins work unchanged. `$GLOBALS['pwg_event_handlers']` and `$GLOBALS['pwg_loaded_plugins']` reference-bridged for plugins that read the globals directly.
 
 **Tier 2 — LanguageStack + redirect_html (16 function-internal sites)**
 
-| New class / change | Sites removed | Variables replaced |
-|---|---|---|
-| `Piwigo\Core\LanguageStack` | 13 | `$lang`, `$lang_info`, `$language_files`, `$switch_lang` |
-| `Lang::day(int)` / `Lang::month(int)` added | 1 | `$lang['day'][$dow]` in `format_date_legacy` |
-| `redirect_html` (Tier 2.2) | 5 | `$lang_info`, `$template`, `$t2`, `$debug`, `$user`, `$lang`, `$page` |
-| `$conf_mail` (caught in audit) | 1 | Inlined to `Config::` calls + `RequestCache` template cache |
+| New class / change                          | Sites removed | Variables replaced                                                    |
+| ------------------------------------------- | ------------- | --------------------------------------------------------------------- |
+| `Piwigo\Core\LanguageStack`                 | 13            | `$lang`, `$lang_info`, `$language_files`, `$switch_lang`              |
+| `Lang::day(int)` / `Lang::month(int)` added | 1             | `$lang['day'][$dow]` in `format_date_legacy`                          |
+| `redirect_html` (Tier 2.2)                  | 5             | `$lang_info`, `$template`, `$t2`, `$debug`, `$user`, `$lang`, `$page` |
+| `$conf_mail` (caught in audit)              | 1             | Inlined to `Config::` calls + `RequestCache` template cache           |
 
 `LanguageStack` reads/writes `$GLOBALS['lang']` and `$GLOBALS['lang_info']` in-place (not by rebinding) to preserve the `Lang::attachGlobals()` reference bridge. Push-down stack state (`$stack`, `$saved`) is held in private static properties — no `$switch_lang` global.
 
@@ -588,12 +588,12 @@ Resolve or formally defer all `TODO`/`FIXME` markers in tracked PHP files.
 
 All 18 remaining markers resolved in one pass:
 
-| Disposition | Count | Examples |
-|---|---|---|
-| **Deleted** — already implemented or dead | 5 | Past-due 2022 `rank`-keyword DB shim; cookie-validation TODO whose check was already on the next line; external-script URL note; `//TODO maybe later` on image_access_type |
-| **Explained** — replaced with real comment | 4 | Imagick pre-scale condition; `convert_charset` fallback; stale 2.7 upgrade reference rewritten; `ORDER BY NULL` intent |
-| **DEFERRED** — real concern, no current owner | 6 | `Updates.php` plugin-era redirect target; search cat-id access gap; admin URL in gallery filter; category position persistence; stub `cache_size`; image_id/filename precedence |
-| **PERF** — performance note, not a bug | 2 | Redundant `get_available_tags()` call; all-rows-before-PHP-count in WS history |
+| Disposition                                   | Count | Examples                                                                                                                                                                        |
+| --------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deleted** — already implemented or dead     | 5     | Past-due 2022 `rank`-keyword DB shim; cookie-validation TODO whose check was already on the next line; external-script URL note; `//TODO maybe later` on image_access_type      |
+| **Explained** — replaced with real comment    | 4     | Imagick pre-scale condition; `convert_charset` fallback; stale 2.7 upgrade reference rewritten; `ORDER BY NULL` intent                                                          |
+| **DEFERRED** — real concern, no current owner | 6     | `Updates.php` plugin-era redirect target; search cat-id access gap; admin URL in gallery filter; category position persistence; stub `cache_size`; image_id/filename precedence |
+| **PERF** — performance note, not a bug        | 2     | Redundant `get_available_tags()` call; all-rows-before-PHP-count in WS history                                                                                                  |
 
 ### Verification
 
@@ -613,14 +613,14 @@ grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|instal
 
 `include/ws_core.inc.php` shrunk from 676 lines to 27 lines (constants only). The six class bodies (`PwgError`, `PwgNamedArray`, `PwgNamedStruct`, `PwgRequestHandler`, `PwgResponseEncoder`, `PwgServer`) were deleted; `src/Piwigo/Ws/` is now the single authoritative source, loaded by Composer PSR-4 autoload.
 
-| Change | Detail |
-|---|---|
-| `include/ws_core.inc.php` | Class bodies stripped; only `define()` constants remain |
-| `src/Piwigo/Ws/PwgServer.php` | `setHandler()` made nullable (consistent with `setEncoder()`); properties private |
-| `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` | Dual `instanceof` guards collapsed to single namespaced check |
-| `src/Piwigo/Ws/Protocol/PwgRestEncoder.php` | Direct `->_content`/`->_itemName`/`->_xmlAttributes` replaced with `getContent()`/`getItemName()`/`getXmlAttributes()` |
-| `include/ws_protocols/rest_encoder.php` | Same getter migration; added `use Piwigo\Ws\PwgNamedArray` + `PwgNamedStruct` |
-| `ws.php` | Added `use Piwigo\Ws\PwgServer` |
+| Change                                         | Detail                                                                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `include/ws_core.inc.php`                      | Class bodies stripped; only `define()` constants remain                                                                |
+| `src/Piwigo/Ws/PwgServer.php`                  | `setHandler()` made nullable (consistent with `setEncoder()`); properties private                                      |
+| `src/Piwigo/Ws/Encoder/PwgResponseEncoder.php` | Dual `instanceof` guards collapsed to single namespaced check                                                          |
+| `src/Piwigo/Ws/Protocol/PwgRestEncoder.php`    | Direct `->_content`/`->_itemName`/`->_xmlAttributes` replaced with `getContent()`/`getItemName()`/`getXmlAttributes()` |
+| `include/ws_protocols/rest_encoder.php`        | Same getter migration; added `use Piwigo\Ws\PwgNamedArray` + `PwgNamedStruct`                                          |
+| `ws.php`                                       | Added `use Piwigo\Ws\PwgServer`                                                                                        |
 
 Enum conversion of `WS_TYPE_*` / `WS_PARAM_*` constants deferred to task #19.
 
@@ -646,7 +646,7 @@ removed in eight tiered commits. Remaining count: **0**.
 Replacement patterns by tier:
 
 1. **Array / object key access (~110 sites).** `@$arr['k']` → `$arr['k']
-   ?? null`. Accumulators like `@$arr[$k]++` and `@$arr[$k] += $v` rewritten
+?? null`. Accumulators like `@$arr[$k]++` and `@$arr[$k] += $v` rewritten
    as `$arr[$k] = ($arr[$k] ?? 0) + …`. Nested-array assignments dropped
    the `@` entirely (PHP auto-vivifies on assignment).
 2. **Local file ops (~60 sites).** Introduced
@@ -1251,21 +1251,21 @@ Counts re-measured against the current tree.
 
 In addition to the `functions_*.inc.php` modules above, several `include/*.inc.php` and `admin/include/*.inc.php` files are procedural scripts that read file-top globals (`$template`, `$user`, `$page`, `$persistent_cache`, `$lang`). They're in scope for this item because the work is identical: extract the body into a typed service class, leave a one-line delegate behind. Once the service exists, the `global` declaration at the top of the file is replaced by constructor-injected (or `Kernel::container()->get(...)`) dependencies.
 
-| File | Becomes | Notes |
-|---|---|---|
-| `include/section_init.inc.php` | `Piwigo\Section\SectionInitializer::initialize()` | Owns the PATH_INFO / `$page['section']` parsing — also touched by item #22. |
-| `include/user.inc.php` | `Piwigo\Users\UserBootstrap` | Builds the `CurrentUser` from session + cookies on each request. |
-| `include/filter.inc.php` | `Piwigo\Filter\FilterResolver` | Resolves the active filter from session + URL. |
-| `include/ws_core.inc.php` | merge into `Piwigo\Ws\PwgServer` | Already partially classed (item #8). |
-| `include/ws_init.inc.php` | merge into `Piwigo\Ws\PwgServer::boot()` | |
+| File                                                                         | Becomes                                                                       | Notes                                                                         |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `include/section_init.inc.php`                                               | `Piwigo\Section\SectionInitializer::initialize()`                             | Owns the PATH_INFO / `$page['section']` parsing — also touched by item #22.   |
+| `include/user.inc.php`                                                       | `Piwigo\Users\UserBootstrap`                                                  | Builds the `CurrentUser` from session + cookies on each request.              |
+| `include/filter.inc.php`                                                     | `Piwigo\Filter\FilterResolver`                                                | Resolves the active filter from session + URL.                                |
+| `include/ws_core.inc.php`                                                    | merge into `Piwigo\Ws\PwgServer`                                              | Already partially classed (item #8).                                          |
+| `include/ws_init.inc.php`                                                    | merge into `Piwigo\Ws\PwgServer::boot()`                                      |                                                                               |
 | `include/ws_functions/pwg.{categories,extensions,images,php,tags,users}.php` | `Piwigo\Ws\Method\{Categories,Extensions,Images,General,Tags,Users}Endpoints` | One class per file. Coordinate with item #21 if the OpenAPI work lands first. |
-| `admin/include/albums_tab.inc.php` | `Piwigo\Admin\Album\AlbumsTabRenderer` | |
-| `admin/include/batch_manager_filters.inc.php` | `Piwigo\Admin\BatchManager\FilterResolver` | |
-| `admin/include/configuration_sizes_process.inc.php` | `Piwigo\Admin\Config\SizesProcessor` | |
-| `admin/include/configuration_watermark_process.inc.php` | `Piwigo\Admin\Config\WatermarkProcessor` | |
-| `admin/include/photos_add_direct_prepare.inc.php` | `Piwigo\Admin\Upload\DirectPreparer` | |
-| `admin/include/user_tabs.inc.php` | `Piwigo\Admin\Users\UserTabRenderer` | |
-| `include/constants.php` | `Piwigo\Core\Config::dbPrefix()` | One typed accessor; `$prefixeTable` global retires. |
+| `admin/include/albums_tab.inc.php`                                           | `Piwigo\Admin\Album\AlbumsTabRenderer`                                        |                                                                               |
+| `admin/include/batch_manager_filters.inc.php`                                | `Piwigo\Admin\BatchManager\FilterResolver`                                    |                                                                               |
+| `admin/include/configuration_sizes_process.inc.php`                          | `Piwigo\Admin\Config\SizesProcessor`                                          |                                                                               |
+| `admin/include/configuration_watermark_process.inc.php`                      | `Piwigo\Admin\Config\WatermarkProcessor`                                      |                                                                               |
+| `admin/include/photos_add_direct_prepare.inc.php`                            | `Piwigo\Admin\Upload\DirectPreparer`                                          |                                                                               |
+| `admin/include/user_tabs.inc.php`                                            | `Piwigo\Admin\Users\UserTabRenderer`                                          |                                                                               |
+| `include/constants.php`                                                      | `Piwigo\Core\Config::dbPrefix()`                                              | One typed accessor; `$prefixeTable` global retires.                           |
 
 Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `include/picture_comment.inc.php`, `include/picture_metadata.inc.php`, `include/picture_rate.inc.php`, `include/no_photo_yet.inc.php`, `include/search_filters.inc.php`, `include/selected_tags.inc.php`, `include/category_cats.inc.php`, `include/category_default.inc.php`) are **not** in scope here — they become Latte partials under item #23.
 
@@ -1513,47 +1513,47 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
 
 5. **Controllers — Wave A: root entrypoints (15 files).** Move each repo-root `.php` file into `app/Controller/<Name>Controller.php` as a class implementing `__invoke(ServerRequestInterface): ResponseInterface`. The body becomes the existing logic adapted to read from the request and return a response.
 
-   | Entry-script | Becomes |
-   |---|---|
-   | `index.php` | `IndexController` (or `GalleryController`) |
-   | `picture.php` | `PictureController` |
-   | `password.php` | `PasswordController` |
-   | `profile.php` | `ProfileController` |
-   | `comments.php` | `CommentsController` |
-   | `feed.php` | `FeedController` |
-   | `i.php` | `ImageDerivativeController` |
-   | `identification.php` | `IdentificationController` |
-   | `install.php` | `InstallController` |
-   | `notification.php` | `NotificationController` |
-   | `register.php` | `RegisterController` |
-   | `search.php` | `SearchController` |
-   | `tags.php` | `TagsController` |
-   | `upgrade.php` | `UpgradeController` |
-   | `ws.php` | `WebServiceController` |
+   | Entry-script         | Becomes                                    |
+   | -------------------- | ------------------------------------------ |
+   | `index.php`          | `IndexController` (or `GalleryController`) |
+   | `picture.php`        | `PictureController`                        |
+   | `password.php`       | `PasswordController`                       |
+   | `profile.php`        | `ProfileController`                        |
+   | `comments.php`       | `CommentsController`                       |
+   | `feed.php`           | `FeedController`                           |
+   | `i.php`              | `ImageDerivativeController`                |
+   | `identification.php` | `IdentificationController`                 |
+   | `install.php`        | `InstallController`                        |
+   | `notification.php`   | `NotificationController`                   |
+   | `register.php`       | `RegisterController`                       |
+   | `search.php`         | `SearchController`                         |
+   | `tags.php`           | `TagsController`                           |
+   | `upgrade.php`        | `UpgradeController`                        |
+   | `ws.php`             | `WebServiceController`                     |
 
 5b. **Controllers — Wave B: admin entrypoints (57 files).** Same pattern under `app/Controller/Admin/`. Routed via the `/admin/...` prefix in step 4. One commit per logical cluster (album management, batch manager, configuration, plugins/themes, users/groups, maintenance, etc.) — not 57 separate commits and not one mega-commit.
 
 5c. **Per-page Context DTOs.** Each controller hands a single typed DTO to its template instead of pushing ~15 file-scope `$category`, `$collection`, `$base_url`, `$picture`, `$related_categories`, `$comment_action`, etc. variables. New DTOs under `src/Piwigo/Page/Context/`:
 
-   | DTO | Owning controller(s) | Properties |
-   |---|---|---|
-   | `AlbumPageContext` | `IndexController`, `CategoryController` | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl` |
-   | `PicturePageContext` | `PictureController` | `picture`, `relatedCategories`, `commentAction`, `urlSelf` |
-   | `SearchPageContext` | `SearchController` | `query`, `filters`, `results`, `pagination` |
-   | `TagsPageContext` | `TagsController` | `tags`, `selectedTags`, `photos` |
-   | `CommentsPageContext` | `CommentsController` | `comments`, `pagination`, `filters` |
-   | `FeedPageContext` | `FeedController` | `items`, `feedMeta` |
-   | `IdentificationPageContext` | `IdentificationController`, `RegisterController`, `PasswordController` | `errors`, `redirectTo`, `formState` |
-   | `ProfilePageContext` | `ProfileController` | `user`, `prefs`, `themes`, `languages` |
-   | `NotificationPageContext` | `NotificationController` | `subscriptions`, `formState` |
-   | `AdminAlbumPageContext` | `Admin\AlbumController`, `Admin\CategoryModifyController`, `Admin\CategoryPermissionsController` | `category`, `adminBaseUrl`, `permissions` |
-   | `AdminPhotoPageContext` | `Admin\PhotoController`, `Admin\PictureModifyController` | `picture`, `adminPhotoBaseUrl` |
-   | `BatchManagerContext` | `Admin\BatchManager*Controller` | `collection`, `baseUrl`, `selectedFilters` |
-   | `MaintenanceContext` | `Admin\MaintenanceActionsController` | `maintActions`, `lastRun` |
-   | `AdminListContext` | generic — `Admin\UserListController`, `Admin\GroupListController`, `Admin\TagsController`, `Admin\PluginsController`, `Admin\ThemesController`, etc. | `items`, `pagination`, `filters`, `baseUrl` |
-   | `AdminPageContext` | base class — `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages` | inherited by all admin contexts |
+| DTO                         | Owning controller(s)                                                                                                                                 | Properties                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `AlbumPageContext`          | `IndexController`, `CategoryController`                                                                                                              | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl` |
+| `PicturePageContext`        | `PictureController`                                                                                                                                  | `picture`, `relatedCategories`, `commentAction`, `urlSelf` |
+| `SearchPageContext`         | `SearchController`                                                                                                                                   | `query`, `filters`, `results`, `pagination`                |
+| `TagsPageContext`           | `TagsController`                                                                                                                                     | `tags`, `selectedTags`, `photos`                           |
+| `CommentsPageContext`       | `CommentsController`                                                                                                                                 | `comments`, `pagination`, `filters`                        |
+| `FeedPageContext`           | `FeedController`                                                                                                                                     | `items`, `feedMeta`                                        |
+| `IdentificationPageContext` | `IdentificationController`, `RegisterController`, `PasswordController`                                                                               | `errors`, `redirectTo`, `formState`                        |
+| `ProfilePageContext`        | `ProfileController`                                                                                                                                  | `user`, `prefs`, `themes`, `languages`                     |
+| `NotificationPageContext`   | `NotificationController`                                                                                                                             | `subscriptions`, `formState`                               |
+| `AdminAlbumPageContext`     | `Admin\AlbumController`, `Admin\CategoryModifyController`, `Admin\CategoryPermissionsController`                                                     | `category`, `adminBaseUrl`, `permissions`                  |
+| `AdminPhotoPageContext`     | `Admin\PhotoController`, `Admin\PictureModifyController`                                                                                             | `picture`, `adminPhotoBaseUrl`                             |
+| `BatchManagerContext`       | `Admin\BatchManager*Controller`                                                                                                                      | `collection`, `baseUrl`, `selectedFilters`                 |
+| `MaintenanceContext`        | `Admin\MaintenanceActionsController`                                                                                                                 | `maintActions`, `lastRun`                                  |
+| `AdminListContext`          | generic — `Admin\UserListController`, `Admin\GroupListController`, `Admin\TagsController`, `Admin\PluginsController`, `Admin\ThemesController`, etc. | `items`, `pagination`, `filters`, `baseUrl`                |
+| `AdminPageContext`          | base class — `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                                                                                 | inherited by all admin contexts                            |
 
-   DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #23 receive these DTOs as `{templateType}` declarations.
+DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #23 receive these DTOs as `{templateType}` declarations.
 
 6. **Middleware pipeline.** `Piwigo\Http\MiddlewarePipeline` runs:
    1. `ExceptionHandlerMiddleware` (catches `PiwigoException`, renders error response — depends on item #10)

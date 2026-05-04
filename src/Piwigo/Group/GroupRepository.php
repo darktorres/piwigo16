@@ -111,7 +111,10 @@ final class GroupRepository extends AbstractRepository
      * @return string[]
      */
     public function findMemberUsernamesByGroupId(
-        string $usernameField, string $idField, string $usersTable, int $groupId
+        string $usernameField,
+        string $idField,
+        string $usersTable,
+        int $groupId
     ): array {
         $rows = $this->conn->executeQuery(
             "SELECT u.$usernameField AS username
@@ -120,7 +123,7 @@ final class GroupRepository extends AbstractRepository
              WHERE ug.group_id = ?",
             [$groupId]
         )->fetchFirstColumn();
-        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }
 
     /** Return the name of a group by id, or null if not found. */
@@ -201,7 +204,7 @@ final class GroupRepository extends AbstractRepository
             ->setParameter('pattern', '%' . $nameLike . '%')
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**

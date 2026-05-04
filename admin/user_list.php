@@ -88,10 +88,10 @@ SELECT
 ;';
     $admin_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
-    $protected_users = array_merge($protected_users, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids));
+    $protected_users = array_merge($protected_users, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids));
 
     // we add all admin+webmaster users BUT the user herself
-    $password_protected_users = array_merge($password_protected_users, array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids), [(string) $user['id']]));
+    $password_protected_users = array_merge($password_protected_users, array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids), [(string) $user['id']]));
 }
 
 $query = '
@@ -114,8 +114,8 @@ $template->assign(
     'language_options' => get_languages(),
     'language_selected' => get_default_language(),
     'association_options' => $groups,
-    'protected_users' => implode(',', array_unique(array_map(fn(int|string $v): string => (string) $v, $protected_users))),
-    'password_protected_users' => implode(',', array_unique(array_map(fn(int|string $v): string => (string) $v, $password_protected_users))),
+    'protected_users' => implode(',', array_unique(array_map(fn (int|string $v): string => (string) $v, $protected_users))),
+    'password_protected_users' => implode(',', array_unique(array_map(fn (int|string $v): string => (string) $v, $password_protected_users))),
     'guest_user' => \Piwigo\Config\Config::guestId(),
     'filter_group' => ($_GET['group'] ?? null),
     'search_input' => (isset($_GET['user_id']) ? 'id:'.(is_scalar($_GET['user_id']) ? (string) $_GET['user_id'] : '') : null),

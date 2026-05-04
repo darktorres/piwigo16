@@ -360,7 +360,7 @@ SELECT category_id
 ;';
 
     $authorizeds = array_diff(
-        array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
+        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'category_id')),
         explode(
             ',',
             calculate_permissions($user['id'], $user['status'])

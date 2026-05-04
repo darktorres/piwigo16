@@ -426,7 +426,7 @@ switch ($page['section']) {
       FROM `'.GROUPS_TABLE.'`
     ;';
             $groups = array_map(
-                fn(mixed $v): string => is_scalar($v) ? (string) $v : '',
+                fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
                 array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'name', 'id')
             );
             natcasesort($groups);

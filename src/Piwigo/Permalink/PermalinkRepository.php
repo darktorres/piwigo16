@@ -106,7 +106,7 @@ final class PermalinkRepository extends AbstractRepository
         // DBAL doesn't support LIMIT on DELETE in a platform-agnostic way;
         // use raw SQL since the project is MySQL-only.
         $affected = $this->conn->executeStatement(
-            'DELETE FROM ' . $this->table('old_permalinks') . " WHERE permalink = ? LIMIT 1",
+            'DELETE FROM ' . $this->table('old_permalinks') . ' WHERE permalink = ? LIMIT 1',
             [$permalink]
         );
         return $affected > 0;

@@ -29,7 +29,10 @@ final class NotificationRepository extends AbstractRepository
      * @return list<array<string, mixed>>
      */
     public function findUsersWithoutNotification(
-        string $idField, string $usernameField, string $emailField, string $usersTable
+        string $idField,
+        string $usernameField,
+        string $emailField,
+        string $usersTable
     ): array {
         return $this->conn->executeQuery(
             "SELECT u.$idField AS user_id, u.$usernameField AS username, u.$emailField AS mail_address

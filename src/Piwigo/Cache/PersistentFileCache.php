@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Config\Config;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\PruneableInterface;
-use Piwigo\Config\Config;
 
 /**
  * Legacy-API shim backed by a PSR-6 pool (default: FilesystemAdapter).

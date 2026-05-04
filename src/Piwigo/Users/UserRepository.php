@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Db\AbstractRepository;
-
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the user domain. */
 final class UserRepository extends AbstractRepository
@@ -475,7 +474,10 @@ final class UserRepository extends AbstractRepository
      * Used by pwg.users.php to verify the current password before changing it.
      */
     public function findPasswordById(
-        string $passwordField, string $idField, string $usersTable, int $userId
+        string $passwordField,
+        string $idField,
+        string $usersTable,
+        int $userId
     ): ?string {
         $value = $this->conn->createQueryBuilder()
             ->select($passwordField)
@@ -507,7 +509,10 @@ final class UserRepository extends AbstractRepository
      * $usernameField, $idField, $usersTable are admin-configured — not user-supplied.
      */
     public function findUsernameById(
-        string $idField, string $usernameField, string $usersTable, int $userId
+        string $idField,
+        string $usernameField,
+        string $usersTable,
+        int $userId
     ): ?string {
         $value = $this->conn->createQueryBuilder()
             ->select($usernameField)
@@ -527,7 +532,10 @@ final class UserRepository extends AbstractRepository
      * @return array<string, string>  keyed by string user_id
      */
     public function findUsernamesByIds(
-        string $idField, string $usernameField, string $usersTable, array $ids
+        string $idField,
+        string $usernameField,
+        string $usersTable,
+        array $ids
     ): array {
         if ($ids === []) {
             return [];
@@ -549,8 +557,11 @@ final class UserRepository extends AbstractRepository
      * $emailField, $idField, $usersTable are admin-configured — not user-supplied.
      */
     public function countByEmail(
-        string $emailField, string $idField, string $usersTable,
-        string $email, ?int $excludeUserId = null
+        string $emailField,
+        string $idField,
+        string $usersTable,
+        string $email,
+        ?int $excludeUserId = null
     ): int {
         $qb = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -570,7 +581,9 @@ final class UserRepository extends AbstractRepository
      * $usernameField and $usersTable are admin-configured — not user-supplied.
      */
     public function countByUsernameInsensitive(
-        string $usernameField, string $usersTable, string $login
+        string $usernameField,
+        string $usersTable,
+        string $login
     ): int {
         $value = $this->conn->createQueryBuilder()
             ->select("COUNT($usernameField)")
@@ -593,7 +606,7 @@ final class UserRepository extends AbstractRepository
         $rows = $this->conn->executeQuery(
             "SELECT $usernameField FROM $usersTable"
         )->fetchFirstColumn();
-        return array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }
 
     /**
@@ -610,7 +623,7 @@ final class UserRepository extends AbstractRepository
             ->orderBy('id', 'ASC')
             ->executeQuery()
             ->fetchFirstColumn();
-        return array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**
@@ -618,7 +631,10 @@ final class UserRepository extends AbstractRepository
      * $usernameField, $idField, $usersTable are admin-configured — not user-supplied.
      */
     public function findIdByUsername(
-        string $usernameField, string $idField, string $usersTable, string $username
+        string $usernameField,
+        string $idField,
+        string $usersTable,
+        string $username
     ): int|false {
         $value = $this->conn->createQueryBuilder()
             ->select($idField)
@@ -635,7 +651,10 @@ final class UserRepository extends AbstractRepository
      * $emailField, $idField, $usersTable are admin-configured — not user-supplied.
      */
     public function findIdByEmail(
-        string $emailField, string $idField, string $usersTable, string $email
+        string $emailField,
+        string $idField,
+        string $usersTable,
+        string $email
     ): int|false {
         $value = $this->conn->createQueryBuilder()
             ->select($idField)
@@ -671,8 +690,11 @@ final class UserRepository extends AbstractRepository
      * @return array{username: string, password: string}|null
      */
     public function findAuthFieldsById(
-        string $usernameField, string $passwordField, string $idField,
-        string $usersTable, int $userId
+        string $usernameField,
+        string $passwordField,
+        string $idField,
+        string $usersTable,
+        int $userId
     ): ?array {
         $row = $this->conn->executeQuery(
             "SELECT $usernameField AS username, $passwordField AS password FROM $usersTable WHERE $idField = ?",
@@ -695,8 +717,12 @@ final class UserRepository extends AbstractRepository
      * @return array<string, mixed>|null
      */
     public function findByUsernameOrEmail(
-        string $usernameField, string $emailField, string $idField, string $passwordField,
-        string $usersTable, string $usernameOrEmail
+        string $usernameField,
+        string $emailField,
+        string $idField,
+        string $passwordField,
+        string $usersTable,
+        string $usernameOrEmail
     ): ?array {
         $select = "$idField AS id, $usernameField AS username, $emailField AS email, $passwordField AS password, status";
         $userInfos = $this->table('user_infos');

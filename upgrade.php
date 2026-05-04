@@ -80,7 +80,7 @@ function get_columns_of(array $tables): array
 
     foreach ($tables as $table) {
         $columns_of[$table] = array_map(
-            fn(mixed $v): string => is_scalar($v) ? (string) $v : '',
+            fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             get_dbal_connection()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
         );
     }

@@ -560,10 +560,10 @@ SELECT image_id
 ;';
     $favorites = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
 
-    $to_deletes = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
+    $to_deletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
     if (count($to_deletes) > 0) {
         \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-            ->deleteFavoritesByImageIds(array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, array_values($to_deletes)));
+            ->deleteFavoritesByImageIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_values($to_deletes)));
     }
 }
 
@@ -611,10 +611,10 @@ SELECT cat_id
 
     // uniquify ids : some private categories might be authorized for the
     // groups and for the user
-    $authorized_array = array_unique(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorized_array));
+    $authorized_array = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorized_array));
 
     // only unauthorized private categories are forbidden
-    $forbidden_array = array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $private_array), $authorized_array);
+    $forbidden_array = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $private_array), $authorized_array);
 
     // if user is not an admin, locked categories are forbidden
     if (!is_admin($user_status)) {
@@ -623,7 +623,7 @@ SELECT id
   FROM '.CATEGORIES_TABLE.'
   WHERE visible = \'false\'
 ;';
-        $forbidden_array = array_merge($forbidden_array, array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id')));
+        $forbidden_array = array_merge($forbidden_array, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id')));
         $forbidden_array = array_unique($forbidden_array);
     }
 
@@ -1964,7 +1964,7 @@ SELECT
                 $admin_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'user_id');
 
                 // we add all admin+webmaster users BUT the user herself
-                $password_protected_users = array_merge($password_protected_users, array_diff(array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids), [(string) $currentUser->id]));
+                $password_protected_users = array_merge($password_protected_users, array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids), [(string) $currentUser->id]));
 
                 if (in_array($param_user_id[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');

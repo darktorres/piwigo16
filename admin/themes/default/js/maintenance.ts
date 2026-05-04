@@ -68,9 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     const multipleSizesValues: Record<string, string> = data.result.infos[1].value;
                     for (const key of Object.keys(multipleSizesValues)) {
-                        (multipleSizesValues as any)[key] = toMB(
-                            (multipleSizesValues as any)[key]
-                        );
+                        (multipleSizesValues as any)[key] = toMB((multipleSizesValues as any)[key]);
                     }
                     displayResponse(domPairs, multipleSizes, multipleSizesValues);
                     document

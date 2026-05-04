@@ -101,7 +101,8 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
     $page['execution_uuid'] = generate_key(10);
 
-    $persistent_cache = new PersistentFileCache();
+    $pool             = \Piwigo\Cache\CacheFactory::create();
+    $persistent_cache = new PersistentFileCache($pool);
     \Piwigo\Cache\PersistentCacheRegistry::set($persistent_cache);
 
     // Database connection

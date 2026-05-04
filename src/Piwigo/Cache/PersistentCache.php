@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Psr\Cache\CacheItemPoolInterface;
+
 /**
-  Provides a persistent cache mechanism across multiple page loads/sessions etc...
-*/
+ * Legacy persistent-cache API. Concrete subclasses wrap a PSR-6 pool
+ * and delegate the get/set/purge surface to it.
+ */
 abstract class PersistentCache
 {
     public int $default_lifetime = 86400;
     protected string $instance_key = PHPWG_VERSION;
 
-    /**
-     * @return string a key that can be safely be used with get/set methods
-     */
+    abstract public function getPool(): CacheItemPoolInterface;
+
     /** @param array<mixed>|string $key */
     public function make_key(array|string $key): string
     {
@@ -25,26 +27,9 @@ abstract class PersistentCache
         return md5($key);
     }
 
-    /**
-    Searches for a key in the persistent cache and fills corresponding value.
-    * @param string $key
-    * @param mixed $value
-    * @return bool false if the $key is not found in cache ($value is not modified in this case)
-    */
-    abstract public function get($key, &$value);
+    abstract public function get(string $key, mixed &$value): bool;
 
-    /**
-    Sets a key/value pair in the persistent cache.
-    @param string $key - it should be the return value of make_key function
-    @param mixed $value
-    @param int $lifetime
-    * @return bool false on error
-    */
-    abstract public function set($key, $value, $lifetime = null);
+    abstract public function set(string $key, mixed $value, ?int $lifetime = null): bool;
 
-    /**
-    Purge the persistent cache.
-    @param boolean $all - if false only expired items will be purged
-    */
     abstract public function purge(bool $all): bool;
 }

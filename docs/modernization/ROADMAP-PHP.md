@@ -962,7 +962,7 @@ vendor/bin/phpunit --testsuite Integration
 
 ## #15 — PSR-6 / PSR-16 cache + Redis support
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 

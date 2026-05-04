@@ -4,74 +4,62 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Piwigo\Config\Config;
-use Piwigo\Core\Filesystem;
 
 /**
-  Implementation of a persistent cache using files.
-*/
+ * Legacy-API shim backed by a PSR-6 pool (default: FilesystemAdapter).
+ *
+ * Pass any CacheItemPoolInterface to the constructor to override the backend
+ * (e.g. the pool returned by CacheFactory::create()). When called without
+ * arguments, a FilesystemAdapter pointing at the data/cache directory is used.
+ */
 class PersistentFileCache extends PersistentCache
 {
-    private readonly string $dir;
+    private readonly CacheItemPoolInterface $pool;
 
-    public function __construct()
+    public function __construct(?CacheItemPoolInterface $pool = null)
     {
-        $this->dir = PHPWG_ROOT_PATH.Config::dataLocation().'cache/';
+        if ($pool !== null) {
+            $this->pool = $pool;
+        } else {
+            $directory   = PHPWG_ROOT_PATH . Config::dataLocation() . 'cache/';
+            $this->pool  = new FilesystemAdapter('', $this->default_lifetime, $directory);
+        }
     }
 
-    public function get($key, &$value): bool
+    public function getPool(): CacheItemPoolInterface
     {
-        $path = $this->dir.$key.'.cache';
-        $fileContent = is_file($path) ? file_get_contents($path) : false;
-        if ($fileContent !== false) {
-            $loaded = unserialize($fileContent);
-            if (is_array($loaded) && isset($loaded['expire']) && is_int($loaded['expire'])) {
-                if ($loaded['expire'] > time()) {
-                    $value = $loaded['data'];
-                    return true;
-                }
-            }
-        }
-        return false;
+        return $this->pool;
     }
 
-    public function set($key, $value, $lifetime = null): bool
+    public function get(string $key, mixed &$value): bool
     {
-        if ($lifetime === null) {
-            $lifetime = $this->default_lifetime;
+        $item = $this->pool->getItem($key);
+        if (!$item->isHit()) {
+            return false;
         }
+        $value = $item->get();
+        return true;
+    }
 
-        if (random_int(0, mt_getrandmax()) % 97 == 0) {
-            $this->purge(false);
-        }
-
-        $serialized = serialize([
-            'expire' => time() + $lifetime,
-            'data' => $value,
-          ]);
-
-        $path = $this->dir.$key.'.cache';
-        if (!is_dir($this->dir)) {
-            mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
-        }
-        return file_put_contents($path, $serialized) !== false;
+    public function set(string $key, mixed $value, ?int $lifetime = null): bool
+    {
+        $item = $this->pool->getItem($key);
+        $item->set($value);
+        $item->expiresAfter($lifetime ?? $this->default_lifetime);
+        return $this->pool->save($item);
     }
 
     public function purge(bool $all): bool
     {
-        $files = glob($this->dir.'*.cache');
-        if (empty($files)) {
-            return false;
+        if ($all) {
+            return $this->pool->clear();
         }
-
-        $limit = time() - $this->default_lifetime;
-        foreach ($files as $file) {
-            $mtime = Filesystem::tryFileMtime($file);
-            if ($all || $mtime === false || $mtime < $limit) {
-                Filesystem::tryUnlink($file);
-            }
+        if ($this->pool instanceof \Symfony\Component\Cache\PruneableInterface) {
+            return $this->pool->prune();
         }
-        return true;
+        return $this->pool->clear();
     }
-
 }

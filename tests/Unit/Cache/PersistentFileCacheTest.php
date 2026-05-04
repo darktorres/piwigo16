@@ -21,95 +21,120 @@ final class PersistentFileCacheTest extends TestCase
 {
     private string $tmpRoot;
     private string $cacheDir;
+    private PersistentFileCache $cache;
 
     protected function setUp(): void
     {
-        // Create a unique temp dir under the repo root so the path relative
-        // to PHPWG_ROOT_PATH can be computed simply.
-        $this->tmpRoot = PHPWG_ROOT_PATH . 'tmp_cache_test_' . getmypid() . '_' . mt_rand() . '/';
+        $this->tmpRoot  = PHPWG_ROOT_PATH . 'tmp_cache_test_' . getmypid() . '_' . mt_rand() . '/';
         $this->cacheDir = $this->tmpRoot . 'cache/';
         mkdir($this->cacheDir, 0755, true);
 
-        // Config::dataLocation() returns getString('data_location', '_data/').
-        // Set it to our tmp dir (relative to PHPWG_ROOT_PATH).
         $rel = str_replace(PHPWG_ROOT_PATH, '', $this->tmpRoot);
         Config::loadArray(['data_location' => $rel]);
+
+        $this->cache = new PersistentFileCache();
     }
 
     protected function tearDown(): void
     {
+        $this->cache->purge(true);
         Config::reset();
-        foreach (glob($this->cacheDir . '*.cache') ?: [] as $f) {
-            unlink($f);
+        self::deleteDir($this->cacheDir);
+        self::deleteDir($this->tmpRoot);
+    }
+
+    private static function deleteDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
         }
-        \Piwigo\Core\Filesystem::tryRmdir($this->cacheDir);
-        \Piwigo\Core\Filesystem::tryRmdir($this->tmpRoot);
+        $items = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($items as $item) {
+            /** @var \SplFileInfo $item */
+            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+        }
+        rmdir($dir);
     }
 
     public function test_get_returns_false_for_missing_key(): void
     {
-        $cache = new PersistentFileCache();
         $value = null;
-        self::assertFalse($cache->get('no_such_key', $value));
+        self::assertFalse($this->cache->get('no_such_key', $value));
         self::assertNull($value);
     }
 
     public function test_set_and_get_round_trip_with_array(): void
     {
-        $cache = new PersistentFileCache();
-        $cache->set('my_key', ['answer' => 42], 3600);
+        $this->cache->set('my_key', ['answer' => 42], 3600);
 
         $value = null;
-        self::assertTrue($cache->get('my_key', $value));
+        self::assertTrue($this->cache->get('my_key', $value));
         self::assertSame(['answer' => 42], $value);
     }
 
     public function test_set_and_get_round_trip_with_scalar(): void
     {
-        $cache = new PersistentFileCache();
-        $cache->set('scalar', 'hello', 3600);
+        $this->cache->set('scalar', 'hello', 3600);
 
         $value = null;
-        self::assertTrue($cache->get('scalar', $value));
+        self::assertTrue($this->cache->get('scalar', $value));
         self::assertSame('hello', $value);
     }
 
     public function test_get_returns_false_for_expired_entry(): void
     {
-        $cache = new PersistentFileCache();
-        // Manually write a cache file with an already-expired timestamp.
-        $serialized = serialize(['expire' => time() - 10, 'data' => 'stale']);
-        file_put_contents($this->cacheDir . 'expired_key.cache', $serialized);
+        // expiresAfter(-1) stores the item with a past expiry timestamp;
+        // the next getItem() call sees it as a miss.
+        $this->cache->set('exp_key', 'stale', -1);
 
         $value = null;
-        self::assertFalse($cache->get('expired_key', $value));
+        self::assertFalse($this->cache->get('exp_key', $value));
     }
 
-    public function test_purge_expired_removes_only_stale_files(): void
+    public function test_purge_all_clears_every_entry(): void
     {
-        $cache = new PersistentFileCache();
-        // purge(false) uses filemtime < (time() - default_lifetime=86400).
-        // Touch the file with an mtime older than 1 day.
-        file_put_contents($this->cacheDir . 'stale.cache', serialize(['expire' => time() - 1, 'data' => 'x']));
-        touch($this->cacheDir . 'stale.cache', time() - 90000);
-        $cache->set('fresh', 'keep', 3600);
+        $this->cache->set('a', 1, 3600);
+        $this->cache->set('b', 2, 3600);
 
-        $cache->purge(false);
+        $this->cache->purge(true);
 
-        self::assertFileDoesNotExist($this->cacheDir . 'stale.cache');
+        $va = null;
+        $vb = null;
+        self::assertFalse($this->cache->get('a', $va));
+        self::assertFalse($this->cache->get('b', $vb));
+    }
+
+    public function test_purge_false_preserves_fresh_entries(): void
+    {
+        $this->cache->set('fresh', 'keep', 3600);
+        $this->cache->set('stale', 'drop', -1);
+
+        $this->cache->purge(false);
+
         $value = null;
-        self::assertTrue($cache->get('fresh', $value));
+        self::assertTrue($this->cache->get('fresh', $value));
+        self::assertSame('keep', $value);
     }
 
-    public function test_purge_all_removes_every_cache_file(): void
+    public function test_make_key_is_consistent(): void
     {
-        $cache = new PersistentFileCache();
-        $cache->set('a', 1, 3600);
-        $cache->set('b', 2, 3600);
+        $k1 = $this->cache->make_key('same');
+        $k2 = $this->cache->make_key('same');
+        self::assertSame($k1, $k2);
+    }
 
-        $cache->purge(true);
+    public function test_make_key_differs_for_different_inputs(): void
+    {
+        $k1 = $this->cache->make_key('foo');
+        $k2 = $this->cache->make_key('bar');
+        self::assertNotSame($k1, $k2);
+    }
 
-        $remaining = glob($this->cacheDir . '*.cache') ?: [];
-        self::assertCount(0, $remaining);
+    public function test_getPool_returns_psr6_pool(): void
+    {
+        self::assertInstanceOf(\Psr\Cache\CacheItemPoolInterface::class, $this->cache->getPool());
     }
 }

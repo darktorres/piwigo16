@@ -1095,7 +1095,7 @@ npx playwright test
 
 ## #17 — DB layer modernization (Doctrine DBAL + repositories)
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** XL
+**Status:** 🔄 In progress &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 

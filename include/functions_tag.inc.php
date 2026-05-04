@@ -99,19 +99,13 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         return [];
     }
 
-    $query = '
-SELECT *
-  FROM '.TAGS_TABLE;
-
-    if (count($tag_counters) < 1000) {
-        $query .= '
-  WHERE id IN ('.implode(',', array_keys($tag_counters)).')
-';
-    }
-    $result = pwg_query($query);
+    $repo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+    $rows = count($tag_counters) < 1000
+        ? $repo->findByIds(array_map('intval', array_keys($tag_counters)))
+        : $repo->findAll();
 
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($rows as $row) {
         $row_id = is_numeric($row['id']) ? (int) $row['id'] : (is_scalar($row['id']) ? (string) $row['id'] : '');
         if (isset($tag_counters[$row_id])) {
             $row['counter'] = is_scalar($tag_counters[$row_id]) ? intval($tag_counters[$row_id]) : 0;
@@ -131,13 +125,9 @@ SELECT *
 /** @return array<mixed> */
 function get_all_tags(): array
 {
-    $query = '
-SELECT *
-  FROM '.TAGS_TABLE.'
-;';
-    $result = pwg_query($query);
+    $rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)->findAll();
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($rows as $row) {
         $row['name_raw'] = $row['name'];
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
@@ -284,31 +274,11 @@ function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = 
     if (empty($items)) {
         return [];
     }
-    $query = '
-SELECT t.*, count(*) AS counter
-  FROM '.IMAGE_TAG_TABLE.'
-    INNER JOIN '.TAGS_TABLE.' t ON tag_id = id
-  WHERE image_id IN ('.implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)).')';
-    if (!empty($excluded_tag_ids)) {
-        $query .= '
-    AND tag_id NOT IN ('.implode(',', $excluded_tag_ids).')';
-    }
-    $query .= '
-  GROUP BY t.id
-  ORDER BY ';
-    if ($max_tags > 0) {
-        // When a limit is requested, sort by usage count descending.
-        // When all tags are requested ($max_tags == 0), ORDER BY NULL suppresses
-        // MySQL's implicit filesort and lets the engine return rows in any order.
-        $query .= 'counter DESC
-  LIMIT '.$max_tags;
-    } else {
-        $query .= 'NULL';
-    }
-
-    $result = pwg_query($query);
+    $imageIds = array_map(static fn (mixed $v): int => is_scalar($v) ? (int) $v : 0, $items);
+    $rows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findCommonTags($imageIds, $max_tags, $excluded_tag_ids);
     $tags = [];
-    while ($row = pwg_db_fetch_assoc($result)) {
+    foreach ($rows as $row) {
         $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
         $tags[] = $row;
     }
@@ -332,29 +302,12 @@ SELECT t.*, count(*) AS counter
  */
 function find_tags(array $ids = [], array $url_names = [], array $names = []): array
 {
-    $where_clauses = [];
-    if (!empty($ids)) {
-        $where_clauses[] = 'id IN ('.implode(',', $ids).')';
-    }
-    if (!empty($url_names)) {
-        $where_clauses[] =
-          'url_name IN (\''. implode('\', \'', $url_names) .'\')';
-    }
-    if (!empty($names)) {
-        $where_clauses[] =
-          'name IN (\''. implode('\', \'', $names) .'\')';
-    }
-    if (empty($where_clauses)) {
-        return [];
-    }
-
-    $query = '
-SELECT *
-  FROM '.TAGS_TABLE.'
-  WHERE '. implode('
-    OR ', $where_clauses);
-
-    return query2array($query);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+        ->findByIdUrlOrName(
+            array_map('intval', $ids),
+            array_map('strval', $url_names),
+            array_map('strval', $names)
+        );
 }
 
 /**

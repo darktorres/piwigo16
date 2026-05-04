@@ -313,39 +313,32 @@ SELECT ';
   FROM '.USERS_TABLE.'
   WHERE '.\Piwigo\Config\Config::userFields()['id'].' = \''.$user_id.'\'';
 
-    $row = pwg_db_fetch_assoc(pwg_query($query));
+    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $row = $conn->executeQuery($query)->fetchAssociative() ?: null;
 
     // retrieve additional user data ?
     if (\Piwigo\Config\Config::externalAuthentification()) {
-        $query = '
-SELECT
-    COUNT(1) AS counter
-  FROM '.USER_INFOS_TABLE.' AS ui
-    LEFT JOIN '.USER_CACHE_TABLE.' AS uc ON ui.user_id = uc.user_id
-    LEFT JOIN '.THEMES_TABLE.' AS t ON t.id = ui.theme
-  WHERE ui.user_id = '.$user_id.'
-  GROUP BY ui.user_id
-;';
-        [$counter] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($counter != 1) {
+        $counter = $conn->executeQuery(
+            'SELECT COUNT(1) AS counter FROM ' . USER_INFOS_TABLE . ' AS ui
+             LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
+             LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+             WHERE ui.user_id = ? GROUP BY ui.user_id',
+            [$user_id]
+        )->fetchOne();
+        if ((int) $counter !== 1) {
             create_user_infos($user_id);
         }
     }
 
     // retrieve user info
-    $query = '
-SELECT
-    ui.*,
-    uc.*,
-    t.name AS theme_name
-  FROM '.USER_INFOS_TABLE.' AS ui
-    LEFT JOIN '.USER_CACHE_TABLE.' AS uc ON ui.user_id = uc.user_id
-    LEFT JOIN '.THEMES_TABLE.' AS t ON t.id = ui.theme
-  WHERE ui.user_id = '.$user_id.'
-;';
-
-    $result = pwg_query($query);
-    $user_infos_row = pwg_db_fetch_assoc($result);
+    $user_infos_row = $conn->executeQuery(
+        'SELECT ui.*, uc.*, t.name AS theme_name
+         FROM ' . USER_INFOS_TABLE . ' AS ui
+         LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
+         LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+         WHERE ui.user_id = ?',
+        [$user_id]
+    )->fetchAssociative() ?: null;
 
     // then merge basic + additional user data
     $userdata = array_merge($row ?? [], $user_infos_row ?? []);
@@ -387,7 +380,7 @@ SELECT
   FROM '.USER_CACHE_TABLE.'
   WHERE user_id='.$ud_id.'
 ;';
-                    [$nb_cache_lines] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+                    $nb_cache_lines = $conn->executeQuery($query)->fetchOne();
 
                     $logger_msg = $logger_msg_prefix.'user_cache generation waiting k='.$k.' ';
                     $waiting_time = get_elapsed_time($user_cache_waiting_start_time, get_moment());
@@ -450,7 +443,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
   FROM '.IMAGE_CATEGORY_TABLE.'
   WHERE category_id NOT IN ('.$ud_forbidden_cats.')
     AND image_id '.$userdata['image_access_type'].' ('.$userdata['image_access_list'].')';
-            [$userdata['nb_total_images']] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+            $userdata['nb_total_images'] = $conn->executeQuery($query)->fetchOne();
 
 
             // now we update user cache categories
@@ -477,10 +470,7 @@ SELECT COUNT(DISTINCT(image_id)) as total
             }
 
             // delete user cache
-            $query = '
-DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
-  WHERE user_id = '.$ud_id;
-            pwg_query($query);
+            $conn->executeStatement('DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . ' WHERE user_id = ?', [$ud_id]);
 
             // Due to concurrency issues, we ask MySQL to ignore errors on
             // insert. This may happen when cache needs refresh and that Piwigo is
@@ -497,10 +487,7 @@ DELETE FROM '.USER_CACHE_CATEGORIES_TABLE.'
 
 
             // update user cache
-            $query = '
-DELETE FROM '.USER_CACHE_TABLE.'
-  WHERE user_id = '.$ud_id;
-            pwg_query($query);
+            $conn->executeStatement('DELETE FROM ' . USER_CACHE_TABLE . ' WHERE user_id = ?', [$ud_id]);
 
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
@@ -511,18 +498,22 @@ DELETE FROM '.USER_CACHE_TABLE.'
             $ud_last_photo_date = is_scalar($userdata['last_photo_date']) ? (string) $userdata['last_photo_date'] : '';
             $ud_image_access_type = is_scalar($userdata['image_access_type']) ? (string) $userdata['image_access_type'] : '';
             $ud_image_access_list = is_scalar($userdata['image_access_list']) ? (string) $userdata['image_access_list'] : '';
-            $query = '
-INSERT IGNORE INTO '.USER_CACHE_TABLE.'
-  (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,
-    last_photo_date,
-    image_access_type, image_access_list)
-  VALUES
-  ('.$ud_id.',\''.($ud_need_update ? 'true' : 'false').'\','
-  .$ud_cache_update_time.',\''
-  .$ud_forbidden_cats_str.'\','.$ud_nb_total_images.','.
-  (empty($ud_last_photo_date) ? 'NULL' : '\''.$ud_last_photo_date.'\'').
-  ',\''.$ud_image_access_type.'\',\''.$ud_image_access_list.'\')';
-            pwg_query($query);
+            $last_photo_placeholder = empty($ud_last_photo_date) ? 'NULL' : '?';
+            $cacheParams = [
+                $ud_id, $ud_need_update ? 'true' : 'false', $ud_cache_update_time,
+                $ud_forbidden_cats_str, $ud_nb_total_images,
+                $ud_image_access_type, $ud_image_access_list,
+            ];
+            if (!empty($ud_last_photo_date)) {
+                array_splice($cacheParams, 5, 0, [$ud_last_photo_date]);
+            }
+            $conn->executeStatement(
+                'INSERT IGNORE INTO ' . USER_CACHE_TABLE .
+                ' (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,' .
+                '  last_photo_date, image_access_type, image_access_list)' .
+                ' VALUES (?, ?, ?, ?, ?, ' . $last_photo_placeholder . ', ?, ?)',
+                $cacheParams
+            );
 
             pwg_unique_exec_ends($cache_generation_token_name);
             $logger->info($logger_msg_prefix.'user_cache generated, executed in '.get_elapsed_time($user_cache_generation_start_time, get_moment()));
@@ -571,12 +562,8 @@ SELECT image_id
 
     $to_deletes = array_diff($favorites, $authorizeds);
     if (count($to_deletes) > 0) {
-        $query = '
-DELETE FROM '.FAVORITES_TABLE.'
-  WHERE image_id IN ('.implode(',', $to_deletes).')
-    AND user_id = '.$currentUser->id.'
-;';
-        pwg_query($query);
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            ->deleteFavoritesByImageIds(array_map('intval', array_values($to_deletes)));
     }
 }
 

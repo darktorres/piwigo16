@@ -22,7 +22,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
-global $template, $user, $page, $persistent_cache, $lang, $pwg_loaded_plugins, $cache;
+global $template, $user, $page, $persistent_cache, $lang, $pwg_loaded_plugins;
 
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -336,22 +336,25 @@ SELECT
             )
         );
 
+        $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
+            return query2array('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+        });
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {
             $url_img = make_picture_url(
                 [
                 'image_id' => $row['id'],
                 'image_file' => $image_file,
-                'category' => $cache['cat_names'][ $row['cat_id'] ],
+                'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null,
                 ]
             );
         } else {
             foreach ($authorizeds as $category) {
                 $url_img = make_picture_url(
                     [
-                    'image_id' => $row['id'], //utile ?
+                    'image_id' => $row['id'],
                     'image_file' => $image_file,
-                    'category' => $cache['cat_names'][ $category ],
+                    'category' => (is_array($catNames) && (is_int($category) || is_string($category))) ? ($catNames[$category] ?? null) : null,
                     ]
                 );
                 break;

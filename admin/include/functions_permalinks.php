@@ -54,10 +54,6 @@ SELECT c.id
  */
 function delete_cat_permalink(string $cat_id, $save): bool
 {
-    $cache = &$GLOBALS['cache'];
-    if (!is_array($cache)) {
-        $cache = [];
-    }
     $query = '
 SELECT permalink
   FROM '.CATEGORIES_TABLE.'
@@ -90,7 +86,7 @@ UPDATE '.CATEGORIES_TABLE.'
   LIMIT 1';
     pwg_query($query);
 
-    unset($cache['cat_names']); //force regeneration
+    \Piwigo\Cache\RequestCache::clearNs('cat_names');
     if ($save) {
         if (isset($old_cat_id)) {
             $query = '
@@ -118,10 +114,6 @@ VALUES
  */
 function set_cat_permalink(string $cat_id, string $permalink, $save): bool
 {
-    $cache = &$GLOBALS['cache'];
-    if (!is_array($cache)) {
-        $cache = [];
-    }
     $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', (string) $permalink);
     $sanitized_permalink = trim((string) $sanitized_permalink, '/');
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
@@ -180,7 +172,7 @@ UPDATE '.CATEGORIES_TABLE.'
     //  LIMIT 1';
     pwg_query($query);
 
-    unset($cache['cat_names']); //force regeneration
+    \Piwigo\Cache\RequestCache::clearNs('cat_names');
 
     return true;
 }

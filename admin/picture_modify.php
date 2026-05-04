@@ -16,7 +16,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
-global $template, $user, $page, $persistent_cache, $lang, $admin_photo_base_url, $cache;
+global $template, $user, $page, $persistent_cache, $lang, $admin_photo_base_url;
 
 
 include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -387,11 +387,14 @@ SELECT category_id
     if (count($authorizeds) > 0) {
         $category = $authorizeds[array_rand($authorizeds)];
 
+        $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
+            return query2array('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';', 'id') ?: [];
+        });
         $url_img = make_picture_url(
             [
             'image_id' => $_GET['image_id'],
             'image_file' => $image_file,
-            'category' => $cache['cat_names'][ $category ],
+            'category' => (is_array($catNames) && (is_int($category) || is_string($category))) ? ($catNames[$category] ?? null) : null,
             ]
         );
 

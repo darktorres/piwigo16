@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugin\PluginRepository;
 use Piwigo\Users\CurrentUser;
 
 class Plugins
@@ -27,7 +29,7 @@ class Plugins
     {
         $this->get_fs_plugins();
 
-        foreach (get_db_plugins() as $db_plugin) {
+        foreach (ServiceLocator::get(PluginRepository::class)->findAll() as $db_plugin) {
             if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
                 $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
             }
@@ -107,11 +109,7 @@ class Plugins
                 $errors = trigger_change('plugin_install_errors', $errors);
 
                 if (empty($errors)) {
-                    $query = '
-INSERT INTO '. PLUGINS_TABLE .' (id,version)
-  VALUES (\''. $plugin_id .'\', \''. $installVersionStr .'\')
-;';
-                    pwg_query($query);
+                    ServiceLocator::get(PluginRepository::class)->insert($plugin_id, $installVersionStr);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -135,12 +133,7 @@ INSERT INTO '. PLUGINS_TABLE .' (id,version)
                     $plugin_maintain->update($previous_version, $new_version, $errors);
 
                     if ($new_version != 'auto') {
-                        $query = '
-UPDATE '. PLUGINS_TABLE .'
-  SET version=\''. $new_version .'\'
-  WHERE id=\''. $plugin_id .'\'
-;';
-                        pwg_query($query);
+                        ServiceLocator::get(PluginRepository::class)->updateVersion($plugin_id, $new_version);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -152,7 +145,7 @@ UPDATE '. PLUGINS_TABLE .'
             case 'activate':
                 if (!isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    [$crt_db_plugin] = get_db_plugins(null, $plugin_id);
+                    [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
                     load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
@@ -168,12 +161,7 @@ UPDATE '. PLUGINS_TABLE .'
                 }
 
                 if (empty($errors)) {
-                    $query = '
-UPDATE '. PLUGINS_TABLE .'
-  SET state=\'active\'
-  WHERE id=\''. $plugin_id .'\'
-;';
-                    pwg_query($query);
+                    ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'active');
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -185,12 +173,7 @@ UPDATE '. PLUGINS_TABLE .'
                     break;
                 }
 
-                $query = '
-UPDATE '. PLUGINS_TABLE .'
-  SET state=\'inactive\'
-  WHERE id=\''. $plugin_id .'\'
-;';
-                pwg_query($query);
+                ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'inactive');
 
                 $plugin_maintain->deactivate();
 
@@ -215,11 +198,7 @@ UPDATE '. PLUGINS_TABLE .'
                     $this->perform_action('deactivate', $plugin_id);
                 }
 
-                $query = '
-DELETE FROM '. PLUGINS_TABLE .'
-  WHERE id=\''. $plugin_id .'\'
-;';
-                pwg_query($query);
+                ServiceLocator::get(PluginRepository::class)->delete($plugin_id);
 
                 $plugin_maintain->uninstall();
                 break;

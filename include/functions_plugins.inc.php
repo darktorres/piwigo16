@@ -132,21 +132,8 @@ function &get_plugin_data($plugin_id): mixed
 /** @return array<array<string,mixed>> */
 function get_db_plugins(?string $state = '', ?string $id = ''): array
 {
-    $query = '
-SELECT * FROM '.PLUGINS_TABLE;
-    $clauses = [];
-    if (!empty($state)) {
-        $clauses[] = 'state=\''.$state.'\'';
-    }
-    if (!empty($id)) {
-        $clauses[] = 'id="'.$id.'"';
-    }
-    if (count($clauses)) {
-        $query .= '
-  WHERE '. implode(' AND ', $clauses);
-    }
-
-    return query2array($query);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class)
+        ->findAll($state, $id);
 }
 
 /**
@@ -234,12 +221,8 @@ function autoupdate_plugin(array &$plugin): void
         // update database (only on production). We want to avoid registering an "auto" to "auto" update,
         // which happens for each "version=auto" plugin on each page load.
         if ($new_version != $old_version) {
-            $query = '
-UPDATE '. PLUGINS_TABLE .'
-  SET version = "'. $fs_version .'"
-  WHERE id = "'. $plugin_id .'"
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class)
+                ->updateVersion($plugin_id, $fs_version);
 
             pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', ['plugin_id' => $plugin_id, 'from_version' => $old_version, 'to_version' => $new_version]);
         }

@@ -22,16 +22,8 @@ function find_available_check_key(): string
 {
     while (true) {
         $key = generate_key(16);
-        $query = '
-select
-  count(*)
-from
-  '.USER_MAIL_NOTIFICATION_TABLE.'
-where
-  check_key = \''.$key.'\';';
-
-        [$count] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
-        if ($count == 0) {
+        if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationRepository::class)
+            ->checkKeyExists($key)) {
             return $key;
         }
     }
@@ -80,66 +72,14 @@ function quote_check_key_list(array $check_key_list = []): array
  */
 function get_user_notifications(string $action, array $check_key_list = [], bool|string $enabled_filter_value = ''): array
 {
-    $data_users = [];
+    // PHP loose comparison: false == '' is true, so the original only applied
+    // the filter when $enabled_filter_value was strictly true.
+    $enabledFilter = ($enabled_filter_value !== '' && $enabled_filter_value !== false)
+        ? (bool) $enabled_filter_value
+        : null;
 
-    if (in_array($action, ['subscribe', 'send'])) {
-        $quoted_check_key_list = quote_check_key_list($check_key_list);
-        if (count($quoted_check_key_list) != 0) {
-            $query_and_check_key = ' and
-    check_key in ('.implode(',', $quoted_check_key_list).') ';
-        } else {
-            $query_and_check_key = '';
-        }
-
-        $query = '
-select
-  N.user_id,
-  N.check_key,
-  U.'.\Piwigo\Config\Config::userFields()['username'].' as username,
-  U.'.\Piwigo\Config\Config::userFields()['email'].' as mail_address,
-  N.enabled,
-  N.last_send,
-  UI.status
-from '.USER_MAIL_NOTIFICATION_TABLE.' as N
-  JOIN '.USERS_TABLE.' as U on N.user_id =  U.'.\Piwigo\Config\Config::userFields()['id'].'
-  JOIN '.USER_INFOS_TABLE.' as UI on UI.user_id = N.user_id
-where 1=1';
-
-        if ($action == 'send') {
-            // No mail empty and all users enabled
-            $query .= ' and
-  N.enabled = \'true\' and
-  U.'.\Piwigo\Config\Config::userFields()['email'].' is not null';
-        }
-
-        $query .= $query_and_check_key;
-
-        if ($enabled_filter_value != '') {
-            $query .= ' and
-        N.enabled = \''.boolean_to_string($enabled_filter_value).'\'';
-        }
-
-        $query .= '
-order by';
-
-        if ($action == 'send') {
-            $query .= '
-  last_send, username;';
-        } else {
-            $query .= '
-  username';
-        }
-
-        $query .= ';';
-
-        $result = pwg_query($query);
-        if (!empty($result)) {
-            while ($nbm_user = pwg_db_fetch_assoc($result)) {
-                $data_users[] = $nbm_user;
-            }
-        }
-    }
-    return $data_users;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationRepository::class)
+        ->getUserNotifications($action, $check_key_list, $enabledFilter);
 }
 
 /*

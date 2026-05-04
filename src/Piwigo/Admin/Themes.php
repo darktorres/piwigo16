@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
 
 class Themes
@@ -111,14 +113,7 @@ class Themes
                     $themeVersion = is_scalar($tvRaw) ? (string) $tvRaw : '';
                     $tnRaw = $this->fs_themes[$theme_id]['name'] ?? null;
                     $themeName = is_scalar($tnRaw) ? (string) $tnRaw : '';
-                    $query = '
-INSERT INTO '.THEMES_TABLE.'
-  (id, version, name)
-  VALUES(\''.$theme_id.'\',
-         \''.$themeVersion.'\',
-         \''.$themeName.'\')
-;';
-                    pwg_query($query);
+                    ServiceLocator::get(ThemeRepository::class)->activate($theme_id, $themeVersion, $themeName);
 
                     $activity_details['version'] = $themeVersion;
 
@@ -141,33 +136,14 @@ INSERT INTO '.THEMES_TABLE.'
                 }
 
                 if ($theme_id == get_default_theme()) {
-                    // find a random theme to replace
-                    $new_theme = null;
-
-                    $query = '
-SELECT id
-  FROM '.THEMES_TABLE.'
-  WHERE id != \''.$theme_id.'\'
-;';
-                    $result = pwg_query($query);
-                    if (pwg_db_num_rows($result) == 0) {
-                        $new_theme = 'default';
-                    } else {
-                        $new_theme_row = pwg_db_fetch_row($result) ?? [null];
-                        $new_theme = (string) ($new_theme_row[0] ?? 'default');
-                    }
-
+                    $themeRepo = ServiceLocator::get(ThemeRepository::class);
+                    $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? 'default';
                     $this->set_default_theme($new_theme);
                 }
 
                 $theme_maintain->deactivate();
 
-                $query = '
-DELETE
-  FROM '.THEMES_TABLE.'
-  WHERE id= \''.$theme_id.'\'
-;';
-                pwg_query($query);
+                ServiceLocator::get(ThemeRepository::class)->deactivate($theme_id);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
                     conf_update_param('mobile_theme', '');
@@ -252,28 +228,16 @@ DELETE
         // first we need to know which users are using the current default theme
         $default_theme = get_default_theme();
 
-        $query = '
-SELECT
-    user_id
-  FROM '.USER_INFOS_TABLE.'
-  WHERE theme = \''.$default_theme.'\'
-;';
+        $themeRepo = ServiceLocator::get(ThemeRepository::class);
         $user_ids = array_unique(
             array_merge(
-                query2array($query, null, 'user_id'),
+                $themeRepo->findUsersByTheme($default_theme),
                 [Config::guestId(), Config::defaultUserId()]
             )
         );
 
-        // $user_ids can't be empty, at least the default user has the default
-        // theme
-
-        $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET theme = \''.$theme_id.'\'
-  WHERE user_id IN ('.implode(',', $user_ids).')
-;';
-        pwg_query($query);
+        // $user_ids can't be empty, at least the default user has the default theme
+        $themeRepo->setThemeForUsers($user_ids, $theme_id);
     }
 
     /**
@@ -281,26 +245,7 @@ UPDATE '.USER_INFOS_TABLE.'
      */
     public function get_db_themes(?string $id = ''): array
     {
-        $query = '
-SELECT
-    *
-  FROM '.THEMES_TABLE;
-
-        $clauses = [];
-        if (!empty($id)) {
-            $clauses[] = 'id = \''.$id.'\'';
-        }
-        if (count($clauses) > 0) {
-            $query .= '
-  WHERE '. implode(' AND ', $clauses);
-        }
-
-        $result = pwg_query($query);
-        $themes = [];
-        while ($row = pwg_db_fetch_assoc($result)) {
-            $themes[] = $row;
-        }
-        return $themes;
+        return ServiceLocator::get(ThemeRepository::class)->findAll($id);
     }
 
 

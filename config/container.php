@@ -9,6 +9,9 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Language\LanguageRepository;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Theme\ThemeRepository;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
@@ -53,4 +56,7 @@ return [
     SessionRepository::class      => factory(static fn (Connection $conn): SessionRepository      => new SessionRepository($conn, Config::dbPrefix())),
     RateRepository::class         => factory(static fn (Connection $conn): RateRepository         => new RateRepository($conn, Config::dbPrefix())),
     GroupRepository::class        => factory(static fn (Connection $conn): GroupRepository        => new GroupRepository($conn, Config::dbPrefix())),
+    ThemeRepository::class        => factory(static fn (Connection $conn): ThemeRepository        => new ThemeRepository($conn, Config::dbPrefix())),
+    LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository     => new LanguageRepository($conn, Config::dbPrefix())),
+    PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository    => new PermalinkRepository($conn, Config::dbPrefix())),
 ];

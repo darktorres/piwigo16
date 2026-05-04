@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 
 class Languages
@@ -54,14 +56,7 @@ class Languages
                 $langVersion = is_scalar($fsLangVersion) ? (string) $fsLangVersion : '';
                 $fsLangName = $this->fs_languages[$language_id]['name'] ?? null;
                 $langName = is_scalar($fsLangName) ? (string) $fsLangName : '';
-                $query = '
-INSERT INTO '.LANGUAGES_TABLE.'
-  (id, version, name)
-  VALUES(\''.$language_id.'\',
-         \''.$langVersion.'\',
-         \''.$langName.'\')
-;';
-                pwg_query($query);
+                ServiceLocator::get(LanguageRepository::class)->activate($language_id, $langVersion, $langName);
                 break;
 
             case 'deactivate':
@@ -75,12 +70,7 @@ INSERT INTO '.LANGUAGES_TABLE.'
                     break;
                 }
 
-                $query = '
-DELETE
-  FROM '.LANGUAGES_TABLE.'
-  WHERE id= \''.$language_id.'\'
-;';
-                pwg_query($query);
+                ServiceLocator::get(LanguageRepository::class)->deactivate($language_id);
                 break;
 
             case 'delete':
@@ -93,24 +83,17 @@ DELETE
                     break;
                 }
 
-                // Set default language to user who are using this language
-                $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET language = \''.get_default_language().'\'
-  WHERE language = \''.$language_id.'\'
-;';
-                pwg_query($query);
+                // Set default language to users who are using this language
+                ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, get_default_language());
 
                 deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
                 break;
 
             case 'set_default':
-                $query = '
-UPDATE '.USER_INFOS_TABLE.'
-  SET language = \''.$language_id.'\'
-  WHERE user_id IN ('.Config::defaultUserId().', '.Config::guestId().')
-;';
-                pwg_query($query);
+                ServiceLocator::get(LanguageRepository::class)->setDefaultForSystemUsers(
+                    $language_id,
+                    [Config::defaultUserId(), Config::guestId()]
+                );
                 break;
         }
         return $errors;
@@ -181,14 +164,7 @@ UPDATE '.USER_INFOS_TABLE.'
 
     public function get_db_languages(): void
     {
-        $query = '
-  SELECT id, name
-    FROM '.LANGUAGES_TABLE.'
-    ORDER BY name ASC
-  ;';
-        $result = pwg_query($query);
-
-        while ($row = pwg_db_fetch_assoc($result)) {
+        foreach (ServiceLocator::get(LanguageRepository::class)->findAllOrdered() as $row) {
             $id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
             if ($id !== '') {

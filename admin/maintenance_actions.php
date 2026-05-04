@@ -81,21 +81,13 @@ switch ($action) {
         }
     case 'history_detail':
         {
-            $query = '
-DELETE
-  FROM '.HISTORY_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAll();
             \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.')));
             break;
         }
     case 'history_summary':
         {
-            $query = '
-DELETE
-  FROM '.HISTORY_SUMMARY_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAllSummary();
             \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.')));
             break;
         }
@@ -104,50 +96,33 @@ DELETE
             pwg_session_gc();
 
             // delete all sessions associated to invalid user ids (it should never happen)
-            $query = '
-SELECT
-    id,
-    data
-  FROM '.SESSIONS_TABLE.'
-;';
-            $sessions = query2array($query);
+            $userRepo    = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+            $sessionRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class);
 
-            $query = '
-SELECT
-    '.\Piwigo\Config\Config::userFields()['id'].' AS id
-  FROM '.USERS_TABLE.'
-;';
-            $all_user_ids = query2array($query, 'id', null);
+            $sessions     = $userRepo->findAllSessions();
+            $all_user_ids = $userRepo->findAllUserIdsAsSet(
+                \Piwigo\Config\Config::userFields()['id'],
+                USERS_TABLE
+            );
 
             $sessions_to_delete = [];
-
             foreach ($sessions as $session) {
                 if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
                     if (!isset($all_user_ids[ $matches[1] ])) {
-                        $sessions_to_delete[] = $session['id'];
+                        $sessions_to_delete[] = (string) $session['id'];
                     }
                 }
             }
 
             if (count($sessions_to_delete) > 0) {
-                $query = '
-DELETE
-  FROM '.SESSIONS_TABLE.'
-  WHERE id IN (\''.implode("','", $sessions_to_delete).'\')
-;';
-                pwg_query($query);
+                $sessionRepo->deleteByIds($sessions_to_delete);
             }
             \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.')));
             break;
         }
     case 'feeds':
         {
-            $query = '
-DELETE
-  FROM '.USER_FEED_TABLE.'
-  WHERE last_check IS NULL
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->deleteNeverUsedFeeds();
             \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.')));
             break;
         }
@@ -171,11 +146,7 @@ DELETE
         }
     case 'search':
         {
-            $query = '
-DELETE
-  FROM '.SEARCH_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class)->deleteAll();
             sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
             break;
         }
@@ -286,7 +257,7 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
+$db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
 $template->assign(
     [
@@ -376,7 +347,7 @@ SELECT
     COUNT(*)
   FROM '.LOUNGE_TABLE.'
 ;';
-[$nb_lounge] = pwg_db_fetch_row(pwg_query($query)) ?? [null];
+$nb_lounge = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countLoungeImages();
 
 if ($nb_lounge > 0) {
     $template->assign(

@@ -88,20 +88,12 @@ switch ($action) {
         }
     case 'history_detail':
         {
-            $query = '
-DELETE
-  FROM '.HISTORY_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAll();
             break;
         }
     case 'history_summary':
         {
-            $query = '
-DELETE
-  FROM '.HISTORY_SUMMARY_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAllSummary();
             break;
         }
     case 'sessions':
@@ -109,50 +101,33 @@ DELETE
             pwg_session_gc();
 
             // delete all sessions associated to invalid user ids (it should never happen)
-            $query = '
-SELECT
-    id,
-    data
-  FROM '.SESSIONS_TABLE.'
-;';
-            $sessions = query2array($query);
+            $userRepo    = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
+            $sessionRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class);
 
-            $query = '
-SELECT
-    '.\Piwigo\Config\Config::userFields()['id'].' AS id
-  FROM '.USERS_TABLE.'
-;';
-            $all_user_ids = query2array($query, 'id', null);
+            $sessions     = $userRepo->findAllSessions();
+            $all_user_ids = $userRepo->findAllUserIdsAsSet(
+                \Piwigo\Config\Config::userFields()['id'],
+                USERS_TABLE
+            );
 
             $sessions_to_delete = [];
-
             foreach ($sessions as $session) {
                 if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
                     if (!isset($all_user_ids[ $matches[1] ])) {
-                        $sessions_to_delete[] = $session['id'];
+                        $sessions_to_delete[] = (string) $session['id'];
                     }
                 }
             }
 
             if (count($sessions_to_delete) > 0) {
-                $query = '
-DELETE
-  FROM '.SESSIONS_TABLE.'
-  WHERE id IN (\''.implode("','", $sessions_to_delete).'\')
-;';
-                pwg_query($query);
+                $sessionRepo->deleteByIds($sessions_to_delete);
             }
 
             break;
         }
     case 'feeds':
         {
-            $query = '
-DELETE
-  FROM '.USER_FEED_TABLE.'
-  WHERE last_check IS NULL
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->deleteNeverUsedFeeds();
             break;
         }
     case 'database':
@@ -168,11 +143,7 @@ DELETE
         }
     case 'search':
         {
-            $query = '
-DELETE
-  FROM '.SEARCH_TABLE.'
-;';
-            pwg_query($query);
+            \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class)->deleteAll();
             break;
         }
     case 'compiled-templates':
@@ -259,7 +230,7 @@ $purge_urls[ l10n(IMG_CUSTOM) ] = sprintf($url_format, 'derivatives').'&amp;type
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();')) ?? [null];
+$db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
 
 [$container_name, $container_version] = get_container_info();
 

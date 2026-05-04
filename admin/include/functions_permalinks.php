@@ -13,14 +13,8 @@ declare(strict_types=1);
  */
 function get_cat_id_from_permalink(string $permalink): ?int
 {
-    $query = '
-SELECT id FROM '.CATEGORIES_TABLE.'
-  WHERE permalink=\''.$permalink.'\'';
-    $ids = query2array($query, null, 'id');
-    if (!empty($ids)) {
-        return (int)$ids[0];
-    }
-    return null;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class)
+        ->findCategoryIdByPermalink($permalink);
 }
 
 /** returns a category id that has used before this permalink (or null)
@@ -28,21 +22,8 @@ SELECT id FROM '.CATEGORIES_TABLE.'
  */
 function get_cat_id_from_old_permalink(string $permalink): ?int
 {
-    $query = '
-SELECT c.id
-  FROM '.OLD_PERMALINKS_TABLE.' op INNER JOIN '.CATEGORIES_TABLE.' c
-    ON op.cat_id=c.id
-  WHERE op.permalink=\''.$permalink.'\'
-  LIMIT 1';
-    $result = pwg_query($query);
-    $cat_id = null;
-    if (pwg_db_num_rows($result)) {
-        [$cat_id] = pwg_db_fetch_row($result) ?? [null];
-        if ($cat_id !== null) {
-            $cat_id = (int)$cat_id;
-        }
-    }
-    return $cat_id;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class)
+        ->findOldCategoryId($permalink);
 }
 
 
@@ -54,15 +35,9 @@ SELECT c.id
  */
 function delete_cat_permalink(string $cat_id, $save): bool
 {
-    $query = '
-SELECT permalink
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id=\''.$cat_id.'\'
-;';
-    $result = pwg_query($query);
-    if (pwg_db_num_rows($result)) {
-        [$permalink] = pwg_db_fetch_row($result) ?? [null];
-    }
+    $permalinkRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class);
+    $permalink = $permalinkRepo->findPermalinkByCategoryId((int) $cat_id);
+
     if (!isset($permalink)) {// no permalink; nothing to do
         return true;
     }
@@ -79,28 +54,16 @@ SELECT permalink
             return false;
         }
     }
-    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET permalink=NULL
-  WHERE id='.$cat_id.'
-  LIMIT 1';
-    pwg_query($query);
+
+    $permalinkRepo->clearCategoryPermalink((int) $cat_id);
 
     \Piwigo\Cache\RequestCache::clearNs('cat_names');
     if ($save) {
         if (isset($old_cat_id)) {
-            $query = '
-UPDATE '.OLD_PERMALINKS_TABLE.'
-  SET date_deleted=NOW()
-  WHERE cat_id='.$cat_id.' AND permalink=\''.$permalink.'\'';
+            $permalinkRepo->markOldPermalinkDeleted((int) $cat_id, $permalink);
         } else {
-            $query = '
-INSERT INTO '.OLD_PERMALINKS_TABLE.'
-  (permalink, cat_id, date_deleted)
-VALUES
-  ( \''.$permalink.'\','.$cat_id.',NOW() )';
+            $permalinkRepo->insertOldPermalinkDeleted($permalink, (int) $cat_id);
         }
-        pwg_query($query);
     }
     return true;
 }
@@ -157,20 +120,14 @@ function set_cat_permalink(string $cat_id, string $permalink, $save): bool
         return false;
     }
 
+    $permalinkRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class);
+
     if (isset($old_cat_id)) {// the new permalink must not be active and old at the same time
         assert($old_cat_id == $cat_id);
-        $query = '
-DELETE FROM '.OLD_PERMALINKS_TABLE.'
-  WHERE cat_id='.$old_cat_id.' AND permalink=\''.$permalink.'\'';
-        pwg_query($query);
+        $permalinkRepo->deleteOldPermalink((int) $old_cat_id, $permalink);
     }
 
-    $query = '
-UPDATE '.CATEGORIES_TABLE.'
-  SET permalink=\''.$permalink.'\'
-  WHERE id='.$cat_id;
-    //  LIMIT 1';
-    pwg_query($query);
+    $permalinkRepo->setCategoryPermalink((int) $cat_id, $permalink);
 
     \Piwigo\Cache\RequestCache::clearNs('cat_names');
 

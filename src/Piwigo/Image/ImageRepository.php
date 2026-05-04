@@ -11,6 +11,17 @@ use Doctrine\DBAL\ArrayParameterType;
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
 {
+    /** Count images currently sitting in the upload lounge. */
+    public function countLoungeImages(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('lounge'))
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /**
      * Return (MAX(id)+1, COUNT(*)) for the images table.
      * Used by ws_getMissingDerivatives() to page through image ids.

@@ -23,4 +23,16 @@ final class HistoryRepository extends AbstractRepository
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
+
+    /** Truncate the history detail table. */
+    public function deleteAll(): void
+    {
+        $this->conn->executeStatement('DELETE FROM ' . $this->table('history'));
+    }
+
+    /** Truncate the history summary table. */
+    public function deleteAllSummary(): void
+    {
+        $this->conn->executeStatement('DELETE FROM ' . $this->table('history_summary'));
+    }
 }

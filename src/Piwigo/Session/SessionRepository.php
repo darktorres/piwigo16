@@ -57,4 +57,22 @@ final class SessionRepository extends AbstractRepository
             ->setParameter('pattern', '%pwg_uid|i:' . $userId . ';%')
             ->executeStatement();
     }
+
+    /**
+     * Delete sessions by their composite id strings.
+     * Used by maintenance to purge sessions belonging to deleted users.
+     *
+     * @param string[] $compositeIds
+     */
+    public function deleteByIds(array $compositeIds): void
+    {
+        if ($compositeIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('sessions'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $compositeIds, \Doctrine\DBAL\ArrayParameterType::STRING);
+        $qb->executeStatement();
+    }
 }

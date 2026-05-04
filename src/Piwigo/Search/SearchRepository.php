@@ -50,4 +50,10 @@ final class SearchRepository extends AbstractRepository
             ->fetchOne();
         return is_string($value) ? $value : null;
     }
+
+    /** Truncate the search history table. */
+    public function deleteAll(): void
+    {
+        $this->conn->executeStatement('DELETE FROM ' . $this->table('search'));
+    }
 }

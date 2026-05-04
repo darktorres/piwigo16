@@ -185,6 +185,48 @@ final class UserRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /** Delete notification feed rows that were never used (last_check IS NULL). */
+    public function deleteNeverUsedFeeds(): void
+    {
+        $this->conn->createQueryBuilder()
+            ->delete($this->table('user_feed'))
+            ->where('last_check IS NULL')
+            ->executeStatement();
+    }
+
+    /**
+     * Return all session rows from the sessions table.
+     * Used by maintenance to find sessions belonging to deleted users.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllSessions(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('id', 'data')
+            ->from($this->table('sessions'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Return all user ids as a set (associative array keyed by id string).
+     * Used by maintenance to cross-check session user ids.
+     *
+     * @return array<string, null>
+     */
+    public function findAllUserIdsAsSet(string $idField, string $usersTable): array
+    {
+        $rows = $this->conn->executeQuery(
+            "SELECT $idField FROM $usersTable"
+        )->fetchFirstColumn();
+        $result = [];
+        foreach ($rows as $id) {
+            $result[(string) $id] = null;
+        }
+        return $result;
+    }
+
     /**
      * Return a map of user_id → username for the given ids.
      * Column names come from admin config — not user-supplied.

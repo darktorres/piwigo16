@@ -1717,9 +1717,23 @@ All three deferred controllers use shims with their own bootstrap sequences — 
 
 Wave A is **complete** — all 15 root entry-point files are now controller shims.
 
-### Remaining steps
+### Completed — Wave B (admin entry-point controller)
 
-**Wave B — admin controllers** (`src/Piwigo/Controller/Admin/`): ~57 files in 7 cluster commits.
+`AdminController` (`src/Piwigo/Controller/Admin/AdminController.php`) extracts the full body of `admin.php`. The root `admin.php` is now a 6-line shim identical in structure to the Wave A shims:
+
+```php
+define('PHPWG_ROOT_PATH', './');
+define('IN_ADMIN', true);         // must precede common.inc.php
+require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+\Piwigo\Core\Kernel::boot();
+(new AdminController)(RequestFactory::fromGlobals());
+```
+
+`AdminController` preserves the existing `require PHPWG_ROOT_PATH . 'admin/' . $adminPage . '.php'` dispatch mechanism — the 60+ `admin/*.php` sub-page files are included files, not standalone entry-points, and continue to work unchanged. Sub-page OOP conversion (individual `AlbumController`, `PhotoController`, etc.) is deferred to a future phase.
+
+Wave B is **complete** — the `/admin{rest}` route now flows through the PSR-7/15 pipeline.
+
+### Remaining steps
 
 **Phase 6 — DTOs + URL generator + cleanup:**
 - `src/Piwigo/Page/Context/` typed page DTOs

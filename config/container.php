@@ -53,6 +53,12 @@ use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Piwigo\Config\ConfigService;
+use Piwigo\Core\DateService;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Db\QueryHelper;
+use Piwigo\Lang\LangService;
 
 return [
     Config::class          => factory(fn () => Config::instance()),
@@ -91,6 +97,12 @@ return [
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),
+    StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
+    DateService::class         => factory(static fn (): DateService => new DateService()),
+    LangService::class         => factory(static fn (): LangService => new LangService()),
+    ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
+    QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
+    Util::class                => factory(static fn (Connection $conn, LoggerInterface $log): Util => new Util($conn, $log)),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

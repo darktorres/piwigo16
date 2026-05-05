@@ -169,12 +169,27 @@ function unset_make_full_url(): void
 }
 
 /**
+ * Called from i.php before Kernel::boot() — must have its own implementation.
+ * UrlService::embellishUrl() is canonical.
+ *
  * @param string|string[] $url
  * @return string|string[]
  */
 function embellish_url(string|array $url): string|array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->embellishUrl($url);
+    if (is_array($url)) {
+        return array_map(static fn (string $u): string => is_string($r = embellish_url($u)) ? $r : $u, $url);
+    }
+    $url = str_replace('/./', '/', $url);
+    while (($dotdot = strpos($url, '/../', 1)) !== false) {
+        $before = strrpos($url, '/', -(strlen($url) - $dotdot + 1));
+        if ($before !== false) {
+            $url = substr_replace($url, '', $before, $dotdot - $before + 3);
+        } else {
+            break;
+        }
+    }
+    return $url;
 }
 
 function get_gallery_home_url(): string

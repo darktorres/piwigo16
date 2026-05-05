@@ -726,6 +726,9 @@ function load_language(string $filename, string $dirname = '', array $options = 
 
 function convert_charset(string $str, string $source_charset, string $dest_charset): string
 {
+    if ($source_charset === $dest_charset) {
+        return $str;
+    }
     return ServiceLocator::get(StringUtil::class)->convertCharset($str, $source_charset, $dest_charset);
 }
 

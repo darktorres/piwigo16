@@ -46,6 +46,10 @@ function render_comment_content(string $content): string|null
  */
 function name_compare(array $a, array $b): int
 {
+    // pre-boot standalone — called from Languages::get_fs_languages() in install.php / upgrade.php
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Html\HtmlService::class)) {
+        return strcmp(strtolower(is_scalar($a['name']) ? (string) $a['name'] : ''), strtolower(is_scalar($b['name']) ? (string) $b['name'] : ''));
+    }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Html\HtmlService::class)->nameCompare($a, $b);
 }
 

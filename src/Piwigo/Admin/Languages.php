@@ -118,7 +118,7 @@ class Languages
                 $path = PHPWG_ROOT_PATH.'language/'.$file;
                 if (is_dir($path) and !is_link($path)
                     and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
-                    and file_exists($path.'/common.lang.php')
+                    and file_exists($path.'/common.po')
                 ) {
                     $language = [
                         'name' => $file,
@@ -127,29 +127,11 @@ class Languages
                         'uri' => '',
                         'author' => '',
                       ];
-                    $plg_data = implode('', file($path.'/common.lang.php') ?: []);
+                    $plg_data = implode('', file($path.'/common.po') ?: []);
 
-                    if (preg_match('|Language Name:\\s*(.+)|', $plg_data, $val)) {
+                    if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
                         $language['name'] = convert_charset($language['name'], 'utf-8', $target_charset);
-                    }
-                    if (preg_match('|Version:\\s*([\\w.-]+)|', $plg_data, $val)) {
-                        $language['version'] = trim($val[1]);
-                    }
-                    if (preg_match('|Language URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
-                        $language['uri'] = trim($val[1]);
-                    }
-                    if (preg_match('|Author:\\s*(.+)|', $plg_data, $val)) {
-                        $language['author'] = trim($val[1]);
-                    }
-                    if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
-                        $language['author uri'] = trim($val[1]);
-                    }
-                    if (!empty($language['uri']) and strpos($language['uri'], 'extension_view.php?eid=')) {
-                        list(, $extension) = explode('extension_view.php?eid=', $language['uri']);
-                        if (is_numeric($extension)) {
-                            $language['extension'] = $extension;
-                        }
                     }
 
                     // IMPORTANT SECURITY !

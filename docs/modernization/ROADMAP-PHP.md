@@ -1142,20 +1142,33 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 ### What was done
 
-- **322 PO files generated** across 72 locales (2 empty PHP files skipped). All 324 `.lang.php` files deleted immediately after parity verification.
+**Main repo (piwigo16)**
+- **324 PO files generated** across 72 locales. All 324 `.lang.php` files deleted immediately after parity verification.
 - **Packages added:** `gettext/gettext` (PO parser) + `gettext/translator` (pure-PHP runtime — no `ext-gettext` required).
-- **`src/Piwigo/Lang/Translator`** — new service wrapping `Gettext\Translator`; handles plural forms via proper `ngettext()` with per-locale plural-form rules; mirrors strings into `$GLOBALS['lang']` for plugin/theme backward compat.
+- **`src/Piwigo/Lang/Translator`** — singleton service wrapping `Gettext\Translator`; handles plural forms via proper `ngettext()` with per-locale plural-form rules; mirrors strings into `$GLOBALS['lang']` for plugin/theme backward compat; push/pop stack (`pushFresh()` / `pop()` / `saveForLanguage()` / `restoreForLanguage()`) for `switch_lang_to` / `switch_lang_back` in mail sending.
+- **`lang_info` from PO headers** — `code`, `direction`, `name`, `country`, `zero_plural` now read from `X-Piwigo-*` custom PO headers via `PoLoader`; merged into `LanguageStack` so `$lang_info` is always populated without the old PHP include.
 - **`Lang::t()`** delegates to `Translator::get()->translate()`.
-- **`l10n_dec()`** uses `Translator::get()->plural()` — proper ngettext plural evaluation replaces the hand-rolled `zero_plural` flag logic; supports all 6 plural-form tiers across 72 locales (Arabic, Slavic, Romance, etc.).
-- **`load_language()`** loads `.po` via `Translator::load()`; falls back to PHP `include` for plugins/themes that don't ship PO files yet.
+- **`l10n_dec()`** uses `Translator::get()->plural()` — proper ngettext plural evaluation replaces the hand-rolled `zero_plural` flag logic; supports all 6 plural-form tiers across 72 locales (Arabic, Slavic, Romance, etc.); signature widened to `int|float|null`.
+- **`load_language()`** rewritten to PO-only — reads `.po` directly; no `.lang.php` fallback; `lang_info` populated from PO `X-Piwigo-*` headers.
+- **`switch_lang_to` / `switch_lang_back`** in `functions_mail.inc.php` — updated to push/save/restore Translator state alongside `LanguageStack` for correct multi-language mail sending.
+- **DI container** — `Translator::class` binding added to `config/container.php`.
+- **`piwigo_day_N` / `piwigo_month_N` entries** — added to all 72 `common.po` files; 10 locales (ar_EG, az_AZ, en_GB, en_US, ga_IE, hy_AM, lb_LU, ms_MY, ta_IN, zh_HK) were missing these and were patched (az_AZ, en_US, ms_MY had no source data — added manually). `admin/stats.php` also guards against missing `$lang['month']` as belt-and-suspenders.
 - **`tools/i18n/` suite:**
   - `extract-pairs.php` — scans codebase for static `l10n_dec()` singular/plural pairs
   - `plural-forms.php` — plural-form rule database for all 72 Piwigo locales
   - `php-to-po-fn.php` — converts one `.lang.php` to PO string; known pairs become `msgid_plural` entries
-  - `convert-all.php` — batch runner
-  - `verify-parity.php` — confirms every PHP key is present in the generated PO
-- Parity verified: 322 file pairs, 0 missing keys.
+  - `convert-all.php` — batch runner (main repo)
+  - `convert-ext-languages.php` — batch runner for `piwigo16-languages` sibling repo
+  - `verify-parity.php` — confirms every PHP key is present in the generated PO (main repo)
+  - `verify-parity-ext.php` — same for sibling repo
+  - `patch-day-month.php` — one-time tool to recover `$lang['day']`/`$lang['month']` arrays from git history and append as `piwigo_day_N`/`piwigo_month_N` entries; supports Windows (`2>NUL`), idempotent re-runs, and partial patches (days-only or months-only)
+- Parity verified: 324 file pairs, 0 missing keys.
 - PHPStan level 9: **0 errors**.
+
+**Sibling repo (piwigo16-languages)**
+- All `.lang.php` files converted to PO and deleted (same toolchain as main repo).
+- `.zip` archives for each locale regenerated to contain only PO files.
+- `piwigo_day_N` / `piwigo_month_N` entries patched into all `common.po` files there as well.
 
 ### Deferred
 
@@ -1168,11 +1181,10 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 php tools/i18n/verify-parity.php          # exits 0
 
 # Plurals work:
-php -r "echo Piwigo\Lang\Translator::translatePlural('%d photo', '%d photos', 5);"
+php -r "echo Piwigo\Lang\Translator::get()->plural('%d photo', '%d photos', 5);"
 # "5 photos"
 
-vendor/bin/phpunit --filter TranslatorTest
-npx playwright test                        # all locales render
+npx playwright test                        # all locales render, no unserialize warnings
 ```
 
 ---

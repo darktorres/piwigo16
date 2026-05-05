@@ -48,6 +48,21 @@ final class ParamDefinition
     }
 
     /**
+     * Optional param with no default value.
+     * Unlike optional(), this leaves the param absent from $params if not provided
+     * (rather than injecting null). Use when the handler checks isset($params['name']).
+     */
+    public static function optionalFlag(
+        string $name,
+        int $type = 0,
+        int $flags = 0,
+        string $info = '',
+        int|float|null $maxValue = null,
+    ): self {
+        return new self($name, $type, $flags | WsParam::Optional->value, null, false, $maxValue, $info);
+    }
+
+    /**
      * Converts to the internal WsParamDef array format stored in PwgServer::$_methods.
      *
      * @return array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string}

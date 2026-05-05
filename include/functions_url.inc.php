@@ -26,9 +26,49 @@ function get_root_url(): string
     return $rootUrl;
 }
 
+/**
+ * Called from i.php before Kernel::boot() — must have its own implementation.
+ * UrlService::getAbsoluteRootUrl() is canonical.
+ */
 function get_absolute_root_url(bool $with_scheme = true): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getAbsoluteRootUrl($with_scheme);
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']) {
+        $_SERVER['HTTPS'] = 'on';
+    }
+
+    $url = '';
+    if ($with_scheme) {
+        $isHttps = false;
+        if (isset($_SERVER['HTTPS']) && is_scalar($_SERVER['HTTPS']) &&
+          ((strtolower((string) $_SERVER['HTTPS']) === 'on') || ((int) $_SERVER['HTTPS'] === 1))) {
+            $isHttps = true;
+            $url    .= 'https://';
+        } else {
+            $url .= 'http://';
+        }
+        if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+            $url .= is_scalar($_SERVER['HTTP_X_FORWARDED_HOST']) ? (string) $_SERVER['HTTP_X_FORWARDED_HOST'] : '';
+        } else {
+            $url    .= is_scalar($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : '';
+            $urlPort = null;
+            $cfgPort = \Piwigo\Config\Config::urlPort();
+            if ('none' === $cfgPort) {
+                // do nothing
+            } elseif ('auto' === $cfgPort) {
+                $serverPort = is_scalar($_SERVER['SERVER_PORT'] ?? null) ? (int) $_SERVER['SERVER_PORT'] : 80;
+                if ((!$isHttps && $serverPort !== 80) || ($isHttps && $serverPort !== 443)) {
+                    $urlPort = ':' . $serverPort;
+                }
+            } else {
+                $urlPort = ':' . $cfgPort;
+            }
+            if (!empty($urlPort) && strrchr($url, ':') !== $urlPort) {
+                $url .= $urlPort;
+            }
+        }
+    }
+    $url .= cookie_path();
+    return $url;
 }
 
 /** @param array<mixed> $params */

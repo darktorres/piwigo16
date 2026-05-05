@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 
@@ -56,7 +57,7 @@ class Languages
                 $langVersion = is_scalar($fsLangVersion) ? (string) $fsLangVersion : '';
                 $fsLangName = $this->fs_languages[$language_id]['name'] ?? null;
                 $langName = is_scalar($fsLangName) ? (string) $fsLangName : '';
-                ServiceLocator::get(LanguageRepository::class)->activate($language_id, $langVersion, $langName);
+                $this->langRepo()->activate($language_id, $langVersion, $langName);
                 break;
 
             case 'deactivate':
@@ -70,7 +71,7 @@ class Languages
                     break;
                 }
 
-                ServiceLocator::get(LanguageRepository::class)->deactivate($language_id);
+                $this->langRepo()->deactivate($language_id);
                 break;
 
             case 'delete':
@@ -84,19 +85,28 @@ class Languages
                 }
 
                 // Set default language to users who are using this language
-                ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, get_default_language());
+                $this->langRepo()->reassignUsers($language_id, get_default_language());
 
                 deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
                 break;
 
             case 'set_default':
-                ServiceLocator::get(LanguageRepository::class)->setDefaultForSystemUsers(
+                $this->langRepo()->setDefaultForSystemUsers(
                     $language_id,
                     [Config::defaultUserId(), Config::guestId()]
                 );
                 break;
         }
         return $errors;
+    }
+
+    // pre-boot standalone — returns LanguageRepository from container or constructs it directly
+    private function langRepo(): LanguageRepository
+    {
+        if (ServiceLocator::has(LanguageRepository::class)) {
+            return ServiceLocator::get(LanguageRepository::class);
+        }
+        return new LanguageRepository(DbConnection::build(), Config::dbPrefix());
     }
 
     /**
@@ -146,7 +156,7 @@ class Languages
 
     public function get_db_languages(): void
     {
-        foreach (ServiceLocator::get(LanguageRepository::class)->findAllOrdered() as $row) {
+        foreach ($this->langRepo()->findAllOrdered() as $row) {
             $id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
             if ($id !== '') {

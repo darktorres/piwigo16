@@ -9,6 +9,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
 
@@ -114,7 +115,7 @@ class Themes
                     $themeVersion = is_scalar($tvRaw) ? (string) $tvRaw : '';
                     $tnRaw = $this->fs_themes[$theme_id]['name'] ?? null;
                     $themeName = is_scalar($tnRaw) ? (string) $tnRaw : '';
-                    ServiceLocator::get(ThemeRepository::class)->activate($theme_id, $themeVersion, $themeName);
+                    $this->themeRepo()->activate($theme_id, $themeVersion, $themeName);
 
                     $activity_details['version'] = $themeVersion;
 
@@ -137,14 +138,14 @@ class Themes
                 }
 
                 if ($theme_id == get_default_theme()) {
-                    $themeRepo = ServiceLocator::get(ThemeRepository::class);
+                    $themeRepo = $this->themeRepo();
                     $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? 'default';
                     $this->set_default_theme($new_theme);
                 }
 
                 $theme_maintain->deactivate();
 
-                ServiceLocator::get(ThemeRepository::class)->deactivate($theme_id);
+                $this->themeRepo()->deactivate($theme_id);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
                     conf_update_param('mobile_theme', '');
@@ -229,7 +230,7 @@ class Themes
         // first we need to know which users are using the current default theme
         $default_theme = get_default_theme();
 
-        $themeRepo = ServiceLocator::get(ThemeRepository::class);
+        $themeRepo = $this->themeRepo();
         $user_ids = array_unique(
             array_merge(
                 $themeRepo->findUsersByTheme($default_theme),
@@ -246,9 +247,17 @@ class Themes
      */
     public function get_db_themes(?string $id = ''): array
     {
-        return ServiceLocator::get(ThemeRepository::class)->findAll($id);
+        return $this->themeRepo()->findAll($id);
     }
 
+    // pre-boot standalone — returns ThemeRepository from container or constructs it directly
+    private function themeRepo(): ThemeRepository
+    {
+        if (ServiceLocator::has(ThemeRepository::class)) {
+            return ServiceLocator::get(ThemeRepository::class);
+        }
+        return new ThemeRepository(DbConnection::build(), Config::dbPrefix());
+    }
 
     /**
     *  Get themes defined in the theme directory

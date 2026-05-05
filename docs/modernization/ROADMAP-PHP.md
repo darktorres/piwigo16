@@ -1191,7 +1191,7 @@ npx playwright test                        # all locales render, no unserialize 
 
 ## #19 — Migrate `include/functions_*.inc.php` to typed service classes
 
-**Status:** In progress — 285 of ~366 functions migrated (18 of 19 modules done) &nbsp;|&nbsp; **Size:** XL
+**Status:** ✅ Done — all 19 modules + `functions.inc.php` migrated (~366 functions) &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
@@ -1204,15 +1204,16 @@ Move all 366 free functions across the 19 `functions_*.inc.php` modules into typ
 - 9 legacy `.class.php` files are migrated to `src/` by item #3 — they're the home for the new domain classes here.
 - DB-layer plumbing (`functions_mysqli.inc.php`, `pwg_query`) is migrated to repositories by item #17.
 
-### What was done (phases 1–5c)
+### What was done (phases 1–6)
 
-18 of the 19 `functions_*.inc.php` modules fully migrated. Each function
-moved to a typed service class; the free function becomes a one-line
-ServiceLocator delegate. PHPStan level 9 at zero errors after each phase.
-51/51 Playwright e2e tests pass throughout.
+All 19 `functions_*.inc.php` modules + `functions.inc.php` fully migrated.
+Each function moved to a typed service class; the free function becomes a
+one-line ServiceLocator delegate. PHPStan level 9 at zero errors after
+every phase. 51/51 Playwright e2e tests pass throughout.
 
 **Pre-boot pattern**: Functions called before `Kernel::boot()` (e.g.
-`cookie_path`, `generate_key`, `fatal_error`, `get_root_url`) keep their
+`cookie_path`, `generate_key`, `fatal_error`, `get_root_url`, `l10n`,
+`load_conf_from_db`, `redirect_html`, `get_branch_from_version`) keep their
 own standalone implementation in `include/` in addition to the canonical
 service-class copy. ServiceLocator delegates are only safe post-boot.
 
@@ -1228,20 +1229,15 @@ adding new `src/` classes (classmap-authoritative mode).
 | 5a | MailService | 23 |
 | 5b | AuthService, UserService, PermissionService, PreferencesService | 60 |
 | 5c | SearchService | 17 |
-| **Total** | **19 service classes** | **~236 functions** |
-
-`functions.inc.php` (81 functions) remains — deferred because many of its
-functions are called during early boot before `Kernel::boot()` (l10n,
-load_conf_from_db, get_languages, redirect_html, etc.) and would each need
-the same pre-boot standalone-implementation pattern. This is a separate
-session of work.
+| 6 | StringUtil, DateService, LangService, ConfigService, QueryHelper, Util | 81 |
+| **Total** | **25 service classes** | **~317 functions** |
 
 ### Per-module checklist
 
 | Module                                                 | Lines | Funcs | Status | Target namespace |
 | ------------------------------------------------------ | ----- | ----- | ------ | -------------------------------------------------------- |
 | `functions_user.inc.php`                               | 2,711 | 60    | ✅ done | `Piwigo\Users\` (AuthService, UserService, PermissionService, PreferencesService) |
-| `functions.inc.php`                                    | 2,820 | 81    | ⏳ deferred | spread by domain — pre-boot functions need standalone impls |
+| `functions.inc.php`                                    | 2,820 | 81    | ✅ done | StringUtil, DateService, LangService, ConfigService, QueryHelper, Util |
 | `functions_search.inc.php`                             | 2,101 | 17    | ✅ done | `Piwigo\Search\SearchService` |
 | `functions_mail.inc.php`                               | 1,054 | 23    | ✅ done | `Piwigo\Mail\MailService` |
 | `functions_url.inc.php`                                | 846   | 21    | ✅ done | `Piwigo\Url\UrlService` |
@@ -1263,17 +1259,6 @@ session of work.
 | `admin/include/functions.php`                          | 3,671 | ?     | ⏳ future | spread by admin domain |
 | `admin/include/functions_upload.inc.php`               | 1,033 | ?     | ⏳ future | `Piwigo\Admin\Upload\` |
 | `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | ⏳ future | `Piwigo\Admin\Mail\` |
-
-### Remaining: functions.inc.php cluster plan
-
-Charset (5) → `Piwigo\Core\CharsetService` · Date (7) → `Piwigo\Core\DateService`
-· String (10) → `Piwigo\Core\StringUtil` · Image (5) → extend `Piwigo\Picture\PictureService`
-· Language (7) → `Piwigo\Lang\LanguageService` · Theme (3) → `Piwigo\Theme\ThemeService`
-· DB/Config (conf_update_param, single_update, mass_* etc.) → `Piwigo\Db\QueryHelper`
-· Misc (44) → `Piwigo\Core\Util`
-
-Pre-boot functions (l10n, load_conf_from_db, get_languages, redirect_html, etc.)
-must keep standalone implementations in `include/` alongside the service copy.
 
 ### Pre-boot and admin includes → services
 

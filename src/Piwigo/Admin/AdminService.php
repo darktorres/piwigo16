@@ -7,14 +7,14 @@ namespace Piwigo\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 
 final class AdminService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     /** @return string[] */
     public function pwgURL(): array
@@ -501,7 +501,7 @@ final class AdminService
         }
         if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
             $users = get_dbal_connection()->executeQuery(
-                "SELECT MIN(registration_date) AS min_registration_date FROM " . USER_INFOS_TABLE . " WHERE registration_date > '$piwigoOrigins'"
+                'SELECT MIN(registration_date) AS min_registration_date FROM ' . USER_INFOS_TABLE . " WHERE registration_date > '$piwigoOrigins'"
             )->fetchAllAssociative();
             if (count($users) > 0) {
                 $candidate = $users[0]['min_registration_date'];

@@ -12,7 +12,8 @@ final class PictureService
 {
     public function __construct(
         private readonly ImageRepository $imageRepo,
-    ) {}
+    ) {
+    }
 
     /** @return array<string, mixed> */
     public function getDefaultSlideshowParams(): array

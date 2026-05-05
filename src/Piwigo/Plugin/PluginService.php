@@ -13,7 +13,8 @@ final class PluginService
 {
     public function __construct(
         private readonly PluginRepository $repo,
-    ) {}
+    ) {
+    }
 
     /** @return array<array<string,mixed>> */
     public function getDbPlugins(?string $state = '', ?string $id = ''): array

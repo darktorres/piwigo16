@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\PwgTOTP;
-use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

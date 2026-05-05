@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Calendar\CalendarMonthly;
-use Piwigo\Calendar\CalendarWeekly;
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

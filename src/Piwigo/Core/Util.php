@@ -21,7 +21,8 @@ final class Util
     public function __construct(
         private readonly Connection $conn,
         private readonly LoggerInterface $log,
-    ) {}
+    ) {
+    }
 
     public function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
     {
@@ -938,7 +939,7 @@ final class Util
         $watermark = ImageStdParams::get_watermark();
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
-        $query      = "SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM " . ACTIVITY_TABLE . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
+        $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . ACTIVITY_TABLE . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
         $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         $apps       = [];
         $appsPattern = [

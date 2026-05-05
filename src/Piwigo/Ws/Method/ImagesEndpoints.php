@@ -12,7 +12,6 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\SrcImage;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -987,13 +986,13 @@ final class ImagesEndpoints
         $result       = [];
         if (Config::uniquenessMode() === 'md5sum') {
             $md5sums  = preg_split($splitPattern, is_scalar($params['md5sum_list']) ? (string) $params['md5sum_list'] : '', -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            $idOfMd5  = array_column(get_dbal_connection()->executeQuery("SELECT id, md5sum FROM " . IMAGES_TABLE . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
+            $idOfMd5  = array_column(get_dbal_connection()->executeQuery('SELECT id, md5sum FROM ' . IMAGES_TABLE . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $idOfMd5[$md5sum] ?? null;
             }
         } elseif (Config::uniquenessMode() === 'filename') {
             $filenames = preg_split($splitPattern, is_scalar($params['filename_list']) ? (string) $params['filename_list'] : '', -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            $idOfFile  = array_column(get_dbal_connection()->executeQuery("SELECT id, file FROM " . IMAGES_TABLE . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
+            $idOfFile  = array_column(get_dbal_connection()->executeQuery('SELECT id, file FROM ' . IMAGES_TABLE . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
             foreach ($filenames as $filename) {
                 $result[$filename] = $idOfFile[$filename] ?? null;
             }

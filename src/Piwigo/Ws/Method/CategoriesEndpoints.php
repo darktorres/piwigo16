@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\ImageStdParams;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;

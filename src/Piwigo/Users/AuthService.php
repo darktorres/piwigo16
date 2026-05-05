@@ -14,7 +14,8 @@ final class AuthService
         private readonly UserRepository $userRepo,
         private readonly AuthKeyRepository $authKeyRepo,
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null
     {

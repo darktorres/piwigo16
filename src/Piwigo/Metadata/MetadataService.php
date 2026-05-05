@@ -11,7 +11,8 @@ final class MetadataService
 {
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     /**
      * Returns information from IPTC metadata; mapping is done here.
@@ -119,15 +120,15 @@ final class MetadataService
             // GPS data
             $gpsExif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
             if (count($gpsExif) == 4) {
-                $gpsLatArr = is_array($gpsExif['GPSLatitude'])  ? $gpsExif['GPSLatitude']  : null;
+                $gpsLatArr = is_array($gpsExif['GPSLatitude']) ? $gpsExif['GPSLatitude'] : null;
                 $gpsLonArr = is_array($gpsExif['GPSLongitude']) ? $gpsExif['GPSLongitude'] : null;
                 if (
-                    $gpsLatArr !== null and in_array($gpsExif['GPSLatitudeRef'],  ['S', 'N']) and
+                    $gpsLatArr !== null and in_array($gpsExif['GPSLatitudeRef'], ['S', 'N']) and
                     $gpsLonArr !== null and in_array($gpsExif['GPSLongitudeRef'], ['W', 'E'])
                 ) {
                     $gpsLatStr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gpsLatArr);
                     $gpsLonStr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gpsLonArr);
-                    $gpsLatRef = is_scalar($gpsExif['GPSLatitudeRef'])  ? (string) $gpsExif['GPSLatitudeRef']  : '';
+                    $gpsLatRef = is_scalar($gpsExif['GPSLatitudeRef']) ? (string) $gpsExif['GPSLatitudeRef'] : '';
                     $gpsLonRef = is_scalar($gpsExif['GPSLongitudeRef']) ? (string) $gpsExif['GPSLongitudeRef'] : '';
                     $latitude  = $this->parseExifGpsData($gpsLatStr, $gpsLatRef);
                     $longitude = $this->parseExifGpsData($gpsLonStr, $gpsLonRef);

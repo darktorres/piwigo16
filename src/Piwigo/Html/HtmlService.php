@@ -459,8 +459,8 @@ $btraceMsg
                 unset($_SESSION[$sessionKey]);
             }
             $current = match ($mode) {
-                'errors'   => $page->errors   = array_merge($page->errors,   $sessionArr),
-                'infos'    => $page->infos    = array_merge($page->infos,    $sessionArr),
+                'errors'   => $page->errors   = array_merge($page->errors, $sessionArr),
+                'infos'    => $page->infos    = array_merge($page->infos, $sessionArr),
                 'warnings' => $page->warnings = array_merge($page->warnings, $sessionArr),
                 'messages' => $page->messages = array_merge($page->messages, $sessionArr),
             };

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Category;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Category\CategoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -19,7 +19,8 @@ final class CategoryAdminService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function deleteSite(mixed $id): void
     {
@@ -587,7 +588,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
             $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
         }
         $privateCats = array_column(get_dbal_connection()->executeQuery(
-            'SELECT id FROM ' . CATEGORIES_TABLE . " WHERE id IN (" . implode(',', array_map(fn (mixed $v): string => is_numeric($v) ? (string)(int)$v : '0', $catIds)) . ") AND status = 'private'"
+            'SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_numeric($v) ? (string)(int)$v : '0', $catIds)) . ") AND status = 'private'"
         )->fetchAllAssociative(), 'id');
         if (count($privateCats) === 0) {
             return;

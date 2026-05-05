@@ -12,7 +12,8 @@ final class TagService
 {
     public function __construct(
         private readonly TagRepository $repo,
-    ) {}
+    ) {
+    }
 
     public function getNbAvailableTags(): int
     {

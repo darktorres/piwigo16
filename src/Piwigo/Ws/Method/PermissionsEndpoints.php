@@ -87,7 +87,7 @@ final class PermissionsEndpoints
                 $catIds = array_merge($catIds, get_subcat_ids($catIdParamInt));
             }
             $catIdsStr = array_map(fn (mixed $v): string => (string) $v, $catIds);
-            $query     = "SELECT id FROM " . CATEGORIES_TABLE . " WHERE id IN (" . implode(',', $catIdsStr) . ") AND status = 'private';";
+            $query     = 'SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
             $privateCats = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             $inserts     = [];
             $groupIdParam = is_array($params['group_id']) ? $params['group_id'] : [];

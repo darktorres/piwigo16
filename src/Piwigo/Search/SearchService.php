@@ -7,7 +7,6 @@ namespace Piwigo\Search;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\DbInfo;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
@@ -19,7 +18,8 @@ final class SearchService
         private readonly SearchRepository $searchRepo,
         private readonly Connection $conn,
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     public function getSearchIdPattern(int|string $candidate): ?string
     {
@@ -107,20 +107,20 @@ final class SearchService
             }
         }
 
-        $expertFilter       = is_array($displayFilters['expert'] ?? null)          ? (array) $displayFilters['expert']          : [];
-        $allwordsFilter     = is_array($displayFilters['words'] ?? null)            ? (array) $displayFilters['words']            : [];
-        $authorFilter       = is_array($displayFilters['author'] ?? null)           ? (array) $displayFilters['author']           : [];
-        $filetypeFilter     = is_array($displayFilters['file_type'] ?? null)        ? (array) $displayFilters['file_type']        : [];
-        $addedByFilter      = is_array($displayFilters['added_by'] ?? null)         ? (array) $displayFilters['added_by']         : [];
-        $albumFilter        = is_array($displayFilters['album'] ?? null)            ? (array) $displayFilters['album']            : [];
-        $postDateFilter     = is_array($displayFilters['post_date'] ?? null)        ? (array) $displayFilters['post_date']        : [];
-        $creationDateFilter = is_array($displayFilters['creation_date'] ?? null)    ? (array) $displayFilters['creation_date']    : [];
-        $ratioFilter        = is_array($displayFilters['ratio'] ?? null)            ? (array) $displayFilters['ratio']            : [];
-        $ratingFilter       = is_array($displayFilters['rating'] ?? null)           ? (array) $displayFilters['rating']           : [];
-        $fileSizeFilter     = is_array($displayFilters['file_size'] ?? null)        ? (array) $displayFilters['file_size']        : [];
-        $heightFilter       = is_array($displayFilters['height'] ?? null)           ? (array) $displayFilters['height']           : [];
-        $widthFilter        = is_array($displayFilters['width'] ?? null)            ? (array) $displayFilters['width']            : [];
-        $tagsFilter         = is_array($displayFilters['tags'] ?? null)             ? (array) $displayFilters['tags']             : [];
+        $expertFilter       = is_array($displayFilters['expert'] ?? null) ? (array) $displayFilters['expert'] : [];
+        $allwordsFilter     = is_array($displayFilters['words'] ?? null) ? (array) $displayFilters['words'] : [];
+        $authorFilter       = is_array($displayFilters['author'] ?? null) ? (array) $displayFilters['author'] : [];
+        $filetypeFilter     = is_array($displayFilters['file_type'] ?? null) ? (array) $displayFilters['file_type'] : [];
+        $addedByFilter      = is_array($displayFilters['added_by'] ?? null) ? (array) $displayFilters['added_by'] : [];
+        $albumFilter        = is_array($displayFilters['album'] ?? null) ? (array) $displayFilters['album'] : [];
+        $postDateFilter     = is_array($displayFilters['post_date'] ?? null) ? (array) $displayFilters['post_date'] : [];
+        $creationDateFilter = is_array($displayFilters['creation_date'] ?? null) ? (array) $displayFilters['creation_date'] : [];
+        $ratioFilter        = is_array($displayFilters['ratio'] ?? null) ? (array) $displayFilters['ratio'] : [];
+        $ratingFilter       = is_array($displayFilters['rating'] ?? null) ? (array) $displayFilters['rating'] : [];
+        $fileSizeFilter     = is_array($displayFilters['file_size'] ?? null) ? (array) $displayFilters['file_size'] : [];
+        $heightFilter       = is_array($displayFilters['height'] ?? null) ? (array) $displayFilters['height'] : [];
+        $widthFilter        = is_array($displayFilters['width'] ?? null) ? (array) $displayFilters['width'] : [];
+        $tagsFilter         = is_array($displayFilters['tags'] ?? null) ? (array) $displayFilters['tags'] : [];
 
         $searchFields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
 
@@ -182,7 +182,9 @@ final class SearchService
                 }
             }
             if (count($wordClauses) > 0) {
-                array_walk($wordClauses, function (string &$s): void { $s = '(' . $s . ')'; });
+                array_walk($wordClauses, function (string &$s): void {
+                    $s = '(' . $s . ')';
+                });
             }
             $allwordsMode = is_scalar($allwordsFields['mode'] ?? null) ? (string) $allwordsFields['mode'] : 'AND';
             if (!in_array($allwordsMode, ['OR', 'AND'])) {
@@ -529,7 +531,7 @@ final class SearchService
                     }
                 }
                 $pre  = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
-                $post = ($token->modifier & QST_WILDCARD_END)   ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+                $post = ($token->modifier & QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote((string) $variant)) . $post . '\'';
                 }

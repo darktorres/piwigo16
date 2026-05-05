@@ -10,7 +10,8 @@ final class QueryHelper
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     /** @return array<mixed> */
     public function simpleHashFromQuery(string $query, string $keyname, string $valuename): array

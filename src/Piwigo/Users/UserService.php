@@ -11,7 +11,6 @@ use Piwigo\Auth\PwgTOTP;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\SqlExpr;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 
@@ -24,7 +23,8 @@ final class UserService
         private readonly ActivityRepository $actRepo,
         private readonly GroupRepository $groupRepo,
         private readonly AuthKeyRepository $authKeyRepo,
-    ) {}
+    ) {
+    }
 
     /** @param string[] $errors */
     public function registerUser(string $login, string $password, ?string $mailAddress = null, bool $notifyAdmin = true, array &$errors = [], bool $notifyUser = false): int|false
@@ -87,7 +87,7 @@ final class UserService
                 include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
                 $adminUrl     = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
                 $keyargsContent = [
-                    get_l10n_args('User: %s',  stripslashes($login)),
+                    get_l10n_args('User: %s', stripslashes($login)),
                     get_l10n_args('Email: %s', $mailAddress),
                     get_l10n_args(''),
                     get_l10n_args('Admin: %s', $adminUrl),
@@ -108,10 +108,10 @@ final class UserService
                     get_l10n_args('', ''),
                     get_l10n_args('Here are your connection settings', ''),
                     get_l10n_args('', ''),
-                    get_l10n_args('Link: %s',     get_absolute_root_url()),
+                    get_l10n_args('Link: %s', get_absolute_root_url()),
                     get_l10n_args('Username: %s', stripslashes($login)),
                     get_l10n_args('Password: %s', str_repeat('*', $length)),
-                    get_l10n_args('Email: %s',    $mailAddress),
+                    get_l10n_args('Email: %s', $mailAddress),
                     get_l10n_args('', ''),
                     get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
                 ];
@@ -683,10 +683,10 @@ SELECT DISTINCT f.image_id
             $apiKey['apikey_secret'] = str_repeat('*', 40);
             unset($apiKey['auth_key_id'], $apiKey['user_id'], $apiKey['key_type']);
             $apiKey['apikey_name']        = stripslashes(is_string($apiKey['apikey_name']) ? $apiKey['apikey_name'] : '');
-            $akCreatedOn                   = is_scalar($apiKey['created_on'])   ? (string) $apiKey['created_on']   : null;
-            $akExpiredOn                   = is_scalar($apiKey['expired_on'])   ? (string) $apiKey['expired_on']   : null;
+            $akCreatedOn                   = is_scalar($apiKey['created_on']) ? (string) $apiKey['created_on'] : null;
+            $akExpiredOn                   = is_scalar($apiKey['expired_on']) ? (string) $apiKey['expired_on'] : null;
             $akLastUsedOn                  = is_scalar($apiKey['last_used_on']) ? (string) $apiKey['last_used_on'] : null;
-            $akRevokedOn                   = is_scalar($apiKey['revoked_on'])   ? (string) $apiKey['revoked_on']   : null;
+            $akRevokedOn                   = is_scalar($apiKey['revoked_on']) ? (string) $apiKey['revoked_on'] : null;
             $apiKey['created_on_format']   = format_date($akCreatedOn, ['day', 'month', 'year']);
             $apiKey['expired_on_format']   = format_date($akExpiredOn, ['day', 'month', 'year']);
             $apiKey['last_used_on_since']  = $akLastUsedOn ? time_since($akLastUsedOn, 'day') : l10n('Never');

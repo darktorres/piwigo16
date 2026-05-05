@@ -12,7 +12,8 @@ final class PermissionService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function getUserStatus(string $userStatus = ''): string
     {

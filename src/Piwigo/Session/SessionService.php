@@ -10,7 +10,8 @@ final class SessionService
 {
     public function __construct(
         private readonly SessionRepository $repo,
-    ) {}
+    ) {
+    }
 
     public function generateKey(int $size): string
     {

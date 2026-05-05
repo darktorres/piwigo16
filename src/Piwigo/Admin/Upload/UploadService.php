@@ -81,7 +81,7 @@ final class UploadService
 
         if (!isset($imageId) && Config::uploadDetectDuplicate()) {
             $imagesFound = get_dbal_connection()->executeQuery(
-                "SELECT id FROM " . IMAGES_TABLE . " WHERE md5sum = '$md5sum'"
+                'SELECT id FROM ' . IMAGES_TABLE . " WHERE md5sum = '$md5sum'"
             )->fetchAllAssociative();
             if (count($imagesFound) > 0) {
                 $imageId = is_numeric($imagesFound[0]['id']) ? (int) $imagesFound[0]['id'] : 0;

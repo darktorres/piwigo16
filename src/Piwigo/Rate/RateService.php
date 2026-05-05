@@ -15,7 +15,8 @@ final class RateService
         private readonly RateRepository $rateRepo,
         private readonly ImageRepository $imageRepo,
         private readonly CookieService $cookies,
-    ) {}
+    ) {
+    }
 
     /** @return array<mixed>|false */
     public function ratePicture(int $imageId, float|int|null $rate): array|false
@@ -81,7 +82,7 @@ final class RateService
 
         foreach ($this->rateRepo->getSumsByElement() as $row) {
             $allRatesCount += is_numeric($row['rcount']) ? (int) $row['rcount'] : 0;
-            $allRatesAvg   += is_numeric($row['rsum'])   ? (float) $row['rsum']  : 0.0;
+            $allRatesAvg   += is_numeric($row['rsum']) ? (float) $row['rsum'] : 0.0;
             $elementIdKey   = is_numeric($row['element_id']) ? (int) $row['element_id'] : (is_scalar($row['element_id']) ? (string) $row['element_id'] : 0);
             $byItem[$elementIdKey] = $row;
         }
@@ -95,7 +96,7 @@ final class RateService
         $return  = null;
         $updates = [];
         foreach ($byItem as $id => $rateSummary) {
-            $rsum   = is_numeric($rateSummary['rsum'])   ? (float) $rateSummary['rsum']  : 0.0;
+            $rsum   = is_numeric($rateSummary['rsum']) ? (float) $rateSummary['rsum'] : 0.0;
             $rcount = is_numeric($rateSummary['rcount']) ? (int)   $rateSummary['rcount'] : 0;
             $score  = ($itemRatecountAvg * $allRatesAvg + $rsum) / ($itemRatecountAvg + $rcount);
             $score  = round($score, 2);

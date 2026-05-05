@@ -7,7 +7,6 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
@@ -17,7 +16,8 @@ final class CategoryService
     public function __construct(
         private readonly CategoryRepository $catRepo,
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<mixed> $a
@@ -387,7 +387,7 @@ FROM ' . CATEGORIES_TABLE . ' as c
 
             do {
                 $parent['count_images']     += is_numeric($cat['nb_images']) ? (int) $cat['nb_images'] : 0;
-                $parent['count_categories'] ++;
+                $parent['count_categories']++;
 
                 if ((empty($parent['max_date_last'])) or ($parent['max_date_last'] < $cat['date_last'])) {
                     $parent['max_date_last'] = $cat['date_last'];

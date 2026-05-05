@@ -267,7 +267,7 @@ final class UsersEndpoints
         $currentUser = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
         if ($currentUser->status === 'admin') {
-            $protectedUsers = array_merge($protectedUsers, array_column(get_dbal_connection()->executeQuery("SELECT user_id FROM " . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
+            $protectedUsers = array_merge($protectedUsers, array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
         }
         $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
         $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));

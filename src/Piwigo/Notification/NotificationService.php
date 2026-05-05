@@ -13,7 +13,8 @@ final class NotificationService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): string
     {
@@ -323,9 +324,9 @@ SELECT
     public function getRecentPostDatesArray(array $args): array
     {
         return $this->getRecentPostDates(
-            empty($args['max_dates'])    ? 3 : (is_numeric($args['max_dates'])    ? (int) $args['max_dates']    : 3),
+            empty($args['max_dates']) ? 3 : (is_numeric($args['max_dates']) ? (int) $args['max_dates'] : 3),
             empty($args['max_elements']) ? 3 : (is_numeric($args['max_elements']) ? (int) $args['max_elements'] : 3),
-            empty($args['max_cats'])     ? 3 : (is_numeric($args['max_cats'])     ? (int) $args['max_cats']     : 3)
+            empty($args['max_cats']) ? 3 : (is_numeric($args['max_cats']) ? (int) $args['max_cats'] : 3)
         ) ?? [];
     }
 

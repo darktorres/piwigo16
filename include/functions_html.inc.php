@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 
 // +-----------------------------------------------------------------------+

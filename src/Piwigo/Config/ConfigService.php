@@ -13,7 +13,8 @@ final class ConfigService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {

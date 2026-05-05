@@ -102,7 +102,7 @@ foreach (scandir($langDir) ?: [] as $locale) {
         continue;
     }
 
-    $addedDays   = $hasDays   ? 0 : count($days);
+    $addedDays   = $hasDays ? 0 : count($days);
     $addedMonths = $hasMonths ? 0 : count($months);
 
     if ($dryRun) {

@@ -17,7 +17,8 @@ final class MailService
 {
     public function __construct(
         private readonly Connection $conn,
-    ) {}
+    ) {
+    }
 
     public function getMailSenderName(): string
     {
@@ -71,7 +72,7 @@ final class MailService
         if (is_array($input)) {
             return [
                 'email' => is_scalar($input['email'] ?? null) ? (string) $input['email'] : '',
-                'name'  => is_scalar($input['name']  ?? null) ? (string) $input['name']  : '',
+                'name'  => is_scalar($input['name']  ?? null) ? (string) $input['name'] : '',
             ];
         }
 
@@ -443,7 +444,7 @@ SELECT
         }
         $mail->setFrom($from['email'], $from['name']);
         $replyEmail = is_string($args['reply_to_mail_address'] ?? null) ? $args['reply_to_mail_address'] : $from['email'];
-        $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name']         : $from['name'];
+        $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name'] : $from['name'];
         $mail->addReplyTo($replyEmail, $replyName);
 
         if (empty($args['subject'])) {

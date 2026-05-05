@@ -12,7 +12,8 @@ final class CommentService
 {
     public function __construct(
         private readonly CommentRepository $repo,
-    ) {}
+    ) {
+    }
 
     /** @param array<string,mixed> $comment */
     public function userCommentCheck(string $action, array $comment): string
@@ -166,14 +167,14 @@ final class CommentService
 
         if ($commentAction != 'reject') {
             $comm['id'] = $this->repo->insert([
-                'author'       => is_scalar($comm['author'])   ? (string) $comm['author']   : '',
+                'author'       => is_scalar($comm['author']) ? (string) $comm['author'] : '',
                 'author_id'    => (int) $comm['author_id'],
-                'anonymous_id' => is_scalar($comm['ip'])       ? (string) $comm['ip']        : '',
-                'content'      => is_scalar($comm['content'])  ? (string) $comm['content']  : '',
+                'anonymous_id' => is_scalar($comm['ip']) ? (string) $comm['ip'] : '',
+                'content'      => is_scalar($comm['content']) ? (string) $comm['content'] : '',
                 'validated'    => $commentAction === 'validate',
                 'image_id'     => is_scalar($comm['image_id']) ? (int)    $comm['image_id'] : 0,
                 'website_url'  => !empty($comm['website_url']) ? (is_scalar($comm['website_url']) ? (string) $comm['website_url'] : null) : null,
-                'email'        => !empty($comm['email'])       ? (is_scalar($comm['email'])       ? (string) $comm['email']       : null) : null,
+                'email'        => !empty($comm['email']) ? (is_scalar($comm['email']) ? (string) $comm['email'] : null) : null,
             ]);
 
             $this->invalidateUserCacheNbComments();
@@ -185,9 +186,9 @@ final class CommentService
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
 
                 $keyargsContent = [
-                    get_l10n_args('Author: %s',                   stripslashes(is_scalar($comm['author'])  ? (string) $comm['author']  : '')),
-                    get_l10n_args('Email: %s',                    stripslashes(is_scalar($comm['email'])   ? (string) $comm['email']   : '')),
-                    get_l10n_args('Comment: %s',                  stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
+                    get_l10n_args('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
+                    get_l10n_args('Email: %s', stripslashes(is_scalar($comm['email']) ? (string) $comm['email'] : '')),
+                    get_l10n_args('Comment: %s', stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
                     get_l10n_args(''),
                     get_l10n_args('Manage this user comment: %s', $commentUrl),
                 ];
@@ -275,8 +276,8 @@ final class CommentService
             $result = $this->repo->update(
                 (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
                 [
-                    'content'     => is_scalar($comment['content'])     ? (string) $comment['content']     : '',
-                    'website_url' => !empty($comment['website_url'])    ? (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : null) : null,
+                    'content'     => is_scalar($comment['content']) ? (string) $comment['content'] : '',
+                    'website_url' => !empty($comment['website_url']) ? (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : null) : null,
                     'validated'   => $commentAction === 'validate',
                 ],
                 $updateAuthorId
@@ -287,8 +288,8 @@ final class CommentService
 
                 $commentUrl     = get_absolute_root_url() . 'comments.php?comment_id=' . (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0');
                 $keyargsContent = [
-                    get_l10n_args('Author: %s',    stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
-                    get_l10n_args('Comment: %s',   stripslashes(is_scalar($comment['content'])             ? (string) $comment['content']             : '')),
+                    get_l10n_args('Author: %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
+                    get_l10n_args('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
                     get_l10n_args(''),
                     get_l10n_args('Manage this user comment: %s', $commentUrl),
                     get_l10n_args('(!) This comment requires validation'),

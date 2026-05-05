@@ -398,7 +398,7 @@ final class ImageAdminService
         conf_update_param('fs_quick_check_last_check', date('c'));
 
         $issue1827Ids = array_column(get_dbal_connection()->executeQuery(
-            "SELECT id FROM " . IMAGES_TABLE . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
+            'SELECT id FROM ' . IMAGES_TABLE . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
         )->fetchAllAssociative(), 'id');
         shuffle($issue1827Ids);
         $issue1827Ids = array_slice($issue1827Ids, 0, 50);

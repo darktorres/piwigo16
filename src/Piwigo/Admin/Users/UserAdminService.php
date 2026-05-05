@@ -83,7 +83,7 @@ final class UserAdminService
             $statusList[] = 'webmaster';
         }
         $raw = array_column(get_dbal_connection()->executeQuery(
-            "SELECT user_id FROM " . USER_INFOS_TABLE . " WHERE status IN ('" . implode("','", $statusList) . "')"
+            'SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('" . implode("','", $statusList) . "')"
         )->fetchAllAssociative(), 'user_id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
     }
@@ -133,7 +133,10 @@ final class UserAdminService
     {
         $userFields = Config::userFields();
         $username   = ServiceLocator::get(UserRepository::class)->findUsernameById(
-            $userFields['id'], $userFields['username'], USERS_TABLE, is_numeric($userId) ? (int) $userId : 0
+            $userFields['id'],
+            $userFields['username'],
+            USERS_TABLE,
+            is_numeric($userId) ? (int) $userId : 0
         );
         return $username !== null ? stripslashes((string) $username) : false;
     }

@@ -1324,6 +1324,43 @@ grep -c "^function " include/functions_*.inc.php | awk -F: '{s+=$NF} END {print 
 # target: 0 (modules become empty shells, eventually deleted)
 ```
 
+### Final step — delete the delegate shells
+
+Once no first-party caller uses a free function directly (all call-sites have
+been migrated to typed service methods or removed), the delegate shells and the
+include files themselves can be deleted. The pre-boot standalones (`l10n`,
+`mkgetdir`, `redirect`, `safe_unserialize`, `script_basename`, etc.) are the
+exception — they must remain in `include/functions.inc.php` (or their
+respective `include/` file) until `install.php` and `i.php` are brought into
+the full boot sequence.
+
+**Deletion order:**
+
+1. `include/functions_cookie.inc.php` — all 3 delegates → delete file; update `config/container.php` comment
+2. `include/functions_filter.inc.php` — 1 delegate; pre-boot `get_filter_page_value` stays until #22
+3. `include/functions_picture.inc.php` — 6 delegates
+4. `include/functions_rate.inc.php` — 2 delegates
+5. `include/functions_metadata.inc.php` — 5 delegates
+6. `include/functions_comment.inc.php` — 8 delegates
+7. `include/functions_tag.inc.php` — 9 delegates
+8. `include/functions_session.inc.php` — 12 delegates
+9. `include/functions_calendar.inc.php` — 1 delegate
+10. `include/functions_notification.inc.php` — 18 delegates
+11. `include/functions_category.inc.php` — 17 delegates
+12. `include/functions_search.inc.php` — 17 delegates
+13. `include/functions_html.inc.php` — 23 delegates (pre-boot `get_root_url` etc. stay)
+14. `include/functions_url.inc.php` — 21 delegates (pre-boot `get_absolute_root_url`, `embellish_url` stay)
+15. `include/functions_mail.inc.php` — 23 delegates
+16. `include/functions_plugins.inc.php` — keep (event system + pre-boot defines)
+17. `include/functions_user.inc.php` — keep until #22 (pre-boot permission guards)
+18. `include/functions.inc.php` — keep (pre-boot standalones for install.php / i.php)
+19. `include/ws_functions.inc.php` — 8 delegates; delete after WS is fully refactored (#21)
+20. `admin/include/functions.php`, `functions_upload.inc.php`, `functions_notification_by_mail.inc.php`, `functions_metadata.php`, `functions_history.inc.php` — delete after verifying no direct callers remain
+
+**Pre-condition:** `grep -r "^function " include/functions_<x>.inc.php` shows only
+delegate one-liners (no standalone bodies beyond the documented pre-boot set).
+Run `vendor/bin/phpstan analyse` and `npx playwright test` after each deletion.
+
 ---
 
 ## #20 — Background job queue (Symfony Messenger)

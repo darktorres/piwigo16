@@ -207,6 +207,9 @@ function get_query_string_diff(array $rejects = [], bool $escape = true): string
 
 function url_is_remote(string $url): bool
 {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Url\UrlService::class)) {
+        return str_starts_with($url, 'http://') || str_starts_with($url, 'https://');
+    }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->urlIsRemote($url);
 }
 

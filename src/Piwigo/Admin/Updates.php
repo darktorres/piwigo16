@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
@@ -55,7 +56,7 @@ class Updates
         $_SESSION['need_update'.PHPWG_VERSION] = null;
 
         if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
-          and fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
+          and ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
@@ -96,7 +97,7 @@ class Updates
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1(Config::secretKey().get_absolute_root_url());
 
-            if (fetchRemote($url, $result)) {
+            if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -260,7 +261,7 @@ class Updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -310,7 +311,7 @@ class Updates
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
-        if (fetchRemote($url, $result, $get_data, $post_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data, $post_data)) {
             $pem_exts = safe_unserialize($result);
             if ($pem_exts === []) {
                 return false;
@@ -444,7 +445,7 @@ class Updates
 
     public function get_merged_extensions(string $version): void
     {
-        if (fetchRemote($this->merged_extension_url, $result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($this->merged_extension_url, $result)) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -516,7 +517,7 @@ class Updates
 
             while (!$end) {
                 $chunk_num++;
-                if (fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
+                if (ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
                   and $input = safe_unserialize($result)) {
                     if (0 == ($input['remaining'] ?? -1)) {
                         $end = true;

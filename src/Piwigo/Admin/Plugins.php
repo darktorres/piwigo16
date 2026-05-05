@@ -355,7 +355,7 @@ class Plugins
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
-        if (fetchRemote($url, $result) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and $pem_versions = safe_unserialize($result)) {
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
@@ -433,7 +433,7 @@ class Plugins
                 $get_data['extension_include'] = implode(',', $plugins_to_check);
             }
         }
-        if (fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
             $pem_plugins = safe_unserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -482,7 +482,7 @@ class Plugins
           'extension_include' => implode(',', $plugins_to_check),
         ];
 
-        if (fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
             $pem_plugins = safe_unserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -563,7 +563,7 @@ class Plugins
             $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
-                if (fetchRemote($url, $handle, $get_data)) {
+                if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
                     $zip = new \PclZip($archive);
                     if ($list = $zip->listContent()) {

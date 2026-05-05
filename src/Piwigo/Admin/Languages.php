@@ -187,7 +187,7 @@ class Languages
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -236,7 +236,7 @@ class Languages
             }
         }
 
-        if (fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
             $pem_languages = safe_unserialize($result);
             if ($pem_languages === []) {
                 return false;
@@ -274,7 +274,7 @@ class Languages
 
             $handle = Filesystem::tryFopen($archive, 'wb');
             $fh = $handle;
-            if (is_resource($fh) && fetchRemote($url, $handle, $get_data)) {
+            if (is_resource($fh) && ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
                 $zip = new \PclZip($archive);
                 if ($list = $zip->listContent()) {

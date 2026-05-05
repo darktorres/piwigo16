@@ -379,7 +379,7 @@ class Themes
         $version = PHPWG_VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -428,7 +428,7 @@ class Themes
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
-        if (fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
             $pem_themes = safe_unserialize($result);
             if ($pem_themes === []) {
                 return false;
@@ -485,7 +485,7 @@ class Themes
             $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
-                if (fetchRemote($url, $handle, $get_data)) {
+                if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
                     $zip = new \PclZip($archive);
                     if ($list = $zip->listContent()) {

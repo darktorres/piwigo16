@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
@@ -787,7 +788,7 @@ final class Util
         }
 
         $url         = PEM_URL . '/api/get_extension_list.php';
-        $pemExtensions = fetchRemote($url, $result) ? safe_unserialize($result) : [];
+        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) ? safe_unserialize($result) : [];
 
         if ($pemExtensions !== []) {
             $officialExts = [];
@@ -978,7 +979,7 @@ final class Util
         $getData  = ['format' => 'php', 'method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
         $postData = ['data' => json_encode($piwigoInfos)];
 
-        if (!fetchRemote($url, $result, $getData, $postData)) {
+        if (!ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $getData, $postData)) {
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
             $this->sendPiwigoInfosRetryLater(24 * 60 * 60);
         } else {

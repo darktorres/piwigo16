@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
@@ -213,7 +214,7 @@ final class UploadService
         unset_make_full_url();
         $logger->info('[addUploadedFile] force cache generation, url = ' . $derivativeUrl);
         $dest = '';
-        fetchRemote($derivativeUrl, $dest);
+        ServiceLocator::get(AdminService::class)->fetchRemote($derivativeUrl, $dest);
         trigger_notify('loc_end_add_uploaded_file', $imageInfos);
         return $imageId;
     }

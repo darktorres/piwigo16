@@ -10,6 +10,8 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 
+include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+
 final class PermissionsEndpoints
 {
     /**

@@ -17,6 +17,9 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 
+include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
+
 final class UsersEndpoints
 {
     /**

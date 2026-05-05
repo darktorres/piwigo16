@@ -10,6 +10,8 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
+include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
+
 final class CommentsEndpoints
 {
     /**

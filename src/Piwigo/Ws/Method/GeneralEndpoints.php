@@ -13,6 +13,10 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 
+include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
+
 final class GeneralEndpoints
 {
     public function directorySizeBytes(string $path): ?int

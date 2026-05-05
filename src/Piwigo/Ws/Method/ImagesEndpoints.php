@@ -18,6 +18,13 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 
+include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
+include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
+include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
+
 final class ImagesEndpoints
 {
     // ── Internal helpers ─────────────────────────────────────────────────

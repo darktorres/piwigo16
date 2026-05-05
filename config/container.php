@@ -54,6 +54,15 @@ use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Piwigo\Admin\AdminService;
+use Piwigo\Ws\Method\CategoriesEndpoints;
+use Piwigo\Ws\Method\CommentsEndpoints;
+use Piwigo\Ws\Method\ExtensionsEndpoints;
+use Piwigo\Ws\Method\GeneralEndpoints;
+use Piwigo\Ws\Method\GroupsEndpoints;
+use Piwigo\Ws\Method\ImagesEndpoints;
+use Piwigo\Ws\Method\PermissionsEndpoints;
+use Piwigo\Ws\Method\TagsEndpoints;
+use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Notification\NotificationAdminService;
@@ -104,6 +113,15 @@ return [
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),
+    GeneralEndpoints::class          => factory(static fn (): GeneralEndpoints => new GeneralEndpoints()),
+    TagsEndpoints::class             => factory(static fn (): TagsEndpoints => new TagsEndpoints()),
+    CommentsEndpoints::class         => factory(static fn (): CommentsEndpoints => new CommentsEndpoints()),
+    PermissionsEndpoints::class      => factory(static fn (): PermissionsEndpoints => new PermissionsEndpoints()),
+    ExtensionsEndpoints::class       => factory(static fn (): ExtensionsEndpoints => new ExtensionsEndpoints()),
+    GroupsEndpoints::class           => factory(static fn (): GroupsEndpoints => new GroupsEndpoints()),
+    UsersEndpoints::class            => factory(static fn (): UsersEndpoints => new UsersEndpoints()),
+    CategoriesEndpoints::class       => factory(static fn (): CategoriesEndpoints => new CategoriesEndpoints()),
+    ImagesEndpoints::class           => factory(static fn (): ImagesEndpoints => new ImagesEndpoints()),
     AdminService::class              => factory(static fn (Connection $conn): AdminService => new AdminService($conn)),
     CategoryAdminService::class      => factory(static fn (Connection $conn): CategoryAdminService => new CategoryAdminService($conn)),
     ImageAdminService::class         => factory(static fn (): ImageAdminService => new ImageAdminService()),

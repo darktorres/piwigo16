@@ -21,18 +21,6 @@ use Piwigo\Users\UserService;
 
 function validate_mail_address(?int $user_id, ?string $mail_address): string|null
 {
-    // pre-boot standalone — called from install.php before Kernel::boot(); DB duplicate check
-    // is skipped here because InstallSentinel::isInstalled() is false at install time anyway
-    if (!ServiceLocator::has(AuthService::class)) {
-        if (empty($mail_address) &&
-            !(\Piwigo\Config\Config::obligatoryUserMailAddress() && in_array(script_basename(), ['register', 'profile']))) {
-            return '';
-        }
-        if (filter_var($mail_address ?? '', FILTER_VALIDATE_EMAIL) === false) {
-            return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
-        }
-        return null;
-    }
     return ServiceLocator::get(AuthService::class)->validateMailAddress($user_id, $mail_address);
 }
 
@@ -189,37 +177,6 @@ function get_default_language(): string
  */
 function create_user_infos(array|int $user_ids, ?array $override_values = null): void
 {
-    // pre-boot install context: USER_INFOS_TABLE is empty so getDefaultUserInfo() returns null;
-    // skip the service and inline the logic with defaultUser = []
-    if (!ServiceLocator::has(UserService::class)) {
-        if (!is_array($user_ids)) {
-            $user_ids = [$user_ids];
-        }
-        if (empty($user_ids)) {
-            return;
-        }
-        $inserts     = [];
-        $dbnow       = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
-        $defaultUser = array_merge([], $override_values ?? []);
-
-        foreach ($user_ids as $userId) {
-            $level = array_key_exists('level', $defaultUser) ? $defaultUser['level'] : 0;
-            if ($userId == \Piwigo\Config\Config::webmasterId()) {
-                $status = 'webmaster';
-                $level  = max(\Piwigo\Config\Config::availablePermissionLevels());
-            } elseif ($userId == \Piwigo\Config\Config::guestId() || $userId == \Piwigo\Config\Config::defaultUserId()) {
-                $status = 'guest';
-            } else {
-                $status = 'normal';
-            }
-            $inserts[] = array_merge(
-                array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $defaultUser),
-                ['user_id' => $userId, 'status' => $status, 'registration_date' => $dbnow, 'level' => $level]
-            );
-        }
-        mass_inserts(USER_INFOS_TABLE, array_keys($inserts[0]), $inserts);
-        return;
-    }
     ServiceLocator::get(UserService::class)->createUserInfos($user_ids, $override_values);
 }
 
@@ -411,12 +368,5 @@ function userprefs_delete_param(mixed $params): void
 
 function userprefs_get_param(mixed $param, mixed $default_value = null): mixed
 {
-    // pre-boot standalone — reads $GLOBALS['user']['preferences'], no container needed
-    if (!ServiceLocator::has(PreferencesService::class)) {
-        $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-        $preferences = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
-        $key = is_scalar($param) ? (string) $param : '';
-        return $preferences[$key] ?? $default_value;
-    }
     return ServiceLocator::get(PreferencesService::class)->userprefsGetParam($param, $default_value);
 }

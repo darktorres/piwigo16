@@ -7,6 +7,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Kernel;
 use Piwigo\Template\TemplateRegistry;
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -75,6 +76,8 @@ if (InstallSentinel::isInstalled()) {
 
 require(PHPWG_ROOT_PATH . 'include/constants.php');
 require(PHPWG_ROOT_PATH . 'admin/include/functions.php');
+
+Kernel::boot();
 
 $languages = new Languages('utf-8');
 

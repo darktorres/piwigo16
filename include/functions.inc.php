@@ -120,8 +120,11 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
 
 function mkgetdir(mixed $dir, mixed $flags = MKGETDIR_DEFAULT): bool
 {
-    // pre-boot standalone — called from install.php/upgrade.php/i.php before Kernel::boot()
-    if (!ServiceLocator::has(Util::class)) {
+    // pre-boot standalone — called from install.php/upgrade.php/i.php before Kernel::boot(),
+    // OR after boot but before DB credentials are configured (install.php Template construction
+    // at line ~139 precedes install_db_connect() at line ~151 — Util::mkgetdir() depends on
+    // Connection which can't be built without credentials)
+    if (!ServiceLocator::has(Util::class) || Config::dbName() === '') {
         $d = is_scalar($dir) ? (string) $dir : '';
         $f = is_numeric($flags) ? (int) $flags : MKGETDIR_DEFAULT;
         if (!is_dir($d)) {
@@ -233,11 +236,6 @@ function pwg_log(int|string|null $image_id = null, ?string $image_type = null, ?
  */
 function pwg_activity(string $object, array|int|string $object_id, string $action, array $details = []): void
 {
-    // pre-boot standalone — Util::pwgActivity() uses neither $this->conn nor $this->log
-    if (!ServiceLocator::has(Util::class)) {
-        (new Util(DbConnection::build(), new \Psr\Log\NullLogger()))->pwgActivity($object, $object_id, $action, $details);
-        return;
-    }
     ServiceLocator::get(Util::class)->pwgActivity($object, $object_id, $action, $details);
 }
 
@@ -493,31 +491,17 @@ function pwg_is_dbconf_writeable(): bool
 /** @param callable-string|null $parser */
 function conf_update_param(string $param, mixed $value, bool $updateGlobal = false, ?string $parser = null): void
 {
-    // pre-boot standalone — called from install.php after DB creation but before Kernel::boot()
-    if (!ServiceLocator::has(ConfigService::class)) {
-        (new ConfigService(DbConnection::build()))->confUpdateParam($param, $value, $updateGlobal, $parser);
-        return;
-    }
     ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $value, $updateGlobal, $parser);
 }
 
 /** @param string|string[] $params */
 function conf_delete_param(string|array $params): void
 {
-    // pre-boot standalone — same context as conf_update_param
-    if (!ServiceLocator::has(ConfigService::class)) {
-        (new ConfigService(DbConnection::build()))->confDeleteParam($params);
-        return;
-    }
     ServiceLocator::get(ConfigService::class)->confDeleteParam($params);
 }
 
 function conf_get_param(mixed $param, mixed $default_value = null): mixed
 {
-    // pre-boot standalone — Config::raw() is always available without the container
-    if (!ServiceLocator::has(ConfigService::class)) {
-        return Config::raw(is_scalar($param) ? (string) $param : '') ?? $default_value;
-    }
     return ServiceLocator::get(ConfigService::class)->confGetParam(is_scalar($param) ? (string) $param : '', $default_value);
 }
 
@@ -1243,10 +1227,6 @@ function render_comment_content(string $content): string|null
  */
 function name_compare(array $a, array $b): int
 {
-    // pre-boot standalone — called from Languages::get_fs_languages() in install.php / upgrade.php
-    if (!ServiceLocator::has(HtmlService::class)) {
-        return strcmp(strtolower(is_scalar($a['name']) ? (string) $a['name'] : ''), strtolower(is_scalar($b['name']) ? (string) $b['name'] : ''));
-    }
     return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
 }
 

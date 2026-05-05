@@ -8,7 +8,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Db\DbConnection;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Users\CurrentUser;
 
@@ -30,20 +29,11 @@ class Plugins
     {
         $this->get_fs_plugins();
 
-        foreach ($this->pluginRepo()->findAll() as $db_plugin) {
+        foreach (ServiceLocator::get(PluginRepository::class)->findAll() as $db_plugin) {
             if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
                 $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
             }
         }
-    }
-
-    // pre-boot standalone — returns PluginRepository from container or constructs it directly
-    private function pluginRepo(): PluginRepository
-    {
-        if (ServiceLocator::has(PluginRepository::class)) {
-            return ServiceLocator::get(PluginRepository::class);
-        }
-        return new PluginRepository(DbConnection::build(), Config::dbPrefix());
     }
 
     /**
@@ -119,7 +109,7 @@ class Plugins
                 $errors = trigger_change('plugin_install_errors', $errors);
 
                 if (empty($errors)) {
-                    $this->pluginRepo()->insert($plugin_id, $installVersionStr);
+                    ServiceLocator::get(PluginRepository::class)->insert($plugin_id, $installVersionStr);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -143,7 +133,7 @@ class Plugins
                     $plugin_maintain->update($previous_version, $new_version, $errors);
 
                     if ($new_version != 'auto') {
-                        $this->pluginRepo()->updateVersion($plugin_id, $new_version);
+                        ServiceLocator::get(PluginRepository::class)->updateVersion($plugin_id, $new_version);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -155,7 +145,7 @@ class Plugins
             case 'activate':
                 if (!isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    [$crt_db_plugin] = $this->pluginRepo()->findAll(null, $plugin_id);
+                    [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
                     load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
@@ -171,7 +161,7 @@ class Plugins
                 }
 
                 if (empty($errors)) {
-                    $this->pluginRepo()->updateState($plugin_id, 'active');
+                    ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'active');
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -183,7 +173,7 @@ class Plugins
                     break;
                 }
 
-                $this->pluginRepo()->updateState($plugin_id, 'inactive');
+                ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'inactive');
 
                 $plugin_maintain->deactivate();
 
@@ -208,7 +198,7 @@ class Plugins
                     $this->perform_action('deactivate', $plugin_id);
                 }
 
-                $this->pluginRepo()->delete($plugin_id);
+                ServiceLocator::get(PluginRepository::class)->delete($plugin_id);
 
                 $plugin_maintain->uninstall();
                 break;

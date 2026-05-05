@@ -10,6 +10,7 @@ use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Single boot entry point for the typed-service layer.
@@ -43,6 +44,12 @@ final class Kernel
 
         self::$container = Container::build();
         ServiceLocator::setContainer(self::$container);
+
+        // Seed LoggerRegistry with a NullLogger if common.inc.php hasn't set a real one yet
+        // (install.php and upgrade.php do not include common.inc.php).
+        if (!LoggerRegistry::isInitialized()) {
+            LoggerRegistry::set(new NullLogger());
+        }
 
         // Eagerly wire the StorageRegistry so StorageRegistry::disk() works
         // from procedural upload code without going through the container.

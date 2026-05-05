@@ -123,6 +123,9 @@ function print_time(string $message): void
 // +-----------------------------------------------------------------------+
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
+Config::override('auto_migrate', false);
+Kernel::boot();
+
 $languages = new Languages('utf-8');
 $get_language = isset($_GET['language']) && is_string($_GET['language']) ? $_GET['language'] : null;
 if ($get_language !== null) {
@@ -183,13 +186,11 @@ require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
 upgrade_db_connect();
 
-define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
+define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
 
 // +-----------------------------------------------------------------------+
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
-
-Kernel::boot();
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 TemplateRegistry::set($template);
 $template->set_filenames(['upgrade' => 'upgrade.tpl']);

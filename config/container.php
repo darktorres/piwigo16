@@ -21,6 +21,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Plugin\PluginService;
@@ -72,6 +73,7 @@ return [
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
     CalendarService::class     => factory(static fn (): CalendarService => new CalendarService()),
+    MailService::class         => factory(static fn (Connection $conn): MailService => new MailService($conn)),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn): CategoryService => new CategoryService($cat, $conn)),
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
     NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),

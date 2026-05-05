@@ -1,0 +1,264 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tag;
+
+use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Config\Config;
+use Piwigo\Users\CurrentUser;
+
+final class TagService
+{
+    public function __construct(
+        private readonly TagRepository $repo,
+    ) {}
+
+    public function getNbAvailableTags(): int
+    {
+        $user = &$GLOBALS['user'];
+        if (!is_array($user)) {
+            $user = [];
+        }
+        if (!isset($user['nb_available_tags'])) {
+            $user['nb_available_tags'] = count($this->getAvailableTags());
+            single_update(
+                USER_CACHE_TABLE,
+                ['nb_available_tags' => $user['nb_available_tags']],
+                ['user_id' => CurrentUser::get()->id]
+            );
+        }
+        $nb = $user['nb_available_tags'];
+        return is_numeric($nb) ? (int) $nb : 0;
+    }
+
+    /**
+     * @param int[] $tagIds
+     * @return array<mixed>
+     */
+    public function getAvailableTags(array $tagIds = []): array
+    {
+        $persistentCache = PersistentCacheRegistry::current();
+        $user            = CurrentUser::get()->rawAttributes;
+
+        $usePersistentCache = true;
+
+        $query = '
+SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
+  FROM ' . IMAGE_CATEGORY_TABLE . ' ic
+    INNER JOIN ' . IMAGE_TAG_TABLE . ' it
+    ON ic.image_id=it.image_id
+  WHERE 1=1
+  ' . get_sql_condition_FandF(
+            [
+                'forbidden_categories' => 'category_id',
+                'visible_categories'   => 'category_id',
+                'visible_images'       => 'ic.image_id',
+            ],
+            ' AND '
+        );
+
+        if (count($tagIds) > 0) {
+            $usePersistentCache = false;
+            $query .= '
+    AND tag_id IN (' . implode(',', $tagIds) . ')
+';
+        }
+
+        $query .= '
+  GROUP BY tag_id
+;';
+
+        if ($usePersistentCache) {
+            $userId      = CurrentUser::get()->id;
+            $cacheUpdate = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
+            $cacheKey    = $persistentCache->make_key('get_available_tags' . $userId . $cacheUpdate);
+            $tagCounters = [];
+            if (!$persistentCache->get($cacheKey, $tagCounters)) {
+                $tagCounters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+                $persistentCache->set($cacheKey, $tagCounters);
+            }
+        } else {
+            $tagCounters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+        }
+
+        if (!is_array($tagCounters) || empty($tagCounters)) {
+            return [];
+        }
+
+        $rows = count($tagCounters) < 1000
+            ? $this->repo->findByIds(array_map('intval', array_keys($tagCounters)))
+            : $this->repo->findAll();
+
+        $tags = [];
+        foreach ($rows as $row) {
+            $rowId = is_numeric($row['id']) ? (int) $row['id'] : (is_scalar($row['id']) ? (string) $row['id'] : '');
+            if (isset($tagCounters[$rowId])) {
+                $row['counter']  = is_scalar($tagCounters[$rowId]) ? intval($tagCounters[$rowId]) : 0;
+                $row['name_raw'] = $row['name'];
+                $row['name']     = trigger_change('render_tag_name', $row['name'], $row);
+                $tags[]          = $row;
+            }
+        }
+        return $tags;
+    }
+
+    /** @return array<mixed> */
+    public function getAllTags(): array
+    {
+        $tags = [];
+        foreach ($this->repo->findAll() as $row) {
+            $row['name_raw'] = $row['name'];
+            $row['name']     = trigger_change('render_tag_name', $row['name'], $row);
+            $tags[]          = $row;
+        }
+        usort($tags, tag_alpha_compare(...));
+        return $tags;
+    }
+
+    /**
+     * @param array<mixed> $tags
+     * @return array<mixed>
+     */
+    public function addLevelToTags(array $tags): array
+    {
+        if (count($tags) == 0) {
+            return $tags;
+        }
+
+        $totalCount = 0;
+        foreach ($tags as $tag) {
+            if (is_array($tag)) {
+                $totalCount += is_numeric($tag['counter']) ? (int) $tag['counter'] : 0;
+            }
+        }
+
+        $tagAverageCount    = $totalCount / count($tags);
+        $thresholdOfLevel   = [];
+        for ($i = 1; $i < Config::tagsLevels(); $i++) {
+            $thresholdOfLevel[$i] = 2 * $i * $tagAverageCount / Config::tagsLevels();
+        }
+
+        foreach ($tags as &$tag) {
+            if (!is_array($tag)) {
+                continue;
+            }
+            $tag['level'] = 1;
+            for ($i = Config::tagsLevels() - 1; $i >= 1; $i--) {
+                if ((is_numeric($tag['counter']) ? (int) $tag['counter'] : 0) > $thresholdOfLevel[$i]) {
+                    $tag['level'] = $i + 1;
+                    break;
+                }
+            }
+        }
+        unset($tag);
+
+        return $tags;
+    }
+
+    /**
+     * @param int[]|int|string $tagIds
+     * @return int[]
+     */
+    public function getImageIdsForTags(array|int|string $tagIds, string $mode = 'AND', ?string $extraImagesWhereSql = '', ?string $orderBy = '', bool $usePermissions = true): array
+    {
+        if (!is_array($tagIds)) {
+            $tagIds = [$tagIds];
+        }
+        if (empty($tagIds)) {
+            return [];
+        }
+
+        $query = '
+SELECT id
+  FROM ' . IMAGES_TABLE . ' i ';
+
+        if ($usePermissions) {
+            $query .= '
+    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ic ON id=ic.image_id';
+        }
+
+        $query .= '
+    INNER JOIN ' . IMAGE_TAG_TABLE . ' it ON id=it.image_id
+    WHERE tag_id IN (' . implode(',', $tagIds) . ')';
+
+        if ($usePermissions) {
+            $query .= get_sql_condition_FandF(
+                [
+                    'forbidden_categories' => 'category_id',
+                    'visible_categories'   => 'category_id',
+                    'visible_images'       => 'id',
+                ],
+                "\n  AND"
+            );
+        }
+
+        $query .= (empty($extraImagesWhereSql) ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
+  GROUP BY id';
+
+        if ($mode == 'AND' and count($tagIds) > 1) {
+            $query .= '
+  HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
+        }
+        $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+    }
+
+    /**
+     * @param array<mixed>  $items
+     * @param int[]         $excludedTagIds
+     * @return array<mixed>
+     */
+    public function getCommonTags(array $items, int $maxTags, array $excludedTagIds = []): array
+    {
+        if (empty($items)) {
+            return [];
+        }
+        $imageIds = array_map(static fn (mixed $v): int => is_scalar($v) ? (int) $v : 0, $items);
+        $rows     = $this->repo->findCommonTags($imageIds, $maxTags, $excludedTagIds);
+        $tags     = [];
+        foreach ($rows as $row) {
+            $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
+            $tags[]      = $row;
+        }
+        usort($tags, tag_alpha_compare(...));
+        return $tags;
+    }
+
+    /**
+     * @param int[]|string[] $ids
+     * @param string[]       $urlNames
+     * @param string[]       $names
+     * @return array<mixed>
+     */
+    public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
+    {
+        return $this->repo->findByIdUrlOrName(
+            array_map('intval', $ids),
+            array_map('strval', $urlNames),
+            array_map('strval', $names)
+        );
+    }
+
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
+    public function tagsIdCompare(array $a, array $b): int
+    {
+        return ($a['id'] < $b['id']) ? -1 : 1;
+    }
+
+    /**
+     * @param array<mixed> $a
+     * @param array<mixed> $b
+     */
+    public function tagsCounterCompare(array $a, array $b): int
+    {
+        if ($a['counter'] == $b['counter']) {
+            return $this->tagsIdCompare($a, $b);
+        }
+        return ($a['counter'] < $b['counter']) ? +1 : -1;
+    }
+}

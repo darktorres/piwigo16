@@ -10,6 +10,7 @@ use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
@@ -19,6 +20,8 @@ use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Tag\TagService;
+use Piwigo\Url\UrlService;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
@@ -63,6 +66,9 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
+    HtmlService::class     => factory(static fn (): HtmlService => new HtmlService()),
+    TagService::class      => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
+    UrlService::class      => factory(static fn (): UrlService => new UrlService()),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

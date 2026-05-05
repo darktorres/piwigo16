@@ -9,14 +9,14 @@ namespace Piwigo\Core;
  * response headers instead (X-PHP-Error-N), visible in DevTools → Network
  * → Response Headers.
  *
- * This prevents PHP notices/warnings from corrupting JSON, XML, or binary
- * responses while keeping them inspectable in the browser.
+ * Headers are emitted immediately inside the error handler callback, not
+ * deferred to a shutdown function. Shutdown functions run after Template::flush()
+ * has already committed the response body, making header() a no-op at that point.
+ * Emitting during the error handler fires while script execution is still in
+ * progress and headers are still mutable.
  *
- * Errors are also passed through to PHP's built-in error_log() so the Apache
- * error log remains the authoritative server-side record.
- *
- * Install once, early in the bootstrap:
- *   ErrorCollector::install();
+ * Errors are also passed through to error_log() so the Apache error log
+ * remains the authoritative server-side record.
  */
 final class ErrorCollector
 {
@@ -36,6 +36,13 @@ final class ErrorCollector
         ini_set('display_errors', '0');
         ini_set('display_startup_errors', '0');
 
+        // Buffer output so headers remain mutable until the first byte is actually
+        // sent. Without this, a warning that fires before any echo would still
+        // race against output that may have started before install() was called.
+        if (!ob_get_level()) {
+            ob_start();
+        }
+
         set_error_handler(static function (int $errno, string $errstr, string $errfile, int $errline): bool {
             // Respect the @ error-suppression operator.
             if (!(error_reporting() & $errno)) {
@@ -44,34 +51,35 @@ final class ErrorCollector
 
             $label = self::label($errno);
             $short = basename($errfile) . ':' . $errline;
-            self::$collected[] = "[{$label}] {$errstr} in {$short}";
+            $msg   = "[{$label}] {$errstr} in {$short}";
+
+            self::$collected[] = $msg;
 
             // Keep the Apache error log as the authoritative server-side record.
             error_log("PHP {$label}: {$errstr} in {$errfile} on line {$errline}");
 
+            // Emit the header immediately — the error handler fires during script
+            // execution, before Template::flush() commits the response body, so
+            // header() is still valid here. Shutdown functions fire too late.
+            if (!headers_sent()) {
+                $n    = count(self::$collected);
+                $safe = substr(str_replace(["\r", "\n"], ' ', $msg), 0, 500);
+                header('X-PHP-Error-' . $n . ': ' . $safe);
+                header('X-PHP-Error-Count: ' . $n); // replaced on each error; final value = total
+            }
+
             return true; // Suppress PHP's built-in inline output.
         });
 
+        // Shutdown function: catch fatal errors that set_error_handler() cannot
+        // intercept. At this point the response is already committed, so we can
+        // only log — no header() calls.
         register_shutdown_function(static function (): void {
-            // Catch fatal errors that set_error_handler() cannot intercept.
             $last = error_get_last();
             if ($last !== null && ($last['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
                 $label = self::label($last['type']);
-                $short = basename($last['file']) . ':' . $last['line'];
-                self::$collected[] = "[{$label}] {$last['message']} in {$short}";
+                error_log("PHP {$label}: {$last['message']} in {$last['file']} on line {$last['line']}");
             }
-
-            if (empty(self::$collected) || headers_sent()) {
-                return;
-            }
-
-            // Emit one header per error — DevTools shows each on its own line.
-            foreach (self::$collected as $i => $msg) {
-                // Strip newlines (invalid in header values) and cap length.
-                $safe = substr(str_replace(["\r", "\n"], ' ', $msg), 0, 500);
-                header('X-PHP-Error-' . ($i + 1) . ': ' . $safe);
-            }
-            header('X-PHP-Error-Count: ' . count(self::$collected));
         });
     }
 
@@ -95,11 +103,11 @@ final class ErrorCollector
     private static function label(int $type): string
     {
         return match (true) {
-            (bool) ($type & (E_ERROR | E_USER_ERROR | E_CORE_ERROR | E_COMPILE_ERROR))     => 'ERROR',
+            (bool) ($type & (E_ERROR | E_USER_ERROR | E_CORE_ERROR | E_COMPILE_ERROR))        => 'ERROR',
             (bool) ($type & (E_WARNING | E_USER_WARNING | E_CORE_WARNING | E_COMPILE_WARNING)) => 'WARNING',
-            (bool) ($type & (E_DEPRECATED | E_USER_DEPRECATED))                            => 'DEPRECATED',
-            (bool) ($type & (E_NOTICE | E_USER_NOTICE))                                    => 'NOTICE',
-            default => 'PHP',
+            (bool) ($type & (E_DEPRECATED | E_USER_DEPRECATED))                               => 'DEPRECATED',
+            (bool) ($type & (E_NOTICE | E_USER_NOTICE))                                       => 'NOTICE',
+            default                                                                            => 'PHP',
         };
     }
 }

@@ -84,13 +84,12 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // dynamic include are gone; functions_mysqli.inc.php is the only dblayer.
     include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
+    // Always route PHP errors to DevTools (X-PHP-Error-N response headers) rather
+    // than inline output, which corrupts JSON/XML/binary responses.
+    // The DB config show_php_errors controls error_reporting level only.
+    \Piwigo\Core\ErrorCollector::install();
     if (\Piwigo\Config\Config::has('show_php_errors') && !empty(\Piwigo\Config\Config::showPhpErrors()) && function_exists('ini_set')) {
         ini_set('error_reporting', (string) \Piwigo\Config\Config::showPhpErrors());
-        if (\Piwigo\Config\Config::showPhpErrorsOnFrontend()) {
-            // Route errors to DevTools (X-PHP-Error-N response headers) instead of
-            // inline output, which corrupts JSON/XML/binary responses.
-            \Piwigo\Core\ErrorCollector::install();
-        }
     }
 
     if (\Piwigo\Config\Config::sessionGcProbability() > 0 && function_exists('ini_set')) {

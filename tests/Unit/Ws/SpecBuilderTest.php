@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Ws;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\OpenApi\SpecBuilder;
+use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsType;
 
 /**
  * Unit-tests for SpecBuilder — no DB, no HTTP bootstrap.
@@ -283,5 +286,124 @@ final class SpecBuilderTest extends TestCase
         $op = $this->build()->toArray()['paths']['/ws/pwg.admin.op']['get'];
         self::assertArrayHasKey('security', $op);
         self::assertTrue($op['x-admin-only']);
+    }
+
+    // -------------------------------------------------------------------------
+    // MethodDefinition typed-registration path
+    // -------------------------------------------------------------------------
+
+    public function test_register_method_def_appears_in_spec(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.images.getInfo',
+            callback: fn () => null,
+            description: 'Returns image info.',
+            tags: ['images'],
+        ));
+        $paths = $this->build()->toArray()['paths'];
+        self::assertArrayHasKey('/ws/pwg.images.getInfo', $paths);
+    }
+
+    public function test_register_explicit_tags_override_inference(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.images.getInfo',
+            callback: fn () => null,
+            description: 'Get image.',
+            tags: ['custom-tag'],
+        ));
+        $op = $this->build()->toArray()['paths']['/ws/pwg.images.getInfo']['get'];
+        self::assertContains('custom-tag', $op['tags']);
+        self::assertNotContains('images', $op['tags']);
+    }
+
+    public function test_register_empty_tags_falls_back_to_inference(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.categories.getList',
+            callback: fn () => null,
+            description: 'List categories.',
+            tags: [],
+        ));
+        $op = $this->build()->toArray()['paths']['/ws/pwg.categories.getList']['get'];
+        self::assertContains('categories', $op['tags']);
+    }
+
+    public function test_register_requires_auth_sets_security(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.admin.op',
+            callback: fn () => null,
+            description: 'Admin.',
+            requiresAuth: true,
+        ));
+        $op = $this->build()->toArray()['paths']['/ws/pwg.admin.op']['get'];
+        self::assertArrayHasKey('security', $op);
+        self::assertTrue($op['x-admin-only']);
+    }
+
+    public function test_register_post_only_uses_post_verb(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.images.setInfo',
+            callback: fn () => null,
+            description: 'Set info.',
+            postOnly: true,
+        ));
+        $path = $this->build()->toArray()['paths']['/ws/pwg.images.setInfo'];
+        self::assertArrayHasKey('post', $path);
+        self::assertArrayNotHasKey('get', $path);
+    }
+
+    public function test_register_with_param_definitions(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.images.getInfo',
+            callback: fn () => null,
+            description: 'Get image info.',
+            params: [
+                ParamDefinition::required('image_id', WsType::Id->value),
+                ParamDefinition::optional('comments_page', 0, WsType::Int->value | WsType::Positive->value),
+            ],
+        ));
+        $op     = $this->build()->toArray()['paths']['/ws/pwg.images.getInfo']['get'];
+        $params = $op['parameters'];
+
+        $idParam = array_values(array_filter($params, fn ($p) => $p['name'] === 'image_id'))[0];
+        self::assertTrue($idParam['required']);
+        self::assertSame('integer', $idParam['schema']['type']);
+        self::assertSame(1, $idParam['schema']['minimum']);
+
+        $pageParam = array_values(array_filter($params, fn ($p) => $p['name'] === 'comments_page'))[0];
+        self::assertFalse($pageParam['required']);
+        self::assertSame(0, $pageParam['schema']['default']);
+    }
+
+    public function test_register_hidden_def_excluded_from_spec(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.internal',
+            callback: fn () => null,
+            description: 'Internal.',
+            hidden: true,
+        ));
+        $paths = $this->build()->toArray()['paths'];
+        self::assertArrayNotHasKey('/ws/pwg.internal', $paths);
+    }
+
+    public function test_register_method_is_invokable_via_invoke(): void
+    {
+        $called = false;
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test',
+            callback: function (array $params) use (&$called): string {
+                $called = true;
+                return 'ok';
+            },
+            description: 'Test.',
+        ));
+        $result = $this->server->invoke('pwg.test', []);
+        self::assertTrue($called, 'register() must store callback in $_methods so invoke() works');
+        self::assertSame('ok', $result);
     }
 }

@@ -1479,13 +1479,38 @@ An OpenAPI 3.1 specification describes every method registered with `PwgServer::
 
 | File | Role |
 |---|---|
-| `src/Piwigo/Ws/OpenApi/SpecBuilder.php` | Walks `PwgServer::getMethods()`, emits `OpenApiDocument`. |
+| `src/Piwigo/Ws/MethodDefinition.php` | Typed method descriptor (name, callback, description, params, tags, requiresAuth, postOnly, hidden, includeFile). |
+| `src/Piwigo/Ws/ParamDefinition.php` | Typed param descriptor with named constructors `::required()` / `::optional()`; converts to internal `WsParamDef` via `toWsParamDef()`. |
+| `src/Piwigo/Ws/OpenApi/SpecBuilder.php` | Walks `PwgServer::getMethods()` + `getMethodDefs()`, emits `OpenApiDocument`. |
 | `src/Piwigo/Ws/OpenApi/OpenApiDocument.php` | Immutable value object; `toArray()` and `toJson()`. |
-| `src/Piwigo/Ws/OpenApi/ApiMethod.php` | PHP attribute for future per-handler enrichment (`summary`, `responseClass`, `tags`). |
+| `src/Piwigo/Ws/OpenApi/ApiMethod.php` | PHP attribute for per-handler enrichment (`summary`, `responseClass`, `tags`). |
 
-#### PwgServer change
+#### PwgServer changes
 
-`PwgServer::populateMethods()` extracted from `run()` — registers reflection methods, triggers `ws_add_methods`, sorts. Called by `run()` and by the OpenAPI branch in `ws.php`.
+- `PwgServer::populateMethods()` extracted from `run()` — registers reflection methods, triggers `ws_add_methods`, sorts.
+- `PwgServer::register(MethodDefinition $def)` — typed registration path. Stores the `MethodDefinition` in `$_methodDefs` for spec generation and normalizes to the internal `WsMethod` array in `$_methods` so `invoke()` works unchanged (full BC).
+- `PwgServer::getMethodDefs(): array<string, MethodDefinition>` — read by `SpecBuilder`.
+
+#### Typed vs legacy registration
+
+Both paths coexist indefinitely:
+
+```php
+// Legacy (unchanged, still used by all current callers in ws.php)
+$server->addMethod('pwg.images.getInfo', 'ws_images_getInfo', ['image_id' => ['type' => WS_TYPE_ID]], '...', $file);
+
+// Typed (new path — use for new methods or when migrating in #22)
+$server->register(new MethodDefinition(
+    name:         'pwg.images.getInfo',
+    callback:     ImagesEndpoints::getInfo(...),
+    description:  'Returns information about an image.',
+    params:       [ParamDefinition::required('image_id', WsType::Id->value)],
+    tags:         ['images'],
+    requiresAuth: false,
+));
+```
+
+When `MethodDefinition` is present for a method, `SpecBuilder` uses its `tags` (instead of inferring from the method name) and its `requiresAuth`/`postOnly` flags directly.
 
 #### Routes (ws.php)
 

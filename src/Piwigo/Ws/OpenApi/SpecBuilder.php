@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\OpenApi;
 
+use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsParam;
 use Piwigo\Ws\WsType;
@@ -30,13 +31,15 @@ final class SpecBuilder
     public function build(): OpenApiDocument
     {
         $version = defined('PHPWG_VERSION') ? (string) constant('PHPWG_VERSION') : '16.x';
+        $defs    = $this->server->getMethodDefs();
 
         $paths = [];
         foreach ($this->server->getMethods() as $name => $method) {
             if (!empty($method['options']['hidden'])) {
                 continue;
             }
-            $paths['/ws/' . $name] = $this->buildPathItem($name, $method);
+            $def    = $defs[$name] ?? null;
+            $paths['/ws/' . $name] = $this->buildPathItem($name, $method, $def);
         }
 
         $spec = [
@@ -69,17 +72,20 @@ final class SpecBuilder
      * @phpstan-param WsMethod $method
      * @return array<mixed>
      */
-    private function buildPathItem(string $name, array $method): array
+    private function buildPathItem(string $name, array $method, ?MethodDefinition $def): array
     {
-        $isPost    = isset($method['options']['post_only']) && (bool) $method['options']['post_only'];
+        $isPost    = $def !== null ? $def->postOnly
+            : (isset($method['options']['post_only']) && (bool) $method['options']['post_only']);
         $httpVerb  = $isPost ? 'post' : 'get';
-        $adminOnly = isset($method['options']['admin_only']) && (bool) $method['options']['admin_only'];
+        $adminOnly = $def !== null ? $def->requiresAuth
+            : (isset($method['options']['admin_only']) && (bool) $method['options']['admin_only']);
 
         $rawDesc   = $method['description'];
+        $tags      = ($def !== null && $def->tags !== []) ? $def->tags : $this->inferTags($name);
         $operation = [
             'operationId' => str_replace('.', '_', $name),
             'summary'     => $rawDesc !== '' ? $this->firstLine($rawDesc) : $name,
-            'tags'        => $this->inferTags($name),
+            'tags'        => $tags,
         ];
 
         if ($rawDesc !== '') {

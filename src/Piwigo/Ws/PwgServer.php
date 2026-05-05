@@ -27,6 +27,9 @@ class PwgServer
     /** @var array<string, WsMethod> */
     private array $_methods = [];
 
+    /** @var array<string, MethodDefinition> */
+    private array $_methodDefs = [];
+
     public function __construct()
     {
     }
@@ -35,6 +38,45 @@ class PwgServer
     public function getMethods(): array
     {
         return $this->_methods;
+    }
+
+    /** @return array<string, MethodDefinition> */
+    public function getMethodDefs(): array
+    {
+        return $this->_methodDefs;
+    }
+
+    /**
+     * Typed registration path — stores the MethodDefinition for SpecBuilder / #22
+     * and also normalizes to the internal WsMethod array so invoke() works unchanged.
+     */
+    public function register(MethodDefinition $def): void
+    {
+        $this->_methodDefs[$def->name] = $def;
+
+        $signature = [];
+        foreach ($def->params as $param) {
+            $signature[$param->name] = $param->toWsParamDef();
+        }
+
+        $options = [];
+        if ($def->requiresAuth) {
+            $options['admin_only'] = true;
+        }
+        if ($def->postOnly) {
+            $options['post_only'] = true;
+        }
+        if ($def->hidden) {
+            $options['hidden'] = true;
+        }
+
+        $this->_methods[$def->name] = [
+            'callback'    => $def->callback,
+            'description' => $def->description,
+            'signature'   => $signature,
+            'include'     => $def->includeFile,
+            'options'     => $options,
+        ];
     }
 
     public function getResponseFormat(): string

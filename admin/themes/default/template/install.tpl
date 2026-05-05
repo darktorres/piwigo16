@@ -152,7 +152,7 @@
       <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|@translate}</td>
     </tr>
     <tr>
-      <td>{'Options'|@translate}</options>
+      <td>{'Options'|@translate}</td>
       <td colspan="2">
         <label>
           <input type="checkbox" name="newsletter_subscribe"{if $F_NEWSLETTER_SUBSCRIBE} checked="checked"{/if}>

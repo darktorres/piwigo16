@@ -561,6 +561,23 @@ SELECT
  * @return boolean
  */
 /**
+ * Returns true if PHP's built-in mail() transport is available and configured.
+ * On Windows: requires a non-empty SMTP ini setting.
+ * On Unix:    requires a non-empty sendmail_path ini setting.
+ * Also returns false when mail() itself is disabled via disable_functions.
+ */
+function mail_function_is_usable(): bool
+{
+    if (!function_exists('mail')) {
+        return false;
+    }
+    if (PHP_OS_FAMILY === 'Windows') {
+        return !empty(ini_get('SMTP'));
+    }
+    return !empty(ini_get('sendmail_path'));
+}
+
+/**
  * @param string|array<mixed> $to
  * @param array<mixed> $args
  * @param array<mixed> $tpl
@@ -823,6 +840,14 @@ function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
             $mail->Username = $smtpUser;
             $mail->Password = \Piwigo\Config\Config::smtpPassword();
         }
+    }
+
+    // When no SMTP host is configured, PHPMailer falls back to PHP's mail()
+    // function. On systems without a working MTA (e.g. Windows dev without
+    // smtp_host set in php.ini), that always fails. Bail out early rather
+    // than emitting a noisy warning on every update-notify cycle.
+    if (empty($smtpHost) && !mail_function_is_usable()) {
+        return false;
     }
 
     $ret = true;

@@ -1,0 +1,130 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Image;
+
+use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+
+final class DerivativeService
+{
+    /**
+     * Generate (or skip if already current) one derivative file for a given image row and size type.
+     *
+     * @param array<string, mixed> $imageRow  Full row from the images table (path, rotation, coi, …)
+     * @param string               $type      One of the IMG_* constants (e.g. IMG_THUMB, IMG_MEDIUM)
+     */
+    public function generate(array $imageRow, string $type): void
+    {
+        ImageStdParams::load_from_db();
+
+        $srcImage = new SrcImage($imageRow);
+        if ($srcImage->rel_path === '') {
+            return;
+        }
+
+        $defined = ImageStdParams::get_defined_type_map();
+        if (!isset($defined[$type])) {
+            return;
+        }
+
+        $params     = $defined[$type];
+        $derivImage = new DerivativeImage($params, $srcImage);
+        if ($derivImage->same_as_source()) {
+            return;
+        }
+
+        $srcPath   = PHPWG_ROOT_PATH . $srcImage->rel_path;
+        $derivPath = $derivImage->get_path();
+
+        $srcMtime = Filesystem::tryFileMtime($srcPath);
+        if ($srcMtime === false) {
+            return;
+        }
+
+        $derivMtime = Filesystem::tryFileMtime($derivPath);
+        if ($derivMtime !== false
+            && $derivMtime >= $srcMtime
+            && $derivMtime >= $params->last_mod_time) {
+            return;
+        }
+
+        $derivDir = dirname($derivPath);
+        if (!is_dir($derivDir)) {
+            ServiceLocator::get(Util::class)->mkgetdir($derivDir, MKGETDIR_RECURSIVE | MKGETDIR_PROTECT_INDEX);
+        }
+
+        $rotationCode  = is_numeric($imageRow['rotation'] ?? null) ? (int) $imageRow['rotation'] : 0;
+        $rotationAngle = PwgImage::get_rotation_angle_from_code($rotationCode);
+        $coi           = is_string($imageRow['coi'] ?? null) ? $imageRow['coi'] : null;
+
+        $image = new PwgImage($srcPath);
+
+        if ($rotationAngle !== 0) {
+            $image->rotate($rotationAngle);
+        }
+
+        /** @var int[] $o_size */
+        $o_size = [$image->get_width(), $image->get_height()];
+        /** @var array<int, int|float> $d_size */
+        $d_size     = $o_size;
+        $crop_rect  = null;
+        $scale_size = null;
+        $params->sizing->compute($o_size, $coi, $crop_rect, $scale_size);
+
+        if ($crop_rect !== null) {
+            $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
+        }
+
+        if ($scale_size !== null) {
+            $image->resize((int) $scale_size[0], (int) $scale_size[1]);
+            $d_size = $scale_size;
+        }
+
+        if ($params->sharpen) {
+            $image->sharpen((int) $params->sharpen);
+        }
+
+        if ($params->will_watermark($d_size)) {
+            $wm       = ImageStdParams::get_watermark();
+            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
+            /** @var array<int, int> $wm_size */
+            $wm_size  = [$wm_image->get_width(), $wm_image->get_height()];
+
+            if ($d_size[0] < $wm_size[0] || $d_size[1] < $wm_size[1]) {
+                $wm_scaling = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);
+                $wm_tmp     = null;
+                $wm_scaled  = null;
+                $wm_scaling->compute($wm_size, null, $wm_tmp, $wm_scaled);
+                if ($wm_scaled !== null) {
+                    $wm_size = [(int) $wm_scaled[0], (int) $wm_scaled[1]];
+                    $wm_image->resize((int) $wm_scaled[0], (int) $wm_scaled[1]);
+                }
+            }
+
+            $x = (int) round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
+            $y = (int) round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
+            $image->compose($wm_image, $x, $y, $wm->opacity);
+            $wm_image->destroy();
+        }
+
+        if ((int) $d_size[0] * (int) $d_size[1] < Config::derivativesStripMetadataThreshold()) {
+            $image->strip();
+        }
+
+        $image->write($derivPath);
+        $image->destroy();
+        Filesystem::tryChmod($derivPath, 0644);
+    }
+
+    /** @return string[] All currently-enabled derivative type names */
+    public function getDefinedTypes(): array
+    {
+        ImageStdParams::load_from_db();
+        return array_keys(ImageStdParams::get_defined_type_map());
+    }
+}

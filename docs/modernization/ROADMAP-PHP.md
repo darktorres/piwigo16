@@ -1377,7 +1377,7 @@ functions.
 
 ## #20 — Background job queue (Symfony Messenger)
 
-**Status:** 🚧 In progress &nbsp;|&nbsp; **Size:** L
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** L
 
 ### What was built
 
@@ -1397,13 +1397,27 @@ All `final readonly`:
 
 #### Handlers (`src/Piwigo/Job/Handler/`)
 
-One `#[AsMessageHandler]` invokable class per message. All use `ServiceLocator` for repositories/services. Current implementations log the job and perform a lightweight typed-layer action (e.g. verify image exists, count lounge images, call `SearchRepository::deleteAll()`). Deep derivative-file generation deferred until a `DerivativeService` exists.
+One `#[AsMessageHandler]` invokable class per message:
+
+| Handler | Implementation |
+|---|---|
+| `GenerateDerivativeHandler` | Calls `DerivativeService::generate($imageRow, $size)` — full rotate/crop/scale/sharpen/watermark pipeline |
+| `RegenerateAllDerivativesHandler` | Fans out one `GenerateDerivativeJob` per image × type via the bus; `['all']` expands to all defined types |
+| `SendNotificationEmailHandler` | Sends via `MailService::pwgMail()`; accepts `to` address in `$params` (pre-rendered) or falls back to DB lookup by `userId` |
+| `BatchUploadHandler` | Calls `CategoryAdminService::emptyLounge()` — moves lounge photos to their albums |
+| `ReindexImagesHandler` | Calls `SearchRepository::deleteAll()` — clears stale search history so it rebuilds on next use |
+
+#### `DerivativeService` (`src/Piwigo/Image/DerivativeService.php`)
+
+`generate(array $imageRow, string $type): void` — direct file generation without the HTTP round-trip. Mirrors the `i.php` pipeline: checks freshness, creates output directory, runs `PwgImage` rotate → crop → scale → sharpen → watermark → write. Skips if derivative is already current.
+
+`getDefinedTypes(): string[]` — returns enabled derivative type names after loading params from DB.
 
 #### Bus wiring
 
 - `MessengerFactory::build(Connection): MessageBusInterface` — constructs transports, `HandlersLocator`, `SendersLocator`, and `MessageBus` with `[SendMessageMiddleware, HandleMessageMiddleware]`
 - `config/messenger.php` — routing map (all five job classes → `async`)
-- `config/container.php` — `MessageBusInterface::class` factory delegates to `MessengerFactory::build()`
+- `config/container.php` — `MessageBusInterface::class` and `DerivativeService::class` registered
 - Table: `{prefix}messenger_messages` with two queue slots (`piwigo_async`, `piwigo_failed`); `auto_setup=true` creates it on first dispatch
 
 #### Worker CLI (`bin/piwigo`)
@@ -1412,21 +1426,24 @@ One `#[AsMessageHandler]` invokable class per message. All use `ServiceLocator` 
 bin/piwigo messenger:consume async [--limit=N] [--time-limit=N] [--memory-limit=NM]
 ```
 
-Manual polling loop (no pcntl, cross-platform). Dispatches each fetched envelope back through the bus with `ReceivedStamp`; `SendMessageMiddleware` skips re-sending, `HandleMessageMiddleware` runs the handler.
+Manual polling loop (no pcntl, cross-platform). Calls `ImageStdParams::load_from_db()` before entering the loop so derivative generation has the gallery's size configuration. Dispatches each fetched envelope back through the bus with `ReceivedStamp`.
 
 #### Admin queue UI (`admin/queue.php` + `queue.tpl`)
 
-Reads `{prefix}messenger_messages` directly. Shows pending counts for async and failed queues, lists the 50 most recent failed jobs with per-job retry (moves row back to `piwigo_async`) and bulk purge of the failed queue.
+Reads `{prefix}messenger_messages` directly. Shows pending counts for async and failed queues, lists the 50 most recent failed jobs with per-job retry (moves row back to `piwigo_async`) and bulk purge.
 
-#### Dispatched call site
+#### Dispatched call sites
 
-`admin/maintenance_actions.php` `derivatives` case: clears derivative files synchronously (unchanged), then dispatches `RegenerateAllDerivativesJob` for async post-processing.
+| Location | Job dispatched | Notes |
+|---|---|---|
+| `admin/maintenance_actions.php` `derivatives` | `RegenerateAllDerivativesJob` | After synchronous cache clear; handler fans out per-image jobs |
+| `UploadService::addUploadedFile()` | `GenerateDerivativeJob` × 5 sizes | Replaces HTTP round-trip `fetchRemote` for cache warm-up |
+| `UserService::registerUser()` | `SendNotificationEmailJob` | Pre-renders subject+content at dispatch time for correct language |
 
-### Pending
+### Notes
 
-- **Handler depth**: `GenerateDerivativeHandler` logs + verifies image exists but does not generate derivative files — requires a future `DerivativeService`.
-- **More call sites**: batch upload, mass-regen after theme change, notification sends are wired but not yet dispatched from their admin pages.
-- **Supervisor/systemd config**: not documented yet.
+- `ReindexImagesJob` / `ReindexImagesHandler`: Piwigo uses SQL LIKE / MATCH for search — there is no external search index to rebuild. Handler purges stale search history so it recomputes on next request. Can be extended to a real FTS engine when search is upgraded.
+- Supervisor/systemd deployment config is not included; the worker command is documented above.
 
 ---
 

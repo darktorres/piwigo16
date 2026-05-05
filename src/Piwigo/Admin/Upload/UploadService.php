@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
-use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -14,15 +13,16 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
-use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Job\GenerateDerivativeJob;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServerRegistry;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UploadService
 {
@@ -216,14 +216,13 @@ final class UploadService
         if ($imageInfos === null) {
             return $imageId;
         }
-        $srcImage = new SrcImage($imageInfos);
-        set_make_full_url();
-        $imgUrl        = DerivativeImage::url(IMG_MEDIUM, $srcImage);
-        $derivativeUrl = is_string($imgUrl) ? (string) preg_replace('#admin/include/i#', 'i', $imgUrl) : '';
-        unset_make_full_url();
-        $logger->info('[addUploadedFile] force cache generation, url = ' . $derivativeUrl);
-        $dest = '';
-        ServiceLocator::get(AdminService::class)->fetchRemote($derivativeUrl, $dest);
+
+        $bus = ServiceLocator::get(MessageBusInterface::class);
+        foreach ([IMG_THUMB, IMG_SMALL, IMG_MEDIUM, IMG_LARGE, IMG_XLARGE] as $size) {
+            $bus->dispatch(new GenerateDerivativeJob($imageId, $size));
+        }
+        $logger->info('[addUploadedFile] derivative jobs dispatched', ['id' => $imageId]);
+
         trigger_notify('loc_end_add_uploaded_file', $imageInfos);
         return $imageId;
     }

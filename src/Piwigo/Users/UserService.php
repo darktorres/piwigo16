@@ -11,7 +11,10 @@ use Piwigo\Auth\PwgTOTP;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Job\SendNotificationEmailJob;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Piwigo\History\HistoryRepository;
 
 final readonly class UserService
@@ -113,7 +116,14 @@ final readonly class UserService
                     get_l10n_args('', ''),
                     get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
                 ];
-                pwg_mail($mailAddress ?? '', ['subject' => '[' . Config::galleryTitle() . '] ' . l10n('Registration'), 'content' => l10n_args($keyargsContent), 'content_format' => 'text/plain']);
+                ServiceLocator::get(MessageBusInterface::class)->dispatch(
+                    new SendNotificationEmailJob((int) $userId, 'registration', [
+                        'to'             => $mailAddress ?? '',
+                        'subject'        => '[' . Config::galleryTitle() . '] ' . l10n('Registration'),
+                        'content'        => l10n_args($keyargsContent),
+                        'content_format' => 'text/plain',
+                    ])
+                );
             }
 
             trigger_notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);

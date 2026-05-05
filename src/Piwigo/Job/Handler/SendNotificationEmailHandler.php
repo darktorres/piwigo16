@@ -17,26 +17,37 @@ final class SendNotificationEmailHandler
 {
     public function __invoke(SendNotificationEmailJob $job): void
     {
-        $emailField = Config::userFields()['email'];
-        $idField    = Config::userFields()['id'];
+        $to = is_string($job->params['to'] ?? null) ? (string) $job->params['to'] : '';
 
-        $row = ServiceLocator::get(Connection::class)
-            ->executeQuery(
-                'SELECT ' . $emailField . ' AS email FROM ' . USERS_TABLE . ' WHERE ' . $idField . ' = ?',
-                [$job->userId]
-            )
-            ->fetchAssociative();
+        if ($to === '') {
+            $emailField = Config::userFields()['email'];
+            $idField    = Config::userFields()['id'];
 
-        if ($row === false || empty($row['email'])) {
-            LoggerRegistry::current()->warning('notification.user_not_found', ['user_id' => $job->userId]);
+            $row = ServiceLocator::get(Connection::class)
+                ->executeQuery(
+                    'SELECT ' . $emailField . ' AS email FROM ' . USERS_TABLE . ' WHERE ' . $idField . ' = ?',
+                    [$job->userId]
+                )
+                ->fetchAssociative();
+
+            if ($row === false || empty($row['email'])) {
+                LoggerRegistry::current()->warning('notification.user_not_found', ['user_id' => $job->userId]);
+                return;
+            }
+
+            $to = is_string($row['email']) ? $row['email'] : '';
+        }
+
+        if ($to === '') {
             return;
         }
 
         ServiceLocator::get(MailService::class)->pwgMail(
-            is_string($row['email']) ? $row['email'] : '',
+            $to,
             [
-                'subject' => is_scalar($job->params['subject'] ?? null) ? (string) $job->params['subject'] : '',
-                'content' => is_scalar($job->params['content'] ?? null) ? (string) $job->params['content'] : '',
+                'subject'        => is_scalar($job->params['subject'] ?? null) ? (string) $job->params['subject'] : '',
+                'content'        => is_scalar($job->params['content'] ?? null) ? (string) $job->params['content'] : '',
+                'content_format' => is_scalar($job->params['content_format'] ?? null) ? (string) $job->params['content_format'] : 'text/html',
             ]
         );
     }

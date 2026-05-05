@@ -81,6 +81,7 @@ use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\PermissionsEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
+use Piwigo\Image\DerivativeService;
 use Piwigo\Job\MessengerFactory;
 use Piwigo\Ws\WsHelper;
 use Psr\Log\LoggerInterface;
@@ -102,6 +103,8 @@ return [
 
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
+
+    DerivativeService::class   => factory(static fn (): DerivativeService => new DerivativeService()),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
     MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),

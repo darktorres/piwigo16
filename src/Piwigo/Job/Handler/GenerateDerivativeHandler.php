@@ -6,6 +6,7 @@ namespace Piwigo\Job\Handler;
 
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Job\GenerateDerivativeJob;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -20,10 +21,11 @@ final class GenerateDerivativeHandler
             return;
         }
 
-        LoggerRegistry::current()->info('derivative.generate', [
+        ServiceLocator::get(DerivativeService::class)->generate($image, $job->size);
+
+        LoggerRegistry::current()->info('derivative.generated', [
             'id'   => $job->imageId,
             'size' => $job->size,
-            'path' => is_scalar($image['path'] ?? null) ? (string) $image['path'] : '',
         ]);
     }
 }

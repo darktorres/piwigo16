@@ -19,9 +19,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles all admin pages (/admin{rest}).
  * Corresponds to the former admin.php entry-point.
  *
- * Admin sub-pages (admin/*.php) continue to be dispatched via require() and
- * assume the same global state that admin.php used to set up.  Sub-page
- * OOP conversion is deferred to a future phase.
+ * Dispatches to typed sub-controllers (AlbumController, PhotoController, …)
+ * via dispatchToSubController().  Complex admin sub-pages use an explicit
+ * static require inside the controller method; AlbumController inlines its
+ * page bodies fully.
  *
  * This controller sends output directly (template pparse + page_tail) and
  * returns an empty 200 — the caller must NOT use ResponseEmitter.
@@ -334,7 +335,7 @@ final class AdminController implements ControllerInterface
         // ── Dispatch to admin sub-page ────────────────────────────────────────
 
         trigger_notify('loc_begin_admin_page');
-        require PHPWG_ROOT_PATH . 'admin/' . $adminPage . '.php';
+        $this->dispatchToSubController($adminPage);
 
         $tpl->assign('ACTIVE_MENU', get_active_menu($adminPage));
 
@@ -353,5 +354,28 @@ final class AdminController implements ControllerInterface
         require PHPWG_ROOT_PATH . 'include/page_tail.php';
 
         return ResponseFactory::create(200);
+    }
+
+    private function dispatchToSubController(string $page): void
+    {
+        if (in_array($page, AlbumController::PAGES, true)) {
+            (new AlbumController())->handle($page);
+        } elseif (in_array($page, PhotoController::PAGES, true)) {
+            (new PhotoController())->handle($page);
+        } elseif (in_array($page, BatchManagerController::PAGES, true)) {
+            (new BatchManagerController())->handle($page);
+        } elseif (in_array($page, ConfigurationController::PAGES, true)) {
+            (new ConfigurationController())->handle($page);
+        } elseif (in_array($page, UsersController::PAGES, true)) {
+            (new UsersController())->handle($page);
+        } elseif (in_array($page, GroupsController::PAGES, true)) {
+            (new GroupsController())->handle($page);
+        } elseif (in_array($page, ExtensionsController::PAGES, true)) {
+            (new ExtensionsController())->handle($page);
+        } elseif (in_array($page, MaintenanceController::PAGES, true)) {
+            (new MaintenanceController())->handle($page);
+        } else {
+            (new MiscController())->handle($page);
+        }
     }
 }

@@ -21,6 +21,13 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\QueryHelper;
 use Piwigo\Lang\LangService;
+use Piwigo\Category\CategoryService;
+use Piwigo\Html\HtmlService;
+use Piwigo\Image\SrcImage;
+use Piwigo\Menu\BlockManager;
+use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -32,10 +39,6 @@ use Piwigo\Lang\LangService;
 require_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_user.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_session.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_category.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_html.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_tag.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
@@ -871,4 +874,491 @@ function get_container_info(): array
 function is_valid_mysql_datetime(string $datetime): bool
 {
     return ServiceLocator::get(StringUtil::class)->isValidMysqlDatetime($datetime);
+}
+
+// ── Session delegates (inlined from functions_session.inc.php) ────────────
+
+// Config class may not be autoloaded yet during install.php bootstrap.
+if (class_exists(Config::class, false)
+  and Config::has('session_save_handler')
+  and (Config::sessionSaveHandler() == 'db')
+  and InstallSentinel::isInstalled()) {
+    session_set_save_handler(new PwgSession());
+
+    if (function_exists('ini_set')) {
+        ini_set('session.use_cookies', Config::sessionUseCookies());
+        ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
+        ini_set('session.use_trans_sid', intval(Config::sessionUseTransSid()));
+        ini_set('session.cookie_httponly', 1);
+    }
+
+    session_name(Config::sessionName());
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => cookie_path(),
+        'samesite' => 'Strict',
+        'httponly' => true,
+        'secure' => isset($_SERVER['HTTPS']) && is_string($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on',
+    ]);
+    register_shutdown_function(session_write_close(...));
+}
+
+/**
+ * Called before Kernel::boot() in common.inc.php — must have its own
+ * implementation. SessionService::generateKey() is the canonical copy.
+ */
+function generate_key(int $size): string
+{
+    $bytes = random_bytes(max(1, $size + 10));
+    return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
+}
+
+function pwg_session_open(string $path, string $name): bool
+{
+    return ServiceLocator::get(SessionService::class)->sessionOpen($path, $name);
+}
+
+function pwg_session_close(): bool
+{
+    return ServiceLocator::get(SessionService::class)->sessionClose();
+}
+
+function get_remote_addr_session_hash(): string
+{
+    return ServiceLocator::get(SessionService::class)->getRemoteAddrSessionHash();
+}
+
+function pwg_session_read(string $session_id): string
+{
+    return ServiceLocator::get(SessionService::class)->sessionRead($session_id);
+}
+
+function pwg_session_write(string $session_id, string $data): bool
+{
+    return ServiceLocator::get(SessionService::class)->sessionWrite($session_id, $data);
+}
+
+function pwg_session_destroy(string $session_id): bool
+{
+    return ServiceLocator::get(SessionService::class)->sessionDestroy($session_id);
+}
+
+function pwg_session_gc(): bool
+{
+    return ServiceLocator::get(SessionService::class)->sessionGc();
+}
+
+function pwg_set_session_var(string $var, mixed $value): bool
+{
+    return ServiceLocator::get(SessionService::class)->setSessionVar($var, $value);
+}
+
+function pwg_get_session_var(string $var, mixed $default = null): mixed
+{
+    return ServiceLocator::get(SessionService::class)->getSessionVar($var, $default);
+}
+
+function pwg_unset_session_var(string $var): bool
+{
+    return ServiceLocator::get(SessionService::class)->unsetSessionVar($var);
+}
+
+function delete_user_sessions(int $user_id): void
+{
+    ServiceLocator::get(SessionService::class)->deleteUserSessions($user_id);
+}
+
+// ── Category delegates (inlined from functions_category.inc.php) ──────────
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function global_rank_compare(array $a, array $b): int
+{
+    return ServiceLocator::get(CategoryService::class)->globalRankCompare($a, $b);
+}
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function rank_compare(array $a, array $b): int
+{
+    return ServiceLocator::get(CategoryService::class)->rankCompare($a, $b);
+}
+
+function check_restrictions(int $category_id): void
+{
+    ServiceLocator::get(CategoryService::class)->checkRestrictions($category_id);
+}
+
+/** @return array<mixed> */
+function get_categories_menu(): array
+{
+    return ServiceLocator::get(CategoryService::class)->getCategoriesMenu();
+}
+
+/** @return array<mixed>|null */
+function get_cat_info(int|string $id): ?array
+{
+    return ServiceLocator::get(CategoryService::class)->getCatInfo($id);
+}
+
+/** @return array<mixed> */
+function get_category_preferred_image_orders(): array
+{
+    return ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
+}
+
+/**
+ * @param list<array<string, mixed>> $categories
+ * @param int[]|string               $selecteds
+ */
+function display_select_categories(array $categories, array|string $selecteds, string $blockname, bool|string $fullname = true): void
+{
+    ServiceLocator::get(CategoryService::class)->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
+}
+
+/** @param int[]|string $selecteds */
+function display_select_cat_wrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true): void
+{
+    ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query, $selecteds, $blockname, $fullname);
+}
+
+/**
+ * @param array<int|string>|int|string $ids
+ * @return array<int>
+ */
+function get_subcat_ids(array|int|string $ids): array
+{
+    return ServiceLocator::get(CategoryService::class)->getSubcatIds($ids);
+}
+
+/** @param string[] $permalinks */
+function get_cat_id_from_permalinks(array $permalinks, int &$idx): ?int
+{
+    return ServiceLocator::get(CategoryService::class)->getCatIdFromPermalinks($permalinks, $idx);
+}
+
+function get_display_images_count(mixed $cat_nb_images, mixed $cat_count_images, mixed $cat_count_categories, bool|string $short_message = true, string $separator = '\n'): string
+{
+    return ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
+        is_numeric($cat_nb_images) ? (int) $cat_nb_images : 0,
+        is_numeric($cat_count_images) ? (int) $cat_count_images : 0,
+        is_numeric($cat_count_categories) ? (int) $cat_count_categories : 0,
+        $short_message,
+        $separator
+    );
+}
+
+/** @param array<string, mixed> $category */
+function get_random_image_in_category(array $category, bool $recursive = true): ?int
+{
+    return ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category, $recursive);
+}
+
+/**
+ * @param array<string, mixed>               $userdata
+ * @return array<string, array<string, mixed>>
+ */
+function get_computed_categories(array &$userdata, ?int $filter_days = null): array
+{
+    return ServiceLocator::get(CategoryService::class)->getComputedCategories($userdata, $filter_days);
+}
+
+/**
+ * @param array<string, array<string, mixed>> $cats
+ * @param array<string, mixed>                $cat
+ */
+function remove_computed_category(array &$cats, array $cat): void
+{
+    ServiceLocator::get(CategoryService::class)->removeComputedCategory($cats, $cat);
+}
+
+/**
+ * @param int[]|int|string $cat_ids
+ * @return int[]
+ */
+function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', string $order_by = '', bool $use_permissions = true): array
+{
+    return ServiceLocator::get(CategoryService::class)->getImageIdsForCategories($cat_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
+}
+
+/**
+ * @param array<mixed>  $items
+ * @param int[]         $excluded_cat_ids
+ * @return array<string, array<string, mixed>>
+ */
+function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
+{
+    return ServiceLocator::get(CategoryService::class)->getCommonCategories($items, $max, $excluded_cat_ids, $use_permissions);
+}
+
+/**
+ * @param array<mixed>  $items
+ * @param int[]         $excluded_cat_ids
+ * @return array<mixed>
+ */
+function get_related_categories_menu(array $items, array $excluded_cat_ids = []): array
+{
+    return ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $excluded_cat_ids);
+}
+
+// ── Tag delegates (inlined from functions_tag.inc.php) ────────────────────
+
+function get_nb_available_tags(): int
+{
+    return ServiceLocator::get(TagService::class)->getNbAvailableTags();
+}
+
+/**
+ * @param int[] $tag_ids
+ * @return array<mixed>
+ */
+function get_available_tags(array $tag_ids = []): array
+{
+    return ServiceLocator::get(TagService::class)->getAvailableTags($tag_ids);
+}
+
+/** @return array<mixed> */
+function get_all_tags(): array
+{
+    return ServiceLocator::get(TagService::class)->getAllTags();
+}
+
+/**
+ * @param array<mixed> $tags
+ * @return array<mixed>
+ */
+function add_level_to_tags(array $tags): array
+{
+    return ServiceLocator::get(TagService::class)->addLevelToTags($tags);
+}
+
+/**
+ * @param int[]|int|string $tag_ids
+ * @return int[]
+ */
+function get_image_ids_for_tags(array|int|string $tag_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', ?string $order_by = '', bool $use_permissions = true): array
+{
+    return ServiceLocator::get(TagService::class)->getImageIdsForTags($tag_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
+}
+
+/**
+ * @param array<mixed> $items
+ * @param int[]        $excluded_tag_ids
+ * @return array<mixed>
+ */
+function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = []): array
+{
+    return ServiceLocator::get(TagService::class)->getCommonTags($items, $max_tags, $excluded_tag_ids);
+}
+
+/**
+ * @param int[]|string[] $ids
+ * @param string[]       $url_names
+ * @param string[]       $names
+ * @return array<mixed>
+ */
+function find_tags(array $ids = [], array $url_names = [], array $names = []): array
+{
+    return ServiceLocator::get(TagService::class)->findTags($ids, $url_names, $names);
+}
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function tags_id_compare(array $a, array $b): int
+{
+    return ServiceLocator::get(TagService::class)->tagsIdCompare($a, $b);
+}
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function tags_counter_compare(array $a, array $b): int
+{
+    return ServiceLocator::get(TagService::class)->tagsCounterCompare($a, $b);
+}
+
+// ── HTML delegates (inlined from functions_html.inc.php) ──────────────────
+
+/** @param array<mixed> $cat_informations */
+function get_cat_display_name(array $cat_informations, ?string $url = ''): string
+{
+    return ServiceLocator::get(HtmlService::class)->getCatDisplayName($cat_informations, $url);
+}
+
+function get_cat_display_name_cache(
+    string $uppercats,
+    ?string $url = '',
+    bool $single_link = false,
+    ?string $link_class = null,
+    ?string $auth_key = null
+): string {
+    return ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($uppercats, $url, $single_link, $link_class, $auth_key);
+}
+
+function get_cat_display_name_from_id(int|string $cat_id, ?string $url = ''): string
+{
+    return ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($cat_id, $url);
+}
+
+function render_comment_content(string $content): string|null
+{
+    return ServiceLocator::get(HtmlService::class)->renderCommentContent($content);
+}
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function name_compare(array $a, array $b): int
+{
+    // pre-boot standalone — called from Languages::get_fs_languages() in install.php / upgrade.php
+    if (!ServiceLocator::has(HtmlService::class)) {
+        return strcmp(strtolower(is_scalar($a['name']) ? (string) $a['name'] : ''), strtolower(is_scalar($b['name']) ? (string) $b['name'] : ''));
+    }
+    return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
+}
+
+/**
+ * @param array<mixed> $a
+ * @param array<mixed> $b
+ */
+function tag_alpha_compare(array $a, array $b): int
+{
+    return ServiceLocator::get(HtmlService::class)->tagAlphaCompare($a, $b);
+}
+
+function access_denied(): void
+{
+    ServiceLocator::get(HtmlService::class)->accessDenied();
+}
+
+function page_forbidden(string $msg, ?string $alternate_url = null): void
+{
+    ServiceLocator::get(HtmlService::class)->pageForbidden($msg, $alternate_url);
+}
+
+function bad_request(string $msg, ?string $alternate_url = null): void
+{
+    ServiceLocator::get(HtmlService::class)->badRequest($msg, $alternate_url);
+}
+
+function page_not_found(?string $msg, ?string $alternate_url = null): void
+{
+    ServiceLocator::get(HtmlService::class)->pageNotFound($msg, $alternate_url);
+}
+
+/**
+ * Called before Kernel::boot() on DB-connect errors — must have its own
+ * implementation. HtmlService::fatalError() is the canonical copy.
+ */
+function fatal_error(string $msg, ?string $title = null, bool $show_trace = true): never
+{
+    if (empty($title)) {
+        $title = function_exists('l10n') ? l10n('Piwigo encountered a non recoverable error') : 'Piwigo encountered a non recoverable error';
+    }
+
+    $btraceMsg = '';
+    if ($show_trace and function_exists('debug_backtrace')) {
+        $bt = debug_backtrace();
+        for ($i = 1; $i < count($bt); $i++) {
+            $class      = isset($bt[$i]['class']) ? ($bt[$i]['class'] . '::') : '';
+            $btraceMsg .= "#$i\t" . $class . $bt[$i]['function'] . ' ' . ($bt[$i]['file'] ?? '') . '(' . ($bt[$i]['line'] ?? '') . ")\n";
+        }
+        $btraceMsg = trim($btraceMsg);
+        $msg .= "\n";
+    }
+
+    $display = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+<h1>$title</h1>
+<pre style='font-size:larger;background:white;color:red;padding:1em;margin:0;clear:both;display:block;width:auto;height:auto;overflow:auto'>
+<b>$msg</b>
+$btraceMsg
+</pre>\n";
+
+    if (!headers_sent()) {
+        if (function_exists('set_status_header') && ServiceLocator::has(HtmlService::class)) {
+            set_status_header(500);
+        } else {
+            header('HTTP/1.0 500 Server error', true, 500);
+        }
+    }
+    echo $display . str_repeat(' ', 300);
+
+    if (function_exists('ini_set')) {
+        ini_set('display_errors', false);
+    }
+    error_reporting(E_ALL);
+    throw new \RuntimeException(strip_tags($msg) . $btraceMsg);
+}
+
+function get_tags_content_title(): string
+{
+    return ServiceLocator::get(HtmlService::class)->getTagsContentTitle();
+}
+
+function get_combined_categories_content_title(): string
+{
+    return ServiceLocator::get(HtmlService::class)->getCombinedCategoriesContentTitle();
+}
+
+function set_status_header(int $code, string $text = ''): void
+{
+    ServiceLocator::get(HtmlService::class)->setStatusHeader($code, $text);
+}
+
+function render_category_literal_description(?string $desc): string
+{
+    return ServiceLocator::get(HtmlService::class)->renderCategoryLiteralDescription($desc);
+}
+
+/** @param BlockManager[] $menu_ref_arr */
+function register_default_menubar_blocks(array $menu_ref_arr): void
+{
+    ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menu_ref_arr);
+}
+
+/** @param array<string, mixed> $info */
+function render_element_name(array $info): string
+{
+    return ServiceLocator::get(HtmlService::class)->renderElementName($info);
+}
+
+/** @param array<string, mixed> $info */
+function render_element_description(array $info, string $param = ''): string
+{
+    return ServiceLocator::get(HtmlService::class)->renderElementDescription($info, $param);
+}
+
+/** @param array<string, mixed> $info */
+function get_thumbnail_title(array $info, string $title, string $comment = ''): string
+{
+    return ServiceLocator::get(HtmlService::class)->getThumbnailTitle($info, $title, $comment);
+}
+
+function get_src_image_url_protection_handler(string $url, SrcImage $src_image): string
+{
+    return ServiceLocator::get(HtmlService::class)->getSrcImageUrlProtectionHandler($url, $src_image);
+}
+
+/** @param array<string, mixed> $infos */
+function get_element_url_protection_handler(string $url, array $infos): string
+{
+    return ServiceLocator::get(HtmlService::class)->getElementUrlProtectionHandler($url, $infos);
+}
+
+function flush_page_messages(): void
+{
+    ServiceLocator::get(HtmlService::class)->flushPageMessages();
+}
+
+function pwg_nl2br(string $string): string
+{
+    return ServiceLocator::get(HtmlService::class)->pwgNl2br($string);
 }

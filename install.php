@@ -126,6 +126,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 }
 
 //----------------------------------------------------- template initialization
+\Piwigo\Core\Kernel::boot();
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 \Piwigo\Template\TemplateRegistry::set($template);
 $template->set_filenames(['install' => 'install.tpl']);

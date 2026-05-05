@@ -183,6 +183,7 @@ define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
+\Piwigo\Core\Kernel::boot();
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
 \Piwigo\Template\TemplateRegistry::set($template);
 $template->set_filenames(['upgrade' => 'upgrade.tpl']);

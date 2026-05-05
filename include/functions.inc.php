@@ -99,6 +99,49 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
 
 function mkgetdir(mixed $dir, mixed $flags = MKGETDIR_DEFAULT): bool
 {
+    // pre-boot standalone — called from upgrade.php/install.php before Kernel::boot()
+    if (!ServiceLocator::has(Util::class)) {
+        $d = is_scalar($dir) ? (string) $dir : '';
+        $f = is_numeric($flags) ? (int) $flags : MKGETDIR_DEFAULT;
+        if (!is_dir($d)) {
+            if (str_starts_with(PHP_OS, 'WIN')) {
+                $d = str_replace('/', DIRECTORY_SEPARATOR, $d);
+            }
+            $umask = umask(0);
+            set_error_handler(static fn (): bool => true);
+            try {
+                $mkd = mkdir($d, \Piwigo\Config\Config::chmodValue(), ($f & MKGETDIR_RECURSIVE) ? true : false);
+            } finally {
+                restore_error_handler();
+            }
+            umask($umask);
+            if ($mkd == false) {
+                if (!($f & MKGETDIR_DIE_ON_ERROR)) {
+                    return false;
+                }
+                fatal_error("$d " . l10n('no write access'));
+            }
+            if ($f & MKGETDIR_PROTECT_HTACCESS) {
+                $file = $d . '/.htaccess';
+                if (!file_exists($file) && is_writable($d)) {
+                    file_put_contents($file, 'deny from all');
+                }
+            }
+            if ($f & MKGETDIR_PROTECT_INDEX) {
+                $file = $d . '/index.htm';
+                if (!file_exists($file) && is_writable($d)) {
+                    file_put_contents($file, 'Not allowed!');
+                }
+            }
+        }
+        if (!is_writable($d)) {
+            if (!($f & MKGETDIR_DIE_ON_ERROR)) {
+                return false;
+            }
+            fatal_error("$d " . l10n('no write access'));
+        }
+        return true;
+    }
     return ServiceLocator::get(Util::class)->mkgetdir(is_scalar($dir) ? (string) $dir : '', is_numeric($flags) ? (int) $flags : MKGETDIR_DEFAULT);
 }
 
@@ -525,6 +568,23 @@ function array_from_query(string $query, string|false $fieldname = false): array
 
 function script_basename(): string
 {
+    // pre-boot standalone — called from Template::set_theme() in install.php / upgrade.php
+    if (!ServiceLocator::has(StringUtil::class)) {
+        foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
+            if (!empty($_SERVER[$value])) {
+                $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
+                $ext = strrchr($filename, '.');
+                if (\Piwigo\Config\Config::phpExtensionInUrls() && ($ext === false ? '' : substr($ext, 1)) !== 'php') {
+                    continue;
+                }
+                $basename = basename($filename, '.php');
+                if (!empty($basename)) {
+                    return $basename;
+                }
+            }
+        }
+        return '';
+    }
     return ServiceLocator::get(StringUtil::class)->scriptBasename();
 }
 

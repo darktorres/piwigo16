@@ -75,6 +75,7 @@ final class Lang
     public static function loadArray(array $data): void
     {
         self::$data = $data;
+        $GLOBALS['lang'] = $data;
     }
 
     public static function reset(): void

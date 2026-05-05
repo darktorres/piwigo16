@@ -1387,7 +1387,7 @@ function conf_update_param(string $param, mixed $value, bool $updateGlobal = fal
         $raw = call_user_func($parser, $value);
         $dbValue = is_scalar($raw) ? (string) $raw : '';
     } elseif (is_array($value) || is_object($value)) {
-        $dbValue = addslashes(serialize($value));
+        $dbValue = serialize($value);
     } else {
         $dbValue = \Piwigo\Core\BoolUtil::toString(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
     }
@@ -1467,7 +1467,18 @@ function conf_get_param($param, $default_value = null)
 function safe_unserialize(array|string $value): array
 {
     if (is_string($value)) {
-        $unserialized = unserialize($value);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $unserialized = unserialize($value);
+            if (!is_array($unserialized) && $value !== '') {
+                // Legacy: values stored with addslashes() + raw SQL had backslashes stripped by MySQL.
+                // Values stored with addslashes() + DBAL prepared statements keep the backslashes and
+                // fail to unserialize. Strip them and retry.
+                $unserialized = unserialize(stripslashes($value));
+            }
+        } finally {
+            restore_error_handler();
+        }
         return is_array($unserialized) ? $unserialized : [];
     }
     return $value;

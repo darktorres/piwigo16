@@ -1717,21 +1717,33 @@ All three deferred controllers use shims with their own bootstrap sequences — 
 
 Wave A is **complete** — all 15 root entry-point files are now controller shims.
 
-### Completed — Wave B (admin entry-point controller)
+### Completed — Wave B (admin sub-controllers)
 
-`AdminController` (`src/Piwigo/Controller/Admin/AdminController.php`) extracts the full body of `admin.php`. The root `admin.php` is now a 6-line shim identical in structure to the Wave A shims:
+`AdminController` dispatches via `dispatchToSubController()` to 9 typed sub-controller classes — no more dynamic-filename `require`. `admin.php` is a 6-line shim:
 
 ```php
 define('PHPWG_ROOT_PATH', './');
-define('IN_ADMIN', true);         // must precede common.inc.php
+define('IN_ADMIN', true);
 require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 \Piwigo\Core\Kernel::boot();
 (new AdminController)(RequestFactory::fromGlobals());
 ```
 
-`AdminController` preserves the existing `require PHPWG_ROOT_PATH . 'admin/' . $adminPage . '.php'` dispatch mechanism — the 60+ `admin/*.php` sub-page files are included files, not standalone entry-points, and continue to work unchanged. Sub-page OOP conversion (individual `AlbumController`, `PhotoController`, etc.) is deferred to a future phase.
+| Controller | Pages handled |
+|---|---|
+| `AlbumController` | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks *(fully inlined)* |
+| `PhotoController` | photo, picture_modify/coi/formats, photos_add, photos_add_direct/ftp/applications |
+| `BatchManagerController` | batch_manager, batch_manager_global/unit, queue |
+| `ConfigurationController` | configuration |
+| `UsersController` | user_list, user_perm, user_activity |
+| `GroupsController` | group_list, group_perm |
+| `ExtensionsController` | plugins/themes/languages + sub-tabs, updates, extend_for_templates |
+| `MaintenanceController` | maintenance + sub-tabs, history, stats, site_manager, site_reader_local, site_update |
+| `MiscController` | notification_by_mail, permalinks, tags, help, popuphelp, intro, menubar, index, comments, rating, rating_user, profile |
 
-Wave B is **complete** — the `/admin{rest}` route now flows through the PSR-7/15 pipeline.
+`AlbumController` page bodies are fully inlined into class methods. All other sub-controllers use explicit static `require` inside typed methods — the dispatch is static and named, eliminating the dynamic-filename anti-pattern. Complex sub-pages (batch_manager 819 lines, site_update 975 lines, etc.) continue to supply their bodies from `admin/*.php` files.
+
+Wave B is **complete** — all admin pages now dispatch through named, typed methods.
 
 ### Remaining steps
 

@@ -20,12 +20,12 @@ final class DerivativeService
      */
     public function generate(array $imageRow, string $type): void
     {
-        ImageStdParams::load_from_db();
-
         $srcImage = new SrcImage($imageRow);
         if ($srcImage->rel_path === '') {
             return;
         }
+
+        ImageStdParams::load_from_db();
 
         $defined = ImageStdParams::get_defined_type_map();
         if (!isset($defined[$type])) {

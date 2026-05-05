@@ -88,6 +88,15 @@ if (!defined('WS_XML_ATTRIBUTES')) {
     define('WS_XML_ATTRIBUTES', 'attributes_xml_');
 }
 
+// File extension helper stub used by SrcImage and other image classes.
+if (!function_exists('get_extension')) {
+    function get_extension(string $filename): string
+    {
+        $ext = strrchr($filename, '.');
+        return $ext !== false ? strtolower(substr($ext, 1)) : '';
+    }
+}
+
 // Image helper stub: returns the fractional position of a COI character.
 // Real implementation is in include/functions_image.inc.php.
 if (!function_exists('char_to_fraction')) {

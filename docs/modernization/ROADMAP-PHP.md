@@ -1587,137 +1587,146 @@ openapi-generator-cli generate -i 'ws.php?_openapi=json' -g typescript-axios -o 
 
 ## #22 — Single front controller + PSR-7/15 routing
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** XL (capstone)
+**Status:** In progress &nbsp;|&nbsp; **Size:** XL (capstone)
 
 ### Goal
 
-All HTTP requests enter through a single `public/index.php` front controller. The controller adapts the request to PSR-7, runs it through a PSR-15 middleware pipeline (error handler → session → auth → CSRF → routing → controller dispatch), and emits a PSR-7 response. The 26 root-level `.php` files and the ~20 admin entrypoints are replaced by controller classes registered in a route table. URL config switches (`question_mark_in_urls`, `php_extension_in_urls`) are dropped — URLs are always rewritten by the web server.
+All HTTP requests enter through a single `index.php` front controller (kept at the repo root — no `.htaccess` or web-server rewriting required). The controller adapts the request to PSR-7, runs it through a PSR-15 middleware pipeline (error handler → session → auth → CSRF → routing → controller dispatch), and emits a PSR-7 response. The 26 root-level `.php` files and the ~20 admin entrypoints are replaced by controller classes registered in a route table.
+
+**Server-agnostic constraint:** routing works without any web-server config. `PathExtractor` reads the path from PATH_INFO → REQUEST_URI → `?/path` query string in that order. Clean URLs (`/path` without `index.php`) are an opt-in, not a requirement.
 
 This is the capstone item. It depends on items #1–#12 landing first — especially the exception hierarchy (#10), PSR-3 logger (#11), and PSR-11 container (#12).
 
-### Current state
+### Completed — Phase 1–3 (PSR-7/15 infrastructure)
 
-- **46 entrypoints** total: 26 in repo root (`index.php`, `picture.php`, `admin.php`, `ws.php`, `install.php`, `upgrade.php`, `action.php`, `search.php`, `feed.php`, `password.php`, `profile.php`, `comments.php`, `identification.php`, `register.php`, `tags.php`, `i.php`, `notification.php`, `qsearch.php`, `random.php`, `popuphelp.php`, `about.php`, `check_admin.php`, `nbm.php`, `osmmap.php`, `upgrade_feed.php`, `rector.php`) plus ~20 in `admin/`.
-- **No `.htaccess`** at root — no URL rewriting today.
-- **Routing** is procedural: `include/section_init.inc.php` parses PATH_INFO / first GET key into `$page['section']`, and `script_basename()` switches on the entrypoint filename.
-- `Kernel::boot()` is called from each entrypoint and wires service facades — but it's not a request dispatcher.
-- Two URL-format flags in `Config`: `question_mark_in_urls` (default true), `php_extension_in_urls` (default true). Both are legacy compatibility knobs that block proper rewriting.
+#### Dependencies added
 
-### Steps
+```json
+"nyholm/psr7": "^1.8",
+"nyholm/psr7-server": "^1.1",
+"psr/http-message": "^2.0",
+"psr/http-server-middleware": "^1.0",
+"psr/http-server-handler": "^1.0",
+"symfony/routing": "^8.0"
+```
 
-1. **Add PSR-7/15 dependencies.** `composer require nyholm/psr7 nyholm/psr7-server psr/http-message psr/http-server-middleware psr/http-server-handler nikic/fast-route` (or `symfony/routing`).
+`symfony/routing` chosen over `nikic/fast-route` because the built-in `UrlGenerator` is backed by the same `RouteCollection` used for dispatch — so `Router::generate('category', ['rest' => '12-foo'])` shares the route table as the single source of truth for all URL generation.
 
-2. **Create `public/index.php`.**
+#### Phase 1 — Foundation (`src/Piwigo/Http/`)
 
-   ```php
-   <?php
-   declare(strict_types=1);
-   require __DIR__ . '/../vendor/autoload.php';
-   $kernel = Piwigo\Bootstrap\Kernel::boot();
-   $request = Piwigo\Http\RequestFactory::fromGlobals();
-   $response = $kernel->handle($request);
-   (new Piwigo\Http\ResponseEmitter())->emit($response);
-   ```
+| Class | Role |
+|---|---|
+| `PathExtractor` | Server-agnostic path extraction: PATH_INFO → REQUEST_URI strip → `?/path` QUERY_STRING |
+| `RequestFactory` | Wraps `nyholm/psr7-server`; attaches `_route_path` attribute |
+| `ResponseFactory` | Convenience: `html()`, `json()`, `redirect()`, `create()` |
+| `ResponseEmitter` | Sends PSR-7 response to PHP SAPI output |
 
-3. **Web-server config.**
-   - `public/.htaccess` — `RewriteRule ^ index.php [QSA,L]` for everything not matching a real file.
-   - `docs/nginx.conf.example` — equivalent `try_files $uri /index.php?$query_string;`.
-   - The repo's existing root files become eventual no-ops; for backwards compatibility during the transition, keep a few root shims (`index.php` → `require __DIR__ . '/public/index.php';`).
+`PathExtractor` URL form matrix:
 
-4. **Route table.** `config/routes.php`:
+| Request | Source | Result |
+|---|---|---|
+| `GET /piwigo16/index.php/category/12` | PATH_INFO | `/category/12` |
+| `GET /piwigo16/index.php?/category/12` | QUERY_STRING | `/category/12` |
+| `GET /piwigo16/index.php` | (none) | `/` |
+| `GET /piwigo16/category/12` (clean URL) | REQUEST_URI | `/category/12` |
 
-   ```php
-   return function (FastRoute\RouteCollector $r) {
-       $r->addGroup('', function ($r) {
-           $r->get('/',                         GalleryController::class);
-           $r->get('/picture/{id:\d+}[/{slug}]', PictureController::class);
-           $r->get('/category/{id:\d+}[/{slug}]', CategoryController::class);
-           $r->any('/search',                   SearchController::class);
-           $r->any('/identification',           IdentificationController::class);
-           $r->any('/register',                 RegisterController::class);
-           // …
-       });
-       $r->addGroup('/admin', function ($r) {
-           $r->any('[/{section}[/{action}]]',  AdminController::class);
-       });
-       $r->addGroup('/ws', function ($r) {
-           $r->any('[.{format:json|xml}]',     WsController::class);
-       });
-   };
-   ```
+#### Phase 2 — Router (`src/Piwigo/Routing/`, `config/routes.php`)
 
-5. **Controllers — Wave A: root entrypoints (15 files).** Move each repo-root `.php` file into `app/Controller/<Name>Controller.php` as a class implementing `__invoke(ServerRequestInterface): ResponseInterface`. The body becomes the existing logic adapted to read from the request and return a response.
+`Router` wraps `Symfony\Component\Routing\Matcher\UrlMatcher` (dispatch) and `UrlGenerator` (generation) from the same `RouteCollection`. `RouteResult` is an immutable DTO: `FOUND | NOT_FOUND | METHOD_NOT_ALLOWED`.
 
-   | Entry-script         | Becomes                                    |
-   | -------------------- | ------------------------------------------ |
-   | `index.php`          | `IndexController` (or `GalleryController`) |
-   | `picture.php`        | `PictureController`                        |
-   | `password.php`       | `PasswordController`                       |
-   | `profile.php`        | `ProfileController`                        |
-   | `comments.php`       | `CommentsController`                       |
-   | `feed.php`           | `FeedController`                           |
-   | `i.php`              | `ImageDerivativeController`                |
-   | `identification.php` | `IdentificationController`                 |
-   | `install.php`        | `InstallController`                        |
-   | `notification.php`   | `NotificationController`                   |
-   | `register.php`       | `RegisterController`                       |
-   | `search.php`         | `SearchController`                         |
-   | `tags.php`           | `TagsController`                           |
-   | `upgrade.php`        | `UpgradeController`                        |
-   | `ws.php`             | `WebServiceController`                     |
+`config/routes.php` returns a named `RouteCollection` with 22 routes. Route names are the keys for `Router::generate()`. Sub-token parsing (pagination, chronology, slugs) is done by `SectionInitializer` inside each controller — the router only identifies the section via a `{rest}` catch-all.
 
-5b. **Controllers — Wave B: admin entrypoints (57 files).** Same pattern under `app/Controller/Admin/`. Routed via the `/admin/...` prefix in step 4. One commit per logical cluster (album management, batch manager, configuration, plugins/themes, users/groups, maintenance, etc.) — not 57 separate commits and not one mega-commit.
+Key route patterns:
 
-5c. **Per-page Context DTOs.** Each controller hands a single typed DTO to its template instead of pushing ~15 file-scope `$category`, `$collection`, `$base_url`, `$picture`, `$related_categories`, `$comment_action`, etc. variables. New DTOs under `src/Piwigo/Page/Context/`:
+```php
+// /category/12-foo/start-24  →  rest = "12-foo/start-24"
+$routes->add('gallery_cat', new Route('/category/{rest}', [...], ['rest' => '.+'], methods: ['GET']));
 
-| DTO                         | Owning controller(s)                                                                                                                                 | Properties                                                 |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `AlbumPageContext`          | `IndexController`, `CategoryController`                                                                                                              | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl` |
-| `PicturePageContext`        | `PictureController`                                                                                                                                  | `picture`, `relatedCategories`, `commentAction`, `urlSelf` |
-| `SearchPageContext`         | `SearchController`                                                                                                                                   | `query`, `filters`, `results`, `pagination`                |
-| `TagsPageContext`           | `TagsController`                                                                                                                                     | `tags`, `selectedTags`, `photos`                           |
-| `CommentsPageContext`       | `CommentsController`                                                                                                                                 | `comments`, `pagination`, `filters`                        |
-| `FeedPageContext`           | `FeedController`                                                                                                                                     | `items`, `feedMeta`                                        |
-| `IdentificationPageContext` | `IdentificationController`, `RegisterController`, `PasswordController`                                                                               | `errors`, `redirectTo`, `formState`                        |
-| `ProfilePageContext`        | `ProfileController`                                                                                                                                  | `user`, `prefs`, `themes`, `languages`                     |
-| `NotificationPageContext`   | `NotificationController`                                                                                                                             | `subscriptions`, `formState`                               |
-| `AdminAlbumPageContext`     | `Admin\AlbumController`, `Admin\CategoryModifyController`, `Admin\CategoryPermissionsController`                                                     | `category`, `adminBaseUrl`, `permissions`                  |
-| `AdminPhotoPageContext`     | `Admin\PhotoController`, `Admin\PictureModifyController`                                                                                             | `picture`, `adminPhotoBaseUrl`                             |
-| `BatchManagerContext`       | `Admin\BatchManager*Controller`                                                                                                                      | `collection`, `baseUrl`, `selectedFilters`                 |
-| `MaintenanceContext`        | `Admin\MaintenanceActionsController`                                                                                                                 | `maintActions`, `lastRun`                                  |
-| `AdminListContext`          | generic — `Admin\UserListController`, `Admin\GroupListController`, `Admin\TagsController`, `Admin\PluginsController`, `Admin\ThemesController`, etc. | `items`, `pagination`, `filters`, `baseUrl`                |
-| `AdminPageContext`          | base class — `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                                                                                 | inherited by all admin contexts                            |
+// /ws  or  /ws/openapi.json  (no mandatory slash before {rest})
+$routes->add('ws', new Route('/ws{rest}', [...], ['rest' => '(/.*)?'], methods: ['GET','POST']));
 
-DTOs are built incrementally — each controller wave creates its own DTO, no need to ship all 15 up front. The Latte partials in item #23 receive these DTOs as `{templateType}` declarations.
+// /admin  or  /admin/batch_manager
+$routes->add('admin', new Route('/admin{rest}', [...], ['rest' => '(/.*)?'], methods: ['GET','POST']));
+```
 
-6. **Middleware pipeline.** `Piwigo\Http\MiddlewarePipeline` runs:
-   1. `ExceptionHandlerMiddleware` (catches `PiwigoException`, renders error response — depends on item #10)
-   2. `SecurityHeadersMiddleware` (CSP, X-Frame-Options, etc. — see item #24)
-   3. `SessionMiddleware` (start session, attach to request attributes)
-   4. `AuthMiddleware` (resolve `CurrentUser`, attach to request)
-   5. `CsrfMiddleware` (verify pwg_token on state-changing requests — see item #24)
-   6. `RoutingMiddleware` (FastRoute dispatch)
-   7. `ControllerInvokerMiddleware` (calls `__invoke` with route args, returns response)
+#### Phase 3 — Middleware pipeline + Kernel::handle()
 
-7. **Drop legacy URL flags.** Remove `question_mark_in_urls` and `php_extension_in_urls` from `Config` (with deprecation shim that warns if set). All URLs go through a `Piwigo\Url\UrlGenerator` that emits clean rewritten paths.
+`MiddlewarePipeline` is an immutable PSR-15 `RequestHandlerInterface` that shifts the front middleware on each `handle()` call.
 
-8. **Migrate `admin.php` and `ws.php`.** These become `/admin/...` and `/ws/...` route prefixes — same controllers as before, but invoked via the front controller's pipeline.
+Pipeline order wired in `Kernel::handle()`:
 
-9. **Delete root shims** once plugins and integrations are confirmed to use clean URLs (likely a release after the cutover).
+| # | Middleware | Phase-3 state |
+|---|---|---|
+| 1 | `ExceptionHandlerMiddleware` | Active — catches `PiwigoException`, logs others |
+| 2 | `SessionMiddleware` | Active — `session_start()` if not already active |
+| 3 | `AuthMiddleware` | Stub — pass-through; `user.inc.php` still runs via `common.inc.php` |
+| 4 | `CsrfMiddleware` | Stub — pass-through; enforcement wires in Wave A |
+| 5 | `RoutingMiddleware` | Active — calls `Router::dispatch()`, attaches `RouteResult` |
+| 6 | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke` |
+| — | `FallbackHandler` | Returns 404; removed once all routes have controllers |
+
+`Kernel::handle(ServerRequestInterface): ResponseInterface` added. `index.php` is unchanged — the pipeline activates when Wave A lands `GalleryController` and flips the index.
+
+`ControllerInterface` defined in `src/Piwigo/Controller/`:
+```php
+interface ControllerInterface {
+    /** @param array<string, string> $args */
+    public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface;
+}
+```
+
+All middleware + `Router` registered in `config/container.php`.
+
+Tests: `PathExtractorTest` (14 tests) + `RouterTest` (18 tests) = 32 new tests.
+
+### Remaining steps
+
+**Wave A — root entry-point controllers** (`src/Piwigo/Controller/`):
+
+Each old `.php` root file becomes a 2-line shim (`require 'index.php'`). `index.php` flips to the new pipeline when the first controller (`GalleryController`) is ready. `SectionInitializer` extracts the procedural body of `include/section_init.inc.php`.
+
+| Old file | Controller | Key extraction |
+|---|---|---|
+| `index.php` | `GalleryController` | `SectionInitializer::resolve()` |
+| `picture.php` | `PictureController` | Same + picture logic |
+| `search.php` | `SearchController` | — |
+| `tags.php` | `TagsController` | — |
+| `comments.php` | `CommentsController` | — |
+| `feed.php` | `FeedController` | — |
+| `identification.php` | `IdentificationController` | — |
+| `register.php` | `RegisterController` | — |
+| `password.php` | `PasswordController` | — |
+| `profile.php` | `ProfileController` | — |
+| `notification.php` | `NotificationController` | — |
+| `ws.php` | `WsController` | Thin adapter → `PwgServerRegistry::current()->run()` |
+| `install.php` | `InstallController` | Skips normal bootstrap |
+| `upgrade.php` | `UpgradeController` | — |
+| `i.php` | `ImageDerivativeController` | Preserves fast-path |
+
+`AuthMiddleware` absorbs `include/user.inc.php`. `FilterMiddleware` (new) absorbs `include/filter.inc.php`.
+
+**Wave B — admin controllers** (`src/Piwigo/Controller/Admin/`): ~57 files in 7 cluster commits.
+
+**Phase 6 — DTOs + URL generator + cleanup:**
+- `src/Piwigo/Page/Context/` typed page DTOs
+- `src/Piwigo/Url/UrlGenerator` wrapping `Router::generate()`
+- Deprecate `question_mark_in_urls` / `php_extension_in_urls` config flags
+- Delete root shims + legacy include bridges
 
 ### Verification
 
 ```bash
-# Routing sanity
-curl -s http://localhost/                      | grep -q '<title>'
-curl -s http://localhost/picture/1             | grep -q '<title>'
-curl -s -X POST http://localhost/ws.json       -d 'method=pwg.getVersion' | jq .stat   # "ok"
-curl -s http://localhost/admin                 | grep -q 'admin'
+# Server-agnostic (no web-server config needed):
+php -S localhost:8765 index.php &
+curl -s 'http://localhost:8765/?/category/12'        # question-mark mode
+curl -s 'http://localhost:8765/index.php/picture/1'  # PATH_INFO mode
+curl -s 'http://localhost:8765/?_openapi=json' | php -r "echo json_decode(file_get_contents('php://stdin'))->info->title;"
+# → Piwigo Web Services
 
-# Verify single entrypoint
-ls *.php | wc -l        # ≤ 1 (just a shim during transition; 0 after cutover)
+vendor/bin/phpunit --no-progress    # 366 tests, all green
+vendor/bin/phpstan analyse --no-progress   # 0 errors
 
-# E2E suite green
+# E2E suite green (once Wave A lands)
 npx playwright test
 ```
 

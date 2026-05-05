@@ -1745,6 +1745,18 @@ function load_language(string $filename, string $dirname = '', array $options = 
             $source_file = $f;
             break;
         }
+
+        // .lang.php files are deleted; also accept a locale when only its .po exists.
+        // $f path (even non-existent) is kept as $source_file so the .po path can be
+        // derived from it by the loading code below.
+        if (empty($options['local']) && str_ends_with($f, '.lang.php')) {
+            $po_candidate = str_replace('.lang.php', '.po', $f);
+            if (file_exists($po_candidate)) {
+                $selected_language = $language;
+                $source_file = $f;
+                break;
+            }
+        }
     }
 
     if (!empty($source_file)) {
@@ -1759,12 +1771,26 @@ function load_language(string $filename, string $dirname = '', array $options = 
                 // Load via Translator (also mirrors into $GLOBALS['lang'])
                 \Piwigo\Lang\Translator::get()->load($selected_language, $po_file);
 
-                // Also load lang_info from the PHP file so LanguageStack::info() stays populated
-                $lang_info = null;
-                if (is_readable($source_file)) {
-                    include $source_file;
+                // Populate lang_info from the PO file's X-Piwigo-* headers.
+                // The .lang.php files are deleted; all locale metadata now lives here.
+                $poHeaders = (new \Gettext\Loader\PoLoader())->loadFile($po_file)->getHeaders();
+                $lang_info_po = [];
+                if (($v = $poHeaders->get('X-Piwigo-Language-Name')) !== null) {
+                    $lang_info_po['language_name'] = $v;
                 }
-                \Piwigo\Core\LanguageStack::mergeInfo((array) $lang_info);
+                if (($v = $poHeaders->get('X-Piwigo-Country')) !== null) {
+                    $lang_info_po['country'] = $v;
+                }
+                if (($v = $poHeaders->get('X-Piwigo-Direction')) !== null) {
+                    $lang_info_po['direction'] = $v;
+                }
+                if (($v = $poHeaders->get('X-Piwigo-Code')) !== null) {
+                    $lang_info_po['code'] = $v;
+                }
+                if (($v = $poHeaders->get('X-Piwigo-Zero-Plural')) !== null) {
+                    $lang_info_po['zero_plural'] = ($v === 'true');
+                }
+                \Piwigo\Core\LanguageStack::mergeInfo($lang_info_po);
             } else {
                 // Fallback: load from PHP file directly (plugins/themes may not have PO yet)
                 if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {

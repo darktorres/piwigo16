@@ -12,10 +12,12 @@ use Piwigo\Db\DbInfo;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Users\UserRepository;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -170,14 +172,16 @@ switch ($action) {
     case 'derivatives':
         {
             $types_str = is_string($_GET['type'] ?? null) ? $_GET['type'] : '';
-            if ($types_str == 'all') {
-                clear_derivative_cache($types_str);
-            } else {
-                $types = explode('_', $types_str);
-                foreach ($types as $type_to_clear) {
-                    clear_derivative_cache($type_to_clear);
-                }
+            $types     = $types_str === 'all' ? ['all'] : explode('_', $types_str);
+
+            foreach ($types as $type_to_clear) {
+                clear_derivative_cache($type_to_clear);
             }
+
+            ServiceLocator::get(MessageBusInterface::class)->dispatch(
+                new RegenerateAllDerivativesJob($types)
+            );
+
             PageState::current()->addInfo(l10n('action successfully performed.'));
             break;
         }

@@ -1377,7 +1377,7 @@ functions.
 
 ## #20 — Background job queue (Symfony Messenger)
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** L
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 

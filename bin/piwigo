@@ -12,11 +12,89 @@ use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\ConsoleRunner;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Job\MessengerFactory;
+use Symfony\Component\Messenger\Stamp\ReceivedStamp;
+
+define('PHPWG_ROOT_PATH', realpath(__DIR__ . '/..') . '/');
 
 ConfigLoader::applyDefaults();
 ConfigLoader::loadEnv(__DIR__ . '/..');
 ConfigLoader::applyEnvOverrides();
 
+// ----------------------------------------------------------------
+// messenger:consume <transport> [--limit=N] [--time-limit=N] [--memory-limit=NM]
+// ----------------------------------------------------------------
+if (isset($argv[1]) && $argv[1] === 'messenger:consume') {
+    $transportName = isset($argv[2]) && !str_starts_with($argv[2], '-') ? $argv[2] : 'async';
+
+    $limit       = null;
+    $timeLimit   = null;
+    $memoryBytes = null;
+
+    foreach ($argv as $opt) {
+        if (preg_match('/^--limit=(\d+)$/', $opt, $m)) {
+            $limit = (int) $m[1];
+        } elseif (preg_match('/^--time-limit=(\d+)$/', $opt, $m)) {
+            $timeLimit = (int) $m[1];
+        } elseif (preg_match('/^--memory-limit=(\d+)M?$/i', $opt, $m)) {
+            $memoryBytes = (int) $m[1] * 1024 * 1024;
+        }
+    }
+
+    Kernel::boot();
+
+    $dbalConn  = ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $bus       = MessengerFactory::build($dbalConn);
+    $queueName = $transportName === 'failed' ? 'piwigo_failed' : 'piwigo_async';
+    $transport = MessengerFactory::buildTransport($queueName, $dbalConn);
+
+    $startedAt = time();
+    $processed = 0;
+
+    fwrite(STDOUT, sprintf("Starting messenger worker (transport=%s)\n", $transportName));
+
+    while (true) {
+        if ($timeLimit !== null && (time() - $startedAt) >= $timeLimit) {
+            fwrite(STDOUT, "Time limit reached, stopping.\n");
+            break;
+        }
+        if ($memoryBytes !== null && memory_get_usage(true) > $memoryBytes) {
+            fwrite(STDOUT, "Memory limit reached, stopping.\n");
+            break;
+        }
+
+        $found = false;
+        foreach ($transport->get() as $envelope) {
+            $found = true;
+            try {
+                $bus->dispatch($envelope->with(new ReceivedStamp($transportName)));
+                $transport->ack($envelope);
+            } catch (\Throwable $e) {
+                $transport->reject($envelope);
+                fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
+            }
+            $processed++;
+
+            if ($limit !== null && $processed >= $limit) {
+                fwrite(STDOUT, "Message limit reached, stopping.\n");
+                break 2;
+            }
+        }
+
+        if (!$found) {
+            usleep(1_000_000);
+        }
+    }
+
+    fwrite(STDOUT, sprintf("Processed %d message(s).\n", $processed));
+    exit(0);
+}
+
+// ----------------------------------------------------------------
+// Default: Doctrine Migrations console runner
+// ----------------------------------------------------------------
 $connection = DriverManager::getConnection([
     'driver'   => 'mysqli',
     'host'     => Config::dbHost(),

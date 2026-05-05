@@ -572,7 +572,8 @@ function mail_function_is_usable(): bool
         return false;
     }
     if (PHP_OS_FAMILY === 'Windows') {
-        return !empty(ini_get('SMTP'));
+        $smtp = trim((string) ini_get('SMTP'));
+        return $smtp !== '' && strtolower($smtp) !== 'localhost';
     }
     return !empty(ini_get('sendmail_path'));
 }

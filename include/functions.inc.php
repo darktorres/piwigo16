@@ -1695,137 +1695,108 @@ function load_language(string $filename, string $dirname = '', array $options = 
         \Piwigo\Core\LanguageStack::trackPluginFile($dirname, $filename, $options);
     }
 
-    if (empty($options['return'])) {
-        $filename .= '.php';
-    }
     if (empty($dirname)) {
         $dirname = PHPWG_ROOT_PATH;
     }
-    $dirname .= 'language/';
+    $langDir = $dirname . 'language/';
 
-    $default_language = (\Piwigo\Core\InstallSentinel::isInstalled() and !defined('UPGRADES_PATH')) ?
-        get_default_language() : PHPWG_DEFAULT_LANGUAGE;
+    $default_language = (\Piwigo\Core\InstallSentinel::isInstalled() and !defined('UPGRADES_PATH'))
+        ? get_default_language()
+        : PHPWG_DEFAULT_LANGUAGE;
 
-    // construct list of potential languages
+    // Build candidate locale list (highest priority first)
     $languages = [];
-    if (!empty($options['language'])) { // explicit language
+    if (!empty($options['language'])) {
         $languages[] = $options['language'];
     }
-    if (!empty($user['language'])) { // use language
+    if (!empty($user['language'])) {
         $languages[] = $user['language'];
     }
-    if (($parent = get_parent_language()) != null) { // parent language
-        // this is only for when the "child" language is missing
+    if (($parent = get_parent_language()) !== null) {
         $languages[] = $parent;
     }
-    if (isset($options['force_fallback'])) { // fallback language
-        // this is only for when the main language is missing
-        if ($options['force_fallback'] === true) {
-            $options['force_fallback'] = $default_language;
-        }
-        $languages[] = $options['force_fallback'];
+    if (isset($options['force_fallback'])) {
+        $languages[] = $options['force_fallback'] === true ? $default_language : $options['force_fallback'];
     }
-    if (empty($options['no_fallback'])) { // default language
+    if (empty($options['no_fallback'])) {
         $languages[] = $default_language;
     }
 
     /** @var list<string> $languages_typed */
     $languages_typed = array_values(array_unique(array_filter($languages, 'is_string')));
 
-    // find first existing
-    $source_file       = '';
-    $selected_language = '';
-    foreach ($languages_typed as $language) {
-        $f = !empty($options['local']) ?
-          $dirname.$language.'.'.$filename :
-          $dirname.$language.'/'.$filename;
-
-        if (file_exists($f)) {
-            $selected_language = $language;
-            $source_file = $f;
-            break;
-        }
-
-        // .lang.php files are deleted; also accept a locale when only its .po exists.
-        // $f path (even non-existent) is kept as $source_file so the .po path can be
-        // derived from it by the loading code below.
-        if (empty($options['local']) && str_ends_with($f, '.lang.php')) {
-            $po_candidate = str_replace('.lang.php', '.po', $f);
-            if (file_exists($po_candidate)) {
-                $selected_language = $language;
-                $source_file = $f;
-                break;
+    // --- Content-file retrieval (return => true) ---
+    // Used for locale-specific HTML/TXT files (about.html, help pages, etc.).
+    if (!empty($options['return'])) {
+        foreach ($languages_typed as $language) {
+            $f = !empty($options['local'])
+                ? $langDir . $language . '.' . $filename
+                : $langDir . $language . '/' . $filename;
+            if (is_readable($f)) {
+                return file_get_contents($f);
             }
         }
+        return false;
     }
 
-    if (!empty($source_file)) {
-        if (empty($options['return'])) {
-            // Derive the PO path by swapping the .php extension
-            $po_file = substr($source_file, 0, -4); // strip '.php'
-            // source_file ends in e.g. 'common.lang.php'; po_file ends in 'common.lang'
-            // Replace '.lang' → '' to get domain, then add '.po'
-            $po_file = str_replace('.lang', '', $po_file) . '.po';
-
-            if (is_readable($po_file)) {
-                // Load via Translator (also mirrors into $GLOBALS['lang'])
-                \Piwigo\Lang\Translator::get()->load($selected_language, $po_file);
-
-                // Populate lang_info from the PO file's X-Piwigo-* headers.
-                // The .lang.php files are deleted; all locale metadata now lives here.
-                $poHeaders = (new \Gettext\Loader\PoLoader())->loadFile($po_file)->getHeaders();
-                $lang_info_po = [];
-                if (($v = $poHeaders->get('X-Piwigo-Language-Name')) !== null) {
-                    $lang_info_po['language_name'] = $v;
-                }
-                if (($v = $poHeaders->get('X-Piwigo-Country')) !== null) {
-                    $lang_info_po['country'] = $v;
-                }
-                if (($v = $poHeaders->get('X-Piwigo-Direction')) !== null) {
-                    $lang_info_po['direction'] = $v;
-                }
-                if (($v = $poHeaders->get('X-Piwigo-Code')) !== null) {
-                    $lang_info_po['code'] = $v;
-                }
-                if (($v = $poHeaders->get('X-Piwigo-Zero-Plural')) !== null) {
-                    $lang_info_po['zero_plural'] = ($v === 'true');
-                }
-                \Piwigo\Core\LanguageStack::mergeInfo($lang_info_po);
-            } else {
-                // Fallback: load from PHP file directly (plugins/themes may not have PO yet)
-                if (isset($options['force_fallback']) && $options['force_fallback'] != $selected_language) {
-                    $forceFallback = is_scalar($options['force_fallback']) ? (string) $options['force_fallback'] : '';
-                    $fallback_file = str_replace($selected_language, $forceFallback, $source_file);
-                    if (is_readable($fallback_file)) {
-                        include $fallback_file;
-                    }
-                }
-
-                $lang = null;
+    // --- Local customisations (PWG_LOCAL_DIR) ---
+    // Per-installation PHP overrides outside the packaged translation system.
+    if (!empty($options['local'])) {
+        foreach ($languages_typed as $language) {
+            $f = $langDir . $language . '.' . $filename . '.php';
+            if (is_readable($f)) {
+                $lang      = null;
                 $lang_info = null;
-                if (is_readable($source_file)) {
-                    include $source_file;
-                }
-
-                $currentInfo = \Piwigo\Core\LanguageStack::info();
-                $parent_language = !empty($currentInfo['parent']) ? $currentInfo['parent'] : null;
-                if (!empty($parent_language) && $parent_language != $selected_language) {
-                    \Piwigo\Core\LanguageStack::mergeFromFile(
-                        str_replace($selected_language, is_scalar($parent_language) ? (string) $parent_language : '', $source_file)
-                    );
-                }
-
+                include $f;
                 \Piwigo\Core\LanguageStack::mergeLang((array) $lang);
                 \Piwigo\Core\LanguageStack::mergeInfo((array) $lang_info);
+                return true;
             }
-            return true;
-        } else {
-            $content = is_readable($source_file) ? file_get_contents($source_file) : false;
-            return $content;
+        }
+        return false;
+    }
+
+    // --- PO translation loading ---
+    // Domain: 'common.lang' -> 'common', 'admin.lang' -> 'admin', 'myplugin' -> 'myplugin'
+    $domain = (string) preg_replace('/\.lang$/', '', $filename);
+
+    $po_file           = '';
+    $selected_language = '';
+    foreach ($languages_typed as $language) {
+        $candidate = $langDir . $language . '/' . $domain . '.po';
+        if (file_exists($candidate)) {
+            $selected_language = $language;
+            $po_file           = $candidate;
+            break;
         }
     }
 
-    return false;
+    if ($selected_language === '' || !is_readable($po_file)) {
+        return false;
+    }
+
+    // Load strings via Translator (also mirrors into $GLOBALS['lang'])
+    \Piwigo\Lang\Translator::get()->load($selected_language, $po_file);
+
+    // Populate lang_info from PO header X-Piwigo-* fields
+    $poHeaders    = (new \Gettext\Loader\PoLoader())->loadFile($po_file)->getHeaders();
+    $lang_info_po = [];
+    foreach ([
+        'X-Piwigo-Language-Name' => 'language_name',
+        'X-Piwigo-Country'       => 'country',
+        'X-Piwigo-Direction'     => 'direction',
+        'X-Piwigo-Code'          => 'code',
+    ] as $header => $key) {
+        if (($v = $poHeaders->get($header)) !== null) {
+            $lang_info_po[$key] = $v;
+        }
+    }
+    if (($v = $poHeaders->get('X-Piwigo-Zero-Plural')) !== null) {
+        $lang_info_po['zero_plural'] = ($v === 'true');
+    }
+    \Piwigo\Core\LanguageStack::mergeInfo($lang_info_po);
+
+    return true;
 }
 
 /**

@@ -43,6 +43,7 @@ use Piwigo\Plugin\PluginRepository;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteRepository;
@@ -86,6 +87,7 @@ return [
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
     NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),
     PluginService::class       => factory(static fn (PluginRepository $repo): PluginService => new PluginService($repo)),
+    SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log): SearchService => new SearchService($repo, $conn, $log)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),

@@ -1379,96 +1379,54 @@ functions.
 
 **Status:** ✅ Done &nbsp;|&nbsp; **Size:** L
 
-### Goal
+### What was built
 
-Long-running operations dispatch typed messages onto a queue; a worker process consumes them asynchronously. Default transport is Doctrine DBAL (zero-infra: same DB, no Redis required); Redis/AMQP available as opt-in upgrades. Operations that benefit: derivative generation, batch uploads, mass-derivative regeneration after theme change, mailing-list notification sends, full-text reindex.
+`symfony/messenger ^8.0` + `symfony/doctrine-messenger ^8.0` added. Zero extra infrastructure: transport backed by the existing DBAL connection (same MySQL DB, no Redis/RabbitMQ required). Optional Redis/AMQP transports remain available as future upgrades.
 
-### Current state
+#### Message classes (`src/Piwigo/Job/`)
 
-- Zero queue. Two `register_shutdown_function()` hooks for session cleanup.
-- Long ops (batch upload of 1000 photos, mass derivative regeneration after upgrade) run inline in the request — risking PHP `max_execution_time` and timing out browser sessions.
-- "Async" today is fake: the page emits a JS-driven progress bar that polls a status endpoint and triggers more inline ops.
+All `final readonly`:
 
-### Steps
+| Class | Constructor |
+|---|---|
+| `GenerateDerivativeJob` | `int $imageId, string $size` |
+| `RegenerateAllDerivativesJob` | `string[] $types` |
+| `SendNotificationEmailJob` | `int $userId, string $template, array<string,mixed> $params` |
+| `BatchUploadJob` | `int $batchId` |
+| `ReindexImagesJob` | `?int $sinceId = null` |
 
-1. **Add dependencies.**
+#### Handlers (`src/Piwigo/Job/Handler/`)
 
-   ```bash
-   composer require symfony/messenger symfony/doctrine-messenger
-   ```
+One `#[AsMessageHandler]` invokable class per message. All use `ServiceLocator` for repositories/services. Current implementations log the job and perform a lightweight typed-layer action (e.g. verify image exists, count lounge images, call `SearchRepository::deleteAll()`). Deep derivative-file generation deferred until a `DerivativeService` exists.
 
-   Optional: `symfony/redis-messenger`, `symfony/amqp-messenger`.
+#### Bus wiring
 
-2. **Define typed messages** under `src/Piwigo/Job/`:
-   - `GenerateDerivativeJob(int $imageId, string $size)`
-   - `RegenerateAllDerivativesJob(?int $themeId, array $sizes)`
-   - `SendNotificationEmailJob(int $userId, string $template, array $params)`
-   - `BatchUploadJob(int $batchId)`
-   - `ReindexImagesJob(?int $sinceId = null)`
+- `MessengerFactory::build(Connection): MessageBusInterface` — constructs transports, `HandlersLocator`, `SendersLocator`, and `MessageBus` with `[SendMessageMiddleware, HandleMessageMiddleware]`
+- `config/messenger.php` — routing map (all five job classes → `async`)
+- `config/container.php` — `MessageBusInterface::class` factory delegates to `MessengerFactory::build()`
+- Table: `{prefix}messenger_messages` with two queue slots (`piwigo_async`, `piwigo_failed`); `auto_setup=true` creates it on first dispatch
 
-3. **Implement handlers** under `src/Piwigo/Job/Handler/`:
-
-   ```php
-   final class GenerateDerivativeHandler {
-       public function __construct(private ImageRepository $images, private LoggerInterface $log) {}
-       public function __invoke(GenerateDerivativeJob $job): void {
-           $img = $this->images->find($job->imageId);
-           // … run the derivative
-           $this->log->info('derivative.generated', ['id' => $job->imageId, 'size' => $job->size]);
-       }
-   }
-   ```
-
-   Handlers are auto-registered via `#[AsMessageHandler]` attribute.
-
-4. **Bus + transport config.** `config/messenger.php`:
-
-   ```php
-   return [
-       'transports' => [
-           'async' => 'doctrine://default?queue_name=async',
-           'failed' => 'doctrine://default?queue_name=failed',
-       ],
-       'routing' => [
-           Piwigo\Job\GenerateDerivativeJob::class      => 'async',
-           Piwigo\Job\SendNotificationEmailJob::class   => 'async',
-           Piwigo\Job\BatchUploadJob::class             => 'async',
-           Piwigo\Job\RegenerateAllDerivativesJob::class => 'async',
-       ],
-       'failure_transport' => 'failed',
-   ];
-   ```
-
-5. **Refactor inline call sites.** Anywhere that today loops over images regenerating derivatives, replace with:
-
-   ```php
-   foreach ($imageIds as $id) {
-       $bus->dispatch(new GenerateDerivativeJob($id, 'medium'));
-   }
-   // returns immediately; worker picks up
-   ```
-
-6. **Worker entrypoint.** `bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M`. Document `systemd` and `supervisord` configs in `docs/DEPLOYMENT.md`.
-
-7. **Admin queue UI.** New page under `/admin/queue` shows: pending count, in-progress workers, failed jobs (with `view trace` and `retry`). Reads from `messenger_messages` table.
-
-### Verification
+#### Worker CLI (`bin/piwigo`)
 
 ```bash
-# Dispatch a job
-php -r "
-  require 'vendor/autoload.php';
-  \$bus = (Piwigo\Bootstrap\Kernel::container())->get(Symfony\Component\Messenger\MessageBusInterface::class);
-  \$bus->dispatch(new Piwigo\Job\GenerateDerivativeJob(123, 'small'));
-"
-
-# Verify it's queued
-mysql piwigo_test -e "SELECT id, queue_name, body FROM messenger_messages;"
-
-# Consume and verify handler ran
-bin/piwigo messenger:consume async --limit=1
-mysql piwigo_test -e "SELECT * FROM messenger_messages;"  # row removed (or moved to failed)
+bin/piwigo messenger:consume async [--limit=N] [--time-limit=N] [--memory-limit=NM]
 ```
+
+Manual polling loop (no pcntl, cross-platform). Dispatches each fetched envelope back through the bus with `ReceivedStamp`; `SendMessageMiddleware` skips re-sending, `HandleMessageMiddleware` runs the handler.
+
+#### Admin queue UI (`admin/queue.php` + `queue.tpl`)
+
+Reads `{prefix}messenger_messages` directly. Shows pending counts for async and failed queues, lists the 50 most recent failed jobs with per-job retry (moves row back to `piwigo_async`) and bulk purge of the failed queue.
+
+#### Dispatched call site
+
+`admin/maintenance_actions.php` `derivatives` case: clears derivative files synchronously (unchanged), then dispatches `RegenerateAllDerivativesJob` for async post-processing.
+
+### Pending
+
+- **Handler depth**: `GenerateDerivativeHandler` logs + verifies image exists but does not generate derivative files — requires a future `DerivativeService`.
+- **More call sites**: batch upload, mass-regen after theme change, notification sends are wired but not yet dispatched from their admin pages.
+- **Supervisor/systemd config**: not documented yet.
 
 ---
 

@@ -1191,7 +1191,7 @@ npx playwright test                        # all locales render, no unserialize 
 
 ## #19 — Migrate `include/functions_*.inc.php` to typed service classes
 
-**Status:** ✅ Done — all modules migrated (44 service classes, ~525 functions) &nbsp;|&nbsp; **Size:** XL
+**Status:** ✅ Done — 44 service classes, ~525 functions migrated; 11 of 19 delegate shell files deleted &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
@@ -1326,40 +1326,36 @@ grep -c "^function " include/functions_*.inc.php | awk -F: '{s+=$NF} END {print 
 
 ### Final step — delete the delegate shells
 
-Once no first-party caller uses a free function directly (all call-sites have
-been migrated to typed service methods or removed), the delegate shells and the
-include files themselves can be deleted. The pre-boot standalones (`l10n`,
-`mkgetdir`, `redirect`, `safe_unserialize`, `script_basename`, etc.) are the
-exception — they must remain in `include/functions.inc.php` (or their
-respective `include/` file) until `install.php` and `i.php` are brought into
-the full boot sequence.
+Functions from the separate `functions_*.inc.php` shells were inlined directly
+into `functions.inc.php` (which is already loaded for every request via
+`common.inc.php`). This eliminates the separate files without changing any
+call-site — callers still use the same free-function names, now resolved from
+the single consolidated file. The WS endpoint classes were also upgraded to
+call `WsHelper` methods via `ServiceLocator` instead of the deleted free
+functions.
 
-**Deletion order:**
-
-1. `include/functions_cookie.inc.php` — all 3 delegates → delete file; update `config/container.php` comment
-2. `include/functions_filter.inc.php` — 1 delegate; pre-boot `get_filter_page_value` stays until #22
-3. `include/functions_picture.inc.php` — 6 delegates
-4. `include/functions_rate.inc.php` — 2 delegates
-5. `include/functions_metadata.inc.php` — 5 delegates
-6. `include/functions_comment.inc.php` — 8 delegates
-7. `include/functions_tag.inc.php` — 9 delegates
-8. `include/functions_session.inc.php` — 12 delegates
-9. `include/functions_calendar.inc.php` — 1 delegate
-10. `include/functions_notification.inc.php` — 18 delegates
-11. `include/functions_category.inc.php` — 17 delegates
-12. `include/functions_search.inc.php` — 17 delegates
-13. `include/functions_html.inc.php` — 23 delegates (pre-boot `get_root_url` etc. stay)
-14. `include/functions_url.inc.php` — 21 delegates (pre-boot `get_absolute_root_url`, `embellish_url` stay)
-15. `include/functions_mail.inc.php` — 23 delegates
-16. `include/functions_plugins.inc.php` — keep (event system + pre-boot defines)
-17. `include/functions_user.inc.php` — keep until #22 (pre-boot permission guards)
-18. `include/functions.inc.php` — keep (pre-boot standalones for install.php / i.php)
-19. `include/ws_functions.inc.php` — 8 delegates; delete after WS is fully refactored (#21)
-20. `admin/include/functions.php`, `functions_upload.inc.php`, `functions_notification_by_mail.inc.php`, `functions_metadata.php`, `functions_history.inc.php` — delete after verifying no direct callers remain
-
-**Pre-condition:** `grep -r "^function " include/functions_<x>.inc.php` shows only
-delegate one-liners (no standalone bodies beyond the documented pre-boot set).
-Run `vendor/bin/phpstan analyse` and `npx playwright test` after each deletion.
+| File | Status | Notes |
+|---|---|---|
+| `include/functions_session.inc.php` | ✅ deleted | 12 functions inlined into functions.inc.php |
+| `include/functions_category.inc.php` | ✅ deleted | 17 functions inlined |
+| `include/functions_html.inc.php` | ✅ deleted | 23 functions inlined (fatal_error pre-boot standalone kept) |
+| `include/functions_tag.inc.php` | ✅ deleted | 9 functions inlined |
+| `include/functions_picture.inc.php` | ✅ deleted | 6 functions inlined |
+| `include/functions_rate.inc.php` | ✅ deleted | 2 functions inlined |
+| `include/functions_metadata.inc.php` | ✅ deleted | 5 functions inlined |
+| `include/functions_comment.inc.php` | ✅ deleted | 8 functions + event handler inlined |
+| `include/functions_notification.inc.php` | ✅ deleted | 18 functions inlined |
+| `include/functions_mail.inc.php` | ✅ deleted | 23 functions + trigger_notify inlined |
+| `include/ws_functions.inc.php` | ✅ deleted | `ws_isInvokeAllowed` moved to `ws.php`; 7 other delegates were dead code — endpoint classes now call `WsHelper` directly |
+| `include/functions_cookie.inc.php` | 🔒 keep | `i.php` fast-path loads it directly; requires i.php refactor first |
+| `include/functions_url.inc.php` | 🔒 keep | Pre-boot standalones (`get_absolute_root_url`, `embellish_url`) required by `i.php` |
+| `include/functions_search.inc.php` | 🔒 keep | Contains real class implementations (`QSearchScope`, `QNumericRangeScope`, `QDateRangeScope`) — not a delegate shell |
+| `include/functions_filter.inc.php` | 🔒 keep → **#22** | Only loaded by `include/filter.inc.php` (#22 scope) |
+| `include/functions_calendar.inc.php` | 🔒 keep → **#22** | Only loaded by `include/section_init.inc.php` (#22 scope) |
+| `include/functions_plugins.inc.php` | 🔒 keep permanently | Event system + pre-boot `EVENT_HANDLER_PRIORITY_NEUTRAL` define |
+| `include/functions_user.inc.php` | 🔒 keep → **#22** | Pre-boot permission guards; full migration requires typed controller |
+| `include/functions.inc.php` | 🔒 keep permanently | Pre-boot standalones for install.php / i.php |
+| `admin/include/functions.php` etc. | 🔒 keep → **#22** | Admin pages require them directly; #22 controller migration handles these |
 
 ---
 

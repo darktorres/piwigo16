@@ -8,7 +8,9 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
+use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Comment\CommentRepository;
@@ -20,6 +22,8 @@ use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Plugin\PluginService;
 use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
 use Piwigo\History\HistoryRepository;
@@ -35,6 +39,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
@@ -66,9 +71,14 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
-    HtmlService::class     => factory(static fn (): HtmlService => new HtmlService()),
-    TagService::class      => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
-    UrlService::class      => factory(static fn (): UrlService => new UrlService()),
+    CalendarService::class     => factory(static fn (): CalendarService => new CalendarService()),
+    CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn): CategoryService => new CategoryService($cat, $conn)),
+    HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
+    NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),
+    PluginService::class       => factory(static fn (PluginRepository $repo): PluginService => new PluginService($repo)),
+    SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
+    TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
+    UrlService::class          => factory(static fn (): UrlService => new UrlService()),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

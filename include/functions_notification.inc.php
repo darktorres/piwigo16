@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Image\DerivativeImage;
-
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -13,607 +11,107 @@ use Piwigo\Image\DerivativeImage;
 /**
  * @package functions\notification
  */
-/**
- * Get standard sql where in order to restrict and filter categories and images.
- * IMAGE_CATEGORY_TABLE must be named "ic" in the query
- *
- * @param string $prefix_condition
- * @param string $img_field
- * @param bool $force_one_condition
- */
-function get_std_sql_where_restrict_filter(
-    $prefix_condition,
-    $img_field = 'ic.image_id',
-    $force_one_condition = false
-): string {
-    return get_sql_condition_FandF(
-        [
-        'forbidden_categories' => 'ic.category_id',
-        'visible_categories' => 'ic.category_id',
-        'visible_images' => $img_field,
-        ],
-        $prefix_condition,
-        $force_one_condition
-    );
+
+function get_std_sql_where_restrict_filter(string $prefix_condition, string $img_field = 'ic.image_id', bool $force_one_condition = false): string
+{
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->getStdSqlWhereRestrictFilter($prefix_condition, $img_field, $force_one_condition);
 }
 
-/**
- * Execute custom notification query.
- * @todo use a cache for all data returned by custom_notification_query()
- *
- * @param string $action 'count', 'info'
- * @param string $type 'new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return int|array|null
- */
 /** @return array<mixed>|int|null */
 function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|null
 {
-    switch ($type) {
-        case 'new_comments':
-            {
-                $query = '
-  FROM '.COMMENTS_TABLE.' AS c
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON c.image_id = ic.image_id
-  WHERE 1=1';
-                if (!empty($start)) {
-                    $query .= '
-    AND c.validation_date > \''.$start.'\'';
-                }
-                if (!empty($end)) {
-                    $query .= '
-    AND c.validation_date <= \''.$end.'\'';
-                }
-                $query .= get_std_sql_where_restrict_filter('AND');
-                break;
-            }
-
-        case 'unvalidated_comments':
-            {
-                $query = '
-  FROM '.COMMENTS_TABLE.'
-  WHERE 1=1';
-                if (!empty($start)) {
-                    $query .= '
-    AND date > \''.$start.'\'';
-                }
-                if (!empty($end)) {
-                    $query .= '
-    AND date <= \''.$end.'\'';
-                }
-                $query .= '
-    AND validated = \'false\'';
-                break;
-            }
-
-        case 'new_elements':
-            {
-                $query = '
-  FROM '.IMAGES_TABLE.'
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON image_id = id
-  WHERE 1=1';
-                if (!empty($start)) {
-                    $query .= '
-    AND date_available > \''.$start.'\'';
-                }
-                if (!empty($end)) {
-                    $query .= '
-    AND date_available <= \''.$end.'\'';
-                }
-                $query .= get_std_sql_where_restrict_filter('AND', 'id');
-                break;
-            }
-
-        case 'updated_categories':
-            {
-                $query = '
-  FROM '.IMAGES_TABLE.'
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON image_id = id
-  WHERE 1=1';
-                if (!empty($start)) {
-                    $query .= '
-    AND date_available > \''.$start.'\'';
-                }
-                if (!empty($end)) {
-                    $query .= '
-    AND date_available <= \''.$end.'\'';
-                }
-                $query .= get_std_sql_where_restrict_filter('AND', 'id');
-                break;
-            }
-
-        case 'new_users':
-            {
-                $query = '
-  FROM '.USER_INFOS_TABLE.'
-  WHERE 1=1';
-                if (!empty($start)) {
-                    $query .= '
-    AND registration_date > \''.$start.'\'';
-                }
-                if (!empty($end)) {
-                    $query .= '
-    AND registration_date <= \''.$end.'\'';
-                }
-                break;
-            }
-
-        default:
-            return null; // stop and return nothing
-    }
-
-    switch ($action) {
-        case 'count':
-            {
-                switch ($type) {
-                    case 'new_comments':
-                        $field_id = 'c.id';
-                        break;
-                    case 'unvalidated_comments':
-                        $field_id = 'id';
-                        break;
-                    case 'new_elements':
-                        $field_id = 'image_id';
-                        break;
-                    case 'updated_categories':
-                        $field_id = 'category_id';
-                        break;
-                    case 'new_users':
-                        $field_id = 'user_id';
-                        break;
-                }
-                $count = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
-                    ->executeQuery('SELECT COUNT(DISTINCT ' . $field_id . ') ' . $query)
-                    ->fetchOne();
-                return is_numeric($count) ? (int) $count : null;
-
-            }
-
-        case 'info':
-            {
-                switch ($type) {
-                    case 'new_comments':
-                        $field_id = 'c.id';
-                        break;
-                    case 'unvalidated_comments':
-                        $field_id = 'id';
-                        break;
-                    case 'new_elements':
-                        $field_id = 'image_id';
-                        break;
-                    case 'updated_categories':
-                        $field_id = 'category_id';
-                        break;
-                    case 'new_users':
-                        $field_id = 'user_id';
-                        break;
-                }
-                $query = 'SELECT DISTINCT '.$field_id.' '.$query.';';
-                $infos = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-                return $infos;
-            }
-
-        default:
-            return null; // stop and return nothing
-    }
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->customNotificationQuery($action, $type, $start, $end);
 }
 
-/**
- * Returns number of new comments between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return mixed
- */
 function nb_new_comments(?string $start = null, ?string $end = null): mixed
 {
-    return custom_notification_query('count', 'new_comments', $start, $end);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->nbNewComments($start, $end);
 }
 
-/**
- * Returns new comments between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return array<mixed> comment ids
- */
-function new_comments($start = null, $end = null): array
+/** @return array<mixed> */
+function new_comments(?string $start = null, ?string $end = null): array
 {
-    $result = custom_notification_query('info', 'new_comments', $start, $end);
-    return is_array($result) ? $result : [];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->newComments($start, $end);
 }
 
-/**
- * Returns number of unvalidated comments between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return mixed
- */
 function nb_unvalidated_comments(?string $start = null, ?string $end = null): mixed
 {
-    return custom_notification_query('count', 'unvalidated_comments', $start, $end);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->nbUnvalidatedComments($start, $end);
 }
 
-
-/**
- * Returns number of new photos between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return mixed
- */
 function nb_new_elements(?string $start = null, ?string $end = null): mixed
 {
-    return custom_notification_query('count', 'new_elements', $start, $end);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->nbNewElements($start, $end);
 }
 
-/**
- * Returns new photos between two dates.es
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return array<mixed> photos ids
- */
-function new_elements($start = null, $end = null): array
+/** @return array<mixed> */
+function new_elements(?string $start = null, ?string $end = null): array
 {
-    $result = custom_notification_query('info', 'new_elements', $start, $end);
-    return is_array($result) ? $result : [];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->newElements($start, $end);
 }
 
-/**
- * Returns number of updated categories between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return mixed
- */
 function nb_updated_categories(?string $start = null, ?string $end = null): mixed
 {
-    return custom_notification_query('count', 'updated_categories', $start, $end);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->nbUpdatedCategories($start, $end);
 }
 
-/**
- * Returns updated categories between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return array<mixed> categories ids
- */
-function updated_categories($start = null, $end = null): array
+/** @return array<mixed> */
+function updated_categories(?string $start = null, ?string $end = null): array
 {
-    $result = custom_notification_query('info', 'updated_categories', $start, $end);
-    return is_array($result) ? $result : [];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->updatedCategories($start, $end);
 }
 
-/**
- * Returns number of new users between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return mixed
- */
 function nb_new_users(?string $start = null, ?string $end = null): mixed
 {
-    return custom_notification_query('count', 'new_users', $start, $end);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->nbNewUsers($start, $end);
 }
 
-/**
- * Returns new users between two dates.
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @return array<mixed> user ids
- */
-function new_users($start = null, $end = null): array
+/** @return array<mixed> */
+function new_users(?string $start = null, ?string $end = null): array
 {
-    $result = custom_notification_query('info', 'new_users', $start, $end);
-    return is_array($result) ? $result : [];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->newUsers($start, $end);
 }
 
-/**
- * Returns if there was new activity between two dates.
- *
- * Takes in account: number of new comments, number of new elements, number of
- * updated categories. Administrators are also informed about: number of
- * unvalidated comments, number of new users.
- * @todo number of unvalidated elements
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- */
-function news_exists($start = null, $end = null): bool
+function news_exists(?string $start = null, ?string $end = null): bool
 {
-    return (
-        (nb_new_comments($start, $end) > 0) or
-        (nb_new_elements($start, $end) > 0) or
-        (nb_updated_categories($start, $end) > 0) or
-        ((is_admin()) and (nb_unvalidated_comments($start, $end) > 0)) or
-        ((is_admin()) and (nb_new_users($start, $end) > 0)));
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->newsExists($start, $end);
 }
 
-/**
- * Formats a news line and adds it to the array (e.g. '5 new elements')
- *
- * @param array &$news
- * @param int $count
- * @param string $singular_key
- * @param string $plural_key
- * @param string $url
- * @param bool $add_url
- */
 /** @param array<mixed> $news */
 function add_news_line(array &$news, int $count, string $singular_key, string $plural_key, ?string $url = '', bool $add_url = false): void
 {
-    if ($count > 0) {
-        $line = l10n_dec($singular_key, $plural_key, $count);
-        if ($add_url and !empty($url)) {
-            $line = '<a href="'.$url.'">'.$line.'</a>';
-        }
-        $news[] = $line;
-    }
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->addNewsLine($news, $count, $singular_key, $plural_key, $url, $add_url);
 }
 
-/**
- * Returns new activity between two dates.
- *
- * Takes in account: number of new comments, number of new elements, number of
- * updated categories. Administrators are also informed about: number of
- * unvalidated comments, number of new users.
- * @todo number of unvalidated elements
- *
- * @param string $start (mysql datetime format)
- * @param string $end (mysql datetime format)
- * @param bool $exclude_img_cats if true, no info about new images/categories
- * @param bool $add_url add html link around news
- */
 /** @return string[] */
 function news(?string $start = null, ?string $end = null, bool $exclude_img_cats = false, bool $add_url = false, ?string $auth_key = null): array
 {
-    $news = [];
-
-    $add_url_params = [];
-    if (isset($auth_key)) {
-        $add_url_params['auth'] = $auth_key;
-    }
-
-    if (!$exclude_img_cats) {
-        $nb_elements = nb_new_elements($start, $end);
-        add_news_line(
-            $news,
-            is_numeric($nb_elements) ? (int) $nb_elements : 0,
-            '%d new photo',
-            '%d new photos',
-            add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params),
-            $add_url
-        );
-
-        $nb_cats = nb_updated_categories($start, $end);
-        add_news_line(
-            $news,
-            is_numeric($nb_cats) ? (int) $nb_cats : 0,
-            '%d album updated',
-            '%d albums updated',
-            add_url_params(make_index_url(['section' => 'recent_cats']), $add_url_params),
-            $add_url
-        );
-    }
-
-    $nb_comments = nb_new_comments($start, $end);
-    add_news_line(
-        $news,
-        is_numeric($nb_comments) ? (int) $nb_comments : 0,
-        '%d new comment',
-        '%d new comments',
-        add_url_params(get_root_url().'comments.php', $add_url_params),
-        $add_url
-    );
-
-    if (is_admin()) {
-        $nb_unvalidated = nb_unvalidated_comments($start, $end);
-        add_news_line(
-            $news,
-            is_numeric($nb_unvalidated) ? (int) $nb_unvalidated : 0,
-            '%d comment to validate',
-            '%d comments to validate',
-            get_root_url().'admin.php?page=comments',
-            $add_url
-        );
-
-        $nb_users = nb_new_users($start, $end);
-        add_news_line(
-            $news,
-            is_numeric($nb_users) ? (int) $nb_users : 0,
-            '%d new user',
-            '%d new users',
-            get_root_url().'admin.php?page=user_list',
-            $add_url
-        );
-    }
-
-    /** @var string[] $news */
-    return $news;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->news($start, $end, $exclude_img_cats, $add_url, $auth_key);
 }
 
-/**
- * Returns information about recently published elements grouped by post date.
- *
- * @param int $max_dates maximum number of recent dates
- * @param int $max_elements maximum number of elements per date
- * @param int $max_cats maximum number of categories per date
- * @return array|null
- */
 /** @return array<mixed>|null */
 function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats): ?array
 {
-    $persistent_cache = \Piwigo\Cache\PersistentCacheRegistry::current();
-    $userId = \Piwigo\Users\CurrentUser::get()->id;
-    $cacheUpdate = is_scalar(\Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time'] ?? null)
-        ? (string) \Piwigo\Users\CurrentUser::get()->rawAttributes['cache_update_time']
-        : '';
-
-    $cache_key = $persistent_cache->make_key('recent_posts'.$userId.$cacheUpdate.$max_dates.$max_elements.$max_cats);
-    $cached = null;
-    if ($persistent_cache->get($cache_key, $cached)) {
-        return is_array($cached) ? $cached : null;
-    }
-    $where_sql = get_std_sql_where_restrict_filter('WHERE', 'i.id', true);
-
-    $query = '
-SELECT
-    date_available,
-    COUNT(DISTINCT id) AS nb_elements,
-    COUNT(DISTINCT category_id) AS nb_cats
-  FROM '.IMAGES_TABLE.' i INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id=image_id
-  '.$where_sql.'
-  GROUP BY date_available
-  ORDER BY date_available DESC
-  LIMIT '.$max_dates.'
-;';
-    $dates = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-
-    for ($i = 0; $i < count($dates); $i++) {
-        $date_available = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
-        if ($max_elements > 0) { // get some thumbnails ...
-            $query = '
-SELECT DISTINCT i.*
-  FROM '.IMAGES_TABLE.' i
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON id=image_id
-  '.$where_sql.'
-    AND date_available=\''.$date_available.'\'
-  ORDER BY '.DB_RANDOM_FUNCTION.'()
-  LIMIT '.$max_elements.'
-;';
-            $dates[$i]['elements'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-        }
-
-        if ($max_cats > 0) {// get some categories ...
-            $query = '
-SELECT
-    DISTINCT c.uppercats,
-    COUNT(DISTINCT i.id) AS img_count
-  FROM '.IMAGES_TABLE.' i
-    INNER JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON i.id=image_id
-    INNER JOIN '.CATEGORIES_TABLE.' c ON c.id=category_id
-  '.$where_sql.'
-    AND date_available=\''.$date_available.'\'
-  GROUP BY category_id, c.uppercats
-  ORDER BY img_count DESC
-  LIMIT '.$max_cats.'
-;';
-            $dates[$i]['categories'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
-        }
-    }
-
-    $persistent_cache->set($cache_key, $dates);
-    return $dates;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->getRecentPostDates($max_dates, $max_elements, $max_cats);
 }
 
-/**
- * Returns information about recently published elements grouped by post date.
- * Same as get_recent_post_dates() but parameters as an indexed array.
- * @see get_recent_post_dates()
- *
- * @return array
- */
 /**
  * @param array<mixed> $args
  * @return array<mixed>
  */
 function get_recent_post_dates_array(array $args): array
 {
-    return get_recent_post_dates(
-        (empty($args['max_dates']) ? 3 : (is_numeric($args['max_dates']) ? (int) $args['max_dates'] : 3)),
-        (empty($args['max_elements']) ? 3 : (is_numeric($args['max_elements']) ? (int) $args['max_elements'] : 3)),
-        (empty($args['max_cats']) ? 3 : (is_numeric($args['max_cats']) ? (int) $args['max_cats'] : 3))
-    ) ?? [];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->getRecentPostDatesArray($args);
 }
 
-
-/**
- * Returns html description about recently published elements grouped by post date.
- * @todo clean up HTML output, currently messy and invalid !
- *
- * @param array $date_detail returned value of get_recent_post_dates()
- */
 /** @param array<mixed> $date_detail */
 function get_html_description_recent_post_date(array $date_detail, ?string $auth_key = null): string
 {
-    $add_url_params = [];
-    if (isset($auth_key)) {
-        $add_url_params['auth'] = $auth_key;
-    }
-
-    $description = '<ul>';
-
-    $description .=
-          '<li>'
-          .l10n_dec('%d new photo', '%d new photos', is_numeric($date_detail['nb_elements'] ?? null) ? (int) $date_detail['nb_elements'] : 0)
-          .' ('
-          .'<a href="'.add_url_params(make_index_url(['section' => 'recent_pics']), $add_url_params).'">'
-            .l10n('Recent photos').'</a>'
-          .')'
-          .'</li><br>';
-
-    $elements = is_array($date_detail['elements'] ?? null) ? $date_detail['elements'] : [];
-    foreach ($elements as $element) {
-        $element = is_array($element) ? $element : [];
-        $tn_src_raw = DerivativeImage::thumb_url($element);
-        $tn_src = is_string($tn_src_raw) ? $tn_src_raw : '';
-        $description .= '<a href="'.
-          add_url_params(
-              make_picture_url(
-                  [
-            'image_id' => $element['id'],
-            'image_file' => $element['file'],
-            ]
-              ),
-              $add_url_params
-          )
-          .'"><img src="'.$tn_src.'"></a>';
-    }
-    $description .= '...<br>';
-
-    $description .=
-          '<li>'
-          .l10n_dec('%d album updated', '%d albums updated', is_numeric($date_detail['nb_cats'] ?? null) ? (int) $date_detail['nb_cats'] : 0)
-          .'</li>';
-
-    $description .= '<ul>';
-    $categories = is_array($date_detail['categories'] ?? null) ? $date_detail['categories'] : [];
-    foreach ($categories as $cat) {
-        $cat = is_array($cat) ? $cat : [];
-        $description .=
-              '<li>'
-              .get_cat_display_name_cache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $auth_key)
-              .' ('.
-              l10n_dec('%d new photo', '%d new photos', is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0).')'
-              .'</li>';
-    }
-    $description .= '</ul>';
-
-    $description .= '</ul>';
-
-    return $description;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->getHtmlDescriptionRecentPostDate($date_detail, $auth_key);
 }
 
-/**
- * Returns title about recently published elements grouped by post date.
- *
- * @param array $date_detail returned value of get_recent_post_dates()
- */
 /** @param array<mixed> $date_detail */
 function get_title_recent_post_date(array $date_detail): string
 {
-    $title = l10n_dec('%d new photo', '%d new photos', is_numeric($date_detail['nb_elements'] ?? null) ? (int) $date_detail['nb_elements'] : 0);
-
-    if (preg_match('/^\d+-(\d+)-(\d+) /', is_scalar($date_detail['date_available'] ?? null) ? (string) $date_detail['date_available'] : '', $matches)) {
-        $lang = is_array($GLOBALS['lang'] ?? null) ? $GLOBALS['lang'] : [];
-        $months = is_array($lang['month'] ?? null) ? $lang['month'] : [];
-        $monthName = is_string($months[(int)$matches[1]] ?? null) ? $months[(int)$matches[1]] : '';
-        $title .= ' ('.$monthName.' '.$matches[2].')';
-    }
-
-    return $title;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Notification\NotificationService::class)->getTitleRecentPostDate($date_detail);
 }

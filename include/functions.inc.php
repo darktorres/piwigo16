@@ -441,12 +441,27 @@ function conf_get_param(mixed $param, mixed $default_value = null): mixed
 // ── Safe decode helpers ───────────────────────────────────────────────────
 
 /**
+ * Called from ImageStdParams::load_from_db() before Kernel::boot() — must
+ * have its own implementation. StringUtil::safeUnserialize() is canonical.
+ *
  * @param array<mixed>|string $value
  * @return array<mixed>
  */
 function safe_unserialize(array|string $value): array
 {
-    return ServiceLocator::get(StringUtil::class)->safeUnserialize($value);
+    if (is_string($value)) {
+        set_error_handler(static fn (): bool => true);
+        try {
+            $unserialized = unserialize($value);
+            if (!is_array($unserialized) && $value !== '') {
+                $unserialized = unserialize(stripslashes($value));
+            }
+        } finally {
+            restore_error_handler();
+        }
+        return is_array($unserialized) ? $unserialized : [];
+    }
+    return $value;
 }
 
 /**

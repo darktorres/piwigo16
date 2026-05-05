@@ -1488,29 +1488,30 @@ An OpenAPI 3.1 specification describes every method registered with `PwgServer::
 #### PwgServer changes
 
 - `PwgServer::populateMethods()` extracted from `run()` — registers reflection methods, triggers `ws_add_methods`, sorts.
-- `PwgServer::register(MethodDefinition $def)` — typed registration path. Stores the `MethodDefinition` in `$_methodDefs` for spec generation and normalizes to the internal `WsMethod` array in `$_methods` so `invoke()` works unchanged (full BC).
+- `PwgServer::register(MethodDefinition $def)` — sole registration path. Stores the `MethodDefinition` in `$_methodDefs` for spec generation and normalizes to the internal `WsMethod` array in `$_methods` so `invoke()` works unchanged.
 - `PwgServer::getMethodDefs(): array<string, MethodDefinition>` — read by `SpecBuilder`.
+- `PwgServer::addMethod()` **removed** — `register()` is the only registration API. Plugins that called `addMethod()` will need migration when that work is scoped.
 
-#### Typed vs legacy registration
+#### Registration
 
-Both paths coexist indefinitely:
+All 95 default WS methods in `ws_addDefaultMethods()` migrated to `register()`. Each carries explicit `tags`, `requiresAuth`, and `postOnly` flags — no more inference at spec-build time.
 
 ```php
-// Legacy (unchanged, still used by all current callers in ws.php)
-$server->addMethod('pwg.images.getInfo', 'ws_images_getInfo', ['image_id' => ['type' => WS_TYPE_ID]], '...', $file);
-
-// Typed (new path — use for new methods or when migrating in #22)
 $server->register(new MethodDefinition(
     name:         'pwg.images.getInfo',
-    callback:     ImagesEndpoints::getInfo(...),
+    callback:     'ws_images_getInfo',
     description:  'Returns information about an image.',
-    params:       [ParamDefinition::required('image_id', WsType::Id->value)],
+    params:       [
+        ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
+        ParamDefinition::optional(name: 'comments_page', default: 0, type: WS_TYPE_INT | WS_TYPE_POSITIVE),
+    ],
     tags:         ['images'],
     requiresAuth: false,
+    includeFile:  $ws_functions_root . 'pwg.images.php',
 ));
 ```
 
-When `MethodDefinition` is present for a method, `SpecBuilder` uses its `tags` (instead of inferring from the method name) and its `requiresAuth`/`postOnly` flags directly.
+`SpecBuilder` uses `MethodDefinition::$tags` directly; falls back to name-segment inference only when `tags: []`.
 
 #### Routes (ws.php)
 
@@ -1557,7 +1558,16 @@ public function search(...): array { … }
 
 #### Tests
 
-`tests/Unit/Ws/SpecBuilderTest.php` — 21 tests covering document structure, path generation, tag inference, all type mappings, array flags, required/optional, and admin-only security.
+- `tests/Unit/Ws/SpecBuilderTest.php` — 29 tests covering document structure, path generation, tag inference/override, all type mappings, array flags, required/optional, admin-only security, and the full `MethodDefinition` registration path.
+- `tests/Unit/Ws/PwgServerTest.php` — 10 tests covering `register()`, `hasMethod()`, `getMethodDescription()`, `getMethodSignature()`, `getMethodDefs()`, `optionalFlag()` semantics.
+
+#### Pending — CI gate
+
+The spec is not yet validated by a machine-readable schema checker on every run. Options when this is needed:
+
+- **PHPUnit structural test** (no new dependency) — build spec from a populated server, assert required OpenAPI 3.1 keys and field types.
+- **`cebe/php-openapi`** composer dev dep — full PHP validator including `$ref` resolution and schema semantics; callable from a test.
+- **External tool** — `openapi-spec-validator` (Python) or `redocly lint` in a CI pipeline once one is configured.
 
 ### Verification
 

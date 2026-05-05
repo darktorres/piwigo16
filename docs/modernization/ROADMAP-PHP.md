@@ -1230,7 +1230,10 @@ adding new `src/` classes (classmap-authoritative mode).
 | 5b | AuthService, UserService, PermissionService, PreferencesService | 60 |
 | 5c | SearchService | 17 |
 | 6 | StringUtil, DateService, LangService, ConfigService, QueryHelper, Util | 81 |
-| **Total** | **25 service classes** | **~317 functions** |
+| 7 | CategoryAdminService, ImageAdminService, TagAdminService, UserAdminService, AdminService | 80 |
+| 8 | NotificationAdminService | 15 |
+| 9 | UploadService | 21 |
+| **Total** | **32 service classes** | **~433 functions** |
 
 ### Per-module checklist
 
@@ -1255,16 +1258,10 @@ adding new `src/` classes (classmap-authoritative mode).
 | `functions_filter.inc.php`                             | ~36   | 1     | ✅ done | `Piwigo\Filter\FilterService` |
 | `functions_calendar.inc.php`                           | ~299  | 1     | ✅ done | `Piwigo\Calendar\CalendarService` |
 | `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | ✅ done | `Piwigo\Db\` (item #17) |
-| `ws_functions/*.php`                                   | —     | ~71   | ⏳ blocked | `Piwigo\Ws\Method\` — item #21; also needs `admin/include/functions.php` first |
-| `admin/include/functions.php`                          | 3,671 | 80    | 🔓 unblocked | spread by admin domain — no global $* patterns, already uses service classes |
-| `admin/include/functions_upload.inc.php`               | 1,033 | 21    | 🔓 unblocked | `Piwigo\Admin\Upload\` — do after `admin/include/functions.php` |
-| `admin/include/functions_notification_by_mail.inc.php` | 513   | 15    | 🔓 unblocked | `Piwigo\Admin\Notification\` — most self-contained; already uses NotificationRepository |
-
-**Migration order for the unblocked set:**
-1. `admin/include/functions.php` (80 funcs) — foundational; unblocks ws_functions and upload
-2. `admin/include/functions_notification_by_mail.inc.php` (15 funcs) — independent; can go in the same pass
-3. `admin/include/functions_upload.inc.php` (21 funcs) — after #1
-4. `ws_functions/*.php` (~71 funcs) — after #1, coordinate with item #21
+| `ws_functions/*.php`                                   | —     | ~71   | ⏳ blocked | `Piwigo\Ws\Method\` — item #21 |
+| `admin/include/functions.php`                          | 3,671 | 80    | ✅ done | CategoryAdminService, ImageAdminService, TagAdminService, UserAdminService, AdminService |
+| `admin/include/functions_upload.inc.php`               | 1,033 | 21    | ✅ done | `Piwigo\Admin\Upload\UploadService` |
+| `admin/include/functions_notification_by_mail.inc.php` | 513   | 15    | ✅ done | `Piwigo\Admin\Notification\NotificationAdminService` |
 
 ### Pre-boot and admin includes → services
 

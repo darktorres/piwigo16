@@ -33,8 +33,6 @@ global $template, $user, $page, $persistent_cache, $lang;
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 require_once(PHPWG_ROOT_PATH.'admin/include/functions_notification_by_mail.inc.php');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-require_once(PHPWG_ROOT_PATH.'include/functions_notification.inc.php');
-require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

@@ -18,7 +18,6 @@ global $template, $user, $page, $persistent_cache, $lang;
 define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
-require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
 if (!\Piwigo\Config\Config::activateComments()) {
     page_not_found(null);

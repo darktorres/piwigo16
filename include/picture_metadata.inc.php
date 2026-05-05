@@ -22,7 +22,6 @@ use Piwigo\Template\TemplateRegistry;
  */
 
 
-require_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
 if ((Config::showExif()) and (function_exists('exif_read_data'))) {
     $exif_mapping = [];
     foreach (Config::showExifFields() as $field) {

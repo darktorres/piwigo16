@@ -6,12 +6,11 @@ namespace Piwigo\Ws\Method;
 
 use Piwigo\Config\Config;
 use Doctrine\DBAL\Connection;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Core\ServiceLocator;
 
-include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
 final class CommentsEndpoints
 {

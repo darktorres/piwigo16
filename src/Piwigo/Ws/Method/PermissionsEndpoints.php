@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

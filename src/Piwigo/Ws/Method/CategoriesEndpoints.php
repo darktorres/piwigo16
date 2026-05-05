@@ -8,7 +8,6 @@ use Piwigo\Users\UserRepository;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -17,6 +16,8 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -61,10 +62,10 @@ final class CategoriesEndpoints
         }
         if (!empty($cats)) {
             /** @var string[] $whereClauses2 */
-            $whereClauses2   = ws_std_image_sql_filter($params, 'i.');
+            $whereClauses2   = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
             $whereClauses2[] = get_sql_condition_FandF(['visible_images' => 'i.id'], null, true);
-            $orderBy         = ws_std_image_sql_order($params, 'i.');
+            $orderBy         = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
             if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
             }
@@ -91,7 +92,7 @@ final class CategoriesEndpoints
                 $renderedName = trigger_change('render_element_name', $imageName, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
-                $image = array_merge($image, ws_std_get_urls($row));
+                $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $images[] = $image;
             }
             $totalImagesRaw = $catConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
@@ -129,7 +130,7 @@ final class CategoriesEndpoints
                 }
             }
         }
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', ws_std_get_image_xml_attributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
     }
 
     /**
@@ -289,9 +290,9 @@ final class CategoriesEndpoints
         }
         unset($cat);
         if ($params['tree_output']) {
-            return categories_flatlist_to_tree($cats);
+            return ServiceLocator::get(WsHelper::class)->categoriesFlatlistToTree($cats);
         }
-        $output['categories'] = new PwgNamedArray($cats, 'category', ws_std_get_category_xml_attributes());
+        $output['categories'] = new PwgNamedArray($cats, 'category', ServiceLocator::get(WsHelper::class)->getCategoryXmlAttributes());
         return $output;
     }
 

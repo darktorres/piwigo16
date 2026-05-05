@@ -124,7 +124,6 @@ if (!$is_admin_download and \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Conn
     do_error(401, 'Access denied');
 }
 
-require_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
 $file = '';
 switch ($get_part) {
     case 'e':

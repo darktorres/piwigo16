@@ -15,17 +15,16 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
 final class GeneralEndpoints
 {
@@ -77,7 +76,7 @@ final class GeneralEndpoints
         Config::override('derivative_url_style', 2);
         $qlimit = min(5000, (int) ceil(max($imageCount / 500, $maxUrls / count($types))));
         /** @var array<string> $whereClauses */
-        $whereClauses   = ws_std_image_sql_filter($params, '');
+        $whereClauses   = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, '');
         $whereClauses[] = 'id<start_id';
         if (!empty($params['ids'])) {
             $idsArr         = is_array($params['ids']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['ids']) : [];

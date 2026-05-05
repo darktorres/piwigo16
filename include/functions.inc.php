@@ -28,6 +28,12 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
+use Piwigo\Comment\CommentService;
+use Piwigo\Mail\MailService;
+use Piwigo\Metadata\MetadataService;
+use Piwigo\Notification\NotificationService;
+use Piwigo\Picture\PictureService;
+use Piwigo\Rate\RateService;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -1362,3 +1368,405 @@ function pwg_nl2br(string $string): string
 {
     return ServiceLocator::get(HtmlService::class)->pwgNl2br($string);
 }
+
+// ── Picture delegates (inlined from functions_picture.inc.php) ────────────
+
+/** @return array<string, mixed> */
+function get_default_slideshow_params(): array
+{
+    return ServiceLocator::get(PictureService::class)->getDefaultSlideshowParams();
+}
+
+/**
+ * @param array<string, mixed> $params
+ * @return array<string, mixed>
+ */
+function correct_slideshow_params(array $params = []): array
+{
+    return ServiceLocator::get(PictureService::class)->correctSlideshowParams($params);
+}
+
+/** @return array<string, mixed> */
+function decode_slideshow_params(?string $encode_params = null): array
+{
+    return ServiceLocator::get(PictureService::class)->decodeSlideshowParams($encode_params);
+}
+
+/** @param array<string, mixed> $decode_params */
+function encode_slideshow_params(array $decode_params = []): string
+{
+    return ServiceLocator::get(PictureService::class)->encodeSlideshowParams($decode_params);
+}
+
+function increase_image_visit_counter(int $image_id): void
+{
+    ServiceLocator::get(PictureService::class)->increaseImageVisitCounter($image_id);
+}
+
+function count_pdf_pages(string $pdfPath): int|false
+{
+    return ServiceLocator::get(PictureService::class)->countPdfPages($pdfPath);
+}
+
+// ── Rate delegates (inlined from functions_rate.inc.php) ──────────────────
+
+/** @return array<mixed>|false */
+function rate_picture(int $image_id, float|int|null $rate): array|false
+{
+    return ServiceLocator::get(RateService::class)->ratePicture($image_id, $rate);
+}
+
+/** @return array<mixed> */
+function update_rating_score(int|false $element_id = false): array
+{
+    return ServiceLocator::get(RateService::class)->updateRatingScore($element_id);
+}
+
+// ── Metadata delegates (inlined from functions_metadata.inc.php) ──────────
+
+/**
+ * @param array<string,string> $map
+ * @return array<mixed>
+ */
+function get_iptc_data(string $filename, array $map, string $array_sep = ','): array
+{
+    return ServiceLocator::get(MetadataService::class)->getIptcData($filename, $map, $array_sep);
+}
+
+function clean_iptc_value(string $value): string
+{
+    return ServiceLocator::get(MetadataService::class)->cleanIptcValue($value);
+}
+
+/**
+ * @param array<string,string> $map
+ * @return array<mixed>
+ */
+function get_exif_data(string $filename, array $map): array
+{
+    return ServiceLocator::get(MetadataService::class)->getExifData($filename, $map);
+}
+
+function strip_html_in_metadata(mixed &$v, string $k): void
+{
+    ServiceLocator::get(MetadataService::class)->stripHtmlInMetadata($v, $k);
+}
+
+/** @param array<string> $raw */
+function parse_exif_gps_data(array $raw, string $ref): float
+{
+    return ServiceLocator::get(MetadataService::class)->parseExifGpsData($raw, $ref);
+}
+
+// ── Comment delegates (inlined from functions_comment.inc.php) ────────────
+
+add_event_handler('user_comment_check', 'user_comment_check');
+
+/** @param array<string,mixed> $comment */
+function user_comment_check(string $action, array $comment): string
+{
+    return ServiceLocator::get(CommentService::class)->userCommentCheck($action, $comment);
+}
+
+/**
+ * @param array<string,mixed> $comm
+ * @param string[]            $infos
+ * @return string validate, moderate, or reject
+ */
+function insert_user_comment(array &$comm, string $key, array &$infos): string
+{
+    return ServiceLocator::get(CommentService::class)->insertUserComment($comm, $key, $infos);
+}
+
+/** @param int|int[] $comment_id */
+function delete_user_comment(int|array $comment_id): bool
+{
+    return ServiceLocator::get(CommentService::class)->deleteUserComment($comment_id);
+}
+
+/**
+ * @param array<string,mixed> $comment
+ * @return string validate, moderate, or reject
+ */
+function update_user_comment(array $comment, string $post_key): string
+{
+    return ServiceLocator::get(CommentService::class)->updateUserComment($comment, $post_key);
+}
+
+/** @param array<string,mixed> $comment */
+function email_admin(string $action, array $comment): void
+{
+    ServiceLocator::get(CommentService::class)->emailAdmin($action, $comment);
+}
+
+function get_comment_author_id(int $comment_id, bool $die_on_error = true): int|false
+{
+    return ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_id, $die_on_error);
+}
+
+/** @param int|int[] $comment_id */
+function validate_user_comment(int|array $comment_id): void
+{
+    ServiceLocator::get(CommentService::class)->validateUserComment($comment_id);
+}
+
+function invalidate_user_cache_nb_comments(): void
+{
+    ServiceLocator::get(CommentService::class)->invalidateUserCacheNbComments();
+}
+
+// ── Notification delegates (inlined from functions_notification.inc.php) ──
+
+function get_std_sql_where_restrict_filter(string $prefix_condition, string $img_field = 'ic.image_id', bool $force_one_condition = false): string
+{
+    return ServiceLocator::get(NotificationService::class)->getStdSqlWhereRestrictFilter($prefix_condition, $img_field, $force_one_condition);
+}
+
+/** @return array<mixed>|int|null */
+function custom_notification_query(string $action, string $type, ?string $start = null, ?string $end = null): array|int|null
+{
+    return ServiceLocator::get(NotificationService::class)->customNotificationQuery($action, $type, $start, $end);
+}
+
+function nb_new_comments(?string $start = null, ?string $end = null): mixed
+{
+    return ServiceLocator::get(NotificationService::class)->nbNewComments($start, $end);
+}
+
+/** @return array<mixed> */
+function new_comments(?string $start = null, ?string $end = null): array
+{
+    return ServiceLocator::get(NotificationService::class)->newComments($start, $end);
+}
+
+function nb_unvalidated_comments(?string $start = null, ?string $end = null): mixed
+{
+    return ServiceLocator::get(NotificationService::class)->nbUnvalidatedComments($start, $end);
+}
+
+function nb_new_elements(?string $start = null, ?string $end = null): mixed
+{
+    return ServiceLocator::get(NotificationService::class)->nbNewElements($start, $end);
+}
+
+/** @return array<mixed> */
+function new_elements(?string $start = null, ?string $end = null): array
+{
+    return ServiceLocator::get(NotificationService::class)->newElements($start, $end);
+}
+
+function nb_updated_categories(?string $start = null, ?string $end = null): mixed
+{
+    return ServiceLocator::get(NotificationService::class)->nbUpdatedCategories($start, $end);
+}
+
+/** @return array<mixed> */
+function updated_categories(?string $start = null, ?string $end = null): array
+{
+    return ServiceLocator::get(NotificationService::class)->updatedCategories($start, $end);
+}
+
+function nb_new_users(?string $start = null, ?string $end = null): mixed
+{
+    return ServiceLocator::get(NotificationService::class)->nbNewUsers($start, $end);
+}
+
+/** @return array<mixed> */
+function new_users(?string $start = null, ?string $end = null): array
+{
+    return ServiceLocator::get(NotificationService::class)->newUsers($start, $end);
+}
+
+function news_exists(?string $start = null, ?string $end = null): bool
+{
+    return ServiceLocator::get(NotificationService::class)->newsExists($start, $end);
+}
+
+/** @param array<mixed> $news */
+function add_news_line(array &$news, int $count, string $singular_key, string $plural_key, ?string $url = '', bool $add_url = false): void
+{
+    ServiceLocator::get(NotificationService::class)->addNewsLine($news, $count, $singular_key, $plural_key, $url, $add_url);
+}
+
+/** @return string[] */
+function news(?string $start = null, ?string $end = null, bool $exclude_img_cats = false, bool $add_url = false, ?string $auth_key = null): array
+{
+    return ServiceLocator::get(NotificationService::class)->news($start, $end, $exclude_img_cats, $add_url, $auth_key);
+}
+
+/** @return array<mixed>|null */
+function get_recent_post_dates(int $max_dates, int $max_elements, int $max_cats): ?array
+{
+    return ServiceLocator::get(NotificationService::class)->getRecentPostDates($max_dates, $max_elements, $max_cats);
+}
+
+/**
+ * @param array<mixed> $args
+ * @return array<mixed>
+ */
+function get_recent_post_dates_array(array $args): array
+{
+    return ServiceLocator::get(NotificationService::class)->getRecentPostDatesArray($args);
+}
+
+/** @param array<mixed> $date_detail */
+function get_html_description_recent_post_date(array $date_detail, ?string $auth_key = null): string
+{
+    return ServiceLocator::get(NotificationService::class)->getHtmlDescriptionRecentPostDate($date_detail, $auth_key);
+}
+
+/** @param array<mixed> $date_detail */
+function get_title_recent_post_date(array $date_detail): string
+{
+    return ServiceLocator::get(NotificationService::class)->getTitleRecentPostDate($date_detail);
+}
+
+// ── Mail delegates (inlined from functions_mail.inc.php) ──────────────────
+
+function get_mail_sender_name(): string
+{
+    return ServiceLocator::get(MailService::class)->getMailSenderName();
+}
+
+function get_mail_sender_email(): string
+{
+    return ServiceLocator::get(MailService::class)->getMailSenderEmail();
+}
+
+/** @return array<string,mixed> */
+function get_mail_configuration(): array
+{
+    return ServiceLocator::get(MailService::class)->getMailConfiguration();
+}
+
+function format_email(string $name, string $email): string
+{
+    return ServiceLocator::get(MailService::class)->formatEmail($name, $email);
+}
+
+/**
+ * @param string|array<mixed> $input
+ * @return array{email: string, name: string}
+ */
+function unformat_email(string|array $input): array
+{
+    return ServiceLocator::get(MailService::class)->unformatEmail($input);
+}
+
+/** @return string[][] */
+function get_clean_recipients_list(mixed $data): array
+{
+    return ServiceLocator::get(MailService::class)->getCleanRecipientsList($data);
+}
+
+#[\Deprecated(message: '2.6')]
+function get_strict_email_list(string $email_list): string
+{
+    return ServiceLocator::get(MailService::class)->getStrictEmailList($email_list);
+}
+
+function &get_mail_template(string $email_format): Template
+{
+    $result = ServiceLocator::get(MailService::class)->getMailTemplate($email_format);
+    return $result;
+}
+
+function get_str_email_format(bool $is_html): string
+{
+    return ServiceLocator::get(MailService::class)->getStrEmailFormat($is_html);
+}
+
+function switch_lang_to(string $language): void
+{
+    ServiceLocator::get(MailService::class)->switchLangTo($language);
+}
+
+function switch_lang_back(): void
+{
+    ServiceLocator::get(MailService::class)->switchLangBack();
+}
+
+/**
+ * @param array<mixed>|string $subject
+ * @param array<mixed>|string $content
+ */
+function pwg_mail_notification_admins(array|string $subject, array|string $content, bool $send_technical_details = true, ?int $group_id = null): bool
+{
+    return ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins($subject, $content, $send_technical_details, $group_id);
+}
+
+/**
+ * @param array<mixed> $args
+ * @param array<mixed> $tpl
+ */
+function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, ?int $group_id = null): bool
+{
+    return ServiceLocator::get(MailService::class)->pwgMailAdmins($args, $tpl, $exclude_current_user, $only_webmasters, $group_id);
+}
+
+/**
+ * @param array<mixed> $args
+ * @param array<mixed> $tpl
+ */
+function pwg_mail_group(int $group_id, array $args = [], array $tpl = []): bool|int
+{
+    return ServiceLocator::get(MailService::class)->pwgMailGroup($group_id, $args, $tpl);
+}
+
+function mail_function_is_usable(): bool
+{
+    return ServiceLocator::get(MailService::class)->mailFunctionIsUsable();
+}
+
+/**
+ * @param string|array<mixed> $to
+ * @param array<mixed>        $args
+ * @param array<mixed>        $tpl
+ */
+function pwg_mail(string|array $to, array $args = [], array $tpl = []): bool
+{
+    return ServiceLocator::get(MailService::class)->pwgMail($to, $args, $tpl);
+}
+
+#[\Deprecated(message: '2.6')]
+function pwg_send_mail(mixed $result, string $to, string $subject, string $content, string $headers): bool|int
+{
+    return ServiceLocator::get(MailService::class)->pwgSendMail($result, $to, $subject, $content, $headers);
+}
+
+function move_css_to_body(string $content): string
+{
+    return ServiceLocator::get(MailService::class)->moveCssToBody($content);
+}
+
+/** @param array<mixed> $args */
+function pwg_send_mail_test(bool $success, mixed $mail, array $args): void
+{
+    ServiceLocator::get(MailService::class)->pwgSendMailTest($success, $mail, $args);
+}
+
+/** @return array<mixed> */
+function pwg_generate_reset_password_mail(string $username, string $password_link, string $gallery_title, string $remaining_time): array
+{
+    return ServiceLocator::get(MailService::class)->pwgGenerateResetPasswordMail($username, $password_link, $gallery_title, $remaining_time);
+}
+
+/** @return array<mixed> */
+function pwg_generate_set_password_mail(string $username, string $set_password_link, string $gallery_title, string $remaining_time): array
+{
+    return ServiceLocator::get(MailService::class)->pwgGenerateSetPasswordMail($username, $set_password_link, $gallery_title, $remaining_time);
+}
+
+/** @return array<mixed> */
+function pwg_generate_code_verification_mail(string $code): array
+{
+    return ServiceLocator::get(MailService::class)->pwgGenerateCodeVerificationMail($code);
+}
+
+/** @return array<mixed> */
+function pwg_generate_success_reset_password_mail(string $username, int $nb_of_apikeys): array
+{
+    return ServiceLocator::get(MailService::class)->pwgGenerateSuccessResetPasswordMail($username, $nb_of_apikeys);
+}
+
+trigger_notify('functions_mail_included');

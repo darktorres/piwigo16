@@ -71,7 +71,6 @@ switch ($action) {
         {
             images_integrity();
             update_path();
-            require_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
             update_rating_score();
             invalidate_user_cache();
             PageState::current()->addInfo(sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.')));

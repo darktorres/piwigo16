@@ -30,7 +30,6 @@ define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 Kernel::boot();
 require(PHPWG_ROOT_PATH.'include/section_init.inc.php');
-require_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
 
 save_edit_context();
 
@@ -308,13 +307,11 @@ if ($get_action !== null) {
             }
         case 'rate':
             {
-                require_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
                 rate_picture($page['image_id'], input_int('rate', 0, $_POST));
                 redirect($url_self);
             }
         case 'edit_comment':
             {
-                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
                 check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
                 $comment_to_edit = input_int('comment_to_edit', null, $_GET);
                 $author_id = get_comment_author_id($comment_to_edit ?? 0);
@@ -363,7 +360,6 @@ if ($get_action !== null) {
             {
                 check_pwg_token();
 
-                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
                 $comment_to_delete = input_int('comment_to_delete', null, $_GET);
@@ -380,7 +376,6 @@ if ($get_action !== null) {
             {
                 check_pwg_token();
 
-                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
                 $comment_to_validate = input_int('comment_to_validate', null, $_GET);

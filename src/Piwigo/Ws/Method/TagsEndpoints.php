@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Piwigo\Image\ImageRepository;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -34,7 +35,7 @@ final class TagsEndpoints
             $tags[$i]['counter'] = is_numeric($tags[$i]['counter'] ?? null) ? (int) $tags[$i]['counter'] : 0;
             $tags[$i]['url']     = make_index_url(['section' => 'tags', 'tags' => [$tags[$i]]]);
         }
-        return ['tags' => new PwgNamedArray($tags, 'tag', ws_std_get_tag_xml_attributes())];
+        return ['tags' => new PwgNamedArray($tags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
     }
 
     /**
@@ -43,7 +44,7 @@ final class TagsEndpoints
      */
     public function getAdminList(array $params, PwgServer &$service): array
     {
-        return ['tags' => new PwgNamedArray(get_all_tags(), 'tag', ws_std_get_tag_xml_attributes())];
+        return ['tags' => new PwgNamedArray(get_all_tags(), 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
     }
 
     /**
@@ -64,9 +65,9 @@ final class TagsEndpoints
         }
         $tagIds = array_keys($tagsById);
         /** @var string[] $whereClausesArr */
-        $whereClausesArr = ws_std_image_sql_filter($params);
+        $whereClausesArr = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params);
         $whereClauses    = !empty($whereClausesArr) ? implode(' AND ', $whereClausesArr) : null;
-        $orderBy         = ws_std_image_sql_order($params, 'i.');
+        $orderBy         = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
         if (!empty($orderBy)) {
             $orderBy = 'ORDER BY ' . $orderBy;
         }
@@ -105,7 +106,7 @@ final class TagsEndpoints
                 $renderedName  = trigger_change('render_element_name', $imgNameStr, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
-                $image = array_merge($image, ws_std_get_urls($row));
+                $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $imgIdKey   = is_numeric($image['id']) ? (int) $image['id'] : 0;
                 $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgIdKey] ?? []);
                 $imageTags   = [];
@@ -114,12 +115,12 @@ final class TagsEndpoints
                     $pageUrl = make_picture_url(['section' => 'tags', 'tags' => [$tagsById[$tagId]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
                     $imageTags[] = ['id' => (int) $tagId, 'url' => $url, 'page_url' => $pageUrl];
                 }
-                $image['tags'] = new PwgNamedArray($imageTags, 'tag', ws_std_get_tag_xml_attributes());
+                $image['tags'] = new PwgNamedArray($imageTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());
                 $images[] = $image;
             }
             usort($images, rank_compare(...));
         }
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $countSet]), 'images' => new PwgNamedArray($images, 'image', ws_std_get_image_xml_attributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $countSet]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
     }
 
     /**

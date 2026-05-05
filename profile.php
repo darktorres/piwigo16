@@ -290,7 +290,6 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 
                     // send email to the user
                     if ($_POST['username'] != $userdata['username']) {
-                        require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
                         switch_lang_to(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
 
                         $keyargs_content = [

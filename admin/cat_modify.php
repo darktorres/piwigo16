@@ -22,7 +22,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
 
 
-require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
 
 // get_complete_dir returns the concatenation of get_site_url and

@@ -370,7 +370,6 @@ if ($step == 1) {
 
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
-            require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
             $keyargs_content = [
               get_l10n_args('Hello %s,', $admin_name),

@@ -23,7 +23,6 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
 
 
-require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+

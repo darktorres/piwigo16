@@ -13,8 +13,6 @@ define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 check_status(ACCESS_FREE);
-require_once(PHPWG_ROOT_PATH.'include/functions_notification.inc.php');
-require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 require_once(PHPWG_ROOT_PATH.'admin/include/functions_notification_by_mail.inc.php');
 // Translations are in admin file too

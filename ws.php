@@ -8,8 +8,10 @@ use Piwigo\Ws\PwgServerRegistry;
 
 global $template, $user, $page, $persistent_cache, $lang;
 
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -43,7 +45,6 @@ function ws_addDefaultMethods(array $arr): void
     $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $service = $arr[0];
 
-    require_once(PHPWG_ROOT_PATH.'include/ws_functions.inc.php');
     $ws_functions_root = PHPWG_ROOT_PATH.'include/ws_functions/';
 
     $f_params = [
@@ -1722,4 +1723,10 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
         'post_only' => true,
         ]
     );
+}
+
+/** @param array<mixed> $params */
+function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
+{
+    return ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params);
 }

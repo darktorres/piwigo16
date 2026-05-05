@@ -11,7 +11,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -20,12 +19,12 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
 final class ImagesEndpoints
@@ -197,7 +196,7 @@ final class ImagesEndpoints
             return new PwgError(404, 'image_id not found');
         }
         /** @var array<string, mixed> $imageRow */
-        $imageRow      = array_merge($imageRow, ws_std_get_urls($imageRow));
+        $imageRow      = array_merge($imageRow, ServiceLocator::get(WsHelper::class)->getUrls($imageRow));
         $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
         $imageRowFile  = is_scalar($imageRow['file']) ? (string) $imageRow['file'] : '';
         $imageRow['name_raw']    = $imageRow['name'];
@@ -266,7 +265,7 @@ final class ImagesEndpoints
         unset($ret['path'], $ret['storage_category_id']);
         $ret['rates']    = [WS_XML_ATTRIBUTES => $rating];
         $ret['categories'] = new PwgNamedArray($relatedCategories, 'category', ['id', 'url', 'page_url']);
-        $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', ws_std_get_tag_xml_attributes());
+        $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());
         if (isset($commentPostData)) {
             $ret['comment_post'] = [WS_XML_ATTRIBUTES => $commentPostData];
         }
@@ -305,8 +304,8 @@ final class ImagesEndpoints
         $pPerPage  = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $images    = [];
         /** @var array<string> $whereClauses */
-        $whereClauses = ws_std_image_sql_filter($params, 'i.');
-        $orderBy      = ws_std_image_sql_order($params, 'i.');
+        $whereClauses = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, 'i.');
+        $orderBy      = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
         $superOrderBy = false;
         if (!empty($orderBy)) {
             Config::override('order_by', 'ORDER BY ' . $orderBy);
@@ -334,7 +333,7 @@ final class ImagesEndpoints
                 $nameRaw     = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
                 $image['name']    = strip_tags(is_string($nameRaw) ? $nameRaw : (is_scalar($nameRaw) ? (string) $nameRaw : ''));
                 $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
-                $image = array_merge($image, ws_std_get_urls($row));
+                $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $imgIdInt = is_numeric($image['id']) ? (int) $image['id'] : 0;
                 if (isset($imageIdsFlip[$imgIdInt])) {
                     $images[$imageIdsFlip[$imgIdInt]] = $image;
@@ -343,7 +342,7 @@ final class ImagesEndpoints
             ksort($images, SORT_NUMERIC);
             $images = array_values($images);
         }
-        return ['paging' => new PwgNamedStruct(['page' => $pPage, 'per_page' => $pPerPage, 'count' => count($images), 'total_count' => count($searchItems)]), 'images' => new PwgNamedArray($images, 'image', ws_std_get_image_xml_attributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $pPage, 'per_page' => $pPerPage, 'count' => count($images), 'total_count' => count($searchItems)]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
     }
 
     /**

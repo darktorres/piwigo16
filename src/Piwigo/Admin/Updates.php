@@ -213,7 +213,6 @@ class Updates
 
         if ($notify) {
             // send email
-            require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
             switch_lang_to(get_default_language());
 

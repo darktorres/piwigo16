@@ -11,7 +11,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -19,9 +18,10 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
 final class UsersEndpoints
 {
@@ -397,7 +397,7 @@ final class UsersEndpoints
         }
         $userId = CurrentUser::get()->id;
         check_user_favorites();
-        $orderBy = ws_std_image_sql_order($params, 'i.');
+        $orderBy = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
         $query   = 'SELECT i.* FROM ' . FAVORITES_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . get_sql_condition_FandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
         $images  = [];
@@ -411,13 +411,13 @@ final class UsersEndpoints
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k];
             }
-            $images[] = array_merge($image, ws_std_get_urls($row));
+            $images[] = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
         }
         $favPerPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $favPage    = is_numeric($params['page']) ? (int) $params['page'] : 0;
         $count      = count($images);
         $images     = array_slice($images, $favPerPage * $favPage, $favPerPage);
-        return ['paging' => new PwgNamedStruct(['page' => $favPage, 'per_page' => $favPerPage, 'count' => $count]), 'images' => new PwgNamedArray($images, 'image', ws_std_get_image_xml_attributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $favPage, 'per_page' => $favPerPage, 'count' => $count]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
     }
 
     /**

@@ -894,3 +894,39 @@ msgstr "Friday"
 msgid "piwigo_day_6"
 msgstr "Saturday"
 
+msgid "piwigo_month_1"
+msgstr "January"
+
+msgid "piwigo_month_2"
+msgstr "February"
+
+msgid "piwigo_month_3"
+msgstr "March"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "May"
+
+msgid "piwigo_month_6"
+msgstr "June"
+
+msgid "piwigo_month_7"
+msgstr "July"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+
+msgid "piwigo_month_10"
+msgstr "October"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+

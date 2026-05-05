@@ -1115,3 +1115,60 @@ msgstr "تاريخ التعليق"
 msgid "Your authentication key is no longer valid."
 msgstr ".مفتاح المصادقة الخاصة بك لم يعد صالحا"
 
+msgid "piwigo_day_0"
+msgstr "الأحد"
+
+msgid "piwigo_day_1"
+msgstr "الاثنين"
+
+msgid "piwigo_day_2"
+msgstr "الثلاثاء"
+
+msgid "piwigo_day_3"
+msgstr "الأربعاء"
+
+msgid "piwigo_day_4"
+msgstr "الخميس"
+
+msgid "piwigo_day_5"
+msgstr "الجمعة"
+
+msgid "piwigo_day_6"
+msgstr "السبت"
+
+msgid "piwigo_month_1"
+msgstr "يناير"
+
+msgid "piwigo_month_2"
+msgstr "فبراير"
+
+msgid "piwigo_month_3"
+msgstr "مارس"
+
+msgid "piwigo_month_4"
+msgstr "أبريل"
+
+msgid "piwigo_month_5"
+msgstr "مايو"
+
+msgid "piwigo_month_6"
+msgstr "يونيو"
+
+msgid "piwigo_month_7"
+msgstr "يوليو"
+
+msgid "piwigo_month_8"
+msgstr "أغسطس"
+
+msgid "piwigo_month_9"
+msgstr "سبتمبر"
+
+msgid "piwigo_month_10"
+msgstr "أكتوبر"
+
+msgid "piwigo_month_11"
+msgstr "نوفمبر"
+
+msgid "piwigo_month_12"
+msgstr "ديسمبر"
+

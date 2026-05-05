@@ -50,7 +50,8 @@ foreach (scandir($langDir) ?: [] as $locale) {
 
     // Recover common.lang.php from git history
     $gitPath = "language/{$locale}/common.lang.php";
-    $phpContent = shell_exec("git show {$commit}:{$gitPath} 2>/dev/null");
+    $null = PHP_OS_FAMILY === 'Windows' ? '2>NUL' : '2>/dev/null';
+    $phpContent = shell_exec("git show {$commit}:{$gitPath} {$null}");
 
     if ($phpContent === null || $phpContent === '') {
         echo "  SKIP (no git content): $locale\n";
@@ -67,24 +68,48 @@ foreach (scandir($langDir) ?: [] as $locale) {
         continue;
     }
 
-    // Build PO entries to append
-    $extra = '';
-    foreach ($days as $idx => $name) {
-        $extra .= 'msgid ' . po_q("piwigo_day_{$idx}") . "\n";
-        $extra .= 'msgstr ' . po_q($name) . "\n";
-        $extra .= "\n";
-    }
-    foreach ($months as $idx => $name) {
-        $extra .= 'msgid ' . po_q("piwigo_month_{$idx}") . "\n";
-        $extra .= 'msgstr ' . po_q($name) . "\n";
-        $extra .= "\n";
+    // Only append entries that aren't already present (idempotent re-run)
+    $existingPo = file_get_contents($poFile) ?: '';
+    $hasDays   = str_contains($existingPo, 'msgid "piwigo_day_0"');
+    $hasMonths = str_contains($existingPo, 'msgid "piwigo_month_1"');
+
+    if ($hasDays && $hasMonths) {
+        echo "  SKIP (already patched): $locale\n";
+        $skipped++;
+        continue;
     }
 
+    // Build PO entries to append (only missing ones)
+    $extra = '';
+    if (!$hasDays) {
+        foreach ($days as $idx => $name) {
+            $extra .= 'msgid ' . po_q("piwigo_day_{$idx}") . "\n";
+            $extra .= 'msgstr ' . po_q($name) . "\n";
+            $extra .= "\n";
+        }
+    }
+    if (!$hasMonths) {
+        foreach ($months as $idx => $name) {
+            $extra .= 'msgid ' . po_q("piwigo_month_{$idx}") . "\n";
+            $extra .= 'msgstr ' . po_q($name) . "\n";
+            $extra .= "\n";
+        }
+    }
+
+    if ($extra === '') {
+        echo "  SKIP (nothing to add): $locale\n";
+        $skipped++;
+        continue;
+    }
+
+    $addedDays   = $hasDays   ? 0 : count($days);
+    $addedMonths = $hasMonths ? 0 : count($months);
+
     if ($dryRun) {
-        echo '  [DRY] Would append ' . (count($days) + count($months)) . " entries to $locale/common.po\n";
+        echo '  [DRY] Would append ' . ($addedDays + $addedMonths) . " entries to $locale/common.po\n";
     } else {
         file_put_contents($poFile, $extra, FILE_APPEND);
-        echo "  OK: $locale — " . count($days) . ' day + ' . count($months) . " month entries added\n";
+        echo "  OK: $locale — {$addedDays} day + {$addedMonths} month entries added\n";
     }
     $patched++;
 }
@@ -99,16 +124,16 @@ function extract_day_month(string $phpContent): array
     $days   = [];
     $months = [];
 
-    // Match $lang['day'][N] = 'Name';
-    if (preg_match_all('/\$lang\[\'day\'\]\[(\d+)\]\s*=\s*[\'"]([^\'"]+)[\'"]\s*;/', $phpContent, $m, PREG_SET_ORDER)) {
+    // Match $lang['day'][N] or $lang['day']['N'] = 'Name';
+    if (preg_match_all('/\$lang\[\'day\'\]\[\'?(\d+)\'?\]\s*=\s*[\'"]([^\'"]+)[\'"]\s*;/', $phpContent, $m, PREG_SET_ORDER)) {
         foreach ($m as $row) {
             $days[(int) $row[1]] = $row[2];
         }
         ksort($days);
     }
 
-    // Match $lang['month'][N] = 'Name';
-    if (preg_match_all('/\$lang\[\'month\'\]\[(\d+)\]\s*=\s*[\'"]([^\'"]+)[\'"]\s*;/', $phpContent, $m, PREG_SET_ORDER)) {
+    // Match $lang['month'][N] or $lang['month']['N'] = 'Name';
+    if (preg_match_all('/\$lang\[\'month\'\]\[\'?(\d+)\'?\]\s*=\s*[\'"]([^\'"]+)[\'"]\s*;/', $phpContent, $m, PREG_SET_ORDER)) {
         foreach ($m as $row) {
             $months[(int) $row[1]] = $row[2];
         }

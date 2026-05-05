@@ -376,3 +376,60 @@ msgstr "XXS - Kecil"
 msgid "%d rate"
 msgstr "%d rating"
 
+msgid "piwigo_day_0"
+msgstr "Ahad"
+
+msgid "piwigo_day_1"
+msgstr "Isnin"
+
+msgid "piwigo_day_2"
+msgstr "Selasa"
+
+msgid "piwigo_day_3"
+msgstr "Rabu"
+
+msgid "piwigo_day_4"
+msgstr "Khamis"
+
+msgid "piwigo_day_5"
+msgstr "Jumaat"
+
+msgid "piwigo_day_6"
+msgstr "Sabtu"
+
+msgid "piwigo_month_1"
+msgstr "Januari"
+
+msgid "piwigo_month_2"
+msgstr "Februari"
+
+msgid "piwigo_month_3"
+msgstr "Mac"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "Mei"
+
+msgid "piwigo_month_6"
+msgstr "Jun"
+
+msgid "piwigo_month_7"
+msgstr "Julai"
+
+msgid "piwigo_month_8"
+msgstr "Ogos"
+
+msgid "piwigo_month_9"
+msgstr "September"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Disember"
+

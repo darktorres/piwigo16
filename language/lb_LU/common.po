@@ -1142,3 +1142,39 @@ msgstr "Freiden"
 msgid "piwigo_day_6"
 msgstr "Samschten"
 
+msgid "piwigo_month_1"
+msgstr "Januar"
+
+msgid "piwigo_month_2"
+msgstr "Februar"
+
+msgid "piwigo_month_3"
+msgstr "Mäerz"
+
+msgid "piwigo_month_4"
+msgstr "Abrëll"
+
+msgid "piwigo_month_5"
+msgstr "Mee"
+
+msgid "piwigo_month_6"
+msgstr "Juni"
+
+msgid "piwigo_month_7"
+msgstr "Juli"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+
+msgid "piwigo_month_10"
+msgstr "Oktober"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "Dezember"
+

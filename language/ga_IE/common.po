@@ -109,3 +109,60 @@ msgstr "%d trácht nua"
 msgid "%d new comments"
 msgstr "%d tuairimí nua"
 
+msgid "piwigo_day_0"
+msgstr "Dé Domnaigh"
+
+msgid "piwigo_day_1"
+msgstr "Dé Luan"
+
+msgid "piwigo_day_2"
+msgstr "Dé Máirt"
+
+msgid "piwigo_day_3"
+msgstr "Dé Céadaoin"
+
+msgid "piwigo_day_4"
+msgstr "Déaordaoin"
+
+msgid "piwigo_day_5"
+msgstr "De hAoine"
+
+msgid "piwigo_day_6"
+msgstr "Dé Sathairn"
+
+msgid "piwigo_month_1"
+msgstr "Eanáir"
+
+msgid "piwigo_month_2"
+msgstr "Feabhra"
+
+msgid "piwigo_month_3"
+msgstr "Márta"
+
+msgid "piwigo_month_4"
+msgstr "Aibreán"
+
+msgid "piwigo_month_5"
+msgstr "Bealtaine"
+
+msgid "piwigo_month_6"
+msgstr "Meitheamh"
+
+msgid "piwigo_month_7"
+msgstr "Iúil"
+
+msgid "piwigo_month_8"
+msgstr "Lúnasa"
+
+msgid "piwigo_month_9"
+msgstr "Meán Fómhair"
+
+msgid "piwigo_month_10"
+msgstr "Deireadh Fómhair"
+
+msgid "piwigo_month_11"
+msgstr "Samhain"
+
+msgid "piwigo_month_12"
+msgstr "Nollaig"
+

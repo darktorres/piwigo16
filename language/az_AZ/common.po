@@ -142,3 +142,60 @@ msgstr "qeyd"
 msgid "Albums"
 msgstr "Albomlar"
 
+msgid "piwigo_day_0"
+msgstr "Bazar"
+
+msgid "piwigo_day_1"
+msgstr "Bazar ertəsi"
+
+msgid "piwigo_day_2"
+msgstr "Çərşənbə axşamı"
+
+msgid "piwigo_day_3"
+msgstr "Çərşənbə"
+
+msgid "piwigo_day_4"
+msgstr "Cümə axşamı"
+
+msgid "piwigo_day_5"
+msgstr "Cümə"
+
+msgid "piwigo_day_6"
+msgstr "Şənbə"
+
+msgid "piwigo_month_1"
+msgstr "Yanvar"
+
+msgid "piwigo_month_2"
+msgstr "Fevral"
+
+msgid "piwigo_month_3"
+msgstr "Mart"
+
+msgid "piwigo_month_4"
+msgstr "Aprel"
+
+msgid "piwigo_month_5"
+msgstr "May"
+
+msgid "piwigo_month_6"
+msgstr "İyun"
+
+msgid "piwigo_month_7"
+msgstr "İyul"
+
+msgid "piwigo_month_8"
+msgstr "Avqust"
+
+msgid "piwigo_month_9"
+msgstr "Sentyabr"
+
+msgid "piwigo_month_10"
+msgstr "Oktyabr"
+
+msgid "piwigo_month_11"
+msgstr "Noyabr"
+
+msgid "piwigo_month_12"
+msgstr "Dekabr"
+

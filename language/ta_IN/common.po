@@ -1112,3 +1112,60 @@ msgstr "ஆல்பத்தின் பெயர், ஒரு & rarr; Z"
 msgid "Link: %s"
 msgstr "\r\nஇணைப்பு:%s"
 
+msgid "piwigo_day_0"
+msgstr "ஞாயிறு"
+
+msgid "piwigo_day_1"
+msgstr "திங்கள்"
+
+msgid "piwigo_day_2"
+msgstr "செவ்வாய்"
+
+msgid "piwigo_day_3"
+msgstr "புதன்"
+
+msgid "piwigo_day_4"
+msgstr "வியாழன்"
+
+msgid "piwigo_day_5"
+msgstr "வெள்ளி"
+
+msgid "piwigo_day_6"
+msgstr "ஞாயிறு"
+
+msgid "piwigo_month_1"
+msgstr "ஜனவரி"
+
+msgid "piwigo_month_2"
+msgstr "பிப்ரவரி"
+
+msgid "piwigo_month_3"
+msgstr "மார்ச்"
+
+msgid "piwigo_month_4"
+msgstr "ஏப்ரல்"
+
+msgid "piwigo_month_5"
+msgstr "மே"
+
+msgid "piwigo_month_6"
+msgstr "ஜூன்"
+
+msgid "piwigo_month_7"
+msgstr "ஜுலை"
+
+msgid "piwigo_month_8"
+msgstr "ஆகஸ்ட்"
+
+msgid "piwigo_month_9"
+msgstr "செப்டம்பர்"
+
+msgid "piwigo_month_10"
+msgstr "அக்டோபர்"
+
+msgid "piwigo_month_11"
+msgstr "நவம்பர்"
+
+msgid "piwigo_month_12"
+msgstr "டிசம்பர்"
+

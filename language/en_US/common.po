@@ -30,3 +30,60 @@ msgstr "An administrator must authorize your comment before it is displayed."
 msgid "Bad status for user \"guest\", using default status. Please notify the webmaster."
 msgstr "Bad status for guest user; default status will be used. Please notify the webmaster."
 
+msgid "piwigo_day_0"
+msgstr "Sunday"
+
+msgid "piwigo_day_1"
+msgstr "Monday"
+
+msgid "piwigo_day_2"
+msgstr "Tuesday"
+
+msgid "piwigo_day_3"
+msgstr "Wednesday"
+
+msgid "piwigo_day_4"
+msgstr "Thursday"
+
+msgid "piwigo_day_5"
+msgstr "Friday"
+
+msgid "piwigo_day_6"
+msgstr "Saturday"
+
+msgid "piwigo_month_1"
+msgstr "January"
+
+msgid "piwigo_month_2"
+msgstr "February"
+
+msgid "piwigo_month_3"
+msgstr "March"
+
+msgid "piwigo_month_4"
+msgstr "April"
+
+msgid "piwigo_month_5"
+msgstr "May"
+
+msgid "piwigo_month_6"
+msgstr "June"
+
+msgid "piwigo_month_7"
+msgstr "July"
+
+msgid "piwigo_month_8"
+msgstr "August"
+
+msgid "piwigo_month_9"
+msgstr "September"
+
+msgid "piwigo_month_10"
+msgstr "October"
+
+msgid "piwigo_month_11"
+msgstr "November"
+
+msgid "piwigo_month_12"
+msgstr "December"
+

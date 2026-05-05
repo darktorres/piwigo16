@@ -298,7 +298,9 @@ if (count(get_last(60, 'year')) > 1) {
     );
 }
 
-ksort($lang['month']);
+if (is_array($lang['month'] ?? null)) {
+    ksort($lang['month']);
+}
 
 $template->assign([
   'compareYears' => get_month_of_last_years(\Piwigo\Config\Config::statCompareYearDisplayed()),
@@ -311,7 +313,7 @@ $template->assign([
   'page_data_json' => json_encode([
     'str_avg' => l10n('Average last 12 months'),
     'str_number_page_visited' => l10n('Page Visited'),
-    'str_months' => array_values($lang['month']),
+    'str_months' => array_values(is_array($lang['month'] ?? null) ? $lang['month'] : []),
     'lang_code' => strval($user['language']),
   ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
 ]);

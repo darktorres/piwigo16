@@ -1241,3 +1241,60 @@ msgstr "Ֆիլտրված լուսանկարների համար տեգեր չկա
 msgid "last 12 months"
 msgstr "Վերջին 12 ամիսը"
 
+msgid "piwigo_day_0"
+msgstr "Կիրակի"
+
+msgid "piwigo_day_1"
+msgstr "Երկուշաբթի"
+
+msgid "piwigo_day_2"
+msgstr "Երեքշաբթի"
+
+msgid "piwigo_day_3"
+msgstr "Չորեքշաբթի"
+
+msgid "piwigo_day_4"
+msgstr "Հինգշաբթի"
+
+msgid "piwigo_day_5"
+msgstr "Ուրբաթ"
+
+msgid "piwigo_day_6"
+msgstr "Շաբաթ"
+
+msgid "piwigo_month_1"
+msgstr "Հունվար"
+
+msgid "piwigo_month_2"
+msgstr "Փետրվար"
+
+msgid "piwigo_month_3"
+msgstr "Մարտ"
+
+msgid "piwigo_month_4"
+msgstr "Ապրիլ"
+
+msgid "piwigo_month_5"
+msgstr "Մայիս"
+
+msgid "piwigo_month_6"
+msgstr "Հունիս"
+
+msgid "piwigo_month_7"
+msgstr "Հուլիս"
+
+msgid "piwigo_month_8"
+msgstr "Օգոստոս"
+
+msgid "piwigo_month_9"
+msgstr "Սեպտեմբեր"
+
+msgid "piwigo_month_10"
+msgstr "Հոկտեմբեր"
+
+msgid "piwigo_month_11"
+msgstr "Նոյեմբեր"
+
+msgid "piwigo_month_12"
+msgstr "Դեկտեմբեր"
+

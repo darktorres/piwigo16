@@ -1679,31 +1679,40 @@ All middleware + `Router` registered in `config/container.php`.
 
 Tests: `PathExtractorTest` (14 tests) + `RouterTest` (18 tests) = 32 new tests.
 
-### Remaining steps
+### Completed — Wave A (root entry-point controllers)
 
-**Wave A — root entry-point controllers** (`src/Piwigo/Controller/`):
+All root entry-point files converted. `index.php` now runs the PSR-15 pipeline. Each legacy file is a 7-line shim (`define + require common.inc.php + Kernel::boot() + call controller`). No `ResponseEmitter` in shims — controllers that render HTML/XML output directly avoid the PHP 8 `http_response_code()`-after-`header()` warning.
 
-Each old `.php` root file becomes a 2-line shim (`require 'index.php'`). `index.php` flips to the new pipeline when the first controller (`GalleryController`) is ready. `SectionInitializer` extracts the procedural body of `include/section_init.inc.php`.
+Helper functions that were defined inside entry-point files moved to `include/`:
 
-| Old file | Controller | Key extraction |
+| Include file | Extracted from | Contents |
 |---|---|---|
-| `index.php` | `GalleryController` | `SectionInitializer::resolve()` |
-| `picture.php` | `PictureController` | Same + picture logic |
-| `search.php` | `SearchController` | — |
-| `tags.php` | `TagsController` | — |
-| `comments.php` | `CommentsController` | — |
-| `feed.php` | `FeedController` | — |
-| `identification.php` | `IdentificationController` | — |
-| `register.php` | `RegisterController` | — |
-| `password.php` | `PasswordController` | — |
-| `profile.php` | `ProfileController` | — |
-| `notification.php` | `NotificationController` | — |
-| `ws.php` | `WsController` | Thin adapter → `PwgServerRegistry::current()->run()` |
-| `install.php` | `InstallController` | Skips normal bootstrap |
-| `upgrade.php` | `UpgradeController` | — |
-| `i.php` | `ImageDerivativeController` | Preserves fast-path |
+| `include/ws_default_methods.php` | `ws.php` | `ws_addDefaultMethods()` event handler |
+| `include/feed_functions.php` | `feed.php` | `datetime_to_ts`, `ts_to_iso8601`, `PiwigoFeedCreator` |
+| `include/password_functions.php` | `password.php` | 6 reset-flow functions |
+| `include/profile_functions.php` | `profile.php` | `save_profile_from_post`, `load_profile_in_template` |
+| `include/picture_functions.php` | `picture.php` | `default_picture_content` event handler |
 
-`AuthMiddleware` absorbs `include/user.inc.php`. `FilterMiddleware` (new) absorbs `include/filter.inc.php`.
+`admin/profile.php` and `admin/configuration.php` updated to `require_once 'include/profile_functions.php'` directly.
+
+| Old file | Controller | Notes |
+|---|---|---|
+| `index.php` | `GalleryController` | Section routing via inline `section_init.inc.php` |
+| `picture.php` | `PictureController` | Same; `default_picture_content` extracted |
+| `search.php` | `SearchController` | Ends with redirect |
+| `tags.php` | `TagsController` | Cloud + alphabetic views |
+| `comments.php` | `CommentsController` | |
+| `feed.php` | `FeedController` | Functions extracted |
+| `identification.php` | `IdentificationController` | |
+| `register.php` | `RegisterController` | |
+| `password.php` | `PasswordController` | Functions extracted |
+| `profile.php` | `ProfileController` | Functions extracted |
+| `notification.php` | `NotificationController` | `findAvailableFeedId` → private method |
+| `ws.php` | `WsController` | Thin adapter; `ws_addDefaultMethods` extracted |
+
+**Remaining Wave A (deferred — custom bootstraps):** `i.php` (minimal bootstrap, no Kernel::boot()), `install.php`, `upgrade.php`. These route correctly via the pipeline but their controllers are not yet implemented (FallbackHandler returns 404 if accessed via index.php).
+
+### Remaining steps
 
 **Wave B — admin controllers** (`src/Piwigo/Controller/Admin/`): ~57 files in 7 cluster commits.
 

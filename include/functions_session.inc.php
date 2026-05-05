@@ -41,7 +41,7 @@ if (class_exists(\Piwigo\Config\Config::class, false)
         'path' => cookie_path(),
         'samesite' => 'Strict',
         'httponly' => true,
-        'secure' => !empty($_SERVER['HTTPS']),
+        'secure' => isset($_SERVER['HTTPS']) && is_string($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on',
     ]);
     register_shutdown_function(session_write_close(...));
 }
@@ -117,8 +117,9 @@ function get_remote_addr_session_hash(): string
 function pwg_session_read(string $session_id)
 {
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
-        ->read(get_remote_addr_session_hash().$session_id);
+        ->read(get_remote_addr_session_hash() . $session_id);
 }
+
 
 /**
  * Called by PHP session manager, writes data in the sessions table.
@@ -135,7 +136,7 @@ function pwg_session_write(string $session_id, $data): bool
         return true;
     }
     \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class)
-        ->write(get_remote_addr_session_hash().$session_id, (string) $data);
+        ->write(get_remote_addr_session_hash() . $session_id, (string) $data);
     return true;
 }
 

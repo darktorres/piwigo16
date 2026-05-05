@@ -119,3 +119,7 @@ if (\Piwigo\Config\Config::browserLanguage() and (is_a_guest() or is_generic()) 
     $user['language'] = $language;
 }
 trigger_notify('user_init', $user);
+
+// Re-attach CurrentUser after build_user() has populated $GLOBALS['user'].
+// Kernel::boot() ran before user.inc.php so CurrentUser had a stale snapshot.
+\Piwigo\Users\CurrentUser::attachGlobals();

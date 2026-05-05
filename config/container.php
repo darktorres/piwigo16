@@ -7,6 +7,7 @@ use function DI\factory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Auth\AuthKeyRepository;
+use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -14,6 +15,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
@@ -21,9 +23,11 @@ use Piwigo\Lang\Translator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Picture\PictureService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Site\SiteRepository;
@@ -49,6 +53,12 @@ return [
 
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
+
+    // Domain services — stateless; inject only what they need.
+    CookieService::class  => factory(static fn (): CookieService => new CookieService()),
+    FilterService::class  => factory(static fn (): FilterService => new FilterService()),
+    PictureService::class => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
+    RateService::class    => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

@@ -10,121 +10,39 @@ declare(strict_types=1);
 /**
  * @package functions\picture
  */
-/**
- * Returns slideshow default params.
- * - period
- * - repeat
- * - play
- */
 /** @return array<string, mixed> */
 function get_default_slideshow_params(): array
 {
-    return [
-      'period' => \Piwigo\Config\Config::slideshowPeriod(),
-      'repeat' => \Piwigo\Config\Config::slideshowRepeat(),
-      'play' => true,
-      ];
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->getDefaultSlideshowParams();
 }
 
-/**
- * Checks and corrects slideshow params
- */
 /**
  * @param array<string, mixed> $params
  * @return array<string, mixed>
  */
 function correct_slideshow_params(array $params = []): array
 {
-    if ($params['period'] < \Piwigo\Config\Config::slideshowPeriodMin()) {
-        $params['period'] = \Piwigo\Config\Config::slideshowPeriodMin();
-    } elseif ($params['period'] > \Piwigo\Config\Config::slideshowPeriodMax()) {
-        $params['period'] = \Piwigo\Config\Config::slideshowPeriodMax();
-    }
-
-    return $params;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->correctSlideshowParams($params);
 }
 
-/**
- * Decodes slideshow string params into array
- *
- * @param string $encode_params
- */
-/** @return array<string,mixed> */
+/** @return array<string, mixed> */
 function decode_slideshow_params(?string $encode_params = null): array
 {
-    $result = get_default_slideshow_params();
-
-    if (is_numeric($encode_params)) {
-        $result['period'] = $encode_params;
-    } else {
-        $matches = [];
-        if (preg_match_all('/([a-z]+)-(\d+)/', (string) $encode_params, $matches)) {
-            $matchcount = count($matches[1]);
-            for ($i = 0; $i < $matchcount; $i++) {
-                $result[$matches[1][$i]] = $matches[2][$i];
-            }
-        }
-
-        if (preg_match_all('/([a-z]+)-(true|false)/', (string) $encode_params, $matches)) {
-            $matchcount = count($matches[1]);
-            for ($i = 0; $i < $matchcount; $i++) {
-                $result[$matches[1][$i]] = \Piwigo\Core\BoolUtil::fromMixed($matches[2][$i]);
-            }
-        }
-    }
-
-    return correct_slideshow_params($result);
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->decodeSlideshowParams($encode_params);
 }
 
-/**
- * Encodes slideshow array params into a string
- */
-/** @param array<string,mixed> $decode_params */
+/** @param array<string, mixed> $decode_params */
 function encode_slideshow_params(array $decode_params = []): string
 {
-    $corrected = correct_slideshow_params($decode_params);
-    $default = get_default_slideshow_params();
-    $result = '';
-
-    foreach ($corrected as $name => $value) {
-        if (array_key_exists($name, $default) && $default[$name] === $value) {
-            continue;
-        }
-        $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
-        $result .= '+'.$name.'-'.\Piwigo\Core\BoolUtil::toString($bool_val);
-    }
-
-    return $result;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->encodeSlideshowParams($decode_params);
 }
 
-/**
- * Increase the number of visits for a given photo.
- *
- * Code moved from picture.php to be used by both the API and picture.php
- *
- * @since 14
- * @param int $image_id
- */
-function increase_image_visit_counter($image_id): void
+function increase_image_visit_counter(int $image_id): void
 {
-    // avoiding auto update of "lastmodified" field
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-        ->incrementHit($image_id);
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->increaseImageVisitCounter($image_id);
 }
 
-/**
- * Returns the number of pages of a PDF file
- *
- * @param string $pdfPath
- * @return int
- */
-function count_pdf_pages($pdfPath): int|false
+function count_pdf_pages(string $pdfPath): int|false
 {
-    $pdftext = file_get_contents($pdfPath);
-    if ($pdftext === false) {
-        return false;
-    }
-    $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);
-
-    return $num;
+    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Picture\PictureService::class)->countPdfPages($pdfPath);
 }

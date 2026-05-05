@@ -1191,7 +1191,7 @@ npx playwright test                        # all locales render, no unserialize 
 
 ## #19 — Migrate `include/functions_*.inc.php` to typed service classes
 
-**Status:** 🔄 Mostly done — 3 admin/WS modules still pending &nbsp;|&nbsp; **Size:** XL
+**Status:** ✅ Done — all modules migrated (44 service classes, ~525 functions) &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
@@ -1204,13 +1204,11 @@ Move all 366 free functions across the 19 `functions_*.inc.php` modules into typ
 - 9 legacy `.class.php` files are migrated to `src/` by item #3 — they're the home for the new domain classes here.
 - DB-layer plumbing (`functions_mysqli.inc.php`, `pwg_query`) is migrated to repositories by item #17.
 
-### What was done (phases 1–10)
+### What was done (phases 1–10 + cleanup)
 
-All 19 `functions_*.inc.php` modules + `functions.inc.php` + all migrated admin includes fully done.
-Each function moved to a typed service class; the free function becomes a
-one-line ServiceLocator delegate. PHPStan level 9 at zero errors throughout.
-
-**Remaining:** `admin/include/functions_metadata.php` (7 funcs), `admin/include/functions_history.inc.php` (6 funcs), `include/ws_functions.inc.php` (8 WS infrastructure helpers).
+All modules fully migrated. Each function moved to a typed service class;
+the free function becomes a one-line ServiceLocator delegate. PHPStan level 9
+at zero errors throughout.
 
 **Pre-boot pattern**: Functions called before `Kernel::boot()` (e.g.
 `cookie_path`, `generate_key`, `fatal_error`, `get_root_url`, `l10n`,
@@ -1235,7 +1233,8 @@ adding new `src/` classes (classmap-authoritative mode).
 | 8 | NotificationAdminService | 15 |
 | 9 | UploadService | 21 |
 | 10 | GeneralEndpoints, TagsEndpoints, CommentsEndpoints, PermissionsEndpoints, ExtensionsEndpoints, GroupsEndpoints, UsersEndpoints, CategoriesEndpoints, ImagesEndpoints | ~71 |
-| **Total** | **41 service classes** | **~504 functions** |
+| 11 | MetadataAdminService, HistoryAdminService, WsHelper | 21 |
+| **Total** | **44 service classes** | **~525 functions** |
 
 ### Per-module checklist
 
@@ -1264,9 +1263,9 @@ adding new `src/` classes (classmap-authoritative mode).
 | `admin/include/functions.php`                          | 3,671 | 80    | ✅ done | CategoryAdminService, ImageAdminService, TagAdminService, UserAdminService, AdminService |
 | `admin/include/functions_upload.inc.php`               | 1,033 | 21    | ✅ done | `Piwigo\Admin\Upload\UploadService` |
 | `admin/include/functions_notification_by_mail.inc.php` | 513   | 15    | ✅ done | `Piwigo\Admin\Notification\NotificationAdminService` |
-| `admin/include/functions_metadata.php`                 | ~390  | 7     | ⬜ not started | `Piwigo\Admin\Metadata\MetadataAdminService` — `get_sync_iptc_data`, `get_sync_exif_data`, `get_sync_metadata`, `sync_metadata`, `get_filelist`, `get_sync_metadata_attributes`, `metadata_normalize_keywords_string` |
-| `admin/include/functions_history.inc.php`              | ~250  | 6     | ⬜ not started | `Piwigo\Admin\History\HistoryAdminService` — `history_tabsheet`, `get_history`, `history_summarize`, `history_autopurge`, `history_remove_summarized_column`, `history_compare` |
-| `include/ws_functions.inc.php`                         | ~260  | 8     | ⬜ not started | `Piwigo\Ws\WsHelper` — `ws_isInvokeAllowed`, `ws_std_image_sql_filter`, `ws_std_image_sql_order`, `ws_std_get_urls`, `categories_flatlist_to_tree`, plus 3 xml-attribute helpers |
+| `admin/include/functions_metadata.php`                 | ~390  | 7     | ✅ done | `Piwigo\Admin\Metadata\MetadataAdminService` |
+| `admin/include/functions_history.inc.php`              | ~250  | 6     | ✅ done | `Piwigo\Admin\History\HistoryAdminService` |
+| `include/ws_functions.inc.php`                         | ~260  | 8     | ✅ done | `Piwigo\Ws\WsHelper` |
 | `admin/include/functions_upgrade.php`                  | —     | 9     | 🔒 out of scope | Upgrade-flow bootstrap (`prepare_conf_upgrade` redefines table constants before autoloader); runs before service layer |
 | `admin/include/functions_install.inc.php`              | —     | 4     | 🔒 out of scope | Install-flow only (`execute_sqlfile` etc.); pre-service-layer |
 | `include/derivative_params.inc.php`                    | —     | 5     | 🔒 permanent | Low-level derivative URL helpers (`size_equals`, `derivative_to_url`, etc.) — kept as free functions; no service boundary benefit |

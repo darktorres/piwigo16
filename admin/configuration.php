@@ -484,7 +484,7 @@ switch ($page['section']) {
     case 'default':
         {
             $edit_user = build_user(Config::guestId(), false);
-            require_once(PHPWG_ROOT_PATH.'profile.php');
+            require_once PHPWG_ROOT_PATH . 'include/profile_functions.php';
 
             $errors = [];
             if (save_profile_from_post($edit_user, $errors)) {

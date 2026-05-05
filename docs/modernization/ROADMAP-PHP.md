@@ -1210,11 +1210,27 @@ All modules fully migrated. Each function moved to a typed service class;
 the free function becomes a one-line ServiceLocator delegate. PHPStan level 9
 at zero errors throughout.
 
-**Pre-boot pattern**: Functions called before `Kernel::boot()` (e.g.
-`cookie_path`, `generate_key`, `fatal_error`, `get_root_url`, `l10n`,
-`load_conf_from_db`, `redirect_html`, `get_branch_from_version`) keep their
-own standalone implementation in `include/` in addition to the canonical
-service-class copy. ServiceLocator delegates are only safe post-boot.
+**Pre-boot pattern**: `Kernel::boot()` is now called in `install.php` (after
+`require constants.php` / `admin/include/functions.php`, before
+`new Languages()`) and in `upgrade.php` (before `new Languages()`, with
+`Config::override('auto_migrate', false)` to suppress auto-migration during
+the upgrade flow). This eliminates the need for escape-hatch guards on
+`conf_update_param`, `create_user_infos`, `pwg_activity`, and the
+Admin/Languages/Themes/Plugins repo helpers.
+
+A small number of **legitimate** pre-boot standalones remain — functions
+called before any boot is possible (e.g. from `fatal_error`, `i.php`
+fast-path, or common.inc.php itself): `mkgetdir` (extended guard fires when
+`Config::dbName()===''`, i.e. before install_db_connect sets credentials),
+`script_basename`, `load_conf_from_db`, `get_languages`, `convert_charset`
+(same-charset short-circuit), `cookie_path`, `generate_key`, `fatal_error`,
+`get_root_url`, `l10n`, `redirect_html`, `get_branch_from_version`.
+
+`Kernel::boot()` now seeds `LoggerRegistry` with `NullLogger` when
+`common.inc.php` has not set a real logger (install / upgrade context).
+`Template::__construct()` guards `conf_update_param('data_dir_checked', …)`
+with `Config::dbName() !== ''` instead of `ServiceLocator::has(Connection::class)`
+so it correctly skips the DB write when credentials are not yet configured.
 
 **Autoloader**: `composer dump-autoload --optimize` must be re-run after
 adding new `src/` classes (classmap-authoritative mode).
@@ -1354,7 +1370,7 @@ functions.
 | `include/functions_calendar.inc.php` | 🔒 keep → **#22** | Only loaded by `include/section_init.inc.php` (#22 scope) |
 | `include/functions_plugins.inc.php` | 🔒 keep permanently | Event system + pre-boot `EVENT_HANDLER_PRIORITY_NEUTRAL` define |
 | `include/functions_user.inc.php` | 🔒 keep → **#22** | Pre-boot permission guards; full migration requires typed controller |
-| `include/functions.inc.php` | 🔒 keep permanently | Pre-boot standalones for install.php / i.php |
+| `include/functions.inc.php` | 🔒 keep permanently | Legitimate pre-boot standalones (fatal_error, mkgetdir, script_basename, load_conf_from_db, l10n, etc.); escape-hatch guards removed after Kernel::boot() was placed correctly in install.php / upgrade.php |
 | `admin/include/functions.php` etc. | 🔒 keep → **#22** | Admin pages require them directly; #22 controller migration handles these |
 
 ---

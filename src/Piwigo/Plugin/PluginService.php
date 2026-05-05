@@ -7,7 +7,6 @@ namespace Piwigo\Plugin;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
 final class PluginService
@@ -15,36 +14,6 @@ final class PluginService
     public function __construct(
         private readonly PluginRepository $repo,
     ) {}
-
-    public function addEventHandler(string $event, mixed $func, int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL, ?string $includePath = null): bool
-    {
-        return EventDispatcher::addListener($event, $func, $priority, $includePath);
-    }
-
-    public function removeEventHandler(string $event, mixed $func, int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL): bool
-    {
-        return EventDispatcher::removeListener($event, $func, $priority);
-    }
-
-    public function triggerChange(string $event, mixed ...$args): mixed
-    {
-        return EventDispatcher::dispatch($event, ...$args);
-    }
-
-    public function triggerNotify(string $event, mixed ...$args): void
-    {
-        EventDispatcher::notify($event, ...$args);
-    }
-
-    public function setPluginData(string $pluginId, mixed &$data): bool
-    {
-        return LoadedPluginRegistry::setData($pluginId, $data);
-    }
-
-    public function &getPluginData(string $pluginId): mixed
-    {
-        return LoadedPluginRegistry::getData($pluginId);
-    }
 
     /** @return array<array<string,mixed>> */
     public function getDbPlugins(?string $state = '', ?string $id = ''): array

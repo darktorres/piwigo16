@@ -1233,7 +1233,8 @@ adding new `src/` classes (classmap-authoritative mode).
 | 7 | CategoryAdminService, ImageAdminService, TagAdminService, UserAdminService, AdminService | 80 |
 | 8 | NotificationAdminService | 15 |
 | 9 | UploadService | 21 |
-| **Total** | **32 service classes** | **~433 functions** |
+| 10 | GeneralEndpoints, TagsEndpoints, CommentsEndpoints, PermissionsEndpoints, ExtensionsEndpoints, GroupsEndpoints, UsersEndpoints, CategoriesEndpoints, ImagesEndpoints | ~71 |
+| **Total** | **41 service classes** | **~504 functions** |
 
 ### Per-module checklist
 
@@ -1258,7 +1259,7 @@ adding new `src/` classes (classmap-authoritative mode).
 | `functions_filter.inc.php`                             | ~36   | 1     | ✅ done | `Piwigo\Filter\FilterService` |
 | `functions_calendar.inc.php`                           | ~299  | 1     | ✅ done | `Piwigo\Calendar\CalendarService` |
 | `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | ✅ done | `Piwigo\Db\` (item #17) |
-| `ws_functions/*.php`                                   | —     | ~71   | ⏳ blocked | `Piwigo\Ws\Method\` — item #21 |
+| `ws_functions/*.php`                                   | —     | ~71   | ✅ done | `Piwigo\Ws\Method\` — 9 endpoint classes |
 | `admin/include/functions.php`                          | 3,671 | 80    | ✅ done | CategoryAdminService, ImageAdminService, TagAdminService, UserAdminService, AdminService |
 | `admin/include/functions_upload.inc.php`               | 1,033 | 21    | ✅ done | `Piwigo\Admin\Upload\UploadService` |
 | `admin/include/functions_notification_by_mail.inc.php` | 513   | 15    | ✅ done | `Piwigo\Admin\Notification\NotificationAdminService` |

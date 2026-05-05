@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-global $template, $user, $page, $persistent_cache, $lang, $service;
+global $template, $user, $page, $persistent_cache, $lang;
 
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Ws\PwgServer;
@@ -27,7 +27,7 @@ if (!\Piwigo\Config\Config::allowWebServices()) {
 
 include_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
 
-$service->run();
+\Piwigo\Ws\PwgServerRegistry::current()->run();
 
 
 /**

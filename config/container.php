@@ -64,6 +64,12 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Admin\Album\AlbumsTabRenderer;
+use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\Config\SizesProcessor;
+use Piwigo\Admin\Config\WatermarkProcessor;
+use Piwigo\Admin\Upload\DirectPreparer;
+use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\CommentsEndpoints;
 use Piwigo\Ws\Method\ExtensionsEndpoints;
@@ -129,6 +135,12 @@ return [
     UserAdminService::class          => factory(static fn (): UserAdminService => new UserAdminService()),
     NotificationAdminService::class  => factory(static fn (): NotificationAdminService => new NotificationAdminService()),
     UploadService::class             => factory(static fn (): UploadService => new UploadService()),
+    AlbumsTabRenderer::class         => factory(static fn (): AlbumsTabRenderer => new AlbumsTabRenderer()),
+    UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
+    DirectPreparer::class            => factory(static fn (): DirectPreparer => new DirectPreparer()),
+    FilterResolver::class            => factory(static fn (): FilterResolver => new FilterResolver()),
+    SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
+    WatermarkProcessor::class        => factory(static fn (): WatermarkProcessor => new WatermarkProcessor()),
     StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
     DateService::class         => factory(static fn (): DateService => new DateService()),
     LangService::class         => factory(static fn (): LangService => new LangService()),

@@ -7,6 +7,11 @@ namespace Piwigo\Ws;
 use Piwigo\Config\Config;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\PwgRestRequestHandler;
+use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
@@ -447,6 +452,57 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             $res['params'][] = $param_data;
         }
         return $res;
+    }
+
+    public static function boot(): void
+    {
+        include_once PHPWG_ROOT_PATH . 'include/ws_core.inc.php';
+
+        add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
+        add_event_handler('ws_invoke_allowed', 'ws_isInvokeAllowed', EVENT_HANDLER_PRIORITY_NEUTRAL);
+
+        $requestFormat = 'rest';
+        $responseFormat = null;
+
+        if (isset($_GET['format'])) {
+            $responseFormat = is_string($_GET['format']) ? $_GET['format'] : null;
+        }
+
+        if (!isset($responseFormat)) {
+            $responseFormat = $requestFormat;
+        }
+        $responseFormat = (string) $responseFormat;
+
+        $server = new self();
+        PwgServerRegistry::set($server);
+        $GLOBALS['service'] = $server;
+
+        $handler = null;
+        switch ($requestFormat) {
+            case 'rest':
+                $handler = new PwgRestRequestHandler();
+                break;
+        }
+        $server->setHandler($requestFormat, $handler);
+
+        $encoder = null;
+        switch ($responseFormat) {
+            case 'rest':
+                $encoder = new PwgRestEncoder();
+                break;
+            case 'php':
+                $encoder = new PwgSerialPhpEncoder();
+                break;
+            case 'json':
+                $encoder = new PwgJsonEncoder();
+                break;
+            case 'xmlrpc':
+                $encoder = new PwgXmlRpcEncoder();
+                break;
+        }
+        $server->setEncoder($responseFormat, $encoder);
+
+        set_make_full_url();
     }
 
     public function isAuthorizedMethodForAPIKEY(): bool

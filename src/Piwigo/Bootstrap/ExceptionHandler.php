@@ -17,7 +17,11 @@ class ExceptionHandler
         if (LoggerRegistry::isInitialized()) {
             LoggerRegistry::current()->error(
                 $e->getMessage(),
-                ['file' => $e->getFile() . ':' . $e->getLine(), 'code' => $e->getCode()]
+                [
+                    'file'  => $e->getFile() . ':' . $e->getLine(),
+                    'code'  => $e->getCode(),
+                    'trace' => $e->getTraceAsString(),
+                ]
             );
         }
 
@@ -44,6 +48,12 @@ class ExceptionHandler
 
     public static function register(): void
     {
+        // When Xdebug is loaded in develop mode, skip registering so Xdebug
+        // can intercept uncaught exceptions and render its full stack trace.
+        if (extension_loaded('xdebug') && str_contains((string) ini_get('xdebug.mode'), 'develop')) {
+            return;
+        }
+
         set_exception_handler(self::handle(...));
     }
 }

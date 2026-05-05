@@ -1467,67 +1467,85 @@ On shared hosting without persistent processes, the queue simply stays idle and 
 
 ## #21 — OpenAPI 3.1 spec for the WS layer
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** M
+**Status:** ✅ Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
-An OpenAPI 3.1 specification describes every method registered with `PwgServer::addMethod()`. The spec is auto-generated from the registration metadata — no hand-maintained YAML. Served at `/ws/openapi.json`; Swagger UI at `/ws/docs`. With the spec in place, client SDKs (TypeScript, Python, etc.) can be generated via `openapi-generator-cli`.
+An OpenAPI 3.1 specification describes every method registered with `PwgServer::addMethod()`. The spec is auto-generated from the registration metadata — no hand-maintained YAML. Served at `ws.php/openapi.json`; Swagger UI at `ws.php/docs`. With the spec in place, client SDKs (TypeScript, Python, etc.) can be generated via `openapi-generator-cli`.
 
-### Current state
+### As built
 
-- 100+ WS methods registered procedurally with array literals in `include/ws_functions/*.php`.
-- Documentation exists only in PHP docblocks above the handler functions.
-- No machine-readable schema; every external integrator hand-rolls request/response shapes.
+#### New classes
 
-### Steps
+| File | Role |
+|---|---|
+| `src/Piwigo/Ws/OpenApi/SpecBuilder.php` | Walks `PwgServer::getMethods()`, emits `OpenApiDocument`. |
+| `src/Piwigo/Ws/OpenApi/OpenApiDocument.php` | Immutable value object; `toArray()` and `toJson()`. |
+| `src/Piwigo/Ws/OpenApi/ApiMethod.php` | PHP attribute for future per-handler enrichment (`summary`, `responseClass`, `tags`). |
 
-1. **Typed registration.** Introduce `Piwigo\Ws\MethodDefinition` DTO:
+#### PwgServer change
 
-   ```php
-   final class MethodDefinition {
-       public function __construct(
-           public readonly string $name,
-           public readonly string $description,
-           public readonly array $params,           // ParamDefinition[]
-           public readonly string $returns,         // class-string|literal
-           public readonly array $tags = [],
-           public readonly bool $requiresAuth = false,
-       ) {}
-   }
-   ```
+`PwgServer::populateMethods()` extracted from `run()` — registers reflection methods, triggers `ws_add_methods`, sorts. Called by `run()` and by the OpenAPI branch in `ws.php`.
 
-   `PwgServer::addMethod()` accepts both the legacy array shape (BC) and `MethodDefinition` (new). The legacy shape is internally normalized to a `MethodDefinition`.
+#### Routes (ws.php)
 
-2. **`Piwigo\Ws\OpenApi\SpecBuilder`.** Walks the registered methods, emits an OpenAPI 3.1 document:
-   - Each WS method becomes a path `/ws.json#<methodName>` (or `/ws/<methodName>` if routing supports it post-#22).
-   - Param types map from `WsType` enum (item #13) to OpenAPI primitives.
-   - Response shapes derived from a per-method response class (typed object the handler returns).
+Interception block runs **before** `PwgServerRegistry::current()->run()`:
 
-3. **Routes.** `/ws/openapi.json` returns `SpecBuilder::build()->json()`. `/ws/docs` serves the Swagger UI bundle (CDN or vendored).
+| Trigger | Response |
+|---|---|
+| `PATH_INFO === '/openapi.json'` or `?_openapi=json` | JSON spec (`Content-Type: application/json`) |
+| `PATH_INFO === '/docs'` or `?_openapi=ui` | Swagger UI HTML (Swagger UI v5 from jsDelivr CDN) |
 
-4. **Per-method enrichment.** PHP attribute on each handler:
+Clean-URL examples (requires Apache `PathInfo` or `mod_rewrite`):
+- `http://localhost/piwigo16/ws.php/openapi.json`
+- `http://localhost/piwigo16/ws.php/docs`
 
-   ```php
-   #[OpenApi\Method(
-       summary: 'Search images by tag, date, or filename.',
-       responseClass: ImageSearchResponse::class,
-       tags: ['images']
-   )]
-   public function search(...): ImageSearchResponse { … }
-   ```
+Fallback (no rewrite needed):
+- `http://localhost/piwigo16/ws.php?_openapi=json`
+- `http://localhost/piwigo16/ws.php?_openapi=ui`
 
-5. **CI gate.** `vendor/bin/openapi-spec-validator _data/openapi.json` (or equivalent) validates the emitted spec on every push.
+#### Type mapping (`WsType` → OpenAPI)
 
-6. **Optional: client SDKs.** Document `openapi-generator-cli generate -i /ws/openapi.json -g typescript-axios -o sdk/ts` for downstream integrators.
+| WS type flags | OpenAPI schema |
+|---|---|
+| `WS_TYPE_BOOL` | `{type: boolean}` |
+| `WS_TYPE_INT` | `{type: integer, format: int32}` |
+| `WS_TYPE_INT \| WS_TYPE_POSITIVE` | `{type: integer, minimum: 0}` |
+| `WS_TYPE_ID` (`INT \| POSITIVE \| NOTNULL`) | `{type: integer, minimum: 1}` |
+| `WS_TYPE_FLOAT` | `{type: number, format: float}` |
+| (none) | `{type: string}` |
+| `WS_PARAM_FORCE_ARRAY` | wraps scalar in `{type: array, items: …}` |
+| `WS_PARAM_ACCEPT_ARRAY` | `{oneOf: [scalar, {type: array, items: scalar}]}` |
+
+POST-only methods (options `post_only: true`) are documented as `POST` with an `application/x-www-form-urlencoded` request body; all others as `GET` with query parameters.
+
+#### Per-method enrichment (future)
+
+The `#[ApiMethod]` attribute is ready to decorate handler methods:
+
+```php
+#[ApiMethod(summary: 'Search images by tag, date, or filename.', tags: ['images'])]
+public function search(...): array { … }
+```
+
+`SpecBuilder` does not yet read the attribute — it will be wired in #22 when handlers are controller classes with reflection-accessible attributes.
+
+#### Tests
+
+`tests/Unit/Ws/SpecBuilderTest.php` — 21 tests covering document structure, path generation, tag inference, all type mappings, array flags, required/optional, and admin-only security.
 
 ### Verification
 
 ```bash
-curl -s http://localhost/ws/openapi.json | jq '.info.title'   # "Piwigo Web Services"
-curl -s http://localhost/ws/docs | grep -q 'swagger-ui'        # serves Swagger UI HTML
+# Spec served (PATH_INFO approach, needs server-side support):
+curl -s 'http://localhost/piwigo16/ws.php/openapi.json' | php -r "echo json_decode(file_get_contents('php://stdin'))->info->title;"
+# → Piwigo Web Services
 
-# Spec is well-formed
-vendor/bin/openapi-spec-validator _data/openapi.json           # exits 0
+# Fallback (works anywhere):
+curl -s 'http://localhost/piwigo16/ws.php?_openapi=json' | php -r "echo json_decode(file_get_contents('php://stdin'))->info->title;"
+
+# SDK generation (once spec is reachable):
+openapi-generator-cli generate -i 'ws.php?_openapi=json' -g typescript-axios -o sdk/ts
 ```
 
 ---

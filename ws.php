@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
+use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServerRegistry;
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -32,6 +33,67 @@ if (!Config::allowWebServices()) {
 }
 
 require_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
+
+// OpenAPI spec endpoint: ws.php/openapi.json  (or ?_openapi=json as fallback)
+$_wsPathInfo = isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])
+    ? $_SERVER['PATH_INFO'] : '';
+$_wsOpenApiParam = isset($_GET['_openapi']) && is_string($_GET['_openapi'])
+    ? $_GET['_openapi'] : '';
+
+if ($_wsPathInfo === '/openapi.json' || $_wsOpenApiParam === 'json') {
+    $server = PwgServerRegistry::current();
+    $server->populateMethods();
+
+    $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host      = isset($_SERVER['HTTP_HOST']) && is_string($_SERVER['HTTP_HOST'])
+        ? $_SERVER['HTTP_HOST'] : 'localhost';
+    $script    = isset($_SERVER['SCRIPT_NAME']) && is_string($_SERVER['SCRIPT_NAME'])
+        ? $_SERVER['SCRIPT_NAME'] : '/ws.php';
+    $serverUrl = $scheme . '://' . $host . $script;
+
+    $spec = (new SpecBuilder($server, $serverUrl))->build();
+
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Access-Control-Allow-Origin: *');
+        header('Cache-Control: no-store');
+    }
+    echo $spec->toJson();
+    exit;
+}
+
+// Swagger UI documentation: ws.php/docs  (or ?_openapi=ui as fallback)
+if ($_wsPathInfo === '/docs' || $_wsOpenApiParam === 'ui') {
+    $specUrl = (isset($_SERVER['SCRIPT_NAME']) && is_string($_SERVER['SCRIPT_NAME'])
+        ? $_SERVER['SCRIPT_NAME'] : '/ws.php') . '/openapi.json';
+
+    if (!headers_sent()) {
+        header('Content-Type: text/html; charset=utf-8');
+    }
+    echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Piwigo API Docs</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: ' . json_encode($specUrl) . ',
+      dom_id: \'#swagger-ui\',
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+      layout: \'BaseLayout\',
+      deepLinking: true,
+    });
+  </script>
+</body>
+</html>';
+    exit;
+}
 
 PwgServerRegistry::current()->run();
 

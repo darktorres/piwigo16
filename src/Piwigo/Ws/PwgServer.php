@@ -83,7 +83,16 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return;
         }
 
-        // add reflection methods
+        $this->populateMethods();
+        $handler->handleRequest($this);
+    }
+
+    /**
+     * Registers reflection methods, triggers the ws_add_methods event, and sorts.
+     * Called by run() and by ws.php when serving the OpenAPI spec without a handler.
+     */
+    public function populateMethods(): void
+    {
         $this->addMethod(
             'reflection.getMethodList',
             self::ws_getMethodList(...)
@@ -96,7 +105,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
 
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
-        $handler->handleRequest($this);
     }
 
     /**

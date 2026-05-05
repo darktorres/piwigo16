@@ -1,0 +1,589 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Admin\Upload;
+
+use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
+use Piwigo\Ws\PwgError;
+
+final class UploadService
+{
+    /** @return array<string, array{default: bool|int|string, can_be_null: bool, min?: int, max?: int, pattern?: string, error_message?: string}> */
+    public function getUploadFormConfig(): array
+    {
+        return [
+            'original_resize' => ['default' => false, 'can_be_null' => false],
+            'original_resize_maxwidth' => ['default' => 2000, 'min' => 500, 'max' => 20000, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => l10n('The original maximum width must be a number between %d and %d')],
+            'original_resize_maxheight' => ['default' => 2000, 'min' => 300, 'max' => 20000, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => l10n('The original maximum height must be a number between %d and %d')],
+            'original_resize_quality' => ['default' => 95, 'min' => 50, 'max' => 98, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => l10n('The original image quality must be a number between %d and %d')],
+        ];
+    }
+
+    /**
+     * @param array<mixed> $data
+     * @param string[] $errors
+     * @param string[] $formErrors
+     */
+    public function saveUploadFormConfig(array $data, array &$errors = [], array &$formErrors = []): bool
+    {
+        if (empty($data)) {
+            return false;
+        }
+        $config  = $this->getUploadFormConfig();
+        $updates = [];
+        foreach ($data as $field => $value) {
+            if (!isset($config[$field])) {
+                continue;
+            }
+            if (is_bool($config[$field]['default'])) {
+                $value    = isset($value) ? true : false;
+                $updates[] = ['param' => $field, 'value' => \Piwigo\Core\BoolUtil::toString($value)];
+            } elseif ($config[$field]['can_be_null'] && empty($value)) {
+                $updates[] = ['param' => $field, 'value' => 'false'];
+            } else {
+                $min     = $config[$field]['min'] ?? 0;
+                $max     = $config[$field]['max'] ?? PHP_INT_MAX;
+                $pattern = $config[$field]['pattern'] ?? '';
+                $errMsg  = $config[$field]['error_message'] ?? '%s - %s';
+                if (preg_match($pattern, is_scalar($value) ? (string) $value : '') && $value >= $min && $value <= $max) {
+                    $updates[] = ['param' => $field, 'value' => $value];
+                } else {
+                    $errors[]          = sprintf($errMsg, $min, $max);
+                    $formErrors[$field] = '[' . $min . ' .. ' . $max . ']';
+                }
+            }
+        }
+        if (count($errors) === 0) {
+            mass_updates(CONFIG_TABLE, ['primary' => ['param'], 'update' => ['value']], $updates);
+            return true;
+        }
+        return false;
+    }
+
+    /** @param int[]|null $categories */
+    public function addUploadedFile(string $sourceFilepath, ?string $originalFilename = null, ?array $categories = null, ?int $level = null, ?int $imageId = null, ?string $originalMd5sum = null): int
+    {
+        $logger = LoggerRegistry::current();
+        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        if ($originalFilename !== null) {
+            $originalFilename = htmlspecialchars($originalFilename);
+        }
+        $md5sum = $originalMd5sum ?? md5_file($sourceFilepath);
+
+        if (!isset($imageId) && Config::uploadDetectDuplicate()) {
+            $imagesFound = get_dbal_connection()->executeQuery(
+                "SELECT id FROM " . IMAGES_TABLE . " WHERE md5sum = '$md5sum'"
+            )->fetchAllAssociative();
+            if (count($imagesFound) > 0) {
+                $imageId = is_numeric($imagesFound[0]['id']) ? (int) $imagesFound[0]['id'] : 0;
+                $logger->info('[addUploadedFile] image already exists #' . $imageId . ', deleting: ' . $sourceFilepath);
+                unlink($sourceFilepath);
+                $this->addUploadedFileAddToCategories($imageId, $categories);
+                return $imageId;
+            }
+        }
+
+        $filePath = null;
+        $dbnow    = null;
+
+        if (isset($imageId)) {
+            $filePath = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findPathById($imageId);
+            if ($filePath === null) {
+                throw new \Piwigo\Exception\NotFoundException('[addUploadedFile] photo does not exist in database');
+            }
+            delete_element_files([$imageId]);
+        } else {
+            $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+            [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];
+            $uploadDir = sprintf(PHPWG_ROOT_PATH . Config::uploadDir() . '/%s/%s/%s', $year, $month, $day);
+            $dateString = preg_replace('/[^\d]/', '', $dbnow);
+            $randomString  = substr((string) $md5sum, 0, 4) . '%s';
+            $filePathPattern = $uploadDir . '/' . $dateString . '-' . $randomString . '.';
+            $imgsize = getimagesize($sourceFilepath);
+            [$width, $height, $type] = $imgsize ?: [0, 0, 0];
+
+            if (IMAGETYPE_PNG == $type) {
+                $filePathPattern .= 'png';
+            } elseif (IMAGETYPE_GIF == $type) {
+                $filePathPattern .= 'gif';
+            } elseif (IMAGETYPE_JPEG == $type) {
+                $filePathPattern .= 'jpg';
+            } elseif (IMAGETYPE_WEBP == $type) {
+                $filePathPattern .= 'webp';
+            } elseif (Config::has('upload_form_all_types') && Config::uploadFormAllTypes()) {
+                $originalExtension = strtolower(get_extension($originalFilename ?? ''));
+                $finfo             = finfo_open(FILEINFO_MIME_TYPE);
+                $finfoType         = $finfo !== false ? finfo_file($finfo, $sourceFilepath) : false;
+                if (in_array($finfoType, ['image/svg', 'image/svg+xml']) && $originalExtension !== 'svg') {
+                    unlink($sourceFilepath);
+                    $errorMsg = 'Extension "' . $originalExtension . '" for "' . $originalFilename . '" does not match MIME "' . $finfoType . '"';
+                    if (defined('IN_WS')) {
+                        \Piwigo\Ws\PwgServerRegistry::current()->sendResponse(new PwgError(415, $errorMsg));
+                        exit;
+                    }
+                    throw new \Piwigo\Exception\ValidationException($errorMsg);
+                }
+                if (in_array($originalExtension, Config::fileExtensions())) {
+                    $filePathPattern .= $originalExtension;
+                } else {
+                    unlink($sourceFilepath);
+                    throw new \Piwigo\Exception\ValidationException('unexpected file type');
+                }
+            } else {
+                unlink($sourceFilepath);
+                throw new \Piwigo\Exception\ValidationException('forbidden file type');
+            }
+
+            $this->prepareDirectory($uploadDir);
+            do {
+                $filePath = sprintf($filePathPattern, substr(bin2hex(random_bytes(4)), 0, 4));
+            } while (file_exists($filePath));
+        }
+
+        $uploadRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
+        $uploadRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($uploadRoot, $filePath);
+        $uploadStream  = fopen($sourceFilepath, 'rb');
+        if ($uploadStream !== false) {
+            \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($uploadRelPath, $uploadStream);
+            fclose($uploadStream);
+            if (!is_uploaded_file($sourceFilepath)) {
+                Filesystem::tryUnlink($sourceFilepath);
+            }
+        }
+        Filesystem::tryChmod($filePath, 0644);
+
+        $representativeExt = trigger_change('upload_file', '', $filePath);
+        $logger->info('Handling ' . $filePath . ' got ' . $representativeExt);
+
+        if (PwgImage::get_library() !== 'gd' && Config::originalResize()) {
+            if ($this->needResize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight())) {
+                $img = new PwgImage($filePath);
+                $img->pwg_resize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight(), Config::originalResizeQuality(), Config::uploadFormAutomaticRotation(), false);
+                $img->destroy();
+            }
+        }
+
+        $rotationAngle = PwgImage::get_rotation_angle($filePath);
+        $rotation      = PwgImage::get_rotation_code_from_angle($rotationAngle ?? 0);
+        $fileInfos     = $this->pwgImageInfos($filePath);
+
+        if (isset($imageId)) {
+            $update = ['file' => $originalFilename ?? basename($filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            if (isset($level)) {
+                $update['level'] = $level;
+            }
+            single_update(IMAGES_TABLE, $update, ['id' => $imageId]);
+        } else {
+            $file   = $originalFilename ?? basename($filePath);
+            $insert = ['file' => $file, 'name' => get_name_from_file($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            if (isset($level)) {
+                $insert['level'] = $level;
+            }
+            if ($representativeExt !== '') {
+                $insert['representative_ext'] = $representativeExt;
+            }
+            single_insert(IMAGES_TABLE, $insert);
+            $imageId = (int) get_dbal_connection()->lastInsertId();
+            pwg_activity('photo', $imageId, 'add');
+        }
+
+        $this->addUploadedFileAddToCategories($imageId, $categories);
+
+        if (Config::useExif() && !function_exists('exif_read_data')) {
+            Config::override('use_exif', false);
+        }
+        sync_metadata([$imageId]);
+
+        $imageInfos = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findById($imageId);
+        if ($imageInfos === null) {
+            return $imageId;
+        }
+        $srcImage = new SrcImage($imageInfos);
+        set_make_full_url();
+        $imgUrl        = DerivativeImage::url(IMG_MEDIUM, $srcImage);
+        $derivativeUrl = is_string($imgUrl) ? (string) preg_replace('#admin/include/i#', 'i', $imgUrl) : '';
+        unset_make_full_url();
+        $logger->info('[addUploadedFile] force cache generation, url = ' . $derivativeUrl);
+        $dest = '';
+        fetchRemote($derivativeUrl, $dest);
+        trigger_notify('loc_end_add_uploaded_file', $imageInfos);
+        return $imageId;
+    }
+
+    /** @param int[]|null $categories */
+    public function addUploadedFileAddToCategories(int $imageId, ?array $categories): void
+    {
+        if (!Config::has('lounge_active')) {
+            conf_update_param('lounge_active', false, true);
+        }
+        if (!Config::loungeActive()) {
+            $nbPhotos = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+            if ($nbPhotos >= Config::loungeActivateThreshold()) {
+                conf_update_param('lounge_active', true, true);
+            }
+        }
+        if (isset($categories) && count($categories) > 0) {
+            if (Config::loungeActive()) {
+                fill_lounge([$imageId], $categories);
+            } else {
+                associate_images_to_categories([$imageId], $categories);
+            }
+        }
+        if (!Config::loungeActive()) {
+            invalidate_user_cache();
+        }
+    }
+
+    public function addFormat(string $sourceFilepath, string $formatExt, string $formatOf): string
+    {
+        if (!conf_get_param('enable_formats', false)) {
+            throw new \Piwigo\Exception\ConfigException('[addFormat] formats are disabled');
+        }
+        $formatExtList = conf_get_param('format_ext', ['cr2']);
+        if (!is_array($formatExtList)) {
+            $formatExtList = ['cr2'];
+        }
+        if (!in_array($formatExt, $formatExtList)) {
+            $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $formatExtList);
+            throw new \Piwigo\Exception\ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
+        }
+        $images = get_dbal_connection()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
+        if (!isset($images[0])) {
+            throw new \Piwigo\Exception\NotFoundException('[addFormat] photo does not exist in database');
+        }
+        $origPath   = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
+        $formatPath = dirname($origPath) . '/pwg_format/' . get_filename_wo_extension(basename($origPath)) . '.' . $formatExt;
+        $this->prepareDirectory(dirname($formatPath));
+        $fmtRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
+        $fmtAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $formatPath), '/');
+        $fmtRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($fmtRoot, $fmtAbsPath);
+        $fmtStream  = fopen($sourceFilepath, 'rb');
+        if ($fmtStream !== false) {
+            \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($fmtRelPath, $fmtStream);
+            fclose($fmtStream);
+            if (!is_uploaded_file($sourceFilepath)) {
+                Filesystem::tryUnlink($sourceFilepath);
+            }
+        }
+        Filesystem::tryChmod($formatPath, 0644);
+        $fileInfos = $this->pwgImageInfos($formatPath);
+        $insert    = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
+        $formats   = get_dbal_connection()->executeQuery(
+            'SELECT format_id FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $formatOf . ' AND ext = "' . $formatExt . '"'
+        )->fetchAllAssociative();
+        if ($formats) {
+            single_update(IMAGE_FORMAT_TABLE, ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
+            $formatId  = $formats[0]['format_id'];
+            $addStatus = 'update';
+        } else {
+            single_insert(IMAGE_FORMAT_TABLE, $insert);
+            $formatId  = (int) get_dbal_connection()->lastInsertId();
+            $addStatus = 'add';
+        }
+        pwg_activity('photo', $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]);
+        $formatInfos = array_merge($insert, ['format_id' => $formatId]);
+        trigger_notify('loc_end_add_format', $formatInfos);
+        return $addStatus;
+    }
+
+    public function uploadFilePdf(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        $logger->info('uploadFilePdf, filePath=' . $filePath);
+        if (isset($representativeExt)) {
+            return $representativeExt;
+        }
+        if (PwgImage::get_library() !== 'ext_imagick') {
+            return $representativeExt;
+        }
+        if (!in_array(strtolower(get_extension($filePath)), ['pdf'])) {
+            return $representativeExt;
+        }
+        $ext        = is_string(conf_get_param('pdf_representative_ext', 'jpg')) ? conf_get_param('pdf_representative_ext', 'jpg') : 'jpg';
+        $jpgQuality = is_int(conf_get_param('pdf_jpg_quality', 90)) ? conf_get_param('pdf_jpg_quality', 90) : 90;
+        $repFilePath = original_to_representative($filePath, $ext);
+        $this->prepareDirectory(dirname($repFilePath));
+        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"[0]';
+        if ($ext === 'jpg') {
+            $exec .= ' -quality ' . $jpgQuality;
+        }
+        $exec .= ' "' . $repFilePath . '" 2>&1';
+        exec($exec, $returnarray);
+        if (file_exists($repFilePath)) {
+            $representativeExt = $ext;
+        }
+        return $representativeExt;
+    }
+
+    public function uploadFileHeic(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        $logger->info('uploadFileHeic, filePath=' . $filePath);
+        if (isset($representativeExt)) {
+            return $representativeExt;
+        }
+        if (PwgImage::get_library() !== 'ext_imagick') {
+            return $representativeExt;
+        }
+        if (!in_array(strtolower(get_extension($filePath)), ['heic'])) {
+            return $representativeExt;
+        }
+        $ext         = 'jpg';
+        $repFilePath = original_to_representative($filePath, $ext);
+        $this->prepareDirectory(dirname($repFilePath));
+        [$w, $h] = $this->getOptimalDimensionsForRepresentative();
+        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"';
+        $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
+        $exec .= ' "' . $repFilePath . '" 2>&1';
+        $logger->info('uploadFileHeic, exec=' . $exec);
+        exec($exec, $returnarray);
+        if (file_exists($repFilePath)) {
+            $representativeExt = $ext;
+        }
+        return $representativeExt;
+    }
+
+    public function uploadFileTiff(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        $logger->info('uploadFileTiff, filePath=' . $filePath);
+        if (isset($representativeExt)) {
+            return $representativeExt;
+        }
+        if (PwgImage::get_library() !== 'ext_imagick') {
+            return $representativeExt;
+        }
+        if (!in_array(strtolower(get_extension($filePath)), ['tif', 'tiff'])) {
+            return $representativeExt;
+        }
+        $representativeExt = Config::tiffRepresentativeExt();
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . get_filename_wo_extension(basename($filePath)) . '.' . $representativeExt;
+        $this->prepareDirectory(dirname($repFilePath));
+        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"';
+        if ($representativeExt === 'jpg') {
+            $exec .= ' -quality 98';
+        }
+        $dest  = pathinfo($repFilePath);
+        $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        exec($exec, $returnarray);
+        $repAbs = realpath($dest['dirname']) . '/' . $dest['basename'];
+        if (!file_exists($repAbs)) {
+            $first = preg_replace('/\.' . $representativeExt . '$/', '-0.' . $representativeExt, $repAbs) ?? '';
+            if (file_exists($first)) {
+                rename($first, $repAbs);
+            }
+        }
+        return get_extension($repAbs);
+    }
+
+    public function uploadFileVideo(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        $logger->info('uploadFileVideo, filePath=' . $filePath);
+        if (isset($representativeExt)) {
+            return $representativeExt;
+        }
+        $videoExts = ['wmv','mov','mkv','mp4','mpg','flv','asf','xvid','divx','mpeg','avi','rm','m4v','ogg','ogv','webm','webmv'];
+        if (!in_array(strtolower(get_extension($filePath)), $videoExts)) {
+            return $representativeExt;
+        }
+        $representativeExt = 'jpg';
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . get_filename_wo_extension(basename($filePath)) . '.' . $representativeExt;
+        $this->prepareDirectory(dirname($repFilePath));
+        exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1' . " '$filePath'", $O, $S);
+        $second = !empty($O[0]) ? min(floor((float) $O[0] * 10) / 10, 2) : 0;
+        $logger->info('uploadFileVideo, poster at ' . $second . 's');
+        $ffmpeg  = Config::ffmpegDir() . 'ffmpeg -ss ' . $second . ' -i "' . $filePath . '" -frames:v 1 "' . $repFilePath . '"';
+        exec($ffmpeg . ' 2>&1', $FO, $FS);
+        if (!file_exists($repFilePath)) {
+            $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
+            exec($avconv . ' 2>&1');
+        }
+        return file_exists($repFilePath) ? $representativeExt : null;
+    }
+
+    public function uploadFilePsd(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        if (isset($representativeExt) || PwgImage::get_library() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['psd'])) {
+            return $representativeExt;
+        }
+        $representativeExt = 'png';
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . get_filename_wo_extension(basename($filePath)) . '.png';
+        $this->prepareDirectory(dirname($repFilePath));
+        $dest  = pathinfo($repFilePath);
+        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '" "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        $logger->info('uploadFilePsd, exec=' . $exec);
+        exec($exec, $returnarray);
+        $repAbs = realpath($dest['dirname']) . '/' . $dest['basename'];
+        if (!file_exists($repAbs)) {
+            $first = preg_replace('/\.png$/', '-0.png', $repAbs) ?? '';
+            if (file_exists($first)) {
+                rename($first, $repAbs);
+            }
+        }
+        return get_extension($repAbs);
+    }
+
+    public function uploadFileEps(?string $representativeExt, string $filePath): ?string
+    {
+        $logger = LoggerRegistry::current();
+        if (isset($representativeExt) || PwgImage::get_library() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['eps'])) {
+            return $representativeExt;
+        }
+        $ext         = 'png';
+        $repFilePath = original_to_representative($filePath, $ext);
+        $this->prepareDirectory(dirname($repFilePath));
+        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
+        $logger->info('uploadFileEps, exec=' . $exec);
+        exec($exec, $returnarray);
+        if (file_exists($repFilePath)) {
+            $representativeExt = $ext;
+        }
+        return $representativeExt;
+    }
+
+    public function prepareDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            if (str_starts_with(PHP_OS, 'WIN')) {
+                $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
+            }
+            umask(0000);
+            set_error_handler(static fn (): bool => true);
+            try {
+                $ok = mkdir($directory, 0777, true);
+            } finally {
+                restore_error_handler();
+            }
+            if (!$ok) {
+                throw new \Piwigo\Exception\ConfigException('[prepareDirectory] cannot create "' . $directory . '"');
+            }
+        }
+        if (!is_writable($directory)) {
+            Filesystem::tryChmod($directory, 0777);
+        }
+        if (!is_writable($directory)) {
+            throw new \Piwigo\Exception\ConfigException('[prepareDirectory] directory "' . $directory . '" has no write access');
+        }
+        secure_directory($directory);
+    }
+
+    public function needResize(string $imageFilepath, int|string $maxWidth, int|string $maxHeight): bool
+    {
+        if (!in_array(strtolower(get_extension($imageFilepath)), Config::pictureExtensions())) {
+            return false;
+        }
+        [$width, $height] = getimagesize($imageFilepath) ?: [0, 0];
+        if ($width > $maxWidth || $height > $maxHeight) {
+            LoggerRegistry::current()->info('[needResize] ' . $imageFilepath . ' too big (' . $width . 'x' . $height . ' vs ' . $maxWidth . 'x' . $maxHeight . ')');
+            return true;
+        }
+        return false;
+    }
+
+    /** @return array<string,mixed> */
+    public function pwgImageInfos(string $path): array
+    {
+        [$width, $height] = getimagesize($path) ?: [0, 0];
+        return ['width' => $width, 'height' => $height, 'filesize' => floor(filesize($path) / 1024)];
+    }
+
+    /** @return string[] */
+    public function isValidImageExtension(string $extension): array
+    {
+        $extensions = (Config::has('upload_form_all_types') && Config::uploadFormAllTypes())
+            ? Config::fileExtensions()
+            : Config::pictureExtensions();
+        return array_unique(array_map(strtolower(...), $extensions));
+    }
+
+    public function fileUploadErrorMessage(int $errorCode): string
+    {
+        return match ($errorCode) {
+            UPLOAD_ERR_INI_SIZE   => sprintf(l10n('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'), $this->getIniSize('upload_max_filesize', false)),
+            UPLOAD_ERR_FORM_SIZE  => l10n('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+            UPLOAD_ERR_PARTIAL    => l10n('The uploaded file was only partially uploaded'),
+            UPLOAD_ERR_NO_FILE    => l10n('No file was uploaded'),
+            UPLOAD_ERR_NO_TMP_DIR => l10n('Missing a temporary folder'),
+            UPLOAD_ERR_CANT_WRITE => l10n('Failed to write file to disk'),
+            UPLOAD_ERR_EXTENSION  => l10n('File upload stopped by extension'),
+            default               => l10n('Unknown upload error'),
+        };
+    }
+
+    public function getIniSize(string $iniKey, bool $inBytes = true): int|string
+    {
+        $size = ini_get($iniKey);
+        if ($size === false) {
+            return 0;
+        }
+        return $inBytes ? $this->convertShorthandNotationToBytes($size) : $size;
+    }
+
+    public function convertShorthandNotationToBytes(int|string $value): int
+    {
+        $suffix = substr((string) $value, -1);
+        $multiplyBy = match ($suffix) {
+            'K' => 1024,
+            'M' => 1024 * 1024,
+            'G' => 1024 * 1024 * 1024,
+            default => null,
+        };
+        if ($multiplyBy !== null) {
+            $value = (int) ((float) substr((string) $value, 0, -1) * $multiplyBy);
+        }
+        return (int) $value;
+    }
+
+    public function addUploadError(string $uploadId, string $errorMessage): void
+    {
+        $uploadsError                = is_array($_SESSION['uploads_error'] ?? null) ? $_SESSION['uploads_error'] : [];
+        $slot                        = is_array($uploadsError[$uploadId] ?? null) ? $uploadsError[$uploadId] : [];
+        $slot[]                      = $errorMessage;
+        $uploadsError[$uploadId]     = $slot;
+        $_SESSION['uploads_error']   = $uploadsError;
+    }
+
+    public function readyForUploadMessage(): ?string
+    {
+        $relativeDir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', (string) Config::uploadDir());
+        if (!is_dir(Config::uploadDir())) {
+            if (!is_writable(dirname((string) Config::uploadDir()))) {
+                return sprintf(l10n('Create the "%s" directory at the root of your Piwigo installation'), $relativeDir);
+            }
+        } else {
+            $uploadDir = Config::uploadDir();
+            if (!is_writable($uploadDir)) {
+                Filesystem::tryChmod($uploadDir, 0777);
+            }
+            if (!is_writable(Config::uploadDir())) {
+                return sprintf(l10n('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'), $relativeDir);
+            }
+        }
+        return null;
+    }
+
+    /** @return array<int, int|float> */
+    public function getOptimalDimensionsForRepresentative(): array
+    {
+        $enabled  = ImageStdParams::get_defined_type_map();
+        $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
+        $w = $h   = 2000;
+        foreach (ImageStdParams::get_all_types() as $type) {
+            $params = $enabled[$type] ?? ($disabled[$type] ?? null);
+            if ($params instanceof \Piwigo\Image\DerivativeParams) {
+                [$w, $h] = $params->sizing->ideal_size;
+            }
+        }
+        return [$w * 1.5, $h * 1.5];
+    }
+}

@@ -53,6 +53,13 @@ use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Notification\NotificationAdminService;
+use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\StringUtil;
@@ -97,6 +104,13 @@ return [
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),
+    AdminService::class              => factory(static fn (Connection $conn): AdminService => new AdminService($conn)),
+    CategoryAdminService::class      => factory(static fn (Connection $conn): CategoryAdminService => new CategoryAdminService($conn)),
+    ImageAdminService::class         => factory(static fn (): ImageAdminService => new ImageAdminService()),
+    TagAdminService::class           => factory(static fn (Connection $conn): TagAdminService => new TagAdminService($conn)),
+    UserAdminService::class          => factory(static fn (): UserAdminService => new UserAdminService()),
+    NotificationAdminService::class  => factory(static fn (): NotificationAdminService => new NotificationAdminService()),
+    UploadService::class             => factory(static fn (): UploadService => new UploadService()),
     StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
     DateService::class         => factory(static fn (): DateService => new DateService()),
     LangService::class         => factory(static fn (): LangService => new LangService()),

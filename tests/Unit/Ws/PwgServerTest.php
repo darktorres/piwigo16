@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Ws;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Ws\MethodDefinition;
+use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
 
 /**
@@ -12,7 +14,7 @@ use Piwigo\Ws\PwgServer;
  *
  * PwgServer::run(), sendResponse(), and the reflection methods require a live
  * request handler and DB. These tests cover only the parts that work in
- * isolation: addMethod(), hasMethod(), getMethodDescription(), and
+ * isolation: register(), hasMethod(), getMethodDescription(), and
  * getMethodSignature().
  */
 final class PwgServerTest extends TestCase
@@ -33,11 +35,11 @@ final class PwgServerTest extends TestCase
 
     public function test_has_method_returns_true_after_registration(): void
     {
-        $this->server->addMethod('pwg.my.method', 'some_callback');
+        $this->server->register(new MethodDefinition(name: 'pwg.my.method', callback: 'some_callback'));
         self::assertTrue($this->server->hasMethod('pwg.my.method'));
     }
 
-    // ── addMethod() + getMethodDescription() ────────────────────────────────
+    // ── register() + getMethodDescription() ─────────────────────────────────
 
     public function test_get_method_description_returns_empty_for_unknown(): void
     {
@@ -46,65 +48,106 @@ final class PwgServerTest extends TestCase
 
     public function test_get_method_description_returns_registered_description(): void
     {
-        $this->server->addMethod('pwg.test', 'callback', [], 'Test description');
+        $this->server->register(new MethodDefinition(
+            name:        'pwg.test',
+            callback:    'callback',
+            description: 'Test description',
+        ));
         self::assertSame('Test description', $this->server->getMethodDescription('pwg.test'));
     }
 
-    // ── addMethod() + getMethodSignature() ───────────────────────────────────
+    // ── register() + getMethodSignature() ────────────────────────────────────
 
     public function test_get_method_signature_returns_empty_for_unknown(): void
     {
         self::assertSame([], $this->server->getMethodSignature('no.such.method'));
     }
 
-    public function test_add_method_with_no_params_registers_empty_signature(): void
+    public function test_register_with_no_params_produces_empty_signature(): void
     {
-        $this->server->addMethod('pwg.no_params', 'callback');
+        $this->server->register(new MethodDefinition(name: 'pwg.no_params', callback: 'callback'));
         self::assertSame([], $this->server->getMethodSignature('pwg.no_params'));
     }
 
-    public function test_add_method_with_positional_params_normalizes_to_map(): void
+    public function test_register_required_param_preserves_type(): void
     {
-        // Positional array: ['photo_id', 'size'] → map with default flags.
-        $this->server->addMethod('pwg.positional', 'callback', ['photo_id', 'size']);
-        $sig = $this->server->getMethodSignature('pwg.positional');
-
-        self::assertArrayHasKey('photo_id', $sig);
-        self::assertArrayHasKey('size', $sig);
-        self::assertSame(0, $sig['photo_id']['flags']);
-        self::assertSame(0, $sig['photo_id']['type']);
-    }
-
-    public function test_add_method_with_typed_params_preserves_type(): void
-    {
-        $this->server->addMethod('pwg.typed', 'callback', [
-            'image_id' => ['type' => WS_TYPE_INT | WS_TYPE_POSITIVE],
-        ]);
+        $this->server->register(new MethodDefinition(
+            name:     'pwg.typed',
+            callback: 'callback',
+            params:   [ParamDefinition::required(name: 'image_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE)],
+        ));
         $sig = $this->server->getMethodSignature('pwg.typed');
 
         self::assertArrayHasKey('image_id', $sig);
         self::assertSame(WS_TYPE_INT | WS_TYPE_POSITIVE, $sig['image_id']['type']);
+        self::assertSame(0, $sig['image_id']['flags'] & WS_PARAM_OPTIONAL);
     }
 
-    public function test_add_method_with_default_sets_optional_flag(): void
+    public function test_register_optional_param_sets_optional_flag_and_default(): void
     {
-        $this->server->addMethod('pwg.optional_param', 'callback', [
-            'limit' => ['default' => 100, 'type' => WS_TYPE_INT],
-        ]);
+        $this->server->register(new MethodDefinition(
+            name:     'pwg.optional_param',
+            callback: 'callback',
+            params:   [ParamDefinition::optional(name: 'limit', default: 100, type: WS_TYPE_INT)],
+        ));
         $sig = $this->server->getMethodSignature('pwg.optional_param');
 
         self::assertArrayHasKey('limit', $sig);
         self::assertTrue((bool) ($sig['limit']['flags'] & WS_PARAM_OPTIONAL));
+        self::assertSame(100, $sig['limit']['default']);
+    }
+
+    public function test_register_optionalflag_param_sets_optional_without_default(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name:     'pwg.optional_no_default',
+            callback: 'callback',
+            params:   [ParamDefinition::optionalFlag(name: 'group_id', type: WS_TYPE_ID)],
+        ));
+        $sig = $this->server->getMethodSignature('pwg.optional_no_default');
+
+        self::assertArrayHasKey('group_id', $sig);
+        self::assertTrue((bool) ($sig['group_id']['flags'] & WS_PARAM_OPTIONAL));
+        self::assertArrayNotHasKey('default', $sig['group_id']);
     }
 
     public function test_multiple_methods_registered_independently(): void
     {
-        $this->server->addMethod('pwg.alpha', 'cb_a', [], 'Alpha');
-        $this->server->addMethod('pwg.beta', 'cb_b', [], 'Beta');
+        $this->server->register(new MethodDefinition(name: 'pwg.alpha', callback: 'cb_a', description: 'Alpha'));
+        $this->server->register(new MethodDefinition(name: 'pwg.beta',  callback: 'cb_b', description: 'Beta'));
 
         self::assertTrue($this->server->hasMethod('pwg.alpha'));
         self::assertTrue($this->server->hasMethod('pwg.beta'));
         self::assertSame('Alpha', $this->server->getMethodDescription('pwg.alpha'));
         self::assertSame('Beta', $this->server->getMethodDescription('pwg.beta'));
+    }
+
+    // ── register() + getMethodDefs() ─────────────────────────────────────────
+
+    public function test_register_stores_method_definition_retrievable_via_get_method_defs(): void
+    {
+        $def = new MethodDefinition(
+            name:        'pwg.images.getInfo',
+            callback:    'ws_images_getInfo',
+            description: 'Returns image info.',
+            tags:        ['images'],
+            requiresAuth: false,
+        );
+        $this->server->register($def);
+
+        $defs = $this->server->getMethodDefs();
+        self::assertArrayHasKey('pwg.images.getInfo', $defs);
+        self::assertSame($def, $defs['pwg.images.getInfo']);
+    }
+
+    public function test_register_method_def_tags_accessible(): void
+    {
+        $this->server->register(new MethodDefinition(
+            name:     'pwg.images.rate',
+            callback: 'ws_images_rate',
+            tags:     ['images'],
+        ));
+        $defs = $this->server->getMethodDefs();
+        self::assertSame(['images'], $defs['pwg.images.rate']->tags);
     }
 }

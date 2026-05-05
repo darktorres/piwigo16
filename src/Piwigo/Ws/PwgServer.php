@@ -135,15 +135,19 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
      */
     public function populateMethods(): void
     {
-        $this->addMethod(
-            'reflection.getMethodList',
-            self::ws_getMethodList(...)
-        );
-        $this->addMethod(
-            'reflection.getMethodDetails',
-            self::ws_getMethodDetails(...),
-            ['methodName']
-        );
+        $this->register(new MethodDefinition(
+            name:        'reflection.getMethodList',
+            callback:    self::ws_getMethodList(...),
+            description: 'Lists all available web service methods.',
+            tags:        ['reflection'],
+        ));
+        $this->register(new MethodDefinition(
+            name:        'reflection.getMethodDetails',
+            callback:    self::ws_getMethodDetails(...),
+            description: 'Returns details about a specific method.',
+            params:      [ParamDefinition::required('methodName')],
+            tags:        ['reflection'],
+        ));
 
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
@@ -165,65 +169,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         }
         print_r($encodedResponse);
         trigger_notify('sendResponse', $encodedResponse);
-    }
-
-    /**
-     * Registers a web service method.
-     * @param string $methodName the name of the method as seen externally
-     * @param mixed $callback php method to be invoked internally
-     * @param array<mixed>|null $params map of allowed parameter names with options
-     * @param string|null $description a description of the method
-     * @param string $include_file a file to be included before the callback is executed
-     * @param array<string, mixed> $options hidden, admin_only, post_only flags
-     */
-    public function addMethod(string $methodName, mixed $callback, ?array $params = null, ?string $description = null, string $include_file = '', array $options = []): void
-    {
-        $params ??= [];
-        $description ??= '';
-        // Normalize sequential list of param names to keyed array
-        if (range(0, count($params) - 1) === array_keys($params)) {
-            $keyed = [];
-            foreach ($params as $name) {
-                if (is_string($name)) {
-                    $keyed[$name] = ['flags' => 0, 'type' => 0];
-                }
-            }
-            $params = $keyed;
-        }
-
-        /** @var array<string, WsParamDef> $signature */
-        $signature = [];
-        foreach ($params as $param => $data) {
-            $param = (string) $param;
-            if (!is_array($data)) {
-                $signature[$param] = ['flags' => 0, 'type' => 0];
-            } else {
-                $flags = isset($data['flags']) && is_int($data['flags']) ? $data['flags'] : 0;
-                if (array_key_exists('default', $data)) {
-                    $flags |= WS_PARAM_OPTIONAL;
-                }
-                $type = isset($data['type']) && is_int($data['type']) ? $data['type'] : 0;
-                $entry = ['flags' => $flags, 'type' => $type];
-                if (array_key_exists('default', $data)) {
-                    $entry['default'] = $data['default'];
-                }
-                if (isset($data['maxValue']) && (is_int($data['maxValue']) || is_float($data['maxValue']))) {
-                    $entry['maxValue'] = $data['maxValue'];
-                }
-                if (isset($data['info']) && is_string($data['info'])) {
-                    $entry['info'] = $data['info'];
-                }
-                $signature[$param] = $entry;
-            }
-        }
-
-        $this->_methods[$methodName] = [
-            'callback'    => $callback,
-            'description' => $description,
-            'signature'   => $signature,
-            'include'     => $include_file,
-            'options'     => $options,
-        ];
     }
 
     public function hasMethod(string $methodName): bool

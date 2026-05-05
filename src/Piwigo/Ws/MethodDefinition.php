@@ -7,10 +7,9 @@ namespace Piwigo\Ws;
 /**
  * Typed descriptor for a WS method registration.
  *
- * Pass to PwgServer::register() as the new typed path alongside the legacy
- * addMethod() array-based path. The legacy addMethod() still works unchanged;
- * register() stores both the MethodDefinition (for SpecBuilder / #22) and
- * a normalized WsParamDef array (for invoke() / existing BC code).
+ * Pass to PwgServer::register(). The server stores the MethodDefinition for
+ * SpecBuilder / #22 and normalizes params to the internal WsParamDef array
+ * so invoke() works unchanged.
  *
  * Example:
  *   $server->register(new MethodDefinition(

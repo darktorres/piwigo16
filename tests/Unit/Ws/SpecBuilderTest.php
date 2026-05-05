@@ -59,7 +59,7 @@ final class SpecBuilderTest extends TestCase
 
     public function test_to_json_produces_valid_json(): void
     {
-        $this->server->addMethod('pwg.getVersion', fn () => null, null, 'Returns version.');
+        $this->server->register(new MethodDefinition(name: 'pwg.getVersion', callback: fn () => null, description: 'Returns version.', tags: ['pwg']));
         $json = $this->build()->toJson();
         self::assertNotEmpty($json);
         $decoded = json_decode($json, true);
@@ -73,35 +73,21 @@ final class SpecBuilderTest extends TestCase
 
     public function test_registered_method_appears_as_path(): void
     {
-        $this->server->addMethod('pwg.getVersion', fn () => null, null, 'Returns version.');
+        $this->server->register(new MethodDefinition(name: 'pwg.getVersion', callback: fn () => null, description: 'Returns version.', tags: ['pwg']));
         $paths = $this->build()->toArray()['paths'];
         self::assertArrayHasKey('/ws/pwg.getVersion', $paths);
     }
 
     public function test_hidden_method_is_excluded_from_spec(): void
     {
-        $this->server->addMethod(
-            'pwg.internal',
-            fn () => null,
-            null,
-            'Internal.',
-            '',
-            ['hidden' => true]
-        );
+        $this->server->register(new MethodDefinition(name: 'pwg.internal', callback: fn () => null, description: 'Internal.', hidden: true));
         $paths = $this->build()->toArray()['paths'];
         self::assertArrayNotHasKey('/ws/pwg.internal', $paths);
     }
 
     public function test_post_only_method_is_documented_as_post(): void
     {
-        $this->server->addMethod(
-            'pwg.images.setInfo',
-            fn () => null,
-            null,
-            'Set image info.',
-            '',
-            ['post_only' => true]
-        );
+        $this->server->register(new MethodDefinition(name: 'pwg.images.setInfo', callback: fn () => null, description: 'Set image info.', tags: ['images'], postOnly: true));
         $path = $this->build()->toArray()['paths']['/ws/pwg.images.setInfo'];
         self::assertArrayHasKey('post', $path);
         self::assertArrayNotHasKey('get', $path);
@@ -109,7 +95,7 @@ final class SpecBuilderTest extends TestCase
 
     public function test_non_post_method_is_documented_as_get(): void
     {
-        $this->server->addMethod('pwg.getVersion', fn () => null, null, 'Returns version.');
+        $this->server->register(new MethodDefinition(name: 'pwg.getVersion', callback: fn () => null, description: 'Returns version.', tags: ['pwg']));
         $path = $this->build()->toArray()['paths']['/ws/pwg.getVersion'];
         self::assertArrayHasKey('get', $path);
         self::assertArrayNotHasKey('post', $path);
@@ -117,25 +103,25 @@ final class SpecBuilderTest extends TestCase
 
     public function test_operation_id_replaces_dots_with_underscores(): void
     {
-        $this->server->addMethod('pwg.images.getInfo', fn () => null, null, 'Get image info.');
+        $this->server->register(new MethodDefinition(name: 'pwg.images.getInfo', callback: fn () => null, description: 'Get image info.', tags: ['images']));
         $op = $this->build()->toArray()['paths']['/ws/pwg.images.getInfo']['get'];
         self::assertSame('pwg_images_getInfo', $op['operationId']);
     }
 
     // -------------------------------------------------------------------------
-    // Tags inference
+    // Tags — explicit from MethodDefinition, inferred when tags: []
     // -------------------------------------------------------------------------
 
-    public function test_two_part_method_name_uses_first_segment_as_tag(): void
+    public function test_two_part_method_name_uses_first_segment_as_tag_when_no_explicit_tags(): void
     {
-        $this->server->addMethod('reflection.getMethodList', fn () => null, null, '');
+        $this->server->register(new MethodDefinition(name: 'reflection.getMethodList', callback: fn () => null, tags: []));
         $op = $this->build()->toArray()['paths']['/ws/reflection.getMethodList']['get'];
         self::assertContains('reflection', $op['tags']);
     }
 
-    public function test_three_part_method_name_uses_second_segment_as_tag(): void
+    public function test_three_part_method_name_uses_second_segment_as_tag_when_no_explicit_tags(): void
     {
-        $this->server->addMethod('pwg.images.getInfo', fn () => null, null, 'Get image.');
+        $this->server->register(new MethodDefinition(name: 'pwg.images.getInfo', callback: fn () => null, description: 'Get image.', tags: []));
         $op = $this->build()->toArray()['paths']['/ws/pwg.images.getInfo']['get'];
         self::assertContains('images', $op['tags']);
     }
@@ -146,12 +132,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_bool_param_maps_to_boolean_schema(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['recursive' => ['type' => WS_TYPE_BOOL, 'default' => false]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::optional(name: 'recursive', default: false, type: WS_TYPE_BOOL)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $recursive = array_values(array_filter($params, fn ($p) => $p['name'] === 'recursive'))[0];
         self::assertSame('boolean', $recursive['schema']['type']);
@@ -159,12 +143,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_int_positive_notnull_maps_to_integer_minimum_1(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['image_id' => ['type' => WS_TYPE_ID]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $idParam = array_values(array_filter($params, fn ($p) => $p['name'] === 'image_id'))[0];
         self::assertSame('integer', $idParam['schema']['type']);
@@ -173,12 +155,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_float_param_maps_to_number_schema(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['rate' => ['type' => WS_TYPE_FLOAT]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required(name: 'rate', type: WS_TYPE_FLOAT)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $rateParam = array_values(array_filter($params, fn ($p) => $p['name'] === 'rate'))[0];
         self::assertSame('number', $rateParam['schema']['type']);
@@ -187,12 +167,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_untyped_param_defaults_to_string_schema(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['username' => []],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required('username')],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $userParam = array_values(array_filter($params, fn ($p) => $p['name'] === 'username'))[0];
         self::assertSame('string', $userParam['schema']['type']);
@@ -200,12 +178,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_force_array_flag_wraps_schema_in_array(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['image_id' => ['flags' => WS_PARAM_FORCE_ARRAY, 'type' => WS_TYPE_ID]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $param = array_values(array_filter($params, fn ($p) => $p['name'] === 'image_id'))[0];
         self::assertSame('array', $param['schema']['type']);
@@ -214,12 +190,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_accept_array_flag_produces_oneOf_schema(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['ids' => ['flags' => WS_PARAM_ACCEPT_ARRAY, 'type' => WS_TYPE_ID]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required(name: 'ids', type: WS_TYPE_ID, flags: WS_PARAM_ACCEPT_ARRAY)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $param = array_values(array_filter($params, fn ($p) => $p['name'] === 'ids'))[0];
         self::assertArrayHasKey('oneOf', $param['schema']);
@@ -228,12 +202,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_maxvalue_is_included_as_maximum(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['per_page' => ['type' => WS_TYPE_INT | WS_TYPE_POSITIVE, 'default' => 100, 'maxValue' => 500]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::optional(name: 'per_page', default: 100, type: WS_TYPE_INT | WS_TYPE_POSITIVE, maxValue: 500)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $param = array_values(array_filter($params, fn ($p) => $p['name'] === 'per_page'))[0];
         self::assertSame(500, $param['schema']['maximum']);
@@ -245,12 +217,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_required_param_has_required_true(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['image_id' => ['type' => WS_TYPE_ID]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $param = array_values(array_filter($params, fn ($p) => $p['name'] === 'image_id'))[0];
         self::assertTrue($param['required']);
@@ -258,12 +228,10 @@ final class SpecBuilderTest extends TestCase
 
     public function test_optional_param_has_required_false(): void
     {
-        $this->server->addMethod(
-            'pwg.test',
-            fn () => null,
-            ['cat_id' => ['type' => WS_TYPE_ID, 'default' => null]],
-            ''
-        );
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.test', callback: fn () => null,
+            params: [ParamDefinition::optional(name: 'cat_id', default: null, type: WS_TYPE_ID)],
+        ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
         $param = array_values(array_filter($params, fn ($p) => $p['name'] === 'cat_id'))[0];
         self::assertFalse($param['required']);
@@ -275,14 +243,7 @@ final class SpecBuilderTest extends TestCase
 
     public function test_admin_only_method_carries_security_requirement(): void
     {
-        $this->server->addMethod(
-            'pwg.admin.op',
-            fn () => null,
-            null,
-            'Admin operation.',
-            '',
-            ['admin_only' => true]
-        );
+        $this->server->register(new MethodDefinition(name: 'pwg.admin.op', callback: fn () => null, description: 'Admin operation.', requiresAuth: true));
         $op = $this->build()->toArray()['paths']['/ws/pwg.admin.op']['get'];
         self::assertArrayHasKey('security', $op);
         self::assertTrue($op['x-admin-only']);

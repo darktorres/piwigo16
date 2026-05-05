@@ -14,15 +14,14 @@ use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Job\GenerateDerivativeJob;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServerRegistry;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UploadService
 {
@@ -217,11 +216,8 @@ final class UploadService
             return $imageId;
         }
 
-        $bus = ServiceLocator::get(MessageBusInterface::class);
-        foreach ([IMG_THUMB, IMG_SMALL, IMG_MEDIUM, IMG_LARGE, IMG_XLARGE] as $size) {
-            $bus->dispatch(new GenerateDerivativeJob($imageId, $size));
-        }
-        $logger->info('[addUploadedFile] derivative jobs dispatched', ['id' => $imageId]);
+        ServiceLocator::get(DerivativeService::class)->generate($imageInfos, IMG_MEDIUM);
+        $logger->info('[addUploadedFile] medium derivative generated', ['id' => $imageId]);
 
         trigger_notify('loc_end_add_uploaded_file', $imageInfos);
         return $imageId;

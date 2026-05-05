@@ -250,7 +250,7 @@ function get_edit_context(mixed $image_id): false|string|null
 
 function get_user_status(string $user_status = ''): string
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return empty($user_status) ? '' : $user_status;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->getUserStatus($user_status);
@@ -258,7 +258,7 @@ function get_user_status(string $user_status = ''): string
 
 function get_access_type_status(string $user_status = ''): int
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return ACCESS_FREE;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->getAccessTypeStatus($user_status);
@@ -266,7 +266,7 @@ function get_access_type_status(string $user_status = ''): int
 
 function is_autorize_status(int $access_type, string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return $access_type <= ACCESS_FREE;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isAutorizeStatus($access_type, $user_status);
@@ -274,7 +274,7 @@ function is_autorize_status(int $access_type, string $user_status = ''): bool
 
 function check_status(int $access_type, string $user_status = ''): void
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return;
     }
     \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->checkStatus($access_type, $user_status);
@@ -282,7 +282,7 @@ function check_status(int $access_type, string $user_status = ''): void
 
 function is_generic(string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return false;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isGeneric($user_status);
@@ -290,7 +290,7 @@ function is_generic(string $user_status = ''): bool
 
 function is_a_guest(string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return false;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isAGuest($user_status);
@@ -298,7 +298,7 @@ function is_a_guest(string $user_status = ''): bool
 
 function is_classic_user(string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return false;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isClassicUser($user_status);
@@ -306,7 +306,7 @@ function is_classic_user(string $user_status = ''): bool
 
 function is_admin(string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return false;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isAdmin($user_status);
@@ -314,7 +314,7 @@ function is_admin(string $user_status = ''): bool
 
 function is_webmaster(string $user_status = ''): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class) || \Piwigo\Config\Config::dbName() === '') {
+    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Users\PermissionService::class)) {
         return false;
     }
     return \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\PermissionService::class)->isWebmaster($user_status);

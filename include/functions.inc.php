@@ -99,8 +99,8 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
 
 function mkgetdir(mixed $dir, mixed $flags = MKGETDIR_DEFAULT): bool
 {
-    // pre-boot standalone — no container, or install.php context where DB is not yet configured
-    if (!ServiceLocator::has(Util::class) || \Piwigo\Config\Config::dbName() === '') {
+    // pre-boot standalone — called from install.php/upgrade.php/i.php before Kernel::boot()
+    if (!ServiceLocator::has(Util::class)) {
         $d = is_scalar($dir) ? (string) $dir : '';
         $f = is_numeric($flags) ? (int) $flags : MKGETDIR_DEFAULT;
         if (!is_dir($d)) {

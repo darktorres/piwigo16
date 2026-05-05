@@ -36,9 +36,9 @@ final class DateService
         if (count($ymdhms) < 3) {
             return false;
         }
-        $ymdhms[3] = $ymdhms[3] ?? 0;
-        $ymdhms[4] = $ymdhms[4] ?? 0;
-        $ymdhms[5] = $ymdhms[5] ?? 0;
+        $ymdhms[3] ??= 0;
+        $ymdhms[4] ??= 0;
+        $ymdhms[5] ??= 0;
         $date      = new DateTime();
         $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
         $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);

@@ -8,10 +8,10 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Db\SqlExpr;
 
-final class PermissionService
+final readonly class PermissionService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 

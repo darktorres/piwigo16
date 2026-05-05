@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Session;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the DB-backed PHP session store. */
@@ -72,7 +73,7 @@ final class SessionRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('sessions'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $compositeIds, \Doctrine\DBAL\ArrayParameterType::STRING);
+           ->setParameter('ids', $compositeIds, ArrayParameterType::STRING);
         $qb->executeStatement();
     }
 }

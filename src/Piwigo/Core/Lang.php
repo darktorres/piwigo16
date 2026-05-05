@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Lang\Translator;
+
 /**
  * Typed facade over the $lang global array.
  *
@@ -35,7 +37,7 @@ final class Lang
     {
         // Delegate to Translator when PO files are loaded; it falls back to $lang
         // array internally so both pre-boot PHP-file loads and post-boot PO loads work.
-        return \Piwigo\Lang\Translator::get()->translate($key, ...$args);
+        return Translator::get()->translate($key, ...$args);
     }
 
     public static function has(string $key): bool

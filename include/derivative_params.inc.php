@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\DerivativeParams;
+
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -26,7 +28,6 @@ function derivative_to_url($t): string
  * Formats a size array into a identifier usable in filename.
  *
  * @param array<int|float> $s
- * @return int|string
  */
 function size_to_url(array $s): int|string
 {
@@ -52,7 +53,7 @@ function size_equals(array $s1, ?array $s2): bool
  */
 function char_to_fraction(string $c): float|int
 {
-    return (ord($c) - ord('a')) / 25;
+    return (ord($c[0]) - ord('a')) / 25;
 }
 
 /**
@@ -91,17 +92,11 @@ final class ImageRect
         $this->b = $l[1];
     }
 
-    /**
-     * @return int
-     */
     public function width(): int
     {
         return $this->r - $this->l;
     }
 
-    /**
-     * @return int
-     */
     public function height(): int
     {
         return $this->b - $this->t;
@@ -286,4 +281,4 @@ final class SizingParams
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';
-class_alias(\Piwigo\Image\DerivativeParams::class, 'DerivativeParams');
+class_alias(DerivativeParams::class, 'DerivativeParams');

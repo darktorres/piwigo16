@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\PwgError;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Ws\Method\ExtensionsEndpoints;
 
@@ -13,31 +15,31 @@ use Piwigo\Ws\Method\ExtensionsEndpoints;
  * @param array<mixed> $params
  * @return array<mixed>
  */
-function ws_plugins_getList(array $params, \Piwigo\Ws\PwgServer $service): array
+function ws_plugins_getList(array $params, PwgServer $service): array
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->pluginsGetList($params, $service);
 }
 
 /** @param array<mixed> $params */
-function ws_plugins_performAction(array $params, \Piwigo\Ws\PwgServer $service): \Piwigo\Ws\PwgError|true
+function ws_plugins_performAction(array $params, PwgServer $service): PwgError|true
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->pluginsPerformAction($params, $service);
 }
 
 /** @param array<mixed> $params */
-function ws_themes_performAction(array $params, \Piwigo\Ws\PwgServer $service): \Piwigo\Ws\PwgError|true
+function ws_themes_performAction(array $params, PwgServer $service): PwgError|true
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->themesPerformAction($params, $service);
 }
 
 /** @param array<mixed> $params */
-function ws_extensions_update(array $params, \Piwigo\Ws\PwgServer $service): mixed
+function ws_extensions_update(array $params, PwgServer $service): mixed
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->update($params, $service);
 }
 
 /** @param array<mixed> $params */
-function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service): \Piwigo\Ws\PwgError|true
+function ws_extensions_ignoreupdate(array $params, PwgServer $service): PwgError|true
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->ignoreUpdate($params, $service);
 }
@@ -46,7 +48,7 @@ function ws_extensions_ignoreupdate(array $params, \Piwigo\Ws\PwgServer $service
  * @param array<mixed> $params
  * @return array<mixed>
  */
-function ws_extensions_checkupdates(array $params, \Piwigo\Ws\PwgServer $service): array
+function ws_extensions_checkupdates(array $params, PwgServer $service): array
 {
     return ServiceLocator::get(ExtensionsEndpoints::class)->checkUpdates($params, $service);
 }

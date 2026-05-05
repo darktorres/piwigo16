@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\ServiceLocator;
 
@@ -13,7 +14,7 @@ use Piwigo\Core\ServiceLocator;
 // +-----------------------------------------------------------------------+
 
 /* File-level initialisation — must stay here, runs at include time. */
-\Piwigo\Notification\MailNotificationContext::init();
+MailNotificationContext::init();
 
 function find_available_check_key(): string
 {

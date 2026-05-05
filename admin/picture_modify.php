@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Cache\RequestCache;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
@@ -13,7 +22,7 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $admin_photo_base_url;
@@ -76,7 +85,7 @@ if (isset($_GET['delete'])) {
 
 if (isset($_GET['sync_metadata'])) {
     sync_metadata([is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0]);
-    \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file'));
+    PageState::current()->addInfo(l10n('Metadata synchronized from file'));
 }
 
 //--------------------------------------------------------- update informations
@@ -90,7 +99,7 @@ if (isset($_POST['submit'])) {
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
         $post_field = $_POST[$field] ?? null;
-        $data[$field] = \Piwigo\Config\Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
+        $data[$field] = Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
     }
 
     if (!empty($_POST['date_creation'])) {
@@ -114,7 +123,7 @@ if (isset($_POST['submit'])) {
         if (is_scalar($tags_post)) {
             $tag_ids = get_tag_ids((string) $tags_post);
         } elseif (is_array($tags_post)) {
-            $tag_ids = get_tag_ids(array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $tags_post));
+            $tag_ids = get_tag_ids(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $tags_post));
         }
     }
     set_tags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0);
@@ -126,7 +135,7 @@ if (isset($_POST['submit'])) {
     check_input_parameter('associate', $_POST, true, PATTERN_ID);
     move_images_to_categories(
         [is_numeric($_GET['image_id'] ?? null) ? (int)$_GET['image_id'] : 0],
-        is_array($_POST['associate']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
+        is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
     );
 
     invalidate_user_cache();
@@ -137,8 +146,8 @@ if (isset($_POST['submit'])) {
     }
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
-    $represented_albums_int = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $represented_albums);
-    $represent_post_int = is_array($_POST['represent']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
+    $represented_albums_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $represented_albums);
+    $represent_post_int = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
     $no_longer_thumbnail_for = array_diff($represented_albums_int, $represent_post_int);
     if (count($no_longer_thumbnail_for) > 0) {
         set_random_representant(array_values($no_longer_thumbnail_for));
@@ -146,14 +155,14 @@ if (isset($_POST['submit'])) {
 
     $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
     if (count($new_thumbnail_for) > 0) {
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        ServiceLocator::get(CategoryRepository::class)
             ->setRepresentativePicture(
-                array_map(fn ($v) => (int) $v, $new_thumbnail_for),
+                array_map(fn ($v): int => (int) $v, $new_thumbnail_for),
                 is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0
             );
     }
 
-    $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
+    $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
 
     $template->assign(
         [
@@ -169,7 +178,7 @@ if (isset($_POST['submit'])) {
 
 // tags
 $tag_selection = get_taglist_from_rows(
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+    ServiceLocator::get(TagRepository::class)
         ->findTagsByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)
 );
 
@@ -255,8 +264,8 @@ $template->assign(
 );
 
 $added_by = 'N/A';
-$userFields = \Piwigo\Config\Config::userFields();
-$foundUsername = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+$userFields = Config::userFields();
+$foundUsername = ServiceLocator::get(UserRepository::class)
     ->findUsernameById(
         $userFields['id'],
         $userFields['username'],
@@ -281,8 +290,8 @@ $intro_vars = [
   'is_svg' => (strtoupper(end($extTab)) == 'SVG'),
   ];
 
-if (\Piwigo\Config\Config::rateEnabled() and !empty($row['rating_score'])) {
-    $row['nb_rates'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+if (Config::rateEnabled() and !empty($row['rating_score'])) {
+    $row['nb_rates'] = ServiceLocator::get(RateRepository::class)
         ->countByElementId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
 
     $intro_vars['stats'] .= ', '.sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
@@ -308,7 +317,7 @@ if (!empty($formats)) {
 $template->assign('INTRO', $intro_vars);
 
 
-if (in_array(get_extension($row['path']), \Piwigo\Config\Config::pictureExtensions())) {
+if (in_array(get_extension($row['path']), Config::pictureExtensions())) {
     $template->assign('U_COI', get_root_url().'admin.php?page=picture_coi&amp;image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''));
 }
 
@@ -325,7 +334,7 @@ $template->assign(
 $related_categories = [];
 $related_categories_ids = [];
 
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+foreach (ServiceLocator::get(CategoryRepository::class)
     ->findCategoryInfosByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) as $row) {
     $name =
       get_cat_display_name_cache(
@@ -370,9 +379,7 @@ SELECT category_id
     if (count($authorizeds) > 0) {
         $category = $authorizeds[array_rand($authorizeds)];
 
-        $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: [];
-        });
+        $catNames = RequestCache::remember('cat_names', 'all', static fn(): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: []);
         $url_img = make_picture_url(
             [
             'image_id' => $_GET['image_id'],

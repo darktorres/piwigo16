@@ -43,7 +43,7 @@ final class ErrorCollector
         // No ob_get_level() guard — PHP's output_buffering INI may already have
         // created a level-1 buffer, which would prevent our callback from being
         // registered. We always add our own level so the callback fires.
-        ob_start([self::class, 'injectConsoleScript']);
+        ob_start(self::injectConsoleScript(...));
 
         set_error_handler(static function (int $errno, string $errstr, string $errfile, int $errline): bool {
             // Respect the @ error-suppression operator.

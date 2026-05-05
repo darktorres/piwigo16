@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Users\UserRepository;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -88,7 +89,7 @@ final class CategoriesEndpoints
                 }
                 $imageName   = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
                 $renderedName = trigger_change('render_element_name', $imageName, __FUNCTION__);
-                $image['name']    = strip_tags($renderedName);
+                $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ws_std_get_urls($row));
                 $images[] = $image;
@@ -205,7 +206,7 @@ final class CategoriesEndpoints
             } else {
                 $row['name_raw']  = $row['name'];
                 $renderedListName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getList');
-                $row['name']      = strip_tags($renderedListName);
+                $row['name']      = strip_tags((string) $renderedListName);
             }
             $row['comment_raw'] = $row['comment'];
             $row['comment']     = trigger_change('render_category_description', is_scalar($row['comment']) ? (string) $row['comment'] : '', 'ws_categories_getList');
@@ -265,7 +266,7 @@ final class CategoriesEndpoints
                 }
             }
             if (count($newImageIds) > 0) {
-                foreach ($imgRepoWsCats->findByIds(array_map('intval', $newImageIds)) as $row) {
+                foreach ($imgRepoWsCats->findByIds(array_map(intval(...), $newImageIds)) as $row) {
                     $thumbnailSrcOf[is_scalar($row['id']) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
                 }
             }
@@ -331,7 +332,7 @@ final class CategoriesEndpoints
             $catDisplayName  = get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', 'admin.php?page=album-');
             $row['name_raw'] = $row['name'];
             $renderedAdminName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getAdminList');
-            $row['name']     = strip_tags($renderedAdminName);
+            $row['name']     = strip_tags((string) $renderedAdminName);
             $row['fullname'] = strip_tags($catDisplayName);
             $row['comment_raw'] = $row['comment'];
             $row['comment']  = trigger_change('render_category_description', $row['comment'] ?? '', 'ws_categories_getAdminList');
@@ -478,7 +479,7 @@ final class CategoriesEndpoints
             $subcats = get_subcat_ids([$categoryId]);
             if (count($subcats) > 0) {
                 $commentableVal = is_scalar($params['commentable']) ? (string) $params['commentable'] : 'false';
-                ServiceLocator::get(CategoryRepository::class)->setCommentable(array_map('intval', $subcats), $commentableVal === 'true');
+                ServiceLocator::get(CategoryRepository::class)->setCommentable(array_map(intval(...), $subcats), $commentableVal === 'true');
             }
         }
         if ($performUpdate) {
@@ -502,7 +503,7 @@ final class CategoriesEndpoints
             return new PwgError(404, 'image_id not found');
         }
         $catRepo->setRepresentativePicture([$categoryId], $imageId);
-        ServiceLocator::get(\Piwigo\Users\UserRepository::class)->clearUserRepresentativeForCategory($categoryId);
+        ServiceLocator::get(UserRepository::class)->clearUserRepresentativeForCategory($categoryId);
         pwg_activity('album', $categoryId, 'edit', ['image_id' => $imageId]);
         return null;
     }
@@ -594,13 +595,13 @@ final class CategoriesEndpoints
         $categoriesInDb = [];
         $updateCatIds   = [];
         $parentId       = is_numeric($params['parent']) ? (int) $params['parent'] : 0;
-        foreach (ServiceLocator::get(CategoryRepository::class)->findByIds(array_map('intval', $categoryIds)) as $row) {
+        foreach (ServiceLocator::get(CategoryRepository::class)->findByIds(array_map(intval(...), $categoryIds)) as $row) {
             $rowId              = is_scalar($row['id']) ? (string) $row['id'] : '';
             $categoriesInDb[$rowId] = $row;
             $updateCatIds = array_merge($updateCatIds, array_slice(explode(',', is_scalar($row['uppercats']) ? (string) $row['uppercats'] : ''), 0, -1));
             if (!empty($row['dir'])) {
                 $renderedMoveName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_move');
-                $row['name'] = strip_tags($renderedMoveName);
+                $row['name'] = strip_tags((string) $renderedMoveName);
                 return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $row['name'], is_numeric($row['id']) ? (int) $row['id'] : 0));
             }
         }
@@ -617,7 +618,7 @@ final class CategoriesEndpoints
         move_categories($categoryIds, $parentId);
         invalidate_user_cache();
         $catDisplayName = '';
-        foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map('intval', $categoryIds)) as $uppercatsStr) {
+        foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
             $catDisplayName = get_cat_display_name_cache($uppercatsStr, 'admin.php?page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }

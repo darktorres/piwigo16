@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+
 global $persistent_cache, $title, $debug, $t2;
 
 use Piwigo\Admin\Updates;
@@ -26,7 +29,7 @@ trigger_notify('loc_begin_page_tail');
 
 $template->assign(
     [
-    'VERSION' => \Piwigo\Config\Config::showVersion() ? PHPWG_VERSION : '',
+    'VERSION' => Config::showVersion() ? PHPWG_VERSION : '',
     'PHPWG_URL' => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
     ]
 );
@@ -41,10 +44,10 @@ if (!is_a_guest()) {
 }
 
 //--------------------------------------------------------- update notification
-if (\Piwigo\Config\Config::updateNotifyCheckPeriod() > 0) {
+if (Config::updateNotifyCheckPeriod() > 0) {
     $check_for_updates = false;
-    if (\Piwigo\Config\Config::has('update_notify_last_check')) {
-        if (strtotime((string) \Piwigo\Config\Config::updateNotifyLastCheck()) < strtotime(\Piwigo\Config\Config::updateNotifyCheckPeriod().' seconds ago')) {
+    if (Config::has('update_notify_last_check')) {
+        if (strtotime((string) Config::updateNotifyLastCheck()) < strtotime(Config::updateNotifyCheckPeriod().' seconds ago')) {
             $check_for_updates = true;
         }
     } else {
@@ -68,12 +71,12 @@ send_piwigo_infos();
 //------------------------------------------------------------- generation time
 $debug_vars = [];
 
-if (\Piwigo\Config\Config::showQueries()) {
+if (Config::showQueries()) {
     $debug_vars = array_merge($debug_vars, ['QUERIES_LIST' => $debug]);
 }
 
-if (\Piwigo\Config\Config::showGt()) {
-    $pageState = \Piwigo\Core\PageState::current();
+if (Config::showGt()) {
+    $pageState = PageState::current();
     $time = get_elapsed_time($t2, get_moment());
 
     $debug_vars = array_merge(
@@ -87,7 +90,7 @@ if (\Piwigo\Config\Config::showGt()) {
 $template->assign('debug', $debug_vars);
 
 //------------------------------------------------------------- mobile version
-if (!empty(\Piwigo\Config\Config::mobilTheme()) && (get_device() != 'desktop' || mobile_theme())) {
+if (!empty(Config::mobilTheme()) && (get_device() != 'desktop' || mobile_theme())) {
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Metadata;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
@@ -47,7 +49,7 @@ final class MetadataAdminService
     /** @return array<mixed> */
     public function getSyncExifData(string $file): array
     {
-        $exif = ServiceLocator::get(MetadataService::class)->getExifData($file, \Piwigo\Config\Config::useExifMapping());
+        $exif = ServiceLocator::get(MetadataService::class)->getExifData($file, Config::useExifMapping());
 
         foreach ($exif as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -85,18 +87,18 @@ final class MetadataAdminService
     {
         $update_fields = ['filesize', 'width', 'height'];
 
-        if (\Piwigo\Config\Config::useExif()) {
+        if (Config::useExif()) {
             $update_fields = array_merge(
                 $update_fields,
-                array_keys(\Piwigo\Config\Config::useExifMapping()),
+                array_keys(Config::useExifMapping()),
                 ['latitude', 'longitude']
             );
         }
 
-        if (\Piwigo\Config\Config::useIptc()) {
+        if (Config::useIptc()) {
             $update_fields = array_merge(
                 $update_fields,
-                array_keys(\Piwigo\Config\Config::useIptcMapping())
+                array_keys(Config::useIptcMapping())
             );
         }
 
@@ -110,7 +112,7 @@ final class MetadataAdminService
     public function getSyncMetadata(array $infos): array|false
     {
         $file = PHPWG_ROOT_PATH . (is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
-        $fs = \Piwigo\Core\Filesystem::tryFilesize($file);
+        $fs = Filesystem::tryFilesize($file);
 
         if ($fs === false) {
             return false;
@@ -169,13 +171,13 @@ final class MetadataAdminService
             $file = PHPWG_ROOT_PATH . (is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
         }
 
-        if (\Piwigo\Config\Config::useExif()) {
+        if (Config::useExif()) {
             $exif = $this->getSyncExifData($file);
             $infos = array_merge($infos, $exif);
         }
 
-        if (\Piwigo\Config\Config::useIptc()) {
-            $iptc = $this->getSyncIptcData($file, \Piwigo\Config\Config::useIptcMapping());
+        if (Config::useIptc()) {
+            $iptc = $this->getSyncIptcData($file, Config::useIptcMapping());
             $infos = array_merge($infos, $iptc);
         }
 
@@ -202,7 +204,7 @@ final class MetadataAdminService
         $datas = [];
         $tags_of = [];
 
-        foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map('intval', $ids)) as $data) {
+        foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), $ids)) as $data) {
             $data = $this->getSyncMetadata($data);
             if ($data === false) {
                 continue;
@@ -288,7 +290,7 @@ SELECT id, path, representative_ext
 
     public function normalizeKeywordsString(string $keywordsString): string
     {
-        $keywordsString = preg_replace(\Piwigo\Config\Config::metadataKeywordSeparatorRegex(), ',', $keywordsString);
+        $keywordsString = preg_replace(Config::metadataKeywordSeparatorRegex(), ',', $keywordsString);
         $keywordsString = str_replace(["\r\n", "\n", "\r"], ',', $keywordsString ?? '');
         $keywordsString = preg_replace('/,+/', ',', $keywordsString);
         $keywordsString = preg_replace('/^,+|,+$/', '', (string) $keywordsString);

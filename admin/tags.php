@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +15,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -117,7 +120,7 @@ $template->assign('message_tags', $message_tags);
 // +-----------------------------------------------------------------------+
 $per_page = 100;
 
-$_tagRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+$_tagRepo = ServiceLocator::get(TagRepository::class);
 $tag_counters = $_tagRepo->getTagCounters();
 
 // all tags

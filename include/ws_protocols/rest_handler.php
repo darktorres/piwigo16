@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
 
@@ -14,7 +15,7 @@ use Piwigo\Ws\PwgRequestHandler;
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(\Piwigo\Ws\PwgServer &$service): void
+    public function handleRequest(PwgServer &$service): void
     {
         $params = [];
         $method = '';

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Users\UserRepository;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -13,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-defined('PHPWG_ROOT_PATH') or throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+defined('PHPWG_ROOT_PATH') or throw new AuthException('Hacking attempt!');
 
 global $template, $user, $page, $persistent_cache, $lang;
 
@@ -28,16 +34,16 @@ if (isset($_GET['f_min_rates'])) {
     $filter_min_rates = is_scalar($raw_f_min_rates) ? (int) $raw_f_min_rates : 2;
 }
 
-$consensus_top_number = \Piwigo\Config\Config::topNumber();
+$consensus_top_number = Config::topNumber();
 if (isset($_GET['consensus_top_number'])) {
     $raw_consensus_top = $_GET['consensus_top_number'];
     $consensus_top_number = is_scalar($raw_consensus_top) ? (int) $raw_consensus_top : $consensus_top_number;
 }
 
 // build users
-$userFields = \Piwigo\Config\Config::userFields();
+$userFields = Config::userFields();
 $users_by_id = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+foreach (ServiceLocator::get(UserRepository::class)
     ->findAllWithStatus($userFields['id'], $userFields['username'], USERS_TABLE) as $row) {
     $users_by_id[is_numeric($row['id']) ? (int)$row['id'] : 0] = [
         'name' => is_scalar($row['username']) ? (string) $row['username'] : '',
@@ -46,14 +52,14 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
 }
 
 $by_user_rating_model = [ 'rates' => [] ];
-foreach (\Piwigo\Config\Config::rateItems() as $rate) {
+foreach (Config::rateItems() as $rate) {
     $by_user_rating_model['rates'][(int)$rate] = [];
 }
 
 // by user aggregation
 $image_ids = [];
 $by_user_ratings = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAllOrderedByDate() as $row) {
+foreach (ServiceLocator::get(RateRepository::class)->findAllOrderedByDate() as $row) {
     $user_id = is_numeric($row['user_id']) ? (int)$row['user_id'] : 0;
     if (!isset($users_by_id[$user_id])) {
         $users_by_id[$user_id] = ['name' => '???'.$user_id, 'anon' => false];
@@ -87,8 +93,8 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->f
 $image_urls = [];
 if (count($image_ids) > 0) {
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-        ->findByIds(array_map('intval', array_keys($image_ids))) as $row) {
+    foreach (ServiceLocator::get(ImageRepository::class)
+        ->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
         $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
         $image_urls[$id] = [
             'tn'   => DerivativeImage::url($params, $row),
@@ -99,7 +105,7 @@ if (count($image_ids) > 0) {
 
 //all image averages
 $all_img_sum = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findAverageByElement() as $row) {
+foreach (ServiceLocator::get(RateRepository::class)->findAverageByElement() as $row) {
     $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
 }
 
@@ -231,13 +237,13 @@ $template->assign('order_by_options_selected', [$order_by_index]);
 
 $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
-$nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
+$nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
 
 $template->assign([
   'F_ACTION' => get_root_url().'admin.php',
   'F_MIN_RATES' => $filter_min_rates,
   'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-  'available_rates' => \Piwigo\Config\Config::rateItems(),
+  'available_rates' => Config::rateItems(),
   'ratings' => $by_user_ratings,
   'image_urls' => $image_urls,
   'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0],

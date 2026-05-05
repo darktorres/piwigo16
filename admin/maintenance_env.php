@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Session\SessionRepository;
+use Piwigo\Config\Config;
+use Piwigo\Admin\MaintenanceService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Core\PageState;
+use Piwigo\Db\DbInfo;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\FileCombiner;
@@ -14,7 +24,7 @@ use Piwigo\Template\FileCombiner;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -88,12 +98,12 @@ switch ($action) {
         }
     case 'history_detail':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAll();
+            ServiceLocator::get(HistoryRepository::class)->deleteAll();
             break;
         }
     case 'history_summary':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAllSummary();
+            ServiceLocator::get(HistoryRepository::class)->deleteAllSummary();
             break;
         }
     case 'sessions':
@@ -101,12 +111,12 @@ switch ($action) {
             pwg_session_gc();
 
             // delete all sessions associated to invalid user ids (it should never happen)
-            $userRepo    = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
-            $sessionRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class);
+            $userRepo    = ServiceLocator::get(UserRepository::class);
+            $sessionRepo = ServiceLocator::get(SessionRepository::class);
 
             $sessions     = $userRepo->findAllSessions();
             $all_user_ids = $userRepo->findAllUserIdsAsSet(
-                \Piwigo\Config\Config::userFields()['id'],
+                Config::userFields()['id'],
                 USERS_TABLE
             );
 
@@ -127,12 +137,12 @@ switch ($action) {
         }
     case 'feeds':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->deleteNeverUsedFeeds();
+            ServiceLocator::get(UserRepository::class)->deleteNeverUsedFeeds();
             break;
         }
     case 'database':
         {
-            \Piwigo\Admin\MaintenanceService::repairAndOptimize();
+            MaintenanceService::repairAndOptimize();
             break;
         }
     case 'c13y':
@@ -143,7 +153,7 @@ switch ($action) {
         }
     case 'search':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class)->deleteAll();
+            ServiceLocator::get(SearchRepository::class)->deleteAll();
             break;
         }
     case 'compiled-templates':
@@ -163,7 +173,7 @@ switch ($action) {
     case 'check_upgrade':
         {
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
+                PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
                 $lines = explode("\r\n", $result);
@@ -184,19 +194,19 @@ switch ($action) {
                 }
 
                 if ('' == $versions['latest']) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
+                    PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
                 }
                 // concatenation needed to avoid automatic transformation by release
                 // script generator
                 elseif (str_contains((string) ($versions['current'] ?? ''), '%')) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
+                    PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
                 } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
+                    PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
 
                     $update_url = PHPWG_ROOT_PATH.'admin.php?page=updates';
-                    \Piwigo\Core\PageState::current()->addInfo('<a href="'. $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>');
+                    PageState::current()->addInfo('<a href="'. $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>');
                 } else {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
+                    PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
                 }
             }
         }
@@ -229,8 +239,8 @@ foreach (ImageStdParams::get_defined_type_map() as $params) {
 $purge_urls[ l10n(IMG_CUSTOM) ] = sprintf($url_format, 'derivatives').'&amp;type='.IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
-$db_version = \Piwigo\Db\DbInfo::version();
-$db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+$db_version = DbInfo::version();
+$db_current_date = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
 [$container_name, $container_version] = get_container_info();
 
@@ -267,12 +277,12 @@ $template->assign(
     'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
-    'cache_sizes' => (\Piwigo\Config\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Config\Config::cacheSizes()) : null,
+    'cache_sizes' => (Config::has('cache_sizes')) ? safe_unserialize((string)Config::cacheSizes()) : null,
     'time_elapsed_since_last_calc' => (function (): ?string {
-        if (!\Piwigo\Config\Config::has('cache_sizes')) {
+        if (!Config::has('cache_sizes')) {
             return null;
         }
-        $cs = safe_unserialize((string)\Piwigo\Config\Config::cacheSizes());
+        $cs = safe_unserialize((string)Config::cacheSizes());
         $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
         return time_since(is_scalar($entry['value'] ?? null) ? (string)$entry['value'] : null, 'year');
     })(),
@@ -285,7 +295,7 @@ if (!empty($graphics_library)) {
     $template->assign('GRAPHICS_LIBRARY', $graphics_library);
 }
 
-if (\Piwigo\Config\Config::galleryLocked()) {
+if (Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),

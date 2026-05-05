@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugin\PluginRepository;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Plugins;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +16,7 @@ use Piwigo\Admin\Plugins;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -134,7 +138,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     $fsExtId = $fs_plugin['extension'] ?? null;
     if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {
         // Deactivate manually plugin from database
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class)
+        ServiceLocator::get(PluginRepository::class)
             ->updateState($plugin_id, 'inactive');
 
         $tpl_plugin['STATE'] = 'merged';
@@ -211,7 +215,7 @@ $template->assign(
     'isWebmaster' => (is_webmaster()) ? 1 : 0,
     'ADMIN_PAGE_TITLE' => l10n('Plugins'),
     'view_selector' => userprefs_get_param('plugin-manager-view', 'classic'),
-    'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\Config::enableExtensionsInstall(),
+    'CONF_ENABLE_EXTENSIONS_INSTALL' => Config::enableExtensionsInstall(),
     'page_data_json' => json_encode([
         'pwg_token' => $pwg_token,
         'isWebmaster' => (is_webmaster()) ? 1 : 0,

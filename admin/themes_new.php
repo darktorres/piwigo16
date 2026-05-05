@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
@@ -12,14 +16,14 @@ use Piwigo\Admin\Themes;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
-    throw new \Piwigo\Exception\ConfigException('Piwigo extensions install/update system is disabled');
+if (!Config::enableExtensionsInstall()) {
+    throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
 $base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
@@ -32,7 +36,7 @@ $themes = new Themes();
 
 $themes_dir = PHPWG_ROOT_PATH.'themes';
 if (!is_writable($themes_dir)) {
-    \Piwigo\Core\PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes'));
+    PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes'));
 }
 
 // +-----------------------------------------------------------------------+
@@ -41,7 +45,7 @@ if (!is_writable($themes_dir)) {
 
 if (isset($_GET['revision']) and isset($_GET['extension'])) {
     if (!is_webmaster()) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
+        PageState::current()->addError(l10n('Webmaster status is required.'));
     } else {
         check_pwg_token();
 
@@ -63,7 +67,7 @@ if (isset($_GET['revision']) and isset($_GET['extension'])) {
 if (isset($_GET['installstatus'])) {
     switch ($_GET['installstatus']) {
         case 'ok':
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Theme has been successfully installed'));
+            PageState::current()->addInfo(l10n('Theme has been successfully installed'));
 
             $theme_id_str = is_string($_GET['theme_id'] ?? null) ? $_GET['theme_id'] : '';
             if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
@@ -80,19 +84,19 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
+            PageState::current()->addError(l10n('Can\'t create temporary file.'));
             break;
 
         case 'dl_archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
+            PageState::current()->addError(l10n('Can\'t download archive.'));
             break;
 
         case 'archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+            PageState::current()->addError(l10n('Can\'t read or extract archive.'));
             break;
 
         default:
-            \Piwigo\Core\PageState::current()->addError(l10n(
+            PageState::current()->addError(l10n(
                 'An error occured during extraction (%s).',
                 htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')
             ));
@@ -126,7 +130,7 @@ if ($themes->get_server_themes(true)) { // only new Themes
         );
     }
 } else {
-    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+    PageState::current()->addError(l10n('Can\'t connect to server.'));
 }
 
 $template->assign(

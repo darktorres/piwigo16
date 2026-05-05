@@ -336,7 +336,7 @@ class Themes
                     }
 
                     // IMPORTANT SECURITY !
-                    $theme = array_map(fn ($v) => is_string($v) ? htmlspecialchars($v) : $v, $theme);
+                    $theme = array_map(fn (bool|string $v): string|bool => is_string($v) ? htmlspecialchars($v) : $v, $theme);
                     $this->fs_themes[$file] = $theme;
                 }
             }

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Config\Config;
+
 global $template, $user, $page, $persistent_cache, $lang;
 
 use Piwigo\Image\ImageStdParams;
@@ -16,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-\Piwigo\Core\Kernel::boot();
+Kernel::boot();
 require(PHPWG_ROOT_PATH.'include/section_init.inc.php');
 
 // Check Access and exit when user status is not ok
@@ -119,7 +122,7 @@ if (empty($page['is_external'])) {
         );
     }
 
-    if (\Piwigo\Config\Config::indexFlatIcon() and !isset($page['flat']) and 'categories' == $page['section']) {
+    if (Config::indexFlatIcon() and !isset($page['flat']) and 'categories' == $page['section']) {
         $template->assign(
             'U_MODE_FLAT',
             duplicate_index_url(['flat' => ''], ['start', 'chronology_field'])
@@ -132,13 +135,13 @@ if (empty($page['is_external'])) {
           'chronology_style' => 'monthly',
           'chronology_view' => 'list',
           ];
-        if (\Piwigo\Config\Config::indexCreatedDateIcon()) {
+        if (Config::indexCreatedDateIcon()) {
             $template->assign(
                 'U_MODE_CREATED',
                 duplicate_index_url($chronology_params, ['start', 'flat'])
             );
         }
-        if (\Piwigo\Config\Config::indexPostedDateIcon()) {
+        if (Config::indexPostedDateIcon()) {
             $chronology_params['chronology_field'] = 'posted';
             $template->assign(
                 'U_MODE_POSTED',
@@ -151,7 +154,7 @@ if (empty($page['is_external'])) {
         } else {
             $chronology_field = 'created';
         }
-        if (\Piwigo\Config\Config::raw('index_'.$chronology_field.'_date_icon')) {
+        if (Config::raw('index_'.$chronology_field.'_date_icon')) {
             $url = duplicate_index_url(
                 ['chronology_field' => $chronology_field ],
                 ['chronology_date', 'start', 'flat']
@@ -168,8 +171,8 @@ if (empty($page['is_external'])) {
     if ('categories' == $page['section'] and isset($page['category']) and !isset($page['combined_categories'])) {
         $template->assign(
             [
-            'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
-            'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
+            'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
+            'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?cat_id='.$page['category']['id'],
       ]
         );
@@ -179,7 +182,7 @@ if (empty($page['is_external'])) {
         //get tags for related tags "button", with the possibility to combine them
         $tags = get_common_tags(
             $page['items'],
-            \Piwigo\Config\Config::menubarTagCloudItemsNumber(),
+            Config::menubarTagCloudItemsNumber(),
             $page['tag_ids']
         );
 
@@ -214,22 +217,22 @@ if (empty($page['is_external'])) {
 
         $template->assign(
             [
-            'SEARCH_IN_SET_BUTTON' => \Piwigo\Config\Config::indexSearchInSetButton(),
-            'SEARCH_IN_SET_ACTION' => \Piwigo\Config\Config::indexSearchInSetAction(),
+            'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
+            'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
             'SEARCH_IN_SET_URL' => get_root_url().'search.php?tag_id='.implode(',', $page['body_data']['tag_ids']),
             'COMBINABLE_TAGS' => $related_tags,
       ]
         );
     }
 
-    if (isset($page['category']) and is_admin() and \Piwigo\Config\Config::indexEditIcon()) {
+    if (isset($page['category']) and is_admin() and Config::indexEditIcon()) {
         $template->assign(
             'U_EDIT',
             get_root_url().'admin.php?page=album-'.$page['category']['id']
         );
     }
 
-    if (is_admin() and !empty($page['items']) and \Piwigo\Config\Config::indexCaddieIcon()) {
+    if (is_admin() and !empty($page['items']) and Config::indexCaddieIcon()) {
         $template->assign(
             'U_CADDIE',
             add_url_params(duplicate_index_url(), ['caddie' => 1])
@@ -265,7 +268,7 @@ if (empty($page['is_external'])) {
     }
 
     // image order
-    if (\Piwigo\Config\Config::indexSortOrderInput()
+    if (Config::indexSortOrderInput()
         and count($page['items']) > 0
         and $page['section'] != 'most_visited'
         and $page['section'] != 'best_rated') {
@@ -273,7 +276,7 @@ if (empty($page['is_external'])) {
         $order_idx = pwg_get_session_var('image_order', 0);
 
         // get first order field and direction
-        $first_order = substr((string) \Piwigo\Config\Config::orderBy(), 9);
+        $first_order = substr((string) Config::orderBy(), 9);
         if (($pos = strpos($first_order, ',')) !== false) {
             $first_order = substr($first_order, 0, $pos);
         }
@@ -310,7 +313,7 @@ if (empty($page['is_external'])) {
     }
 
     // category comment
-    if (($page['start'] == 0 or \Piwigo\Config\Config::albumDescriptionOnAllPages()) and !isset($page['chronology_field']) and !empty($page['comment'])) {
+    if (($page['start'] == 0 or Config::albumDescriptionOnAllPages()) and !isset($page['chronology_field']) and !empty($page['comment'])) {
         $template->assign('CONTENT_DESCRIPTION', $page['comment']);
     }
 
@@ -331,7 +334,7 @@ if (empty($page['is_external'])) {
     if (!empty($page['items'])) {
         require(PHPWG_ROOT_PATH.'include/category_default.inc.php');
 
-        if (\Piwigo\Config\Config::indexSizesIcon()) {
+        if (Config::indexSizesIcon()) {
             $url = add_url_params(
                 duplicate_index_url(),
                 ['display' => '']
@@ -360,7 +363,7 @@ if (empty($page['is_external'])) {
     if (!empty($page['cat_slideshow_url'])) {
         if (input_string('slideshow', null, $_GET) !== null) {
             redirect($page['cat_slideshow_url']);
-        } elseif (\Piwigo\Config\Config::indexSlideShowIcon()) {
+        } elseif (Config::indexSlideShowIcon()) {
             $template->assign('U_SLIDESHOW', $page['cat_slideshow_url']);
         }
     }
@@ -369,7 +372,7 @@ if (empty($page['is_external'])) {
     //Fill related tags action
     if (!empty($page['items']) and 'tags' != $page['body_data']['section']) {
         $selection = array_slice($page['items'], $page['start'], $page['nb_image_page']);
-        $tags = add_level_to_tags(get_common_tags($selection, \Piwigo\Config\Config::contentTagCloudItemsNumber()));
+        $tags = add_level_to_tags(get_common_tags($selection, Config::contentTagCloudItemsNumber()));
         $related_tags = [];
         foreach ($tags as $tag) {
             $related_tags[] =

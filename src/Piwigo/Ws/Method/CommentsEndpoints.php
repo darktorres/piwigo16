@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Config\Config;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
@@ -20,7 +21,7 @@ final class CommentsEndpoints
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        if (!\Piwigo\Config\Config::activateComments()) {
+        if (!Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
         $acceptedStatus = ['all', 'pending', 'validated'];
@@ -70,19 +71,19 @@ final class CommentsEndpoints
         }
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 10;
         $pageNum = is_numeric($params['page']) ? (int) $params['page'] : 0;
-        $userFields = \Piwigo\Config\Config::userFields();
+        $userFields = Config::userFields();
         $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . COMMENTS_TABLE . ' AS c INNER JOIN ' . IMAGES_TABLE . ' AS i ON i.id = c.image_id LEFT JOIN ' . USERS_TABLE . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . USER_INFOS_TABLE . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
         $list = [];
         foreach ($conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $mediumDerivative = DerivativeImage::get_one(IMG_MEDIUM, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
             $medium = $mediumDerivative !== null ? $mediumDerivative->get_url() : null;
-            if (empty($row['author_id']) || $row['author_id'] == \Piwigo\Config\Config::guestId()) {
+            if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
                 $authorName = $row['author'];
             } else {
                 $coalesced  = $row['username'] ?? $row['author'] ?? l10n('guest');
                 $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : l10n('guest'));
             }
-            $list[] = ['id' => $row['id'], 'admin_link' => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : ''), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => trigger_change('render_comment_author', $authorName), 'author_status' => \Piwigo\Config\Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => trigger_change('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $list[] = ['id' => $row['id'], 'admin_link' => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : ''), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => trigger_change('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => trigger_change('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];

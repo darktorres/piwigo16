@@ -9,12 +9,12 @@ use Piwigo\Config\Config;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 
-final class RateService
+final readonly class RateService
 {
     public function __construct(
-        private readonly RateRepository $rateRepo,
-        private readonly ImageRepository $imageRepo,
-        private readonly CookieService $cookies,
+        private RateRepository $rateRepo,
+        private ImageRepository $imageRepo,
+        private CookieService $cookies,
     ) {
     }
 

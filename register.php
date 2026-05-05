@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Config\Config;
+
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -13,7 +16,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 //----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-\Piwigo\Core\Kernel::boot();
+Kernel::boot();
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -22,7 +25,7 @@ check_status(ACCESS_FREE);
 
 //----------------------------------------------------------- user registration
 
-if (!\Piwigo\Config\Config::allowUserRegistration()) {
+if (!Config::allowUserRegistration()) {
     page_forbidden('User registration closed');
 }
 
@@ -95,7 +98,7 @@ $template->assign([
   'F_ACTION' => 'register.php',
   'F_LOGIN' => $login,
   'F_EMAIL' => $email,
-  'obligatory_user_mail_address' => \Piwigo\Config\Config::obligatoryUserMailAddress(),
+  'obligatory_user_mail_address' => Config::obligatoryUserMailAddress(),
 ]);
 
 // include menubar

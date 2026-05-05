@@ -15,10 +15,10 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
-final class CategoryAdminService
+final readonly class CategoryAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 

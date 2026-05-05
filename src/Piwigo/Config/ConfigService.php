@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Db\DbConnection;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 
-final class ConfigService
+final readonly class ConfigService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 
@@ -24,7 +25,7 @@ final class ConfigService
         if (ServiceLocator::has(Connection::class)) {
             $conn = ServiceLocator::get(Connection::class);
         } else {
-            $conn = \Piwigo\Db\DbConnection::build();
+            $conn = DbConnection::build();
         }
 
         $rows = $conn->executeQuery($sql)->fetchAllAssociative();
@@ -79,7 +80,7 @@ final class ConfigService
                 [$param, $dbValue, $dbValue]
             );
         } else {
-            \Piwigo\Db\DbConnection::build()->executeStatement(
+            DbConnection::build()->executeStatement(
                 'INSERT INTO ' . CONFIG_TABLE . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
                 [$param, $dbValue, $dbValue]
             );
@@ -103,7 +104,7 @@ final class ConfigService
         if (ServiceLocator::has(Connection::class)) {
             $conn = ServiceLocator::get(Connection::class);
         } else {
-            $conn = \Piwigo\Db\DbConnection::build();
+            $conn = DbConnection::build();
         }
         $qb = $conn->createQueryBuilder()->delete(CONFIG_TABLE);
         $qb->where($qb->expr()->in('param', ':params'))

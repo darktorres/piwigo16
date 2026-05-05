@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Notification;
 
+use Piwigo\Core\BoolUtil;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -169,7 +170,7 @@ final class NotificationAdminService
 
         if (count($checkKeyList) != 0) {
             $updates       = [];
-            $enabledValue  = \Piwigo\Core\BoolUtil::toString($isSubscribe);
+            $enabledValue  = BoolUtil::toString($isSubscribe);
             $dataUsers     = $this->getUserNotifications('subscribe', $checkKeyList, !$isSubscribe);
             $msgBreakTimeout = l10n('Time to send mail is limited. Others mails are skipped.');
             $this->beginUsersEnvNbm(true);

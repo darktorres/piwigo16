@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
+use Piwigo\Storage\StorageRegistry;
+use Piwigo\Core\PageState;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Template\TemplateRegistry;
@@ -46,17 +48,17 @@ final class WatermarkProcessor
 
                     $wmStream = fopen($tmp_name, 'rb');
                     if ($wmStream !== false) {
-                        \Piwigo\Storage\StorageRegistry::disk('watermarks')->writeStream(
+                        StorageRegistry::disk('watermarks')->writeStream(
                             basename($file_path),
                             $wmStream
                         );
                         fclose($wmStream);
                         $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
                     } else {
-                        \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "$file_path " . l10n('no write access'));
+                        PageState::current()->addError($errors['watermarkImage'] = "$file_path " . l10n('no write access'));
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
+                    PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }

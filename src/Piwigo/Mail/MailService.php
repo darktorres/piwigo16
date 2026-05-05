@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Lang\Translator;
 use Doctrine\DBAL\Connection;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -13,10 +14,10 @@ use Piwigo\Core\LanguageStack;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 
-final class MailService
+final readonly class MailService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 
@@ -105,7 +106,7 @@ final class MailService
             }
         } else {
             $data = explode(',', is_scalar($data) ? (string) $data : '');
-            $data = array_map(fn (string $item): array => $this->unformatEmail($item), $data);
+            $data = array_map($this->unformatEmail(...), $data);
         }
 
         $existing = [];
@@ -156,14 +157,14 @@ final class MailService
         if (!LanguageStack::isSwitchInitialized() && !LanguageStack::hasSavedState($currentLanguage)) {
             LanguageStack::markSwitchInitialized();
             LanguageStack::saveState($currentLanguage);
-            \Piwigo\Lang\Translator::saveForLanguage($currentLanguage);
+            Translator::saveForLanguage($currentLanguage);
         }
 
         LanguageStack::pushStack($currentLanguage);
         CurrentUser::setLanguage($language);
 
         if (!LanguageStack::hasSavedState($language)) {
-            \Piwigo\Lang\Translator::pushFresh();
+            Translator::pushFresh();
             LanguageStack::setLang([]);
             LanguageStack::setInfo([]);
 
@@ -182,10 +183,10 @@ final class MailService
             load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
-            \Piwigo\Lang\Translator::saveForLanguage($language);
+            Translator::saveForLanguage($language);
         } else {
             LanguageStack::restoreState($language);
-            \Piwigo\Lang\Translator::restoreForLanguage($language);
+            Translator::restoreForLanguage($language);
         }
     }
 
@@ -194,7 +195,7 @@ final class MailService
         $language = LanguageStack::popStack();
         if ($language !== null) {
             LanguageStack::restoreState($language);
-            \Piwigo\Lang\Translator::restoreForLanguage($language);
+            Translator::restoreForLanguage($language);
             CurrentUser::setLanguage($language);
         }
     }

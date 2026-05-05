@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Config\Config;
+use Piwigo\Group\GroupRepository;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +16,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
@@ -29,12 +36,12 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 $cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string)$_GET['cat_id'] : '';
 if (empty($cat_id)) {
-    throw new \Piwigo\Exception\ValidationException('No category selected');
+    throw new ValidationException('No category selected');
 }
 
 $category = get_cat_info((int)$cat_id);
 if ($category === null) {
-    throw new \Piwigo\Exception\ValidationException('Invalid category');
+    throw new ValidationException('Invalid category');
 }
 $pageCat = $category['id'];
 $pageCat = is_numeric($pageCat ?? null) ? (int) $pageCat : 0;
@@ -83,10 +90,10 @@ SELECT group_id
         $deny_groups = array_diff($groups_granted_int, $post_groups);
         if (count($deny_groups) > 0) {
             // if you forbid access to an album, all sub-albums become automatically forbidden
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+            ServiceLocator::get(PermissionRepository::class)
                 ->deleteGroupAccess(
-                    array_map('intval', $deny_groups),
-                    array_map('intval', get_subcat_ids([$pageCat]))
+                    array_map(intval(...), $deny_groups),
+                    array_map(intval(...), get_subcat_ids([$pageCat]))
                 );
         }
 
@@ -103,7 +110,7 @@ SELECT group_id
             $query = '
 SELECT id
   FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_map(fn ($v) => (string) $v, $cat_ids)).')
+  WHERE id IN ('.implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)).')
     AND status = \'private\'
 ;';
             $private_cats = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
@@ -151,10 +158,10 @@ SELECT user_id
         $deny_users = array_diff($users_granted_int, $post_users);
         if (count($deny_users) > 0) {
             // if you forbid access to an album, all sub-album become automatically forbidden
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+            ServiceLocator::get(PermissionRepository::class)
                 ->deleteUserAccess(
-                    array_map('intval', $deny_users),
-                    array_map('intval', get_subcat_ids([$pageCat]))
+                    array_map(intval(...), $deny_users),
+                    array_map(intval(...), get_subcat_ids([$pageCat]))
                 );
         }
 
@@ -224,8 +231,8 @@ $template->assign('groups_selected', $group_granted_ids);
 $users = [];
 
 $query = '
-SELECT '.\Piwigo\Config\Config::userFields()['id'].' AS id,
-       '.\Piwigo\Config\Config::userFields()['username'].' AS username
+SELECT '.Config::userFields()['id'].' AS id,
+       '.Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
 ;';
 $users = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
@@ -245,7 +252,7 @@ $user_granted_indirect_ids = [];
 if (count($group_granted_ids) > 0) {
     $granted_groups = [];
 
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)
+    foreach (ServiceLocator::get(GroupRepository::class)
         ->findUserGroupMembersByGroupIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
         $row_group_id = is_scalar($row['group_id']) ? (string) $row['group_id'] : '';
         if (!isset($granted_groups[$row_group_id])) {
@@ -301,7 +308,7 @@ $cat_perm_page_data = [
 
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
+  'INHERIT' => Config::inheritanceByDefault(),
   'CACHE_KEYS' => $cache_keys,
   'cat_perm_page_data_json' => json_encode($cat_perm_page_data),
   ]);

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata;
 
+use Piwigo\Exception\ConfigException;
 use Piwigo\Config\Config;
 use Psr\Log\LoggerInterface;
 
-final class MetadataService
+final readonly class MetadataService
 {
     public function __construct(
-        private readonly LoggerInterface $logger,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -96,7 +97,7 @@ final class MetadataService
         $result = [];
 
         if (!function_exists('exif_read_data')) {
-            throw new \Piwigo\Exception\ConfigException('Exif extension not available, admin should disable exif use');
+            throw new ConfigException('Exif extension not available, admin should disable exif use');
         }
 
         $exif = pwg_safe_exif_read_data($filename) ?: null;
@@ -126,8 +127,8 @@ final class MetadataService
                     $gpsLatArr !== null and in_array($gpsExif['GPSLatitudeRef'], ['S', 'N']) and
                     $gpsLonArr !== null and in_array($gpsExif['GPSLongitudeRef'], ['W', 'E'])
                 ) {
-                    $gpsLatStr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gpsLatArr);
-                    $gpsLonStr = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $gpsLonArr);
+                    $gpsLatStr = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $gpsLatArr);
+                    $gpsLonStr = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $gpsLonArr);
                     $gpsLatRef = is_scalar($gpsExif['GPSLatitudeRef']) ? (string) $gpsExif['GPSLatitudeRef'] : '';
                     $gpsLonRef = is_scalar($gpsExif['GPSLongitudeRef']) ? (string) $gpsExif['GPSLongitudeRef'] : '';
                     $latitude  = $this->parseExifGpsData($gpsLatStr, $gpsLatRef);

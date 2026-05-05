@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Config\Config;
+use Piwigo\Db\SqlExpr;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -18,7 +24,7 @@ use Piwigo\Admin\Tabsheet;
  */
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -41,7 +47,7 @@ check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
 if (isset($_GET['action'])) {
     if ('empty_caddie' == $_GET['action']) {
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ServiceLocator::get(ImageRepository::class)
             ->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $_SESSION['page_infos'] = [
@@ -155,7 +161,7 @@ if (isset($_POST['submitFilter'])) {
     if (isset($_POST['filter_level_use'])) {
         check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
 
-        if (in_array($_POST['filter_level'], \Piwigo\Config\Config::availablePermissionLevels())) {
+        if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
             $bmf['level'] = $_POST['filter_level'];
 
             if (isset($_POST['filter_level_include_lower'])) {
@@ -240,7 +246,7 @@ elseif (isset($_GET['filter'])) {
                 break;
 
             case 'level':
-                if (is_numeric($value) && in_array($value, \Piwigo\Config\Config::availablePermissionLevels())) {
+                if (is_numeric($value) && in_array($value, Config::availablePermissionLevels())) {
                     $bmf['level'] = $value;
                 }
                 break;
@@ -346,14 +352,14 @@ SELECT image_id
             break;
 
         case 'last_import':
-            $last_import_date_raw = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            $last_import_date_raw = ServiceLocator::get(ImageRepository::class)
                 ->findMaxDateAvailable();
             if (!empty($last_import_date_raw)) {
                 $last_import_date = $last_import_date_raw;
                 $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
-  WHERE date_available BETWEEN '.\Piwigo\Db\SqlExpr::recentPeriodExpr(1, $last_import_date).' AND \''.$last_import_date.'\'
+  WHERE date_available BETWEEN '.SqlExpr::recentPeriodExpr(1, $last_import_date).' AND \''.$last_import_date.'\'
 ;';
                 $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             }
@@ -470,7 +476,7 @@ SELECT
                 $query = '
 SELECT id
   FROM '.IMAGES_TABLE.'
-  '.\Piwigo\Config\Config::orderBy();
+  '.Config::orderBy();
 
                 $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
             }
@@ -487,7 +493,7 @@ if (isset($bmf['category'])) {
     $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
 
     // we need to check the category still exists (it may have been deleted since it was added in the session)
-    if (!\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->existsById($bmf_category)) {
+    if (!ServiceLocator::get(CategoryRepository::class)->existsById($bmf_category)) {
         unset($_SESSION['bulk_manager_filter']);
         redirect(get_root_url().'admin.php?page='.(is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
     }
@@ -517,7 +523,7 @@ if (isset($bmf['level'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE level '.$operator.' '.$bmf_level.'
-  '.\Piwigo\Config\Config::orderBy();
+  '.Config::orderBy();
 
     $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
@@ -563,7 +569,7 @@ if (isset($bmf['dimension'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.\Piwigo\Config\Config::orderBy();
+  '.Config::orderBy();
 
     $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
@@ -588,7 +594,7 @@ if (isset($bmf['filesize'])) {
 SELECT id
   FROM '.IMAGES_TABLE.'
   WHERE '.implode(' AND ', $where_clause).'
-  '.\Piwigo\Config\Config::orderBy();
+  '.Config::orderBy();
 
     $filter_sets[] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
 }
@@ -668,7 +674,7 @@ $ratios = [];
 $dimensions = [];
 
 // get all width, height and ratios
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findDistinctDimensions() as $row) {
+foreach (ServiceLocator::get(ImageRepository::class)->findDistinctDimensions() as $row) {
     $row_width  = $row['width'];
     $row_height = $row['height'];
     if ($row_width > 0 && $row_height > 0) {
@@ -743,7 +749,7 @@ $template->assign('dimensions', $dimensions);
 $filesizes = [];
 $filesize = [];
 
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
+foreach (ServiceLocator::get(ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
     $filesizes[] = sprintf('%.1f', $filesize_kb / 1024);
 }
 
@@ -779,28 +785,28 @@ $dim_heights = $dimensions['heights'];
 $dim_ratios  = $dimensions['ratios'];
 $sliders_json = [
     'widths' => [
-        'values'   => array_map('floatval', explode(',', $dim_widths)),
+        'values'   => array_map(floatval(...), explode(',', $dim_widths)),
         'selected' => ['min' => $dimensions['selected']['min_width'], 'max' => $dimensions['selected']['max_width']],
         'text'     => l10n('between %d and %d pixels'),
     ],
     'heights' => [
-        'values'   => array_map('floatval', explode(',', $dim_heights)),
+        'values'   => array_map(floatval(...), explode(',', $dim_heights)),
         'selected' => ['min' => $dimensions['selected']['min_height'], 'max' => $dimensions['selected']['max_height']],
         'text'     => l10n('between %d and %d pixels'),
     ],
     'ratios' => [
-        'values'   => array_map('floatval', explode(',', $dim_ratios)),
+        'values'   => array_map(floatval(...), explode(',', $dim_ratios)),
         'selected' => ['min' => $dimensions['selected']['min_ratio'], 'max' => $dimensions['selected']['max_ratio']],
         'text'     => l10n('between %.2f and %.2f'),
     ],
     'filesizes' => [
-        'values'   => array_map('floatval', explode(',', $filesize['list'])),
+        'values'   => array_map(floatval(...), explode(',', $filesize['list'])),
         'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],
         'text'     => l10n('between %s and %s MB'),
     ],
 ];
 
-$filter_category_selected_val = isset($selected_category) ? $selected_category : null;
+$filter_category_selected_val = $selected_category ?? null;
 
 $template->assign('batch_filter_page_data_json', json_encode([
     'sliders'                => $sliders_json,

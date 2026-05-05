@@ -89,7 +89,7 @@ final class PermalinkRepository extends AbstractRepository
     /** Insert a new old_permalink row with date_deleted set to NOW(). */
     public function insertOldPermalinkDeleted(string $permalink, int $catId): void
     {
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $this->conn->insert($this->table('old_permalinks'), [
             'permalink'    => $permalink,
             'cat_id'       => $catId,

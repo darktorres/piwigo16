@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Tag\TagService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,7 +17,7 @@ declare(strict_types=1);
 
 function get_nb_available_tags(): int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->getNbAvailableTags();
+    return ServiceLocator::get(TagService::class)->getNbAvailableTags();
 }
 
 /**
@@ -23,13 +26,13 @@ function get_nb_available_tags(): int
  */
 function get_available_tags(array $tag_ids = []): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->getAvailableTags($tag_ids);
+    return ServiceLocator::get(TagService::class)->getAvailableTags($tag_ids);
 }
 
 /** @return array<mixed> */
 function get_all_tags(): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->getAllTags();
+    return ServiceLocator::get(TagService::class)->getAllTags();
 }
 
 /**
@@ -38,7 +41,7 @@ function get_all_tags(): array
  */
 function add_level_to_tags(array $tags): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->addLevelToTags($tags);
+    return ServiceLocator::get(TagService::class)->addLevelToTags($tags);
 }
 
 /**
@@ -47,7 +50,7 @@ function add_level_to_tags(array $tags): array
  */
 function get_image_ids_for_tags(array|int|string $tag_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', ?string $order_by = '', bool $use_permissions = true): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->getImageIdsForTags($tag_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
+    return ServiceLocator::get(TagService::class)->getImageIdsForTags($tag_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
 }
 
 /**
@@ -57,7 +60,7 @@ function get_image_ids_for_tags(array|int|string $tag_ids, string $mode = 'AND',
  */
 function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = []): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->getCommonTags($items, $max_tags, $excluded_tag_ids);
+    return ServiceLocator::get(TagService::class)->getCommonTags($items, $max_tags, $excluded_tag_ids);
 }
 
 /**
@@ -68,7 +71,7 @@ function get_common_tags(array $items, int $max_tags, array $excluded_tag_ids = 
  */
 function find_tags(array $ids = [], array $url_names = [], array $names = []): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->findTags($ids, $url_names, $names);
+    return ServiceLocator::get(TagService::class)->findTags($ids, $url_names, $names);
 }
 
 /**
@@ -77,7 +80,7 @@ function find_tags(array $ids = [], array $url_names = [], array $names = []): a
  */
 function tags_id_compare(array $a, array $b): int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->tagsIdCompare($a, $b);
+    return ServiceLocator::get(TagService::class)->tagsIdCompare($a, $b);
 }
 
 /**
@@ -86,5 +89,5 @@ function tags_id_compare(array $a, array $b): int
  */
 function tags_counter_compare(array $a, array $b): int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagService::class)->tagsCounterCompare($a, $b);
+    return ServiceLocator::get(TagService::class)->tagsCounterCompare($a, $b);
 }

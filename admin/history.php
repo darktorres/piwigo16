@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Users\UserRepository;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -21,7 +27,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -30,7 +36,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 require_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 
-$types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
+$types = array_merge(['none'], SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 
 $display_thumbnails = ['no_display_thumbnail' => l10n('No display'),
                             'display_thumbnail_classic' => l10n('Classic display'),
@@ -72,7 +78,7 @@ if (isset($page['search_id'])) {
         get_root_url().'admin.php'.get_query_string_diff(['start']),
         $page['nb_lines'],
         $page['start'],
-        \Piwigo\Config\Config::nbLogsPage()
+        Config::nbLogsPage()
     );
 
     $template->assign('navbar', $navbar);
@@ -114,8 +120,8 @@ if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET[
 }
 
 if ($form_param['user_id'] != '-1') {
-    $userFields = \Piwigo\Config\Config::userFields();
-    $foundUsername = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    $userFields = Config::userFields();
+    $foundUsername = ServiceLocator::get(UserRepository::class)
         ->findUsernameById(
             $userFields['id'],
             $userFields['username'],
@@ -143,13 +149,13 @@ $template->assign(
 
 $template->assign('display_thumbnails', $display_thumbnails);
 $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
-$template->assign('guest_id', \Piwigo\Config\Config::guestId());
+$template->assign('guest_id', Config::guestId());
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
 $template->assign('page_data_json', json_encode([
     'API_METHOD'                  => 'ws.php?format=json&method=pwg.history.search',
     'filter_user_name'            => $form_param['user_name'] ?? null,
-    'guest_id'                    => \Piwigo\Config\Config::guestId(),
+    'guest_id'                    => Config::guestId(),
     'today'                       => date('Y-m-d'),
     'initial_user_id'             => $form_param['user_id'],
     'initial_image_id'            => $form_param['image_id'] ?? '',

@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Core\BoolUtil;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Exception\NotFoundException;
+use Piwigo\Ws\PwgServerRegistry;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Storage\StorageRegistry;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Image\DerivativeParams;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
@@ -46,7 +55,7 @@ final class UploadService
             }
             if (is_bool($config[$field]['default'])) {
                 $value    = isset($value) ? true : false;
-                $updates[] = ['param' => $field, 'value' => \Piwigo\Core\BoolUtil::toString($value)];
+                $updates[] = ['param' => $field, 'value' => BoolUtil::toString($value)];
             } elseif ($config[$field]['can_be_null'] && empty($value)) {
                 $updates[] = ['param' => $field, 'value' => 'false'];
             } else {
@@ -73,7 +82,7 @@ final class UploadService
     public function addUploadedFile(string $sourceFilepath, ?string $originalFilename = null, ?array $categories = null, ?int $level = null, ?int $imageId = null, ?string $originalMd5sum = null): int
     {
         $logger = LoggerRegistry::current();
-        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $userId = CurrentUser::get()->id;
         if ($originalFilename !== null) {
             $originalFilename = htmlspecialchars($originalFilename);
         }
@@ -96,13 +105,13 @@ final class UploadService
         $dbnow    = null;
 
         if (isset($imageId)) {
-            $filePath = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findPathById($imageId);
+            $filePath = ServiceLocator::get(ImageRepository::class)->findPathById($imageId);
             if ($filePath === null) {
-                throw new \Piwigo\Exception\NotFoundException('[addUploadedFile] photo does not exist in database');
+                throw new NotFoundException('[addUploadedFile] photo does not exist in database');
             }
             delete_element_files([$imageId]);
         } else {
-            $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+            $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];
             $uploadDir = sprintf(PHPWG_ROOT_PATH . Config::uploadDir() . '/%s/%s/%s', $year, $month, $day);
             $dateString = preg_replace('/[^\d]/', '', $dbnow);
@@ -127,20 +136,20 @@ final class UploadService
                     unlink($sourceFilepath);
                     $errorMsg = 'Extension "' . $originalExtension . '" for "' . $originalFilename . '" does not match MIME "' . $finfoType . '"';
                     if (defined('IN_WS')) {
-                        \Piwigo\Ws\PwgServerRegistry::current()->sendResponse(new PwgError(415, $errorMsg));
+                        PwgServerRegistry::current()->sendResponse(new PwgError(415, $errorMsg));
                         exit;
                     }
-                    throw new \Piwigo\Exception\ValidationException($errorMsg);
+                    throw new ValidationException($errorMsg);
                 }
                 if (in_array($originalExtension, Config::fileExtensions())) {
                     $filePathPattern .= $originalExtension;
                 } else {
                     unlink($sourceFilepath);
-                    throw new \Piwigo\Exception\ValidationException('unexpected file type');
+                    throw new ValidationException('unexpected file type');
                 }
             } else {
                 unlink($sourceFilepath);
-                throw new \Piwigo\Exception\ValidationException('forbidden file type');
+                throw new ValidationException('forbidden file type');
             }
 
             $this->prepareDirectory($uploadDir);
@@ -150,10 +159,10 @@ final class UploadService
         }
 
         $uploadRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
-        $uploadRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($uploadRoot, $filePath);
+        $uploadRelPath = StorageRegistry::stripRoot($uploadRoot, $filePath);
         $uploadStream  = fopen($sourceFilepath, 'rb');
         if ($uploadStream !== false) {
-            \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($uploadRelPath, $uploadStream);
+            StorageRegistry::disk('uploads')->writeStream($uploadRelPath, $uploadStream);
             fclose($uploadStream);
             if (!is_uploaded_file($sourceFilepath)) {
                 Filesystem::tryUnlink($sourceFilepath);
@@ -203,7 +212,7 @@ final class UploadService
         }
         sync_metadata([$imageId]);
 
-        $imageInfos = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findById($imageId);
+        $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
         if ($imageInfos === null) {
             return $imageId;
         }
@@ -226,7 +235,7 @@ final class UploadService
             conf_update_param('lounge_active', false, true);
         }
         if (!Config::loungeActive()) {
-            $nbPhotos = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+            $nbPhotos = ServiceLocator::get(ImageRepository::class)->countAll();
             if ($nbPhotos >= Config::loungeActivateThreshold()) {
                 conf_update_param('lounge_active', true, true);
             }
@@ -246,7 +255,7 @@ final class UploadService
     public function addFormat(string $sourceFilepath, string $formatExt, string $formatOf): string
     {
         if (!conf_get_param('enable_formats', false)) {
-            throw new \Piwigo\Exception\ConfigException('[addFormat] formats are disabled');
+            throw new ConfigException('[addFormat] formats are disabled');
         }
         $formatExtList = conf_get_param('format_ext', ['cr2']);
         if (!is_array($formatExtList)) {
@@ -254,21 +263,21 @@ final class UploadService
         }
         if (!in_array($formatExt, $formatExtList)) {
             $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $formatExtList);
-            throw new \Piwigo\Exception\ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
+            throw new ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
         }
         $images = get_dbal_connection()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
         if (!isset($images[0])) {
-            throw new \Piwigo\Exception\NotFoundException('[addFormat] photo does not exist in database');
+            throw new NotFoundException('[addFormat] photo does not exist in database');
         }
         $origPath   = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
         $formatPath = dirname($origPath) . '/pwg_format/' . get_filename_wo_extension(basename($origPath)) . '.' . $formatExt;
         $this->prepareDirectory(dirname($formatPath));
         $fmtRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
         $fmtAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $formatPath), '/');
-        $fmtRelPath = \Piwigo\Storage\StorageRegistry::stripRoot($fmtRoot, $fmtAbsPath);
+        $fmtRelPath = StorageRegistry::stripRoot($fmtRoot, $fmtAbsPath);
         $fmtStream  = fopen($sourceFilepath, 'rb');
         if ($fmtStream !== false) {
-            \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($fmtRelPath, $fmtStream);
+            StorageRegistry::disk('uploads')->writeStream($fmtRelPath, $fmtStream);
             fclose($fmtStream);
             if (!is_uploaded_file($sourceFilepath)) {
                 Filesystem::tryUnlink($sourceFilepath);
@@ -466,14 +475,14 @@ final class UploadService
                 restore_error_handler();
             }
             if (!$ok) {
-                throw new \Piwigo\Exception\ConfigException('[prepareDirectory] cannot create "' . $directory . '"');
+                throw new ConfigException('[prepareDirectory] cannot create "' . $directory . '"');
             }
         }
         if (!is_writable($directory)) {
             Filesystem::tryChmod($directory, 0777);
         }
         if (!is_writable($directory)) {
-            throw new \Piwigo\Exception\ConfigException('[prepareDirectory] directory "' . $directory . '" has no write access');
+            throw new ConfigException('[prepareDirectory] directory "' . $directory . '" has no write access');
         }
         secure_directory($directory);
     }
@@ -581,7 +590,7 @@ final class UploadService
         $w = $h   = 2000;
         foreach (ImageStdParams::get_all_types() as $type) {
             $params = $enabled[$type] ?? ($disabled[$type] ?? null);
-            if ($params instanceof \Piwigo\Image\DerivativeParams) {
+            if ($params instanceof DerivativeParams) {
                 [$w, $h] = $params->sizing->ideal_size;
             }
         }

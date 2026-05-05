@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Piwigo\Exception\ValidationException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
@@ -12,12 +13,12 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Log\LoggerInterface;
 
-final class SearchService
+final readonly class SearchService
 {
     public function __construct(
-        private readonly SearchRepository $searchRepo,
-        private readonly Connection $conn,
-        private readonly LoggerInterface $logger,
+        private SearchRepository $searchRepo,
+        private Connection $conn,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -42,7 +43,7 @@ final class SearchService
         $clausePattern = $this->getSearchIdPattern($candidate);
 
         if (empty($clausePattern)) {
-            throw new \Piwigo\Exception\ValidationException('Invalid search identifier');
+            throw new ValidationException('Invalid search identifier');
         }
 
         $query   = 'SELECT * FROM ' . SEARCH_TABLE . ' WHERE ' . sprintf($clausePattern, $candidate) . ';';
@@ -397,9 +398,7 @@ final class SearchService
             /** @var array<int, array<string>> $typedFilterValues */
             $typedFilterValues = array_map(
                 /** @param array<mixed> $v */
-                static function (array $v): array {
-                    return array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $v);
-                },
+                static fn(array $v): array => array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $v),
                 array_values($imageIdsForFilter)
             );
             if (count($typedFilterValues) > 1) {
@@ -462,11 +461,11 @@ final class SearchService
             $functionStart = get_moment();
             $first         = $imageIdsForFilter[array_shift($otherFilters)] ?? [];
             $otherFiltersItems = is_array($first)
-                ? array_values(array_filter($first, fn ($v) => is_int($v) || is_string($v)))
+                ? array_values(array_filter($first, fn ($v): bool => is_int($v) || is_string($v)))
                 : [];
             foreach ($otherFilters as $otherFilter) {
                 $nextRaw           = is_array($imageIdsForFilter[$otherFilter] ?? null) ? $imageIdsForFilter[$otherFilter] : [];
-                $next              = array_filter($nextRaw, fn ($v) => is_int($v) || is_string($v));
+                $next              = array_filter($nextRaw, fn ($v): bool => is_int($v) || is_string($v));
                 $otherFiltersItems = array_intersect($otherFiltersItems, $next);
             }
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
@@ -1026,7 +1025,7 @@ final class SearchService
     public function saveSearch(array $rules, int|string|null $forkedFrom = null): array
     {
         $createdBy  = CurrentUser::get()->id;
-        $dbnow      = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $dbnow      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
         single_insert(SEARCH_TABLE, [

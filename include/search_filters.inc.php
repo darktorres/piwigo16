@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -10,7 +14,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-$filters_views_raw = conf_get_param('filters_views', \Piwigo\Config\Config::defaultFiltersViews());
+$filters_views_raw = conf_get_param('filters_views', Config::defaultFiltersViews());
 $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
 /** @var array<string, array<string,mixed>> $filters_views */
 $filters_views = safe_unserialize($filters_views_str);
@@ -86,12 +90,12 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
             $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
             $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
             $missing_tag_ids = array_diff(
-                array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words_raw),
-                array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_words_raw),
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
             );
 
             if (count($missing_tag_ids) > 0) {
-                $filter_tags = array_merge(get_available_tags(array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                $filter_tags = array_merge(get_available_tags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
             }
         }
 
@@ -102,8 +106,8 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         // in case the search has forbidden tags for current user, we need to filter the search rule
         $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
         $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
-        $tags_words2 = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
-        $filter_tag_ids_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
+        $tags_words2 = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
+        $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
         $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
         $my_search['fields']['tags'] = $tags_field2;
     } elseif (isset($my_search['fields']['tags']) and !($display_filters['tags']['access'])) {
@@ -154,8 +158,8 @@ SELECT
         // in case the search has forbidden authors for current user, we need to filter the search rule
         $author_field = is_array($my_search['fields']['author']) ? $my_search['fields']['author'] : [];
         $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
-        $author_words_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_words_raw);
-        $author_names_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $author_names);
+        $author_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $author_words_raw);
+        $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $author_names);
         $author_field['words'] = array_intersect($author_words_str, $author_names_str);
         $my_search['fields']['author'] = $author_field;
     } elseif (isset($my_search['fields']['author']) and !($display_filters['author']['access'])) {
@@ -192,7 +196,7 @@ SELECT
             $list_of_dates = [];
             $pre_counters = [];
 
-            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            foreach (ServiceLocator::get(Connection::class)
                 ->executeQuery($query)->fetchAllAssociative() as $row) {
                 foreach ($thresholds as $threshold => $date_limit) {
                     if ($row['date'] > $date_limit) {
@@ -294,7 +298,7 @@ SELECT
             $list_of_dates = [];
             $pre_counters = [];
 
-            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            foreach (ServiceLocator::get(Connection::class)
                 ->executeQuery($query)->fetchAllAssociative() as $row) {
                 if (!empty($row['date'])) {
                     foreach ($thresholds as $threshold => $date_limit) {
@@ -405,10 +409,10 @@ SELECT
 
             $query = '
 SELECT
-    '.\Piwigo\Config\Config::userFields()['id'].' AS id,
-    '.\Piwigo\Config\Config::userFields()['username'].' AS username
+    '.Config::userFields()['id'].' AS id,
+    '.Config::userFields()['username'].' AS username
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
+  WHERE '.Config::userFields()['id'].' IN ('.implode(',', $user_ids).')
 ;';
             $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
@@ -423,7 +427,7 @@ SELECT
 
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
         $added_by_field_raw = is_array($my_search['fields']['added_by']) ? $my_search['fields']['added_by'] : [];
-        $added_by_field_int = array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
+        $added_by_field_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
         $my_search['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
     } elseif (isset($my_search['fields']['added_by']) and !($display_filters['added_by']['access'])) {
         unset($my_search['fields']['added_by']);
@@ -441,9 +445,9 @@ SELECT
     uppercats
   FROM '.CATEGORIES_TABLE.'
     INNER JOIN '.USER_CACHE_CATEGORIES_TABLE.' ON id = cat_id AND user_id = '.$user['id'].'
-  WHERE id IN ('.implode(',', array_map(fn (mixed $v) => is_numeric($v) ? (int) $v : 0, $cat_words)).')
+  WHERE id IN ('.implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_words)).')
 ;';
-            foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            foreach (ServiceLocator::get(Connection::class)
                 ->executeQuery($query)->fetchAllAssociative() as $row) {
                 $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
@@ -458,7 +462,7 @@ SELECT
             $template->assign('fullname_of', json_encode($fullname_of));
 
             // in case the search has forbidden albums for current user, we need to filter the search rule
-            $cat_words_str = array_map(fn (mixed $v) => is_scalar($v) ? (string) $v : '', $cat_words);
+            $cat_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_words);
             $cat_field['words'] = array_intersect($cat_words_str, array_keys($fullname_of));
             $my_search['fields']['cat'] = $cat_field;
         }
@@ -514,7 +518,7 @@ SELECT
     }
 
     // For rating
-    if (\Piwigo\Config\Config::rateEnabled()) {
+    if (Config::rateEnabled()) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
         if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
@@ -589,7 +593,7 @@ SELECT
     JOIN '.IMAGE_CATEGORY_TABLE.' AS ic ON ic.image_id = i.id
   WHERE '.$filter_clause.'
 ;';
-        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        foreach (ServiceLocator::get(Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $row) {
             $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
             $key_fs = sprintf('%.1f', $fs_val / 1024);
@@ -790,7 +794,7 @@ SELECT
     $sliders_data = [];
     if (isset($filesize)) {
         $sliders_data['filesizes'] = [
-            'values'   => array_map('floatval', explode(',', $filesize['list'])),
+            'values'   => array_map(floatval(...), explode(',', (string) $filesize['list'])),
             'selected' => [
                 'min' => $filesize['selected']['min'],
                 'max' => $filesize['selected']['max'],
@@ -800,7 +804,7 @@ SELECT
     }
     if (isset($height)) {
         $sliders_data['heights'] = [
-            'values'   => array_map('intval', explode(',', $height['list'])),
+            'values'   => array_map(intval(...), explode(',', (string) $height['list'])),
             'selected' => [
                 'min' => $height['selected']['min'],
                 'max' => $height['selected']['max'],
@@ -810,7 +814,7 @@ SELECT
     }
     if (isset($width)) {
         $sliders_data['widths'] = [
-            'values'   => array_map('intval', explode(',', $width['list'])),
+            'values'   => array_map(intval(...), explode(',', (string) $width['list'])),
             'selected' => [
                 'min' => $width['selected']['min'],
                 'max' => $width['selected']['max'],
@@ -824,7 +828,7 @@ SELECT
         'global_params'               => $my_search,
         'search_id'                   => $page['search'],
         'fullname_of_cat'             => $fullname_of ?? [],
-        'show_filter_ratings'         => \Piwigo\Config\Config::rateEnabled() ? true : false,
+        'show_filter_ratings'         => Config::rateEnabled() ? true : false,
         'sliders'                     => $sliders_data,
         'str_word_widget_label'       => l10n('Search for words'),
         'str_tags_widget_label'       => l10n('Tag'),

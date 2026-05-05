@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Plugins;
 
 // +-----------------------------------------------------------------------+
@@ -12,14 +16,14 @@ use Piwigo\Admin\Plugins;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
-    throw new \Piwigo\Exception\ConfigException('Piwigo extensions install/update system is disabled');
+if (!Config::enableExtensionsInstall()) {
+    throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
 $template->set_filenames(['plugins' => 'plugins_new.tpl']);
@@ -31,7 +35,7 @@ $plugins = new Plugins();
 //------------------------------------------------------automatic installation
 if (isset($_GET['revision']) and isset($_GET['extension'])) {
     if (!is_webmaster()) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
+        PageState::current()->addError(l10n('Webmaster status is required.'));
     } else {
         check_pwg_token();
 
@@ -51,8 +55,8 @@ if (isset($_GET['installstatus'])) {
             // installed plugin and click on the activation switch.
             $activate_url = get_root_url().'admin.php?page=plugins&amp;filter=deactivated';
 
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
-            \Piwigo\Core\PageState::current()->addInfo('<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>');
+            PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
+            PageState::current()->addInfo('<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>');
 
             $getPluginId = is_string($_GET['plugin_id'] ?? null) ? $_GET['plugin_id'] : '';
             if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
@@ -69,20 +73,20 @@ if (isset($_GET['installstatus'])) {
             break;
 
         case 'temp_path_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
+            PageState::current()->addError(l10n('Can\'t create temporary file.'));
             break;
 
         case 'dl_archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
+            PageState::current()->addError(l10n('Can\'t download archive.'));
             break;
 
         case 'archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+            PageState::current()->addError(l10n('Can\'t read or extract archive.'));
             break;
 
         default:
-            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
-            \Piwigo\Core\PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
+            PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
+            PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
     }
 }
 
@@ -187,7 +191,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
 
 
 } else {
-    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+    PageState::current()->addError(l10n('Can\'t connect to server.'));
 }
 
 if (!$beta_test and preg_match('/(beta|RC)/', PHPWG_VERSION)) {

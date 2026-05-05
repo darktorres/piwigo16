@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Core\ServiceLocator;
+
 final class PreferencesService
 {
     public function getBrowserLanguage(): false|int|string
@@ -57,7 +59,7 @@ final class PreferencesService
         $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $preferences = $user['preferences'] ?? [];
 
-        \Piwigo\Core\ServiceLocator::get(UserRepository::class)
+        ServiceLocator::get(UserRepository::class)
             ->updatePreferences(CurrentUser::get()->id, serialize($preferences));
     }
 

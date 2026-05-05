@@ -11,11 +11,11 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
-final class CategoryService
+final readonly class CategoryService
 {
     public function __construct(
-        private readonly CategoryRepository $catRepo,
-        private readonly Connection $conn,
+        private CategoryRepository $catRepo,
+        private Connection $conn,
     ) {
     }
 

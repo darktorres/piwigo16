@@ -78,7 +78,7 @@ final class UserRepository extends AbstractRepository
      */
     public function updateLastVisit(int $userId): void
     {
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $this->conn->createQueryBuilder()
             ->update($this->table('user_infos'))
             ->set('last_visit', ':now')
@@ -293,7 +293,7 @@ final class UserRepository extends AbstractRepository
             ->set('status', ':status')
             ->setParameter('status', $status);
         $qb->where($qb->expr()->in('user_id', ':userIds'))
-           ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -543,7 +543,7 @@ final class UserRepository extends AbstractRepository
         $rows = $this->conn->executeQuery(
             "SELECT $idField AS id, $usernameField AS username FROM $usersTable WHERE $idField IN (?)",
             [$ids],
-            [\Doctrine\DBAL\ArrayParameterType::INTEGER]
+            [ArrayParameterType::INTEGER]
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {

@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Config\Config;
+use Doctrine\DBAL\Connection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -20,7 +27,7 @@ use Piwigo\Image\SrcImage;
  */
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -97,21 +104,21 @@ if (isset($_POST['submit'])) {
     // if the user tries to apply an action, it means that there is at least 1
     // photo in the selection
     if (count($collection_int) == 0) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Select at least one photo'));
+        PageState::current()->addError(l10n('Select at least one photo'));
     }
 
     $action = is_scalar($_POST['selectAction'] ?? null) ? (string) $_POST['selectAction'] : '';
     $redirect = false;
 
     if ('remove_from_caddie' == $action) {
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        ServiceLocator::get(ImageRepository::class)
             ->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
 
         // remove from caddie action available only in caddie so reload content
         $redirect = true;
     } elseif ('add_tags' == $action) {
         if (empty($_POST['add_tags'])) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
+            PageState::current()->addError(l10n('Select at least one tag'));
         } else {
             $add_tags_raw = $_POST['add_tags'];
             if (is_array($add_tags_raw)) {
@@ -133,7 +140,7 @@ if (isset($_POST['submit'])) {
         if (count($del_tags_int) > 0) {
             $taglist_before = get_image_tag_ids($collection_int);
 
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+            ServiceLocator::get(TagRepository::class)
                 ->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
 
             $taglist_after = get_image_tag_ids($collection_int);
@@ -149,15 +156,15 @@ if (isset($_POST['submit'])) {
                 $redirect = true;
             }
         } else {
-            \Piwigo\Core\PageState::current()->addError(l10n('Select at least one tag'));
+            PageState::current()->addError(l10n('Select at least one tag'));
         }
     }
 
     if ('associate' == $action) {
         if (empty($_POST['associate'])) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Select at least one album'));
+            PageState::current()->addError(l10n('Select at least one album'));
         } else {
-            $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
+            $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
             associate_images_to_categories(
                 $collection_int,
                 $associate_raw
@@ -336,18 +343,18 @@ if (isset($_POST['submit'])) {
                 $redirect_url = get_root_url().'admin.php?page='.(is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                 $redirect = true;
             } else {
-                \Piwigo\Core\PageState::current()->addError(l10n('No photo can be deleted'));
+                PageState::current()->addError(l10n('No photo can be deleted'));
             }
         } else {
-            \Piwigo\Core\PageState::current()->addError(l10n('You need to confirm deletion'));
+            PageState::current()->addError(l10n('You need to confirm deletion'));
         }
     }
 
     // synchronize metadata
     elseif ('metadata' == $action) {
-        \Piwigo\Core\PageState::current()->addInfo(l10n('Metadata synchronized from file').' <span class="badge">'.count($collection_int).'</span>');
+        PageState::current()->addInfo(l10n('Metadata synchronized from file').' <span class="badge">'.count($collection_int).'</span>');
     } elseif ('delete_derivatives' == $action && !empty($_POST['del_derivatives_type'])) {
-        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+        foreach (ServiceLocator::get(ImageRepository::class)
             ->findPathsAndRepresentativesByIds($collection_int) as $info) {
             $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
             foreach ($del_types as $type) {
@@ -357,10 +364,10 @@ if (isset($_POST['submit'])) {
         }
     } elseif ('generate_derivatives' == $action) {
         if ($_POST['regenerateSuccess'] != '0') {
-            \Piwigo\Core\PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess']));
+            PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess']));
         }
         if ($_POST['regenerateError'] != '0') {
-            \Piwigo\Core\PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError']));
+            PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError']));
         }
     }
 
@@ -448,8 +455,8 @@ if (!empty($_GET['display'])) {
     } else {
         $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 20;
     }
-} elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
-    $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageGlobal();
+} elseif (in_array(Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
+    $page['nb_images'] = Config::batchManagerImagesPerPageGlobal();
 } else {
     $page['nb_images'] = 20;
 }
@@ -479,7 +486,7 @@ if (count($page['cat_elements_id']) > 0) {
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, [ 'id' ]);
-        \Piwigo\Config\Config::override('order_by', ' ORDER BY '.join(', ', $order_by_fields));
+        Config::override('order_by', ' ORDER BY '.join(', ', $order_by_fields));
     }
 
     $query = '
@@ -489,9 +496,9 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     if ($is_category) {
         $category_info = get_cat_info($bmf_category_val);
 
-        \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByInsideCategory());
+        Config::override('order_by', Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Config\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+            Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -507,10 +514,10 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
     }
 
     $query .= '
-  '.\Piwigo\Config\Config::orderBy().'
+  '.Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
-    $batchRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    $batchRows = ServiceLocator::get(Connection::class)
         ->executeQuery($query)
         ->fetchAllAssociative();
 

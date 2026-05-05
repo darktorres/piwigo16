@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+
 global $persistent_cache, $title, $debug, $t2;
 
 use Piwigo\Core\PageState;
@@ -32,18 +34,18 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
     $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_admin', true);
 }
 
-$pageBanner = $page['page_banner'] ?? \Piwigo\Config\Config::pageBanner();
+$pageBanner = $page['page_banner'] ?? Config::pageBanner();
 $template->assign(
     [
     'GALLERY_TITLE' =>
-      $page['gallery_title'] ?? \Piwigo\Config\Config::galleryTitle(),
+      $page['gallery_title'] ?? Config::galleryTitle(),
 
     'PAGE_BANNER' =>
       trigger_change(
           'render_page_banner',
           str_replace(
               '%gallery_title%',
-              \Piwigo\Config\Config::galleryTitle(),
+              Config::galleryTitle(),
               is_string($pageBanner) ? $pageBanner : ''
           )
       ),
@@ -56,7 +58,7 @@ $template->assign(
 
     'U_HOME' => get_gallery_home_url(),
 
-    'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
+    'LEVEL_SEPARATOR' => Config::levelSeparator(),
 
     'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
@@ -73,7 +75,7 @@ if (!empty($header_notes)) {
 }
 
 // No referencing is required
-if (!\Piwigo\Config\Config::metaRef()) {
+if (!Config::metaRef()) {
     if (!isset($page['meta_robots']) || !is_array($page['meta_robots'])) {
         $page['meta_robots'] = [];
     }

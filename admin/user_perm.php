@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Permission\PermissionRepository;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +14,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('IN_ADMIN')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
@@ -34,7 +39,7 @@ if (!empty($_POST)) {
 if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
     $page['user'] = $_GET['user_id'];
 } else {
-    throw new \Piwigo\Exception\ValidationException('user_id URL parameter is missing');
+    throw new ValidationException('user_id URL parameter is missing');
 }
 
 // +-----------------------------------------------------------------------+
@@ -48,13 +53,13 @@ if (isset($_POST['falsify'])
     and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $post_cat_true_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+    $post_cat_true_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
     $subcats = get_subcat_ids($post_cat_true_ids);
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
-        ->deleteUserAccessForUser((int) $page['user'], array_map('intval', $subcats));
+    ServiceLocator::get(PermissionRepository::class)
+        ->deleteUserAccessForUser((int) $page['user'], array_map(intval(...), $subcats));
 } elseif (isset($_POST['trueify'])
     and count($post_cat_false) > 0) {
-    $post_cat_false_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+    $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
     add_permission_on_category($post_cat_false_ids, (int) $page['user']);
 }
 
@@ -90,7 +95,7 @@ $template->assign(
 // retrieve category ids authorized to the groups the user belongs to
 $group_authorized = [];
 
-$groupAuthorizedRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+$groupAuthorizedRows = ServiceLocator::get(PermissionRepository::class)
     ->findGroupAuthorizedCategoriesForUser((int) $page['user']);
 
 if (count($groupAuthorizedRows) > 0) {
@@ -123,7 +128,7 @@ $query_true .= '
 ;';
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+$authorized_ids = ServiceLocator::get(PermissionRepository::class)
     ->findDirectUserCatIds((int) $page['user'], $group_authorized);
 
 $query_false = '

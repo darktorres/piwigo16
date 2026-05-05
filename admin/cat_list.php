@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Config\Config;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +13,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -162,10 +166,10 @@ elseif (isset($_POST['submitAdd'])) {
 
     invalidate_user_cache();
     if (isset($output_create['error'])) {
-        \Piwigo\Core\PageState::current()->addError(is_scalar($output_create['error']) ? (string)$output_create['error'] : '');
+        PageState::current()->addError(is_scalar($output_create['error']) ? (string)$output_create['error'] : '');
     } else {
         $edit_url = get_root_url().'admin.php?page=album-'.(is_scalar($output_create['id'] ?? '') ? (string)($output_create['id'] ?? '') : '');
-        \Piwigo\Core\PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string)($output_create['info'] ?? '') : '').' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
+        PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string)($output_create['info'] ?? '') : '').' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
     }
 }
 // +-----------------------------------------------------------------------+
@@ -173,7 +177,7 @@ elseif (isset($_POST['submitAdd'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['parent_id'])) {
-    $navigation .= \Piwigo\Config\Config::levelSeparator();
+    $navigation .= Config::levelSeparator();
     $raw_parent_id = $_GET['parent_id'];
     $navigation .= get_cat_display_name_from_id(
         is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0,
@@ -314,7 +318,7 @@ foreach ($categories as $category) {
         $tpl_cat['U_DELETE'] = $self_url.'&amp;delete='.(is_scalar($category['id']) ? (string)$category['id'] : '');
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token='.get_pwg_token();
     } else {
-        if (\Piwigo\Config\Config::enableSynchronization()) {
+        if (Config::enableSynchronization()) {
             $tpl_cat['U_SYNC'] = $base_url.'site_update&amp;site=1&amp;cat_id='.(is_scalar($category['id']) ? (string)$category['id'] : '');
         }
     }

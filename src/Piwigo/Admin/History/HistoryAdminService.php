@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\History;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
@@ -129,7 +131,7 @@ SELECT
   WHERE ' . $where_separator . '
 ;';
 
-        foreach (ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        foreach (ServiceLocator::get(Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $row) {
             $data[] = $row;
         }
@@ -188,7 +190,7 @@ SELECT
     date ASC,
     hour ASC
 ;';
-        $historyRows = ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        $historyRows = ServiceLocator::get(Connection::class)
             ->executeQuery($query)->fetchAllAssociative();
 
         $need_update = [];
@@ -249,7 +251,7 @@ SELECT *
       )
     )
 ;';
-            foreach (ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            foreach (ServiceLocator::get(Connection::class)
                 ->executeQuery($query)->fetchAllAssociative() as $row) {
                 $key = sprintf('%4u', is_numeric($row['year']) ? (int) $row['year'] : 0);
                 if (isset($row['month'])) {
@@ -301,14 +303,14 @@ SELECT *
     {
         $logger = LoggerRegistry::current();
 
-        if (0 == \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
+        if (0 == Config::historyAutopurgeKeepLines()) {
             return;
         }
 
         $histRepo = ServiceLocator::get(HistoryRepository::class);
         $count = $histRepo->countAll();
 
-        if ($count <= \Piwigo\Config\Config::historyAutopurgeKeepLines()) {
+        if ($count <= Config::historyAutopurgeKeepLines()) {
             $this->historyRemoveSummarizedColumn();
             return;
         }
@@ -353,8 +355,8 @@ SELECT
 
         $search_min = [
             $history_id_last_summarized,
-            $history_id_latest - \Piwigo\Config\Config::historyAutopurgeKeepLines(),
-            $history_id_oldest + \Piwigo\Config\Config::historyAutopurgeBlocksize(),
+            $history_id_latest - Config::historyAutopurgeKeepLines(),
+            $history_id_oldest + Config::historyAutopurgeBlocksize(),
         ];
 
         $history_id_delete_before = min($search_min);
@@ -366,14 +368,14 @@ SELECT
 
     public function historyRemoveSummarizedColumn(): void
     {
-        if (\Piwigo\Config\Config::has('history_summarized_dropped') && \Piwigo\Config\Config::historySummarizedDropped()) {
+        if (Config::has('history_summarized_dropped') && Config::historySummarizedDropped()) {
             return;
         }
 
         $histRepo = ServiceLocator::get(HistoryRepository::class);
         $count = $histRepo->countAll();
 
-        if ($count > \Piwigo\Config\Config::historyAutopurgeKeepLines() + \Piwigo\Config\Config::historyAutopurgeBlocksize()) {
+        if ($count > Config::historyAutopurgeKeepLines() + Config::historyAutopurgeBlocksize()) {
             return;
         }
 

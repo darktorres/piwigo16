@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+use Piwigo\Users\UserRepository;
+use Piwigo\Activity\ActivityRepository;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +16,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -38,9 +45,9 @@ require(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
     $output_lines = [];
 
-    $usernameField = \Piwigo\Config\Config::userFields()['username'];
-    $idField = \Piwigo\Config\Config::userFields()['id'];
-    $activityRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    $usernameField = Config::userFields()['username'];
+    $idField = Config::userFields()['id'];
+    $activityRows = ServiceLocator::get(Connection::class)
         ->executeQuery(
             "SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details,
              $usernameField AS username
@@ -102,7 +109,7 @@ $user_activity_page_data = [
 
 $template->assign([
   'PWG_TOKEN' => get_pwg_token(),
-  'INHERIT' => \Piwigo\Config\Config::inheritanceByDefault(),
+  'INHERIT' => Config::inheritanceByDefault(),
   'CACHE_KEYS' => $cache_keys,
   'user_activity_page_data_json' => json_encode($user_activity_page_data),
   ]);
@@ -121,10 +128,10 @@ $nb_lines_for_user = array_column(get_dbal_connection()->executeQuery($query)->f
 if (count($nb_lines_for_user) > 0) {
     $query = '
   SELECT 
-      '.\Piwigo\Config\Config::userFields()['id'].' AS id, 
-      '.\Piwigo\Config\Config::userFields()['username'].' AS username 
+      '.Config::userFields()['id'].' AS id, 
+      '.Config::userFields()['username'].' AS username 
     FROM '.USERS_TABLE.' 
-    WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
+    WHERE '.Config::userFields()['id'].' IN ('.implode(',', array_keys($nb_lines_for_user)).');';
 }
 
 $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
@@ -143,10 +150,10 @@ foreach ($nb_lines_for_user as $id => $nb_line) {
 }
 $template->assign('ulist', $filterable_users);
 
-$nb_users = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->countAll(USERS_TABLE);
+$nb_users = ServiceLocator::get(UserRepository::class)->countAll(USERS_TABLE);
 $template->assign('nb_users', $nb_users);
 
-$actRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Activity\ActivityRepository::class);
+$actRepo = ServiceLocator::get(ActivityRepository::class);
 $min_date = $actRepo->findOldestDate();
 $max_date = $actRepo->findNewestDate();
 

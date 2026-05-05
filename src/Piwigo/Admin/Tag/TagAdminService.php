@@ -9,10 +9,10 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Tag\TagRepository;
 
-final class TagAdminService
+final readonly class TagAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 
@@ -105,7 +105,7 @@ final class TagAdminService
                 $extraClauses = trigger_change('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
                     $existing = array_column(get_dbal_connection()->executeQuery(
-                        'SELECT id FROM ' . TAGS_TABLE . ' WHERE ' . implode(' OR ', array_map('strval', $extraClauses))
+                        'SELECT id FROM ' . TAGS_TABLE . ' WHERE ' . implode(' OR ', array_map(strval(...), $extraClauses))
                     )->fetchAllAssociative(), 'id');
                 }
                 if (count($existing) === 0) {

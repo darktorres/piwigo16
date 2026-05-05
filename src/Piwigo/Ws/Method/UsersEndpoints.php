@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Group\GroupRepository;
+use Piwigo\Db\SchemaHelper;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -46,7 +49,7 @@ final class UsersEndpoints
         $filteredGroups = [];
         if (!empty($params['filter'])) {
             $filterStr      = is_scalar($params['filter']) ? (string) $params['filter'] : '';
-            $filteredGroups = ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findIdsByNameLike($filterStr);
+            $filteredGroups = ServiceLocator::get(GroupRepository::class)->findIdsByNameLike($filterStr);
             $filterQuoted   = get_dbal_connection()->quote('%' . $filterStr . '%');
             $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ' . $filterQuoted . ' OR u.' . Config::userFields()['email'] . ' LIKE ' . $filterQuoted;
             if (!empty($filteredGroups)) {
@@ -76,7 +79,7 @@ final class UsersEndpoints
         if (!empty($params['status'])) {
             $statusArr  = is_array($params['status']) ? $params['status'] : [];
             $statusArr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $statusArr);
-            $statusArr  = array_intersect($statusArr, \Piwigo\Db\SchemaHelper::getEnums(USER_INFOS_TABLE, 'status'));
+            $statusArr  = array_intersect($statusArr, SchemaHelper::getEnums(USER_INFOS_TABLE, 'status'));
             if (count($statusArr) > 0) {
                 $whereClauses[] = 'ui.status IN("' . implode('","', $statusArr) . '")';
             }
@@ -175,7 +178,7 @@ final class UsersEndpoints
             if (array_key_exists('groups', $params['display'])) {
                 $conn = ServiceLocator::get(Connection::class);
                 $qb   = $conn->createQueryBuilder()->select('user_id', 'group_id')->from(USER_GROUP_TABLE);
-                $qb->where($qb->expr()->in('user_id', ':ids'))->setParameter('ids', array_keys($users), \Doctrine\DBAL\ArrayParameterType::INTEGER);
+                $qb->where($qb->expr()->in('user_id', ':ids'))->setParameter('ids', array_keys($users), ArrayParameterType::INTEGER);
                 foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
                     $grpUid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
                     if (!isset($users[$grpUid]['groups']) || !is_array($users[$grpUid]['groups'])) {

@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Site\SiteRepository;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +18,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -24,8 +30,8 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (!\Piwigo\Config\Config::enableSynchronization()) {
-    throw new \Piwigo\Exception\ConfigException('synchronization is disabled');
+if (!Config::enableSynchronization()) {
+    throw new ConfigException('synchronization is disabled');
 }
 
 check_status(ACCESS_ADMINISTRATOR);
@@ -66,19 +72,19 @@ if (isset($_POST['submit']) and !empty($_POST['galleries_url'])) {
     }
 
     // site must not exists
-    $siteRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class);
+    $siteRepo = ServiceLocator::get(SiteRepository::class);
     if ($siteRepo->countByUrl($url) > 0) {
-        \Piwigo\Core\PageState::current()->addError(l10n('This site already exists').' ['.$url.']');
+        PageState::current()->addError(l10n('This site already exists').' ['.$url.']');
     }
     if (count($page['errors']) == 0) {
         if (! file_exists($url)) {
-            \Piwigo\Core\PageState::current()->addError(l10n('Directory does not exist').' ['.$url.']');
+            PageState::current()->addError(l10n('Directory does not exist').' ['.$url.']');
         }
     }
 
     if (count($page['errors']) == 0) {
         $siteRepo->insert($url);
-        \Piwigo\Core\PageState::current()->addInfo($url.' '.l10n('created'));
+        PageState::current()->addInfo($url.' '.l10n('created'));
     }
 }
 
@@ -89,13 +95,13 @@ if (isset($_GET['site']) and is_numeric($_GET['site'])) {
     $page['site'] = $_GET['site'];
 }
 if (isset($_GET['action']) and isset($page['site'])) {
-    $galleries_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)
+    $galleries_url = ServiceLocator::get(SiteRepository::class)
         ->findGalleriesUrlById((int) $page['site']);
     switch ($_GET['action']) {
         case 'delete':
             {
                 delete_site($page['site']);
-                \Piwigo\Core\PageState::current()->addInfo($galleries_url.' '.l10n('deleted'));
+                PageState::current()->addInfo($galleries_url.' '.l10n('deleted'));
                 break;
             }
     }
@@ -121,7 +127,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
 ;';
 $sites_detail = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'site_id');
 
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)->findAll() as $row) {
+foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
     $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
     $is_remote = url_is_remote(is_scalar($row['galleries_url']) ? (string)$row['galleries_url'] : '');
     $base_url = PHPWG_ROOT_PATH.'admin.php';

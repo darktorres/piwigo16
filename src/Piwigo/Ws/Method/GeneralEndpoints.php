@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Image\ImageRepository;
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\Filesystem;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Search\SearchRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
@@ -53,7 +63,7 @@ final class GeneralEndpoints
             }
         }
         $maxUrls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
-        [$maxId, $imageCount] = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findMaxIdAndCount();
+        [$maxId, $imageCount] = ServiceLocator::get(ImageRepository::class)->findMaxIdAndCount();
         if ($imageCount === 0) {
             return [];
         }
@@ -74,7 +84,7 @@ final class GeneralEndpoints
             $whereClauses[] = 'id IN (' . implode(',', $idsArr) . ')';
         }
         $queryModel = 'SELECT id, path, representative_ext, width, height, rotation FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY id DESC LIMIT ' . $qlimit . ';';
-        $conn       = ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+        $conn       = ServiceLocator::get(Connection::class);
         $urls       = [];
         do {
             $rows   = $conn->executeQuery(str_replace('start_id', (string) $startId, $queryModel))->fetchAllAssociative();
@@ -90,7 +100,7 @@ final class GeneralEndpoints
                     if ($type !== $derivative->get_type()) {
                         continue;
                     }
-                    if (\Piwigo\Core\Filesystem::tryFileMtime($derivative->get_path()) === false) {
+                    if (Filesystem::tryFileMtime($derivative->get_path()) === false) {
                         $url    = $derivative->get_url();
                         $urls[] = (is_string($url) ? $url : '') . $uid;
                     }
@@ -123,11 +133,11 @@ final class GeneralEndpoints
     public function getInfos(array $params, PwgServer &$service): array
     {
         $infos['version']            = PHPWG_VERSION;
-        $imgRepo  = ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
-        $catRepo  = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
-        $tagRepo  = ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
-        $userRepo = ServiceLocator::get(\Piwigo\Users\UserRepository::class);
-        $comRepo  = ServiceLocator::get(\Piwigo\Comment\CommentRepository::class);
+        $imgRepo  = ServiceLocator::get(ImageRepository::class);
+        $catRepo  = ServiceLocator::get(CategoryRepository::class);
+        $tagRepo  = ServiceLocator::get(TagRepository::class);
+        $userRepo = ServiceLocator::get(UserRepository::class);
+        $comRepo  = ServiceLocator::get(CommentRepository::class);
         $infos['nb_elements']           = $imgRepo->countAll();
         $infos['nb_categories']         = $catRepo->countAll();
         $infos['nb_virtual']            = $catRepo->countVirtual();
@@ -184,7 +194,7 @@ final class GeneralEndpoints
     /** @param array<mixed> $params */
     public function caddieAdd(array $params, PwgServer &$service): int
     {
-        $userId = \Piwigo\Users\CurrentUser::get()->id;
+        $userId = CurrentUser::get()->id;
         $query  = 'SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . CADDIE_TABLE . ' ON id=element_id AND user_id=' . $userId . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) . ') AND element_id IS NULL;';
         $result = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
         $datas  = [];
@@ -248,14 +258,14 @@ final class GeneralEndpoints
 
     public function sessionGetStatus(mixed $params, PwgServer &$service): mixed
     {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = CurrentUser::get();
         $res['username'] = is_a_guest() ? 'guest' : stripslashes($currentUser->username);
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
         $res['pwg_token'] = get_pwg_token();
         $res['charset']   = get_pwg_charset();
-        $res['current_datetime'] = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = PHPWG_VERSION;
         $res['save_visits'] = do_log();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
@@ -398,7 +408,7 @@ final class GeneralEndpoints
                     $detArr = $outputLines[$idx]['details'] ?? [];
                     /** @var list<mixed> $detUsers */
                     $detUsers   = is_array($detArr['users'] ?? null) ? $detArr['users'] : [];
-                    $detUsers[] = isset($usernameOf[$uidKey]) ? $usernameOf[$uidKey] : ('user#' . $uidKey);
+                    $detUsers[] = $usernameOf[$uidKey] ?? ('user#' . $uidKey);
                     $detArr['users'] = $detUsers;
                     $outputLines[$idx]['details'] = $detArr;
                 }
@@ -427,7 +437,7 @@ final class GeneralEndpoints
         if (!is_array($page)) {
             $page = [];
         }
-        if (!empty($params['section']) && in_array($params['section'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'))) {
+        if (!empty($params['section']) && in_array($params['section'], SchemaHelper::getEnums(HISTORY_TABLE, 'section'))) {
             $page['section'] = $params['section'];
         }
         if (!empty($params['cat_id'])) {
@@ -459,7 +469,7 @@ final class GeneralEndpoints
         } else {
             $page['start'] = 0;
         }
-        $types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
+        $types = array_merge(['none'], SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
         $displayThumbnails = ['no_display_thumbnail' => l10n('No display'), 'display_thumbnail_classic' => l10n('Classic display'), 'display_thumbnail_hoverbox' => l10n('Hoverbox display')];
         $page['errors'] = [];
         $search         = [];
@@ -492,7 +502,7 @@ final class GeneralEndpoints
         $displayThumbnailStr = is_scalar($param['display_thumbnail']) ? (string) $param['display_thumbnail'] : '';
         $cookieVal           = ($displayThumbnailStr !== '' && isset($displayThumbnails[$displayThumbnailStr])) ? $displayThumbnailStr : null;
         pwg_set_cookie_var('display_thumbnail', $cookieVal, strtotime('+1 month'));
-        $searchRepo = ServiceLocator::get(\Piwigo\Search\SearchRepository::class);
+        $searchRepo = ServiceLocator::get(SearchRepository::class);
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
         $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
@@ -562,7 +572,7 @@ final class GeneralEndpoints
         }
         if (count($userIds) > 0) {
             $userFields = Config::userFields();
-            $rawMap     = ServiceLocator::get(\Piwigo\Users\UserRepository::class)->findUsernamesByIds($userFields['id'], $userFields['username'], USERS_TABLE, array_map('intval', array_keys($userIds)));
+            $rawMap     = ServiceLocator::get(UserRepository::class)->findUsernamesByIds($userFields['id'], $userFields['username'], USERS_TABLE, array_map(intval(...), array_keys($userIds)));
             foreach ($rawMap as $id => $username) {
                 $usernameOf[$id] = stripslashes($username);
             }
@@ -585,7 +595,7 @@ final class GeneralEndpoints
         }
         $nameOfTag = [];
         if ($hasTags) {
-            foreach (ServiceLocator::get(\Piwigo\Tag\TagRepository::class)->findAll() as $row) {
+            foreach (ServiceLocator::get(TagRepository::class)->findAll() as $row) {
                 $tagIdKey = is_scalar($row['id']) ? (string) $row['id'] : '';
                 if ($tagIdKey !== '') {
                     $nameOfTag[$tagIdKey] = trigger_change('render_tag_name', $row['name'], $row);

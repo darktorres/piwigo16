@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\Config;
+use Piwigo\Users\UserRepository;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Tabsheet;
@@ -14,7 +23,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -54,7 +63,7 @@ if (isset($page['nb_pending_comments'])) {
     $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
     $message .= ' <i class="icon-right"></i></a>';
 
-    \Piwigo\Core\PageState::current()->addMessage($message);
+    PageState::current()->addMessage($message);
 }
 
 // any orphan photo?
@@ -71,11 +80,11 @@ if ($nb_orphans > 0) {
     $message .= l10n('Orphans').'</a>';
     $message .= '<span class="adminMenubarCounter">'.$nb_orphans.'</span>';
 
-    \Piwigo\Core\PageState::current()->addWarning($message);
+    PageState::current()->addWarning($message);
 }
 
 // locked album ?
-$locked_album = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countHidden();
+$locked_album = ServiceLocator::get(CategoryRepository::class)->countHidden();
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
 
@@ -83,7 +92,7 @@ if ($locked_album > 0) {
     $message .= l10n('Locked album').'</a>';
     $message .= '<span class="adminMenubarCounter">'.$locked_album.'</span>';
 
-    \Piwigo\Core\PageState::current()->addWarning($message);
+    PageState::current()->addWarning($message);
 }
 
 fs_quick_check();
@@ -94,11 +103,11 @@ fs_quick_check();
 
 $template->set_filenames(['intro' => 'intro.tpl']);
 
-if (\Piwigo\Config\Config::showNewsletterSubscription() and userprefs_get_param('show_newsletter_subscription', true)) {
-    $register_date = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+if (Config::showNewsletterSubscription() and userprefs_get_param('show_newsletter_subscription', true)) {
+    $register_date = ServiceLocator::get(UserRepository::class)
         ->findEarliestRegistrationDate();
-    $nb_cats   = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countAll();
-    $nb_images = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+    $nb_cats   = ServiceLocator::get(CategoryRepository::class)->countAll();
+    $nb_images = ServiceLocator::get(ImageRepository::class)->countAll();
 
     $uagent_obj = new uagent_info();
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
@@ -141,22 +150,22 @@ $template->assign(
     'NB_PLUGINS' => count($pwg_loaded_plugins),
     'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
     'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
-    'CHECK_FOR_UPDATES' => \Piwigo\Config\Config::dashboardCheckForUpdates(),
+    'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates(),
     ]
 );
 
-if (\Piwigo\Config\Config::activateComments()) {
-    $nb_comments = \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentRepository::class)->countAll();
+if (Config::activateComments()) {
+    $nb_comments = ServiceLocator::get(CommentRepository::class)->countAll();
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);
 }
 
-if (\Piwigo\Config\Config::showPiwigoLatestNews()) {
+if (Config::showPiwigoLatestNews()) {
     $latest_news = get_piwigo_news();
 
     if (isset($latest_news['id']) and $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
-        \Piwigo\Core\PageState::current()->addMessage(sprintf(
+        PageState::current()->addMessage(sprintf(
             '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
             l10n('Latest Piwigo news'),
             is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '',
@@ -172,7 +181,7 @@ trigger_notify('loc_end_intro');
 // |                           get activity data                           |
 // +-----------------------------------------------------------------------+
 
-$nb_weeks = \Piwigo\Config\Config::dashboardActivityNbWeeks();
+$nb_weeks = Config::dashboardActivityNbWeeks();
 
 //Count mondays
 $mondays = 0;
@@ -230,7 +239,7 @@ if ($cached_activity === null or (is_numeric($cached_activity['calculated_on']) 
         $activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
 
-    \Piwigo\Core\LoggerRegistry::current()->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
+    LoggerRegistry::current()->debug('[admin/intro::'.__LINE__.'] recent activity calculated in '.get_elapsed_time($start_time, get_moment()));
 
     $_SESSION['cache_activity_last_weeks'] = [
       'calculated_on' => time(),
@@ -357,7 +366,7 @@ $file_extensions = array_column(get_dbal_connection()->executeQuery($query)->fet
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
-    if (in_array(strtolower((string) $ext), \Piwigo\Config\Config::pictureExtensions())) {
+    if (in_array(strtolower((string) $ext), Config::pictureExtensions())) {
         $type = 'Photos';
     } elseif (in_array(strtolower((string) $ext), $video_format)) {
         $type = 'Videos';
@@ -398,8 +407,8 @@ foreach ($file_extensions as $ext => $ext_details) {
 }
 
 // Add cache size if requested and known.
-if (\Piwigo\Config\Config::addCacheToStorageChart() && \Piwigo\Config\Config::has('cache_sizes')) {
-    $cache_sizes = unserialize((string)\Piwigo\Config\Config::cacheSizes());
+if (Config::addCacheToStorageChart() && Config::has('cache_sizes')) {
+    $cache_sizes = unserialize((string)Config::cacheSizes());
     if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
         $cacheValue = is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0;
         $data_storage['Cache']['total']['filesize'] = $cacheValue / 1024;
@@ -421,7 +430,7 @@ foreach ($data_storage as $type => $_) {
     $translate_type[$type] = l10n($type);
 }
 $intro_dashboard_extras = [
-    'check_for_updates'       => (bool) \Piwigo\Config\Config::dashboardCheckForUpdates(),
+    'check_for_updates'       => (bool) Config::dashboardCheckForUpdates(),
     'storage_total'           => $total_storage,
     'str_gb_used'             => l10n('%s GB used'),
     'str_mb_used'             => l10n('%s MB used'),

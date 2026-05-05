@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\PageState;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -22,7 +24,7 @@ function get_admin_plugin_menu_link(string $file): string
         $file = str_replace('\\', '/', $file);//Windows
         $url .= '&amp;section='.urlencode($file);
     } else {
-        \Piwigo\Core\PageState::current()->addError('PLUGIN ERROR: "'.$file.'" is not a valid file');
+        PageState::current()->addError('PLUGIN ERROR: "'.$file.'" is not a valid file');
     }
     return $url;
 }

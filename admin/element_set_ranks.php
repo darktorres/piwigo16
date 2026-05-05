@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -19,7 +23,7 @@ use Piwigo\Image\SrcImage;
  */
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -67,7 +71,7 @@ $image_order_choice = 'default';
 if (isset($_POST['submit'])) {
     if (isset($_POST['rank_of_image'])) {
         $rank_of_image_raw = is_array($_POST['rank_of_image']) ? $_POST['rank_of_image'] : [];
-        $rank_of_image = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $rank_of_image_raw);
+        $rank_of_image = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $rank_of_image_raw);
         asort($rank_of_image, SORT_NUMERIC);
 
         save_images_order(
@@ -101,14 +105,14 @@ if (isset($_POST['submit'])) {
         $message = l10n('Images manual order was saved');
     }
     $category_id_int = (int) $page['category_id'];
-    $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
-    $catRepo->updateImageOrder($category_id_int, isset($image_order) ? $image_order : null);
+    $catRepo = ServiceLocator::get(CategoryRepository::class);
+    $catRepo->updateImageOrder($category_id_int, $image_order ?? null);
 
     if (isset($_POST['image_order_subcats'])) {
         $cat_info = get_cat_info((string) $category_id_int);
         $catRepo->updateImageOrderForSubcats(
             is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '',
-            isset($image_order) ? $image_order : null
+            $image_order ?? null
         );
     }
 
@@ -128,7 +132,7 @@ $template->set_filenames(
 
 $base_url = get_root_url().'admin.php';
 
-$category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+$category = ServiceLocator::get(CategoryRepository::class)
     ->findCategoryById((int) $page['category_id']);
 
 if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['image_order'] == '`rank` ASC')) {
@@ -154,7 +158,7 @@ $template->assign(
 // |                              thumbnails                               |
 // +-----------------------------------------------------------------------+
 
-$imgRows = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+$imgRows = ServiceLocator::get(ImageRepository::class)
     ->findByCategoryIdOrdered((int) $page['category_id']);
 if (count($imgRows) > 0) {
     // template thumbnail initialization

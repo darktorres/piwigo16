@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Core\PageState;
+use Doctrine\DBAL\Connection;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -23,7 +30,7 @@ function parse_sort_variables(
     ?string $template_var,
     string $anchor = ''
 ): array {
-    $template = \Piwigo\Template\TemplateRegistry::current();
+    $template = TemplateRegistry::current();
     $url_components = parse_url(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '');
     if ($url_components === false) {
         $url_components = ['path' => '', 'query' => ''];
@@ -73,7 +80,7 @@ function parse_sort_variables(
 }
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -96,10 +103,10 @@ if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
     $selected_cat = [(int) $postCatId];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
-    $deleted = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permalink\PermalinkRepository::class)
+    $deleted = ServiceLocator::get(PermalinkRepository::class)
         ->deleteOldPermalinkByValue(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '');
     if (!$deleted) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Cannot delete the old permalink !'));
+        PageState::current()->addError(l10n('Cannot delete the old permalink !'));
     }
 }
 
@@ -140,7 +147,7 @@ if ($sortBy0 === 'id' || $sortBy0 === 'permalink') {
     $permalinkQuery .= ' ORDER BY ' . $sortBy0;
 }
 $categories = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+foreach (ServiceLocator::get(Connection::class)
     ->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
     $row['name'] = get_cat_display_name_cache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
     $categories[] = $row;
@@ -169,7 +176,7 @@ if (count($sort_by) && $sortByOld0 !== '') {
     $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0;
 }
 $deleted_permalinks = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+foreach (ServiceLocator::get(Connection::class)
     ->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
     $row['name'] = get_cat_display_name_cache((string)(is_numeric($row['cat_id']) ? (int)$row['cat_id'] : 0));
     $row['U_DELETE'] =

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Menu\BlockManager;
 
@@ -13,14 +16,14 @@ use Piwigo\Menu\BlockManager;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 function abs_fn_cmp(mixed $a, mixed $b): int
@@ -55,7 +58,7 @@ $menu = new BlockManager('menubar');
 $menu->load_registered_blocks();
 $reg_blocks = $menu->get_registered_blocks();
 
-$mb_conf = \Piwigo\Config\Config::raw('blk_' . $menu->get_id());
+$mb_conf = Config::raw('blk_' . $menu->get_id());
 if (is_string($mb_conf)) {
     $mb_conf = unserialize($mb_conf);
 }

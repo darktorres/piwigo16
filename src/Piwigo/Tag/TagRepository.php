@@ -408,7 +408,7 @@ final class TagRepository extends AbstractRepository
      */
     public function findOrphanTags(): array
     {
-        $yesterday = (new \DateTimeImmutable())->modify('-1 day')->format('Y-m-d H:i:s');
+        $yesterday = new \DateTimeImmutable()->modify('-1 day')->format('Y-m-d H:i:s');
         return $this->conn->createQueryBuilder()
             ->select('t.id', 't.name')
             ->from($this->table('tags'), 't')

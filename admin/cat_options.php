@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +15,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -47,7 +50,7 @@ if (isset($_POST['falsify'])
     switch ($current_section) {
         case 'comments':
             {
-                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ServiceLocator::get(CategoryRepository::class)
                     ->setCommentable($cat_true, false);
                 break;
             }
@@ -63,7 +66,7 @@ if (isset($_POST['falsify'])
             }
         case 'representative':
             {
-                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ServiceLocator::get(CategoryRepository::class)
                     ->clearRepresentatives($cat_true);
                 break;
             }
@@ -80,7 +83,7 @@ if (isset($_POST['falsify'])
     switch ($current_section) {
         case 'comments':
             {
-                \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                ServiceLocator::get(CategoryRepository::class)
                     ->setCommentable($cat_false, true);
                 break;
             }

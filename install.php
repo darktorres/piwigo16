@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Config\TestMode;
+use Piwigo\Core\Filesystem;
+use Piwigo\Config\Config;
+
 global $template, $user, $page, $persistent_cache, $lang;
 
 use Piwigo\Admin\Languages;
@@ -35,7 +42,7 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 require(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 
-\Piwigo\Config\ConfigLoader::applyDefaults();
+ConfigLoader::applyDefaults();
 
 // Obtain various vars
 $dbhost   = is_scalar($_POST['dbhost'] ?? null) && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
@@ -62,7 +69,7 @@ if (isset($_POST['install'])) {
 $infos = [];
 $errors = [];
 
-if (\Piwigo\Core\InstallSentinel::isInstalled()) {
+if (InstallSentinel::isInstalled()) {
     die('Piwigo is already installed');
 }
 
@@ -127,7 +134,7 @@ if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
 
 //----------------------------------------------------- template initialization
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
-\Piwigo\Template\TemplateRegistry::set($template);
+TemplateRegistry::set($template);
 $template->set_filenames(['install' => 'install.tpl']);
 if (!isset($step)) {
     $step = 1;
@@ -179,7 +186,7 @@ if (isset($_POST['install'])) {
         // a subsequent boot. Fail loudly on write errors — silently continuing
         // leaves the install half-broken (DB tables created, no config to
         // point at them).
-        $envPath = PHPWG_ROOT_PATH . \Piwigo\Config\TestMode::envFile();
+        $envPath = PHPWG_ROOT_PATH . TestMode::envFile();
         $envBody = "PIWIGO_DB_HOST={$dbhost}\n"
                  . "PIWIGO_DB_USER={$dbuser}\n"
                  . "PIWIGO_DB_PASSWORD={$dbpasswd}\n"
@@ -187,17 +194,17 @@ if (isset($_POST['install'])) {
                  . "PIWIGO_DB_PREFIX={$prefixeTable}\n";
         $envTmp = $envPath . '.tmp.' . bin2hex(random_bytes(4));
         if (file_put_contents($envTmp, $envBody) === false || !rename($envTmp, $envPath)) {
-            \Piwigo\Core\Filesystem::tryUnlink($envTmp);
+            Filesystem::tryUnlink($envTmp);
             fatal_error('Could not write ' . $envPath . ' — check filesystem permissions on the repository root.');
         }
 
         // Mirror the same values into Config::$data so the rest of this
         // request (table creation, admin insert) sees them.
-        \Piwigo\Config\Config::override('db_host', $dbhost);
-        \Piwigo\Config\Config::override('db_user', $dbuser);
-        \Piwigo\Config\Config::override('db_password', $dbpasswd);
-        \Piwigo\Config\Config::override('db_base', $dbname);
-        \Piwigo\Config\Config::override('db_prefix', $prefixeTable);
+        Config::override('db_host', $dbhost);
+        Config::override('db_user', $dbuser);
+        Config::override('db_password', $dbpasswd);
+        Config::override('db_base', $dbname);
+        Config::override('db_prefix', $prefixeTable);
 
         // tables creation, based on piwigo_structure.sql
         execute_sqlfile(
@@ -263,7 +270,7 @@ if (isset($_POST['install'])) {
         // Available upgrades must be ignored after a fresh installation. To
         // make PWG avoid upgrading, we must tell it upgrades have already been
         // made.
-        define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+        define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
         $datas = [];
         foreach (get_available_upgrade_ids() as $upgrade_id) {
             $datas[] = [
@@ -281,7 +288,7 @@ if (isset($_POST['install'])) {
         }
 
         // Install signal: empty stamp file at local/.installed.
-        \Piwigo\Core\InstallSentinel::markInstalled();
+        InstallSentinel::markInstalled();
     }
 }
 
@@ -327,12 +334,12 @@ if ($step == 1) {
         // See include/functions_session.inc.php
         session_set_save_handler(new PwgSession());
         if (function_exists('ini_set')) {
-            ini_set('session.use_cookies', \Piwigo\Config\Config::sessionUseCookies());
-            ini_set('session.use_only_cookies', \Piwigo\Config\Config::sessionUseOnlyCookies());
-            ini_set('session.use_trans_sid', intval(\Piwigo\Config\Config::sessionUseTransSid()));
+            ini_set('session.use_cookies', Config::sessionUseCookies());
+            ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
+            ini_set('session.use_trans_sid', intval(Config::sessionUseTransSid()));
             ini_set('session.cookie_httponly', 1);
         }
-        session_name(\Piwigo\Config\Config::sessionName());
+        session_name(Config::sessionName());
         session_set_cookie_params(0, cookie_path());
         register_shutdown_function(session_write_close(...));
 

@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Config\Config;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +14,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -28,7 +33,7 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 /** @return array<mixed> */
 function get_last(int $last_number = 60, string $type = 'year'): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+    return ServiceLocator::get(HistoryRepository::class)
         ->findSummaryByType($type, $last_number);
 }
 
@@ -131,7 +136,7 @@ ORDER BY
         $result['month'][] = set_missing_values('day', $val, new DateTime($key), $lastDate);
     }
 
-    $result['avg'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)
+    $result['avg'] = ServiceLocator::get(HistoryRepository::class)
         ->findCurrentPeriodDailyAvg((int) $date->format('Y'), (int) $date->format('n'));
 
     return $result;
@@ -303,7 +308,7 @@ if (is_array($lang['month'] ?? null)) {
 }
 
 $template->assign([
-  'compareYears' => get_month_of_last_years(\Piwigo\Config\Config::statCompareYearDisplayed()),
+  'compareYears' => get_month_of_last_years(Config::statCompareYearDisplayed()),
   'monthStats' => get_month_stats(),
   'lastHours' => $last_hours,
   'lastDays' => $last_days,

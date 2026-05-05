@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Core\ServiceLocator;
 
@@ -10,7 +11,7 @@ use Piwigo\Core\ServiceLocator;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;

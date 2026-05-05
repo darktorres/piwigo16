@@ -8,10 +8,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Users\CurrentUser;
 
-final class CommentService
+final readonly class CommentService
 {
     public function __construct(
-        private readonly CommentRepository $repo,
+        private CommentRepository $repo,
     ) {
     }
 

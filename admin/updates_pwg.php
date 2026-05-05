@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Updates;
 
 // +-----------------------------------------------------------------------+
@@ -12,14 +16,14 @@ use Piwigo\Admin\Updates;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Config\Config::enableCoreUpdate()) {
-    throw new \Piwigo\Exception\ConfigException('Piwigo core update system is disabled');
+if (!Config::enableCoreUpdate()) {
+    throw new ConfigException('Piwigo core update system is disabled');
 }
 
 require_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
@@ -120,7 +124,7 @@ if (isset($new_versions['major_php']) and version_compare(phpversion(), is_scala
 // +-----------------------------------------------------------------------+
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 $template->assign(

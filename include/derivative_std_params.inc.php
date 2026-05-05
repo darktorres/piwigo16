@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\DerivativeSize;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
 
@@ -17,18 +21,18 @@ use Piwigo\Image\SizingParams;
  */
 
 
-define('IMG_SQUARE', \Piwigo\Image\DerivativeSize::Square->value);
-define('IMG_THUMB', \Piwigo\Image\DerivativeSize::Thumb->value);
-define('IMG_XXSMALL', \Piwigo\Image\DerivativeSize::TwoSmall->value);
-define('IMG_XSMALL', \Piwigo\Image\DerivativeSize::XSmall->value);
-define('IMG_SMALL', \Piwigo\Image\DerivativeSize::Small->value);
-define('IMG_MEDIUM', \Piwigo\Image\DerivativeSize::Medium->value);
-define('IMG_LARGE', \Piwigo\Image\DerivativeSize::Large->value);
-define('IMG_XLARGE', \Piwigo\Image\DerivativeSize::XLarge->value);
-define('IMG_XXLARGE', \Piwigo\Image\DerivativeSize::TwoXLarge->value);
-define('IMG_3XLARGE', \Piwigo\Image\DerivativeSize::ThreeXLarge->value);
-define('IMG_4XLARGE', \Piwigo\Image\DerivativeSize::FourXLarge->value);
-define('IMG_CUSTOM', \Piwigo\Image\DerivativeSize::Custom->value);
+define('IMG_SQUARE', DerivativeSize::Square->value);
+define('IMG_THUMB', DerivativeSize::Thumb->value);
+define('IMG_XXSMALL', DerivativeSize::TwoSmall->value);
+define('IMG_XSMALL', DerivativeSize::XSmall->value);
+define('IMG_SMALL', DerivativeSize::Small->value);
+define('IMG_MEDIUM', DerivativeSize::Medium->value);
+define('IMG_LARGE', DerivativeSize::Large->value);
+define('IMG_XLARGE', DerivativeSize::XLarge->value);
+define('IMG_XXLARGE', DerivativeSize::TwoXLarge->value);
+define('IMG_3XLARGE', DerivativeSize::ThreeXLarge->value);
+define('IMG_4XLARGE', DerivativeSize::FourXLarge->value);
+define('IMG_CUSTOM', DerivativeSize::Custom->value);
 
 
 /**
@@ -70,8 +74,8 @@ final class ImageStdParams
     /** @var DerivativeParams[] */
     private static $type_map = [];
     /** @var DerivativeParams[] */
-    private static $disabled_type_map = [];
-    /** @var array<string, \Piwigo\Image\DerivativeParams|string> */
+    private static array $disabled_type_map = [];
+    /** @var array<string, DerivativeParams|string> */
     private static $undefined_type_map = [];
     /** @var \Piwigo\Image\WatermarkParams */
     private static $watermark;
@@ -112,20 +116,17 @@ final class ImageStdParams
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
         }
-        return \Piwigo\Config\Config::disabledDerivatives() ?? '';
+        return Config::disabledDerivatives() ?? '';
     }
 
     /**
-     * @return array<string, \Piwigo\Image\DerivativeParams|string>
+     * @return array<string, DerivativeParams|string>
      */
     public static function get_undefined_type_map()
     {
         return self::$undefined_type_map;
     }
 
-    /**
-     * @return DerivativeParams
-     */
     public static function get_by_type(string $type): DerivativeParams
     {
         return self::$all_type_map[$type];
@@ -166,7 +167,7 @@ final class ImageStdParams
      */
     public static function load_from_db(): void
     {
-        $derivatives = \Piwigo\Config\Config::derivatives();
+        $derivatives = Config::derivatives();
         $arr = safe_unserialize(is_string($derivatives) ? $derivatives : '');
         if ($arr !== []) {
             $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
@@ -254,7 +255,7 @@ final class ImageStdParams
             $disabled = addslashes(serialize(self::$disabled_type_map));
             conf_update_param('disabled_derivatives', $disabled);
         } else {
-            \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)->executeStatement(
+            ServiceLocator::get(Connection::class)->executeStatement(
                 'DELETE FROM ' . CONFIG_TABLE . " WHERE param = 'disabled_derivatives'"
             );
         }

@@ -9,10 +9,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
-final class PluginService
+final readonly class PluginService
 {
     public function __construct(
-        private readonly PluginRepository $repo,
+        private PluginRepository $repo,
     ) {
     }
 

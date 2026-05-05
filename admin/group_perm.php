@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Category\CategoryRepository;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +14,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -52,21 +57,21 @@ if (isset($_POST['falsify'])
     and count($post_cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $post_cat_true_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+    $post_cat_true_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
     $subcats = get_subcat_ids($post_cat_true_ids);
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
-        ->deleteGroupAccessForGroup((int) $group_id, array_map('intval', $subcats));
+    ServiceLocator::get(PermissionRepository::class)
+        ->deleteGroupAccessForGroup((int) $group_id, array_map(intval(...), $subcats));
 } elseif (isset($_POST['trueify'])
          and count($post_cat_false) > 0) {
-    $post_cat_false_ids = array_map(fn ($v) => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+    $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
     $uppercats = get_uppercat_ids($post_cat_false_ids);
-    $uppercats_str = array_map(fn ($v) => (string) $v, $uppercats);
+    $uppercats_str = array_map(fn (string $v): string => (string) $v, $uppercats);
     $private_uppercats = [];
 
-    $permRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
-    $catRepo  = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+    $permRepo = ServiceLocator::get(PermissionRepository::class);
+    $catRepo  = ServiceLocator::get(CategoryRepository::class);
 
-    $private_uppercats = $catRepo->findPrivateByIds(array_map('intval', $uppercats_str));
+    $private_uppercats = $catRepo->findPrivateByIds(array_map(intval(...), $uppercats_str));
 
     // retrying to authorize a category which is already authorized may cause
     // an error (in SQL statement), so we need to know which categories are accessible
@@ -122,7 +127,7 @@ SELECT id,name,uppercats,global_rank
 ;';
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 
-$authorized_ids = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class)
+$authorized_ids = ServiceLocator::get(PermissionRepository::class)
     ->findAuthorizedPrivateCatIdsByGroup((int) $group_id);
 
 $query_false = '

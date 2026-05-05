@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -65,7 +67,7 @@ if (
 
     $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
 } else {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 $template->set_filename('popuphelp', 'popuphelp.tpl');

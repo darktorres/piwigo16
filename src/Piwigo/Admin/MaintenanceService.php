@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\PageState;
+
 final class MaintenanceService
 {
     public static function repairAndOptimize(): void
@@ -39,9 +41,9 @@ final class MaintenanceService
         }
 
         if ($success) {
-            \Piwigo\Core\PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
+            PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
         } else {
-            \Piwigo\Core\PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
+            PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
         }
     }
 }

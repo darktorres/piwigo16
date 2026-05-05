@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -33,14 +37,14 @@ define('MASS_UPDATES_SKIP_EMPTY', 1);
  * Pre-boot (install, upgrade, upgrade_feed): lazily builds one from Config
  * and caches it in a static so we pay the connect cost only once.
  */
-function get_dbal_connection(): \Doctrine\DBAL\Connection
+function get_dbal_connection(): Connection
 {
-    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
-        return \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    if (ServiceLocator::has(Connection::class)) {
+        return ServiceLocator::get(Connection::class);
     }
     static $conn = null;
     if ($conn === null) {
-        $conn = \Piwigo\Db\DbConnection::build();
+        $conn = DbConnection::build();
     }
     return $conn;
 }
@@ -140,7 +144,7 @@ function mass_updates(string $tablename, array $dbfields, array $datas, int $fla
         $conn->executeStatement(
             'UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $tmp . ' AS t2 SET ' .
             implode(', ', array_map($funcSet, $dbfields['update'])) .
-            ' WHERE ' . implode(' AND ', array_map(fn ($s): string => "t1.$s = t2.$s", $dbfields['primary']))
+            ' WHERE ' . implode(' AND ', array_map(fn (string $s): string => "t1.$s = t2.$s", $dbfields['primary']))
         );
         $conn->executeStatement('DROP TABLE ' . $tmp);
     }

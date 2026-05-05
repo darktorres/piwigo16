@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Filter\FilterService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,5 +19,5 @@ declare(strict_types=1);
 /** @param array<array<string, mixed>> $cats */
 function update_cats_with_filtered_data(array &$cats): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Filter\FilterService::class)->updateCategoriesWithFilteredData($cats);
+    ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($cats);
 }

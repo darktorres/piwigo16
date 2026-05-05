@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Config\Config;
 
 /**
@@ -142,7 +143,7 @@ final class SrcImage
                 $hi = is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0);
                 $this->size = [$wi, $hi];
                 if ($this->id !== 0) {
-                    \Piwigo\Core\ServiceLocator::get(ImageRepository::class)
+                    ServiceLocator::get(ImageRepository::class)
                         ->updateDimensions($this->id, $wi, $hi);
                 }
                 return $this->size;

@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Session\SessionRepository;
+use Piwigo\Config\Config;
+use Piwigo\Admin\MaintenanceService;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Db\DbInfo;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Image\ImageStdParams;
@@ -54,7 +64,7 @@ switch ($action) {
             update_category('all');
             update_global_rank();
             invalidate_user_cache(true);
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Update albums informations'), l10n('action successfully performed.')));
             break;
         }
     case 'images':
@@ -64,31 +74,31 @@ switch ($action) {
             require_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
             update_rating_score();
             invalidate_user_cache();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Update photos information'), l10n('action successfully performed.')));
             break;
         }
     case 'delete_orphan_tags':
         {
             delete_orphan_tags();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Delete orphan tags'), l10n('action successfully performed.')));
             break;
         }
     case 'user_cache':
         {
             invalidate_user_cache();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge user cache'), l10n('action successfully performed.')));
             break;
         }
     case 'history_detail':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAll();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.')));
+            ServiceLocator::get(HistoryRepository::class)->deleteAll();
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history detail'), l10n('action successfully performed.')));
             break;
         }
     case 'history_summary':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->deleteAllSummary();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.')));
+            ServiceLocator::get(HistoryRepository::class)->deleteAllSummary();
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge history summary'), l10n('action successfully performed.')));
             break;
         }
     case 'sessions':
@@ -96,12 +106,12 @@ switch ($action) {
             pwg_session_gc();
 
             // delete all sessions associated to invalid user ids (it should never happen)
-            $userRepo    = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class);
-            $sessionRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionRepository::class);
+            $userRepo    = ServiceLocator::get(UserRepository::class);
+            $sessionRepo = ServiceLocator::get(SessionRepository::class);
 
             $sessions     = $userRepo->findAllSessions();
             $all_user_ids = $userRepo->findAllUserIdsAsSet(
-                \Piwigo\Config\Config::userFields()['id'],
+                Config::userFields()['id'],
                 USERS_TABLE
             );
 
@@ -117,36 +127,36 @@ switch ($action) {
             if (count($sessions_to_delete) > 0) {
                 $sessionRepo->deleteByIds($sessions_to_delete);
             }
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge sessions'), l10n('action successfully performed.')));
             break;
         }
     case 'feeds':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->deleteNeverUsedFeeds();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.')));
+            ServiceLocator::get(UserRepository::class)->deleteNeverUsedFeeds();
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge never used notification feeds'), l10n('action successfully performed.')));
             break;
         }
     case 'database':
         {
-            \Piwigo\Admin\MaintenanceService::repairAndOptimize();
+            MaintenanceService::repairAndOptimize();
             break;
         }
     case 'c13y':
         {
             $c13y = new CheckIntegrity();
             $c13y->maintenance();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.')));
             break;
         }
     case 'empty_lounge':
         {
             $rows = empty_lounge();
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
+            PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
             break;
         }
     case 'search':
         {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchRepository::class)->deleteAll();
+            ServiceLocator::get(SearchRepository::class)->deleteAll();
             sprintf('%s : %s', l10n('Reinitialize check integrity'), l10n('action successfully performed.'));
             break;
         }
@@ -155,7 +165,7 @@ switch ($action) {
             $template->delete_compiled_templates();
             FileCombiner::clear_combined_files();
             $persistent_cache->purge(true);
-            \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.')));
+            PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.')));
             break;
         }
     case 'derivatives':
@@ -169,14 +179,14 @@ switch ($action) {
                     clear_derivative_cache($type_to_clear);
                 }
             }
-            \Piwigo\Core\PageState::current()->addInfo(l10n('action successfully performed.'));
+            PageState::current()->addInfo(l10n('action successfully performed.'));
             break;
         }
 
     case 'check_upgrade':
         {
             if (!fetchRemote(PHPWG_URL.'/download/latest_version', $result)) {
-                \Piwigo\Core\PageState::current()->addError(l10n('Unable to check for upgrade.'));
+                PageState::current()->addError(l10n('Unable to check for upgrade.'));
             } else {
                 $versions = ['current' => PHPWG_VERSION];
                 $lines = explode("\r\n", $result);
@@ -197,19 +207,19 @@ switch ($action) {
                 }
 
                 if ('' == $versions['latest']) {
-                    \Piwigo\Core\PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
+                    PageState::current()->addError(l10n('Check for upgrade failed for unknown reasons.'));
                 }
                 // concatenation needed to avoid automatic transformation by release
                 // script generator
                 elseif (str_contains((string) ($versions['current'] ?? ''), '%')) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
+                    PageState::current()->addInfo(l10n('You are running on development sources, no check possible.'));
                 } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
+                    PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
                 } else {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
+                    PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
                 }
             }
-            \Piwigo\Core\PageState::current()->addInfo(l10n('action successfully performed.'));
+            PageState::current()->addInfo(l10n('action successfully performed.'));
         }
 
     default:
@@ -229,7 +239,7 @@ if ($register_activity) {
 
 $template->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
 $pwg_token = get_pwg_token();
-$gallery_locked = \Piwigo\Config\Config::galleryLocked();
+$gallery_locked = Config::galleryLocked();
 $template->assign('page_data_json', json_encode([
     'unit_MB'                     => l10n('%s MB'),
     'no_time_elapsed'             => l10n('right now'),
@@ -246,7 +256,7 @@ $template->assign('page_data_json', json_encode([
 $url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 $purge_urls[l10n('All')] = 'all';
@@ -256,8 +266,8 @@ foreach (ImageStdParams::get_defined_type_map() as $params) {
 $purge_urls[ l10n(IMG_CUSTOM) ] = IMG_CUSTOM;
 
 $php_current_timestamp = date('Y-m-d H:i:s');
-$db_version = \Piwigo\Db\DbInfo::version();
-$db_current_date = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+$db_version = DbInfo::version();
+$db_current_date = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
 $template->assign(
     [
@@ -289,12 +299,12 @@ $template->assign(
     'PHP_DATATIME' => $php_current_timestamp,
     'DB_DATATIME' => $db_current_date,
     'pwg_token' => $pwg_token,
-    'cache_sizes' => (\Piwigo\Config\Config::has('cache_sizes')) ? safe_unserialize((string)\Piwigo\Config\Config::cacheSizes()) : null,
+    'cache_sizes' => (Config::has('cache_sizes')) ? safe_unserialize((string)Config::cacheSizes()) : null,
     'time_elapsed_since_last_calc' => (function (): ?string {
-        if (!\Piwigo\Config\Config::has('cache_sizes')) {
+        if (!Config::has('cache_sizes')) {
             return null;
         }
-        $cs = safe_unserialize((string)\Piwigo\Config\Config::cacheSizes());
+        $cs = safe_unserialize((string)Config::cacheSizes());
         $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
         return time_since(is_scalar($entry['value'] ?? null) ? (string)$entry['value'] : null, 'year');
     })(),
@@ -305,7 +315,7 @@ $template->assign(
 switch (PwgImage::get_library()) {
     case 'ext_imagick':
         $library = 'External ImageMagick';
-        exec(\Piwigo\Config\Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
+        exec(Config::extImagickDir().PwgImage::get_ext_imagick_command().' -version', $returnarray);
         if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
             $library .= ' ' . $match[1];
         }
@@ -328,7 +338,7 @@ switch (PwgImage::get_library()) {
         break;
 }
 
-if (\Piwigo\Config\Config::galleryLocked()) {
+if (Config::galleryLocked()) {
     $template->assign(
         [
         'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),
@@ -347,7 +357,7 @@ SELECT
     COUNT(*)
   FROM '.LOUNGE_TABLE.'
 ;';
-$nb_lounge = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countLoungeImages();
+$nb_lounge = ServiceLocator::get(ImageRepository::class)->countLoungeImages();
 
 if ($nb_lounge > 0) {
     $template->assign(

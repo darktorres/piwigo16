@@ -44,8 +44,8 @@ final class HistoryRepository extends AbstractRepository
         ?string $tagsString
     ): int {
         $this->conn->insert($this->table('history'), [
-            'date'        => (new \DateTimeImmutable())->format('Y-m-d'),
-            'time'        => (new \DateTimeImmutable())->format('H:i:s'),
+            'date'        => new \DateTimeImmutable()->format('Y-m-d'),
+            'time'        => new \DateTimeImmutable()->format('H:i:s'),
             'user_id'     => $userId,
             'IP'          => $ip,
             'section'     => $section,

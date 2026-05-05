@@ -21,16 +21,12 @@ final class StorageRegistry
 {
     private static ?self $instance = null;
 
-    /** @var array<string, \Closure(): FilesystemOperator> */
-    private readonly array $factories;
-
     /** @var array<string, FilesystemOperator> */
     private array $resolved = [];
 
     /** @param array<string, \Closure(): FilesystemOperator> $factories */
-    public function __construct(array $factories)
+    public function __construct(private readonly array $factories)
     {
-        $this->factories = $factories;
     }
 
     /** Load factories from config/storage.php (returns an array of closures). */

@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Core\Filesystem;
+use Piwigo\Template\TemplateRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
@@ -81,10 +87,10 @@ final class ImageAdminService
             }
         }
         $imgRepo  = ServiceLocator::get(ImageRepository::class);
-        $catRepo  = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
-        $comRepo  = ServiceLocator::get(\Piwigo\Comment\CommentRepository::class);
-        $userRepo = ServiceLocator::get(\Piwigo\Users\UserRepository::class);
-        $tagRepo  = ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
+        $catRepo  = ServiceLocator::get(CategoryRepository::class);
+        $comRepo  = ServiceLocator::get(CommentRepository::class);
+        $userRepo = ServiceLocator::get(UserRepository::class);
+        $tagRepo  = ServiceLocator::get(TagRepository::class);
         $comRepo->deleteByImageIds($ids);
         $catRepo->deleteImageCategoryByImageIds($ids);
         $imgRepo->deleteFormatsByImageIds($ids);
@@ -205,7 +211,7 @@ final class ImageAdminService
         $path    = substr_replace($path, $pattern, $dot, 0);
         if (($glob = glob(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $path)) !== false) {
             foreach ($glob as $file) {
-                \Piwigo\Core\Filesystem::tryUnlink($file);
+                Filesystem::tryUnlink($file);
             }
         }
     }
@@ -271,7 +277,7 @@ final class ImageAdminService
                     unlink($path . '/index.htm');
                 }
                 clearstatcache();
-                \Piwigo\Core\Filesystem::tryRmdir($path);
+                Filesystem::tryRmdir($path);
             }
             return $rmdir;
         }
@@ -362,7 +368,7 @@ final class ImageAdminService
     {
         if (is_null(conf_get_param('count_orphans'))) {
             $allCount = ServiceLocator::get(ImageRepository::class)->countAll();
-            $catCount = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countLinkedImages();
+            $catCount = ServiceLocator::get(CategoryRepository::class)->countLinkedImages();
             $counter  = $allCount - $catCount;
             conf_update_param('count_orphans', $counter, true);
         }
@@ -419,7 +425,7 @@ final class ImageAdminService
             'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(',', $checkIds) . ')'
         )->fetchAllAssociative(), 'path', 'id');
 
-        $template = \Piwigo\Template\TemplateRegistry::current();
+        $template = TemplateRegistry::current();
         foreach ($paths as $path) {
             if (!file_exists(is_scalar($path) ? (string) $path : '')) {
                 $template->assign('header_msgs', [l10n('Some photos are missing from your file system. Details provided by plugin Check Uploads')]);

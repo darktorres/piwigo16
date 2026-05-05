@@ -14,15 +14,15 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 
-final class UserService
+final readonly class UserService
 {
     public function __construct(
-        private readonly UserRepository $userRepo,
-        private readonly Connection $conn,
-        private readonly HistoryRepository $histRepo,
-        private readonly ActivityRepository $actRepo,
-        private readonly GroupRepository $groupRepo,
-        private readonly AuthKeyRepository $authKeyRepo,
+        private UserRepository $userRepo,
+        private Connection $conn,
+        private HistoryRepository $histRepo,
+        private ActivityRepository $actRepo,
+        private GroupRepository $groupRepo,
+        private AuthKeyRepository $authKeyRepo,
     ) {
     }
 
@@ -426,7 +426,7 @@ SELECT DISTINCT f.image_id
         }
         if (!empty($userIds)) {
             $inserts     = [];
-            $dbnow       = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+            $dbnow       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $defaultUser = $this->getDefaultUserInfo(false) ?? [];
 
             if (!is_null($overrideValues)) {
@@ -627,7 +627,7 @@ SELECT DISTINCT f.image_id
     {
         $keyId     = 'pkid-' . date('Ymd') . '-' . generate_key(20);
         $keySecret = generate_key(40);
-        $dbnow     = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $dbnow     = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         $key = [
             'auth_key'       => $keyId,
@@ -640,7 +640,7 @@ SELECT DISTINCT f.image_id
 
         $expiration = null;
         if (!empty($duration)) {
-            $expiration   = (new \DateTimeImmutable())->modify('+' . ($duration * 86400) . ' seconds')->format('Y-m-d H:i:s');
+            $expiration   = new \DateTimeImmutable()->modify('+' . ($duration * 86400) . ' seconds')->format('Y-m-d H:i:s');
             $key['duration'] = $duration;
         }
         $key['expired_on'] = $expiration;
@@ -656,7 +656,7 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
             return l10n('API Key not found');
         }
-        single_update(USER_AUTH_KEYS_TABLE, ['revoked_on' => (new \DateTimeImmutable())->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
+        single_update(USER_AUTH_KEYS_TABLE, ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
         return true;
     }
 
@@ -677,7 +677,7 @@ SELECT DISTINCT f.image_id
             return false;
         }
 
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         foreach ($apiKeys as $i => $apiKey) {
             $apiKey['apikey_secret'] = str_repeat('*', 40);

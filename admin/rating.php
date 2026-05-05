@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Users\UserRepository;
+use Doctrine\DBAL\Connection;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Image\DerivativeImage;
 
@@ -13,7 +20,7 @@ use Piwigo\Image\DerivativeImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -55,9 +62,9 @@ if (isset($_GET['order_by']) and is_numeric($_GET['order_by'])) {
 $page['user_filter'] = '';
 if (isset($_GET['users'])) {
     if ($_GET['users'] == 'user') {
-        $page['user_filter'] = ' AND r.user_id <> '.\Piwigo\Config\Config::guestId();
+        $page['user_filter'] = ' AND r.user_id <> '.Config::guestId();
     } elseif ($_GET['users'] == 'guest') {
-        $page['user_filter'] = ' AND r.user_id = '.\Piwigo\Config\Config::guestId();
+        $page['user_filter'] = ' AND r.user_id = '.Config::guestId();
     }
 }
 
@@ -70,8 +77,8 @@ if (isset($_GET['cat']) and is_numeric($_GET['cat'])) {
     }
 }
 
-$userFields = \Piwigo\Config\Config::userFields();
-$rawUsers = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+$userFields = Config::userFields();
+$rawUsers = ServiceLocator::get(UserRepository::class)
     ->findAllUserIdNameMap($userFields['id'], $userFields['username'], USERS_TABLE);
 $users = [];
 foreach ($rawUsers as $id => $username) {
@@ -92,11 +99,11 @@ if (!empty($page['cat_filter'])) {
 
 $query .= '
 WHERE 1=1'. $page['user_filter'];
-$nb_images_raw = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+$nb_images_raw = ServiceLocator::get(Connection::class)
     ->executeQuery($query)->fetchOne();
 $nb_images = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
 
-$nb_elements = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countRatings();
+$nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |
@@ -191,7 +198,7 @@ $query .= '
   LIMIT '.$elements_per_page.' OFFSET '.$start.'
 ;';
 
-$images = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+$images = ServiceLocator::get(Connection::class)
     ->executeQuery($query)
     ->fetchAllAssociative();
 
@@ -202,7 +209,7 @@ foreach ($images as $image) {
     $image_id_int = is_numeric($image['id']) ? (int) $image['id'] : 0;
     $image_url = get_root_url().'admin.php?page=photo-'.$image_id_int;
 
-    $all_rates = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+    $all_rates = ServiceLocator::get(RateRepository::class)
         ->findByElementId($image_id_int);
     $nb_rates = count($all_rates);
 

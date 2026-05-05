@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Theme\ThemeRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Db\SqlExpr;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Db\DbInfo;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Plugins;
@@ -16,11 +22,11 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Log\LoggerInterface;
 
-final class Util
+final readonly class Util
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly LoggerInterface $log,
+        private Connection $conn,
+        private LoggerInterface $log,
     ) {
     }
 
@@ -142,8 +148,8 @@ final class Util
     public function getPwgThemes(bool $showMobile = false): array
     {
         $themes = [];
-        if (ServiceLocator::has(\Piwigo\Theme\ThemeRepository::class)) {
-            $rows = ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class)->findAll();
+        if (ServiceLocator::has(ThemeRepository::class)) {
+            $rows = ServiceLocator::get(ThemeRepository::class)->findAll();
         } else {
             $rows = $this->conn->executeQuery('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;')->fetchAllAssociative();
         }
@@ -170,7 +176,7 @@ final class Util
 
     public function getThemeconf(string $key): mixed
     {
-        /** @var \Piwigo\Template\Template $template */
+        /** @var Template $template */
         $template = $GLOBALS['template'];
         return $template->get_themeconf($key);
     }
@@ -180,19 +186,13 @@ final class Util
         $pageName = script_basename();
         /** @var array<string, array<string, mixed>> $filterPages */
         $filterPages = Config::filterPages();
-        if (isset($filterPages[$pageName][$valueName])) {
-            return $filterPages[$pageName][$valueName];
-        }
-        if (isset($filterPages['default'][$valueName])) {
-            return $filterPages['default'][$valueName];
-        }
-        return null;
+        return $filterPages[$pageName][$valueName] ?? $filterPages['default'][$valueName] ?? null;
     }
 
     public function getWebmasterMailAddress(): string
     {
         $userFields = Config::userFields();
-        $email = ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+        $email = ServiceLocator::get(UserRepository::class)
             ->getWebmasterEmail(
                 $userFields['email'],
                 $userFields['id'],
@@ -315,7 +315,7 @@ final class Util
         }
         $raw         = CurrentUser::get()->rawAttributes;
         $recentPeriod = is_scalar($raw['recent_period'] ?? null) ? (int) $raw['recent_period'] : 7;
-        $title = RequestCache::remember('get_icon', 'title', static fn () => l10n(
+        $title = RequestCache::remember('get_icon', 'title', static fn (): string => l10n(
             'photos posted during the last %d days',
             $recentPeriod
         ));
@@ -327,7 +327,7 @@ final class Util
             'get_icon',
             'sql_recent_date',
             static function () use ($recentPeriod): string {
-                $v = get_dbal_connection()->executeQuery('SELECT ' . \Piwigo\Db\SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
+                $v = get_dbal_connection()->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
                 return is_scalar($v) ? (string) $v : '';
             }
         );
@@ -465,7 +465,7 @@ final class Util
         $updateLastVisit = trigger_change('pwg_log_update_last_visit', $updateLastVisit);
 
         if ($updateLastVisit) {
-            ServiceLocator::get(\Piwigo\Users\UserRepository::class)->updateLastVisit($userId);
+            ServiceLocator::get(UserRepository::class)->updateLastVisit($userId);
         }
 
         if (!$this->doLog($imageId, $imageType)) {
@@ -494,7 +494,7 @@ final class Util
 
         if ($pageSection !== '') {
             if (!Config::has('history_sections_cache')) {
-                conf_update_param('history_sections_cache', \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
+                conf_update_param('history_sections_cache', SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
             }
             $historySectionsCache = safe_unserialize(Config::historySectionsCache() ?? '');
             Config::override('history_sections_cache', $historySectionsCache);
@@ -504,13 +504,13 @@ final class Util
             ) {
                 $section = $pageSection;
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections = \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section');
+                $historySections = SchemaHelper::getEnums(HISTORY_TABLE, 'section');
                 $historySections[] = $pageSection;
                 $this->conn->executeStatement(
                     'ALTER TABLE ' . HISTORY_TABLE . " CHANGE section section enum('" .
                     implode("','", array_unique($historySections)) . "') DEFAULT NULL"
                 );
-                conf_update_param('history_sections_cache', \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
+                conf_update_param('history_sections_cache', SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
                 $section = $pageSection;
             }
         }
@@ -520,17 +520,17 @@ final class Util
         $searchId   = is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : 'NULL';
         $authKeyId  = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
 
-        $historyId = ServiceLocator::get(\Piwigo\History\HistoryRepository::class)->insertLog(
+        $historyId = ServiceLocator::get(HistoryRepository::class)->insertLog(
             $userId,
             $ip,
-            isset($section) ? $section : null,
+            $section ?? null,
             $categoryId !== 'NULL' ? $categoryId : null,
             $searchId !== 'NULL' ? $searchId : null,
             $imageId,
-            isset($imageType) ? $imageType : null,
+            $imageType ?? null,
             $formatId,
             $authKeyId !== 'NULL' ? $authKeyId : null,
-            isset($tagsString) ? $tagsString : null
+            $tagsString ?? null
         );
         if ($historyId % 1000 === 0) {
             include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
@@ -733,7 +733,7 @@ final class Util
 
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        $dbCurrentDate = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $dbCurrentDate = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         if (!Config::has('send_piwigo_infos_origin_hash')) {
             conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
@@ -749,7 +749,7 @@ final class Util
                 'os_version'        => PHP_OS,
                 'container_type'    => $containerType,
                 'container_version' => $containerVersion,
-                'db_version'        => \Piwigo\Db\DbInfo::version(),
+                'db_version'        => DbInfo::version(),
                 'php_datetime'      => date('Y-m-d H:i:s'),
                 'db_datetime'       => $dbCurrentDate,
                 'graphics_library'  => get_graphics_library(),

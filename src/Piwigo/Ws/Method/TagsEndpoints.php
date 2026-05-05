@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Image\ImageRepository;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Ws\PwgError;
@@ -86,7 +87,7 @@ final class TagsEndpoints
         if (!empty($imageIds)) {
             $rankOf      = array_flip($imageIds);
             $favoriteIds = get_user_favorites();
-            $imageRows   = ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->findByIds($imageIds);
+            $imageRows   = ServiceLocator::get(ImageRepository::class)->findByIds($imageIds);
             foreach ($imageRows as $row) {
                 $image       = [];
                 $rowIdKey    = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -102,7 +103,7 @@ final class TagsEndpoints
                 }
                 $imgNameStr    = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
                 $renderedName  = trigger_change('render_element_name', $imgNameStr, __FUNCTION__);
-                $image['name']    = strip_tags($renderedName);
+                $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ws_std_get_urls($row));
                 $imgIdKey   = is_numeric($image['id']) ? (int) $image['id'] : 0;

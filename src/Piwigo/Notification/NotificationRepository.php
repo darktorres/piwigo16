@@ -57,7 +57,7 @@ final class NotificationRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('user_mail_notification'));
         $qb->where($qb->expr()->in('check_key', ':keys'))
-           ->setParameter('keys', $checkKeys, \Doctrine\DBAL\ArrayParameterType::STRING);
+           ->setParameter('keys', $checkKeys, ArrayParameterType::STRING);
         $qb->executeStatement();
     }
 

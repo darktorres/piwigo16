@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Rate\RateRepository;
+
 global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
 
 use Piwigo\Template\TemplateRegistry;
@@ -19,19 +23,19 @@ use Piwigo\Users\CurrentUser;
  *
  */
 
-if (\Piwigo\Config\Config::rateEnabled()) {
+if (Config::rateEnabled()) {
     $template = TemplateRegistry::current();
     $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
     $rate_summary = [ 'count' => 0, 'score' => $picture['current']['rating_score'], 'average' => null ];
     if (null != $rate_summary['score']) {
         [$rate_summary['count'], $rate_summary['average']] =
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+            ServiceLocator::get(RateRepository::class)
                 ->findCountAndAvgByElementId(is_numeric($picture['current']['id'] ?? null) ? (int) $picture['current']['id'] : 0);
     }
     $template->assign('rate_summary', $rate_summary);
 
     $user_rate = null;
-    if (\Piwigo\Config\Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
+    if (Config::rateAnonymous() or is_autorize_status(ACCESS_CLASSIC)) {
         if ($rate_summary['count'] > 0) {
             $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
             $anonId = null;
@@ -42,7 +46,7 @@ if (\Piwigo\Config\Config::rateEnabled()) {
                 }
                 $anonId = implode('.', $ip_components);
             }
-            $user_rate = \Piwigo\Core\ServiceLocator::get(\Piwigo\Rate\RateRepository::class)
+            $user_rate = ServiceLocator::get(RateRepository::class)
                 ->findRateByUserAndElement($imageId, CurrentUser::get()->id, $anonId);
         }
 
@@ -54,7 +58,7 @@ if (\Piwigo\Config\Config::rateEnabled()) {
                   ['action' => 'rate']
               ),
               'USER_RATE' => $user_rate,
-              'marks'    => \Piwigo\Config\Config::rateItems(),
+              'marks'    => Config::rateItems(),
             ]
         );
     }

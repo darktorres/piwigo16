@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -18,7 +21,7 @@ declare(strict_types=1);
  */
 function global_rank_compare(array $a, array $b): int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->globalRankCompare($a, $b);
+    return ServiceLocator::get(CategoryService::class)->globalRankCompare($a, $b);
 }
 
 /**
@@ -27,30 +30,30 @@ function global_rank_compare(array $a, array $b): int
  */
 function rank_compare(array $a, array $b): int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->rankCompare($a, $b);
+    return ServiceLocator::get(CategoryService::class)->rankCompare($a, $b);
 }
 
 function check_restrictions(int $category_id): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->checkRestrictions($category_id);
+    ServiceLocator::get(CategoryService::class)->checkRestrictions($category_id);
 }
 
 /** @return array<mixed> */
 function get_categories_menu(): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getCategoriesMenu();
+    return ServiceLocator::get(CategoryService::class)->getCategoriesMenu();
 }
 
 /** @return array<mixed>|null */
 function get_cat_info(int|string $id): ?array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getCatInfo($id);
+    return ServiceLocator::get(CategoryService::class)->getCatInfo($id);
 }
 
 /** @return array<mixed> */
 function get_category_preferred_image_orders(): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getCategoryPreferredImageOrders();
+    return ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
 }
 
 /**
@@ -59,13 +62,13 @@ function get_category_preferred_image_orders(): array
  */
 function display_select_categories(array $categories, array|string $selecteds, string $blockname, bool|string $fullname = true): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
+    ServiceLocator::get(CategoryService::class)->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
 }
 
 /** @param int[]|string $selecteds */
 function display_select_cat_wrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->displaySelectCatWrapper($query, $selecteds, $blockname, $fullname);
+    ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query, $selecteds, $blockname, $fullname);
 }
 
 /**
@@ -74,18 +77,18 @@ function display_select_cat_wrapper(string $query, array|string $selecteds, stri
  */
 function get_subcat_ids(array|int|string $ids): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getSubcatIds($ids);
+    return ServiceLocator::get(CategoryService::class)->getSubcatIds($ids);
 }
 
 /** @param string[] $permalinks */
 function get_cat_id_from_permalinks(array $permalinks, int &$idx): ?int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getCatIdFromPermalinks($permalinks, $idx);
+    return ServiceLocator::get(CategoryService::class)->getCatIdFromPermalinks($permalinks, $idx);
 }
 
 function get_display_images_count(mixed $cat_nb_images, mixed $cat_count_images, mixed $cat_count_categories, bool|string $short_message = true, string $separator = '\n'): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getDisplayImagesCount(
+    return ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
         is_numeric($cat_nb_images) ? (int) $cat_nb_images : 0,
         is_numeric($cat_count_images) ? (int) $cat_count_images : 0,
         is_numeric($cat_count_categories) ? (int) $cat_count_categories : 0,
@@ -97,7 +100,7 @@ function get_display_images_count(mixed $cat_nb_images, mixed $cat_count_images,
 /** @param array<string, mixed> $category */
 function get_random_image_in_category(array $category, bool $recursive = true): ?int
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getRandomImageInCategory($category, $recursive);
+    return ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category, $recursive);
 }
 
 /**
@@ -106,7 +109,7 @@ function get_random_image_in_category(array $category, bool $recursive = true): 
  */
 function get_computed_categories(array &$userdata, ?int $filter_days = null): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getComputedCategories($userdata, $filter_days);
+    return ServiceLocator::get(CategoryService::class)->getComputedCategories($userdata, $filter_days);
 }
 
 /**
@@ -115,7 +118,7 @@ function get_computed_categories(array &$userdata, ?int $filter_days = null): ar
  */
 function remove_computed_category(array &$cats, array $cat): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->removeComputedCategory($cats, $cat);
+    ServiceLocator::get(CategoryService::class)->removeComputedCategory($cats, $cat);
 }
 
 /**
@@ -124,7 +127,7 @@ function remove_computed_category(array &$cats, array $cat): void
  */
 function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 'AND', ?string $extra_images_where_sql = '', string $order_by = '', bool $use_permissions = true): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getImageIdsForCategories($cat_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
+    return ServiceLocator::get(CategoryService::class)->getImageIdsForCategories($cat_ids, $mode, $extra_images_where_sql, $order_by, $use_permissions);
 }
 
 /**
@@ -134,7 +137,7 @@ function get_image_ids_for_categories(array|int|string $cat_ids, string $mode = 
  */
 function get_common_categories(array $items, ?int $max = null, array $excluded_cat_ids = [], bool $use_permissions = true): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getCommonCategories($items, $max, $excluded_cat_ids, $use_permissions);
+    return ServiceLocator::get(CategoryService::class)->getCommonCategories($items, $max, $excluded_cat_ids, $use_permissions);
 }
 
 /**
@@ -144,5 +147,5 @@ function get_common_categories(array $items, ?int $max = null, array $excluded_c
  */
 function get_related_categories_menu(array $items, array $excluded_cat_ids = []): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryService::class)->getRelatedCategoriesMenu($items, $excluded_cat_ids);
+    return ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $excluded_cat_ids);
 }

@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Config\Config;
+
 global $template, $user, $page, $persistent_cache, $lang;
 
 use Piwigo\Template\Template;
@@ -26,12 +31,12 @@ if (
     and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
     and !isset($_SESSION['no_photo_yet'])     // temporary hide
 ) {
-    $nb_photos = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+    $nb_photos = ServiceLocator::get(ImageRepository::class)->countAll();
     if (0 == $nb_photos) {
         // make sure we don't use the mobile theme, which is not compatible with
         // the "no photo yet" feature
         $template = new Template(PHPWG_ROOT_PATH.'themes', $user['theme']);
-        \Piwigo\Template\TemplateRegistry::set($template);
+        TemplateRegistry::set($template);
 
         if (isset($_GET['no_photo_yet'])) {
             if ('browse' == $_GET['no_photo_yet']) {
@@ -51,7 +56,7 @@ if (
         $template->set_filenames(['no_photo_yet' => 'no_photo_yet.tpl']);
 
         if (is_admin()) {
-            $url = \Piwigo\Config\Config::noPhotoYetUrl();
+            $url = Config::noPhotoYetUrl();
             if (!str_starts_with((string) $url, 'http')) {
                 $url = get_root_url().$url;
             }

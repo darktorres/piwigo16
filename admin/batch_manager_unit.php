@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Cache\RequestCache;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
@@ -19,7 +27,7 @@ use Piwigo\Image\SrcImage;
  */
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $pwg_loaded_plugins;
@@ -45,8 +53,8 @@ if (isset($_POST['submit'])) {
 
     $datas = [];
 
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-        ->findByIds(array_map('intval', $collection)) as $row) {
+    foreach (ServiceLocator::get(ImageRepository::class)
+        ->findByIds(array_map(intval(...), $collection)) as $row) {
         $data = [];
         $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
 
@@ -56,7 +64,7 @@ if (isset($_POST['submit'])) {
         $data['level'] = $_POST['level-'.$row_id_str];
 
         $desc_key = 'description-'.$row_id_str;
-        if (\Piwigo\Config\Config::allowHtmlDescriptions()) {
+        if (Config::allowHtmlDescriptions()) {
             $data['comment'] = $_POST[$desc_key] ?? null;
         } else {
             $desc_val = $_POST[$desc_key] ?? null;
@@ -96,7 +104,7 @@ if (isset($_POST['submit'])) {
         $datas
     );
 
-    \Piwigo\Core\PageState::current()->addInfo(l10n('Photo informations updated'));
+    PageState::current()->addInfo(l10n('Photo informations updated'));
     invalidate_user_cache();
 }
 
@@ -170,8 +178,8 @@ if (!empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
     // $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
     $page['nb_images'] = is_numeric($_GET['display']) ? (int) $_GET['display'] : 5;
-} elseif (in_array(\Piwigo\Config\Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
-    $page['nb_images'] = \Piwigo\Config\Config::batchManagerImagesPerPageUnit();
+} elseif (in_array(Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
+    $page['nb_images'] = Config::batchManagerImagesPerPageUnit();
 } else {
     $page['nb_images'] = 5;
 }
@@ -200,7 +208,7 @@ if (count($page['cat_elements_id']) > 0) {
 
     if (is_string($bmf['prefilter'] ?? null)
         and 'duplicates' == $bmf['prefilter']) {
-        \Piwigo\Config\Config::override('order_by', ' ORDER BY file, id');
+        Config::override('order_by', ' ORDER BY file, id');
     }
 
 
@@ -211,9 +219,9 @@ SELECT *
     if ($is_category) {
         $category_info = get_cat_info($bmf_category_val);
 
-        \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByInsideCategory());
+        Config::override('order_by', Config::orderByInsideCategory());
         if (!empty($category_info['image_order'])) {
-            \Piwigo\Config\Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+            Config::override('order_by', ' ORDER BY '.(is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
         }
 
         $query .= '
@@ -229,7 +237,7 @@ SELECT *
     }
 
     $query .= '
-  '.\Piwigo\Config\Config::orderBy().'
+  '.Config::orderBy().'
   LIMIT '.$page['nb_images'].' OFFSET '.$page['start'].'
 ;';
     $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
@@ -237,10 +245,10 @@ SELECT *
     if (count($added_by_ids) > 0) {
         $query = '
 SELECT
-    '.\Piwigo\Config\Config::userFields()['username'].' AS username,
-    '.\Piwigo\Config\Config::userFields()['id'].' AS id
+    '.Config::userFields()['username'].' AS username,
+    '.Config::userFields()['id'].' AS id
   FROM '.USERS_TABLE.'
-  WHERE '.\Piwigo\Config\Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
+  WHERE '.Config::userFields()['id'].' IN ( '.implode(',', $added_by_ids).' )
 ;';
         $added_by_username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
     }
@@ -260,7 +268,7 @@ SELECT
 
 
         $tag_selection = get_taglist_from_rows(
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Tag\TagRepository::class)
+            ServiceLocator::get(TagRepository::class)
                 ->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0)
         );
 
@@ -282,7 +290,7 @@ SELECT
         $row_id_int = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
         $media['image'] = get_image_infos($row_id_int, true);
 
-        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+        foreach (ServiceLocator::get(CategoryRepository::class)
             ->findCategoryInfosByImageId($row_id_int) as $item) {
             $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
             $name =
@@ -317,9 +325,7 @@ SELECT
             )
         );
 
-        $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static function () {
-            return array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: [];
-        });
+        $catNames = RequestCache::remember('cat_names', 'all', static fn(): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: []);
         if (isset($row['cat_id'])
         and in_array($row['cat_id'], $authorizeds)) {
             $url_img = make_picture_url(

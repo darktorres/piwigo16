@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +15,7 @@ use Piwigo\Admin\Themes;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -24,7 +27,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 check_status(ACCESS_ADMINISTRATOR);
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 // +-----------------------------------------------------------------------+
@@ -103,7 +106,7 @@ if (isset($_FILES['std_pgs_logo']) and !empty($std_pgs_logo_tmp)) {
 
             $logoStream = fopen($std_pgs_logo_tmp, 'rb');
             if ($logoStream !== false) {
-                \Piwigo\Storage\StorageRegistry::disk('local')->writeStream(
+                StorageRegistry::disk('local')->writeStream(
                     'logo/' . basename($file_path),
                     $logoStream
                 );

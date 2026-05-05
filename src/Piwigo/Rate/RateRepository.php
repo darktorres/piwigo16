@@ -95,7 +95,7 @@ final class RateRepository extends AbstractRepository
             'anonymous_id' => $anonId,
             'element_id'   => $elementId,
             'rate'         => $rate,
-            'date'         => (new \DateTimeImmutable())->format('Y-m-d'),
+            'date'         => new \DateTimeImmutable()->format('Y-m-d'),
         ]);
     }
 

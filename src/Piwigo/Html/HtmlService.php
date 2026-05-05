@@ -64,7 +64,7 @@ final class HtmlService
             $addUrlParamsArr['auth'] = $authKey;
         }
 
-        $catNamesRaw = RequestCache::remember('cat_names', 'all', static function () {
+        $catNamesRaw = RequestCache::remember('cat_names', 'all', static function (): array {
             $query = '
 SELECT id, name, permalink
   FROM ' . CATEGORIES_TABLE . '
@@ -169,7 +169,7 @@ SELECT id, name, permalink
     {
         foreach ([$a, $b] as $tag) {
             $tagName = is_scalar($tag['name']) ? (string) $tag['name'] : '';
-            RequestCache::remember('tag_alpha', $tagName, static fn () => pwg_transliterate($tagName));
+            RequestCache::remember('tag_alpha', $tagName, static fn (): string => pwg_transliterate($tagName));
         }
 
         $aName = is_scalar($a['name']) ? (string) $a['name'] : '';
@@ -453,7 +453,7 @@ $btraceMsg
         foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
             $sessionKey = 'page_' . $mode;
             $sessionArr = (isset($_SESSION[$sessionKey]) && is_array($_SESSION[$sessionKey]))
-                ? array_values(array_filter($_SESSION[$sessionKey], 'is_string'))
+                ? array_values(array_filter($_SESSION[$sessionKey], is_string(...)))
                 : [];
             if ($sessionArr !== []) {
                 unset($_SESSION[$sessionKey]);

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Updates;
 
 // +-----------------------------------------------------------------------+
@@ -12,28 +16,28 @@ use Piwigo\Admin\Updates;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
-    throw new \Piwigo\Exception\ConfigException('Piwigo extensions install/update system is disabled');
+if (!Config::enableExtensionsInstall()) {
+    throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-$updates_ignored_raw = \Piwigo\Config\Config::raw('updates_ignored');
-\Piwigo\Config\Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
+$updates_ignored_raw = Config::raw('updates_ignored');
+Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
 $autoupdate = new Updates($page['page']);
 
 $show_reset = false;
 if (!$autoupdate->get_server_extensions()) {
-    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+    PageState::current()->addError(l10n('Can\'t connect to server.'));
     return; // TODO: remove this return and add a proper "page killer"
 }
 
@@ -63,7 +67,7 @@ foreach ($autoupdate->types as $type) {
 
         $ext_info = $server_ext[$fs_ext['extension']];
 
-        $updates_ignored = \Piwigo\Config\Config::raw('updates_ignored');
+        $updates_ignored = Config::raw('updates_ignored');
         $updates_ignored_arr = is_array($updates_ignored) ? $updates_ignored : [];
         $updates_ignored_for_type = is_array($updates_ignored_arr[$type] ?? null) ? $updates_ignored_arr[$type] : [];
         if (!safe_version_compare($fs_ext['version'], $ext_info['revision_name'], '>=')) {

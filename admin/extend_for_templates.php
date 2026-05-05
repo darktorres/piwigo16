@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -27,7 +31,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -35,7 +39,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
-$tpl_extension = safe_unserialize(\Piwigo\Config\Config::extentsForTemplates() ?? '');
+$tpl_extension = safe_unserialize(Config::extentsForTemplates() ?? '');
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */
@@ -136,10 +140,10 @@ if (isset($_POST['submit'])) {
         }
         $i++;
     }
-    \Piwigo\Config\Config::override('extents_for_templates', serialize($replacements));
+    Config::override('extents_for_templates', serialize($replacements));
     $tpl_extension = $replacements;
-    conf_update_param('extents_for_templates', \Piwigo\Config\Config::extentsForTemplates());
-    \Piwigo\Core\PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
+    conf_update_param('extents_for_templates', Config::extentsForTemplates());
+    PageState::current()->addInfo(l10n('Templates configuration has been recorded.'));
 }
 
 // +-----------------------------------------------------------------------+

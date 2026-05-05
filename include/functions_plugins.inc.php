@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Admin\PluginMaintain;
+use Piwigo\Admin\ThemeMaintain;
+use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Plugins\LoadedPluginRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugin\PluginService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -23,8 +30,8 @@ define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 // global namespace. Aliases — not duplicate class definitions — keep the
 // signatures in lockstep with src/Piwigo/Admin/{Plugin,Theme}Maintain.php
 // so vendor LSP checks pass against the real (relaxed) parent.
-class_alias(\Piwigo\Admin\PluginMaintain::class, 'PluginMaintain');
-class_alias(\Piwigo\Admin\ThemeMaintain::class, 'ThemeMaintain');
+class_alias(PluginMaintain::class, 'PluginMaintain');
+class_alias(ThemeMaintain::class, 'ThemeMaintain');
 
 
 // The 6 functions below call EventDispatcher/LoadedPluginRegistry directly —
@@ -38,7 +45,7 @@ function add_event_handler(
     int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
     ?string $include_path = null
 ): bool {
-    return \Piwigo\Plugins\EventDispatcher::addListener(is_scalar($event) ? (string) $event : '', $func, $priority, $include_path);
+    return EventDispatcher::addListener(is_scalar($event) ? (string) $event : '', $func, $priority, $include_path);
 }
 
 function remove_event_handler(
@@ -46,59 +53,59 @@ function remove_event_handler(
     mixed $func,
     int $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
 ): bool {
-    return \Piwigo\Plugins\EventDispatcher::removeListener(is_scalar($event) ? (string) $event : '', $func, $priority);
+    return EventDispatcher::removeListener(is_scalar($event) ? (string) $event : '', $func, $priority);
 }
 
 function trigger_change(string $event, mixed ...$args): mixed
 {
-    return \Piwigo\Plugins\EventDispatcher::dispatch($event, ...$args);
+    return EventDispatcher::dispatch($event, ...$args);
 }
 
 function trigger_notify(string $event, mixed ...$args): void
 {
-    \Piwigo\Plugins\EventDispatcher::notify($event, ...$args);
+    EventDispatcher::notify($event, ...$args);
 }
 
 function set_plugin_data(string $plugin_id, mixed &$data): bool
 {
-    return \Piwigo\Plugins\LoadedPluginRegistry::setData($plugin_id, $data);
+    return LoadedPluginRegistry::setData($plugin_id, $data);
 }
 
 function &get_plugin_data(string $plugin_id): mixed
 {
-    return \Piwigo\Plugins\LoadedPluginRegistry::getData($plugin_id);
+    return LoadedPluginRegistry::getData($plugin_id);
 }
 
 /** @return array<array<string,mixed>> */
 function get_db_plugins(?string $state = '', ?string $id = ''): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginService::class)->getDbPlugins($state, $id);
+    return ServiceLocator::get(PluginService::class)->getDbPlugins($state, $id);
 }
 
 /** @param array<string,mixed> $plugin */
 function load_plugin(array $plugin): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginService::class)->loadPlugin($plugin);
+    ServiceLocator::get(PluginService::class)->loadPlugin($plugin);
 }
 
 /** @param array<string,mixed> $plugin */
 function autoupdate_plugin(array &$plugin): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginService::class)->autoupdatePlugin($plugin);
+    ServiceLocator::get(PluginService::class)->autoupdatePlugin($plugin);
 }
 
 function load_plugins(): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginService::class)->loadPlugins();
+    ServiceLocator::get(PluginService::class)->loadPlugins();
 }
 
 /**
  * Factory helper used by PluginMaintain dispatch in src/ — keeps dynamic
  * instantiation in include/ (not subject to piwigo.noDynamicNew in src/).
  *
- * @param class-string<\Piwigo\Admin\PluginMaintain> $classname
+ * @param class-string<PluginMaintain> $classname
  */
-function instantiate_plugin_maintain(string $classname, string $plugin_id): \Piwigo\Admin\PluginMaintain
+function instantiate_plugin_maintain(string $classname, string $plugin_id): PluginMaintain
 {
     return new $classname($plugin_id);
 }
@@ -106,9 +113,9 @@ function instantiate_plugin_maintain(string $classname, string $plugin_id): \Piw
 /**
  * Factory helper for ThemeMaintain dispatch.
  *
- * @param class-string<\Piwigo\Admin\ThemeMaintain> $classname
+ * @param class-string<ThemeMaintain> $classname
  */
-function instantiate_theme_maintain(string $classname, string $theme_id): \Piwigo\Admin\ThemeMaintain
+function instantiate_theme_maintain(string $classname, string $theme_id): ThemeMaintain
 {
     return new $classname($theme_id);
 }

@@ -171,7 +171,7 @@ final class UrlService
             case 'file':
                 if (isset($params['image_file'])) {
                     $fnameWoExt = get_filename_wo_extension(is_scalar($params['image_file']) ? (string) $params['image_file'] : '');
-                    if (ord($fnameWoExt) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
+                    if (ord($fnameWoExt[0]) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
                         $url .= $fnameWoExt;
                         break;
                     }
@@ -198,7 +198,7 @@ final class UrlService
                 $url .= '-' . (is_scalar($params['chronology_view']) ? (string) $params['chronology_view'] : '');
             }
             if (!empty($params['chronology_date'])) {
-                $url .= '-' . implode('-', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
+                $url .= '-' . implode('-', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
             }
         }
 
@@ -319,7 +319,7 @@ final class UrlService
                 }
             case 'list':
                 {
-                    $sectionString .= '/list/' . implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
+                    $sectionString .= '/list/' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
                     break;
                 }
             case 'none':

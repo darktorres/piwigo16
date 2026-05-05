@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the category domain. */
@@ -23,7 +24,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('image_category'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -42,7 +43,7 @@ final class CategoryRepository extends AbstractRepository
             ->update($this->table('categories'))
             ->set('representative_picture_id', 'NULL');
         $qb->where($qb->expr()->in('id', ':categoryIds'))
-           ->setParameter('categoryIds', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -59,7 +60,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('image_category'));
         $qb->where($qb->expr()->in('category_id', ':ids'))
-           ->setParameter('ids', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -76,7 +77,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -93,7 +94,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('old_permalinks'));
         $qb->where($qb->expr()->in('cat_id', ':ids'))
-           ->setParameter('ids', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -110,7 +111,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('group_access'));
         $qb->where($qb->expr()->in('cat_id', ':ids'))
-           ->setParameter('ids', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -132,8 +133,8 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('image_category'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
            ->andWhere($qb->expr()->in('category_id', ':categoryIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER)
-           ->setParameter('categoryIds', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+           ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
@@ -153,7 +154,7 @@ final class CategoryRepository extends AbstractRepository
             ->where('category_id = :categoryId')
             ->setParameter('categoryId', $categoryId);
         $qb->andWhere($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -235,7 +236,7 @@ final class CategoryRepository extends AbstractRepository
             ->set('representative_picture_id', ':imageId')
             ->setParameter('imageId', $imageId);
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -270,7 +271,7 @@ final class CategoryRepository extends AbstractRepository
             ->select('*')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
@@ -334,7 +335,7 @@ final class CategoryRepository extends AbstractRepository
         }
 
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -431,7 +432,7 @@ final class CategoryRepository extends AbstractRepository
             ->where('image_id = :imageId')
             ->setParameter('imageId', $imageId);
         $qb->andWhere($qb->expr()->in('category_id', ':catIds'))
-           ->setParameter('catIds', $catIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -450,7 +451,7 @@ final class CategoryRepository extends AbstractRepository
             ->set('commentable', ':val')
             ->setParameter('val', $commentable ? 'true' : 'false');
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -470,7 +471,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'))
             ->where("status = 'private'");
         $qb->andWhere($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
@@ -530,7 +531,7 @@ final class CategoryRepository extends AbstractRepository
             ->select('id', 'dir')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $result[is_numeric($row['id']) ? (int) $row['id'] : 0] = is_string($row['dir']) ? $row['dir'] : null;
@@ -669,7 +670,7 @@ final class CategoryRepository extends AbstractRepository
             ->select('DISTINCT image_id')
             ->from($this->table('image_category'));
         $qb->where($qb->expr()->in('category_id', ':ids'))
-           ->setParameter('ids', $categoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
@@ -691,8 +692,8 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('image_category'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
            ->andWhere($qb->expr()->notIn('category_id', ':catIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER)
-           ->setParameter('catIds', $excludedCategoryIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+           ->setParameter('catIds', $excludedCategoryIds, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
@@ -711,7 +712,7 @@ final class CategoryRepository extends AbstractRepository
             ->select('id')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('representative_picture_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
@@ -743,7 +744,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('image_category'));
         $qb->where($qb->expr()->in('image_id', ':ids'))
-           ->setParameter('ids', $orphanImageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $orphanImageIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -779,7 +780,7 @@ final class CategoryRepository extends AbstractRepository
             ->set('visible', ':visible')
             ->setParameter('visible', $visible ? 'true' : 'false');
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -798,7 +799,7 @@ final class CategoryRepository extends AbstractRepository
             ->set('status', ':status')
             ->setParameter('status', $status);
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -813,12 +814,12 @@ final class CategoryRepository extends AbstractRepository
         if ($ids === []) {
             return [];
         }
-        $ids = array_map('intval', $ids);
+        $ids = array_map(intval(...), $ids);
         $qb = $this->conn->createQueryBuilder()
             ->select('id', 'name', 'id_uppercat', 'uppercats', 'global_rank')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
@@ -833,12 +834,12 @@ final class CategoryRepository extends AbstractRepository
         if ($ids === []) {
             return [];
         }
-        $ids = array_map('intval', $ids);
+        $ids = array_map(intval(...), $ids);
         $qb = $this->conn->createQueryBuilder()
             ->select('id', 'status')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = $row;
@@ -863,7 +864,7 @@ final class CategoryRepository extends AbstractRepository
             ->select('uppercats')
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $qb->executeQuery()->fetchFirstColumn());
     }
 

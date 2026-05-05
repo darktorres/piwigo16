@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Site\SiteRepository;
+use Piwigo\Exception\NotFoundException;
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\BoolUtil;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +23,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -24,26 +35,26 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
 
-if (!\Piwigo\Config\Config::enableSynchronization()) {
-    throw new \Piwigo\Exception\ConfigException('synchronization is disabled');
+if (!Config::enableSynchronization()) {
+    throw new ConfigException('synchronization is disabled');
 }
 
 check_status(ACCESS_ADMINISTRATOR);
 
 if (!is_numeric($_GET['site'])) {
-    throw new \Piwigo\Exception\ValidationException('site param missing or invalid');
+    throw new ValidationException('site param missing or invalid');
 }
 $site_id = $_GET['site'];
 
-$site_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Site\SiteRepository::class)
+$site_url = ServiceLocator::get(SiteRepository::class)
     ->findGalleriesUrlById((int) $site_id);
 if (!isset($site_url)) {
-    throw new \Piwigo\Exception\NotFoundException('site '.$site_id.' does not exist');
+    throw new NotFoundException('site '.$site_id.' does not exist');
 }
 $site_url_str = (string) $site_url;
 $site_is_remote = url_is_remote($site_url_str);
 
-define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
 $error_labels = [
   'PWG-UPDATE-1' => [
@@ -161,7 +172,7 @@ SELECT id, uppercats, global_rank, status, visible
 
     // get categort full directories in an array for comparison with file
     // system directory tree
-    $db_fulldirs = get_fulldirs(array_map('intval', array_keys($db_categories)));
+    $db_fulldirs = get_fulldirs(array_map(intval(...), array_keys($db_categories)));
 
     // what is the base directory to search file system sub-directories ?
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
@@ -177,7 +188,7 @@ SELECT id, uppercats, global_rank, status, visible
     // has 1 for next rank on its sub-categories to create
     $next_rank['NULL'] = 1;
 
-    $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $conn = ServiceLocator::get(Connection::class);
     foreach ($conn->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE)->fetchAllAssociative() as $row) {
         $next_rank[$row['id']] = 1;
     }
@@ -216,16 +227,16 @@ SELECT id, uppercats, global_rank, status, visible
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
         $dir = basename((string) $fulldir);
-        if (preg_match(\Piwigo\Config\Config::syncCharsRegex(), $dir)) {
+        if (preg_match(Config::syncCharsRegex(), $dir)) {
             $insert = [
               'id'          => $next_id++,
               'dir'         => $dir,
               'name'        => str_replace('_', ' ', $dir),
               'site_id'     => $site_id,
               'commentable' =>
-                \Piwigo\Core\BoolUtil::toString(\Piwigo\Config\Config::newcatDefaultCommentable()),
-              'status'      => \Piwigo\Config\Config::newcatDefaultStatus(),
-              'visible'     => \Piwigo\Core\BoolUtil::toString(\Piwigo\Config\Config::newcatDefaultVisible()),
+                BoolUtil::toString(Config::newcatDefaultCommentable()),
+              'status'      => Config::newcatDefaultStatus(),
+              'visible'     => BoolUtil::toString(Config::newcatDefaultVisible()),
               ];
 
             if (isset($db_fulldirs[dirname((string) $fulldir)])) {
@@ -296,9 +307,9 @@ SELECT id, uppercats, global_rank, status, visible
             pwg_activity('album', $category_ids, 'add', ['sync' => true]);
 
             $category_up = implode(',', array_unique($category_up));
-            if (\Piwigo\Config\Config::inheritanceByDefault() and !empty($category_up)) {
-                $permRepoSync = \Piwigo\Core\ServiceLocator::get(\Piwigo\Permission\PermissionRepository::class);
-                $category_up_ids = array_map('intval', explode(',', $category_up));
+            if (Config::inheritanceByDefault() and !empty($category_up)) {
+                $permRepoSync = ServiceLocator::get(PermissionRepository::class);
+                $category_up_ids = array_map(intval(...), explode(',', $category_up));
 
                 $groupAccessRows = $permRepoSync->findGroupCategoryAccess($category_up_ids);
                 if (!empty($groupAccessRows)) {
@@ -456,7 +467,7 @@ SELECT id, path
             continue;
         }
         $filename = basename((string) $path);
-        if (!preg_match(\Piwigo\Config\Config::syncCharsRegex(), $filename)) {
+        if (!preg_match(Config::syncCharsRegex(), $filename)) {
             $errors[] = [
               'path' => $path,
               'type' => 'PWG-UPDATE-1',
@@ -492,7 +503,7 @@ SELECT id, path
           'info' => l10n('added'),
           ];
 
-        if (\Piwigo\Config\Config::isFormatsEnabled()) {
+        if (Config::isFormatsEnabled()) {
             $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
             foreach ($fs_path_formats as $ext => $filesize) {
                 $insert_formats[] = [
@@ -512,8 +523,8 @@ SELECT id, path
     }
 
     // search new/removed formats on photos already registered in database
-    if (\Piwigo\Config\Config::isFormatsEnabled()) {
-        $db_elements_str = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $db_elements);
+    if (Config::isFormatsEnabled()) {
+        $db_elements_str = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $db_elements);
         $db_elements_flip = array_flip($db_elements_str);
 
         $existing_ids = [];
@@ -528,8 +539,8 @@ SELECT id, path
             $db_formats = [];
 
             // find formats for existing photos (already in database)
-            foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-                ->findFormatsByImageIds(array_map('intval', $existing_ids)) as $row) {
+            foreach (ServiceLocator::get(ImageRepository::class)
+                ->findFormatsByImageIds(array_map(intval(...), $existing_ids)) as $row) {
                 $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                 $row_ext = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
                 if (!isset($db_formats[$row_image_id])) {
@@ -621,7 +632,7 @@ SELECT id, path
         }
 
         if (count($formats_to_delete) > 0) {
-            \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+            ServiceLocator::get(ImageRepository::class)
                 ->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
         }
     }
@@ -708,7 +719,7 @@ if (isset($_POST['submit'])
                 // fields
                 [
                   'primary' => ['id'],
-                  'update'  => array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes()),
+                  'update'  => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes()),
                   ],
                 $datas
             );
@@ -808,7 +819,7 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
                   'update'  => array_unique(
                       array_merge(
                           array_values(array_diff(
-                              array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()),
+                              array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()),
                               // keywords and tags fields are managed separately
                               ['keywords', 'tags']
                           )),
@@ -848,7 +859,7 @@ if ($simulate) {
 
 // used_metadata string is displayed to inform admin which metadata will be
 // used from files for synchronization
-$used_metadata = implode(', ', array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
+$used_metadata = implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
 // $site_is_remote is always false here (fatal_error called above if true)
 
 $template->assign(

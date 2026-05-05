@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Storage\StorageRegistry;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
@@ -36,7 +39,7 @@ final class ImagesEndpoints
         $searchCurrentRanks = false;
         if (empty($categoriesString)) {
             if ($replaceMode) {
-                ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
+                ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
                 update_category([]);
             }
             return true;
@@ -58,7 +61,7 @@ final class ImagesEndpoints
         $catIds = array_unique($catIds);
         if (count($catIds) === 0) {
             if ($replaceMode) {
-                ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
+                ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
                 update_category([]);
             }
             return true;
@@ -72,7 +75,7 @@ final class ImagesEndpoints
         if ($replaceMode) {
             $toRemoveCatIds = array_diff($existingCatIds, $catIds);
             if (count($toRemoveCatIds) > 0) {
-                ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->removeImageFromCategories(is_numeric($imageId) ? (int) $imageId : 0, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
+                ServiceLocator::get(CategoryRepository::class)->removeImageFromCategories(is_numeric($imageId) ? (int) $imageId : 0, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
                 update_category(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
             }
         }
@@ -231,7 +234,7 @@ final class ImagesEndpoints
         }
         $rating = ['score' => $imageRow['rating_score'], 'count' => 0, 'average' => null];
         if (isset($rating['score'])) {
-            [$rating['count'], $rating['average']] = ServiceLocator::get(\Piwigo\Rate\RateRepository::class)->findCountAndAvgByElementId($imageRowId);
+            [$rating['count'], $rating['average']] = ServiceLocator::get(RateRepository::class)->findCountAndAvgByElementId($imageRowId);
             $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
         }
         $relatedComments = [];
@@ -531,7 +534,7 @@ final class ImagesEndpoints
         if (empty($params['rank'])) {
             return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
         }
-        $catRepo = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+        $catRepo = ServiceLocator::get(CategoryRepository::class);
         if (!ServiceLocator::get(ImageRepository::class)->existsById($pImageId)) {
             return new PwgError(404, 'image_id not found');
         }
@@ -663,7 +666,7 @@ final class ImagesEndpoints
             $pCategoriesStr = is_scalar($params['categories']) ? (string) $params['categories'] : '';
             $this->addImageCategoryRelations($imageId, $pCategoriesStr);
             if (preg_match('/^\d+/', $pCategoriesStr, $matches)) {
-                $category              = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->findCategoryById((int) $matches[0]);
+                $category              = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $matches[0]);
                 $urlParams['section']  = 'categories';
                 $urlParams['category'] = $category;
             }
@@ -733,7 +736,7 @@ final class ImagesEndpoints
         $urlParams = ['image_id' => $imageId];
         if (!empty($pCategoryAs)) {
             $firstCatId  = $pCategoryAs[0] ?? 0;
-            $category    = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->findCategoryById($firstCatId);
+            $category    = ServiceLocator::get(CategoryRepository::class)->findCategoryById($firstCatId);
             $urlParams['section']  = 'categories';
             $urlParams['category'] = $category;
         }
@@ -833,7 +836,7 @@ final class ImagesEndpoints
                 }
             }
             $imageId = add_uploaded_file($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
-            $catRepo2   = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+            $catRepo2   = ServiceLocator::get(CategoryRepository::class);
             $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
             $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
             $nbPhotosLounge = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . LOUNGE_TABLE . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ')', [$pCategoryFirst])->fetchOne();
@@ -872,10 +875,10 @@ final class ImagesEndpoints
         $filesFile2TmpName = is_scalar($filesFile2['tmp_name'] ?? null) ? (string) $filesFile2['tmp_name'] : '';
         $chunkRoot     = PHPWG_ROOT_PATH . Config::uploadDir();
         $chunkAbsPath  = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfilePath), '/');
-        $chunkRelPath  = \Piwigo\Storage\StorageRegistry::stripRoot($chunkRoot, $chunkAbsPath);
+        $chunkRelPath  = StorageRegistry::stripRoot($chunkRoot, $chunkAbsPath);
         $chunkStream   = fopen($filesFile2TmpName, 'rb');
         if ($chunkStream !== false) {
-            \Piwigo\Storage\StorageRegistry::disk('uploads')->writeStream($chunkRelPath, $chunkStream);
+            StorageRegistry::disk('uploads')->writeStream($chunkRelPath, $chunkStream);
             fclose($chunkStream);
         }
         $logger->debug(__FUNCTION__ . ' uploaded ' . $chunkfilePath);
@@ -1077,7 +1080,7 @@ final class ImagesEndpoints
         $formatsOf = [];
         /** @var list<string> $imageIds */
         $imageIds  = [];
-        foreach ($imgRepo->findFormatsByFormatIds(array_map('intval', $formatIds)) as $row) {
+        foreach ($imgRepo->findFormatsByFormatIds(array_map(intval(...), $formatIds)) as $row) {
             $rowImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $rowExt     = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
             if (!isset($formatsOf[$rowImageId])) {
@@ -1089,7 +1092,7 @@ final class ImagesEndpoints
         if (count($imageIds) === 0) {
             return new PwgError(404, 'No format found for the id(s) given');
         }
-        foreach ($imgRepo->findByIds(array_map('intval', $imageIds)) as $row) {
+        foreach ($imgRepo->findByIds(array_map(intval(...), $imageIds)) as $row) {
             $rowPath = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
             $rowId   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             if (url_is_remote($rowPath)) {
@@ -1110,7 +1113,7 @@ final class ImagesEndpoints
                 }
             }
         }
-        $imgRepo->deleteFormatsByFormatIds(array_map('intval', $formatIds));
+        $imgRepo->deleteFormatsByFormatIds(array_map(intval(...), $formatIds));
         invalidate_user_cache();
         return $ok;
     }
@@ -1273,7 +1276,7 @@ final class ImagesEndpoints
         $imageIds      = array_values(array_filter($ucImageIdsRaw, fn (int $v): bool => $v > 0));
         $ucCategoryId  = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $movedFromLounge  = empty_lounge();
-        $categoryInfos    = ['nb_photos' => ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
+        $categoryInfos    = ['nb_photos' => ServiceLocator::get(CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
         $categoryName     = get_cat_display_name_from_id($ucCategoryId, null);
         trigger_notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
         return ['moved_from_lounge' => $movedFromLounge, 'category' => ['id' => $ucCategoryId, 'nb_photos' => $categoryInfos['nb_photos'], 'label' => $categoryName]];

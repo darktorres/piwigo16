@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Core\ServiceLocator;
 
@@ -14,7 +15,7 @@ require_once(PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php');
 /** @return array<mixed> */
 function get_sync_iptc_data(string $file): array
 {
-    return ServiceLocator::get(MetadataAdminService::class)->getSyncIptcData($file, \Piwigo\Config\Config::useIptcMapping());
+    return ServiceLocator::get(MetadataAdminService::class)->getSyncIptcData($file, Config::useIptcMapping());
 }
 
 /** @return array<mixed> */

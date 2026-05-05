@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Users\CurrentUser;
+
 global $persistent_cache, $service;
 
 use Piwigo\Ws\PwgError;
@@ -14,7 +18,7 @@ use Piwigo\Ws\PwgError;
 // +-----------------------------------------------------------------------+
 
 // by default we start with guest
-$user['id'] = \Piwigo\Config\Config::guestId();
+$user['id'] = Config::guestId();
 
 if (isset($_COOKIE[session_name()])) {
     if (isset($_GET['act']) and $_GET['act'] == 'logout') { // logout
@@ -26,12 +30,12 @@ if (isset($_COOKIE[session_name()])) {
 }
 
 // Now check the auto-login
-if ($user['id'] == \Piwigo\Config\Config::guestId()) {
+if ($user['id'] == Config::guestId()) {
     auto_login();
 }
 
 // using Apache authentication override the above user search
-if (\Piwigo\Config\Config::apacheAuthentication()) {
+if (Config::apacheAuthentication()) {
     $remote_user = null;
     foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
         if (isset($_SERVER[$server_key])) {
@@ -74,7 +78,7 @@ if (
         // set pwg_token for api_key request
         $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();
 
-        \Piwigo\Core\LoggerRegistry::current()->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').']');
+        LoggerRegistry::current()->info('[api_key][pkid='.explode(':', (string) $auth_header)[0].'][method='.(is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '').']');
     }
 }
 
@@ -115,11 +119,11 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
 
 $user = build_user(is_numeric($user['id']) ? (int) $user['id'] : 0, $page['user_use_cache']);
 
-if (\Piwigo\Config\Config::browserLanguage() and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
+if (Config::browserLanguage() and (is_a_guest() or is_generic()) and $language = get_browser_language()) {
     $user['language'] = $language;
 }
 trigger_notify('user_init', $user);
 
 // Re-attach CurrentUser after build_user() has populated $GLOBALS['user'].
 // Kernel::boot() ran before user.inc.php so CurrentUser had a stale snapshot.
-\Piwigo\Users\CurrentUser::attachGlobals();
+CurrentUser::attachGlobals();

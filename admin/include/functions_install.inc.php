@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbConnection;
+use Piwigo\Exception\DbException;
+use Piwigo\Config\Config;
+use Piwigo\Db\DbInfo;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 
@@ -11,28 +17,21 @@ use Piwigo\Admin\Themes;
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * @package functions\admin\install
  */
-
-
 /**
  * Loads a SQL file and executes all queries.
  * Before executing a query, $replaced is... replaced by $replacing. This is
  * useful when the SQL file contains generic words. Drop table queries are
  * not executed.
- *
- * @param string $filepath
- * @param string $replaced
- * @param string $replacing
  */
 function execute_sqlfile(string $filepath, string $replaced, string $replacing, string $dblayer): void
 {
-    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
-        $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    if (ServiceLocator::has(Connection::class)) {
+        $conn = ServiceLocator::get(Connection::class);
     } else {
-        $conn = \Piwigo\Db\DbConnection::build();
+        $conn = DbConnection::build();
     }
 
     $sql_lines = file($filepath) ?: [];
@@ -126,7 +125,7 @@ function install_db_connect(array &$infos, array &$errors): void
             restore_error_handler();
         }
         if ($tmp->connect_error) {
-            throw new \Piwigo\Exception\DbException($tmp->connect_error);
+            throw new DbException($tmp->connect_error);
         }
         $safe = $tmp->real_escape_string($dbname);
         $tmp->query("DROP DATABASE IF EXISTS `{$safe}`");
@@ -138,14 +137,14 @@ function install_db_connect(array &$infos, array &$errors): void
     }
 
     // Prime Config so get_dbal_connection() uses the install credentials.
-    \Piwigo\Config\Config::override('db_host', $host);
-    \Piwigo\Config\Config::override('db_user', $user);
-    \Piwigo\Config\Config::override('db_password', $pass);
-    \Piwigo\Config\Config::override('db_base', $dbname);
+    Config::override('db_host', $host);
+    Config::override('db_user', $user);
+    Config::override('db_password', $pass);
+    Config::override('db_base', $dbname);
 
     try {
         get_dbal_connection();
-        $dbVersion = \Piwigo\Db\DbInfo::version();
+        $dbVersion = DbInfo::version();
         if (version_compare($dbVersion, REQUIRED_MYSQL_VERSION, '<')) {
             $errors[] = sprintf(
                 'your MySQL version is too old, you have "%s" and you need at least "%s"',

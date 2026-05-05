@@ -2,6 +2,18 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Language\LanguageRepository;
+use Piwigo\Db\DbConnection;
+use Piwigo\Core\LanguageStack;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Template\Template;
+use Piwigo\Core\Lang;
+use Piwigo\Lang\Translator;
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\InstallSentinel;
+use Gettext\Loader\PoLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\ServiceLocator;
@@ -110,7 +122,7 @@ function mkgetdir(mixed $dir, mixed $flags = MKGETDIR_DEFAULT): bool
             $umask = umask(0);
             set_error_handler(static fn (): bool => true);
             try {
-                $mkd = mkdir($d, \Piwigo\Config\Config::chmodValue(), ($f & MKGETDIR_RECURSIVE) ? true : false);
+                $mkd = mkdir($d, Config::chmodValue(), ($f & MKGETDIR_RECURSIVE) ? true : false);
             } finally {
                 restore_error_handler();
             }
@@ -172,9 +184,9 @@ function str2url(string $str): string
 /** @return string[] */
 function get_languages(): array
 {
-    if (\Piwigo\Core\ServiceLocator::has(\Piwigo\Language\LanguageRepository::class)) {
+    if (ServiceLocator::has(LanguageRepository::class)) {
         $languages = [];
-        foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Language\LanguageRepository::class)->findIdNameMap() as $id => $name) {
+        foreach (ServiceLocator::get(LanguageRepository::class)->findIdNameMap() as $id => $name) {
             if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
                 $languages[$id] = $name;
             }
@@ -182,7 +194,7 @@ function get_languages(): array
         return $languages;
     }
     $languages = [];
-    foreach (\Piwigo\Db\DbConnection::build()
+    foreach (DbConnection::build()
         ->executeQuery('SELECT id, name FROM ' . LANGUAGES_TABLE . ' ORDER BY name ASC')
         ->fetchAllAssociative() as $row) {
         $langId   = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -278,16 +290,16 @@ function redirect_http(mixed $url): void
 
 function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): void
 {
-    if (!\Piwigo\Core\LanguageStack::initialized() || !\Piwigo\Template\TemplateRegistry::isInitialized()) {
-        \Piwigo\Users\CurrentUser::setRawAttributes(build_user(\Piwigo\Config\Config::guestId(), true));
+    if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
+        CurrentUser::setRawAttributes(build_user(Config::guestId(), true));
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-        $tpl = new \Piwigo\Template\Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
-        \Piwigo\Template\TemplateRegistry::set($tpl);
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        TemplateRegistry::set($tpl);
     } elseif (defined('IN_ADMIN') && IN_ADMIN) {
-        $tpl = new \Piwigo\Template\Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
-        \Piwigo\Template\TemplateRegistry::set($tpl);
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        TemplateRegistry::set($tpl);
     }
 
     if (empty($msg)) {
@@ -298,7 +310,7 @@ function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): vo
     $url_link = is_scalar($url) ? (string) $url : '';
     $title    = 'redirection';
 
-    $tpl = \Piwigo\Template\TemplateRegistry::current();
+    $tpl = TemplateRegistry::current();
     $tpl->set_filenames(['redirect' => 'redirect.tpl']);
 
     require(PHPWG_ROOT_PATH . 'include/page_header.php');
@@ -316,7 +328,7 @@ function redirect(mixed $url, mixed $msg = '', mixed $refresh_time = 0): void
     $urlStr      = is_scalar($url) ? (string) $url : '';
     $msgStr      = is_scalar($msg) ? (string) $msg : '';
     $refreshTime = is_numeric($refresh_time) ? (int) $refresh_time : 0;
-    if (\Piwigo\Config\Config::defaultRedirectMethod() === 'http' && $refreshTime === 0 && !headers_sent()) {
+    if (Config::defaultRedirectMethod() === 'http' && $refreshTime === 0 && !headers_sent()) {
         redirect_http($urlStr);
     } else {
         redirect_html($urlStr, $msgStr, $refreshTime);
@@ -370,12 +382,12 @@ function get_name_from_file_delegate(mixed $filename): string
 function l10n(?string $key): string
 {
     $args = func_num_args() > 1 ? array_slice(func_get_args(), 1) : [];
-    return \Piwigo\Core\Lang::t($key ?? '', ...$args);
+    return Lang::t($key ?? '', ...$args);
 }
 
 function l10n_dec(string $singular_key, string $plural_key, int|float|null $decimal): string
 {
-    return \Piwigo\Lang\Translator::get()->plural($singular_key, $plural_key, (int) $decimal);
+    return Translator::get()->plural($singular_key, $plural_key, (int) $decimal);
 }
 
 /** @return array<mixed> */
@@ -434,10 +446,10 @@ function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_
     $sql = 'SELECT param, value FROM ' . CONFIG_TABLE .
         (!empty($condition) ? ' WHERE ' . $condition : '');
 
-    if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
-        $conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    if (ServiceLocator::has(Connection::class)) {
+        $conn = ServiceLocator::get(Connection::class);
     } else {
-        $conn = \Piwigo\Db\DbConnection::build();
+        $conn = DbConnection::build();
     }
 
     $rows = $conn->executeQuery($sql)->fetchAllAssociative();
@@ -453,7 +465,7 @@ function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_
         } elseif ($val === 'false') {
             $val = false;
         }
-        \Piwigo\Config\Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
+        Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
     }
 
     trigger_notify('load_conf', $condition);
@@ -574,7 +586,7 @@ function script_basename(): string
             if (!empty($_SERVER[$value])) {
                 $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
                 $ext = strrchr($filename, '.');
-                if (\Piwigo\Config\Config::phpExtensionInUrls() && ($ext === false ? '' : substr($ext, 1)) !== 'php') {
+                if (Config::phpExtensionInUrls() && ($ext === false ? '' : substr($ext, 1)) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');
@@ -605,7 +617,7 @@ function get_pwg_charset(): string
 function get_parent_language(mixed $lang_id = null): ?string
 {
     if (empty($lang_id)) {
-        $info   = \Piwigo\Core\LanguageStack::info();
+        $info   = LanguageStack::info();
         $parent = $info['parent'] ?? null;
         return is_string($parent) && $parent !== '' ? $parent : null;
     }
@@ -621,13 +633,13 @@ function get_parent_language(mixed $lang_id = null): ?string
 /** @param array<mixed> $options */
 function load_language(string $filename, string $dirname = '', array $options = []): string|bool
 {
-    $user = \Piwigo\Users\CurrentUser::isInitialized()
-        ? \Piwigo\Users\CurrentUser::get()->rawAttributes
+    $user = CurrentUser::isInitialized()
+        ? CurrentUser::get()->rawAttributes
         : (is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : []);
 
     if (!empty($dirname) && !empty($filename) && empty($options['return'])
-        && !\Piwigo\Core\LanguageStack::hasPluginFile($dirname, $filename)) {
-        \Piwigo\Core\LanguageStack::trackPluginFile($dirname, $filename, $options);
+        && !LanguageStack::hasPluginFile($dirname, $filename)) {
+        LanguageStack::trackPluginFile($dirname, $filename, $options);
     }
 
     if (empty($dirname)) {
@@ -635,7 +647,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     }
     $langDir = $dirname . 'language/';
 
-    $default_language = (\Piwigo\Core\InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
+    $default_language = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
         ? get_default_language()
         : PHPWG_DEFAULT_LANGUAGE;
 
@@ -657,7 +669,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     }
 
     /** @var list<string> $languages_typed */
-    $languages_typed = array_values(array_unique(array_filter($languages, 'is_string')));
+    $languages_typed = array_values(array_unique(array_filter($languages, is_string(...))));
 
     if (!empty($options['return'])) {
         foreach ($languages_typed as $language) {
@@ -678,8 +690,8 @@ function load_language(string $filename, string $dirname = '', array $options = 
                 $lang      = null;
                 $lang_info = null;
                 include $f;
-                \Piwigo\Core\LanguageStack::mergeLang((array) $lang);
-                \Piwigo\Core\LanguageStack::mergeInfo((array) $lang_info);
+                LanguageStack::mergeLang((array) $lang);
+                LanguageStack::mergeInfo((array) $lang_info);
                 return true;
             }
         }
@@ -702,9 +714,9 @@ function load_language(string $filename, string $dirname = '', array $options = 
         return false;
     }
 
-    \Piwigo\Lang\Translator::get()->load($selected_language, $po_file);
+    Translator::get()->load($selected_language, $po_file);
 
-    $poHeaders    = (new \Gettext\Loader\PoLoader())->loadFile($po_file)->getHeaders();
+    $poHeaders    = new PoLoader()->loadFile($po_file)->getHeaders();
     $lang_info_po = [];
     foreach ([
         'X-Piwigo-Language-Name' => 'language_name',
@@ -719,7 +731,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     if (($v = $poHeaders->get('X-Piwigo-Zero-Plural')) !== null) {
         $lang_info_po['zero_plural'] = ($v === 'true');
     }
-    \Piwigo\Core\LanguageStack::mergeInfo($lang_info_po);
+    LanguageStack::mergeInfo($lang_info_po);
 
     return true;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Config\Config;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\ServiceLocator;
@@ -18,8 +19,8 @@ final class DirectPreparer
 
         $tpl->assign([
             'F_ADD_ACTION' => $photosAddBaseUrl,
-            'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize(),
-            'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize(),
+            'chunk_size' => Config::uploadFormChunkSize(),
+            'max_file_size' => Config::uploadFormMaxFileSize(),
             'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
         ]);
 
@@ -40,10 +41,10 @@ final class DirectPreparer
             }
         }
 
-        if (\Piwigo\Config\Config::originalResize()) {
+        if (Config::originalResize()) {
             $tpl->assign([
-                'original_resize_maxwidth' => \Piwigo\Config\Config::originalResizeMaxwidth(),
-                'original_resize_maxheight' => \Piwigo\Config\Config::originalResizeMaxheight(),
+                'original_resize_maxwidth' => Config::originalResizeMaxwidth(),
+                'original_resize_maxheight' => Config::originalResizeMaxheight(),
             ]);
         }
 
@@ -55,9 +56,9 @@ final class DirectPreparer
         $unique_exts = array_unique(
             array_map(
                 strtolower(...),
-                \Piwigo\Config\Config::uploadFormAllTypes()
-                    ? \Piwigo\Config\Config::fileExtensions()
-                    : \Piwigo\Config\Config::pictureExtensions()
+                Config::uploadFormAllTypes()
+                    ? Config::fileExtensions()
+                    : Config::pictureExtensions()
             )
         );
 
@@ -119,7 +120,7 @@ final class DirectPreparer
         }
         if (!isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
-            if (\Piwigo\Config\Config::useExif() && !function_exists('exif_read_data')) {
+            if (Config::useExif() && !function_exists('exif_read_data')) {
                 $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
             }
             if (get_ini_size('upload_max_filesize') > get_ini_size('post_max_size')) {
@@ -129,10 +130,10 @@ final class DirectPreparer
                     get_ini_size('post_max_size', false)
                 );
             }
-            if (get_ini_size('upload_max_filesize') < \Piwigo\Config\Config::uploadFormChunkSize() * 1024) {
+            if (get_ini_size('upload_max_filesize') < Config::uploadFormChunkSize() * 1024) {
                 $setup_warnings[] = sprintf(
                     'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
-                    \Piwigo\Config\Config::uploadFormChunkSize(),
+                    Config::uploadFormChunkSize(),
                     ceil((int) get_ini_size('upload_max_filesize') / 1024)
                 );
             }

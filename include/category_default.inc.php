@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Config\Config;
+
 global $persistent_cache;
 
 use Piwigo\Image\ImageStdParams;
@@ -39,14 +43,14 @@ $selection = array_values(array_filter(
         'loc_index_thumbnails_selection',
         array_slice($pageItems, $pageStart, $pageNbImagePage)
     ),
-    fn ($v) => is_int($v) || is_string($v)
+    fn ($v): bool => is_int($v) || is_string($v)
 ));
 
 if (count($selection) > 0) {
     $rank_of = array_flip($selection);
 
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-        ->findByIds(array_map('intval', $selection)) as $row) {
+    foreach (ServiceLocator::get(ImageRepository::class)
+        ->findByIds(array_map(intval(...), $selection)) as $row) {
         $row['rank'] = $rank_of[ is_numeric($row['id']) ? (int)$row['id'] : 0 ];
         $pictures[] = $row;
     }
@@ -71,7 +75,7 @@ if (count($pictures) > 0) {
           ($_GET['slideshow'] ?? '')]
       );
 
-    if (\Piwigo\Config\Config::activateComments() and $user['show_nb_comments']) {
+    if (Config::activateComments() and $user['show_nb_comments']) {
         $query = '
 SELECT image_id, COUNT(*) AS nb_comments
   FROM '.COMMENTS_TABLE.'
@@ -116,7 +120,7 @@ foreach ($pictures as $row) {
       'file_ext' => strtolower(get_extension(is_string($row['file'] ?? null) ? $row['file'] : '')),
       ]);
 
-    if (\Piwigo\Config\Config::indexNewIcon()) {
+    if (Config::indexNewIcon()) {
         $tpl_var['icon_ts'] = get_icon(is_string($row['date_available'] ?? null) ? $row['date_available'] : null);
     }
 
@@ -144,8 +148,8 @@ foreach ($pictures as $row) {
 
 $template->assign([
   'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(pwg_get_session_var('index_deriv', IMG_THUMB))),
-  'maxRequests' => \Piwigo\Config\Config::maxRequests(),
-  'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\Config::showThumbnailCaption(),
+  'maxRequests' => Config::maxRequests(),
+  'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
     ]);
 $tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
 $template->assign('thumbnails', $tpl_thumbnails_var);

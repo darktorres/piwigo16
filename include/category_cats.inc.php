@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+
 global $persistent_cache, $logger;
 
 use Piwigo\Image\ImageStdParams;
@@ -72,14 +76,14 @@ if ('recent_cats' != $page['section']) {
   ORDER BY `rank`';
 }
 
-$nb_cats_page = \Piwigo\Config\Config::nbCategoriesPage();
+$nb_cats_page = Config::nbCategoriesPage();
 $query .= '
   LIMIT '.$nb_cats_page.' OFFSET '.(is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0).'
 ;';
 
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
-$conn = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+$conn = ServiceLocator::get(Connection::class);
 $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
 $page['total_categories'] = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
@@ -95,7 +99,7 @@ foreach ($catCatsRows as $row) {
         $image_id = $row['user_representative_picture_id'];
     } elseif (!empty($row['representative_picture_id'])) { // if a representative picture is set, it has priority
         $image_id = $row['representative_picture_id'];
-    } elseif (\Piwigo\Config\Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
+    } elseif (Config::allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
         $image_id = get_random_image_in_category($row);
     } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) { // at this point, $row['count_images'] should always be >0 (used as condition in SQL)
         // searching a random representant among representant of sub-categories
@@ -114,7 +118,7 @@ SELECT representative_picture_id
   ORDER BY '.DB_RANDOM_FUNCTION.'()
   LIMIT 1
 ;';
-        $subval = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        $subval = ServiceLocator::get(Connection::class)
             ->executeQuery($query)->fetchOne();
         if ($subval !== false) {
             $image_id = is_numeric($subval) ? (int) $subval : null;
@@ -123,7 +127,7 @@ SELECT representative_picture_id
 
 
     if (isset($image_id)) {
-        if (\Piwigo\Config\Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
+        if (Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
             $user_representative_updates_for[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $image_id;
         }
 
@@ -143,7 +147,7 @@ SELECT representative_picture_id
     unset($image_id);
 }
 
-if (\Piwigo\Config\Config::displayFromto()) {
+if (Config::displayFromto()) {
     if (count($category_ids) > 0) {
         $query = '
 SELECT
@@ -179,7 +183,7 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $image_ids).')
 ;';
-    foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    foreach (ServiceLocator::get(Connection::class)
         ->executeQuery($query)->fetchAllAssociative() as $row) {
         if ($row['level'] <= $user['level']) {
             $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
@@ -201,7 +205,7 @@ SELECT *
                         $new_image_ids[] = $image_id;
                     }
 
-                    if (\Piwigo\Config\Config::representativeCacheOnLevel()) {
+                    if (Config::representativeCacheOnLevel()) {
                         $user_representative_updates_for[is_scalar($category['id'] ?? null) ? (string)$category['id'] : ''] = $image_id;
                     }
 
@@ -218,7 +222,7 @@ SELECT *
   FROM '.IMAGES_TABLE.'
   WHERE id IN ('.implode(',', $new_image_ids).')
 ;';
-        foreach (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        foreach (ServiceLocator::get(Connection::class)
             ->executeQuery($query)->fetchAllAssociative() as $row) {
             $infos_of_image[is_scalar($row['id'] ?? null) ? (string)$row['id'] : ''] = $row;
         }
@@ -286,7 +290,7 @@ if (count($categories) > 0) {
         $tpl_var = array_merge($category, [
               'ID'    => $category['id'] /*obsolete*/,
               'representative'   => $representative_infos,
-              'TN_ALT'   => strip_tags($category['name']),
+              'TN_ALT'   => strip_tags((string) $category['name']),
 
               'URL'   => make_index_url(
                   [
@@ -311,14 +315,14 @@ if (count($categories) > 0) {
                 ),
               'NAME'  => $name,
             ]);
-        if (\Piwigo\Config\Config::indexNewIcon()) {
+        if (Config::indexNewIcon()) {
             $tpl_var['icon_ts'] = get_icon(
                 is_scalar($category['max_date_last'] ?? null) ? (string)$category['max_date_last'] : null,
                 (bool)($category['is_child_date_last'] ?? false)
             );
         }
 
-        if (\Piwigo\Config\Config::displayFromto()) {
+        if (Config::displayFromto()) {
             if (isset($dates_of_category[ $category['id'] ])) {
                 $from = $dates_of_category[ $category['id'] ]['from'];
                 $to   = $dates_of_category[ $category['id'] ]['to'];
@@ -338,7 +342,7 @@ if (count($categories) > 0) {
     $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
     $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
     $template->assign([
-      'maxRequests' => \Piwigo\Config\Config::maxRequests(),
+      'maxRequests' => Config::maxRequests(),
       'category_thumbnails' => $tpl_thumbnails_var_selection,
       'derivative_params' => $derivative_params,
       ]);
@@ -347,12 +351,12 @@ if (count($categories) > 0) {
 
     // navigation bar
     $page['cats_navigation_bar'] = [];
-    if ($page['total_categories'] > \Piwigo\Config\Config::nbCategoriesPage()) {
+    if ($page['total_categories'] > Config::nbCategoriesPage()) {
         $page['cats_navigation_bar'] = create_navigation_bar(
             duplicate_index_url([], ['startcat']),
             is_numeric($page['total_categories']) ? (int)$page['total_categories'] : 0,
             is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
-            \Piwigo\Config\Config::nbCategoriesPage(),
+            Config::nbCategoriesPage(),
             true,
             'startcat'
         );

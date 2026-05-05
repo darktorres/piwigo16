@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Image\ImageStdParams;
@@ -87,7 +89,7 @@ class Template
                     false // show trace
                 );
             }
-            if (\Piwigo\Core\ServiceLocator::has(\Doctrine\DBAL\Connection::class)) {
+            if (ServiceLocator::has(Connection::class)) {
                 conf_update_param('data_dir_checked', 1);
             }
         }

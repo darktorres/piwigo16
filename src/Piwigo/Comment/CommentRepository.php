@@ -41,7 +41,7 @@ final class CommentRepository extends AbstractRepository
      */
     public function countRecentByAuthor(int $authorId, int $antiFloodTime, string $anonymousId = ''): int
     {
-        $refDate = (new \DateTimeImmutable())
+        $refDate = new \DateTimeImmutable()
             ->modify('-' . $antiFloodTime . ' seconds')
             ->format('Y-m-d H:i:s');
 
@@ -78,7 +78,7 @@ final class CommentRepository extends AbstractRepository
      */
     public function insert(array $data): int
     {
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $this->conn->insert($this->table('comments'), [
             'author'          => $data['author'],
             'author_id'       => $data['author_id'],
@@ -130,7 +130,7 @@ final class CommentRepository extends AbstractRepository
      */
     public function update(int $commentId, array $data, ?int $authorId = null): bool
     {
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $validated = $data['validated'];
 
         $qb = $this->conn->createQueryBuilder()
@@ -177,7 +177,7 @@ final class CommentRepository extends AbstractRepository
      */
     public function setValidated(int|array $commentId): void
     {
-        $now = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         $qb = $this->conn->createQueryBuilder()
             ->update($this->table('comments'))
@@ -211,7 +211,7 @@ final class CommentRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('comments'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 

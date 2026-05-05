@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\PageState;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +15,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -25,9 +31,9 @@ if (is_webmaster()) {
         $response = [];
         $data = [];
 
-        $usernameField = \Piwigo\Config\Config::userFields()['username'];
-        $idField = \Piwigo\Config\Config::userFields()['id'];
-        $activityRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        $usernameField = Config::userFields()['username'];
+        $idField = Config::userFields()['id'];
+        $activityRows = ServiceLocator::get(Connection::class)
             ->executeQuery(
                 "SELECT activity_id, object, object_id, action, performed_by, occured_on, details,
                  IF(performed_by = 0, 'System', $usernameField) AS username
@@ -342,7 +348,7 @@ if (is_webmaster()) {
         exit;
     }
 } else {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 // +-----------------------------------------------------------------------+

@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\UserRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\PageState;
+use Piwigo\Exception\NotFoundException;
+
 global $template, $user, $page, $persistent_cache, $lang;
 
 use Piwigo\Image\DerivativeImage;
@@ -17,7 +28,7 @@ use Piwigo\Image\SrcImage;
 
 define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-\Piwigo\Core\Kernel::boot();
+Kernel::boot();
 require(PHPWG_ROOT_PATH.'include/section_init.inc.php');
 require_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
 
@@ -36,7 +47,7 @@ $page['rank_of'] = array_flip($page['items']);
 // if this image_id doesn't correspond to this category, an error message is
 // displayed, and execution is stopped
 if (!isset($page['rank_of'][$page['image_id']])) {
-    $imageRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+    $imageRepo = ServiceLocator::get(ImageRepository::class);
     if ($page['image_id'] > 0) {
         $row = $imageRepo->findById($page['image_id']);
     } else {// url given by file name
@@ -79,7 +90,7 @@ SELECT id
                   ' AND'
               ).'
   LIMIT 1';
-            if (\Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+            if (ServiceLocator::get(Connection::class)
                     ->executeQuery($query)->fetchOne() === false) {
                 access_denied();
             } else {
@@ -134,7 +145,7 @@ function default_picture_content(string $content, array $element_info): string
         }
         setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path() ?? '']);
     }
-    $deriv_type = pwg_get_session_var('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
+    $deriv_type = pwg_get_session_var('picture_deriv', Config::derivativeDefaultSize());
     $derivativesRaw = is_array($element_info['derivatives'] ?? null) ? $element_info['derivatives'] : [];
     $selected_derivative = $derivativesRaw[$deriv_type] ?? null;
 
@@ -162,12 +173,12 @@ function default_picture_content(string $content, array $element_info): string
         $show_original &= !($derivative->same_as_source());
 
         // in case we do not display the sizes icon, we only add the selected size to unique_derivatives
-        if (\Piwigo\Config\Config::pictureSizesIcon() or $type == $deriv_type) {
+        if (Config::pictureSizesIcon() or $type == $deriv_type) {
             $unique_derivatives[$type] = $derivative;
         }
     }
 
-    $template = \Piwigo\Template\TemplateRegistry::current();
+    $template = TemplateRegistry::current();
     if ($show_original) {
         $template->assign('U_ORIGINAL', $element_info['element_url']);
     }
@@ -245,7 +256,7 @@ if ($get_action !== null) {
     switch ($get_action) {
         case 'add_to_favorites':
             {
-                \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ServiceLocator::get(UserRepository::class)
                     ->addFavorite(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
@@ -257,7 +268,7 @@ if ($get_action !== null) {
             }
         case 'remove_from_favorites':
             {
-                \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+                ServiceLocator::get(UserRepository::class)
                     ->deleteFavorite(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
@@ -274,7 +285,7 @@ if ($get_action !== null) {
         case 'set_as_representative':
             {
                 if (is_admin() and isset($page['category'])) {
-                    \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+                    ServiceLocator::get(CategoryRepository::class)
                         ->setRepresentativePicture(
                             [is_numeric($page['category']['id']) ? (int) $page['category']['id'] : 0],
                             is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
@@ -325,14 +336,14 @@ if ($get_action !== null) {
                         $perform_redirect = false;
                         switch ($comment_action) {
                             case 'moderate':
-                                \Piwigo\Core\PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
+                                PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
                                 // no break
                             case 'validate':
-                                \Piwigo\Core\PageState::current()->addInfo(l10n('Your comment has been registered'));
+                                PageState::current()->addInfo(l10n('Your comment has been registered'));
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
-                                \Piwigo\Core\PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
+                                PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
                                 break;
                             default:
                                 trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);
@@ -434,8 +445,8 @@ if (isset($page['next_item'])) {
     $ids[] = $page['last_item'];
 }
 
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
-    ->findByIds(array_map('intval', $ids)) as $row) {
+foreach (ServiceLocator::get(ImageRepository::class)
+    ->findByIds(array_map(intval(...), $ids)) as $row) {
     if (isset($page['previous_item']) and $row['id'] == $page['previous_item']) {
         $i = 'previous';
     } elseif (isset($page['next_item']) and $row['id'] == $page['next_item']) {
@@ -496,7 +507,7 @@ foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
 }
 
 if (!isset($picture['current'])) {
-    throw new \Piwigo\Exception\NotFoundException('Current picture not found.');
+    throw new NotFoundException('Current picture not found.');
 }
 
 $slideshow_params = [];
@@ -533,7 +544,7 @@ if ($get_slideshow !== null) {
 } else {
     $page['slideshow'] = false;
 }
-if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
+if ($page['slideshow'] and Config::lightSlideshow()) {
     $template->set_filenames(['slideshow' => 'slideshow.tpl']);
 } else {
     $template->set_filenames(['picture' => 'picture.tpl']);
@@ -551,7 +562,7 @@ $url_metadata = add_url_params($url_metadata, ['metadata' => null]);
 $metadata_showable = trigger_change(
     'get_element_metadata_available',
     (
-        (\Piwigo\Config\Config::showExif() or \Piwigo\Config\Config::showIptc())
+        (Config::showExif() or Config::showIptc())
     and !$picture['current']['src_image']->is_mimetype()
     ),
     $picture['current']
@@ -590,10 +601,10 @@ foreach (['first','previous','next','last', 'current'] as $which_image) {
         );
     }
 }
-if (\Piwigo\Config\Config::pictureDownloadIcon() and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
+if (Config::pictureDownloadIcon() and !empty($picture['current']['download_url']) and $user['enabled_high'] == 'true') {
     $template->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
-    if (\Piwigo\Config\Config::isFormatsEnabled()) {
+    if (Config::isFormatsEnabled()) {
         $query = '
 SELECT *
   FROM '.IMAGE_FORMAT_TABLE.'
@@ -664,7 +675,7 @@ if ($page['slideshow']) {
 
     foreach (['dec', 'inc'] as $op) {
         $periodRaw = $slideshow_params['period'] ?? 0;
-        $new_period = (is_numeric($periodRaw) ? $periodRaw : 0) + ((($op == 'dec') ? -1 : 1) * \Piwigo\Config\Config::slideshowPeriodStep());
+        $new_period = (is_numeric($periodRaw) ? $periodRaw : 0) + ((($op == 'dec') ? -1 : 1) * Config::slideshowPeriodStep());
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
@@ -684,7 +695,7 @@ if ($page['slideshow']) {
         }
     }
     $template->assign('slideshow', $tpl_slideshow);
-} elseif (\Piwigo\Config\Config::pictureSlideShowIcon()) {
+} elseif (Config::pictureSlideShowIcon()) {
     $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
     $template->assign(
         [
@@ -703,15 +714,15 @@ $template->assign(
     'PHOTO' => $title_nb,
     'IS_HOME' => ('categories' == $page['section'] and !isset($page['category'])),
 
-    'LEVEL_SEPARATOR' => \Piwigo\Config\Config::levelSeparator(),
+    'LEVEL_SEPARATOR' => Config::levelSeparator(),
 
     'U_UP' => $url_up,
-    'DISPLAY_NAV_BUTTONS' => \Piwigo\Config\Config::pictureNavigationIcons(),
-    'DISPLAY_NAV_THUMB' => \Piwigo\Config\Config::pictureNavigationThumb(),
+    'DISPLAY_NAV_BUTTONS' => Config::pictureNavigationIcons(),
+    'DISPLAY_NAV_THUMB' => Config::pictureNavigationThumb(),
     ]
 );
 
-if (\Piwigo\Config\Config::pictureMetadataIcon()) {
+if (Config::pictureMetadataIcon()) {
     $template->assign('U_METADATA', $url_metadata);
 }
 
@@ -720,7 +731,7 @@ if (\Piwigo\Config\Config::pictureMetadataIcon()) {
 
 // admin links
 if (is_admin()) {
-    if (isset($page['category']) and \Piwigo\Config\Config::pictureRepresentativeIcon()) {
+    if (isset($page['category']) and Config::pictureRepresentativeIcon()) {
         $template->assign(
             [
             'U_SET_AS_REPRESENTATIVE' => add_url_params(
@@ -731,11 +742,11 @@ if (is_admin()) {
         );
     }
 
-    if (\Piwigo\Config\Config::pictureEditIcon()) {
+    if (Config::pictureEditIcon()) {
         $template->assign('U_PHOTO_ADMIN', get_root_url().'admin.php?page=photo-'.$page['image_id']);
     }
 
-    if (\Piwigo\Config\Config::pictureCaddieIcon()) {
+    if (Config::pictureCaddieIcon()) {
         $template->assign(
             'U_CADDIE',
             add_url_params($url_self, ['action' => 'add_to_caddie'])
@@ -745,8 +756,8 @@ if (is_admin()) {
 }
 
 // favorite manipulation
-if (!is_a_guest() and \Piwigo\Config\Config::pictureFavoriteIcon()) {
-    $is_favorite = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+if (!is_a_guest() and Config::pictureFavoriteIcon()) {
+    $is_favorite = ServiceLocator::get(UserRepository::class)
         ->isFavorite(
             is_numeric($user['id']) ? (int) $user['id'] : 0,
             is_numeric($page['image_id']) ? (int) $page['image_id'] : 0
@@ -837,7 +848,7 @@ $infos['INFO_VISITS'] = $currentPic['hit'] ?? null;
 $infos['INFO_FILE'] = $currentPic['file'] ?? null;
 
 $template->assign($infos);
-$template->assign('display_info', unserialize(\Piwigo\Config\Config::pictureInformations() ?? ''));
+$template->assign('display_info', unserialize(Config::pictureInformations() ?? ''));
 
 // related tags
 $tags = get_common_tags([$page['image_id']], -1);
@@ -897,7 +908,7 @@ SELECT id, name, permalink
 if (in_array(strtolower(get_extension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
     $template->assign(
         [
-        'PDF_VIEWER_FILESIZE_THRESHOLD' => \Piwigo\Config\Config::pdfViewerFilesizeThreshold() * 1024,
+        'PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024,
         'PDF_NB_PAGES' => count_pdf_pages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : ''),
     ]
     );
@@ -918,7 +929,7 @@ if ($nextSrcImage !== null
     and $nextSrcImage->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
     and !str_contains(is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '', 'Chrome/')) {
-    $derivType = pwg_get_session_var('picture_deriv', \Piwigo\Config\Config::derivativeDefaultSize());
+    $derivType = pwg_get_session_var('picture_deriv', Config::derivativeDefaultSize());
     $nextDerivs = is_array($nextPic['derivatives'] ?? null) ? $nextPic['derivatives'] : [];
     $nextDeriv = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
     if ($nextDeriv !== null) {
@@ -940,7 +951,7 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 require(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
-if (\Piwigo\Config\Config::activateComments()) {
+if (Config::activateComments()) {
     require(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
 }
 if ($metadata_showable and isset($_SESSION['pwg_show_metadata'])) {
@@ -949,7 +960,7 @@ if ($metadata_showable and isset($_SESSION['pwg_show_metadata'])) {
 
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
-if (\Piwigo\Config\Config::pictureMenu() and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
+if (Config::pictureMenu() and (!isset($themeconf['hide_menu_on']) or !in_array('thePicturePage', $themeconf['hide_menu_on']))) {
     if (!isset($page['start'])) {
         $page['start'] = 0;
     }
@@ -959,7 +970,7 @@ if (\Piwigo\Config\Config::pictureMenu() and (!isset($themeconf['hide_menu_on'])
 require(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_picture');
 flush_page_messages();
-if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
+if ($page['slideshow'] and Config::lightSlideshow()) {
     $template->pparse('slideshow');
 } else {
     $template->parse_picture_buttons();

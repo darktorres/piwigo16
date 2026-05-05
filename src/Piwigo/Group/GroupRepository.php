@@ -100,7 +100,7 @@ final class GroupRepository extends AbstractRepository
             ->select('user_id', 'group_id')
             ->from($this->table('user_group'));
         $qb->where($qb->expr()->in('group_id', ':groupIds'))
-           ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
@@ -152,7 +152,7 @@ final class GroupRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('user_group'));
         $qb->where($qb->expr()->in('group_id', ':groupIds'))
-           ->setParameter('groupIds', $groupIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -169,7 +169,7 @@ final class GroupRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('groups'));
         $qb->where($qb->expr()->in('id', ':ids'))
-           ->setParameter('ids', $ids, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 
@@ -186,7 +186,7 @@ final class GroupRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('user_group'));
         $qb->where($qb->expr()->in('user_id', ':userIds'))
-           ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 

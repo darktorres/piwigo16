@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -14,7 +18,7 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -28,7 +32,7 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 $imageIdCoi = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
-$imgRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
+$imgRepo = ServiceLocator::get(ImageRepository::class);
 
 if (isset($_POST['submit'])) {
     $lRaw = $_POST['l'] ?? null;
@@ -60,10 +64,10 @@ if (isset($_POST['submit'])) {
     }
     delete_element_derivatives($row, IMG_CUSTOM);
     $uid = '&b='.time();
-    \Piwigo\Config\Config::override('question_mark_in_urls', true);
-    \Piwigo\Config\Config::override('php_extension_in_urls', true);
-    if (\Piwigo\Config\Config::derivativeUrlStyle() == 1) {
-        \Piwigo\Config\Config::override('derivative_url_style', 0); //auto
+    Config::override('question_mark_in_urls', true);
+    Config::override('php_extension_in_urls', true);
+    if (Config::derivativeUrlStyle() == 1) {
+        Config::override('derivative_url_style', 0); //auto
     }
 } else {
     $uid = '';

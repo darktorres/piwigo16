@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -13,7 +14,7 @@ use Piwigo\Image\ImageStdParams;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;

@@ -6,10 +6,10 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 
-final class QueryHelper
+final readonly class QueryHelper
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Core\PageState;
 use Piwigo\Admin\Languages;
 
 // +-----------------------------------------------------------------------+
@@ -12,14 +16,14 @@ use Piwigo\Admin\Languages;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-if (!\Piwigo\Config\Config::enableExtensionsInstall()) {
-    throw new \Piwigo\Exception\ConfigException('Piwigo extensions install/update system is disabled');
+if (!Config::enableExtensionsInstall()) {
+    throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
 $template->set_filenames(['languages' => 'languages_new.tpl']);
@@ -35,7 +39,7 @@ $languages->get_db_languages();
 
 $languages_dir = PHPWG_ROOT_PATH.'language';
 if (!is_writable($languages_dir)) {
-    \Piwigo\Core\PageState::current()->addError(l10n('Add write access to the "%s" directory', 'language'));
+    PageState::current()->addError(l10n('Add write access to the "%s" directory', 'language'));
 }
 
 // +-----------------------------------------------------------------------+
@@ -44,7 +48,7 @@ if (!is_writable($languages_dir)) {
 
 if (isset($_GET['revision'])) {
     if (!is_webmaster()) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Webmaster status is required.'));
+        PageState::current()->addError(l10n('Webmaster status is required.'));
     } else {
         check_pwg_token();
 
@@ -60,24 +64,24 @@ if (isset($_GET['revision'])) {
 if (isset($_GET['installstatus'])) {
     switch ($_GET['installstatus']) {
         case 'ok':
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Language has been successfully installed'));
+            PageState::current()->addInfo(l10n('Language has been successfully installed'));
             break;
 
         case 'temp_path_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t create temporary file.'));
+            PageState::current()->addError(l10n('Can\'t create temporary file.'));
             break;
 
         case 'dl_archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t download archive.'));
+            PageState::current()->addError(l10n('Can\'t download archive.'));
             break;
 
         case 'archive_error':
-            \Piwigo\Core\PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+            PageState::current()->addError(l10n('Can\'t read or extract archive.'));
             break;
 
         default:
             $installStatus = is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '';
-            \Piwigo\Core\PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installStatus)));
+            PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars($installStatus)));
     }
 }
 
@@ -109,7 +113,7 @@ if ($languages->get_server_languages(true)) {
           'URL_DOWNLOAD' => $dlUrl . '&amp;origin=piwigo_download']);
     }
 } else {
-    \Piwigo\Core\PageState::current()->addError(l10n('Can\'t connect to server.'));
+    PageState::current()->addError(l10n('Can\'t connect to server.'));
 }
 $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

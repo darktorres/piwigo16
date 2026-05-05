@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\Config;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Kernel;
+use Piwigo\Template\TemplateRegistry;
+
 global $template, $user, $page, $persistent_cache, $lang, $prefixeTable;
 
 use Piwigo\Admin\Languages;
@@ -27,13 +33,13 @@ define('PHPWG_ROOT_PATH', './');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
-\Piwigo\Config\ConfigLoader::applyDefaults();
-\Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-\Piwigo\Config\ConfigLoader::applyEnvOverrides();
+ConfigLoader::applyDefaults();
+ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+ConfigLoader::applyEnvOverrides();
 
-$prefixeTable = \Piwigo\Config\Config::dbPrefix();
+$prefixeTable = Config::dbPrefix();
 
-if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
+if (!InstallSentinel::isInstalled()) {
     die('Piwigo is not installed yet — run install.php first.');
 }
 
@@ -177,15 +183,15 @@ require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
 upgrade_db_connect();
 
-define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
 // +-----------------------------------------------------------------------+
 // |                        template initialization                        |
 // +-----------------------------------------------------------------------+
 
-\Piwigo\Core\Kernel::boot();
+Kernel::boot();
 $template = new Template(PHPWG_ROOT_PATH.'admin/themes', 'roma');
-\Piwigo\Template\TemplateRegistry::set($template);
+TemplateRegistry::set($template);
 $template->set_filenames(['upgrade' => 'upgrade.tpl']);
 $template->assign(
     [

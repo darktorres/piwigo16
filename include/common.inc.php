@@ -2,6 +2,18 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\ExceptionHandler;
+use Piwigo\Core\Kernel;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\Config;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\ErrorCollector;
+use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Core\PageState;
+use Piwigo\Template\TemplateRegistry;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
@@ -18,7 +30,7 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 
-\Piwigo\Bootstrap\ExceptionHandler::register();
+ExceptionHandler::register();
 
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
@@ -45,7 +57,7 @@ if (!empty($_SERVER['PATH_INFO'])) {
 
 // Skip the bootstrap dance when Kernel::boot() has already run (e.g. a nested
 // include or a test that bootstraps via Kernel directly instead of this file).
-if (!\Piwigo\Core\Kernel::isBooted()) :
+if (!Kernel::isBooted()) :
 
     //
     // Define some basic shared bootstrap arrays. Config no longer lives here
@@ -67,16 +79,16 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     $header_notes = [];
     $filter = [];
 
-    \Piwigo\Config\ConfigLoader::applyDefaults();
+    ConfigLoader::applyDefaults();
 
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-    \Piwigo\Config\ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
-    \Piwigo\Config\ConfigLoader::applyEnvOverrides();
+    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::applyEnvOverrides();
 
-    $prefixeTable = \Piwigo\Config\Config::dbPrefix();
+    $prefixeTable = Config::dbPrefix();
 
-    if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
+    if (!InstallSentinel::isInstalled()) {
         header('Location: install.php');
         exit;
     }
@@ -87,14 +99,14 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // Always route PHP errors to DevTools (X-PHP-Error-N response headers) rather
     // than inline output, which corrupts JSON/XML/binary responses.
     // The DB config show_php_errors controls error_reporting level only.
-    \Piwigo\Core\ErrorCollector::install();
-    if (\Piwigo\Config\Config::has('show_php_errors') && !empty(\Piwigo\Config\Config::showPhpErrors()) && function_exists('ini_set')) {
-        ini_set('error_reporting', (string) \Piwigo\Config\Config::showPhpErrors());
+    ErrorCollector::install();
+    if (Config::has('show_php_errors') && !empty(Config::showPhpErrors()) && function_exists('ini_set')) {
+        ini_set('error_reporting', (string) Config::showPhpErrors());
     }
 
-    if (\Piwigo\Config\Config::sessionGcProbability() > 0 && function_exists('ini_set')) {
+    if (Config::sessionGcProbability() > 0 && function_exists('ini_set')) {
         ini_set('session.gc_divisor', '100');
-        ini_set('session.gc_probability', (string) min((int) \Piwigo\Config\Config::sessionGcProbability(), 100));
+        ini_set('session.gc_probability', (string) min((int) Config::sessionGcProbability(), 100));
     }
 
     require(PHPWG_ROOT_PATH . 'include/constants.php');
@@ -102,9 +114,9 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
 
     $page['execution_uuid'] = generate_key(10);
 
-    $pool             = \Piwigo\Cache\CacheFactory::create();
+    $pool             = CacheFactory::create();
     $persistent_cache = new PersistentFileCache($pool);
-    \Piwigo\Cache\PersistentCacheRegistry::set($persistent_cache);
+    PersistentCacheRegistry::set($persistent_cache);
 
     // Database connection — DBAL connects lazily on first use.
     // Force it now so a bad config surfaces a clean error before rendering.
@@ -117,26 +129,26 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // in Piwigo 15, configuration setting webmaster_id is moved from config files
     // to database. It may be undefined at some point, with Piwigo 15+ scripts and
     // a Piwigo 14 database schema not upgraded yet. Let's avoid any problem.
-    if (!\Piwigo\Config\Config::has('webmaster_id')) {
-        \Piwigo\Config\Config::override('webmaster_id', 1);
+    if (!Config::has('webmaster_id')) {
+        Config::override('webmaster_id', 1);
     }
 
     load_conf_from_db();
 
     $logger = new Logger([
-      'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
-      'severity' => \Piwigo\Config\Config::logLevel(),
+      'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+      'severity' => Config::logLevel(),
       // we use an hashed filename to prevent direct file access, and we salt with
       // the db_password instead of secret_key because the log must be usable in i.php
       // (secret_key is in the database)
-      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+      'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
       'globPattern' => 'log_*.txt',
-      'archiveDays' => \Piwigo\Config\Config::logArchiveDays(),
+      'archiveDays' => Config::logArchiveDays(),
       ]);
-    \Piwigo\Core\LoggerRegistry::set($logger);
+    LoggerRegistry::set($logger);
 
-    if (!\Piwigo\Config\Config::checkUpgradeFeed()) {
-        if (!\Piwigo\Config\Config::has('piwigo_db_version') or \Piwigo\Config\Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {
+    if (!Config::checkUpgradeFeed()) {
+        if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {
             redirect(get_root_url().'upgrade.php');
         }
     }
@@ -146,32 +158,32 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     // Boot the container before session_start() so the session handler callbacks
     // (pwg_session_read, pwg_session_write, etc.) can resolve SessionRepository
     // from ServiceLocator. Entry-point Kernel::boot() calls remain idempotent.
-    \Piwigo\Core\Kernel::boot();
+    Kernel::boot();
 
     session_start();
-    \Piwigo\Plugins\EventDispatcher::init();
+    EventDispatcher::init();
     load_plugins();
 
-    if (!\Piwigo\Config\Config::has('piwigo_installed_version')) {
+    if (!Config::has('piwigo_installed_version')) {
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-    } elseif (\Piwigo\Config\Config::piwigoInstalledVersion() != PHPWG_VERSION) {
+    } elseif (Config::piwigoInstalledVersion() != PHPWG_VERSION) {
         // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => \Piwigo\Config\Config::piwigoInstalledVersion(), 'to_version' => PHPWG_VERSION]);
+        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => PHPWG_VERSION]);
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
     }
 
 //Check if last major update conf is set if not set it
-if (!\Piwigo\Config\Config::has('last_major_update')) {
-    conf_update_param('last_major_update', (new \DateTimeImmutable())->format('Y-m-d H:i:s'), true);
+if (!Config::has('last_major_update')) {
+    conf_update_param('last_major_update', new \DateTimeImmutable()->format('Y-m-d H:i:s'), true);
 }
 
 
 // users can have defined a custom order pattern, incompatible with GUI form
-if (\Piwigo\Config\Config::has('order_by_custom')) {
-    \Piwigo\Config\Config::override('order_by', \Piwigo\Config\Config::orderByCustom());
+if (Config::has('order_by_custom')) {
+    Config::override('order_by', Config::orderByCustom());
 }
-if (\Piwigo\Config\Config::has('order_by_inside_category_custom')) {
-    \Piwigo\Config\Config::override('order_by_inside_category', \Piwigo\Config\Config::orderByInsideCategoryCustom());
+if (Config::has('order_by_inside_category_custom')) {
+    Config::override('order_by_inside_category', Config::orderByInsideCategoryCustom());
 }
 
 check_lounge();
@@ -192,8 +204,8 @@ if (in_array(substr($user_language, 0, 2), ['fr','it','de','es','pl','ru','nl','
 }
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
-if (\Piwigo\Config\Config::has('alternative_pem_url') and \Piwigo\Config\Config::alternativePemUrl() != '') {
-    define('PEM_URL', \Piwigo\Config\Config::alternativePemUrl());
+if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {
+    define('PEM_URL', Config::alternativePemUrl());
 } else {
     // Serve extensions from the local sibling repo instead of piwigo.org/ext.
     $pem_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -219,8 +231,8 @@ if (is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if (\Piwigo\Core\PageState::current()->authKeyInvalid) {
-    \Piwigo\Core\PageState::current()->addError(
+if (PageState::current()->authKeyInvalid) {
+    PageState::current()->addError(
         l10n('Your authentication key is no longer valid.')
       .sprintf(' <a href="%s">%s</a>', get_root_url().'identification.php', l10n('Login'))
     );
@@ -264,13 +276,13 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
     $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
     $theme = is_scalar($theme_raw) ? (string) $theme_raw : '';
     if (script_basename() != 'ws' and mobile_theme()) {
-        $theme = \Piwigo\Config\Config::mobilTheme();
+        $theme = Config::mobilTheme();
     }
     $template = new Template(PHPWG_ROOT_PATH.'themes', $theme);
 }
-\Piwigo\Template\TemplateRegistry::set($template);
+TemplateRegistry::set($template);
 
-if (!\Piwigo\Config\Config::has('no_photo_yet')) {
+if (!Config::has('no_photo_yet')) {
     require(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
 }
 
@@ -282,7 +294,7 @@ if (is_array($internal_status_gs)
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 
-if (\Piwigo\Config\Config::galleryLocked()) {
+if (Config::galleryLocked()) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
     if (script_basename() != 'identification' and !is_admin()) {
@@ -297,7 +309,7 @@ if (\Piwigo\Config\Config::galleryLocked()) {
     }
 }
 
-if (\Piwigo\Config\Config::checkUpgradeFeed()) {
+if (Config::checkUpgradeFeed()) {
     require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
     if (check_upgrade_feed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
@@ -310,26 +322,26 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (!empty(\Piwigo\Config\Config::filterPages()) and get_filter_page_value('used')) {
+if (!empty(Config::filterPages()) and get_filter_page_value('used')) {
     require(PHPWG_ROOT_PATH.'include/filter.inc.php');
 } else {
     $filter['enabled'] = false;
 }
 
-if (\Piwigo\Config\Config::has('header_notes')) {
-    $header_notes = array_merge($header_notes, \Piwigo\Config\Config::headerNotes());
+if (Config::has('header_notes')) {
+    $header_notes = array_merge($header_notes, Config::headerNotes());
 }
 
 // default event handlers
 add_event_handler('render_category_literal_description', 'render_category_literal_description');
-if (!\Piwigo\Config\Config::allowHtmlDescriptions()) {
+if (!Config::allowHtmlDescriptions()) {
     add_event_handler('render_category_description', 'pwg_nl2br');
 }
 add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
 add_event_handler('render_tag_url', 'str2url');
 add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
-if (!empty(\Piwigo\Config\Config::originalUrlProtection())) {
+if (!empty(Config::originalUrlProtection())) {
     add_event_handler('get_element_url', 'get_element_url_protection_handler');
     add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
 }

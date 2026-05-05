@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Lang;
 
+use Piwigo\Core\Lang;
 use Gettext\Loader\PoLoader;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\LanguageStack;
@@ -13,7 +14,7 @@ final class LangService
 {
     public function l10n(?string $key, mixed ...$args): string
     {
-        return \Piwigo\Core\Lang::t($key ?? '', ...$args);
+        return Lang::t($key ?? '', ...$args);
     }
 
     public function l10nDec(string $singularKey, string $pluralKey, int|float|null $decimal): string
@@ -113,7 +114,7 @@ final class LangService
         }
 
         /** @var list<string> $languagesTyped */
-        $languagesTyped = array_values(array_unique(array_filter($languages, 'is_string')));
+        $languagesTyped = array_values(array_unique(array_filter($languages, is_string(...))));
 
         if (!empty($options['return'])) {
             foreach ($languagesTyped as $language) {
@@ -160,7 +161,7 @@ final class LangService
 
         Translator::get()->load($selectedLanguage, $poFile);
 
-        $poHeaders  = (new PoLoader())->loadFile($poFile)->getHeaders();
+        $poHeaders  = new PoLoader()->loadFile($poFile)->getHeaders();
         $langInfoPo = [];
         foreach ([
             'X-Piwigo-Language-Name' => 'language_name',

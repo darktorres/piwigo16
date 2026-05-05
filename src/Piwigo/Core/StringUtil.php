@@ -409,7 +409,7 @@ final class StringUtil
 
     public function safeVersionCompare(mixed $a, mixed $b, mixed $op = null): int|bool
     {
-        $replaceChars = static fn (array $m): string => (string) ord(strtolower((string) ($m[1] ?? ''))[0] ?? '');
+        $replaceChars = static fn (array $m): string => (string) ord((strtolower((string) ($m[1] ?? ''))[0] ?? '')[0]);
         $aStr = is_scalar($a) ? (string) $a : '';
         $bStr = is_scalar($b) ? (string) $b : '';
         $aStr = (string) preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $aStr);

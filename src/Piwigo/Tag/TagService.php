@@ -8,10 +8,10 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Users\CurrentUser;
 
-final class TagService
+final readonly class TagService
 {
     public function __construct(
-        private readonly TagRepository $repo,
+        private TagRepository $repo,
     ) {
     }
 
@@ -88,7 +88,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         }
 
         $rows = count($tagCounters) < 1000
-            ? $this->repo->findByIds(array_map('intval', array_keys($tagCounters)))
+            ? $this->repo->findByIds(array_map(intval(...), array_keys($tagCounters)))
             : $this->repo->findAll();
 
         $tags = [];
@@ -236,9 +236,9 @@ SELECT id
     public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
     {
         return $this->repo->findByIdUrlOrName(
-            array_map('intval', $ids),
-            array_map('strval', $urlNames),
-            array_map('strval', $names)
+            array_map(intval(...), $ids),
+            array_map(strval(...), $urlNames),
+            array_map(strval(...), $names)
         );
     }
 

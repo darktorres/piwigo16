@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Language\LanguageRepository;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Languages;
 
 // +-----------------------------------------------------------------------+
@@ -12,14 +17,14 @@ use Piwigo\Admin\Languages;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
 
 
 if (!is_webmaster()) {
-    \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+    PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
 $template->set_filenames(['languages' => 'languages_installed.tpl']);
@@ -91,7 +96,7 @@ $missing_language_ids = array_diff(
     array_keys($languages->fs_languages)
 );
 
-$langRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Language\LanguageRepository::class);
+$langRepo = ServiceLocator::get(LanguageRepository::class);
 foreach ($missing_language_ids as $language_id) {
     $langRepo->reassignUsers((string) $language_id, get_default_language());
     $langRepo->deactivate((string) $language_id);
@@ -99,7 +104,7 @@ foreach ($missing_language_ids as $language_id) {
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);
 $template->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
-$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\Config::enableExtensionsInstall());
+$template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
 $template->assign('page_data_json', json_encode([
     'str_delete_language_confirm' => l10n('Are you sure you want to delete the language "%s"?'),
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));

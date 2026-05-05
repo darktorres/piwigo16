@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\PageState;
+use Piwigo\Config\Config;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Users\UserRepository;
+
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -16,7 +24,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 define('PHPWG_ROOT_PATH', './');
 require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
-\Piwigo\Core\Kernel::boot();
+Kernel::boot();
 require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
 // +-----------------------------------------------------------------------+
@@ -38,7 +46,7 @@ check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end
  */
 function process_verification_code(): bool
 {
-    $logger = \Piwigo\Core\LoggerRegistry::current();
+    $logger = LoggerRegistry::current();
     if (isset($_SESSION['reset_password_code'])) {
         return true;
     }
@@ -46,7 +54,7 @@ function process_verification_code(): bool
     // empty param
     $username_or_email = input_string('username_or_email', '', $_POST);
     if (empty($username_or_email)) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Invalid username or email'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Invalid username or email'));
         return false;
     }
 
@@ -62,7 +70,7 @@ function process_verification_code(): bool
     // preventing username/email enumeration through timing or responses.
     $is_user_found = is_numeric($user_id);
     if (!$is_user_found) {
-        $user_id = \Piwigo\Config\Config::guestId();
+        $user_id = Config::guestId();
     }
 
     $userdata = getuserdata($user_id, false);
@@ -78,7 +86,7 @@ function process_verification_code(): bool
         // block early for generic or guest user because
         // we don't consider theses users has sensible for username/email enumeration
         if (is_a_guest($status) or is_generic($status)) {
-            \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Password reset is not allowed for this user'));
+            PageState::current()->addKeyedError('password_form_error', l10n('Password reset is not allowed for this user'));
             return false;
         }
 
@@ -89,7 +97,7 @@ function process_verification_code(): bool
             and is_numeric($userdata_prefs['reset_password_forbidden_until'])
             and (int)$userdata_prefs['reset_password_forbidden_until'] > time()
         ) {
-            \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Too many attempts, please try later..'));
+            PageState::current()->addKeyedError('password_form_error', l10n('Too many attempts, please try later..'));
             return false;
         }
     }
@@ -112,7 +120,7 @@ function process_verification_code(): bool
         'attempts' => 0,
         'user_id' => $is_user_found ? $user_id : null,
         'created_at' => time(),
-        'ttl' => min(\Piwigo\Config\Config::passwordResetCodeDuration(), 900), // max 15 min
+        'ttl' => min(Config::passwordResetCodeDuration(), 900), // max 15 min
       ];
 
     return true;
@@ -135,7 +143,7 @@ function process_password_request(): bool
     // check expired
     if (time() > $state['created_at'] + $state['ttl']) {
         unset($_SESSION['reset_password_code']);
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Code expired'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Code expired'));
         return false;
     }
 
@@ -163,20 +171,20 @@ function process_password_request(): bool
             if (!empty($state['user_id'])) {
                 $state_user_id = (int)$state['user_id'];
                 $save_user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-                \Piwigo\Users\CurrentUser::setRawAttributes(build_user($state_user_id, false));
+                CurrentUser::setRawAttributes(build_user($state_user_id, false));
                 userprefs_update_param('reset_password_forbidden_until', time() + 60 * 60);
-                \Piwigo\Users\CurrentUser::setRawAttributes($save_user);
+                CurrentUser::setRawAttributes($save_user);
 
                 pwg_activity('user', $state_user_id, 'reset_password_failure_too_many');
             }
-            \Piwigo\Core\PageState::current()->addKeyedError('login_page_error', l10n('Too many attempts, please try later..'));
+            PageState::current()->addKeyedError('login_page_error', l10n('Too many attempts, please try later..'));
             return false;
         }
 
         if (!empty($state['user_id'])) {
             pwg_activity('user', (int)$state['user_id'], 'reset_password_failure_code');
         }
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Invalid verification code'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Invalid verification code'));
         return false;
     }
 
@@ -185,13 +193,13 @@ function process_password_request(): bool
     unset($_SESSION['reset_password_code']);
 
     if (empty($user_id)) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Invalid verification code'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Invalid verification code'));
         return false;
     }
 
     $save_user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $temp_user = build_user((int)$user_id, false);
-    \Piwigo\Users\CurrentUser::setRawAttributes($temp_user);
+    CurrentUser::setRawAttributes($temp_user);
     userprefs_delete_param('reset_password_forbidden_until');
 
     $temp_username = is_scalar($temp_user['username'] ?? null) ? (string)$temp_user['username'] : '';
@@ -209,11 +217,11 @@ function process_password_request(): bool
     if (is_array($GLOBALS['page'])) {
         $GLOBALS['page']['username'] = $temp_username;
     }
-    \Piwigo\Users\CurrentUser::setRawAttributes($save_user);
+    CurrentUser::setRawAttributes($save_user);
 
     // fallback check: don't send mail when user is guest, generic or doesn't have email
     if (is_a_guest($status) || is_generic($status) || $has_no_email) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Password reset is not allowed for this user'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Password reset is not allowed for this user'));
         return false;
     }
 
@@ -230,18 +238,18 @@ function check_password_reset_key(string $reset_key): int|false
 {
     $key = $reset_key;
     if (!preg_match('/^[a-z0-9]{20}$/i', (string) $key)) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_page_error', l10n('Invalid key'));
+        PageState::current()->addKeyedError('password_page_error', l10n('Invalid key'));
         return false;
     }
 
     $user_id = null;
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    foreach (ServiceLocator::get(UserRepository::class)
         ->findByActiveActivationKey() as $row) {
         $activation_key = isset($row['activation_key']) ? (is_scalar($row['activation_key']) ? (string)$row['activation_key'] : '') : '';
         $row_status = isset($row['status']) ? (is_scalar($row['status']) ? (string)$row['status'] : '') : '';
         if (password_verify($key, $activation_key)) {
             if (is_a_guest($row_status) or is_generic($row_status)) {
-                \Piwigo\Core\PageState::current()->addKeyedError('password_page_error', l10n('Password reset is not allowed for this user'));
+                PageState::current()->addKeyedError('password_page_error', l10n('Password reset is not allowed for this user'));
                 return false;
             }
 
@@ -251,7 +259,7 @@ function check_password_reset_key(string $reset_key): int|false
     }
 
     if (empty($user_id)) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_page_error', l10n('Invalid key'));
+        PageState::current()->addKeyedError('password_page_error', l10n('Invalid key'));
         return false;
     }
 
@@ -267,21 +275,21 @@ function check_password_reset_key(string $reset_key): int|false
 function reset_password(): bool
 {
     if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('The passwords do not match'));
+        PageState::current()->addKeyedError('password_form_error', l10n('The passwords do not match'));
         return false;
     }
 
     $user_id = reset_password_key() ?: reset_password_code();
 
     if (!is_numeric($user_id)) {
-        \Piwigo\Core\PageState::current()->addKeyedError('password_form_error', l10n('Invalid key or code'));
+        PageState::current()->addKeyedError('password_form_error', l10n('Invalid key or code'));
         return false;
     }
 
     single_update(
         USERS_TABLE,
-        [\Piwigo\Config\Config::userFields()['password'] => password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT)],
-        [\Piwigo\Config\Config::userFields()['id'] => $user_id]
+        [Config::userFields()['password'] => password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT)],
+        [Config::userFields()['id'] => $user_id]
     );
 
     /** @var array{user_id: int|null, username: string, email: string, language: string}|null $valid_reset_code */
@@ -306,8 +314,8 @@ function reset_password(): bool
 
     pwg_activity('user', $user_id, 'reset_password_success');
 
-    \Piwigo\Core\PageState::current()->addInfo(l10n('Your password has been reset'));
-    \Piwigo\Core\PageState::current()->addInfo('<a href="'.get_root_url().'identification.php">'.l10n('Login').'</a>');
+    PageState::current()->addInfo(l10n('Your password has been reset'));
+    PageState::current()->addInfo('<a href="'.get_root_url().'identification.php">'.l10n('Login').'</a>');
 
     return true;
 }
@@ -355,14 +363,14 @@ if (input_string('submit', null, $_POST) !== null) {
 
     if ('lost' == $get_action) {
         if (process_verification_code()) {
-            \Piwigo\Core\PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
+            PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
             $page['action'] = 'lost_code';
         }
     }
 
     if ('lost_code' == $get_action) {
         if (process_password_request()) {
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
+            PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
             $page['action'] = 'reset';
         }
     }

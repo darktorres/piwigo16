@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Exception\NotFoundException;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +16,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -29,11 +33,11 @@ check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 $cat_id_str = is_scalar($_GET['cat_id']) ? (string) $_GET['cat_id'] : '';
 $admin_album_base_url = get_root_url().'admin.php?page=album-'.$cat_id_str;
 
-$category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+$category = ServiceLocator::get(CategoryRepository::class)
     ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);
 
 if (!isset($category['id'])) {
-    throw new \Piwigo\Exception\NotFoundException('unknown album');
+    throw new NotFoundException('unknown album');
 }
 
 // +-----------------------------------------------------------------------+

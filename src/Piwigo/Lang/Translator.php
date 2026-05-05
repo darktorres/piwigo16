@@ -30,9 +30,9 @@ final class Translator
     /** @var array<string, self> saved Translator per language code */
     private static array $saved = [];
 
-    private GettextTranslator $inner;
+    private readonly GettextTranslator $inner;
 
-    private ArrayGenerator $generator;
+    private readonly ArrayGenerator $generator;
 
     public function __construct()
     {
@@ -114,7 +114,7 @@ final class Translator
             return;
         }
 
-        $translations = (new PoLoader())->loadFile($poFile);
+        $translations = new PoLoader()->loadFile($poFile);
 
         // Merge into the inner translator via its array format
         $this->inner->addTranslations($this->generator->generateArray($translations));

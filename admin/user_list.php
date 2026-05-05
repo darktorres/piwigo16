@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Config\Config;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Core\PageState;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -31,7 +38,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 $groups = [];
 $groups_for_filter = [];
 
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findWithMemberCounts() as $row) {
+foreach (ServiceLocator::get(GroupRepository::class)->findWithMemberCounts() as $row) {
     $groups[is_numeric($row['id']) ? (int)$row['id'] : 0] = $row['name'];
     $groups_for_filter[] = [
       'id' => $row['id'],
@@ -47,7 +54,7 @@ $template->assign('groups_for_filter', $groups_for_filter);
 // +-----------------------------------------------------------------------+
 
 $register_dates = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)->findRegistrationMonthsYears() as $row) {
+foreach (ServiceLocator::get(UserRepository::class)->findRegistrationMonthsYears() as $row) {
     $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
 }
 
@@ -60,8 +67,8 @@ $template->assign('register_dates', implode(',', $register_dates));
 $template->assign(
     [
     'ADMIN_PAGE_TITLE' => l10n('Users'),
-    'ACTIVATE_COMMENTS' => \Piwigo\Config\Config::activateComments(),
-    'Double_Password' => \Piwigo\Config\Config::doublePasswordTypeInAdmin(),
+    'ACTIVATE_COMMENTS' => Config::activateComments(),
+    'Double_Password' => Config::doublePasswordTypeInAdmin(),
   ]
 );
 
@@ -71,12 +78,12 @@ $default_user = get_default_user_info(true);
 
 $protected_users = [
   $user['id'],
-  \Piwigo\Config\Config::guestId(),
-  \Piwigo\Config\Config::defaultUserId(),
-  \Piwigo\Config\Config::webmasterId(),
+  Config::guestId(),
+  Config::defaultUserId(),
+  Config::webmasterId(),
   ];
 
-$password_protected_users = [\Piwigo\Config\Config::guestId()];
+$password_protected_users = [Config::guestId()];
 
 // an admin can't delete other admin/webmaster
 if ('admin' == $user['status']) {
@@ -96,9 +103,9 @@ SELECT
 
 $query = '
 SELECT
-    '.\Piwigo\Config\Config::userFields()['username'].' AS username
+    '.Config::userFields()['username'].' AS username
     FROM '.USERS_TABLE.'
-    WHERE '.\Piwigo\Config\Config::userFields()['id'].' = '.\Piwigo\Config\Config::webmasterId().'
+    WHERE '.Config::userFields()['id'].' = '.Config::webmasterId().'
 ;';
 
 $owner_username = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username');
@@ -116,12 +123,12 @@ $template->assign(
     'association_options' => $groups,
     'protected_users' => implode(',', array_unique(array_map(fn (int|string $v): string => (string) $v, $protected_users))),
     'password_protected_users' => implode(',', array_unique(array_map(fn (int|string $v): string => (string) $v, $password_protected_users))),
-    'guest_user' => \Piwigo\Config\Config::guestId(),
+    'guest_user' => Config::guestId(),
     'filter_group' => ($_GET['group'] ?? null),
     'search_input' => (isset($_GET['user_id']) ? 'id:'.(is_scalar($_GET['user_id']) ? (string) $_GET['user_id'] : '') : null),
     'connected_user' => $user['id'],
     'connected_user_status' => $user['status'],
-    'owner' => \Piwigo\Config\Config::webmasterId(),
+    'owner' => Config::webmasterId(),
     'owner_username' => $owner_username[0],
     ]
 );
@@ -132,13 +139,13 @@ if (isset($_GET['show_add_user'])) {
 
 // Status options
 $label_of_status = [];
-foreach (\Piwigo\Db\SchemaHelper::getEnums(USER_INFOS_TABLE, 'status') as $status) {
+foreach (SchemaHelper::getEnums(USER_INFOS_TABLE, 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_'.$status);
 }
 
 $nb_users_by_status = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-    ->findStatusDistribution(\Piwigo\Config\Config::guestId()) as $status => $count) {
+foreach (ServiceLocator::get(UserRepository::class)
+    ->findStatusDistribution(Config::guestId()) as $status => $count) {
     $nb_users_by_status[$status] = [
         'name'    => l10n('user_status_' . $status),
         'counter' => $count,
@@ -162,13 +169,13 @@ $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
 $level_options = [];
-foreach (\Piwigo\Config\Config::availablePermissionLevels() as $level) {
+foreach (Config::availablePermissionLevels() as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }
 
 $nb_users_by_level = $level_options;
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-    ->findLevelDistribution(\Piwigo\Config\Config::guestId()) as $level => $count) {
+foreach (ServiceLocator::get(UserRepository::class)
+    ->findLevelDistribution(Config::guestId()) as $level => $count) {
     $nb_users_by_level[$level] = [
         'name'    => l10n(sprintf('Level %d', $level)),
         'counter' => $count,
@@ -181,14 +188,14 @@ $template->assign('nb_users_by_level', $nb_users_by_level);
 
 $groups_arr_id = [];
 $groups_arr_name = [];
-foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class)->findAllOrdered() as $row) {
+foreach (ServiceLocator::get(GroupRepository::class)->findAllOrdered() as $row) {
     $groups_arr_name[] = '"' . addslashes(is_scalar($row['name']) ? (string) $row['name'] : '') . '"';
     $groups_arr_id[] = is_scalar($row['id']) ? (string) $row['id'] : '';
 }
 
 $template->assign('groups_arr_id', implode(',', $groups_arr_id));
 $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-$template->assign('guest_id', \Piwigo\Config\Config::guestId());
+$template->assign('guest_id', Config::guestId());
 
 $template->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
 
@@ -225,7 +232,7 @@ function webmaster_id_is_local(): bool
 }
 
 if (webmaster_id_is_local()) {
-    \Piwigo\Core\PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+    PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
 }
 // Build groups_arr as [[id, name], ...] pairs for the JSON block
 $groups_arr_json = [];
@@ -237,12 +244,12 @@ $template->assign('page_data_json', json_encode([
     'pwg_token'                => get_pwg_token(),
     'connected_user'           => (int)$user['id'],
     'connected_user_status'    => $user['status'],
-    'owner_id'                 => (int)\Piwigo\Config\Config::webmasterId(),
+    'owner_id'                 => (int)Config::webmasterId(),
     'owner_username'           => $owner_username[0] ?? '',
-    'guest_id'                 => (int)\Piwigo\Config\Config::guestId(),
+    'guest_id'                 => (int)Config::guestId(),
     'has_group'                => $_GET['group'] ?? '',
     'view_selector'            => userprefs_get_param('user-manager-view', 'line'),
-    'pagination'               => (function () {
+    'pagination'               => (function (): int {
         $v = userprefs_get_param('user-manager-pagination', userprefs_get_param('user-manager-view', 'line') === 'line' ? 5 : 10);
         return is_numeric($v) ? (int) $v : 0;
     })(),

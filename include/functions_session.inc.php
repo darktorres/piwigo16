@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Session\SessionService;
 use Piwigo\Session\PwgSession;
 
 // +-----------------------------------------------------------------------+
@@ -22,20 +26,20 @@ use Piwigo\Session\PwgSession;
 // PwgSession is autoloaded by Composer.
 
 // Config class may not be autoloaded yet during install.php bootstrap.
-if (class_exists(\Piwigo\Config\Config::class, false)
-  and \Piwigo\Config\Config::has('session_save_handler')
-  and (\Piwigo\Config\Config::sessionSaveHandler() == 'db')
-  and \Piwigo\Core\InstallSentinel::isInstalled()) {
+if (class_exists(Config::class, false)
+  and Config::has('session_save_handler')
+  and (Config::sessionSaveHandler() == 'db')
+  and InstallSentinel::isInstalled()) {
     session_set_save_handler(new PwgSession());
 
     if (function_exists('ini_set')) {
-        ini_set('session.use_cookies', \Piwigo\Config\Config::sessionUseCookies());
-        ini_set('session.use_only_cookies', \Piwigo\Config\Config::sessionUseOnlyCookies());
-        ini_set('session.use_trans_sid', intval(\Piwigo\Config\Config::sessionUseTransSid()));
+        ini_set('session.use_cookies', Config::sessionUseCookies());
+        ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
+        ini_set('session.use_trans_sid', intval(Config::sessionUseTransSid()));
         ini_set('session.cookie_httponly', 1);
     }
 
-    session_name(\Piwigo\Config\Config::sessionName());
+    session_name(Config::sessionName());
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => cookie_path(),
@@ -58,55 +62,55 @@ function generate_key(int $size): string
 
 function pwg_session_open(string $path, string $name): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionOpen($path, $name);
+    return ServiceLocator::get(SessionService::class)->sessionOpen($path, $name);
 }
 
 function pwg_session_close(): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionClose();
+    return ServiceLocator::get(SessionService::class)->sessionClose();
 }
 
 function get_remote_addr_session_hash(): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->getRemoteAddrSessionHash();
+    return ServiceLocator::get(SessionService::class)->getRemoteAddrSessionHash();
 }
 
 function pwg_session_read(string $session_id): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionRead($session_id);
+    return ServiceLocator::get(SessionService::class)->sessionRead($session_id);
 }
 
 function pwg_session_write(string $session_id, string $data): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionWrite($session_id, $data);
+    return ServiceLocator::get(SessionService::class)->sessionWrite($session_id, $data);
 }
 
 function pwg_session_destroy(string $session_id): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionDestroy($session_id);
+    return ServiceLocator::get(SessionService::class)->sessionDestroy($session_id);
 }
 
 function pwg_session_gc(): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->sessionGc();
+    return ServiceLocator::get(SessionService::class)->sessionGc();
 }
 
 function pwg_set_session_var(string $var, mixed $value): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->setSessionVar($var, $value);
+    return ServiceLocator::get(SessionService::class)->setSessionVar($var, $value);
 }
 
 function pwg_get_session_var(string $var, mixed $default = null): mixed
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->getSessionVar($var, $default);
+    return ServiceLocator::get(SessionService::class)->getSessionVar($var, $default);
 }
 
 function pwg_unset_session_var(string $var): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->unsetSessionVar($var);
+    return ServiceLocator::get(SessionService::class)->unsetSessionVar($var);
 }
 
 function delete_user_sessions(int $user_id): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->deleteUserSessions($user_id);
+    ServiceLocator::get(SessionService::class)->deleteUserSessions($user_id);
 }

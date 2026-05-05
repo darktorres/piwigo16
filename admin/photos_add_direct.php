@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
@@ -13,7 +20,7 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHOTOS_ADD_BASE_URL')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
@@ -25,7 +32,7 @@ global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_p
 if (isset($_GET['batch'])) {
     check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
 
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)
+    ServiceLocator::get(ImageRepository::class)
         ->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
 
     $inserts = [];
@@ -45,10 +52,10 @@ if (isset($_GET['batch'])) {
 }
 
 if (userprefs_get_param('promote-mobile-apps', true)) {
-    $register_date = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+    $register_date = ServiceLocator::get(UserRepository::class)
         ->findEarliestRegistrationDate();
-    $nb_cats   = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)->countAll();
-    $nb_images = \Piwigo\Core\ServiceLocator::get(\Piwigo\Image\ImageRepository::class)->countAll();
+    $nb_cats   = ServiceLocator::get(CategoryRepository::class)->countAll();
+    $nb_images = ServiceLocator::get(ImageRepository::class)->countAll();
 
     $uagent_obj = new uagent_info();
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
@@ -63,7 +70,7 @@ $template->assign('PHPWG_URL', PHPWG_URL);
 // |                             Formats Mode                              |
 // +-----------------------------------------------------------------------+
 
-$display_formats = \Piwigo\Config\Config::isFormatsEnabled() && isset($_GET['formats']);
+$display_formats = Config::isFormatsEnabled() && isset($_GET['formats']);
 
 $have_formats_original = false;
 $formats_original_info = [];
@@ -110,7 +117,7 @@ SELECT *
 
         $have_formats_original = true;
     } else {
-        \Piwigo\Core\PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
+        PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
     }
 
 }
@@ -130,28 +137,28 @@ trigger_notify('loc_end_photo_add_direct');
 $unique_exts_for_json = array_unique(
     array_map(
         strtolower(...),
-        \Piwigo\Config\Config::uploadFormAllTypes() ? \Piwigo\Config\Config::fileExtensions() : \Piwigo\Config\Config::pictureExtensions()
+        Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions()
     )
 );
 
 $template->assign([
-  'ENABLE_FORMATS' => \Piwigo\Config\Config::isFormatsEnabled(),
+  'ENABLE_FORMATS' => Config::isFormatsEnabled(),
   'DISPLAY_FORMATS' => $display_formats,
   'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
   'FORMATS_ORIGINAL_INFO' => $formats_original_info,
   'FORMATS_EXT_INFO' => $formats_ext_info,
   'SWITCH_FORMAT_MODE_URL' => get_root_url().'admin.php?page=photos_add'.($display_formats ? '' : '&formats'),
-  'format_ext' =>  implode(',', \Piwigo\Config\Config::formatExtensions()),
-  'str_format_ext' =>  implode(', ', \Piwigo\Config\Config::formatExtensions()),
+  'format_ext' =>  implode(',', Config::formatExtensions()),
+  'str_format_ext' =>  implode(', ', Config::formatExtensions()),
   'page_data_json' => json_encode([
       'pwg_token' => get_pwg_token(),
-      'chunk_size' => \Piwigo\Config\Config::uploadFormChunkSize().'kb',
-      'max_file_size' => \Piwigo\Config\Config::uploadFormMaxFileSize().'mb',
+      'chunk_size' => Config::uploadFormChunkSize().'kb',
+      'max_file_size' => Config::uploadFormMaxFileSize().'mb',
       'albumSummary_label' => l10n('Album "%s" now contains %d photos'),
       'batch_Label' => l10n('Manage this set of %d photos'),
       'file_ext' => implode(',', $unique_exts_for_json),
       'formatMode' => $display_formats,
-      'format_ext' => implode(',', \Piwigo\Config\Config::formatExtensions()),
+      'format_ext' => implode(',', Config::formatExtensions()),
       'format_remove' => l10n('Remove'),
       'format_update_warning' => l10n('This format already exists, it will be overwritten !'),
       'formatsAdded_label' => l10n('%d formats added for %d photos'),

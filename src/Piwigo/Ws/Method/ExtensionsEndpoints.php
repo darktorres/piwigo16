@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
@@ -102,7 +103,7 @@ final class ExtensionsEndpoints
         $upgradeStatus = 'ok';
         $extensionName = '';
         if ($type === 'plugins') {
-            $extension = new \Piwigo\Admin\Plugins();
+            $extension = new Plugins();
             if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]['state'] === 'active') {
                 $extension->perform_action('deactivate', $extensionId);
                 redirect(PHPWG_ROOT_PATH . 'ws.php?method=pwg.extensions.update&type=plugins&id=' . $extensionId . '&revision=' . $revision . '&reactivate=true&pwg_token=' . get_pwg_token() . '&format=json');
@@ -115,7 +116,7 @@ final class ExtensionsEndpoints
                 $extension->perform_action('activate', $extensionId);
             }
         } elseif ($type === 'themes') {
-            $extension      = new \Piwigo\Admin\Themes();
+            $extension      = new Themes();
             $upgradeStatus  = $extension->extract_theme_files('upgrade', $revision, $extensionId);
             $extensionName  = is_string($extension->fs_themes[$extensionId]['name'] ?? null) ? $extension->fs_themes[$extensionId]['name'] : '';
             $fromVersion    = is_string($extension->fs_themes[$extensionId]['version'] ?? null) ? $extension->fs_themes[$extensionId]['version'] : '';
@@ -128,7 +129,7 @@ final class ExtensionsEndpoints
             }
             pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activityDetails);
         } elseif ($type === 'languages') {
-            $extension     = new \Piwigo\Admin\Languages();
+            $extension     = new Languages();
             $upgradeStatus = $extension->extract_language_files('upgrade', $revision, $extensionId);
             $extensionName = is_string($extension->fs_languages[$extensionId]['name'] ?? null) ? $extension->fs_languages[$extensionId]['name'] : '';
         }

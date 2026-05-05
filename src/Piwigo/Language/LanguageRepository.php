@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Language;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the language domain. */
@@ -59,7 +60,7 @@ final class LanguageRepository extends AbstractRepository
             ->set('language', ':lang')
             ->setParameter('lang', $languageId);
         $qb->where($qb->expr()->in('user_id', ':userIds'))
-           ->setParameter('userIds', $userIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+           ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
 

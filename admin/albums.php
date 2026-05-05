@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Config\Config;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +15,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -17,7 +23,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
-$albums_counter = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+$albums_counter = ServiceLocator::get(CategoryRepository::class)
     ->countAll();
 
 // +-----------------------------------------------------------------------+
@@ -55,7 +61,7 @@ $sort_orders = [
 if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
     if (!in_array($_POST['order'], $sort_orders)) {
-        throw new \Piwigo\Exception\ValidationException('Invalid sort order');
+        throw new ValidationException('Invalid sort order');
     }
     check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
@@ -67,7 +73,7 @@ SELECT id
       (($post_id_str === '-1') ? 'IS NULL' : '= '.$post_id_str).'
 ;';
     $category_ids = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
-    $category_ids = array_map(fn ($v) => is_scalar($v) ? (string) $v : '', $category_ids);
+    $category_ids = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $category_ids);
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = get_subcat_ids($category_ids);
@@ -83,14 +89,14 @@ SELECT id
         $order_by_date = true;
 
         $ref_dates = get_categories_ref_date(
-            array_map('intval', $category_ids),
+            array_map(intval(...), $category_ids),
             $order_by_field,
             'ASC' == $order_by_asc ? 'min' : 'max'
         );
     }
 
-    foreach (\Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
-        ->findByIds(array_map('intval', $category_ids)) as $row) {
+    foreach (ServiceLocator::get(CategoryRepository::class)
+        ->findByIds(array_map(intval(...), $category_ids)) as $row) {
         $row['name'] = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
 
         if ($order_by_date) {
@@ -131,9 +137,9 @@ $template->assign(
     ]
 );
 
-$template->assign('delay_before_autoOpen', \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening());
+$template->assign('delay_before_autoOpen', Config::albumMoveDelayBeforeAutoOpening());
 
-$template->assign('POS_PREF', \Piwigo\Config\Config::newcatDefaultPosition()); //TODO use user pref if it exists
+$template->assign('POS_PREF', Config::newcatDefaultPosition()); //TODO use user pref if it exists
 
 // +-----------------------------------------------------------------------+
 // |                          Album display                                |
@@ -263,7 +269,7 @@ foreach ($subcats_of as $cat_id => $subcat_ids) {
 }
 
 $nb_albums = count($allAlbum);
-$light_album_manager = ($albums_counter > \Piwigo\Config\Config::lightAlbumManagerThreshold()) ? 1 : 0;
+$light_album_manager = ($albums_counter > Config::lightAlbumManagerThreshold()) ? 1 : 0;
 $album_tree = assocToOrderedTree($associatedTree);
 
 $template->assign(
@@ -279,7 +285,7 @@ $template->assign(
         'openCat'                    => (int) $open_cat,
         'nb_albums'                  => $nb_albums,
         'light_album_manager'        => (bool) $light_album_manager,
-        'delay_autoOpen'             => \Piwigo\Config\Config::albumMoveDelayBeforeAutoOpening(),
+        'delay_autoOpen'             => Config::albumMoveDelayBeforeAutoOpening(),
         'x_nb_subcats'               => l10n('%d sub-albums'),
         'x_nb_images'                => l10n('%d photos'),
         'x_nb_sub_photos'            => l10n('%d pictures in sub-albums'),

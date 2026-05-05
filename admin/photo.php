@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +16,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -35,7 +39,7 @@ $page['image'] = get_image_infos($image_id_str, true);
 
 if (isset($_GET['cat_id'])) {
     $cat_id_val = $_GET['cat_id'];
-    $category = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    $category = ServiceLocator::get(CategoryRepository::class)
         ->findCategoryById(is_scalar($cat_id_val) ? (int) $cat_id_val : 0);
 }
 
@@ -68,7 +72,7 @@ if ('properties' == $page['tab']) {
     require(PHPWG_ROOT_PATH.'admin/picture_modify.php');
 } elseif ('coi' == $page['tab']) {
     require(PHPWG_ROOT_PATH.'admin/picture_coi.php');
-} elseif ('formats' == $page['tab'] && \Piwigo\Config\Config::isFormatsEnabled()) {
+} elseif ('formats' == $page['tab'] && Config::isFormatsEnabled()) {
     require(PHPWG_ROOT_PATH.'admin/picture_formats.php');
 } else {
     require(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');

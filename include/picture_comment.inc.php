@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+
 global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
 
 use Piwigo\Template\TemplateRegistry;
@@ -35,8 +41,8 @@ foreach ($related_categories as $category) {
 }
 
 if ($page['show_comments'] and isset($_POST['content'])) {
-    if (is_a_guest() and !\Piwigo\Config\Config::commentsForall()) {
-        throw new \Piwigo\Exception\AuthException('Session expired');
+    if (is_a_guest() and !Config::commentsForall()) {
+        throw new AuthException('Session expired');
     }
 
     $comm = [
@@ -50,19 +56,19 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
     $post_key = $_POST['key'] ?? '';
-    $pageStateErrors = &\Piwigo\Core\PageState::current()->errors;
+    $pageStateErrors = &PageState::current()->errors;
     $comment_action = insert_user_comment($comm, is_scalar($post_key) ? (string) $post_key : '', $pageStateErrors);
 
     switch ($comment_action) {
         case 'moderate':
-            \Piwigo\Core\PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
+            PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
             // no break
         case 'validate':
-            \Piwigo\Core\PageState::current()->addInfo(l10n('Your comment has been registered'));
+            PageState::current()->addInfo(l10n('Your comment has been registered'));
             break;
         case 'reject':
             set_status_header(403);
-            \Piwigo\Core\PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
+            PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
             break;
         default:
             trigger_error('Invalid comment action '.$comment_action, E_USER_WARNING);
@@ -75,7 +81,7 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     );
 } elseif (isset($_POST['content'])) {
     set_status_header(403);
-    throw new \Piwigo\Exception\AuthException('ugly spammer');
+    throw new AuthException('ugly spammer');
 }
 
 if ($page['show_comments']) {
@@ -87,7 +93,7 @@ if ($page['show_comments']) {
 
     $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
     // number of comments for this picture
-    $row = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+    $row = ServiceLocator::get(Connection::class)
         ->executeQuery(
             'SELECT COUNT(*) AS nb_comments FROM ' . COMMENTS_TABLE .
             ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
@@ -107,7 +113,7 @@ if ($page['show_comments']) {
         duplicate_picture_url([], ['start']),
         $nb_comments,
         $startOffset,
-        \Piwigo\Config\Config::nbCommentPage(),
+        Config::nbCommentPage(),
         true // We want a clean URL
     );
 
@@ -125,7 +131,7 @@ if ($page['show_comments']) {
         if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $get_comments_order);
         }
-        $comments_order = pwg_get_session_var('comments_order', \Piwigo\Config\Config::commentsOrder());
+        $comments_order = pwg_get_session_var('comments_order', Config::commentsOrder());
 
         $template->assign([
           'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC') ]),
@@ -137,7 +143,7 @@ SELECT
     com.id,
     com.author,
     com.author_id,
-    u.'.\Piwigo\Config\Config::userFields()['email'].' AS user_email,
+    u.'.Config::userFields()['email'].' AS user_email,
     com.date,
     com.image_id,
     com.website_url,
@@ -146,13 +152,13 @@ SELECT
     com.validated
   FROM '.COMMENTS_TABLE.' AS com
   LEFT JOIN '.USERS_TABLE.' AS u
-    ON u.'.\Piwigo\Config\Config::userFields()['id'].' = author_id
+    ON u.'.Config::userFields()['id'].' = author_id
   WHERE com.image_id = '.$imageId.'
     '.$validated_clause.'
   ORDER BY com.date '.$comments_order.'
-  LIMIT '.\Piwigo\Config\Config::nbCommentPage().' OFFSET '.$startOffset.'
+  LIMIT '.Config::nbCommentPage().' OFFSET '.$startOffset.'
 ;';
-        $commentRows = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)
+        $commentRows = ServiceLocator::get(Connection::class)
             ->executeQuery($query)
             ->fetchAllAssociative();
 
@@ -226,7 +232,7 @@ SELECT
     if (isset($edit_comment)) {
         $show_add_comment_form = false;
     }
-    if (is_a_guest() and !\Piwigo\Config\Config::commentsForall()) {
+    if (is_a_guest() and !Config::commentsForall()) {
         $show_add_comment_form = false;
     }
 
@@ -238,13 +244,13 @@ SELECT
             'KEY' =>              $key,
             'CONTENT' =>          '',
             'SHOW_AUTHOR' =>      !is_classic_user(),
-            'AUTHOR_MANDATORY' => \Piwigo\Config\Config::commentsAuthorMandatory(),
+            'AUTHOR_MANDATORY' => Config::commentsAuthorMandatory(),
             'AUTHOR' =>           '',
             'WEBSITE_URL' =>      '',
             'SHOW_EMAIL' =>       !is_classic_user() or empty(CurrentUser::get()->email),
-            'EMAIL_MANDATORY' =>  \Piwigo\Config\Config::commentsEmailMandatory(),
+            'EMAIL_MANDATORY' =>  Config::commentsEmailMandatory(),
             'EMAIL' =>            '',
-            'SHOW_WEBSITE' =>     \Piwigo\Config\Config::commentsEnableWebsite(),
+            'SHOW_WEBSITE' =>     Config::commentsEnableWebsite(),
           ];
 
         if ('reject' == ($comment_action ?? null)) {

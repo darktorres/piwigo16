@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Core\InstallSentinel;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Config\Config;
 
-final class AuthService
+final readonly class AuthService
 {
     public function __construct(
-        private readonly UserRepository $userRepo,
-        private readonly AuthKeyRepository $authKeyRepo,
-        private readonly Connection $conn,
+        private UserRepository $userRepo,
+        private AuthKeyRepository $authKeyRepo,
+        private Connection $conn,
     ) {
     }
 
@@ -28,7 +29,7 @@ final class AuthService
             return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (\Piwigo\Core\InstallSentinel::isInstalled() and !empty($mailAddress)) {
+        if (InstallSentinel::isInstalled() and !empty($mailAddress)) {
             $userFields = Config::userFields();
             $count = $this->userRepo->countByEmail(
                 $userFields['email'],
@@ -46,7 +47,7 @@ final class AuthService
 
     public function validateLoginCase(mixed $login): string|null
     {
-        if (\Piwigo\Core\InstallSentinel::isInstalled()) {
+        if (InstallSentinel::isInstalled()) {
             $count = $this->userRepo->countByUsernameInsensitive(
                 Config::userFields()['username'],
                 USERS_TABLE,
@@ -372,9 +373,9 @@ SELECT
 
         $candidate = generate_key(30);
         if (!$this->authKeyRepo->existsByKey($candidate)) {
-            $now      = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+            $now      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $duration = Config::authKeyDuration();
-            $expiry   = (new \DateTimeImmutable())->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
+            $expiry   = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
             $key      = [
                 'auth_key'   => $candidate,
                 'user_id'    => $userId,
@@ -407,7 +408,7 @@ SELECT
     {
         $activationKey = generate_key(20);
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
-        $expire        = (new \DateTimeImmutable())->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
+        $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
         single_update(USER_INFOS_TABLE, [
             'activation_key'        => password_hash($activationKey, PASSWORD_BCRYPT),

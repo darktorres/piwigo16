@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
+use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -55,7 +56,7 @@ final class SizesProcessor
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == \Piwigo\Config\Config::derivativeDefaultSize()) ? true : false;
+            $pderivative['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == Config::derivativeDefaultSize()) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {

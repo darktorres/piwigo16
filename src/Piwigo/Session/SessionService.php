@@ -6,10 +6,10 @@ namespace Piwigo\Session;
 
 use Piwigo\Config\Config;
 
-final class SessionService
+final readonly class SessionService
 {
     public function __construct(
-        private readonly SessionRepository $repo,
+        private SessionRepository $repo,
     ) {
     }
 

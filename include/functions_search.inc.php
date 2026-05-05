@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Search\SearchService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,19 +17,19 @@ declare(strict_types=1);
 
 function get_search_id_pattern(int|string $candidate): ?string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getSearchIdPattern($candidate);
+    return ServiceLocator::get(SearchService::class)->getSearchIdPattern($candidate);
 }
 
 /** @return array<string,mixed>|null */
 function get_search_info(int|string $candidate): ?array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getSearchInfo($candidate);
+    return ServiceLocator::get(SearchService::class)->getSearchInfo($candidate);
 }
 
 /** @return array<mixed> */
 function get_search_array(mixed $search_id): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getSearchArray($search_id);
+    return ServiceLocator::get(SearchService::class)->getSearchArray($search_id);
 }
 
 /**
@@ -35,18 +38,18 @@ function get_search_array(mixed $search_id): array
  */
 function get_regular_search_results(array $search, ?string $images_where = ''): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getRegularSearchResults($search, $images_where);
+    return ServiceLocator::get(SearchService::class)->getRegularSearchResults($search, $images_where);
 }
 
 function get_clause_for_filter(mixed $filter_name): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getClauseForFilter($filter_name);
+    return ServiceLocator::get(SearchService::class)->getClauseForFilter($filter_name);
 }
 
 /** @return array<int>|false */
 function get_items_for_filter(string $filter_name): array|false
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getItemsForFilter($filter_name);
+    return ServiceLocator::get(SearchService::class)->getItemsForFilter($filter_name);
 }
 
 
@@ -68,7 +71,7 @@ class QSearchScope
     {
     }
 
-    public function parse(QSingleToken $token): bool
+    public function parse(\Piwigo\Search\QSingleToken $token): bool
     {
         if (!$this->nullable && 0 == strlen((string) $token->term)) {
             return false;
@@ -85,7 +88,7 @@ class QSearchScope
 class QNumericRangeScope extends \Piwigo\Search\QSearchScope
 {
     /** @param string[] $aliases */
-    public function __construct(string $id, array $aliases, bool $nullable = false, private int|float $epsilon = 0)
+    public function __construct(string $id, array $aliases, bool $nullable = false, private readonly int|float $epsilon = 0)
     {
         parent::__construct($id, $aliases, $nullable, false);
     }
@@ -155,6 +158,7 @@ class QNumericRangeScope extends \Piwigo\Search\QSearchScope
         return true;
     }
 
+    #[\Override]
     public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
         $scope_data = is_array($token->scope_data) ? $token->scope_data : [];
@@ -239,6 +243,7 @@ class QDateRangeScope extends \Piwigo\Search\QSearchScope
         return true;
     }
 
+    #[\Override]
     public function get_sql(string $field, \Piwigo\Search\QSingleToken $token): string
     {
         $scope_data = is_array($token->scope_data) ? $token->scope_data : ['', ''];
@@ -273,7 +278,7 @@ class QSingleToken implements \Stringable
     public mixed $scope_data = null;
     public int $idx = 0;
 
-    public function __construct(public string $term, public int $modifier, public ?QSearchScope $scope)
+    public function __construct(public string $term, public int $modifier, public ?\Piwigo\Search\QSearchScope $scope)
     {
     }
 
@@ -647,22 +652,22 @@ class QResults
  */
 function qsearch_get_text_token_search_sql(\Piwigo\Search\QSingleToken $token, array $fields): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->qsearchGetTextTokenSearchSql($token, $fields);
+    return ServiceLocator::get(SearchService::class)->qsearchGetTextTokenSearchSql($token, $fields);
 }
 
 function qsearch_get_images(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->qsearchGetImages($expr, $qsr);
+    ServiceLocator::get(SearchService::class)->qsearchGetImages($expr, $qsr);
 }
 
 function qsearch_get_tags(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->qsearchGetTags($expr, $qsr);
+    ServiceLocator::get(SearchService::class)->qsearchGetTags($expr, $qsr);
 }
 
 function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search\QResults $qsr): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->qsearchGetCategories($expr, $qsr);
+    ServiceLocator::get(SearchService::class)->qsearchGetCategories($expr, $qsr);
 }
 
 /**
@@ -671,7 +676,7 @@ function qsearch_get_categories(\Piwigo\Search\QExpression $expr, \Piwigo\Search
  */
 function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults $qsr, bool &$qualifies, array &$ignored_terms): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->qsearchEval($expr, $qsr, $qualifies, $ignored_terms);
+    return ServiceLocator::get(SearchService::class)->qsearchEval($expr, $qsr, $qualifies, $ignored_terms);
 }
 
 /**
@@ -680,7 +685,7 @@ function qsearch_eval(\Piwigo\Search\QMultiToken $expr, \Piwigo\Search\QResults 
  */
 function get_quick_search_results(string $q, array $options): ?array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getQuickSearchResults($q, $options);
+    return ServiceLocator::get(SearchService::class)->getQuickSearchResults($q, $options);
 }
 
 /**
@@ -689,24 +694,24 @@ function get_quick_search_results(string $q, array $options): ?array
  */
 function get_quick_search_results_no_cache(string $q, array $options): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getQuickSearchResultsNoCache($q, $options);
+    return ServiceLocator::get(SearchService::class)->getQuickSearchResultsNoCache($q, $options);
 }
 
 /** @return array<mixed> */
 function get_search_results(int|string $search_id, bool $super_order_by, ?string $images_where = ''): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getSearchResults($search_id, $super_order_by, $images_where);
+    return ServiceLocator::get(SearchService::class)->getSearchResults($search_id, $super_order_by, $images_where);
 }
 
 /** @return string[]|null */
 function split_allwords(string $raw_allwords): ?array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->splitAllwords($raw_allwords);
+    return ServiceLocator::get(SearchService::class)->splitAllwords($raw_allwords);
 }
 
 function get_available_search_uuid(): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->getAvailableSearchUuid();
+    return ServiceLocator::get(SearchService::class)->getAvailableSearchUuid();
 }
 
 /**
@@ -715,5 +720,5 @@ function get_available_search_uuid(): string
  */
 function save_search(array $rules, int|string|null $forked_from = null): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Search\SearchService::class)->saveSearch($rules, $forked_from);
+    return ServiceLocator::get(SearchService::class)->saveSearch($rules, $forked_from);
 }

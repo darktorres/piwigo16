@@ -8,10 +8,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Image\ImageRepository;
 
-final class PictureService
+final readonly class PictureService
 {
     public function __construct(
-        private readonly ImageRepository $imageRepo,
+        private ImageRepository $imageRepo,
     ) {
     }
 

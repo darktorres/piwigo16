@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Db\DbInfo;
+use Piwigo\Core\Filesystem;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\History\HistoryRepository;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 
-final class AdminService
+final readonly class AdminService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 
@@ -32,7 +39,7 @@ final class AdminService
     public function createTableAddCharacterSet(mixed $query): string
     {
         $query = is_scalar($query) ? (string) $query : '';
-        if (version_compare(\Piwigo\Db\DbInfo::version(), '4.1.0', '<')) {
+        if (version_compare(DbInfo::version(), '4.1.0', '<')) {
             return $query;
         }
         $query = trim($query, ';');
@@ -95,13 +102,13 @@ final class AdminService
                         if (is_dir($pathfile)) {
                             $this->deltree($pathfile, $trashPath);
                         } else {
-                            \Piwigo\Core\Filesystem::tryUnlink($pathfile);
+                            Filesystem::tryUnlink($pathfile);
                         }
                     }
                 }
                 closedir($fh);
             }
-            if (\Piwigo\Core\Filesystem::tryRmdir($path)) {
+            if (Filesystem::tryRmdir($path)) {
                 return true;
             }
             if (!empty($trashPath)) {
@@ -110,7 +117,7 @@ final class AdminService
                 }
                 while ($r = $trashPath . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                     if (!is_dir($r)) {
-                        \Piwigo\Core\Filesystem::tryRename($path, $r);
+                        Filesystem::tryRename($path, $r);
                         break;
                     }
                 }
@@ -467,11 +474,11 @@ final class AdminService
     public function getPwgGeneralStatitics(): array
     {
         $stats    = [];
-        $imgRepo  = ServiceLocator::get(\Piwigo\Image\ImageRepository::class);
-        $catRepo  = ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
-        $tagRepo  = ServiceLocator::get(\Piwigo\Tag\TagRepository::class);
-        $userRepo = ServiceLocator::get(\Piwigo\Users\UserRepository::class);
-        $histRepo = ServiceLocator::get(\Piwigo\History\HistoryRepository::class);
+        $imgRepo  = ServiceLocator::get(ImageRepository::class);
+        $catRepo  = ServiceLocator::get(CategoryRepository::class);
+        $tagRepo  = ServiceLocator::get(TagRepository::class);
+        $userRepo = ServiceLocator::get(UserRepository::class);
+        $histRepo = ServiceLocator::get(HistoryRepository::class);
 
         $stats['nb_photos']     = $imgRepo->countAll();
         $stats['nb_categories'] = $catRepo->countAll();

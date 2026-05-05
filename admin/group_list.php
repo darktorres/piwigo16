@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Group\GroupRepository;
+use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,7 +17,7 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang;
@@ -96,8 +101,8 @@ $template->assign(
 // |                              group list                               |
 // +-----------------------------------------------------------------------+
 
-$groupRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Group\GroupRepository::class);
-$userFields = \Piwigo\Config\Config::userFields();
+$groupRepo = ServiceLocator::get(GroupRepository::class);
+$userFields = Config::userFields();
 
 $admin_url = get_root_url().'admin.php?page=';
 $perm_url    = $admin_url.'group_perm&amp;group_id=';
@@ -120,7 +125,7 @@ foreach ($groupRepo->findAllOrdered() as $row) {
         [
         'NAME' => $row['name'],
         'ID' => $row['id'],
-        'IS_DEFAULT' => (\Piwigo\Core\BoolUtil::fromMixed($row['is_default']) ? ' ['.l10n('default').']' : ''),
+        'IS_DEFAULT' => (BoolUtil::fromMixed($row['is_default']) ? ' ['.l10n('default').']' : ''),
         'NB_MEMBERS' => count($members),
         'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
         'MEMBERS' => l10n_dec('%d member', '%d members', count($members)),

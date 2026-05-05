@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Db\SqlExpr;
+
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -71,7 +73,7 @@ WHERE ';
   category_id  IN ('.$filter['visible_categories'].') and';
         }
         $query .= '
-    date_available >= '.\Piwigo\Db\SqlExpr::recentPeriodExpr($filter['recent_period']);
+    date_available >= '.SqlExpr::recentPeriodExpr($filter['recent_period']);
 
         $filter['visible_images'] = implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id')));
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -11,7 +13,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHOTOS_ADD_BASE_URL')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+

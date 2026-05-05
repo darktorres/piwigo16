@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Config\Config;
 use Piwigo\Template\TemplateRegistry;
 
 final class FilterResolver
@@ -27,7 +28,7 @@ final class FilterResolver
             ['ID' => 'all_photos', 'NAME' => l10n('All')],
         ];
 
-        if (\Piwigo\Config\Config::enableSynchronization()) {
+        if (Config::enableSynchronization()) {
             $prefilters[] = ['ID' => 'no_virtual_album', 'NAME' => l10n('With no virtual album')];
             $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
         }
@@ -43,7 +44,7 @@ final class FilterResolver
         $start = is_int($page['start'] ?? null) ? $page['start'] : 0;
 
         $tpl->assign([
-            'conf_checksum_compute_blocksize' => \Piwigo\Config\Config::checksumComputeBlocksize(),
+            'conf_checksum_compute_blocksize' => Config::checksumComputeBlocksize(),
             'prefilters' => $prefilters,
             'filter' => $bulk_manager_filter,
             'selection' => $collection,
@@ -62,7 +63,7 @@ final class FilterResolver
         }
 
         $level_options = [];
-        foreach (\Piwigo\Config\Config::availablePermissionLevels() as $level) {
+        foreach (Config::availablePermissionLevels() as $level) {
             $level_options[$level] = l10n(sprintf('Level %d', $level));
             if (0 == $level) {
                 $level_options[$level] = l10n('Everybody');
@@ -81,7 +82,7 @@ SELECT
     id,
     name
   FROM ' . TAGS_TABLE . '
-  WHERE id IN (' . implode(',', array_map(fn ($v) => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
+  WHERE id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
 ;';
             $filter_tags = get_taglist($query);
         }

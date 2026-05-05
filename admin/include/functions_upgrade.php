@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugin\PluginRepository;
+use Piwigo\Core\PageState;
+use Piwigo\Theme\ThemeRepository;
+use Piwigo\Users\UserRepository;
+use Piwigo\Config\Config;
 use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
@@ -68,7 +74,7 @@ function deactivate_non_standard_plugins(): void
       'LocalFilesEditor',
       ];
 
-    $pluginRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Plugin\PluginRepository::class);
+    $pluginRepo = ServiceLocator::get(PluginRepository::class);
     $allActive = $pluginRepo->findAll('active');
     $plugins = [];
     foreach ($allActive as $row) {
@@ -83,7 +89,7 @@ function deactivate_non_standard_plugins(): void
             $pluginRepo->updateState($pluginId, 'inactive');
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+        PageState::current()->addInfo(l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                             .'<p><i>'.implode(', ', $plugins).'</i></p>');
     }
 }
@@ -97,7 +103,7 @@ function deactivate_non_standard_themes(): void
       'smartpocket',
       ];
 
-    $themeRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Theme\ThemeRepository::class);
+    $themeRepo = ServiceLocator::get(ThemeRepository::class);
     $allThemes = $themeRepo->findAll();
     $theme_ids = [];
     $theme_names = [];
@@ -114,12 +120,12 @@ function deactivate_non_standard_themes(): void
             $themeRepo->deactivate($tid);
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+        PageState::current()->addInfo(l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                             .'<p><i>'.implode(', ', $theme_names).'</i></p>');
 
         // what is the default theme?
-        $defaultUserInfo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
-            ->getDefaultUserInfo(\Piwigo\Config\Config::defaultUserId());
+        $defaultUserInfo = ServiceLocator::get(UserRepository::class)
+            ->getDefaultUserInfo(Config::defaultUserId());
         $default_theme = is_scalar($defaultUserInfo['theme'] ?? null) ? (string) $defaultUserInfo['theme'] : '';
 
         // if the default theme has just been deactivated, let's set another core theme as default
@@ -132,7 +138,7 @@ function deactivate_non_standard_themes(): void
             }
 
             // then associate it to default user
-            $themeRepo->setThemeForUsers([\Piwigo\Config\Config::defaultUserId()], PHPWG_DEFAULT_TEMPLATE);
+            $themeRepo->setThemeForUsers([Config::defaultUserId()], PHPWG_DEFAULT_TEMPLATE);
         }
     }
 }
@@ -152,7 +158,7 @@ function check_upgrade_access_rights(): void
         session_start();
         $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
         if (!empty($pwgUid)) {
-            $statusValue = \Piwigo\Core\ServiceLocator::get(\Piwigo\Users\UserRepository::class)
+            $statusValue = ServiceLocator::get(UserRepository::class)
                 ->findStatusByUserId((int) $pwgUid);
             if ($statusValue === 'webmaster') {
                 define('PHPWG_IN_UPGRADE', true);
@@ -177,15 +183,15 @@ function check_upgrade_access_rights(): void
         $query = 'SELECT password, status FROM '.USERS_TABLE.' WHERE username = ?';
     } else {
         $query = 'SELECT u.password, ui.status FROM '.USERS_TABLE.' AS u'
-            .' INNER JOIN '.USER_INFOS_TABLE.' AS ui ON u.'.\Piwigo\Config\Config::userFields()['id'].'=ui.user_id'
-            .' WHERE '.\Piwigo\Config\Config::userFields()['username'].' = ?';
+            .' INNER JOIN '.USER_INFOS_TABLE.' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
+            .' WHERE '.Config::userFields()['username'].' = ?';
     }
     $row = get_dbal_connection()->executeQuery($query, [$username])->fetchAssociative() ?: null;
 
     if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
-        \Piwigo\Core\PageState::current()->addError(l10n('Invalid password!'));
+        PageState::current()->addError(l10n('Invalid password!'));
     } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
-        \Piwigo\Core\PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
+        PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
     } else {
         define('PHPWG_IN_UPGRADE', true);
     }

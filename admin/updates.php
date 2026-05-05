@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Exception\AuthException;
+use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
 use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
@@ -12,11 +15,11 @@ use Piwigo\Admin\Tabsheet;
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
-if (!\Piwigo\Config\Config::enableExtensionsInstall() and !\Piwigo\Config\Config::enableCoreUpdate()) {
-    throw new \Piwigo\Exception\ConfigException('update system is disabled');
+if (!Config::enableExtensionsInstall() and !Config::enableCoreUpdate()) {
+    throw new ConfigException('update system is disabled');
 }
 
 $my_base_url = get_root_url().'admin.php?page=updates';

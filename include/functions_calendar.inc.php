@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Calendar\CalendarService;
+
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -27,5 +30,5 @@ define('CWEEK', 1);
 
 function initialize_calendar(): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Calendar\CalendarService::class)->initializeCalendar();
+    ServiceLocator::get(CalendarService::class)->initializeCalendar();
 }

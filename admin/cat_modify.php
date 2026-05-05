@@ -1,6 +1,13 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Exception\AuthException;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Core\PageState;
+use Piwigo\Core\BoolUtil;
+use Piwigo\Config\Config;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -9,7 +16,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 if (!defined('PHPWG_ROOT_PATH')) {
-    throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+    throw new AuthException('Hacking attempt!');
 }
 
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
@@ -46,14 +53,14 @@ function get_local_dir(string $category_id): string
     if (isset($catEntry['uppercats']) && is_scalar($catEntry['uppercats'])) {
         $uppercats = (string) $catEntry['uppercats'];
     } else {
-        $catRepo = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
+        $catRepo = ServiceLocator::get(CategoryRepository::class);
         $uppercats = $catRepo->findUppercatsStringById((int) $category_id) ?? '';
     }
 
     $upper_array = explode(',', $uppercats);
 
-    $catRepo2 = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class);
-    $database_dirs = $catRepo2->findIdDirMap(array_map('intval', $upper_array));
+    $catRepo2 = ServiceLocator::get(CategoryRepository::class);
+    $database_dirs = $catRepo2->findIdDirMap(array_map(intval(...), $upper_array));
     foreach ($upper_array as $id) {
         $local_dir .= $database_dirs[$id].'/';
     }
@@ -65,7 +72,7 @@ function get_local_dir(string $category_id): string
 // simply "./galleries/"
 function get_site_url(string $category_id): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    return ServiceLocator::get(CategoryRepository::class)
         ->findGalleriesUrlByCategoryId((int) $category_id) ?? '';
 }
 
@@ -109,7 +116,7 @@ foreach (['comment','dir','site_id', 'id_uppercat'] as $nullable) {
 
 $category['is_virtual'] = empty($category['dir']) ? true : false;
 
-$category['has_images'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+$category['has_images'] = ServiceLocator::get(CategoryRepository::class)
     ->hasCategoryImages((int) $_GET['cat_id']);
 
 // number of sub-categories
@@ -147,7 +154,7 @@ if (!empty($category['id_uppercat'])) {
 }
 
 // We show or hide this warning in JS
-\Piwigo\Core\PageState::current()->addWarning(l10n('This album is currently locked, visible only to administrators.').'<span class="icon-cone unlock-album">'.l10n('Unlock it').'</span>');
+PageState::current()->addWarning(l10n('This album is currently locked, visible only to administrators.').'<span class="icon-cone unlock-album">'.l10n('Unlock it').'</span>');
 
 $template->assign(
     [
@@ -157,7 +164,7 @@ $template->assign(
     'CAT_ID'             => $category['id'],
     'CAT_NAME'           => htmlspecialchars((string) $category['name']),
     'CAT_COMMENT'        => htmlspecialchars((string) $category['comment']),
-    'IS_VISIBLE'          => \Piwigo\Core\BoolUtil::toString($category['visible']),
+    'IS_VISIBLE'          => BoolUtil::toString($category['visible']),
     'CAT_ADMIN_ACCESS'   => cat_admin_access($category['id']),
 
     'U_DELETE' => $base_url.'albums',
@@ -175,8 +182,8 @@ $template->assign(
     ]
 );
 
-if (\Piwigo\Config\Config::activateComments()) {
-    $template->assign('CAT_COMMENTABLE', \Piwigo\Core\BoolUtil::toString($category['commentable']));
+if (Config::activateComments()) {
+    $template->assign('CAT_COMMENTABLE', BoolUtil::toString($category['commentable']));
 }
 
 // manage album elements link
@@ -188,7 +195,7 @@ if ($category['has_images']) {
         $base_url.'batch_manager&amp;filter=album-'.$category['id']
     );
 
-    [$image_count, $min_date, $max_date] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
+    [$image_count, $min_date, $max_date] = ServiceLocator::get(CategoryRepository::class)
         ->findImageStats(is_numeric($category['id']) ? (int) $category['id'] : 0);
     $min_date = (string)$min_date;
     $max_date = (string)$max_date;
@@ -303,7 +310,7 @@ if (!$category['is_virtual']) {
     $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
     $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir ?? ''));
 
-    if (\Piwigo\Config\Config::enableSynchronization()) {
+    if (Config::enableSynchronization()) {
         $template->assign(
             'U_SYNC',
             $base_url.'site_update&amp;site='.$category['site_id'].'&amp;cat_id='.$category['id']
@@ -328,7 +335,7 @@ if ($category['has_images'] or !empty($category['representative_picture_id'])) {
     // can the admin delete the current representant ?
     if (
         ($category['has_images']
-         and \Piwigo\Config\Config::allowRandomRepresentative())
+         and Config::allowRandomRepresentative())
         or
         (!$category['has_images']
          and !empty($category['representative_picture_id']))) {
@@ -349,7 +356,7 @@ $template->assign('page_data_json', json_encode([
     'album_id'                            => (int) $category['id'],
     'album_name'                          => $category['name'] ?? '',
     'default_parent_album'                => $parent_cat_id,
-    'is_visible'                          => \Piwigo\Core\BoolUtil::toString($category['visible']),
+    'is_visible'                          => BoolUtil::toString($category['visible']),
     'nb_sub_albums'                       => $category['nb_subcats'],
     'parent_album'                        => $parent_cat_id,
     'related_categories_ids'              => [(string) $category['id'], (string) $parent_cat_id],

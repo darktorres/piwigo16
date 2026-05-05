@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -51,7 +55,7 @@ function get_absolute_root_url(bool $with_scheme = true): string
         } else {
             $url    .= is_scalar($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : '';
             $urlPort = null;
-            $cfgPort = \Piwigo\Config\Config::urlPort();
+            $cfgPort = Config::urlPort();
             if ('none' === $cfgPort) {
                 // do nothing
             } elseif ('auto' === $cfgPort) {
@@ -74,13 +78,13 @@ function get_absolute_root_url(bool $with_scheme = true): string
 /** @param array<mixed> $params */
 function add_url_params(string $url, array $params, string $arg_separator = '&amp;'): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->addUrlParams($url, $params, $arg_separator);
+    return ServiceLocator::get(UrlService::class)->addUrlParams($url, $params, $arg_separator);
 }
 
 /** @param array<mixed> $params */
 function make_index_url(array $params = []): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->makeIndexUrl($params);
+    return ServiceLocator::get(UrlService::class)->makeIndexUrl($params);
 }
 
 /**
@@ -89,7 +93,7 @@ function make_index_url(array $params = []): string
  */
 function duplicate_index_url(array $redefined = [], array $removed = []): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->duplicateIndexUrl($redefined, $removed);
+    return ServiceLocator::get(UrlService::class)->duplicateIndexUrl($redefined, $removed);
 }
 
 /**
@@ -99,7 +103,7 @@ function duplicate_index_url(array $redefined = [], array $removed = []): string
  */
 function params_for_duplication(array $redefined, array $removed): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->paramsForDuplication($redefined, $removed);
+    return ServiceLocator::get(UrlService::class)->paramsForDuplication($redefined, $removed);
 }
 
 /**
@@ -108,25 +112,25 @@ function params_for_duplication(array $redefined, array $removed): array
  */
 function duplicate_picture_url(array $redefined = [], array $removed = []): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->duplicatePictureUrl($redefined, $removed);
+    return ServiceLocator::get(UrlService::class)->duplicatePictureUrl($redefined, $removed);
 }
 
 /** @param array<mixed> $params */
 function make_picture_url(array $params): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->makePictureUrl($params);
+    return ServiceLocator::get(UrlService::class)->makePictureUrl($params);
 }
 
 /** @param array<mixed> $params */
 function add_well_known_params_in_url(string $url, array $params): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->addWellKnownParamsInUrl($url, $params);
+    return ServiceLocator::get(UrlService::class)->addWellKnownParamsInUrl($url, $params);
 }
 
 /** @param array<mixed> $params */
 function make_section_in_url(array $params): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->makeSectionInUrl($params);
+    return ServiceLocator::get(UrlService::class)->makeSectionInUrl($params);
 }
 
 /**
@@ -135,7 +139,7 @@ function make_section_in_url(array $params): string
  */
 function parse_section_url(array $tokens, int &$next_token): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->parseSectionUrl($tokens, $next_token);
+    return ServiceLocator::get(UrlService::class)->parseSectionUrl($tokens, $next_token);
 }
 
 /**
@@ -144,28 +148,28 @@ function parse_section_url(array $tokens, int &$next_token): array
  */
 function parse_well_known_params_url(array $tokens, int &$i): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->parseWellKnownParamsUrl($tokens, $i);
+    return ServiceLocator::get(UrlService::class)->parseWellKnownParamsUrl($tokens, $i);
 }
 
 function get_action_url(int|string $id, string $what_part, bool $download): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getActionUrl($id, $what_part, $download);
+    return ServiceLocator::get(UrlService::class)->getActionUrl($id, $what_part, $download);
 }
 
 /** @param array<string,mixed> $element_info */
 function get_element_url(array $element_info): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getElementUrl($element_info);
+    return ServiceLocator::get(UrlService::class)->getElementUrl($element_info);
 }
 
 function set_make_full_url(): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->setMakeFullUrl();
+    ServiceLocator::get(UrlService::class)->setMakeFullUrl();
 }
 
 function unset_make_full_url(): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->unsetMakeFullUrl();
+    ServiceLocator::get(UrlService::class)->unsetMakeFullUrl();
 }
 
 /**
@@ -194,7 +198,7 @@ function embellish_url(string|array $url): string|array
 
 function get_gallery_home_url(): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getGalleryHomeUrl();
+    return ServiceLocator::get(UrlService::class)->getGalleryHomeUrl();
 }
 
 /**
@@ -202,19 +206,19 @@ function get_gallery_home_url(): string
  */
 function get_query_string_diff(array $rejects = [], bool $escape = true): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getQueryStringDiff($rejects, $escape);
+    return ServiceLocator::get(UrlService::class)->getQueryStringDiff($rejects, $escape);
 }
 
 function url_is_remote(string $url): bool
 {
-    if (!\Piwigo\Core\ServiceLocator::has(\Piwigo\Url\UrlService::class)) {
+    if (!ServiceLocator::has(UrlService::class)) {
         return str_starts_with($url, 'http://') || str_starts_with($url, 'https://');
     }
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->urlIsRemote($url);
+    return ServiceLocator::get(UrlService::class)->urlIsRemote($url);
 }
 
 /** @return array<int,true> */
 function get_user_favorites(): array
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getUserFavorites();
+    return ServiceLocator::get(UrlService::class)->getUserFavorites();
 }

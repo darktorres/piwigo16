@@ -9,10 +9,10 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Users\CurrentUser;
 
-final class NotificationService
+final readonly class NotificationService
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 

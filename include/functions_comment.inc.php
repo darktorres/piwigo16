@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Comment\CommentService;
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -25,7 +28,7 @@ add_event_handler('user_comment_check', 'user_comment_check');
 /** @param array<string,mixed> $comment */
 function user_comment_check(string $action, array $comment): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->userCommentCheck($action, $comment);
+    return ServiceLocator::get(CommentService::class)->userCommentCheck($action, $comment);
 }
 
 /**
@@ -35,7 +38,7 @@ function user_comment_check(string $action, array $comment): string
  */
 function insert_user_comment(array &$comm, string $key, array &$infos): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->insertUserComment($comm, $key, $infos);
+    return ServiceLocator::get(CommentService::class)->insertUserComment($comm, $key, $infos);
 }
 
 /**
@@ -43,7 +46,7 @@ function insert_user_comment(array &$comm, string $key, array &$infos): string
  */
 function delete_user_comment(int|array $comment_id): bool
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->deleteUserComment($comment_id);
+    return ServiceLocator::get(CommentService::class)->deleteUserComment($comment_id);
 }
 
 /**
@@ -52,27 +55,27 @@ function delete_user_comment(int|array $comment_id): bool
  */
 function update_user_comment(array $comment, string $post_key): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->updateUserComment($comment, $post_key);
+    return ServiceLocator::get(CommentService::class)->updateUserComment($comment, $post_key);
 }
 
 /** @param array<string,mixed> $comment */
 function email_admin(string $action, array $comment): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->emailAdmin($action, $comment);
+    ServiceLocator::get(CommentService::class)->emailAdmin($action, $comment);
 }
 
 function get_comment_author_id(int $comment_id, bool $die_on_error = true): int|false
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->getCommentAuthorId($comment_id, $die_on_error);
+    return ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_id, $die_on_error);
 }
 
 /** @param int|int[] $comment_id */
 function validate_user_comment(int|array $comment_id): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->validateUserComment($comment_id);
+    ServiceLocator::get(CommentService::class)->validateUserComment($comment_id);
 }
 
 function invalidate_user_cache_nb_comments(): void
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Comment\CommentService::class)->invalidateUserCacheNbComments();
+    ServiceLocator::get(CommentService::class)->invalidateUserCacheNbComments();
 }

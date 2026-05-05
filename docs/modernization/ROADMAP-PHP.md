@@ -1709,8 +1709,13 @@ Helper functions that were defined inside entry-point files moved to `include/`:
 | `profile.php` | `ProfileController` | Functions extracted |
 | `notification.php` | `NotificationController` | `findAvailableFeedId` → private method |
 | `ws.php` | `WsController` | Thin adapter; `ws_addDefaultMethods` extracted |
+| `i.php` | `ImageDerivativeController` | Minimal bootstrap preserved in shim; no `common.inc.php` |
+| `install.php` | `InstallController` | Custom bootstrap; `Kernel::boot()` fires inline after DB check |
+| `upgrade.php` | `UpgradeController` | Custom bootstrap; `get_tables`/`getColumnsOf` as private methods |
 
-**Remaining Wave A (deferred — custom bootstraps):** `i.php` (minimal bootstrap, no Kernel::boot()), `install.php`, `upgrade.php`. These route correctly via the pipeline but their controllers are not yet implemented (FallbackHandler returns 404 if accessed via index.php).
+All three deferred controllers use shims with their own bootstrap sequences — they do **not** go through the standard pipeline. `include/image_derivative_functions.php` holds the i.php helpers with `function_exists` guards so they work under both minimal and full bootstrap.
+
+Wave A is **complete** — all 15 root entry-point files are now controller shims.
 
 ### Remaining steps
 

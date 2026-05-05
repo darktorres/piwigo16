@@ -8,9 +8,22 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+/**
+ * Called before Kernel::boot() in common.inc.php upgrade redirect —
+ * must have its own implementation. UrlService::getRootUrl() is canonical.
+ */
 function get_root_url(): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlService::class)->getRootUrl();
+    $page     = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+    $rootPath = $page['root_path'] ?? null;
+    if (is_string($rootPath) && $rootPath !== '') {
+        return $rootPath;
+    }
+    $rootUrl = PHPWG_ROOT_PATH;
+    if (str_starts_with($rootUrl, './')) {
+        return substr($rootUrl, 2);
+    }
+    return $rootUrl;
 }
 
 function get_absolute_root_url(bool $with_scheme = true): string

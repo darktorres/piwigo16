@@ -398,12 +398,13 @@ final class UrlService
                     }
 
                     if (count($maybePermalinks)) {
-                        $catId = get_cat_id_from_permalinks($maybePermalinks, $permaIndex);
+                        $permaIndex = 0;
+                        $catId      = get_cat_id_from_permalinks($maybePermalinks, $permaIndex);
                         if (isset($catId)) {
                             $nextToken += $permaIndex + 1;
 
                             if (!isset($page['category'])) {
-                                $page['category']              = $catId;
+                                $page['category']                = $catId;
                                 $page['hit_by']['cat_permalink'] = $maybePermalinks[$permaIndex];
                             } else {
                                 if (!is_array($page['combined_categories'])) {

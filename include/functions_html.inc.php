@@ -79,9 +79,48 @@ function page_not_found(?string $msg, ?string $alternate_url = null): void
     \Piwigo\Core\ServiceLocator::get(\Piwigo\Html\HtmlService::class)->pageNotFound($msg, $alternate_url);
 }
 
+/**
+ * Called before Kernel::boot() on DB-connect errors — must have its own
+ * implementation. HtmlService::fatalError() is the canonical copy.
+ */
 function fatal_error(string $msg, ?string $title = null, bool $show_trace = true): never
 {
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Html\HtmlService::class)->fatalError($msg, $title, $show_trace);
+    if (empty($title)) {
+        $title = function_exists('l10n') ? l10n('Piwigo encountered a non recoverable error') : 'Piwigo encountered a non recoverable error';
+    }
+
+    $btraceMsg = '';
+    if ($show_trace and function_exists('debug_backtrace')) {
+        $bt = debug_backtrace();
+        for ($i = 1; $i < count($bt); $i++) {
+            $class      = isset($bt[$i]['class']) ? ($bt[$i]['class'] . '::') : '';
+            $btraceMsg .= "#$i\t" . $class . $bt[$i]['function'] . ' ' . ($bt[$i]['file'] ?? '') . '(' . ($bt[$i]['line'] ?? '') . ")\n";
+        }
+        $btraceMsg = trim($btraceMsg);
+        $msg .= "\n";
+    }
+
+    $display = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+<h1>$title</h1>
+<pre style='font-size:larger;background:white;color:red;padding:1em;margin:0;clear:both;display:block;width:auto;height:auto;overflow:auto'>
+<b>$msg</b>
+$btraceMsg
+</pre>\n";
+
+    if (!headers_sent()) {
+        if (function_exists('set_status_header') && \Piwigo\Core\ServiceLocator::has(\Piwigo\Html\HtmlService::class)) {
+            set_status_header(500);
+        } else {
+            header('HTTP/1.0 500 Server error', true, 500);
+        }
+    }
+    echo $display . str_repeat(' ', 300);
+
+    if (function_exists('ini_set')) {
+        ini_set('display_errors', false);
+    }
+    error_reporting(E_ALL);
+    throw new \RuntimeException(strip_tags($msg) . $btraceMsg);
 }
 
 function get_tags_content_title(): string

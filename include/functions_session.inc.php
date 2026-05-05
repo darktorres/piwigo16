@@ -46,9 +46,14 @@ if (class_exists(\Piwigo\Config\Config::class, false)
     register_shutdown_function(session_write_close(...));
 }
 
+/**
+ * Called before Kernel::boot() in common.inc.php — must have its own
+ * implementation. SessionService::generateKey() is the canonical copy.
+ */
 function generate_key(int $size): string
 {
-    return \Piwigo\Core\ServiceLocator::get(\Piwigo\Session\SessionService::class)->generateKey($size);
+    $bytes = random_bytes(max(1, $size + 10));
+    return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
 }
 
 function pwg_session_open(string $path, string $name): bool

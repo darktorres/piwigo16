@@ -35,8 +35,11 @@ final class SessionService
         }
 
         $remoteAddr = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-        if (!str_contains($remoteAddr, ':')) {
-            return vsprintf('%02X%02X', explode('.', $remoteAddr));
+        if (!str_contains($remoteAddr, ':')) { // ipv4
+            $parts = explode('.', $remoteAddr);
+            if (count($parts) >= 2) {
+                return vsprintf('%02X%02X', $parts);
+            }
         }
         return '';
     }

@@ -27,6 +27,10 @@ use Piwigo\Notification\NotificationService;
 use Piwigo\Plugin\PluginService;
 use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
@@ -72,8 +76,12 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
+    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn): AuthService => new AuthService($u, $ak, $conn)),
     CalendarService::class     => factory(static fn (): CalendarService => new CalendarService()),
     MailService::class         => factory(static fn (Connection $conn): MailService => new MailService($conn)),
+    PermissionService::class   => factory(static fn (Connection $conn): PermissionService => new PermissionService($conn)),
+    PreferencesService::class  => factory(static fn (): PreferencesService => new PreferencesService()),
+    UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak): UserService => new UserService($u, $conn, $h, $a, $g, $ak)),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn): CategoryService => new CategoryService($cat, $conn)),
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
     NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),

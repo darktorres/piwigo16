@@ -1293,6 +1293,23 @@ In addition to the `functions_*.inc.php` modules above, several `include/*.inc.p
 
 Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `include/picture_comment.inc.php`, `include/picture_metadata.inc.php`, `include/picture_rate.inc.php`, `include/no_photo_yet.inc.php`, `include/search_filters.inc.php`, `include/selected_tags.inc.php`, `include/category_cats.inc.php`, `include/category_default.inc.php`) are **not** in scope here — they become Latte partials under item #23.
 
+### Out-of-scope free functions (confirmed not missed)
+
+A full codebase scan surfaces several additional files with free functions that are intentionally **not** in task #19's scope:
+
+| File(s) | Functions | Why out of scope |
+|---|---|---|
+| `i.php` | 12 | Fast-path image server — `trigger_notify`, `trigger_change`, `mkgetdir`, `safe_unserialize` are deliberate local re-definitions (avoids loading the full stack); the remaining 8 are image-serving controller logic → **#22** |
+| `admin/*.php` page files | ~30 | Inline page helpers: sort comparators (`avg_compare`, `cmpCat`, etc.), `stats.php` DB queries, `notification_by_mail.php` mail flow, `cat_modify.php` path helpers — all controller logic → **#22** |
+| Root entry points (`password.php`, `profile.php`, `action.php`, `feed.php`, etc.) | ~15 | Page controller logic → **#22** |
+| `ws.php:ws_addDefaultMethods` | 1 | 1400-line WS method registration event handler → **#21** (OpenAPI) or **#22** |
+| `include/menubar.inc.php:initialize_menu` | 1 | Procedural menu bootstrap → **#22** |
+| `include/common.inc.php:sanitize_mysql_kv` | 1 | `array_walk` callback for DB config sanitization — stays |
+| `include/ws_protocols/xmlrpc_encoder.php:xmlrpc_encode` | 1 | XML-RPC encoding helper, lives with its encoder class — stays |
+| `_data/templates_c/*.php` | many | Smarty auto-compiled templates — not hand-written, ignore |
+| `plugins/**` | many | Bundled third-party plugins — out of first-party scope |
+| `tools/**` | few | Dev utilities — out of scope |
+
 ### Verification (per module)
 
 ```bash

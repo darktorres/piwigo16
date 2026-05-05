@@ -32,8 +32,8 @@ if (isset($_POST['install'])) {
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 
 \Piwigo\Config\ConfigLoader::applyDefaults();
 

@@ -118,7 +118,7 @@ function print_time(string $message): void
 // |                             language                                  |
 // +-----------------------------------------------------------------------+
 $languages = new Languages('utf-8');
-$get_language = input_string('language', null, $_GET);
+$get_language = isset($_GET['language']) && is_string($_GET['language']) ? $_GET['language'] : null;
 if ($get_language !== null) {
     $language = strip_tags($get_language);
 

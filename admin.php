@@ -14,11 +14,11 @@
 define('PHPWG_ROOT_PATH', './');
 define('IN_ADMIN', true);
 
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_plugins.inc.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/add_core_tabs.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_plugins.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/add_core_tabs.inc.php');
 
 trigger_notify('loc_begin_admin');
 
@@ -161,7 +161,7 @@ $link_start = PHPWG_ROOT_PATH.'admin.php?page=';
 $conf_link = $link_start.'configuration&amp;section=';
 
 // $_GET['tab'] is often used to perform and
-// include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
+// require('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
 // avoid any unexpected file inclusion
 check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
@@ -378,7 +378,7 @@ $template->assign('album_selector_page_data_json', json_encode([
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
 trigger_notify('loc_begin_admin_page');
-include(PHPWG_ROOT_PATH.'admin/'.$page['page'].'.php');
+require(PHPWG_ROOT_PATH.'admin/'.$page['page'].'.php');
 
 $template->assign('ACTIVE_MENU', get_active_menu($page['page']));
 
@@ -389,7 +389,7 @@ $template->assign('ACTIVE_MENU', get_active_menu($page['page']));
 // Add the Piwigo Official menu
 $template->assign('pwgmenu', pwg_URL());
 
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 
 trigger_notify('loc_end_admin');
 
@@ -397,4 +397,4 @@ flush_page_messages();
 
 $template->pparse('admin');
 
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

@@ -17,17 +17,17 @@ use Piwigo\Lang\LangService;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_user.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_session.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_category.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_html.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_tag.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
-include_once(PHPWG_ROOT_PATH . 'include/derivative.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_user.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_session.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_category.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_html.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_tag.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
+require_once(PHPWG_ROOT_PATH . 'include/derivative.inc.php');
 
 // ── StringUtil delegates ──────────────────────────────────────────────────
 
@@ -258,13 +258,13 @@ function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): vo
     $tpl = \Piwigo\Template\TemplateRegistry::current();
     $tpl->set_filenames(['redirect' => 'redirect.tpl']);
 
-    include(PHPWG_ROOT_PATH . 'include/page_header.php');
+    require(PHPWG_ROOT_PATH . 'include/page_header.php');
 
     $tpl->set_filenames(['redirect' => 'redirect.tpl']);
     $tpl->assign('REDIRECT_MSG', $msg);
     $tpl->parse('redirect');
 
-    include(PHPWG_ROOT_PATH . 'include/page_tail.php');
+    require(PHPWG_ROOT_PATH . 'include/page_tail.php');
     exit();
 }
 
@@ -551,7 +551,7 @@ function get_parent_language(mixed $lang_id = null): ?string
     }
     $f = PHPWG_ROOT_PATH . 'language/' . (is_scalar($lang_id) ? (string) $lang_id : '') . '/common.lang.php';
     if (file_exists($f)) {
-        include($f);
+        require($f);
         /** @var array<string,mixed> $lang_info */
         return !empty($lang_info['parent']) && is_string($lang_info['parent']) ? $lang_info['parent'] : null;
     }

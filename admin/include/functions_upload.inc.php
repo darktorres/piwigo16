@@ -12,7 +12,7 @@ use Piwigo\Core\ServiceLocator;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 
 /* File-level event handler registrations — must stay here. */
 add_event_handler('upload_image_resize', 'pwg_image_resize');

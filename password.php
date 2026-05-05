@@ -15,9 +15,9 @@ global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
-include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -460,7 +460,7 @@ $template->assign(
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 if (!isset($themeconf['hide_menu_on']) or !in_array('thePasswordPage', $themeconf['hide_menu_on'])) {
-    include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
+    require(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 }
 
 //Load language if cookie is set from login/register/password pages
@@ -505,8 +505,8 @@ $template->assign('HELP_LINK', $help_link);
 // |                           html code display                           |
 // +-----------------------------------------------------------------------+
 
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_password');
 flush_page_messages();
 $template->pparse('password');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

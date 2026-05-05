@@ -15,7 +15,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $category, $admin_album_base_url;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |

@@ -24,8 +24,8 @@ if (!is_webmaster()) {
     \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -221,12 +221,12 @@ if (isset($_POST['submit'])) {
             }
         case 'watermark':
             {
-                include(PHPWG_ROOT_PATH.'admin/include/configuration_watermark_process.inc.php');
+                require(PHPWG_ROOT_PATH.'admin/include/configuration_watermark_process.inc.php');
                 break;
             }
         case 'sizes':
             {
-                include(PHPWG_ROOT_PATH.'admin/include/configuration_sizes_process.inc.php');
+                require(PHPWG_ROOT_PATH.'admin/include/configuration_sizes_process.inc.php');
                 break;
             }
         case 'comments':
@@ -478,7 +478,7 @@ switch ($page['section']) {
     case 'default':
         {
             $edit_user = build_user(\Piwigo\Config\Config::guestId(), false);
-            include_once(PHPWG_ROOT_PATH.'profile.php');
+            require_once(PHPWG_ROOT_PATH.'profile.php');
 
             $errors = [];
             if (save_profile_from_post($edit_user, $errors)) {

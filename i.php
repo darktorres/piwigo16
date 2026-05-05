@@ -343,8 +343,8 @@ function try_switch_source(\Piwigo\Image\DerivativeParams $params, ?int $origina
 function send_derivative(int|false $expires, \Piwigo\Image\ImageDerivativeContext $ctx): void
 {
     if (isset($_GET['ajaxload']) and $_GET['ajaxload'] == 'true') {
-        include_once(PHPWG_ROOT_PATH.'include/functions_cookie.inc.php');
-        include_once(PHPWG_ROOT_PATH.'include/functions_url.inc.php');
+        require_once(PHPWG_ROOT_PATH.'include/functions_cookie.inc.php');
+        require_once(PHPWG_ROOT_PATH.'include/functions_url.inc.php');
 
         echo json_encode(array( 'url' => embellish_url(get_absolute_root_url().$ctx->derivativePath) ));
         return;
@@ -398,8 +398,8 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
     $timing[$k] = '';
 }
 
-include_once(PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
-include_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
+require_once(PHPWG_ROOT_PATH .'/include/derivative_params.inc.php');
+require_once(PHPWG_ROOT_PATH .'/include/derivative_std_params.inc.php');
 
 $conn = DbConnection::build();
 

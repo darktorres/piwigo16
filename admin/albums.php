@@ -15,7 +15,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 $albums_counter = \Piwigo\Core\ServiceLocator::get(\Piwigo\Category\CategoryRepository::class)
     ->countAll();
@@ -32,7 +32,7 @@ check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'list';
-include(PHPWG_ROOT_PATH.'admin/include/albums_tab.inc.php');
+require(PHPWG_ROOT_PATH.'admin/include/albums_tab.inc.php');
 
 // +-----------------------------------------------------------------------+
 // |                         categories auto order                         |

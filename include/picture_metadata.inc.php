@@ -20,7 +20,7 @@ use Piwigo\Template\TemplateRegistry;
  */
 
 
-include_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
+require_once(PHPWG_ROOT_PATH.'/include/functions_metadata.inc.php');
 if ((\Piwigo\Config\Config::showExif()) and (function_exists('exif_read_data'))) {
     $exif_mapping = [];
     foreach (\Piwigo\Config\Config::showExifFields() as $field) {

@@ -13,7 +13,7 @@
 
 define('PHPWG_ROOT_PATH', './');
 define('PWG_HELP', true);
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 
 // +-----------------------------------------------------------------------+
@@ -25,7 +25,7 @@ $page['body_id'] = 'thePopuphelpPage';
 $title = l10n('Piwigo Help');
 $page['page_banner'] = '';
 $page['meta_robots'] = array('noindex' => 1, 'nofollow' => 1);
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 
 if (
     isset($_GET['page'])
@@ -61,4 +61,4 @@ $template->assign(
 
 $template->pparse('popuphelp');
 
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

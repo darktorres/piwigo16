@@ -65,7 +65,7 @@ if (
     if ($auth_header) {
         $authenticate = auth_key_login($auth_header, true);
         if (!$authenticate) {
-            include_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
+            require_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
             $service->sendResponse(new PwgError(401, 'Invalid api_key'));
             exit;
         }
@@ -85,8 +85,8 @@ if (
     and isset($_POST['username'])
     and isset($_POST['password'])
 ) {
-    include_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
-    include_once(PHPWG_ROOT_PATH.'include/ws_functions/pwg.php');
+    require_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/ws_functions/pwg.php');
 
     $credentials = [
       'username' => $_POST['username'],

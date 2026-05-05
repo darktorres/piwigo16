@@ -17,7 +17,7 @@ use Piwigo\Ws\PwgServer;
 define('PHPWG_ROOT_PATH', './');
 define('IN_WS', true);
 
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 check_status(ACCESS_FREE);
 
@@ -25,7 +25,7 @@ if (!\Piwigo\Config\Config::allowWebServices()) {
     page_forbidden('Web services are disabled');
 }
 
-include_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/ws_init.inc.php');
 
 \Piwigo\Ws\PwgServerRegistry::current()->run();
 
@@ -39,7 +39,7 @@ function ws_addDefaultMethods(array $arr): void
     $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
     $service = $arr[0];
 
-    include_once(PHPWG_ROOT_PATH.'include/ws_functions.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/ws_functions.inc.php');
     $ws_functions_root = PHPWG_ROOT_PATH.'include/ws_functions/';
 
     $f_params = [

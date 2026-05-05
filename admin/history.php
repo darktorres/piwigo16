@@ -27,8 +27,8 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
 
 $types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 

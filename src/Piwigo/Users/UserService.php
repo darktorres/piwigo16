@@ -84,7 +84,7 @@ final class UserService
             create_user_infos((int) $userId, $override);
 
             if ($notifyAdmin and 'none' != Config::emailAdminOnNewUser()) {
-                include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+                require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
                 $adminUrl     = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
                 $keyargsContent = [
                     get_l10n_args('User: %s', stripslashes($login)),
@@ -100,7 +100,7 @@ final class UserService
             }
 
             if ($notifyUser and email_check_format($mailAddress ?? '')) {
-                include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+                require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
                 $length = random_int(10, 15);
                 $keyargsContent = [
                     get_l10n_args('Hello %s,', stripslashes($login)),
@@ -482,7 +482,7 @@ SELECT DISTINCT f.image_id
         }
 
         $currentUser = CurrentUser::get();
-        include_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
+        require_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 
         $updates = $updatesInfos = [];
         $updateStatus = null;
@@ -732,7 +732,7 @@ SELECT DISTINCT f.image_id
 
     public function notificationApiKeyExpiration(string $username, string $email, int $daysLeft): bool
     {
-        include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+        require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
         $daysLeftStr = $daysLeft <= 1 ? l10n('Your API key will expire in %d day.', $daysLeft) : l10n('Your API key will expire in %d days.', $daysLeft);
         $message     = '<p style="margin: 20px 0">' . l10n('Hello %s,', $username) . '</p>';
         $message    .= '<p style="margin: 20px 0">' . $daysLeftStr . '</p>';

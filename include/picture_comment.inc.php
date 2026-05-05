@@ -47,7 +47,7 @@ if ($page['show_comments'] and isset($_POST['content'])) {
       'image_id' => $page['image_id'],
      ];
 
-    include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
     $post_key = $_POST['key'] ?? '';
     $pageStateErrors = &\Piwigo\Core\PageState::current()->errors;

@@ -181,7 +181,7 @@ final class CommentService
 
             if ((Config::emailAdminOnComment() && 'validate' == $commentAction)
                 or (Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction)) {
-                include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+                require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
 
                 $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
 
@@ -284,7 +284,7 @@ final class CommentService
             );
 
             if ($result and Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction) {
-                include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+                require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
 
                 $commentUrl     = get_absolute_root_url() . 'comments.php?comment_id=' . (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0');
                 $keyargsContent = [
@@ -323,7 +323,7 @@ final class CommentService
             return;
         }
 
-        include_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
+        require_once(PHPWG_ROOT_PATH . 'include/functions_mail.inc.php');
 
         $keyargsContent = [get_l10n_args('Author: %s', $comment['author'])];
 

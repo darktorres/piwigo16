@@ -32,8 +32,8 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 if ($page['tab'] == 'update') {
-    include(PHPWG_ROOT_PATH.'admin/updates_ext.php');
+    require(PHPWG_ROOT_PATH.'admin/updates_ext.php');
     $template->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
 } else {
-    include(PHPWG_ROOT_PATH.'admin/plugins_'.$page['tab'].'.php');
+    require(PHPWG_ROOT_PATH.'admin/plugins_'.$page['tab'].'.php');
 }

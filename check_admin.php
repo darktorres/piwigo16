@@ -1,7 +1,7 @@
 <?php
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 
 $user = \Piwigo\Core\ServiceLocator::get(\Doctrine\DBAL\Connection::class)

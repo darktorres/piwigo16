@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -119,7 +119,7 @@ $tabsheet->set_id('maintenance');
 $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
-include(PHPWG_ROOT_PATH.'admin/maintenance_'.$page['tab'].'.php');
+require(PHPWG_ROOT_PATH.'admin/maintenance_'.$page['tab'].'.php');
 
 $template->assign(
     ['ADMIN_PAGE_TITLE' => l10n('Maintenance')]

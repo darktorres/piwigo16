@@ -17,7 +17,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 if (!defined('PHPWG_ROOT_PATH')) {//direct script access
     define('PHPWG_ROOT_PATH', './');
-    include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
     \Piwigo\Core\Kernel::boot();
 
     // +-----------------------------------------------------------------------+
@@ -107,11 +107,11 @@ if (!defined('PHPWG_ROOT_PATH')) {//direct script access
     $themeconf = $template->get_template_vars('themeconf');
     if (!isset($themeconf['hide_menu_on']) or !in_array('theProfilePage', $themeconf['hide_menu_on'])) {
         if ($themeconf['id'] !== 'standard_pages') {
-            include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
+            require(PHPWG_ROOT_PATH.'include/menubar.inc.php');
         }
     }
 
-    include(PHPWG_ROOT_PATH.'include/page_header.php');
+    require(PHPWG_ROOT_PATH.'include/page_header.php');
 
     //Load language if cookie is set from login/register/password pages
     $cookie_lang = input_string('lang', null, $_COOKIE);
@@ -163,7 +163,7 @@ if (!defined('PHPWG_ROOT_PATH')) {//direct script access
     trigger_notify('loc_end_profile');
     flush_page_messages();
     $template->pparse('profile');
-    include(PHPWG_ROOT_PATH.'include/page_tail.php');
+    require(PHPWG_ROOT_PATH.'include/page_tail.php');
 }
 
 //------------------------------------------------------ update & customization
@@ -252,7 +252,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 
     if (count($errors) == 0) {
         // mass_updates function
-        include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+        require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
         $activity_details_tables = [];
 
@@ -283,7 +283,7 @@ function save_profile_from_post(array $userdata, array &$errors): bool
 
                     // send email to the user
                     if ($_POST['username'] != $userdata['username']) {
-                        include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
+                        require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
                         switch_lang_to(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
 
                         $keyargs_content = [

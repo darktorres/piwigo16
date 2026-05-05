@@ -12,7 +12,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
 $raw_section = $_GET['section'] ?? '';
@@ -45,7 +45,7 @@ if (!isset($pwg_loaded_plugins[$plugin_id])) {
 
 $filename = PHPWG_PLUGINS_PATH.implode('/', $sections);
 if (is_file($filename)) {
-    include_once($filename);
+    require_once($filename);
 } else {
     throw new \Piwigo\Exception\NotFoundException('Missing file '.htmlentities($filename));
 }

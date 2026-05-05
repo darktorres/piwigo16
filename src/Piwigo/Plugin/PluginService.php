@@ -30,7 +30,7 @@ final class PluginService
         if (file_exists($fileName)) {
             $this->autoupdatePlugin($plugin);
             LoadedPluginRegistry::register($pluginId, $plugin);
-            include_once($fileName);
+            require_once($fileName);
         }
     }
 
@@ -70,7 +70,7 @@ final class PluginService
             $maintainFile = PHPWG_PLUGINS_PATH . $pluginId . '/maintain.class.php';
 
             if (file_exists($maintainFile)) {
-                include_once($maintainFile);
+                require_once($maintainFile);
 
                 $classname = str_replace('-', '_', $pluginId) . '_maintain';
 

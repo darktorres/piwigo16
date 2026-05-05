@@ -20,11 +20,11 @@ defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 $prefixeTable = \Piwigo\Config\Config::dbPrefix();
 
-include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
+require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
-include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
+require_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
 
 
 // +-----------------------------------------------------------------------+
@@ -74,7 +74,7 @@ foreach ($to_apply as $upgrade_id) {
     // include & execute upgrade script. Each upgrade script must contain
     // $upgrade_description variable which describe briefly what the upgrade
     // script does.
-    include(UPGRADES_PATH.'/'.$upgrade_id.'-database.php');
+    require(UPGRADES_PATH.'/'.$upgrade_id.'-database.php');
 
     // notify upgrade
     single_insert(PREFIX_TABLE . 'upgrade', [

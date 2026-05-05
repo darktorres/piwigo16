@@ -12,7 +12,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 
 // +-----------------------------------------------------------------------+
@@ -118,7 +118,7 @@ if (!\Piwigo\Config\Config::galleryLocked()) {
 // include menubar
 $themeconf = $template->get_template_vars('themeconf');
 if (!\Piwigo\Config\Config::galleryLocked() && (!isset($themeconf['hide_menu_on']) or !in_array('theIdentificationPage', $themeconf['hide_menu_on']))) {
-    include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
+    require(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 }
 
 //Load language if cookie is set from login/register/password pages
@@ -159,8 +159,8 @@ if (str_starts_with((string) $user['language'], 'fr')) {
 $template->assign('HELP_LINK', $help_link);
 
 //----------------------------------------------------------- html code display
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_identification');
 flush_page_messages();
 $template->pparse('identification');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

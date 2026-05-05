@@ -33,7 +33,7 @@ if ('search' == $page['section'] and isset($page['search_details'])) {
         }
     }
 
-    include_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/functions_search.inc.php');
 
     /** @var array<string, mixed> $my_search */
     $my_search = get_search_array($page['search']);

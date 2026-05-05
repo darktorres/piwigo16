@@ -51,7 +51,7 @@ class Plugins
 
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
-            include_once($file_to_include.'.class.php');
+            require_once($file_to_include.'.class.php');
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                 return instantiate_plugin_maintain($classname, $plugin_id);
             }
@@ -59,7 +59,7 @@ class Plugins
 
         // before 2.7 pattern (OO or procedural)
         if (file_exists($file_to_include.'.inc.php')) {
-            include_once($file_to_include.'.inc.php');
+            require_once($file_to_include.'.inc.php');
 
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                 return instantiate_plugin_maintain($classname, $plugin_id);
@@ -223,7 +223,7 @@ class Plugins
                     $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
 
-                include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+                require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
                 deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
                 break;
         }

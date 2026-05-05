@@ -12,7 +12,7 @@
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
 
 // +-----------------------------------------------------------------------+

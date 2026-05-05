@@ -16,7 +16,7 @@ use Piwigo\Core\ServiceLocator;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php');
+require_once(PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php');
 
 // ── CategoryAdminService delegates ───────────────────────────────────────
 

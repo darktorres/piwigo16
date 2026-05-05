@@ -18,7 +18,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -61,7 +61,7 @@ $infos = [];
 if ($site_is_remote) {
     fatal_error('remote sites not supported');
 } else {
-    include_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
+    require_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
     $site_reader = new LocalSiteReader($site_url_str);
 }
 

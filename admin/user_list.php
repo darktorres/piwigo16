@@ -20,7 +20,7 @@ check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'user_list';
-include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
+require(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 
 global $template, $user, $page, $persistent_cache, $lang;
 

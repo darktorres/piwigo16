@@ -367,7 +367,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         }
 
         if (!empty($method['include'])) {
-            include_once($method['include']);
+            require_once($method['include']);
         }
         $callback = $method['callback'];
         if (!is_callable($callback)) {

@@ -15,7 +15,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -32,7 +32,7 @@ check_input_parameter('group', $_GET, false, PATTERN_ID);
 // +-----------------------------------------------------------------------+
 
 $page['tab'] = 'user_activity';
-include(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
+require(PHPWG_ROOT_PATH.'admin/include/user_tabs.inc.php');
 
 
 if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {

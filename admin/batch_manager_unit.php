@@ -25,7 +25,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $pwg_loaded_plugins;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -147,7 +147,7 @@ $template->assign(
     'PWG_TOKEN' => get_pwg_token(),
     ]
 );
-include(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
+require(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
 
 $template->assign('page_data_json', json_encode([
     'str_are_you_sure' => l10n('Are you sure?'),

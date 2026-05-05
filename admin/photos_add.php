@@ -18,8 +18,8 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
 define(
     'PHOTOS_ADD_BASE_URL',
@@ -71,4 +71,4 @@ $template->set_filenames(
 // |                             Load the tab                              |
 // +-----------------------------------------------------------------------+
 
-include(PHPWG_ROOT_PATH.'admin/photos_add_'.$page['tab'].'.php');
+require(PHPWG_ROOT_PATH.'admin/photos_add_'.$page['tab'].'.php');

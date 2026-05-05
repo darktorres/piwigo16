@@ -17,7 +17,7 @@ define('PHPWG_ROOT_PATH', '../');
 global $template, $user, $page, $persistent_cache, $lang;
 define('PWG_HELP', true);
 define('IN_ADMIN', true);
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -42,7 +42,7 @@ if (!isset($_GET['output']) or 'content_only' != $_GET['output']) {
     ]
     );
 
-    include(PHPWG_ROOT_PATH.'include/page_header.php');
+    require(PHPWG_ROOT_PATH.'include/page_header.php');
 }
 
 $helpPage = is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '';
@@ -87,4 +87,4 @@ if (isset($_GET['output']) and 'content_only' == $_GET['output']) {
 
 $template->pparse('popuphelp');
 
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

@@ -33,7 +33,7 @@ if (isset($_POST['install'])) {
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
 require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
-include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
+require(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 
 \Piwigo\Config\ConfigLoader::applyDefaults();
 
@@ -66,8 +66,8 @@ if (\Piwigo\Core\InstallSentinel::isInstalled()) {
     die('Piwigo is already installed');
 }
 
-include(PHPWG_ROOT_PATH . 'include/constants.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions.php');
+require(PHPWG_ROOT_PATH . 'include/constants.php');
+require(PHPWG_ROOT_PATH . 'admin/include/functions.php');
 
 $languages = new Languages('utf-8');
 
@@ -133,9 +133,9 @@ if (!isset($step)) {
     $step = 1;
 }
 //---------------------------------------------------------------- form analyze
-include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$dblayer.'.inc.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions_install.inc.php');
-include(PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php');
+require(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$dblayer.'.inc.php');
+require(PHPWG_ROOT_PATH . 'admin/include/functions_install.inc.php');
+require(PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php');
 
 if (isset($_POST['install'])) {
     install_db_connect($infos, $errors);
@@ -363,7 +363,7 @@ if ($step == 1) {
 
         // email notification
         if (isset($_POST['send_credentials_by_mail'])) {
-            include_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
+            require_once(PHPWG_ROOT_PATH.'include/functions_mail.inc.php');
 
             $keyargs_content = [
               get_l10n_args('Hello %s,', $admin_name),

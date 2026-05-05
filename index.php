@@ -15,9 +15,9 @@ use Piwigo\Image\ImageStdParams;
 
 //--------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
-include(PHPWG_ROOT_PATH.'include/section_init.inc.php');
+require(PHPWG_ROOT_PATH.'include/section_init.inc.php');
 
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
@@ -101,7 +101,7 @@ $template->assign('TITLE', $template_title);
 $template->assign('NB_ITEMS', $nb_items);
 
 //-------------------------------------------------------------- menubar
-include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
+require(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 
 $template->set_filename('index', 'index.tpl');
 
@@ -163,7 +163,7 @@ if (empty($page['is_external'])) {
         }
     }
 
-    include(PHPWG_ROOT_PATH.'include/search_filters.inc.php');
+    require(PHPWG_ROOT_PATH.'include/search_filters.inc.php');
 
     if ('categories' == $page['section'] and isset($page['category']) and !isset($page['combined_categories'])) {
         $template->assign(
@@ -210,7 +210,7 @@ if (empty($page['is_external'])) {
         usort($related_tags, fn (array $a, array $b): int => $b['counter'] <=> $a['counter']);
 
 
-        include_once(PHPWG_ROOT_PATH.'include/selected_tags.inc.php');
+        require_once(PHPWG_ROOT_PATH.'include/selected_tags.inc.php');
 
         $template->assign(
             [
@@ -325,11 +325,11 @@ if (empty($page['is_external'])) {
       and ('recent_cats' == $page['section'] or 'categories' == $page['section'])
       and (!isset($page['category']['count_categories']) or $page['category']['count_categories'] > 0)
     ) {
-        include(PHPWG_ROOT_PATH.'include/category_cats.inc.php');
+        require(PHPWG_ROOT_PATH.'include/category_cats.inc.php');
     }
 
     if (!empty($page['items'])) {
-        include(PHPWG_ROOT_PATH.'include/category_default.inc.php');
+        require(PHPWG_ROOT_PATH.'include/category_default.inc.php');
 
         if (\Piwigo\Config\Config::indexSizesIcon()) {
             $url = add_url_params(
@@ -391,7 +391,7 @@ if (empty($page['is_external'])) {
 }
 
 //------------------------------------------------------------ end
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_index');
 flush_page_messages();
 $template->parse_index_buttons();
@@ -399,4 +399,4 @@ $template->pparse('index');
 
 //------------------------------------------------------------ log informations
 pwg_log();
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

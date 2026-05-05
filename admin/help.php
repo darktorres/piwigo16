@@ -11,7 +11,7 @@ use Piwigo\Admin\Tabsheet;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 global $template, $user, $page, $persistent_cache, $lang;
 

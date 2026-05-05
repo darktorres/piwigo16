@@ -1183,7 +1183,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         $dir = realpath($dir);
         if (!isset($themeconfs[$dir])) {
             $themeconf = [];
-            include($dir.'/themeconf.inc.php');
+            require($dir.'/themeconf.inc.php');
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
         }

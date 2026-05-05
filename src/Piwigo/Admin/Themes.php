@@ -45,7 +45,7 @@ class Themes
         $classname = $theme_id.'_maintain';
 
         if (file_exists($file_to_include)) {
-            include_once($file_to_include);
+            require_once($file_to_include);
 
             if (class_exists($classname) && is_a($classname, ThemeMaintain::class, true)) {
                 return instantiate_theme_maintain($classname, $theme_id);
@@ -172,7 +172,7 @@ class Themes
 
                 $theme_maintain->delete();
 
-                include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+                require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
                 deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
                 break;
 

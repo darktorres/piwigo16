@@ -82,7 +82,7 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
     }
     // Only mysqli is supported. The self-heal for old 'mysql' installs and the
     // dynamic include are gone; functions_mysqli.inc.php is the only dblayer.
-    include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
+    require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
     // Always route PHP errors to DevTools (X-PHP-Error-N response headers) rather
     // than inline output, which corrupts JSON/XML/binary responses.
@@ -97,8 +97,8 @@ if (!\Piwigo\Core\Kernel::isBooted()) :
         ini_set('session.gc_probability', (string) min((int) \Piwigo\Config\Config::sessionGcProbability(), 100));
     }
 
-    include(PHPWG_ROOT_PATH . 'include/constants.php');
-    include(PHPWG_ROOT_PATH . 'include/functions.inc.php');
+    require(PHPWG_ROOT_PATH . 'include/constants.php');
+    require(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 
     $page['execution_uuid'] = generate_key(10);
 
@@ -176,7 +176,7 @@ if (\Piwigo\Config\Config::has('order_by_inside_category_custom')) {
 
 check_lounge();
 
-include(PHPWG_ROOT_PATH.'include/user.inc.php');
+require(PHPWG_ROOT_PATH.'include/user.inc.php');
 
 // Use GLOBALS access to bypass type narrowing from $user initialization
 $user_globals = $GLOBALS['user'];
@@ -271,7 +271,7 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
 \Piwigo\Template\TemplateRegistry::set($template);
 
 if (!\Piwigo\Config\Config::has('no_photo_yet')) {
-    include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
+    require(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
 }
 
 $user_arr_gs = $GLOBALS['user'];
@@ -298,7 +298,7 @@ if (\Piwigo\Config\Config::galleryLocked()) {
 }
 
 if (\Piwigo\Config\Config::checkUpgradeFeed()) {
-    include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
+    require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
     if (check_upgrade_feed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
           .'<a href="'.get_absolute_root_url(false).'upgrade_feed.php">upgrade now</a>';
@@ -311,7 +311,7 @@ if (count($header_msgs) > 0) {
 }
 
 if (!empty(\Piwigo\Config\Config::filterPages()) and get_filter_page_value('used')) {
-    include(PHPWG_ROOT_PATH.'include/filter.inc.php');
+    require(PHPWG_ROOT_PATH.'include/filter.inc.php');
 } else {
     $filter['enabled'] = false;
 }

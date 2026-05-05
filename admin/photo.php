@@ -65,11 +65,11 @@ $template->assign(
 // +-----------------------------------------------------------------------+
 
 if ('properties' == $page['tab']) {
-    include(PHPWG_ROOT_PATH.'admin/picture_modify.php');
+    require(PHPWG_ROOT_PATH.'admin/picture_modify.php');
 } elseif ('coi' == $page['tab']) {
-    include(PHPWG_ROOT_PATH.'admin/picture_coi.php');
+    require(PHPWG_ROOT_PATH.'admin/picture_coi.php');
 } elseif ('formats' == $page['tab'] && \Piwigo\Config\Config::isFormatsEnabled()) {
-    include(PHPWG_ROOT_PATH.'admin/picture_formats.php');
+    require(PHPWG_ROOT_PATH.'admin/picture_formats.php');
 } else {
-    include(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');
+    require(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');
 }

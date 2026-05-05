@@ -100,7 +100,7 @@ WHERE ';
             $filter['recent_period']
         );
     }
-    include_once(PHPWG_ROOT_PATH.'include/functions_filter.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/functions_filter.inc.php');
 } else {
     if (!empty($_SESSION['pwg_filter_enabled'])) {
         pwg_unset_session_var('filter_enabled');

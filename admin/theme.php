@@ -15,7 +15,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
     throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 check_status(ACCESS_ADMINISTRATOR);
 
 if (empty($_GET['theme'])) {
@@ -30,7 +30,7 @@ if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
 $theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
 $filename = PHPWG_THEMES_PATH.$theme_name.'/admin/admin.inc.php';
 if (is_file($filename)) {
-    include_once($filename);
+    require_once($filename);
 } else {
     throw new \Piwigo\Exception\NotFoundException('Missing file '.$filename);
 }

@@ -26,7 +26,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -382,7 +382,7 @@ $template->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl'])
 
 $base_url = get_root_url().'admin.php';
 
-include(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
+require(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
 
 // +-----------------------------------------------------------------------+
 // |                            caddie options                             |
@@ -413,7 +413,7 @@ $template->assign(
 );
 
 // metadata
-include_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
+require_once(PHPWG_ROOT_PATH.'admin/site_reader_local.php');
 $site_reader = new LocalSiteReader('./');
 $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
 

@@ -24,7 +24,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang, $logger, $pwg_loaded_plugins;
 
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
@@ -597,7 +597,7 @@ if (isset($bmf['search'])) {
     $bmf_search = is_array($bmf['search']) ? $bmf['search'] : [];
     $bmf_search_q = is_string($bmf_search['q'] ?? null) ? $bmf_search['q'] : '';
     if (strlen($bmf_search_q) > 0) {
-        include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
+        require_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
         $res = get_quick_search_results_no_cache($bmf_search_q, ['permissions' => false]);
         $res_qs = is_array($res['qs'] ?? null) ? $res['qs'] : [];
         if (!empty($res['items']) && !empty($res_qs['unmatched_terms'])) {
@@ -809,4 +809,4 @@ $template->assign('batch_filter_page_data_json', json_encode([
     'str_select_tag'         => l10n('Select at least one tag'),
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-include(PHPWG_ROOT_PATH.'admin/batch_manager_'.(string) $page['tab'].'.php');
+require(PHPWG_ROOT_PATH.'admin/batch_manager_'.(string) $page['tab'].'.php');

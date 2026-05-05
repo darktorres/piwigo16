@@ -895,9 +895,9 @@ final class SearchService
         $expression = new QExpression($q, $scopes);
 
         $langCode = substr(get_default_language(), 0, 2);
-        include_once(PHPWG_ROOT_PATH . 'include/inflectors/InflectorInterface.php');
-        include_once(PHPWG_ROOT_PATH . 'include/inflectors/en.php');
-        include_once(PHPWG_ROOT_PATH . 'include/inflectors/fr.php');
+        require_once(PHPWG_ROOT_PATH . 'include/inflectors/InflectorInterface.php');
+        require_once(PHPWG_ROOT_PATH . 'include/inflectors/en.php');
+        require_once(PHPWG_ROOT_PATH . 'include/inflectors/fr.php');
         $inflector = match ($langCode) {
             'en'    => new \Inflector_en(),
             'fr'    => new \Inflector_fr(),

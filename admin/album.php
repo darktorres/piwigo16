@@ -66,12 +66,12 @@ $template->assign([
 ]);
 
 if ('properties' == $page['tab']) {
-    include(PHPWG_ROOT_PATH.'admin/cat_modify.php');
+    require(PHPWG_ROOT_PATH.'admin/cat_modify.php');
 } elseif ('sort_order' == $page['tab']) {
-    include(PHPWG_ROOT_PATH.'admin/element_set_ranks.php');
+    require(PHPWG_ROOT_PATH.'admin/element_set_ranks.php');
 } elseif ('permissions' == $page['tab']) {
     $_GET['cat'] = $_GET['cat_id'];
-    include(PHPWG_ROOT_PATH.'admin/cat_perm.php');
+    require(PHPWG_ROOT_PATH.'admin/cat_perm.php');
 } else {
-    include(PHPWG_ROOT_PATH.'admin/album_'.(string) $page['tab'].'.php');
+    require(PHPWG_ROOT_PATH.'admin/album_'.(string) $page['tab'].'.php');
 }

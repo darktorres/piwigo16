@@ -12,7 +12,7 @@ if (!defined('IN_ADMIN')) {
     throw new \Piwigo\Exception\AuthException('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 global $template, $user, $page, $persistent_cache, $lang;
 

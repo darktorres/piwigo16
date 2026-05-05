@@ -39,12 +39,12 @@ if (!\Piwigo\Core\InstallSentinel::isInstalled()) {
 
 // $conf is not used for users tables - define cannot be re-defined
 define('USERS_TABLE', $prefixeTable.'users');
-include_once(PHPWG_ROOT_PATH.'include/constants.php');
+require_once(PHPWG_ROOT_PATH.'include/constants.php');
 define('PREFIX_TABLE', $prefixeTable);
 define('UPGRADES_PATH', PHPWG_ROOT_PATH.'install/db');
 
-include_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
-include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+require_once(PHPWG_ROOT_PATH.'include/functions.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 
 // +-----------------------------------------------------------------------+
 // |                              functions                                |
@@ -172,8 +172,8 @@ load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 
 // +-----------------------------------------------------------------------+
 // |                          database connection                          |
 // +-----------------------------------------------------------------------+
-include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
-include(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
+require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
+require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
 
 upgrade_db_connect();
 

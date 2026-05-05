@@ -16,10 +16,10 @@ use Piwigo\Image\SrcImage;
 // +-----------------------------------------------------------------------+
 
 define('PHPWG_ROOT_PATH', './');
-include_once(PHPWG_ROOT_PATH.'include/common.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/common.inc.php');
 \Piwigo\Core\Kernel::boot();
-include(PHPWG_ROOT_PATH.'include/section_init.inc.php');
-include_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
+require(PHPWG_ROOT_PATH.'include/section_init.inc.php');
+require_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
 
 save_edit_context();
 
@@ -281,7 +281,7 @@ if ($get_action !== null) {
                         );
                     pwg_activity('album', $page['category']['id'], 'edit', ['action' => $get_action, 'image_id' => $page['image_id']]);
 
-                    include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
+                    require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
                     invalidate_user_cache();
                 }
 
@@ -297,13 +297,13 @@ if ($get_action !== null) {
             }
         case 'rate':
             {
-                include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
+                require_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
                 rate_picture($page['image_id'], input_int('rate', 0, $_POST));
                 redirect($url_self);
             }
         case 'edit_comment':
             {
-                include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
                 check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
                 $comment_to_edit = input_int('comment_to_edit', null, $_GET);
                 $author_id = get_comment_author_id($comment_to_edit ?? 0);
@@ -352,7 +352,7 @@ if ($get_action !== null) {
             {
                 check_pwg_token();
 
-                include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
                 $comment_to_delete = input_int('comment_to_delete', null, $_GET);
@@ -369,7 +369,7 @@ if ($get_action !== null) {
             {
                 check_pwg_token();
 
-                include_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
+                require_once(PHPWG_ROOT_PATH.'include/functions_comment.inc.php');
 
                 check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
                 $comment_to_validate = input_int('comment_to_validate', null, $_GET);
@@ -939,12 +939,12 @@ $template->assign(
 // |                               sub pages                               |
 // +-----------------------------------------------------------------------+
 
-include(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
+require(PHPWG_ROOT_PATH.'include/picture_rate.inc.php');
 if (\Piwigo\Config\Config::activateComments()) {
-    include(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
+    require(PHPWG_ROOT_PATH.'include/picture_comment.inc.php');
 }
 if ($metadata_showable and isset($_SESSION['pwg_show_metadata'])) {
-    include(PHPWG_ROOT_PATH.'include/picture_metadata.inc.php');
+    require(PHPWG_ROOT_PATH.'include/picture_metadata.inc.php');
 }
 
 // include menubar
@@ -953,10 +953,10 @@ if (\Piwigo\Config\Config::pictureMenu() and (!isset($themeconf['hide_menu_on'])
     if (!isset($page['start'])) {
         $page['start'] = 0;
     }
-    include(PHPWG_ROOT_PATH.'include/menubar.inc.php');
+    require(PHPWG_ROOT_PATH.'include/menubar.inc.php');
 }
 
-include(PHPWG_ROOT_PATH.'include/page_header.php');
+require(PHPWG_ROOT_PATH.'include/page_header.php');
 trigger_notify('loc_end_picture');
 flush_page_messages();
 if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
@@ -968,4 +968,4 @@ if ($page['slideshow'] and \Piwigo\Config\Config::lightSlideshow()) {
 //------------------------------------------------------------ log informations
 $picIdRaw = $currentPic['id'] ?? null;
 pwg_log((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
-include(PHPWG_ROOT_PATH.'include/page_tail.php');
+require(PHPWG_ROOT_PATH.'include/page_tail.php');

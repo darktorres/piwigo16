@@ -318,7 +318,7 @@ else {
     // |                           search section                              |
     // +-----------------------------------------------------------------------+
     elseif ($page['section'] == 'search') {
-        include_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
+        require_once(PHPWG_ROOT_PATH .'include/functions_search.inc.php');
 
         $search_result = get_search_results($page['search'], $page['super_order_by'] ?? false);
 
@@ -513,7 +513,7 @@ SELECT DISTINCT(id)
 // +-----------------------------------------------------------------------+
 if (isset($page['chronology_field'])) {
     unset($page['is_homepage']);
-    include_once(PHPWG_ROOT_PATH.'include/functions_calendar.inc.php');
+    require_once(PHPWG_ROOT_PATH.'include/functions_calendar.inc.php');
     initialize_calendar();
 }
 

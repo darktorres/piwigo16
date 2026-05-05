@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
-use Piwigo\Language\LanguageRepository;
-use Piwigo\Db\DbConnection;
-use Piwigo\Core\LanguageStack;
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Template\Template;
-use Piwigo\Core\Lang;
-use Piwigo\Lang\Translator;
 use Doctrine\DBAL\Connection;
-use Piwigo\Core\InstallSentinel;
 use Gettext\Loader\PoLoader;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
+use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\LanguageStack;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\QueryHelper;
-use Piwigo\Lang\LangService;
-use Piwigo\Category\CategoryService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
-use Piwigo\Menu\BlockManager;
-use Piwigo\Session\PwgSession;
-use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagService;
-use Piwigo\Comment\CommentService;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
+use Piwigo\Language\LanguageRepository;
 use Piwigo\Mail\MailService;
+use Piwigo\Menu\BlockManager;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Picture\PictureService;
 use Piwigo\Rate\RateService;
+use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
+use Piwigo\Template\Template;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

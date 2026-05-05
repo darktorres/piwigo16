@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 
 /**
  * A source image is used to get a derivative image. It is either

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\History;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;

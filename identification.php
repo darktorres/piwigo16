@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Kernel;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+

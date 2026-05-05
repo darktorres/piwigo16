@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Config\Config;
 use Piwigo\Menu\BlockManager;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

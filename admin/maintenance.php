@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Exception\AuthException;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

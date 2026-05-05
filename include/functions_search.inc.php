@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Search\SearchService;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

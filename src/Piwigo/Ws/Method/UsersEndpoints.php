@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Piwigo\Group\GroupRepository;
-use Piwigo\Db\SchemaHelper;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -19,7 +20,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

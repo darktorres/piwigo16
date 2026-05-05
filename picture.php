@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Kernel;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Image\ImageRepository;
 use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\NotFoundException;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\UserRepository;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Core\PageState;
-use Piwigo\Exception\NotFoundException;
 
 global $template, $user, $page, $persistent_cache, $lang;
 

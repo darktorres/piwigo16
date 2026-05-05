@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Calendar\CalendarService;
-
+use Piwigo\Core\ServiceLocator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

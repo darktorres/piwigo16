@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

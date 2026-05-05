@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Exception\ValidationException;
-use Piwigo\Exception\NotFoundException;
 use Piwigo\Admin\Themes;
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\NotFoundException;
+use Piwigo\Exception\ValidationException;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Piwigo\Db\DbConnection;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 
 final readonly class ConfigService
 {

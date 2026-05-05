@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Notification\MailNotificationContext;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

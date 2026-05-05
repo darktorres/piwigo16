@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Config\Config;
 
 global $template, $user, $page, $persistent_cache, $lang;
 

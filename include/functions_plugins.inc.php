@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
-use Piwigo\Plugins\EventDispatcher;
-use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugin\PluginService;
+use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Plugins\LoadedPluginRegistry;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

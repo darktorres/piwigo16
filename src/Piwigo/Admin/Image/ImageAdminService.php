@@ -6,15 +6,15 @@ namespace Piwigo\Admin\Image;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Core\Filesystem;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\UserRepository;
 
 final class ImageAdminService
 {

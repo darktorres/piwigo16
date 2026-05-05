@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Piwigo\Config\Config;
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Core\ServiceLocator;
-
 
 final class CommentsEndpoints
 {

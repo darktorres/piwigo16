@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
-use Piwigo\Storage\StorageRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 
 final class WatermarkProcessor

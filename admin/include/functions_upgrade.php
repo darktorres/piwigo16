@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Themes;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Core\PageState;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
-use Piwigo\Config\Config;
-use Piwigo\Admin\Themes;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

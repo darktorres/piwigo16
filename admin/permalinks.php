@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Permalink\PermalinkRepository;
-use Piwigo\Core\PageState;
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Template\TemplateRegistry;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

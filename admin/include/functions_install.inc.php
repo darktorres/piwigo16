@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ServiceLocator;
 use Doctrine\DBAL\Connection;
-use Piwigo\Db\DbConnection;
-use Piwigo\Exception\DbException;
-use Piwigo\Config\Config;
-use Piwigo\Db\DbInfo;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbInfo;
+use Piwigo\Exception\DbException;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

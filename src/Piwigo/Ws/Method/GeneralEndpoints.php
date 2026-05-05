@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Piwigo\Image\ImageRepository;
 use Doctrine\DBAL\Connection;
-use Piwigo\Core\Filesystem;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Users\UserRepository;
 use Piwigo\Comment\CommentRepository;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Db\SchemaHelper;
-use Piwigo\Search\SearchRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SchemaHelper;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

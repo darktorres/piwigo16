@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Notification\MailNotificationContext;
+use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
-use Piwigo\Config\Config;
-use Doctrine\DBAL\Connection;
-use Piwigo\Core\BoolUtil;
-use Piwigo\Admin\Tabsheet;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

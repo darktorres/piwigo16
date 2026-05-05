@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Cache\RequestCache;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Permalink\PermalinkRepository;
-use Piwigo\Core\PageState;
-use Piwigo\Cache\RequestCache;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

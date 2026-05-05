@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
+use Piwigo\Admin\Languages;
+use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 use Piwigo\Language\LanguageRepository;
-use Piwigo\Config\Config;
-use Piwigo\Admin\Languages;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

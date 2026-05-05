@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\Config;
 use Piwigo\Admin\Metadata\MetadataAdminService;
+use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 
 // +-----------------------------------------------------------------------+

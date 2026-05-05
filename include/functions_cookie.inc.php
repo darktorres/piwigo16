@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Auth\CookieService;
+use Piwigo\Core\ServiceLocator;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

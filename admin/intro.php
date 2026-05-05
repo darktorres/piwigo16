@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Config\Config;
-use Piwigo\Users\UserRepository;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Comment\CommentRepository;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentRepository;
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Tag\TagRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

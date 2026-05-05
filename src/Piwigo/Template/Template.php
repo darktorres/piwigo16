@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Core\ServiceLocator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Smarty\Debug;
 use Smarty\Smarty;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Notification;
 
-use Piwigo\Core\BoolUtil;
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Notification\MailNotificationContext;

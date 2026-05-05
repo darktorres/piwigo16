@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Db\DbInfo;
-use Piwigo\Core\Filesystem;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\History\HistoryRepository;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbInfo;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\UserRepository;
 
 final readonly class AdminService
 {

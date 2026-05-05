@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Db\SchemaHelper;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Exception\AuthException;
 use Piwigo\Users\UserRepository;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Group\GroupRepository;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
-use Piwigo\Admin\Tabsheet;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Group\GroupRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

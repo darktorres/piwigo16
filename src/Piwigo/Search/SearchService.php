@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Piwigo\Exception\ValidationException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Db\DbInfo;
+use Piwigo\Exception\ValidationException;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Log\LoggerInterface;
@@ -398,7 +398,7 @@ final readonly class SearchService
             /** @var array<int, array<string>> $typedFilterValues */
             $typedFilterValues = array_map(
                 /** @param array<mixed> $v */
-                static fn(array $v): array => array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $v),
+                static fn (array $v): array => array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $v),
                 array_values($imageIdsForFilter)
             );
             if (count($typedFilterValues) > 1) {

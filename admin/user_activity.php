@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
+use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
-use Doctrine\DBAL\Connection;
+use Piwigo\Exception\AuthException;
 use Piwigo\Users\UserRepository;
-use Piwigo\Activity\ActivityRepository;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

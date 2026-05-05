@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\PwgServer;
-use Piwigo\Ws\PwgError;
-use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Ws\Method\GroupsEndpoints;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
+use Piwigo\Ws\PwgServer;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

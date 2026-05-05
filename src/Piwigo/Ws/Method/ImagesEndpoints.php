@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Rate\RateRepository;
-use Piwigo\Storage\StorageRegistry;
 use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';

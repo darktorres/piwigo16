@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Core\InstallSentinel;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;
-use Piwigo\Config\Config;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Template\TemplateRegistry;
 
 global $template, $user, $page, $persistent_cache, $lang;
 

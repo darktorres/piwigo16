@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

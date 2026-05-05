@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 

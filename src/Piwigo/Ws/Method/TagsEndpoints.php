@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Ws\PwgError;
@@ -11,7 +12,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ServiceLocator;
 
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 

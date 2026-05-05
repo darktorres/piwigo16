@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SchemaHelper;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Users\UserRepository;
-use Piwigo\Config\Config;
-use Piwigo\Db\SchemaHelper;
-use Piwigo\Core\PageState;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

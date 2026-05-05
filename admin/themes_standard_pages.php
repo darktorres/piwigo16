@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\PageState;
-use Piwigo\Storage\StorageRegistry;
 use Piwigo\Admin\Themes;
+use Piwigo\Core\PageState;
+use Piwigo\Exception\AuthException;
+use Piwigo\Storage\StorageRegistry;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

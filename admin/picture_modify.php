@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\PageState;
-use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Tag\TagRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Rate\RateRepository;
 use Piwigo\Cache\RequestCache;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Rate\RateRepository;
+use Piwigo\Tag\TagRepository;
+use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -379,7 +379,7 @@ SELECT category_id
     if (count($authorizeds) > 0) {
         $category = $authorizeds[array_rand($authorizeds)];
 
-        $catNames = RequestCache::remember('cat_names', 'all', static fn(): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: []);
+        $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM '.CATEGORIES_TABLE.';')->fetchAllAssociative(), null, 'id') ?: []);
         $url_img = make_picture_url(
             [
             'image_id' => $_GET['image_id'],

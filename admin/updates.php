@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Config\Config;
-use Piwigo\Exception\ConfigException;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\ConfigException;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

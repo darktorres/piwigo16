@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Filter\FilterService;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

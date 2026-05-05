@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\InstallSentinel;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\InstallSentinel;
 
 final readonly class AuthService
 {

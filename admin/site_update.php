@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Config\Config;
-use Piwigo\Exception\ConfigException;
-use Piwigo\Exception\ValidationException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Site\SiteRepository;
-use Piwigo\Exception\NotFoundException;
 use Doctrine\DBAL\Connection;
-use Piwigo\Core\BoolUtil;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Exception\NotFoundException;
+use Piwigo\Exception\ValidationException;
+use Piwigo\Image\ImageRepository;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Site\SiteRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

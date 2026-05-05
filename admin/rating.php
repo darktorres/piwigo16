@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
+use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Users\UserRepository;
-use Doctrine\DBAL\Connection;
+use Piwigo\Exception\AuthException;
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Rate\RateRepository;
-use Piwigo\Admin\Tabsheet;
-use Piwigo\Image\DerivativeImage;
+use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

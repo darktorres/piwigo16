@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
+use Piwigo\Ws\PwgServer;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

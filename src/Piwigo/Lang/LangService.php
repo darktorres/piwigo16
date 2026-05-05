@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Lang;
 
-use Piwigo\Core\Lang;
 use Gettext\Loader\PoLoader;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Users\CurrentUser;
 

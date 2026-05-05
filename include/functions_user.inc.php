@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Users\AuthService;
-use Piwigo\Users\UserService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
-
+use Piwigo\Users\UserService;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

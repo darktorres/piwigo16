@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Core\PageState;
-use Piwigo\Config\Config;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Exception\AuthException;
 use Piwigo\Menu\BlockManager;
 
 // +-----------------------------------------------------------------------+

@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
-use Piwigo\Core\BoolUtil;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Image\ImageRepository;
-use Piwigo\Exception\NotFoundException;
-use Piwigo\Ws\PwgServerRegistry;
-use Piwigo\Exception\ValidationException;
-use Piwigo\Storage\StorageRegistry;
-use Piwigo\Exception\ConfigException;
-use Piwigo\Image\DerivativeParams;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Exception\NotFoundException;
+use Piwigo\Exception\ValidationException;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Storage\StorageRegistry;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServerRegistry;
 
 final class UploadService
 {

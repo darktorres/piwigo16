@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Template\TemplateRegistry;

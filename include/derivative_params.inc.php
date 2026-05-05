@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Image\DerivativeParams;
 
-
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

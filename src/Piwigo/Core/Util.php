@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Piwigo\Theme\ThemeRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Db\SqlExpr;
-use Piwigo\Db\SchemaHelper;
-use Piwigo\History\HistoryRepository;
-use Piwigo\Db\DbInfo;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
+use Piwigo\Db\DbInfo;
+use Piwigo\Db\SchemaHelper;
+use Piwigo\Db\SqlExpr;
+use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
 
 final readonly class Util

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Kernel;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Users\UserRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\UserRepository;
 
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+

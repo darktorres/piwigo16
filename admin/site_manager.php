@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
-use Piwigo\Config\Config;
-use Piwigo\Exception\ConfigException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Site\SiteRepository;
-use Piwigo\Core\PageState;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
+use Piwigo\Exception\ConfigException;
+use Piwigo\Site\SiteRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

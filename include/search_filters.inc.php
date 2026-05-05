@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
-use Doctrine\DBAL\Connection;
 
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+

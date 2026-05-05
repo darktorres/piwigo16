@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
-use Piwigo\Lang\Translator;
 use Doctrine\DBAL\Connection;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 

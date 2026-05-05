@@ -3,21 +3,21 @@
 declare(strict_types=1);
 
 use Piwigo\Bootstrap\ExceptionHandler;
-use Piwigo\Core\Kernel;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\Config;
-use Piwigo\Core\InstallSentinel;
-use Piwigo\Core\ErrorCollector;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCacheRegistry;
-use Piwigo\Core\LoggerRegistry;
-use Piwigo\Plugins\EventDispatcher;
-use Piwigo\Core\PageState;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Config\Config;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\PageState;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
+use Piwigo\Template\TemplateRegistry;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

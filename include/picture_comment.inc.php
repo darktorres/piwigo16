@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Exception\AuthException;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
-use Doctrine\DBAL\Connection;
+use Piwigo\Exception\AuthException;
 
 global $persistent_cache, $url_self, $picture, $related_categories, $comment_action;
 

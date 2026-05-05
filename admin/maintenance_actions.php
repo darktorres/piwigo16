@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\History\HistoryRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Session\SessionRepository;
-use Piwigo\Config\Config;
-use Piwigo\Admin\MaintenanceService;
-use Piwigo\Search\SearchRepository;
-use Piwigo\Db\DbInfo;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\MaintenanceService;
+use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbInfo;
+use Piwigo\History\HistoryRepository;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Search\SearchRepository;
+use Piwigo\Session\SessionRepository;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

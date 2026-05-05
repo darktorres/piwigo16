@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\PageState;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Core\PageState;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ValidationException;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Config\Config;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Permission\PermissionRepository;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

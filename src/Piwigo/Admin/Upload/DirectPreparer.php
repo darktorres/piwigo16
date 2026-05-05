@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
-use Piwigo\Config\Config;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;

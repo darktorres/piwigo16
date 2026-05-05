@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Metadata;
 
-use Piwigo\Exception\ConfigException;
 use Piwigo\Config\Config;
+use Piwigo\Exception\ConfigException;
 use Psr\Log\LoggerInterface;
 
 final readonly class MetadataService

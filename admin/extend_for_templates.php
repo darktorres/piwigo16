@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Exception\AuthException;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Exception\AuthException;
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |

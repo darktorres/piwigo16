@@ -83,9 +83,18 @@ use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Job\MessengerFactory;
+use Piwigo\Http\Middleware\AuthMiddleware;
+use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
+use Piwigo\Http\Middleware\CsrfMiddleware;
+use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
+use Piwigo\Http\Middleware\FallbackHandler;
+use Piwigo\Http\Middleware\RoutingMiddleware;
+use Piwigo\Http\Middleware\SessionMiddleware;
+use Piwigo\Routing\Router;
 use Piwigo\Ws\WsHelper;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 return [
@@ -183,4 +192,14 @@ return [
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository => new ActivityRepository($conn, Config::dbPrefix())),
     AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository => new AuthKeyRepository($conn, Config::dbPrefix())),
     FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository => new FeedRepository($conn, Config::dbPrefix())),
+
+    // ── PSR-7/15 routing infrastructure ──────────────────────────────────────
+    Router::class                     => factory(static fn (): Router => new Router(dirname(__DIR__) . '/config/routes.php')),
+    ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
+    SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
+    AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
+    CsrfMiddleware::class             => factory(static fn (): CsrfMiddleware => new CsrfMiddleware()),
+    RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
+    ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),
+    FallbackHandler::class            => factory(static fn (): FallbackHandler => new FallbackHandler()),
 ];

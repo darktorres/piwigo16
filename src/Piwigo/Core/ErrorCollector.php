@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Redirect PHP errors/warnings away from the response body and into HTTP
- * response headers instead (X-PHP-Error-N), visible in DevTools → Network
- * → Response Headers.
+ * Redirect PHP errors/warnings away from the response body into the browser's
+ * DevTools console (for HTML pages) or DevTools Network → Response Headers
+ * (for non-HTML responses such as JSON/XML/binary).
  *
- * Headers are emitted immediately inside the error handler callback, not
- * deferred to a shutdown function. Shutdown functions run after Template::flush()
- * has already committed the response body, making header() a no-op at that point.
- * Emitting during the error handler fires while script execution is still in
- * progress and headers are still mutable.
- *
- * Errors are also passed through to error_log() so the Apache error log
- * remains the authoritative server-side record.
+ * Mechanism:
+ *  - ob_start() with an output-buffer callback intercepts the complete HTML
+ *    before it is sent to the client. The callback injects a <script> block
+ *    just before </body> so console.warn() / console.error() fire in DevTools.
+ *  - For non-HTML responses that contain no </body> tag, the callback leaves
+ *    the output unchanged. Errors emitted as X-PHP-Error-N response headers
+ *    during the error handler (before headers are committed) remain visible
+ *    in DevTools → Network → Response Headers.
+ *  - Errors are also passed to error_log() so Apache's error log stays the
+ *    authoritative server-side record.
  */
 final class ErrorCollector
 {
@@ -36,12 +38,12 @@ final class ErrorCollector
         ini_set('display_errors', '0');
         ini_set('display_startup_errors', '0');
 
-        // Buffer output so headers remain mutable until the first byte is actually
-        // sent. Without this, a warning that fires before any echo would still
-        // race against output that may have started before install() was called.
-        if (!ob_get_level()) {
-            ob_start();
-        }
+        // The ob_start callback intercepts the full output right before it is
+        // sent and injects <script>console.*</script> into HTML pages.
+        // No ob_get_level() guard — PHP's output_buffering INI may already have
+        // created a level-1 buffer, which would prevent our callback from being
+        // registered. We always add our own level so the callback fires.
+        ob_start([self::class, 'injectConsoleScript']);
 
         set_error_handler(static function (int $errno, string $errstr, string $errfile, int $errline): bool {
             // Respect the @ error-suppression operator.
@@ -55,25 +57,24 @@ final class ErrorCollector
 
             self::$collected[] = $msg;
 
-            // Keep the Apache error log as the authoritative server-side record.
+            // Apache error log — authoritative server-side record.
             error_log("PHP {$label}: {$errstr} in {$errfile} on line {$errline}");
 
-            // Emit the header immediately — the error handler fires during script
-            // execution, before Template::flush() commits the response body, so
-            // header() is still valid here. Shutdown functions fire too late.
+            // For non-HTML responses (JSON, XML, binary) that won't go through
+            // the ob_start callback, also emit as response headers so they are
+            // visible in DevTools → Network → Response Headers.
             if (!headers_sent()) {
                 $n    = count(self::$collected);
                 $safe = substr(str_replace(["\r", "\n"], ' ', $msg), 0, 500);
                 header('X-PHP-Error-' . $n . ': ' . $safe);
-                header('X-PHP-Error-Count: ' . $n); // replaced on each error; final value = total
+                header('X-PHP-Error-Count: ' . $n);
             }
 
             return true; // Suppress PHP's built-in inline output.
         });
 
-        // Shutdown function: catch fatal errors that set_error_handler() cannot
-        // intercept. At this point the response is already committed, so we can
-        // only log — no header() calls.
+        // Shutdown: catch fatals that set_error_handler() cannot intercept.
+        // The response is already committed here — log only, no header/output.
         register_shutdown_function(static function (): void {
             $last = error_get_last();
             if ($last !== null && ($last['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
@@ -81,6 +82,45 @@ final class ErrorCollector
                 error_log("PHP {$label}: {$last['message']} in {$last['file']} on line {$last['line']}");
             }
         });
+    }
+
+    /**
+     * ob_start() callback — called with the full buffered output right before
+     * it is sent to the client. Injects a <script> block before </body> for
+     * HTML responses; returns other responses unchanged.
+     */
+    public static function injectConsoleScript(string $output): string
+    {
+        if (empty(self::$collected)) {
+            return $output;
+        }
+
+        // Only inject into HTML — presence of </body> is the reliable signal.
+        $bodyPos = strripos($output, '</body>');
+        if ($bodyPos === false) {
+            return $output;
+        }
+
+        $lines = '';
+        foreach (self::$collected as $msg) {
+            $level = match (true) {
+                str_contains($msg, '[ERROR]')      => 'error',
+                str_contains($msg, '[WARNING]'),
+                str_contains($msg, '[DEPRECATED]') => 'warn',
+                default                            => 'info',
+            };
+            $lines .= "console.{$level}(" . json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ");\n";
+        }
+
+        $count  = count(self::$collected);
+        $script = "<script>\n"
+            . "/* PHP {$count} error(s) — see also X-PHP-Error-N response headers */\n"
+            . "console.group('PHP ({$count})');\n"
+            . $lines
+            . "console.groupEnd();\n"
+            . '</script>';
+
+        return substr($output, 0, $bodyPos) . $script . substr($output, $bodyPos);
     }
 
     public static function isActive(): bool

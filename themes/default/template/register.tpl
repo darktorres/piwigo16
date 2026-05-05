@@ -20,19 +20,19 @@
         <span class="property">
           <label for="login">* {'Username'|@translate}</label>
         </span>
-        <input type="text" name="login" id="login" value="{$F_LOGIN}" autofocus>
+        <input type="text" name="login" id="login" value="{$F_LOGIN}" autofocus autocomplete="username">
       </li>
       <li>
         <span class="property">
           <label for="password">* {'Password'|@translate}</label>
         </span>
-        <input type="password" name="password" id="password" >
+        <input type="password" name="password" id="password" autocomplete="new-password">
       </li>
       <li>
         <span class="property">
           <label for="password_conf">* {'Confirm Password'|@translate}</label>
         </span>
-        <input type="password" name="password_conf" id="password_conf" >
+        <input type="password" name="password_conf" id="password_conf" autocomplete="new-password">
       </li>
       <li>
         <span class="property">

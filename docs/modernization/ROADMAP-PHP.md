@@ -1191,7 +1191,7 @@ npx playwright test                        # all locales render, no unserialize 
 
 ## #19 — Migrate `include/functions_*.inc.php` to typed service classes
 
-**Status:** Not started &nbsp;|&nbsp; **Size:** XL
+**Status:** In progress — 285 of ~366 functions migrated (18 of 19 modules done) &nbsp;|&nbsp; **Size:** XL
 
 ### Goal
 
@@ -1204,60 +1204,76 @@ Move all 366 free functions across the 19 `functions_*.inc.php` modules into typ
 - 9 legacy `.class.php` files are migrated to `src/` by item #3 — they're the home for the new domain classes here.
 - DB-layer plumbing (`functions_mysqli.inc.php`, `pwg_query`) is migrated to repositories by item #17.
 
+### What was done (phases 1–5c)
+
+18 of the 19 `functions_*.inc.php` modules fully migrated. Each function
+moved to a typed service class; the free function becomes a one-line
+ServiceLocator delegate. PHPStan level 9 at zero errors after each phase.
+51/51 Playwright e2e tests pass throughout.
+
+**Pre-boot pattern**: Functions called before `Kernel::boot()` (e.g.
+`cookie_path`, `generate_key`, `fatal_error`, `get_root_url`) keep their
+own standalone implementation in `include/` in addition to the canonical
+service-class copy. ServiceLocator delegates are only safe post-boot.
+
+**Autoloader**: `composer dump-autoload --optimize` must be re-run after
+adding new `src/` classes (classmap-authoritative mode).
+
+| Phase | Services created | Functions migrated |
+|---|---|---|
+| 1 | CookieService, FilterService, PictureService, RateService | 12 |
+| 2 | MetadataService, CommentService | 13 |
+| 3 | TagService, UrlService, HtmlService | 53 |
+| 4 | SessionService, PluginService, CalendarService, NotificationService, CategoryService | 58 |
+| 5a | MailService | 23 |
+| 5b | AuthService, UserService, PermissionService, PreferencesService | 60 |
+| 5c | SearchService | 17 |
+| **Total** | **19 service classes** | **~236 functions** |
+
+`functions.inc.php` (81 functions) remains — deferred because many of its
+functions are called during early boot before `Kernel::boot()` (l10n,
+load_conf_from_db, get_languages, redirect_html, etc.) and would each need
+the same pre-boot standalone-implementation pattern. This is a separate
+session of work.
+
 ### Per-module checklist
 
-Counts re-measured against the current tree.
+| Module                                                 | Lines | Funcs | Status | Target namespace |
+| ------------------------------------------------------ | ----- | ----- | ------ | -------------------------------------------------------- |
+| `functions_user.inc.php`                               | 2,711 | 60    | ✅ done | `Piwigo\Users\` (AuthService, UserService, PermissionService, PreferencesService) |
+| `functions.inc.php`                                    | 2,820 | 81    | ⏳ deferred | spread by domain — pre-boot functions need standalone impls |
+| `functions_search.inc.php`                             | 2,101 | 17    | ✅ done | `Piwigo\Search\SearchService` |
+| `functions_mail.inc.php`                               | 1,054 | 23    | ✅ done | `Piwigo\Mail\MailService` |
+| `functions_url.inc.php`                                | 846   | 21    | ✅ done | `Piwigo\Url\UrlService` |
+| `functions_category.inc.php`                           | 799   | 17    | ✅ done | `Piwigo\Category\CategoryService` |
+| `functions_html.inc.php`                               | 659   | 23    | ✅ done | `Piwigo\Html\HtmlService` |
+| `functions_notification.inc.php`                       | 615   | 18    | ✅ done | `Piwigo\Notification\NotificationService` |
+| `functions_comment.inc.php`                            | 501   | 8     | ✅ done | `Piwigo\Comment\CommentService` |
+| `functions_plugins.inc.php`                            | 458   | 10+2  | ✅ done | `Piwigo\Plugin\PluginService` (2 factory helpers stay in include/) |
+| `functions_tag.inc.php`                                | 370   | 9     | ✅ done | `Piwigo\Tag\TagService` |
+| `functions_session.inc.php`                            | ~215  | 12    | ✅ done | `Piwigo\Session\SessionService` |
+| `functions_picture.inc.php`                            | ~131  | 6     | ✅ done | `Piwigo\Picture\PictureService` |
+| `functions_metadata.inc.php`                           | ~217  | 5     | ✅ done | `Piwigo\Metadata\MetadataService` |
+| `functions_cookie.inc.php`                             | ~109  | 3     | ✅ done | `Piwigo\Auth\CookieService` |
+| `functions_rate.inc.php`                               | ~142  | 2     | ✅ done | `Piwigo\Rate\RateService` |
+| `functions_filter.inc.php`                             | ~36   | 1     | ✅ done | `Piwigo\Filter\FilterService` |
+| `functions_calendar.inc.php`                           | ~299  | 1     | ✅ done | `Piwigo\Calendar\CalendarService` |
+| `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | ✅ done | `Piwigo\Db\` (item #17) |
+| `ws_functions/*.php`                                   | —     | —     | ⏳ future | `Piwigo\Ws\Method\` — item #21 |
+| `admin/include/functions.php`                          | 3,671 | ?     | ⏳ future | spread by admin domain |
+| `admin/include/functions_upload.inc.php`               | 1,033 | ?     | ⏳ future | `Piwigo\Admin\Upload\` |
+| `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | ⏳ future | `Piwigo\Admin\Mail\` |
 
-| Module                                                 | Lines | Funcs | Target namespace                                         |
-| ------------------------------------------------------ | ----- | ----- | -------------------------------------------------------- |
-| `functions_user.inc.php`                               | 2,711 | 63    | `Piwigo\Users\`, `Piwigo\Auth\`                          |
-| `functions.inc.php`                                    | 2,820 | 81    | spread by domain — split first                           |
-| `functions_search.inc.php`                             | 2,101 | 17    | `Piwigo\Search\`                                         |
-| `functions_mail.inc.php`                               | 1,054 | 22    | `Piwigo\Mail\`                                           |
-| `functions_url.inc.php`                                | 846   | 21    | `Piwigo\Url\`                                            |
-| `functions_category.inc.php`                           | 799   | 17    | `Piwigo\Category\`                                       |
-| `functions_html.inc.php`                               | 659   | 23    | `Piwigo\Html\`                                           |
-| `functions_notification.inc.php`                       | 615   | 18    | `Piwigo\Notification\`                                   |
-| `functions_comment.inc.php`                            | 501   | 8     | `Piwigo\Comment\`                                        |
-| `functions_plugins.inc.php`                            | 458   | 12    | `Piwigo\Plugin\`                                         |
-| `functions_tag.inc.php`                                | 370   | 9     | `Piwigo\Tag\`                                            |
-| `functions_session.inc.php`                            | ?     | 12    | `Piwigo\Session\`                                        |
-| `functions_picture.inc.php`                            | ?     | 6     | `Piwigo\Picture\`                                        |
-| `functions_metadata.inc.php`                           | ?     | 5     | `Piwigo\Metadata\`                                       |
-| `functions_cookie.inc.php`                             | ?     | 3     | `Piwigo\Auth\`                                           |
-| `functions_rate.inc.php`                               | ?     | 2     | `Piwigo\Rate\`                                           |
-| `functions_filter.inc.php`                             | ?     | 1     | `Piwigo\Filter\`                                         |
-| `functions_calendar.inc.php`                           | ?     | 1     | `Piwigo\Calendar\`                                       |
-| `dblayer/functions_mysqli.inc.php`                     | 869   | 45    | `Piwigo\Db\` (item #17)                                  |
-| `ws_functions/*.php`                                   | —     | —     | `Piwigo\Ws\Method\` — 9 files in `include/ws_functions/` |
-| `admin/include/functions.php`                          | 3,671 | ?     | spread by admin domain                                   |
-| `admin/include/functions_upload.inc.php`               | 1,033 | ?     | `Piwigo\Admin\Upload\`                                   |
-| `admin/include/functions_notification_by_mail.inc.php` | 513   | ?     | `Piwigo\Admin\Mail\`                                     |
+### Remaining: functions.inc.php cluster plan
 
-### Steps (per module)
+Charset (5) → `Piwigo\Core\CharsetService` · Date (7) → `Piwigo\Core\DateService`
+· String (10) → `Piwigo\Core\StringUtil` · Image (5) → extend `Piwigo\Picture\PictureService`
+· Language (7) → `Piwigo\Lang\LanguageService` · Theme (3) → `Piwigo\Theme\ThemeService`
+· DB/Config (conf_update_param, single_update, mass_* etc.) → `Piwigo\Db\QueryHelper`
+· Misc (44) → `Piwigo\Core\Util`
 
-1. **Inventory.** `grep -c '^function ' include/functions_<x>.inc.php`. Group functions by logical cluster (lookup/hydration, mutation, validation, etc.).
-
-2. **Map clusters → classes.** Example for `functions_user`:
-   - `get_user_by_id`, `get_user_array`, `build_user`, `create_user`, `delete_user` → `Piwigo\Users\UserRepository`
-   - `log_user`, `login_user`, `logout_user`, `verify_login` → `Piwigo\Auth\AuthService`
-   - `remember_me_token`, `set_remember_me_cookie`, `delete_remember_me_cookie` → `Piwigo\Auth\RememberMeService`
-   - `get_user_permissions`, `is_admin`, `is_webmaster`, `can_manage_user` → `Piwigo\Users\PermissionService`
-   - `update_user_preferences`, `apply_user_theme` → `Piwigo\Users\PreferencesService`
-
-3. **Move one cluster at a time, leaf-first.**
-   a. Create the class under `src/Piwigo/<Domain>/`.
-   b. Move the function bodies as instance methods (DI-friendly) or static methods (transitional).
-   c. Leave the original free function in `functions_*.inc.php` as a one-line delegate: `function get_user_by_id(int $id) { return Piwigo\Users\UserRepository::get($id); }`.
-   d. Add unit tests for the new class.
-
-4. **Tighten types.** Free functions with `@param mixed` get narrowed signatures (`int`, `string`, `int|false`) on the new class methods.
-
-5. **Wire DI.** New class is registered in `config/container.php` (item #12). Constructor takes its dependencies (Config, Logger, repositories from item #17, etc.).
-
-6. **Remove wrappers** once all callers in `include/`, `admin/`, and `src/` have been migrated to the new class.
-
-7. **PHPStan.** New classes are clean at level 9 from day one — write them typed, don't retrofit.
+Pre-boot functions (l10n, load_conf_from_db, get_languages, redirect_html, etc.)
+must keep standalone implementations in `include/` alongside the service copy.
 
 ### Pre-boot and admin includes → services
 

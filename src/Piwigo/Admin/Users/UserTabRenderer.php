@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Users;
 
 use Piwigo\Admin\Tabsheet;
-use Piwigo\Template\TemplateRegistry;
 
 final class UserTabRenderer
 {

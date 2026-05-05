@@ -75,7 +75,8 @@ final class DirectPreparer
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
                 $tpl->assign('ADD_TO_ALBUM', get_cat_display_name_cache(
-                    is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '', null
+                    is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '',
+                    null
                 ));
             } else {
                 $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';

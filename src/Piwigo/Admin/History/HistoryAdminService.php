@@ -9,7 +9,6 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
 use Piwigo\History\HistoryRepository;
-use Piwigo\Template\TemplateRegistry;
 
 final class HistoryAdminService
 {

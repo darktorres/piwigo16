@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
@@ -17,6 +18,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
@@ -55,10 +57,12 @@ return [
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
     // Domain services — stateless; inject only what they need.
-    CookieService::class  => factory(static fn (): CookieService => new CookieService()),
-    FilterService::class  => factory(static fn (): FilterService => new FilterService()),
-    PictureService::class => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
-    RateService::class    => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
+    CookieService::class   => factory(static fn (): CookieService => new CookieService()),
+    FilterService::class   => factory(static fn (): FilterService => new FilterService()),
+    MetadataService::class => factory(static fn (LoggerInterface $log): MetadataService => new MetadataService($log)),
+    PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
+    RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
+    CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

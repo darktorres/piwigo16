@@ -91,7 +91,7 @@ final class WsApiTest extends IntegrationTestCase
     public function test_admin_only_users_list_requires_auth(): void
     {
         // Piwigo may return HTTP 401 or JSON stat='fail' for unauthenticated admin calls.
-        $url = $this->baseUrl . '/ws.php?method=pwg.users.getList&format=json';
+        $url = $this->baseUrl . '/index.php?/ws&method=pwg.users.getList&format=json';
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -165,7 +165,7 @@ final class WsApiTest extends IntegrationTestCase
     {
         $params['method'] = $method;
         $params['format'] = 'json';
-        $url = $this->baseUrl . '/ws.php?' . http_build_query($params);
+        $url = $this->baseUrl . '/index.php?/ws&' . http_build_query($params);
         return $this->curlRequest($url, false, []);
     }
 
@@ -175,7 +175,7 @@ final class WsApiTest extends IntegrationTestCase
      */
     private function apiPost(string $method, array $params = []): array
     {
-        $url = $this->baseUrl . '/ws.php?format=json';
+        $url = $this->baseUrl . '/index.php?/ws&format=json';
         $params['method'] = $method;
         return $this->curlRequest($url, true, $params);
     }

@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Section\SectionInitializer;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -30,7 +31,7 @@ final class PictureController implements ControllerInterface
     {
         require_once PHPWG_ROOT_PATH . 'include/picture_functions.php';
 
-        require PHPWG_ROOT_PATH . 'include/section_init.inc.php';
+        ServiceLocator::get(SectionInitializer::class)->initialize($request, 'picture');
 
         save_edit_context();
         check_status(ACCESS_GUEST);
@@ -42,7 +43,7 @@ final class PictureController implements ControllerInterface
         /** @var array<string, mixed> $lang */
         $lang = &$GLOBALS['lang'];
 
-        // Typed locals extracted before any logic runs (section_init.inc.php populated $page)
+        // Typed locals extracted from $page after SectionInitializer has populated it
         $category  = is_array($page['category'] ?? null) ? $page['category'] : null;
         $catId     = $category !== null && is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
         $rawItems  = is_array($page['items'] ?? null) ? $page['items'] : [];

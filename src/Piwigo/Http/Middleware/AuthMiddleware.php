@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserBootstrap;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Resolves the current user and attaches identity to the request.
+ * Resolves the current user from session / cookie / Apache auth / auth-key
+ * and attaches the CurrentUser instance as the '_current_user' request attribute.
  *
- * Phase-3 bridge: during the transition the user bootstrap is handled by
- * include/user.inc.php (loaded via common.inc.php before Kernel::handle() is
- * called) so this middleware is intentionally a pass-through.
- *
- * When include/user.inc.php is migrated to UserBootstrap (Wave A, Phase 4),
- * this middleware will call UserBootstrap::resolve() and attach the resulting
- * CurrentUser instance as a request attribute.
+ * Calls UserBootstrap::bootstrap() which populates $GLOBALS['user'] and
+ * calls CurrentUser::attachGlobals(). Downstream controllers and templates
+ * read $GLOBALS['user'] as before; typed code reads the request attribute.
  */
 final class AuthMiddleware implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        return $handler->handle($request);
+        UserBootstrap::bootstrap();
+        return $handler->handle($request->withAttribute('_current_user', CurrentUser::get()));
     }
 }

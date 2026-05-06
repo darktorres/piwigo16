@@ -92,6 +92,7 @@ use Piwigo\Http\Middleware\FallbackHandler;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Routing\Router;
+use Piwigo\Section\SectionInitializer;
 use Piwigo\Ws\WsHelper;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -140,7 +141,8 @@ return [
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),
-    UrlGenerator::class        => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
+    UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
+    SectionInitializer::class    => factory(static fn (): SectionInitializer => new SectionInitializer()),
     GeneralEndpoints::class          => factory(static fn (): GeneralEndpoints => new GeneralEndpoints()),
     TagsEndpoints::class             => factory(static fn (): TagsEndpoints => new TagsEndpoints()),
     CommentsEndpoints::class         => factory(static fn (): CommentsEndpoints => new CommentsEndpoints()),

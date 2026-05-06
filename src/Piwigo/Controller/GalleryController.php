@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Section\SectionInitializer;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,15 +18,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * favorites, recent, best-rated, most-visited, and calendar views.
  *
  * Corresponds to the former index.php entry-point (lines 26-405).
- * Reads the bootstrapped globals via $GLOBALS; section routing is done by
- * include/section_init.inc.php (not yet migrated to a typed SectionInitializer).
+ * Section routing is delegated to SectionInitializer which populates $GLOBALS['page'].
  */
 final class GalleryController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        // Populate $GLOBALS['page'], $GLOBALS['user'], $GLOBALS['filter'] from URL tokens
-        require PHPWG_ROOT_PATH . 'include/section_init.inc.php';
+        ServiceLocator::get(SectionInitializer::class)->initialize($request, 'index');
 
         check_status(ACCESS_GUEST);
 

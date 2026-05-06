@@ -188,7 +188,8 @@ if (Config::has('order_by_inside_category_custom')) {
 
 check_lounge();
 
-require(PHPWG_ROOT_PATH.'include/user.inc.php');
+// User bootstrap is now handled by AuthMiddleware → UserBootstrap::bootstrap().
+// include/user.inc.php has been deleted; see src/Piwigo/Users/UserBootstrap.php.
 
 // Use GLOBALS access to bypass type narrowing from $user initialization
 $user_globals = $GLOBALS['user'];

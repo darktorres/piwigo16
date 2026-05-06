@@ -8,17 +8,6 @@ parameters:
         - install.php
         - upgrade.php
         - index.php
-        - ws.php
-        - picture.php
-        - identification.php
-        - profile.php
-        - register.php
-        - password.php
-        - search.php
-        - tags.php
-        - comments.php
-        - notification.php
-        - feed.php
         - i.php
     excludePaths:
         analyseAndScan:

@@ -6,7 +6,9 @@ namespace Piwigo\Notification;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 final readonly class NotificationService
@@ -237,7 +239,7 @@ final readonly class NotificationService
         }
 
         $nbComments = $this->nbNewComments($start, $end);
-        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', add_url_params(get_root_url() . 'comments.php', $addUrlParams), $addUrl);
+        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', add_url_params(ServiceLocator::get(UrlGenerator::class)->comments(), $addUrlParams), $addUrl);
 
         if (is_admin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);

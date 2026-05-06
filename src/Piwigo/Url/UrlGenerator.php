@@ -138,6 +138,10 @@ final readonly class UrlGenerator
     public function comments(): string       { return $this->routeUrl('comments'); }
     public function notification(): string   { return $this->routeUrl('notification'); }
     public function feed(): string           { return $this->routeUrl('feed'); }
+    /** Tags cloud / alphabetic listing page (bare /tags, no specific tags selected). */
+    public function tagsPage(): string       { return $this->routeUrl('tags'); }
+    /** Search form submission URL (bare /search, no saved-search ID yet). */
+    public function searchPage(): string     { return $this->routeUrl('search'); }
 
     public function image(string $path): string
     {

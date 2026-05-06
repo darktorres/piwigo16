@@ -10,6 +10,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -157,7 +158,7 @@ final class GalleryController implements ControllerInterface
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => get_root_url() . 'search.php?cat_id=' . $catId,
+                    'SEARCH_IN_SET_URL'    => add_url_params(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['cat_id' => $catId]),
                 ]);
             }
 
@@ -190,8 +191,7 @@ final class GalleryController implements ControllerInterface
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => get_root_url() . 'search.php?tag_id='
-                        . implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds)),
+                    'SEARCH_IN_SET_URL'    => add_url_params(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['tag_id' => implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds))]),
                     'COMBINABLE_TAGS' => $relatedTags,
                 ]);
             }

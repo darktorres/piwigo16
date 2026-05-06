@@ -10,6 +10,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
@@ -787,7 +788,7 @@ SELECT
     public function pwgGenerateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
         set_make_full_url();
-        $profileUrl = get_root_url() . 'profile.php';
+        $profileUrl = ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->profile();
 
         $message  = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';

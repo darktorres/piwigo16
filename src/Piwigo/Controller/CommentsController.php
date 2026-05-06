@@ -11,6 +11,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,7 +33,7 @@ final class CommentsController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $url_self   = PHPWG_ROOT_PATH . 'comments.php' . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
+        $url_self   = ServiceLocator::get(UrlGenerator::class)->comments() . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
         $sort_order = ['DESC' => l10n('descending'), 'ASC' => l10n('ascending')];
         $sort_by    = ['date' => l10n('comment date'), 'image_id' => l10n('photo')];
         $items_number = [5, 10, 20, 50, 'all'];
@@ -104,8 +105,8 @@ final class CommentsController implements ControllerInterface
         if (!empty($get_comment_id_filter)) {
             check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
             if (!is_admin()) {
-                $login_url = get_root_url() . 'identification.php?redirect='
-                    . urlencode(urlencode(is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : ''));
+                $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
+                $login_url  = add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
                 redirect($login_url);
             }
             $page['where_clauses'][] = 'com.id = ' . $get_comment_id_filter;
@@ -207,7 +208,7 @@ final class CommentsController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->set_filenames(['comments' => 'comments.tpl', 'comment_list' => 'comment_list.tpl']);
         $tpl->assign([
-            'F_ACTION'  => PHPWG_ROOT_PATH . 'comments.php',
+            'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
             'F_KEYWORD' => !empty($get_keyword) ? htmlspecialchars(stripslashes($get_keyword)) : '',
             'F_AUTHOR'  => !empty($get_author)  ? htmlspecialchars(stripslashes($get_author))  : '',
         ]);
@@ -271,7 +272,7 @@ SELECT id, name, uppercats, global_rank
             $category_ids[] = $row['category_id'];
         }
 
-        $url     = PHPWG_ROOT_PATH . 'comments.php' . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
+        $url     = ServiceLocator::get(UrlGenerator::class)->comments() . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
         $navbar  = create_navigation_bar(
             $url,
             is_numeric($counter) ? (int) $counter : 0,

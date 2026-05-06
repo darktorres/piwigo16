@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Url;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Users\CurrentUser;
 
 final class UrlService
@@ -473,7 +474,7 @@ final class UrlService
 
             $page['tags'] = find_tags($requestedTagIds, $requestedTagUrlNames);
             if (empty($page['tags'])) {
-                page_not_found(l10n('Requested tag does not exist'), get_root_url() . 'tags.php');
+                page_not_found(l10n('Requested tag does not exist'), ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->tagsPage());
             }
         } elseif ('favorites' == ($tokens[$nextToken] ?? null)) {
             $page['section'] = 'favorites';

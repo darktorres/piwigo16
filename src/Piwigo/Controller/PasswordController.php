@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -94,7 +96,7 @@ final class PasswordController implements ControllerInterface
             redirect(get_gallery_home_url());
         }
         if ('lost_code' == $page['action'] && !isset($_SESSION['reset_password_code'])) {
-            redirect(get_gallery_home_url() . 'identification.php');
+            redirect(ServiceLocator::get(UrlGenerator::class)->identification());
         }
         if ('lost' == $page['action'] && isset($_SESSION['reset_password_code'])) {
             $page['action'] = 'lost_code';
@@ -119,7 +121,7 @@ final class PasswordController implements ControllerInterface
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'       => $title,
-            'form_action' => get_root_url() . 'password.php',
+            'form_action' => ServiceLocator::get(UrlGenerator::class)->password(),
             'action'      => $page['action'],
             'username'    => is_scalar($page['username'] ?? null) ? $page['username'] : ($user['username'] ?? ''),
             'PWG_TOKEN'   => get_pwg_token(),

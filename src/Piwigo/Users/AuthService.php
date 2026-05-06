@@ -8,6 +8,8 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 
 final readonly class AuthService
 {
@@ -416,7 +418,7 @@ SELECT
         ], ['user_id' => $userId]);
 
         set_make_full_url();
-        $passwordLink = get_root_url() . 'password.php?key=' . $activationKey;
+        $passwordLink = add_url_params(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
         unset_make_full_url();
 
         $timeValidation = time_since(strtotime('now -' . $duration . ' second') ?: null, 'second', null, false);

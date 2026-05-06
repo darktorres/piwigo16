@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -40,7 +42,7 @@ final class TagsController implements ControllerInterface
         foreach (['cloud', 'letters'] as $mode) {
             $tpl->assign(
                 'U_' . strtoupper($mode),
-                get_root_url() . 'tags.php' . (Config::tagsDefaultDisplayMode() == $mode ? '' : '?display_mode=' . $mode)
+                ServiceLocator::get(UrlGenerator::class)->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&amp;display_mode=' . $mode)
             );
         }
 

@@ -45,12 +45,26 @@ $routes->add('gallery_pic', new Route(
     methods:      $get,
 ));
 
+// Bare tags cloud/alphabetic page (former tags.php)
+$routes->add('tags', new Route(
+    path:     '/tags',
+    defaults: ['_controller' => 'Piwigo\Controller\TagsController'],
+    methods:  $get,
+));
+
 // /tags/1+2+3/start-12   → rest = "1+2+3/start-12"
 $routes->add('gallery_tags', new Route(
     path:         '/tags/{rest}',
     defaults:     ['_controller' => 'Piwigo\Controller\TagsController'],
     requirements: ['rest' => '.+'],
     methods:      $get,
+));
+
+// Bare search form submission (former search.php)
+$routes->add('search', new Route(
+    path:     '/search',
+    defaults: ['_controller' => 'Piwigo\Controller\SearchController'],
+    methods:  $gp,
 ));
 
 // /search/42/start-12   → id = "42", rest = "start-12"

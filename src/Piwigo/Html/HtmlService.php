@@ -7,10 +7,12 @@ namespace Piwigo\Html;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 final class HtmlService
@@ -199,7 +201,8 @@ SELECT id, name, permalink
             exit();
         }
 
-        redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '')));
+        $requestUri = is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '';
+        redirect_http(add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg, ?string $alternateUrl = null): void
@@ -278,7 +281,7 @@ $btraceMsg
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
-        $title = '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
+        $title = '<a href="' . ServiceLocator::get(UrlGenerator::class)->tagsPage() . '" title="' . l10n('display available tags') . '">'
           . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
 

@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Job\SendNotificationEmailJob;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -744,7 +745,7 @@ SELECT DISTINCT f.image_id
         $message     = '<p style="margin: 20px 0">' . l10n('Hello %s,', $username) . '</p>';
         $message    .= '<p style="margin: 20px 0">' . $daysLeftStr . '</p>';
         $message    .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
-        $message    .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', get_absolute_root_url() . 'profile.php') . '</p>';
+        $message    .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', ServiceLocator::get(UrlGenerator::class)->profile()) . '</p>';
         return pwg_mail($email, ['subject' => '[' . Config::galleryTitle() . '] ' . l10n('Your API key will expire soon'), 'content' => $message, 'content_format' => 'text/html']);
     }
 

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -84,15 +86,15 @@ final class IdentificationController implements ControllerInterface
         $tpl->set_filenames(['identification' => 'identification.tpl']);
         $tpl->assign([
             'U_REDIRECT'           => $redirect_to,
-            'F_LOGIN_ACTION'       => get_root_url() . 'identification.php',
+            'F_LOGIN_ACTION'       => ServiceLocator::get(UrlGenerator::class)->identification(),
             'authorize_remembering' => Config::authorizeRemembering(),
         ]);
 
         if (!Config::galleryLocked() && Config::allowUserRegistration()) {
-            $tpl->assign('U_REGISTER', get_root_url() . 'register.php');
+            $tpl->assign('U_REGISTER', ServiceLocator::get(UrlGenerator::class)->register());
         }
         if (!Config::galleryLocked()) {
-            $tpl->assign('U_LOST_PASSWORD', get_root_url() . 'password.php');
+            $tpl->assign('U_LOST_PASSWORD', ServiceLocator::get(UrlGenerator::class)->password());
         }
 
         $themeconf    = $tpl->get_template_vars('themeconf');

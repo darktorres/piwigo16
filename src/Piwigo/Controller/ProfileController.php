@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
-use Piwigo\Http\ResponseFactory;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -58,7 +59,7 @@ final class ProfileController implements ControllerInterface
         $tpl->set_filename('profile', 'profile.tpl');
         $tpl->set_filename('profile_content', 'profile_content.tpl');
 
-        load_profile_in_template(get_root_url() . 'profile.php', make_index_url(), $userdata);
+        load_profile_in_template(ServiceLocator::get(UrlGenerator::class)->profile(), make_index_url(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
         $special_user = in_array($userdata_id, [Config::guestId(), Config::defaultUserId()]);

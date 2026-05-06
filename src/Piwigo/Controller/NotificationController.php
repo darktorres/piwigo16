@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -33,7 +34,7 @@ final class NotificationController implements ControllerInterface
         ServiceLocator::get(FeedRepository::class)
             ->insert((string) $page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
-        $feed_url = PHPWG_ROOT_PATH . 'feed.php';
+        $feed_url = ServiceLocator::get(UrlGenerator::class)->feed();
         if (is_a_guest()) {
             $feed_image_only_url = $feed_url;
             $feed_url .= '?feed=' . $page['feed'];

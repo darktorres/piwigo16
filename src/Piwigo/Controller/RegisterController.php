@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -83,7 +85,7 @@ final class RegisterController implements ControllerInterface
         $tpl->assign([
             'U_HOME'                      => make_index_url(),
             'F_KEY'                       => $registration_post_key,
-            'F_ACTION'                    => 'register.php',
+            'F_ACTION'                    => ServiceLocator::get(UrlGenerator::class)->register(),
             'F_LOGIN'                     => $login,
             'F_EMAIL'                     => $email,
             'obligatory_user_mail_address' => Config::obligatoryUserMailAddress(),

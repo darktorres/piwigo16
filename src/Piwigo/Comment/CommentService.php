@@ -6,6 +6,8 @@ namespace Piwigo\Comment;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 final readonly class CommentService
@@ -182,7 +184,7 @@ final readonly class CommentService
             if ((Config::emailAdminOnComment() && 'validate' == $commentAction)
                 or (Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction)) {
 
-                $commentUrl = get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
+                $commentUrl = add_url_params(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => (string) $comm['id']]);
 
                 $keyargsContent = [
                     get_l10n_args('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
@@ -284,7 +286,7 @@ final readonly class CommentService
 
             if ($result and Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction) {
 
-                $commentUrl     = get_absolute_root_url() . 'comments.php?comment_id=' . (is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0');
+                $commentUrl     = add_url_params(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0']);
                 $keyargsContent = [
                     get_l10n_args('Author: %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
                     get_l10n_args('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),

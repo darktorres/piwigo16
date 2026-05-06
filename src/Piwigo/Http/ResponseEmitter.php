@@ -14,7 +14,12 @@ final class ResponseEmitter
     public function emit(ResponseInterface $response): void
     {
         if (!headers_sent()) {
-            http_response_code($response->getStatusCode());
+            header(sprintf(
+                'HTTP/%s %d %s',
+                $response->getProtocolVersion(),
+                $response->getStatusCode(),
+                $response->getReasonPhrase()
+            ), true, $response->getStatusCode());
             foreach ($response->getHeaders() as $name => $values) {
                 $replace = true;
                 foreach ($values as $value) {

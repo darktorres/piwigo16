@@ -8,6 +8,7 @@ use JShrink\Minifier;
 use MatthiasMullie\Minify\CSS;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\InstallSentinel;
 
 /**
  * Allows merging of javascript and css files into a single one.
@@ -60,7 +61,7 @@ final class FileCombiner
     public function combine(): array
     {
         $force = false;
-        if (is_admin() && ($this->is_css || !Config::templateCompileCheck())) {
+        if (InstallSentinel::isInstalled() && is_admin() && ($this->is_css || !Config::templateCompileCheck())) {
             $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && str_contains($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }

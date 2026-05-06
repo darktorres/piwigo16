@@ -8,6 +8,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 final class AlbumsTabRenderer
 {
@@ -15,6 +16,7 @@ final class AlbumsTabRenderer
     {
         /** @var array<string, mixed> $page */
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $GLOBALS['my_base_url'] = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
         $tabsheet->select(is_string($page['tab'] ?? null) ? $page['tab'] : '');

@@ -14,6 +14,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
@@ -583,7 +584,7 @@ SELECT *
             if (!isset($page['start'])) {
                 $page['start'] = 0;
             }
-            require PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';

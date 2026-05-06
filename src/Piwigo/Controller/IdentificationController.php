@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
@@ -101,7 +102,7 @@ final class IdentificationController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!Config::galleryLocked() && !in_array('theIdentificationPage', $hideMenuOn)) {
-            require PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
         $cookie_lang = input_string('lang', null, $_COOKIE);

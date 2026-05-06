@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -55,7 +56,7 @@ final class NotificationController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNotificationPage', $hideMenuOn)) {
-            require PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';

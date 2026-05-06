@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -47,7 +49,7 @@ final class NbmController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNBMPage', $hideMenuOn, true)) {
-            require PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+            ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';

@@ -6,6 +6,8 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
@@ -115,7 +117,7 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('NB_ITEMS', count($items));
 
         // Menubar
-        require PHPWG_ROOT_PATH . 'include/menubar.inc.php';
+        ServiceLocator::get(MenubarRenderer::class)->render();
 
         $tpl->set_filename('index', 'index.tpl');
 
@@ -155,7 +157,7 @@ final class GalleryController implements ControllerInterface
                 }
             }
 
-            require PHPWG_ROOT_PATH . 'include/search_filters.inc.php';
+            ServiceLocator::get(SearchFilterRenderer::class)->render();
 
             if ($section === 'categories' && $category !== null && !isset($page['combined_categories'])) {
                 $tpl->assign([

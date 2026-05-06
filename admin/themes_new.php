@@ -26,7 +26,7 @@ if (!Config::enableExtensionsInstall()) {
     throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
-$base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
 
 $themes = new Themes();
 

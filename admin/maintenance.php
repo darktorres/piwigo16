@@ -105,7 +105,7 @@ $maint_actions = [
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 if (isset($_GET['tab'])) {
     check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');

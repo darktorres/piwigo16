@@ -17,6 +17,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Ws\PwgError;
@@ -584,9 +585,10 @@ final class GeneralEndpoints
             $uppercatsOf    = array_column(get_dbal_connection()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
-                $fullCatPath[$categoryId] = get_cat_display_name_cache($uppercatsS, 'admin.php?page=album-');
+                $albumBase = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-';
+                $fullCatPath[$categoryId] = get_cat_display_name_cache($uppercatsS, $albumBase);
                 $uppercatsParts       = explode(',', $uppercatsS);
-                $nameOfCategory[$categoryId] = get_cat_display_name_cache(end($uppercatsParts) ?: '', 'admin.php?page=album-');
+                $nameOfCategory[$categoryId] = get_cat_display_name_cache(end($uppercatsParts) ?: '', $albumBase);
             }
         }
         if (count($imageIds) > 0) {
@@ -640,7 +642,7 @@ final class GeneralEndpoints
             } else {
                 $userString .= $lineUserIdStr;
             }
-            $userString .= '&nbsp;<a href="' . PHPWG_ROOT_PATH . 'admin.php?page=history&amp;search_id=' . $searchId . '&amp;user_id=' . $lineUserIdStr . '">+</a>';
+            $userString .= '&nbsp;<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;search_id=' . $searchId . '&amp;user_id=' . $lineUserIdStr . '">+</a>';
             $tagNames = '';
             $tagIds   = '';
             if (isset($line['tag_ids'])) {
@@ -653,7 +655,7 @@ final class GeneralEndpoints
             $imageEditString = '';
             $imageId        = '';
             if ($lineImageIdStr !== '') {
-                $imageEditString = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $lineImageIdStr;
+                $imageEditString = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $lineImageIdStr);
                 $pictureUrl      = make_picture_url(['image_id' => $lineImageId]);
                 $element         = [];
                 if (isset($imageInfos[$lineImageIdStr])) {

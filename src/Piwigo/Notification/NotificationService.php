@@ -243,10 +243,10 @@ final readonly class NotificationService
 
         if (is_admin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', get_root_url() . 'admin.php?page=comments', $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', ServiceLocator::get(UrlGenerator::class)->admin('comments'), $addUrl);
 
             $nbUsers = $this->nbNewUsers($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUsers) ? (int) $nbUsers : 0, '%d new user', '%d new users', get_root_url() . 'admin.php?page=user_list', $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbUsers) ? (int) $nbUsers : 0, '%d new user', '%d new users', ServiceLocator::get(UrlGenerator::class)->admin('user_list'), $addUrl);
         }
 
         /** @var string[] $newsArr */

@@ -88,7 +88,7 @@ final readonly class UserService
             create_user_infos((int) $userId, $override);
 
             if ($notifyAdmin and 'none' != Config::emailAdminOnNewUser()) {
-                $adminUrl     = get_absolute_root_url() . 'admin.php?page=user_list&user_id=' . $userId;
+                $adminUrl     = ServiceLocator::get(UrlGenerator::class)->admin('user_list') . '&user_id=' . $userId;
                 $keyargsContent = [
                     get_l10n_args('User: %s', stripslashes($login)),
                     get_l10n_args('Email: %s', $mailAddress),

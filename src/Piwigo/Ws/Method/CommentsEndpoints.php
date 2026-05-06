@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -81,7 +82,7 @@ final class CommentsEndpoints
                 $coalesced  = $row['username'] ?? $row['author'] ?? l10n('guest');
                 $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : l10n('guest'));
             }
-            $list[] = ['id' => $row['id'], 'admin_link' => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : ''), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => trigger_change('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => trigger_change('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => trigger_change('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => trigger_change('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];

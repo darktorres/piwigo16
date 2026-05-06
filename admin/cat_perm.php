@@ -194,7 +194,7 @@ $template->assign(
     'CATEGORIES_NAV' =>
       get_cat_display_name_from_id(
           $pageCat,
-          'admin.php?page=album-'
+          \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
       ),
     'U_HELP' => get_root_url().'admin/popuphelp.php?page=cat_perm',
     'F_ACTION' => $admin_album_base_url.'-permissions',

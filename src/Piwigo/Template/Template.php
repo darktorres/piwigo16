@@ -457,6 +457,7 @@ class Template
 
         $this->smarty->assign('ROOT_URL', get_root_url());
         $this->smarty->assign('WS_URL', ServiceLocator::get(UrlGenerator::class)->ws());
+        $this->smarty->assign('U_SEARCH', ServiceLocator::get(UrlGenerator::class)->searchPage());
 
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);

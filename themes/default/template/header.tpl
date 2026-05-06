@@ -25,7 +25,7 @@
 <link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf.icon_dir}/favicon.ico">
 
 <link rel="start" title="{'Home'|translate}" href="{$U_HOME}" >
-<link rel="search" title="{'Search'|translate}" href="{$ROOT_URL}search.php" >
+<link rel="search" title="{'Search'|translate}" href="{$U_SEARCH}" >
 
 {if isset($first.U_IMG)   }<link rel="first" title="{'First'|translate}" href="{$first.U_IMG}" >{/if}
 {if isset($previous.U_IMG)}<link rel="prev" title="{'Previous'|translate}" href="{$previous.U_IMG}" >{/if}

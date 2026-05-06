@@ -46,7 +46,7 @@ if (isset($_GET['action']) and 'hide_newsletter_subscription' == $_GET['action']
     exit();
 }
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('admin_home');
@@ -74,7 +74,7 @@ if ($page['nb_photos_total'] >= 100000) { // but has not been calculated on a bi
 }
 
 if ($nb_orphans > 0) {
-    $orphans_url = PHPWG_ROOT_PATH.'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
+    $orphans_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_album';
 
     $message = '<a href="'.$orphans_url.'"><i class="icon-heart-broken"></i>';
     $message .= l10n('Orphans').'</a>';
@@ -86,7 +86,7 @@ if ($nb_orphans > 0) {
 // locked album ?
 $locked_album = ServiceLocator::get(CategoryRepository::class)->countHidden();
 if ($locked_album > 0) {
-    $locked_album_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&section=visible';
+    $locked_album_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_options') . '&section=visible';
 
     $message = '<a href="'.$locked_album_url.'"><i class="icon-cone"></i>';
     $message .= l10n('Locked album').'</a>';
@@ -149,7 +149,7 @@ $template->assign(
     'NB_VIEWS' => number_format_human_readable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0),
     'NB_PLUGINS' => count($pwg_loaded_plugins),
     'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
-    'U_QUICK_SYNC' => PHPWG_ROOT_PATH.'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
+    'U_QUICK_SYNC' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token='.get_pwg_token(),
     'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates(),
     ]
 );

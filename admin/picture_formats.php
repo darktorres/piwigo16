@@ -59,7 +59,7 @@ foreach ($formats as &$format) {
 }
 
 $template->assign([
-    'ADD_FORMATS_URL' => get_root_url().'admin.php?page=photos_add&formats='.$picFmtId,
+    'ADD_FORMATS_URL' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photos_add') . '&formats='.$picFmtId,
     'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
     'FORMATS'         => $formats,
     'PWG_TOKEN'       => get_pwg_token(),

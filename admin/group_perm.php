@@ -112,10 +112,7 @@ $template->assign(
     'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
     'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
-    'F_ACTION' =>
-        get_root_url().
-        'admin.php?page=group_perm&amp;group_id='.
-        $group_id,
+    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
     ]
 );
 

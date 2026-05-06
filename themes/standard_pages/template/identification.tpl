@@ -88,17 +88,17 @@
       <div class="secondary-links">
         
 {if isset($U_REGISTER)}
-        <p>{'Don\'t have an account yet ?'|translate} <a href="register.php" title="{'Register'|translate}">{'Create an account'|translate}</a></p>
+        <p>{'Don\'t have an account yet ?'|translate} <a href="{$U_REGISTER}" title="{'Register'|translate}">{'Create an account'|translate}</a></p>
         <span id="separator"></span>
 {/if}
-        <a href="password.php" title="{'Forgot your password?'|translate}">{'Forgot your password?'|translate}</a>
+        <a href="{$U_LOST_PASSWORD}" title="{'Forgot your password?'|translate}">{'Forgot your password?'|translate}</a>
 
       </div>
             
     </div>
   </section>
 
-  <a href="index.php" id="return-to-gallery"><i class="gallery-icon-left"></i> {'Return to the gallery'|translate}</a>
+  <a href="{$ROOT_URL}" id="return-to-gallery"><i class="gallery-icon-left"></i> {'Return to the gallery'|translate}</a>
 
 {if count($language_options) > 1}
   <section id="language-switch">

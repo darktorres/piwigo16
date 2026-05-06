@@ -164,7 +164,7 @@ $template->set_filename('stats', 'stats.tpl');
 // TabSheet initialization
 history_tabsheet();
 
-$base_url = get_root_url().'admin.php?page=history';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history');
 
 $template->assign(
     [

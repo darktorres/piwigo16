@@ -122,7 +122,7 @@ $template->set_filenames(
 
 $get_section = $_GET['section'] ?? null;
 $page['section'] = is_scalar($get_section) ? (string) $get_section : 'status';
-$base_url = PHPWG_ROOT_PATH.'admin.php?page=cat_options&amp;section=';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_options') . '&amp;section=';
 
 $template->assign(
     [

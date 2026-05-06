@@ -44,7 +44,7 @@
   {if isset($CONTAINER_VERSION)}
     <a href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank" class="icon-arrows-cw goto-update-page">{'Follow the update guide'|@translate}</a>
   {else}
-    <a href="admin.php?page=updates&amp;step=2&amp;to={$MINOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MINOR_VERSION}</a>
+    <a href="{$ADMIN_URL}&amp;page=updates&amp;step=2&amp;to={$MINOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MINOR_VERSION}</a>
   {/if}
 {/if}
 </p>
@@ -56,7 +56,7 @@
 {if isset($MAJOR_RELEASE_PHP_REQUIRED)}
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
 {else}
-  <a href="admin.php?page=updates&amp;step=3&amp;to={$MAJOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MAJOR_VERSION}</a>
+  <a href="{$ADMIN_URL}&amp;page=updates&amp;step=3&amp;to={$MAJOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MAJOR_VERSION}</a>
 {/if}
 </p>
 <p class="update-recommendation">

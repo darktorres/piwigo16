@@ -29,7 +29,7 @@ if (!is_webmaster()) {
 
 $template->set_filenames(['languages' => 'languages_installed.tpl']);
 
-$base_url = get_root_url().'admin.php?page='.$page['page'];
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']);
 
 $languages = new Languages();
 $languages->get_db_languages();

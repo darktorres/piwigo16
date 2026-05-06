@@ -10,6 +10,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Theme\ThemeRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 class Themes
@@ -331,7 +332,7 @@ class Themes
 
                     $admin_file = $path.'/admin/admin.inc.php';
                     if (file_exists($admin_file)) {
-                        $theme['admin_uri'] = get_root_url().'admin.php?page=theme&theme='.$file;
+                        $theme['admin_uri'] = ServiceLocator::get(UrlGenerator::class)->admin('theme') . '&theme='.$file;
                     }
 
                     // IMPORTANT SECURITY !

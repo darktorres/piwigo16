@@ -22,7 +22,7 @@ if (!Config::enableExtensionsInstall() and !Config::enableCoreUpdate()) {
     throw new ConfigException('update system is disabled');
 }
 
-$my_base_url = get_root_url().'admin.php?page=updates';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('updates');
 
 if (isset($_GET['tab'])) {
     $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';

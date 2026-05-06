@@ -100,7 +100,7 @@
     </div>
   </section>
 
-  <a href="index.php" id="return-to-gallery"><i class="gallery-icon-left"></i> {'Return to the gallery'|translate}</a>
+  <a href="{$ROOT_URL}" id="return-to-gallery"><i class="gallery-icon-left"></i> {'Return to the gallery'|translate}</a>
 
 {if count($language_options) > 1}
   <section id="language-switch">

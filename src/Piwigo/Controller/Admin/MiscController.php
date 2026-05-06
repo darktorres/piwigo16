@@ -17,6 +17,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\BlockManager;
@@ -67,7 +68,7 @@ final class MiscController
 
         check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
-        $base_url    = get_root_url() . 'admin.php';
+        $base_url    = ServiceLocator::get(UrlGenerator::class)->admin();
         $this->mustRepost = false;
 
         if (!isset($_GET['mode']) || !is_string($_GET['mode'])) {
@@ -236,7 +237,7 @@ final class MiscController
         $tpl->assign('permalinks', $categories);
 
         $sort_by = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
-        $url_del_base    = get_root_url() . 'admin.php?page=permalinks';
+        $url_del_base    = ServiceLocator::get(UrlGenerator::class)->admin('permalinks');
         $sortByOld0      = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $oldPermalinkQuery = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
         if (count($sort_by) && $sortByOld0 !== '') { $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0; }
@@ -259,7 +260,7 @@ final class MiscController
 
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('tags');
         $tabsheet->select('');
@@ -269,11 +270,11 @@ final class MiscController
             check_pwg_token();
             delete_orphan_tags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-            redirect(get_root_url() . 'admin.php?page=tags');
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
 
         $tpl->set_filenames(['tags' => 'tags.tpl']);
-        $tpl->assign(['F_ACTION' => PHPWG_ROOT_PATH . 'admin.php?page=tags', 'PWG_TOKEN' => get_pwg_token()]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token()]);
 
         $warning_tags     = '';
         $orphan_tags      = get_orphan_tags();
@@ -286,7 +287,7 @@ final class MiscController
 
         $orphan_tag_names_array = '[]';
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = sprintf(l10n('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . get_root_url() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . get_pwg_token() . '">' . l10n('Review') . '</a>');
+            $warning_tags = sprintf(l10n('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . get_pwg_token() . '">' . l10n('Review') . '</a>');
             $orphan_tag_names_array = '["' . implode('" ,"', array_map(htmlentities(...), $orphan_tag_names, array_fill(0, count($orphan_tag_names), ENT_QUOTES))) . '"]';
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
@@ -408,7 +409,7 @@ final class MiscController
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) { userprefs_update_param('show_newsletter_subscription', 'false'); exit(); }
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('admin_home');
         $tabsheet->select('');
@@ -426,14 +427,14 @@ final class MiscController
         if (is_numeric($page['nb_photos_total'] ?? null) && (int) $page['nb_photos_total'] >= 100000) { $nb_orphans = count_orphans(); }
 
         if ($nb_orphans > 0) {
-            $orphans_url = PHPWG_ROOT_PATH . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
+            $orphans_url = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_album';
             $message     = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>' . l10n('Orphans') . '</a><span class="adminMenubarCounter">' . $nb_orphans . '</span>';
             PageState::current()->addWarning($message);
         }
 
         $locked_album = ServiceLocator::get(CategoryRepository::class)->countHidden();
         if ($locked_album > 0) {
-            $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
+            $locked_album_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&section=visible';
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>' . l10n('Locked album') . '</a><span class="adminMenubarCounter">' . $locked_album . '</span>';
             PageState::current()->addWarning($message);
         }
@@ -460,7 +461,7 @@ final class MiscController
         $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024 * 1024);
         if ($du_gb > 100) { $du_decimals = 0; }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => number_format_human_readable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => number_format_human_readable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) { $tpl->assign('NB_COMMENTS', ServiceLocator::get(CommentRepository::class)->countAll()); }
         else { $tpl->assign('NB_COMMENTS', 0); }
@@ -608,7 +609,7 @@ final class MiscController
 
         if (!is_webmaster()) { PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'))); }
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('menus');
         $tabsheet->select('');
@@ -652,7 +653,7 @@ final class MiscController
             $tpl->append('blocks', ['pos' => (is_numeric($pos) ? (int) $pos : 0) / 5, 'reg' => $reg_blocks[$id]]);
         }
 
-        $action = get_root_url() . 'admin.php?page=menubar';
+        $action = ServiceLocator::get(UrlGenerator::class)->admin('menubar');
         $tpl->assign(['F_ACTION' => $action]);
         $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
@@ -681,17 +682,17 @@ final class MiscController
 
         $tpl->set_filenames(['comments' => 'comments.tpl']);
         $tpl->assign([
-            'F_ACTION'          => get_root_url() . 'admin.php?page=comments',
+            'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
             'PWG_TOKEN'         => get_pwg_token(),
             'COMMENTS_DISABLED' => !Config::activateComments(),
-            'U_CONFIGURATION'   => get_root_url() . 'admin.php?page=configuration&amp;section=comments',
+            'U_CONFIGURATION'   => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
             'page_data_json'    => json_encode([
                 'pwg_token' => get_pwg_token(),
                 'str_yes_delete_confirmation' => l10n('Yes, delete'), 'str_no_delete_confirmation' => l10n('No, I have changed my mind'), 'str_delete' => l10n('Are you sure you want to delete comment #%s?'), 'str_deletes' => l10n('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => l10n('No comments selected, no actions possible.'), 'str_an_error_has' => l10n('An error has occured'), 'str_comment_validated' => l10n('The comment has been validated.'), 'str_comments_validated' => l10n('The comments have been validated.'), 'str_and_others' => l10n('and %s others'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('comments');
         $tabsheet->select('');
@@ -751,7 +752,7 @@ final class MiscController
         $cache_keys  = get_admin_client_cache_keys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
 
-        $tpl->assign(['navbar' => create_navigation_bar(PHPWG_ROOT_PATH . 'admin.php' . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => PHPWG_ROOT_PATH . 'admin.php', 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
+        $tpl->assign(['navbar' => create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
         $available_order_by = [[l10n('Rate date'), 'recently_rated DESC'], [l10n('Rating score'), 'score DESC'], [l10n('Average rate'), 'avg_rates DESC'], [l10n('Number of rates'), 'nb_rates DESC'], [l10n('Sum of rates'), 'sum_rates DESC'], [l10n('File name'), 'file DESC'], [l10n('Creation date'), 'date_creation DESC'], [l10n('Post date'), 'date_available DESC']];
         for ($i = 0; $i < count($available_order_by); $i++) { $tpl->append('order_by_options', $available_order_by[$i][0]); }
@@ -771,7 +772,7 @@ final class MiscController
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumb_url($image);
             $image_id_int  = is_numeric($image['id']) ? (int) $image['id'] : 0;
-            $image_url     = get_root_url() . 'admin.php?page=photo-' . $image_id_int;
+            $image_url     = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_int);
             $all_rates     = ServiceLocator::get(RateRepository::class)->findByElementId($image_id_int);
             $tpl_image     = ['id' => $image['id'], 'U_THUMB' => $thumbnail_src, 'U_URL' => $image_url, 'SCORE_RATE' => $image['score'], 'AVG_RATE' => $image['avg_rates'], 'SUM_RATE' => $image['sum_rates'], 'NB_RATES' => is_numeric($image['nb_rates']) ? (int) $image['nb_rates'] : 0, 'NB_RATES_TOTAL' => count($all_rates), 'FILE' => $image['file'], 'rates' => []];
             foreach ($all_rates as $row) {
@@ -885,7 +886,7 @@ final class MiscController
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => get_root_url() . 'admin.php', 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => get_root_url(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => get_root_url(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->set_filename('rating', 'rating_user.tpl');
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'rating');
     }
@@ -911,8 +912,8 @@ final class MiscController
         save_profile_from_post($edit_user, $errors);
 
         load_profile_in_template(
-            get_root_url() . 'admin.php?page=profile&amp;user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
-            get_root_url() . 'admin.php?page=user_list',
+            ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&amp;user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
+            ServiceLocator::get(UrlGenerator::class)->admin('user_list'),
             $edit_user
         );
 

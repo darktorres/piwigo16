@@ -809,7 +809,7 @@
               <span class="icon-cancel-circled edit-password-cancel"></span>
             </div>
             <div class="user-property-permissions">
-              <a href="admin.php?page=user_perm&user_id={$guest_id}"><p class="user-property-button head-button-2"><span class="icon-lock user-edit-icon"></span>{'Permissions'|@translate}</p></a>
+              <a href="{$ADMIN_URL}&amp;page=user_perm&amp;user_id={$guest_id}"><p class="user-property-button head-button-2"><span class="icon-lock user-edit-icon"></span>{'Permissions'|@translate}</p></a>
             </div>
           </div>
         </div>

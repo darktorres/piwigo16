@@ -37,10 +37,10 @@ $template->set_filenames(['comments' => 'comments.tpl']);
 $comments_disabled = !Config::activateComments();
 
 $template->assign([
-    'F_ACTION'           => get_root_url().'admin.php?page=comments',
+    'F_ACTION'           => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('comments'),
     'PWG_TOKEN'          => get_pwg_token(),
     'COMMENTS_DISABLED'  => $comments_disabled,
-    'U_CONFIGURATION'    => get_root_url().'admin.php?page=configuration&amp;section=comments',
+    'U_CONFIGURATION'    => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
     'page_data_json'     => json_encode([
         'pwg_token'                => get_pwg_token(),
         'str_yes_delete_confirmation' => l10n('Yes, delete'),
@@ -59,7 +59,7 @@ $template->assign([
 // | Tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('comments');

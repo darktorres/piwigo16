@@ -80,9 +80,9 @@
 
 <p class="afterUploadActions" hidden>
   {if !$DISPLAY_FORMATS}
-    <a class="batchLink icon-pencil"></a><span class="buttonSeparator">{'or'|translate}</span><a href="admin.php?page=photos_add" class="secondary_button icon-plus-circled">{'Add another set of photos'|@translate}</a>
+    <a class="batchLink icon-pencil"></a><span class="buttonSeparator">{'or'|translate}</span><a href="{$ADMIN_URL}&amp;page=photos_add" class="secondary_button icon-plus-circled">{'Add another set of photos'|@translate}</a>
   {else}
-    <a href="admin.php?page=photos_add&formats" class="icon-plus-circled">{'Add another set of formats'|@translate}</a>
+    <a href="{$ADMIN_URL}&amp;page=photos_add&amp;formats" class="icon-plus-circled">{'Add another set of formats'|@translate}</a>
   {/if}
 </p>
 

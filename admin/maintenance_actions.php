@@ -47,7 +47,7 @@ switch ($action) {
         {
             conf_update_param('gallery_locked', 'true');
             pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
-            redirect(get_root_url().'admin.php?page=maintenance');
+            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance'));
             break;
         }
     case 'unlock_gallery':
@@ -55,7 +55,7 @@ switch ($action) {
             conf_update_param('gallery_locked', 'false');
             $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
             pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
-            redirect(get_root_url().'admin.php?page=maintenance');
+            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance'));
             break;
         }
     case 'categories':
@@ -256,7 +256,7 @@ $template->assign('page_data_json', json_encode([
     'str_purge_search_history'    => l10n('Purge search history'),
     'str_delete_all_sizes_confirm' => l10n('Are you sure you want to delete all sizes?'),
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-$url_format = get_root_url().'admin.php?page=maintenance&amp;action=%s&amp;pwg_token='.get_pwg_token();
+$url_format = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
 if (!is_webmaster()) {
     PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));

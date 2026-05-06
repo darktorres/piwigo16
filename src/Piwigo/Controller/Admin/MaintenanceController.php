@@ -17,6 +17,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbInfo;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -89,7 +90,7 @@ final class MaintenanceController
         ];
         $GLOBALS['maint_actions'] = $this->maintActions;
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         if (isset($_GET['tab'])) {
             check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
@@ -136,13 +137,13 @@ final class MaintenanceController
             case 'lock_gallery':
                 conf_update_param('gallery_locked', 'true');
                 pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
-                redirect(get_root_url() . 'admin.php?page=maintenance');
+                redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
                 break;
             case 'unlock_gallery':
                 conf_update_param('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
                 pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
-                redirect(get_root_url() . 'admin.php?page=maintenance');
+                redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
                 break;
             case 'categories':
                 images_integrity(); categories_integrity(); update_uppercats(); update_category('all'); update_global_rank(); invalidate_user_cache(true);
@@ -259,7 +260,7 @@ final class MaintenanceController
             'str_delete_all_sizes_confirm' => l10n('Are you sure you want to delete all sizes?'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
+        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . get_pwg_token();
         if (!is_webmaster()) { PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'))); }
 
         $purge_urls = [l10n('All') => 'all'];
@@ -355,8 +356,8 @@ final class MaintenanceController
         $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
         switch ($action) {
             case 'phpinfo':  phpinfo(); exit();
-            case 'lock_gallery':    conf_update_param('gallery_locked', 'true'); redirect(get_root_url() . 'admin.php?page=maintenance'); break;
-            case 'unlock_gallery':  conf_update_param('gallery_locked', 'false'); $_SESSION['page_infos'] = [l10n('Gallery unlocked')]; redirect(get_root_url() . 'admin.php?page=maintenance'); break;
+            case 'lock_gallery':    conf_update_param('gallery_locked', 'true'); redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance')); break;
+            case 'unlock_gallery':  conf_update_param('gallery_locked', 'false'); $_SESSION['page_infos'] = [l10n('Gallery unlocked')]; redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance')); break;
             case 'categories':      images_integrity(); categories_integrity(); update_uppercats(); update_category('all'); update_global_rank(); invalidate_user_cache(true); break;
             case 'images':          images_integrity(); update_path(); update_rating_score(); invalidate_user_cache(); break;
             case 'delete_orphan_tags': delete_orphan_tags(); break;
@@ -404,7 +405,7 @@ final class MaintenanceController
                     elseif (str_contains((string) ($versions['current'] ?? ''), '%')) { PageState::current()->addInfo(l10n('You are running on development sources, no check possible.')); }
                     elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                         PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
-                        $update_url = PHPWG_ROOT_PATH . 'admin.php?page=updates';
+                        $update_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
                         PageState::current()->addInfo('<a href="' . $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>');
                     } else { PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.')); }
                 }
@@ -414,7 +415,7 @@ final class MaintenanceController
         $tpl->set_filenames(['maintenance' => 'maintenance_env.tpl']);
         $tpl->assign('page_data_json', json_encode(['unit_MB' => l10n('%s MB'), 'no_time_elapsed' => l10n('right now'), 'no_active_plugin' => l10n('No plugin activated'), 'error_occured' => l10n('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = get_root_url() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . get_pwg_token();
+        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . get_pwg_token();
 
         $purge_urls = [];
         $purge_urls[l10n('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
@@ -631,10 +632,10 @@ final class MaintenanceController
 
         $tpl->set_filename('history', 'history.tpl');
         history_tabsheet();
-        $tpl->assign(['F_ACTION' => get_root_url() . 'admin.php?page=history', 'API_METHOD' => 'ws.php?format=json&method=pwg.history.search']);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search']);
 
         if (isset($page['search_id'])) {
-            $navbar = create_navigation_bar(get_root_url() . 'admin.php' . get_query_string_diff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
+            $navbar = create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
             $tpl->assign('navbar', $navbar);
         }
 
@@ -679,7 +680,7 @@ final class MaintenanceController
         $tpl->assign('guest_id', Config::guestId());
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('History'));
         $tpl->assign('page_data_json', json_encode([
-            'API_METHOD'                  => 'ws.php?format=json&method=pwg.history.search',
+            'API_METHOD'                  => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
             'filter_user_name'            => $form_param['user_name'] ?? null,
             'guest_id'                    => Config::guestId(),
             'today'                       => date('Y-m-d'),
@@ -722,7 +723,7 @@ final class MaintenanceController
 
         $tpl->set_filename('stats', 'stats.tpl');
         history_tabsheet();
-        $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=history', 'F_ACTION' => get_root_url() . 'admin.php?page=history']);
+        $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=history', 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
 
         $actual_date = new \DateTime();
         $actual_date->add(new \DateInterval('PT1S'));
@@ -783,7 +784,7 @@ final class MaintenanceController
 
         $tpl->set_filenames(['site_manager' => 'site_manager.tpl']);
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
@@ -818,7 +819,7 @@ final class MaintenanceController
         }
 
         $tpl->assign([
-            'F_ACTION'   => get_root_url() . 'admin.php' . get_query_string_diff(['action', 'site', 'pwg_token']),
+            'F_ACTION'   => ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['action', 'site', 'pwg_token']),
             'PWG_TOKEN'  => get_pwg_token(),
             'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
             'page_data_json' => json_encode(['str_delete_site_confirm' => l10n('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
@@ -829,8 +830,8 @@ final class MaintenanceController
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
             $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
             $is_remote  = url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '');
-            $base_url   = PHPWG_ROOT_PATH . 'admin.php?page=site_manager&amp;site=' . $row_id_str . '&amp;pwg_token=' . get_pwg_token() . '&amp;action=';
-            $update_url = PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=' . $row_id_str;
+            $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&amp;site=' . $row_id_str . '&amp;pwg_token=' . get_pwg_token() . '&amp;action=';
+            $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
             $tpl_var = [
@@ -896,10 +897,10 @@ final class MaintenanceController
         }
 
         if (isset($page['no_md5sum_number'])) {
-            $tpl->assign(['save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . l10n('Some checksums are missing.') . '<i class="icon-right"></i></a>']);
+            $tpl->assign(['save_error' => '<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . l10n('Some checksums are missing.') . '<i class="icon-right"></i></a>']);
         }
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
@@ -1262,7 +1263,7 @@ final class MaintenanceController
 
         $tpl->assign([
             'SITE_URL'       => $site_url_str,
-            'U_SITE_MANAGER' => get_root_url() . 'admin.php?page=site_manager',
+            'U_SITE_MANAGER' => ServiceLocator::get(UrlGenerator::class)->admin('site_manager'),
             'L_RESULT_UPDATE' => $result_title . l10n('Search for new images in the directories'),
             'L_RESULT_METADATA' => $result_title . l10n('Metadata synchronization results'),
             'METADATA_LIST'  => $used_metadata,

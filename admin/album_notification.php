@@ -183,7 +183,7 @@ $template->assign(
       trim(
           get_cat_display_name_from_id(
               $page['cat'],
-              'admin.php?page=album-'
+              \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
           )
       ),
     'F_ACTION' => $admin_album_base_url.'-notification',

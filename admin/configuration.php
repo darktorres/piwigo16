@@ -351,7 +351,7 @@ $tabsheet->set_id('configuration');
 $tabsheet->select($section_str);
 $tabsheet->assign();
 
-$action = get_root_url().'admin.php?page=configuration';
+$action = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('configuration');
 $action .= '&amp;section='.$section_str;
 
 $template->assign(

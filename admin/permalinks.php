@@ -170,7 +170,7 @@ $sort_by = parse_sort_variables(
     '#old_permalinks'
 );
 
-$url_del_base = get_root_url().'admin.php?page=permalinks';
+$url_del_base = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('permalinks');
 $sortByOld0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
 $oldPermalinkQuery = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
 if (count($sort_by) && $sortByOld0 !== '') {

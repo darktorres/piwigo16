@@ -28,7 +28,7 @@ if (!Config::enableExtensionsInstall()) {
 
 $template->set_filenames(['languages' => 'languages_new.tpl']);
 
-$base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.$page['tab'];
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
 
 $languages = new Languages();
 $languages->get_db_languages();

@@ -30,7 +30,7 @@
       {html_options options=$group_mail_options}
     </select>
 {elseif isset($no_group_in_gallery) and $no_group_in_gallery}
-    {'There is no group in this gallery.'|@translate} <a href="admin.php?page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {'There is no group in this gallery.'|@translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|@translate}</a>
 {else}
     {'No group is permitted to see this private album'|@translate}.
     <a href="{$permission_url}" class="externalLink">{'Permission management'|@translate}</a>

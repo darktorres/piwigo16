@@ -167,7 +167,7 @@ foreach ($new_extensions as $file) {
 $template->set_filenames(['extend_for_templates'
      => 'extend_for_templates.tpl']);
 
-$base_url = PHPWG_ROOT_PATH.'admin.php?page=extend_for_templates';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('extend_for_templates');
 
 $template->assign(
     [

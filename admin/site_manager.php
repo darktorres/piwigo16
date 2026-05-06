@@ -49,7 +49,7 @@ $template->set_filenames(['site_manager' => 'site_manager.tpl']);
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('site_update');
@@ -109,7 +109,7 @@ if (isset($_GET['action']) and isset($page['site'])) {
 
 $template->assign(
     [
-    'F_ACTION'  => get_root_url().'admin.php'.get_query_string_diff(['action','site','pwg_token']),
+    'F_ACTION'  => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin().get_query_string_diff(['action','site','pwg_token']),
     'PWG_TOKEN' => get_pwg_token(),
     'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
     'page_data_json' => json_encode([
@@ -130,14 +130,12 @@ $sites_detail = array_column(get_dbal_connection()->executeQuery($query)->fetchA
 foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
     $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
     $is_remote = url_is_remote(is_scalar($row['galleries_url']) ? (string)$row['galleries_url'] : '');
-    $base_url = PHPWG_ROOT_PATH.'admin.php';
-    $base_url .= '?page=site_manager';
+    $base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('site_manager');
     $base_url .= '&amp;site='.$row_id_str;
     $base_url .= '&amp;pwg_token='.get_pwg_token();
     $base_url .= '&amp;action=';
 
-    $update_url = PHPWG_ROOT_PATH.'admin.php';
-    $update_url .= '?page=site_update';
+    $update_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('site_update');
     $update_url .= '&amp;site='.$row_id_str;
 
     $site_id = is_numeric($row['id']) ? (int)$row['id'] : 0;

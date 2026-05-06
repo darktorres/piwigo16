@@ -11,6 +11,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\NotFoundException;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
@@ -56,7 +57,7 @@ final class AlbumController
         check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
         $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
-        $this->adminAlbumBaseUrl = get_root_url() . 'admin.php?page=album-' . $cat_id_str;
+        $this->adminAlbumBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
         $this->albumCategory = ServiceLocator::get(CategoryRepository::class)
             ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);
 
@@ -169,7 +170,7 @@ final class AlbumController
 
         $tpl->assign('open_cat', $open_cat);
         $tpl->set_filename('albums', 'albums.tpl');
-        $tpl->assign(['F_ACTION' => get_root_url() . 'admin.php?page=albums']);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('albums')]);
         $tpl->assign('delay_before_autoOpen', Config::albumMoveDelayBeforeAutoOpening());
         $tpl->assign('POS_PREF', Config::newcatDefaultPosition());
 
@@ -274,7 +275,7 @@ final class AlbumController
         if ($category === null) {
             check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
             $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
-            $admin_album_base_url = get_root_url() . 'admin.php?page=album-' . $cat_id_str;
+            $admin_album_base_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
             $category = ServiceLocator::get(CategoryRepository::class)
                 ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);
             if ($category === null) {
@@ -351,7 +352,7 @@ final class AlbumController
         $catIdScalar = is_scalar($page['cat']) ? (string) $page['cat'] : '';
         $tpl->set_filename('album_notification', 'album_notification.tpl');
         $tpl->assign([
-            'CATEGORIES_NAV' => trim(get_cat_display_name_from_id($catIdScalar, 'admin.php?page=album-')),
+            'CATEGORIES_NAV' => trim(get_cat_display_name_from_id($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
             'F_ACTION'       => $admin_album_base_url . '-notification',
             'PWG_TOKEN'      => get_pwg_token(),
         ]);
@@ -426,7 +427,7 @@ final class AlbumController
 
         check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 
-        $base_url   = get_root_url() . 'admin.php?page=cat_list';
+        $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
         $navigation = '<a href="' . $base_url . '">' . l10n('Home') . '</a>';
 
         $page['tab'] = 'list';
@@ -441,7 +442,7 @@ final class AlbumController
             $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
             update_global_rank();
             invalidate_user_cache();
-            $redirect_url = get_root_url() . 'admin.php?page=cat_list';
+            $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
             if (isset($_GET['parent_id'])) {
                 $redirect_url .= '&parent_id=' . (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : '');
             }
@@ -455,7 +456,7 @@ final class AlbumController
             if (isset($output_create['error'])) {
                 PageState::current()->addError(is_scalar($output_create['error']) ? (string) $output_create['error'] : '');
             } else {
-                $edit_url = get_root_url() . 'admin.php?page=album-' . (is_scalar($output_create['id'] ?? '') ? (string) ($output_create['id'] ?? '') : '');
+                $edit_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . (is_scalar($output_create['id'] ?? '') ? (string) ($output_create['id'] ?? '') : ''));
                 PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>');
             }
         }
@@ -467,7 +468,7 @@ final class AlbumController
         }
 
         $tpl->set_filename('categories', 'cat_list.tpl');
-        $form_action = PHPWG_ROOT_PATH . 'admin.php?page=cat_list';
+        $form_action = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
         if (isset($_GET['parent_id'])) {
             $form_action .= '&amp;parent_id=' . (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : '');
         }
@@ -515,7 +516,7 @@ final class AlbumController
         }
 
         $tpl->assign('categories', []);
-        $base_url = get_root_url() . 'admin.php?page=';
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         if (isset($_GET['parent_id'])) {
             $tpl->assign('PARENT_EDIT', $base_url . 'album-' . (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : ''));
@@ -577,7 +578,7 @@ final class AlbumController
 
         if ($category === null) {
             $cat_id_str           = (string) $_GET['cat_id'];
-            $admin_album_base_url = get_root_url() . 'admin.php?page=album-' . $cat_id_str;
+            $admin_album_base_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
             $category             = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $cat_id_str);
             if ($category === null) {
                 throw new ValidationException('Invalid category');
@@ -608,18 +609,18 @@ final class AlbumController
         $subcat_ids             = get_subcat_ids([$catId]);
         $category['nb_subcats'] = count($subcat_ids) - 1;
 
-        $navigation = get_cat_display_name_cache($catUppercats, get_root_url() . 'admin.php?page=album-');
+        $navigation = get_cat_display_name_cache($catUppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
 
         $uppercats_array = explode(',', $catUppercats);
         if (count($uppercats_array) > 1) {
             array_pop($uppercats_array);
-            $parent_navigation = get_cat_display_name_cache(implode(',', $uppercats_array), get_root_url() . 'admin.php?page=album-');
+            $parent_navigation = get_cat_display_name_cache(implode(',', $uppercats_array), ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
         } else {
             $parent_navigation = l10n('Root');
         }
 
         $tpl->set_filename('album_properties', 'cat_modify.tpl');
-        $base_url     = get_root_url() . 'admin.php?page=';
+        $base_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $cat_list_url = $base_url . 'albums';
         $self_url     = $cat_list_url;
         if ($catUppercat !== '') {
@@ -642,7 +643,7 @@ final class AlbumController
             'U_ADD_PHOTOS_ALBUM'    => $base_url . 'photos_add&amp;album=' . $catId,
             'U_CHILDREN'            => $cat_list_url . '&amp;parent_id=' . $catId,
             'U_MOVE'                => $base_url . 'albums&amp;parent_id=' . $catId,
-            'U_ACTIVITY'            => get_root_url() . 'admin.php?page=user_activity&album=' . $catId,
+            'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&album=' . $catId,
         ]);
 
         if (Config::activateComments()) {
@@ -787,7 +788,7 @@ final class AlbumController
 
         $get_section     = $_GET['section'] ?? null;
         $page['section'] = is_scalar($get_section) ? (string) $get_section : 'status';
-        $base_url        = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
+        $base_url        = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&amp;section=';
 
         $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=cat_options', 'F_ACTION' => $base_url . $page['section']]);
 
@@ -843,7 +844,7 @@ final class AlbumController
         }
         $pageCat = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
 
-        $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : (get_root_url() . 'admin.php?page=album-' . $cat_id);
+        $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id);
 
         if (!empty($_POST)) {
             check_pwg_token();
@@ -902,7 +903,7 @@ final class AlbumController
 
         $tpl->set_filename('cat_perm', 'cat_perm.tpl');
         $tpl->assign([
-            'CATEGORIES_NAV' => get_cat_display_name_from_id($pageCat, 'admin.php?page=album-'),
+            'CATEGORIES_NAV' => get_cat_display_name_from_id($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'),
             'U_HELP'         => get_root_url() . 'admin/popuphelp.php?page=cat_perm',
             'F_ACTION'       => $admin_album_base_url . '-permissions',
             'private'        => ('private' == $category['status']),
@@ -1022,7 +1023,7 @@ final class AlbumController
         }
 
         $tpl->set_filenames(['element_set_ranks' => 'element_set_ranks.tpl']);
-        $base_url = get_root_url() . 'admin.php';
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
         $category = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $page['category_id']);
 
         if ($category !== null && ($category['image_order'] == 'rank ASC' || $category['image_order'] == '`rank` ASC')) {
@@ -1031,7 +1032,7 @@ final class AlbumController
             $image_order_choice = 'user_define';
         }
 
-        $navigation = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', get_root_url() . 'admin.php?page=album-');
+        $navigation = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
         $tpl->assign(['CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)), 'F_ACTION' => $base_url . get_query_string_diff([])]);
 
         $imgRows = ServiceLocator::get(ImageRepository::class)->findByCategoryIdOrdered((int) $page['category_id']);

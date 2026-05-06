@@ -10,7 +10,7 @@
     <div>
         <div class="activity-header">
             <div class="user_activity_end_options">
-                <a class="download_csv tiptip" title="{'Download all activities'|translate}" href="admin.php?page=user_activity&type=download_logs"> 
+                <a class="download_csv tiptip" title="{'Download all activities'|translate}" href="{$ADMIN_URL}&amp;page=user_activity&amp;type=download_logs">
                     <i class="icon-download"> </i>
                 </a>
                 <div id="activityMoreFilters" class="activity-more-filters">

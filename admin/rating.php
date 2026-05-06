@@ -122,12 +122,12 @@ $rating_page_data = [
 $template->assign(
     [
     'navbar' => create_navigation_bar(
-        PHPWG_ROOT_PATH.'admin.php'.get_query_string_diff(['start','del']),
+        \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin().get_query_string_diff(['start','del']),
         $nb_images,
         $start,
         $elements_per_page
     ),
-    'F_ACTION' => PHPWG_ROOT_PATH.'admin.php',
+    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin(),
     'DISPLAY' => $elements_per_page,
     'NB_ELEMENTS' => $nb_elements,
     'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
@@ -207,7 +207,7 @@ foreach ($images as $image) {
     $thumbnail_src = DerivativeImage::thumb_url($image);
 
     $image_id_int = is_numeric($image['id']) ? (int) $image['id'] : 0;
-    $image_url = get_root_url().'admin.php?page=photo-'.$image_id_int;
+    $image_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$image_id_int);
 
     $all_rates = ServiceLocator::get(RateRepository::class)
         ->findByElementId($image_id_int);

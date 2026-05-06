@@ -85,10 +85,7 @@ $template->assign(
     'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
     'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
-    'F_ACTION' =>
-        PHPWG_ROOT_PATH.
-        'admin.php?page=user_perm'.
-        '&amp;user_id='.$page['user'],
+    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_perm') . '&amp;user_id='.$page['user'],
     ]
 );
 

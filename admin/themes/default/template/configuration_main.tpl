@@ -95,7 +95,7 @@
               {html_options options=$group_options selected=$main.email_admin_on_new_user_filter_group}
             </select>
 {else}
-    {'There is no group in this gallery.'|@translate} <a href="admin.php?page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {'There is no group in this gallery.'|@translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|@translate}</a>
 {/if}
             </span>
 

@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tag\TagRepository;
@@ -116,7 +117,7 @@ final class ImageAdminService
             return [];
         }
         $src = $size === null ? DerivativeImage::thumb_url($row) : DerivativeImage::url($size, $row);
-        return ['src' => $src, 'url' => get_root_url() . 'admin.php?page=photo-' . $imageId];
+        return ['src' => $src, 'url' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId)];
     }
 
     /** @return string[] */

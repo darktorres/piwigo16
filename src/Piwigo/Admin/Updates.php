@@ -9,6 +9,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 class Updates
@@ -220,7 +221,7 @@ class Updates
             $content .= "\n\n".l10n(
                 'Time has come to update your Piwigo with version %s, go to %s',
                 $new_versions_string,
-                get_absolute_root_url().'admin.php?page=updates'
+                ServiceLocator::get(UrlGenerator::class)->admin('updates')
             );
             $content .= "\n\n".l10n('It only takes a few clicks.');
             $content .= "\n\n".l10n('Running on an up-to-date Piwigo is important for security.');
@@ -485,7 +486,7 @@ class Updates
             // DEFERRED: redirect target uses basename(__DIR__) = "Admin", producing
             // "page=plugin-Admin" — a leftover from when the updater was a plugin.
             // Revisit when the admin updates page URL is finalised (#7 cleanup).
-            redirect(get_root_url().'admin.php?page=plugin-'.basename(__DIR__));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('plugin-'.basename(__DIR__)));
         }
 
         $obsolete_list = null;

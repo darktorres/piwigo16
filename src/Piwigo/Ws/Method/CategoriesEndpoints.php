@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
@@ -330,7 +331,7 @@ final class CategoriesEndpoints
         foreach ($searchRows as $row) {
             $id              = is_scalar($row['id']) ? (string) $row['id'] : '';
             $row['nb_images'] = $nbImagesOf[$id] ?? 0;
-            $catDisplayName  = get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', 'admin.php?page=album-');
+            $catDisplayName  = get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
             $renderedAdminName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getAdminList');
             $row['name']     = strip_tags((string) $renderedAdminName);
@@ -620,7 +621,7 @@ final class CategoriesEndpoints
         invalidate_user_cache();
         $catDisplayName = '';
         foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
-            $catDisplayName = get_cat_display_name_cache($uppercatsStr, 'admin.php?page=album-');
+            $catDisplayName = get_cat_display_name_cache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
         $nbPhotosIn = array_column(get_dbal_connection()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');

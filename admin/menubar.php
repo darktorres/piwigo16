@@ -46,7 +46,7 @@ function make_consecutive(array &$orders, int $step = 50): void
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('menus');
@@ -160,7 +160,7 @@ foreach ($mb_conf as $id => $pos) {
     );
 }
 
-$action = get_root_url().'admin.php?page=menubar';
+$action = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('menubar');
 $template->assign(['F_ACTION' => $action]);
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

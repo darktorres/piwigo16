@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -59,7 +60,7 @@ final class PhotoController
         check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
         $image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '';
-        $this->adminPhotoBaseUrl = get_root_url() . 'admin.php?page=photo-' . $image_id_str;
+        $this->adminPhotoBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_str);
         $GLOBALS['admin_photo_base_url'] = $this->adminPhotoBaseUrl;
 
         $page['image'] = get_image_infos($image_id_str, true);
@@ -115,7 +116,7 @@ final class PhotoController
 
         // photo() may have already set these; fall back for direct-page access
         if ($this->adminPhotoBaseUrl === '') {
-            $this->adminPhotoBaseUrl = get_root_url() . 'admin.php?page=photo-' . $image_id_str;
+            $this->adminPhotoBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_str);
         }
         $admin_photo_base_url = $this->adminPhotoBaseUrl;
 
@@ -240,8 +241,8 @@ SELECT id
             'U_DOWNLOAD'         => 'action.php?id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '') . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
             'U_SYNC'             => $admin_url_start . '&amp;sync_metadata=1',
             'U_DELETE'           => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),
-            'U_HISTORY'          => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
-            'U_ACTIVITY'         => get_root_url() . 'admin.php?page=user_activity&photo=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
+            'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
+            'U_ACTIVITY'         => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
             'PATH'               => $row['path'],
             'TN_SRC'             => DerivativeImage::url(IMG_MEDIUM, $src_image),
             'FILE_SRC'           => DerivativeImage::url(IMG_LARGE, $src_image),
@@ -254,7 +255,7 @@ SELECT id
             'AUTHOR'             => htmlspecialchars(isset($_POST['author']) ? stripslashes(is_scalar($_POST['author']) ? (string) $_POST['author'] : '') : (empty($row['author']) ? '' : (is_scalar($row['author']) ? (string) $row['author'] : ''))),
             'DATE_CREATION'      => $row['date_creation'],
             'DESCRIPTION'        => htmlspecialchars(isset($_POST['comment']) ? stripslashes(is_scalar($_POST['comment']) ? (string) $_POST['comment'] : '') : (empty($row['comment']) ? '' : (is_scalar($row['comment']) ? (string) $row['comment'] : ''))),
-            'F_ACTION'           => get_root_url() . 'admin.php' . get_query_string_diff(['sync_metadata']),
+            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['sync_metadata']),
         ]);
 
         $added_by  = 'N/A';
@@ -296,7 +297,7 @@ SELECT id
         $tpl->assign('INTRO', $intro_vars);
 
         if (in_array(get_extension($row['path']), Config::pictureExtensions())) {
-            $tpl->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''));
+            $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''));
         }
 
         $selected_level = $_POST['level'] ?? $row['level'];
@@ -306,7 +307,7 @@ SELECT id
         $related_categories_ids = [];
         foreach (ServiceLocator::get(CategoryRepository::class)
             ->findCategoryInfosByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) as $catRow) {
-            $name = get_cat_display_name_cache(is_scalar($catRow['uppercats'] ?? null) ? (string) $catRow['uppercats'] : '', get_root_url() . 'admin.php?page=album-');
+            $name = get_cat_display_name_cache(is_scalar($catRow['uppercats'] ?? null) ? (string) $catRow['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             if ($catRow['category_id'] == $storage_category_id) {
                 $tpl->assign('STORAGE_CATEGORY', $name);
             }
@@ -473,7 +474,7 @@ SELECT id
         unset($format);
 
         $tpl->assign([
-            'ADD_FORMATS_URL' => get_root_url() . 'admin.php?page=photos_add&formats=' . $picFmtId,
+            'ADD_FORMATS_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add') . '&formats=' . $picFmtId,
             'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
             'FORMATS'         => $formats,
             'PWG_TOKEN'       => get_pwg_token(),
@@ -501,7 +502,7 @@ SELECT id
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         require_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
+        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $upload_form_config = get_upload_form_config();
         $GLOBALS['upload_form_config'] = $upload_form_config;
@@ -545,7 +546,7 @@ SELECT id
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         require_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
+        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         if (isset($_GET['batch'])) {
             check_input_parameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
@@ -555,7 +556,7 @@ SELECT id
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
             mass_inserts(CADDIE_TABLE, array_keys($inserts[0]), $inserts);
-            redirect(get_root_url() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
         if (userprefs_get_param('promote-mobile-apps', true)) {
@@ -596,7 +597,7 @@ SELECT id
                 }
                 $extTab = explode('.', is_scalar($formats_original_info['file'] ?? null) ? (string) $formats_original_info['file'] : '');
                 $formats_original_info['ext']    = l10n('%s file type', strtoupper(end($extTab)));
-                $formats_original_info['u_edit'] = get_root_url() . 'admin.php?page=photo-' . $fmtId;
+                $formats_original_info['u_edit'] = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $fmtId);
                 $have_formats_original           = true;
             } else {
                 PageState::current()->addError(l10n('The original picture selected dosen\'t exists.'));
@@ -615,7 +616,7 @@ SELECT id
             'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
             'FORMATS_ORIGINAL_INFO' => $formats_original_info,
             'FORMATS_EXT_INFO'      => $formats_ext_info,
-            'SWITCH_FORMAT_MODE_URL' => get_root_url() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
+            'SWITCH_FORMAT_MODE_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add') . ($display_formats ? '' : '&formats'),
             'format_ext'            => implode(',', Config::formatExtensions()),
             'str_format_ext'        => implode(', ', Config::formatExtensions()),
             'page_data_json'        => json_encode([
@@ -656,7 +657,7 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
+        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $tpl->assign('FTP_HELP_CONTENT', load_language('help/photos_add_ftp.html', '', ['return' => true]));
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Upload Photos'));
@@ -669,7 +670,7 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', get_root_url() . 'admin.php?page=photos_add');
+        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Upload Photos'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');

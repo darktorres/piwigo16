@@ -102,9 +102,9 @@ final class AdminController implements ControllerInterface
                 }
             }
 
-            $redirect_url = 'admin.php';
+            $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin();
             if (count($url_params) > 0) {
-                $redirect_url .= '?' . implode('&amp;', $url_params);
+                $redirect_url .= '&' . implode('&', $url_params);
             }
 
             redirect($redirect_url);
@@ -118,7 +118,7 @@ final class AdminController implements ControllerInterface
 
         // ── Variables init ────────────────────────────────────────────────────
 
-        $change_theme_url = PHPWG_ROOT_PATH . 'admin.php?';
+        $change_theme_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&';
         $test_get         = $_GET;
         unset($test_get['page'], $test_get['section'], $test_get['tag']);
         $qsRaw = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
@@ -171,7 +171,7 @@ final class AdminController implements ControllerInterface
         }
 
         $adminPage  = (string) $page['page'];
-        $link_start = PHPWG_ROOT_PATH . 'admin.php?page=';
+        $link_start = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $conf_link  = $link_start . 'configuration&amp;section=';
 
         check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
@@ -213,8 +213,8 @@ final class AdminController implements ControllerInterface
             'U_USERS'                => $link_start . 'user_list',
             'U_GROUPS'               => $link_start . 'group_list',
             'U_RETURN'               => get_gallery_home_url(),
-            'U_ADMIN'                => PHPWG_ROOT_PATH . 'admin.php',
-            'U_LOGOUT'               => PHPWG_ROOT_PATH . 'index.php?act=logout',
+            'U_ADMIN'                => ServiceLocator::get(UrlGenerator::class)->admin(),
+            'U_LOGOUT'               => get_root_url() . '?act=logout',
             'U_PLUGINS'              => $link_start . 'plugins',
             'U_ADD_PHOTOS'           => $link_start . 'photos_add',
             'U_CHANGE_THEME'         => $change_theme_url,

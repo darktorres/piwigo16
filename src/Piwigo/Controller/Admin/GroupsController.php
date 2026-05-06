@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 
@@ -35,7 +36,7 @@ final class GroupsController
 
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        $my_base_url = get_root_url() . 'admin.php?page=';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('groups');
@@ -50,7 +51,7 @@ final class GroupsController
 
         $cache_keys = get_admin_client_cache_keys(['groups', 'users']);
         $tpl->assign([
-            'F_ADD_ACTION'              => get_root_url() . 'admin.php?page=group_list',
+            'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
             'PWG_TOKEN'                 => get_pwg_token(),
             'CACHE_KEYS'                => $cache_keys,
             'ROOT_URL'                  => get_root_url(),
@@ -86,7 +87,7 @@ final class GroupsController
         $groupRepo  = ServiceLocator::get(GroupRepository::class);
         $userFields = Config::userFields();
 
-        $admin_url             = get_root_url() . 'admin.php?page=';
+        $admin_url             = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $perm_url              = $admin_url . 'group_perm&amp;group_id=';
         $users_url             = $admin_url . 'user_list&amp;group=';
         $del_url               = $admin_url . 'group_list&amp;delete=';
@@ -170,7 +171,7 @@ final class GroupsController
             'TITLE'              => l10n('Manage permissions for group "%s"', get_groupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
             'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
-            'F_ACTION'           => get_root_url() . 'admin.php?page=group_perm&amp;group_id=' . $group_id,
+            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
         ]);
 
         $query_true = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " INNER JOIN " . GROUP_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ";";

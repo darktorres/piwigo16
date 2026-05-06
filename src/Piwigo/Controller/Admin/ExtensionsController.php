@@ -14,6 +14,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Language\LanguageRepository;
@@ -60,7 +61,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $my_base_url = get_root_url() . 'admin.php?page=plugins';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins');
         $GLOBALS['my_base_url'] = $my_base_url;
 
         if (isset($_GET['tab'])) {
@@ -105,7 +106,7 @@ final class ExtensionsController
         }
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'plugins';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
         $pwg_token = get_pwg_token();
         $action_url = $base_url . '&amp;plugin=' . '%s' . '&amp;pwg_token=' . $pwg_token;
 
@@ -146,7 +147,7 @@ final class ExtensionsController
 
             $setting_url = '';
             if ($fs_plugin['hasSettings']) {
-                $setting_url = 'admin.php?page=plugin-' . $plugin_id;
+                $setting_url = ServiceLocator::get(UrlGenerator::class)->admin('plugin-' . $plugin_id);
                 if (preg_match('/^piwigo-(videojs|openstreetmap)$/', (string) $plugin_id)) {
                     $setting_url = str_replace('piwigo-', 'piwigo_', $setting_url);
                 }
@@ -250,7 +251,7 @@ final class ExtensionsController
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'plugins_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr . '&tab=' . $tabStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
 
         $plugins = new Plugins();
 
@@ -267,7 +268,7 @@ final class ExtensionsController
         if (isset($_GET['installstatus'])) {
             switch ($_GET['installstatus']) {
                 case 'ok':
-                    $activate_url = get_root_url() . 'admin.php?page=plugins&amp;filter=deactivated';
+                    $activate_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins') . '&amp;filter=deactivated';
                     PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
                     PageState::current()->addInfo('<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>');
                     $getPluginId = is_string($_GET['plugin_id'] ?? null) ? $_GET['plugin_id'] : '';
@@ -395,7 +396,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $my_base_url = get_root_url() . 'admin.php?page=themes';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('themes');
         $GLOBALS['my_base_url'] = $my_base_url;
 
         if (isset($_GET['tab'])) {
@@ -437,7 +438,7 @@ final class ExtensionsController
         }
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'themes';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
         $themes   = new Themes();
 
         if (isset($_GET['action']) && isset($_GET['theme'])) {
@@ -513,7 +514,7 @@ final class ExtensionsController
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'themes_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr . '&tab=' . $tabStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
         $themes   = new Themes();
 
         $themes_dir = PHPWG_ROOT_PATH . 'themes';
@@ -658,7 +659,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $my_base_url = get_root_url() . 'admin.php?page=languages';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('languages');
         $GLOBALS['my_base_url'] = $my_base_url;
 
         if (isset($_GET['tab'])) {
@@ -700,7 +701,7 @@ final class ExtensionsController
 
         $tpl->set_filenames(['languages' => 'languages_installed.tpl']);
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
 
         $languages = new Languages();
         $languages->get_db_languages();
@@ -757,7 +758,7 @@ final class ExtensionsController
         $tpl->set_filenames(['languages' => 'languages_new.tpl']);
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
-        $base_url = get_root_url() . 'admin.php?page=' . $pageStr . '&tab=' . $tabStr;
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
 
         $languages = new Languages();
         $languages->get_db_languages();
@@ -814,7 +815,7 @@ final class ExtensionsController
             throw new ConfigException('update system is disabled');
         }
 
-        $my_base_url = get_root_url() . 'admin.php?page=updates';
+        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
 
         if (isset($_GET['tab'])) {
             $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';

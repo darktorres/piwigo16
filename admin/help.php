@@ -21,7 +21,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 check_status(ACCESS_ADMINISTRATOR);
 
-$help_link = get_root_url().'admin.php?page=help&section=';
+$help_link = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('help') . '&section=';
 $selected = null;
 
 if (!isset($_GET['section']) || !is_string($_GET['section'])) {

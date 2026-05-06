@@ -24,7 +24,7 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
 define(
     'PHOTOS_ADD_BASE_URL',
-    get_root_url().'admin.php?page=photos_add'
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photos_add')
 );
 
 // +-----------------------------------------------------------------------+

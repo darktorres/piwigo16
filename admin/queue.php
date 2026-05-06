@@ -43,7 +43,7 @@ if ($action === 'retry' && is_numeric($_GET['id'] ?? null)) {
         PageState::current()->addInfo('Job moved back to async queue.');
     }
 
-    redirect(get_root_url() . 'admin.php?page=queue');
+    redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('queue'));
 }
 
 if ($action === 'purge_failed') {
@@ -53,7 +53,7 @@ if ($action === 'purge_failed') {
         ['piwigo_failed']
     );
     PageState::current()->addInfo('Failed queue purged.');
-    redirect(get_root_url() . 'admin.php?page=queue');
+    redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('queue'));
 }
 
 // ---- Read queue stats ----------------------------------------------------
@@ -98,7 +98,7 @@ $failedJobsForTpl = array_map(static function (array $row): array {
         'id'         => is_numeric($row['id']) ? (int) $row['id'] : 0,
         'class'      => $class,
         'created_at' => is_string($row['created_at']) ? $row['created_at'] : '',
-        'U_RETRY'    => get_root_url() . 'admin.php?page=queue&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0),
+        'U_RETRY'    => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('queue') . '&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0),
     ];
 }, $failedJobs);
 
@@ -107,7 +107,7 @@ $template->assign([
     'pending_async'   => $pendingAsync,
     'pending_failed'  => $pendingFailed,
     'failed_jobs'     => $failedJobsForTpl,
-    'U_PURGE_FAILED'  => get_root_url() . 'admin.php?page=queue&action=purge_failed&pwg_token=' . $pwg_token,
+    'U_PURGE_FAILED'  => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('queue') . '&action=purge_failed&pwg_token=' . $pwg_token,
     'worker_command'  => 'bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M',
 ]);
 

@@ -95,7 +95,7 @@ if (is_string($bmf['prefilter'] ?? null)) {
     $page['prefilter'] = $bmf['prefilter'];
 }
 
-$redirect_url = get_root_url().'admin.php?page='.(is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+$redirect_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
 
 /** @var array<int> $collection_int */
 $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
@@ -340,7 +340,7 @@ if (isset($_POST['submit'])) {
                     count($collection_int)
                 );
 
-                $redirect_url = get_root_url().'admin.php?page='.(is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+                $redirect_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                 $redirect = true;
             } else {
                 PageState::current()->addError(l10n('No photo can be deleted'));
@@ -387,7 +387,7 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 $template->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
 
-$base_url = get_root_url().'admin.php';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
 
 require(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
 
@@ -544,7 +544,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         'thumb' => new DerivativeImage($thumb_params, $src_image),
         'TITLE' => $ttitle,
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
-        'U_EDIT' => get_root_url().'admin.php?page=photo-'.(is_scalar($row['id']) ? (string)$row['id'] : ''),
+        'U_EDIT' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.(is_scalar($row['id']) ? (string)$row['id'] : '')),
         ]
             )
         );

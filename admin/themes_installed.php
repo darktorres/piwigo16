@@ -25,7 +25,7 @@ if (!is_webmaster()) {
     PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-$base_url = get_root_url().'admin.php?page='.$page['page'];
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']);
 
 $themes = new Themes();
 

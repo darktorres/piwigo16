@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -61,7 +62,7 @@ final class BatchManagerController
             if ('empty_caddie' == $_GET['action']) {
                 ServiceLocator::get(ImageRepository::class)->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
                 $_SESSION['page_infos'] = [l10n('Information data registered in database')];
-                redirect(get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
             }
 
             if ('delete_orphans' == $_GET['action'] && isset($_GET['nb_orphans_deleted'])) {
@@ -72,7 +73,7 @@ final class BatchManagerController
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = l10n_dec('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
-                    redirect(get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                    redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
                 }
             }
 
@@ -84,7 +85,7 @@ final class BatchManagerController
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = l10n_dec('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
-                    redirect(get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                    redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
                 }
             }
         }
@@ -316,7 +317,7 @@ final class BatchManagerController
             $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
             if (!ServiceLocator::get(CategoryRepository::class)->existsById($bmf_category)) {
                 unset($_SESSION['bulk_manager_filter']);
-                redirect(get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? get_subcat_ids([$bmf_category]) : [$bmf_category];
             $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
@@ -395,7 +396,7 @@ final class BatchManagerController
 
         // ── Tabs ──────────────────────────────────────────────────────────────
 
-        $manager_link = get_root_url() . 'admin.php?page=batch_manager&amp;mode=';
+        $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
 
         if (isset($_GET['mode'])) {
             check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');
@@ -535,7 +536,7 @@ final class BatchManagerController
         $bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
         if (is_string($bmf['prefilter'] ?? null)) { $page['prefilter'] = $bmf['prefilter']; }
 
-        $redirect_url = get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+        $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
 
         /** @var array<int> $collection_int */
         $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
@@ -642,7 +643,7 @@ final class BatchManagerController
                         /** @var array<mixed> $page_infos_ref */
                         $page_infos_ref   = &$_SESSION['page_infos'];
                         $page_infos_ref[] = l10n_dec('%d photo was deleted', '%d photos were deleted', count($collection_int));
-                        $redirect_url     = get_root_url() . 'admin.php?page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+                        $redirect_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                         $redirect         = true;
                     } else { PageState::current()->addError(l10n('No photo can be deleted')); }
                 } else { PageState::current()->addError(l10n('You need to confirm deletion')); }
@@ -671,7 +672,7 @@ final class BatchManagerController
         // ── Template ──────────────────────────────────────────────────────────
 
         $tpl->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
-        $base_url = get_root_url() . 'admin.php';
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         require PHPWG_ROOT_PATH . 'admin/include/batch_manager_filters.inc.php';
 
@@ -751,7 +752,7 @@ final class BatchManagerController
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
                     'TITLE'    => $ttitle,
                     'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
-                    'U_EDIT'   => get_root_url() . 'admin.php?page=photo-' . (is_scalar($row['id']) ? (string) $row['id'] : ''),
+                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['id']) ? (string) $row['id'] : '')),
                 ]));
             }
             $tpl->assign('thumb_params', $thumb_params);
@@ -851,7 +852,7 @@ final class BatchManagerController
         }
 
         $tpl->set_filenames(['batch_manager_unit' => 'batch_manager_unit.tpl']);
-        $base_url = PHPWG_ROOT_PATH . 'admin.php';
+        $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         $tpl->assign([
             'U_ELEMENTS_PAGE' => $base_url . get_query_string_diff(['display', 'start']),
@@ -941,7 +942,7 @@ final class BatchManagerController
 
                 foreach (ServiceLocator::get(CategoryRepository::class)->findCategoryInfosByImageId($row_id_int) as $item) {
                     $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
-                    $name = get_cat_display_name_cache($item_uppercats, get_root_url() . 'admin.php?page=album-');
+                    $name = get_cat_display_name_cache($item_uppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
                     if ($item['category_id'] == $storage_category_id) { $tpl->assign('STORAGE_CATEGORY', $name); }
                     $item_cat_id = is_numeric($item['category_id'] ?? null) ? (int) $item['category_id'] : 0;
                     $related_categories[$item_cat_id] = ['name' => $name, 'unlinkable' => $item_cat_id != $storage_category_id];
@@ -965,7 +966,7 @@ final class BatchManagerController
                     }
                 }
 
-                $admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $row_id_str;
+                $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str);
                 $admin_url_start      = $admin_photo_base_url . '-properties';
                 $admin_url_start     .= isset($row['cat_id']) ? '&amp;cat_id=' . (is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
                 $selected_level       = $row['level'] ?? $row['level'];
@@ -979,7 +980,7 @@ final class BatchManagerController
                     'TN_SRC'                => DerivativeImage::url(IMG_MEDIUM, $src_image),
                     'FILE_SRC'              => DerivativeImage::url(IMG_LARGE, $src_image),
                     'LEGEND'                => $legend,
-                    'U_EDIT'                => get_root_url() . 'admin.php?page=photo-' . $row_id_str,
+                    'U_EDIT'                => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str),
                     'NAME'                  => htmlspecialchars(is_scalar($row['name']) ? (string) $row['name'] : ''),
                     'AUTHOR'                => htmlspecialchars(is_scalar($row['author']) ? (string) $row['author'] : ''),
                     'LEVEL'                 => !empty($row['level']) ? $row['level'] : '0',
@@ -1003,8 +1004,8 @@ final class BatchManagerController
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
                     'tag_selection'         => $tag_selection,
                     'U_DOWNLOAD'            => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
-                    'U_HISTORY'             => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
-                    'U_ACTIVITY'            => get_root_url() . 'admin.php?page=user_activity&photo=' . $row_id_str,
+                    'U_HISTORY'             => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . $row_id_str,
+                    'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $row_id_str,
                     'U_DELETE'              => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),
                     'U_SYNC'                => $admin_url_start . '&amp;sync_metadata=1',
                     'PATH'                  => $row['path'],
@@ -1051,14 +1052,14 @@ final class BatchManagerController
                 $conn->executeStatement('UPDATE ' . $tableName . ' SET queue_name = ?, available_at = NOW(), delivered_at = NULL WHERE id = ?', ['piwigo_async', $failedId]);
                 PageState::current()->addInfo('Job moved back to async queue.');
             }
-            redirect(get_root_url() . 'admin.php?page=queue');
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('queue'));
         }
 
         if ($action === 'purge_failed') {
             check_pwg_token();
             $conn->executeStatement('DELETE FROM ' . $tableName . ' WHERE queue_name = ?', ['piwigo_failed']);
             PageState::current()->addInfo('Failed queue purged.');
-            redirect(get_root_url() . 'admin.php?page=queue');
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('queue'));
         }
 
         $stats       = [];
@@ -1087,7 +1088,7 @@ final class BatchManagerController
             /** @var array<string, mixed> $body */
             $body  = json_decode(is_string($row['body']) ? $row['body'] : '{}', true) ?? [];
             $class = is_string($body['type'] ?? null) ? basename(str_replace('\\', '/', $body['type'])) : 'Unknown';
-            return ['id' => is_numeric($row['id']) ? (int) $row['id'] : 0, 'class' => $class, 'created_at' => is_string($row['created_at']) ? $row['created_at'] : '', 'U_RETRY' => get_root_url() . 'admin.php?page=queue&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0)];
+            return ['id' => is_numeric($row['id']) ? (int) $row['id'] : 0, 'class' => $class, 'created_at' => is_string($row['created_at']) ? $row['created_at'] : '', 'U_RETRY' => ServiceLocator::get(UrlGenerator::class)->admin('queue') . '&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0)];
         }, $failedJobs);
 
         $tpl->assign([
@@ -1095,7 +1096,7 @@ final class BatchManagerController
             'pending_async'  => $pendingAsync,
             'pending_failed' => $pendingFailed,
             'failed_jobs'    => $failedJobsForTpl,
-            'U_PURGE_FAILED' => get_root_url() . 'admin.php?page=queue&action=purge_failed&pwg_token=' . $pwg_token,
+            'U_PURGE_FAILED' => ServiceLocator::get(UrlGenerator::class)->admin('queue') . '&action=purge_failed&pwg_token=' . $pwg_token,
             'worker_command' => 'bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M',
         ]);
 

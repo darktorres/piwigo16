@@ -44,7 +44,7 @@ check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 // +-----------------------------------------------------------------------+
 // | Initialization                                                        |
 // +-----------------------------------------------------------------------+
-$base_url = get_root_url().'admin.php';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
 $must_repost = false;
 
 // +-----------------------------------------------------------------------+

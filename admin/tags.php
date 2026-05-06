@@ -28,7 +28,7 @@ check_status(ACCESS_ADMINISTRATOR);
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = get_root_url().'admin.php?page=';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('tags');
@@ -44,7 +44,7 @@ if (isset($_GET['action']) and 'delete_orphans' == $_GET['action']) {
 
     delete_orphan_tags();
     $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-    redirect(get_root_url().'admin.php?page=tags');
+    redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags'));
 }
 
 // +-----------------------------------------------------------------------+
@@ -55,7 +55,7 @@ $template->set_filenames(['tags' => 'tags.tpl']);
 
 $template->assign(
     [
-    'F_ACTION' => PHPWG_ROOT_PATH.'admin.php?page=tags',
+    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags'),
     'PWG_TOKEN' => get_pwg_token(),
     ]
 );
@@ -85,7 +85,7 @@ if (count($orphan_tag_names) > 0) {
         count($orphan_tag_names),
         '<a 
       class="icon-eye"
-      data-url="'.get_root_url().'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token='.get_pwg_token().'">'
+      data-url="'.\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags').'&amp;action=delete_orphans&amp;pwg_token='.get_pwg_token().'">'
         .l10n('Review').'</a>'
     );
 

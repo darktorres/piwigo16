@@ -134,7 +134,7 @@ $template->set_filename('albums', 'albums.tpl');
 
 $template->assign(
     [
-    'F_ACTION' => get_root_url().'admin.php?page=albums',
+    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('albums'),
     ]
 );
 

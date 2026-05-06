@@ -19,7 +19,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-$my_base_url = get_root_url().'admin.php?page=themes';
+$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('themes');
 
 if (isset($_GET['tab'])) {
     $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';

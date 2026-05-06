@@ -33,8 +33,8 @@ $errors = [];
 save_profile_from_post($edit_user, $errors);
 
 load_profile_in_template(
-    get_root_url().'admin.php?page=profile&amp;user_id='.(is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
-    get_root_url().'admin.php?page=user_list',
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('profile') . '&amp;user_id='.(is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_list'),
     $edit_user
 );
 $page['errors'] = array_merge($page['errors'], $errors);

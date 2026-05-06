@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -94,7 +95,7 @@ final class UsersController
         $owner_username = array_column(get_dbal_connection()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
 
         $tpl->assign([
-            'U_HISTORY'                 => get_root_url() . 'admin.php?page=history&filter_user_id=',
+            'U_HISTORY'                 => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
             'PWG_TOKEN'                 => get_pwg_token(),
             'NB_IMAGE_PAGE'             => $default_user['nb_image_page'] ?? null,
             'RECENT_PERIOD'             => $default_user['recent_period'] ?? null,
@@ -182,7 +183,7 @@ final class UsersController
             'has_group'                => $_GET['group'] ?? '',
             'view_selector'            => $viewSel,
             'pagination'               => is_numeric($rawPagination) ? (int) $rawPagination : 0,
-            'history_base_url'         => get_root_url() . 'admin.php?page=history&filter_user_id=',
+            'history_base_url'         => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
             'register_dates'           => $register_dates,
             'groups_arr'               => $groups_arr_json,
             'months'                   => [l10n('Jan'), l10n('Feb'), l10n('Mar'), l10n('Apr'), l10n('May'), l10n('Jun'), l10n('Jul'), l10n('Aug'), l10n('Sep'), l10n('Oct'), l10n('Nov'), l10n('Dec')],
@@ -269,7 +270,7 @@ final class UsersController
             'TITLE'              => l10n('Manage permissions for user "%s"', get_username($pageUser)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
             'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
-            'F_ACTION'           => PHPWG_ROOT_PATH . 'admin.php?page=user_perm&amp;user_id=' . $pageUser,
+            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&amp;user_id=' . $pageUser,
         ]);
 
         $group_authorized = [];

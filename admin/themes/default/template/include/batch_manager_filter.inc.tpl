@@ -18,7 +18,7 @@
         <option value="{$prefilter.ID}"  class="{$optionClass}" {if isset($filter.prefilter) && $filter.prefilter eq $prefilter.ID}selected="selected"{/if}>{$prefilter.NAME}</option>
         {/foreach}
       </select>
-      <a id="empty_caddie" href="admin.php?page=batch_manager&amp;action=empty_caddie" {if !isset($filter.prefilter) or $filter.prefilter ne 'caddie'}hidden{/if}>{'Empty caddie'|translate}</a>
+      <a id="empty_caddie" href="{$ADMIN_URL}&amp;page=batch_manager&amp;action=empty_caddie" {if !isset($filter.prefilter) or $filter.prefilter ne 'caddie'}hidden{/if}>{'Empty caddie'|translate}</a>
 {if $NB_ORPHANS > 0}
       <a id="delete_orphans" href="#" class="icon-trash" {if !isset($filter.prefilter) or $filter.prefilter ne 'no_album'}hidden{/if}>{'Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
 {/if}

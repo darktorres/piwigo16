@@ -9,7 +9,9 @@ use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -106,7 +108,7 @@ final class ExtensionsEndpoints
             $extension = new Plugins();
             if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]['state'] === 'active') {
                 $extension->perform_action('deactivate', $extensionId);
-                redirect(PHPWG_ROOT_PATH . 'ws.php?method=pwg.extensions.update&type=plugins&id=' . $extensionId . '&revision=' . $revision . '&reactivate=true&pwg_token=' . get_pwg_token() . '&format=json');
+                redirect(ServiceLocator::get(UrlGenerator::class)->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => get_pwg_token(), 'format' => 'json']));
             }
             $performResult = $extension->perform_action('update', $extensionId, ['revision' => $revision]);
             $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';

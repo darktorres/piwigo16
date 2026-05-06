@@ -28,7 +28,7 @@ if (!Config::enableExtensionsInstall()) {
 
 $template->set_filenames(['plugins' => 'plugins_new.tpl']);
 
-$base_url = get_root_url().'admin.php?page='.$page['page'].'&tab='.($page['tab'] ?? '');
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']) . '&tab='.($page['tab'] ?? '');
 
 $plugins = new Plugins();
 
@@ -53,7 +53,7 @@ if (isset($_GET['installstatus'])) {
             // a JS action, no need to provide plugin_id in URL, just link to the page of installed
             // plugins, filtered on deactivated plugins. The webmaster will have to find its newly
             // installed plugin and click on the activation switch.
-            $activate_url = get_root_url().'admin.php?page=plugins&amp;filter=deactivated';
+            $activate_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('plugins') . '&amp;filter=deactivated';
 
             PageState::current()->addInfo(l10n('Plugin has been successfully copied'));
             PageState::current()->addInfo('<a href="'. $activate_url . '">' . l10n('Activate it now') . '</a>');

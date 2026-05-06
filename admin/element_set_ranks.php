@@ -130,7 +130,7 @@ $template->set_filenames(
     ['element_set_ranks' => 'element_set_ranks.tpl']
 );
 
-$base_url = get_root_url().'admin.php';
+$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
 
 $category = ServiceLocator::get(CategoryRepository::class)
     ->findCategoryById((int) $page['category_id']);
@@ -144,7 +144,7 @@ if ($category !== null && ($category['image_order'] == 'rank ASC' or $category['
 // Navigation path
 $navigation = get_cat_display_name_cache(
     is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '',
-    get_root_url().'admin.php?page=album-'
+    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
 );
 
 $template->assign(

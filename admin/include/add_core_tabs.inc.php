@@ -33,7 +33,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
 
     switch ($tab_id) {
         case 'admin_home':
-            $sheets[''] = ['caption' => l10n('Administration Home'), 'url' => 'admin.php'];
+            $sheets[''] = ['caption' => l10n('Administration Home'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin()];
             break;
 
         case 'tags':
@@ -147,8 +147,8 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'rating':
-            $sheets['rating'] = ['caption' => l10n('Photos'), 'url' => get_root_url().'admin.php?page=rating'];
-            $sheets['rating_user'] = ['caption' => l10n('Users'), 'url' => get_root_url().'admin.php?page=rating_user'];
+            $sheets['rating'] = ['caption' => l10n('Photos'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('rating')];
+            $sheets['rating_user'] = ['caption' => l10n('Users'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('rating_user')];
             break;
 
         case 'themes':

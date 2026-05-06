@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 
@@ -230,7 +231,7 @@ final class ConfigurationController
         $tabsheet->select($section);
         $tabsheet->assign();
 
-        $action = get_root_url() . 'admin.php?page=configuration&amp;section=' . $section;
+        $action = ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=' . $section;
 
         $tpl->assign([
             'U_HELP'    => get_root_url() . 'admin/popuphelp.php?page=configuration',

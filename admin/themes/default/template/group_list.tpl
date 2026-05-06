@@ -33,7 +33,7 @@
           <div class="icon-docs dropdown-option" id="GroupDuplicate" value="duplicate">{'Duplicate'|@translate}</div>
           <div class="icon-trash dropdown-option" id="GroupDelete" value="delete">{'Delete'|@translate}</div>
           <div class="icon-star dropdown-option" id="GroupDefault" value="delete"></div>
-          <a class="icon-pulse dropdown-option" href="admin.php?page=user_activity&group={$grp_id}">{'Activity'|@translate}</a>
+          <a class="icon-pulse dropdown-option" href="{$ADMIN_URL}&amp;page=user_activity&amp;group={$grp_id}">{'Activity'|@translate}</a>
         </div>
       </div>
 
@@ -62,7 +62,7 @@
     </div>
 
     <a id="UserListTrigger" class="icon-user-1 manage-users not-in-selection-mode GroupManagerButtons">{'Manage the members'|translate}</a>
-    <a class="icon-lock manage-permissions not-in-selection-mode GroupManagerButtons" href="admin.php?page=group_perm&group_id={$grp_id}">{'Manage Permissions'|translate}</a>
+    <a class="icon-lock manage-permissions not-in-selection-mode GroupManagerButtons" href="{$ADMIN_URL}&amp;page=group_perm&amp;group_id={$grp_id}">{'Manage Permissions'|translate}</a>
   </div>
 {/function}
 {/function}

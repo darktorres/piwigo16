@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto, getPwgToken } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { wsUrl } from './helpers/url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/004.jpg');
@@ -22,7 +22,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
 
     // --- Photo appears in album ---
     const listRes = await request.get(
-        pwgUrl(`/ws.php?format=json&method=pwg.categories.getImages&cat_id=${albumId}`),
+        wsUrl({ format: 'json', method: 'pwg.categories.getImages', cat_id: String(albumId) }),
         { headers: { Cookie: cookie } }
     );
     const listBody = await listRes.json();
@@ -31,7 +31,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     expect(images.some((img: { id: number }) => img.id === imageId)).toBe(true);
 
     // --- Update photo name ---
-    const updateRes = await request.post(pwgUrl('/ws.php?format=json'), {
+    const updateRes = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookie },
         // single_value_mode defaults to 'fill_if_empty' which would keep the
         // existing name; 'replace' is what callers usually want for an update.
@@ -45,7 +45,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     expect((await updateRes.json()).stat).toBe('ok');
 
     const infoRes = await request.get(
-        pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
+        wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
     const infoBody = await infoRes.json();
@@ -53,7 +53,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     expect(infoBody.result.name).toBe('Updated Name');
 
     // --- Delete photo ---
-    const deletePhoto = await request.post(pwgUrl('/ws.php?format=json'), {
+    const deletePhoto = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookie },
         form: { method: 'pwg.images.delete', image_id: String(imageId), pwg_token: pwgToken },
     });
@@ -61,13 +61,13 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
 
     // Deleted photo getInfo must fail
     const afterDelete = await request.get(
-        pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
+        wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
     expect((await afterDelete.json()).stat).toBe('fail');
 
     // --- Delete album ---
-    const deleteAlbum = await request.post(pwgUrl('/ws.php?format=json'), {
+    const deleteAlbum = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookie },
         form: {
             method: 'pwg.categories.delete',
@@ -80,7 +80,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
 
     // Deleted album must not appear in admin list
     const catList = await request.get(
-        pwgUrl('/ws.php?format=json&method=pwg.categories.getAdminList'),
+        wsUrl({ format: 'json', method: 'pwg.categories.getAdminList' }),
         { headers: { Cookie: cookie } }
     );
     const catBody = await catList.json();

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { pwgUrl, wsUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -20,7 +20,7 @@ test.describe('search functionality', () => {
         await uploadPhoto(request, cookie, IMAGE, albumId, uniqueName);
 
         const searchRes = await request.get(
-            pwgUrl(`/ws.php?format=json&method=pwg.images.search&query=${uniqueName}`),
+            wsUrl({ format: 'json', method: 'pwg.images.search', query: uniqueName }),
             { headers: { Cookie: cookie } }
         );
         expect(searchRes.status(), 'pwg.images.search HTTP status').toBe(200);

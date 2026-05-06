@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { test } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { adminUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -30,13 +30,13 @@ test.beforeAll(async ({ browser }) => {
     await page.close();
 });
 
-const ROUTES: ReadonlyArray<{ name: string; path: () => string }> = [
-    { name: 'admin photo editor', path: () => `/admin.php?page=photo&image_id=${sharedPhotoId}` },
-    { name: 'admin comments', path: () => '/admin.php?page=comments' },
-    { name: 'admin batch_manager', path: () => '/admin.php?page=batch_manager' },
-    { name: 'admin stats', path: () => '/admin.php?page=stats' },
-    { name: 'admin rating', path: () => '/admin.php?page=rating' },
-    { name: 'admin permalinks', path: () => '/admin.php?page=permalinks' },
+const ROUTES: ReadonlyArray<{ name: string; url: () => string }> = [
+    { name: 'admin photo editor', url: () => adminUrl('photo') + `&image_id=${sharedPhotoId}` },
+    { name: 'admin comments', url: () => adminUrl('comments') },
+    { name: 'admin batch_manager', url: () => adminUrl('batch_manager') },
+    { name: 'admin stats', url: () => adminUrl('stats') },
+    { name: 'admin rating', url: () => adminUrl('rating') },
+    { name: 'admin permalinks', url: () => adminUrl('permalinks') },
 ];
 
 for (const route of ROUTES) {
@@ -44,7 +44,7 @@ for (const route of ROUTES) {
         const monitor = attachMonitor(page);
         await loginAsAdmin(page);
         monitor.reset();
-        await gotoOk(page, pwgUrl(route.path()), route.name);
+        await gotoOk(page, route.url(), route.name);
         monitor.assertClean(route.name);
     });
 }

@@ -11,7 +11,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
-import { pwgUrl } from './helpers/url';
+import { wsUrl, adminUrl } from './helpers/url';
 
 interface CreatedAlbums {
     ids: number[];
@@ -27,7 +27,7 @@ async function pwgApi(
     const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join('; ');
     const form: Record<string, string> = { method };
     for (const [k, v] of Object.entries(params)) form[k] = String(v);
-    const response = await page.request.post(pwgUrl('/ws.php?format=json'), {
+    const response = await page.request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form,
     });
@@ -73,7 +73,7 @@ async function setupTest(page: Page): Promise<CreatedAlbums> {
 }
 
 async function gotoAlbums(page: Page): Promise<void> {
-    await page.goto(pwgUrl('/admin.php?page=albums'));
+    await page.goto(adminUrl('albums'));
     await expect(page.locator('.tree')).toBeVisible();
     // The tree renders asynchronously; wait for at least one node to appear.
     await expect(page.locator('.move-cat-container').first()).toBeVisible();

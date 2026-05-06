@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
-import { pwgUrl } from './url';
+import { identificationUrl } from './url';
 import { TEST_DATA } from './test-data';
 import { assertVisible, assertNoServerErrors, assertHttpOk } from './strict-assertions';
 
@@ -21,7 +21,7 @@ import { assertVisible, assertNoServerErrors, assertHttpOk } from './strict-asse
  * under 10 seconds or be considered broken.
  */
 export async function loginAsAdmin(page: Page): Promise<void> {
-    const loginUrl = pwgUrl('/identification.php');
+    const loginUrl = identificationUrl();
 
     const navResp = await page.goto(loginUrl);
     assertHttpOk(navResp, 'login page navigation');
@@ -50,7 +50,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
 
     const outcome = await Promise.race([
         page
-            .waitForURL((url) => !url.pathname.includes('identification.php'), {
+            .waitForURL((url) => !url.search.includes('/identification'), {
                 timeout: 8000,
             })
             .then(() => 'redirected' as const)

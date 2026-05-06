@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { wsUrl } from './helpers/url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGE_1 = path.join(__dirname, '../../galleries/Wallpapers/002.jpg');
@@ -26,7 +26,7 @@ test('uploaded photo appears in getInfo', async ({ page, request }) => {
     const imageId = await uploadPhoto(request, cookie, IMAGE_1, albumId, 'My Wallpaper');
 
     const info = await request.get(
-        pwgUrl(`/ws.php?format=json&method=pwg.images.getInfo&image_id=${imageId}`),
+        wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         {
             headers: { Cookie: cookie },
         }
@@ -47,7 +47,7 @@ test('two uploaded photos both appear in album', async ({ page, request }) => {
     await uploadPhoto(request, cookie, IMAGE_2, albumId);
 
     const listRes = await request.get(
-        pwgUrl(`/ws.php?format=json&method=pwg.categories.getImages&cat_id=${albumId}`),
+        wsUrl({ format: 'json', method: 'pwg.categories.getImages', cat_id: String(albumId) }),
         { headers: { Cookie: cookie } }
     );
     const listBody = await listRes.json();

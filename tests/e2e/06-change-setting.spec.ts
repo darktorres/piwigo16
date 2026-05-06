@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
-import { pwgUrl } from './helpers/url';
+import { adminUrl } from './helpers/url';
 import { gotoOk, assertVisible } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -8,7 +8,7 @@ test('gallery title setting round-trips through $conf write path', async ({ page
     const monitor = attachMonitor(page);
     await loginAsAdmin(page);
 
-    await gotoOk(page, pwgUrl('/admin.php?page=configuration&section=main'), 'configuration page');
+    await gotoOk(page, adminUrl('configuration') + '&section=main', 'configuration page');
 
     const titleInput = page.locator('input[name="gallery_title"]');
     await assertVisible(titleInput, 'configuration: gallery_title input');
@@ -25,7 +25,7 @@ test('gallery title setting round-trips through $conf write path', async ({ page
     // Reload and verify the new value persisted.
     await gotoOk(
         page,
-        pwgUrl('/admin.php?page=configuration&section=main'),
+        adminUrl('configuration') + '&section=main',
         'configuration page (after save)'
     );
     await expect(

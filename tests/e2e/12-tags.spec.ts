@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto, getPwgToken } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { wsUrl, adminUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -23,7 +23,7 @@ test.describe('tag management', () => {
         const tagName = `e2e-tag-${Date.now()}`;
 
         // Create tag
-        const tagCreate = await request.post(pwgUrl('/ws.php?format=json'), {
+        const tagCreate = await request.post(wsUrl({ format: 'json' }), {
             headers: { Cookie: cookie },
             form: { method: 'pwg.tags.add', name: tagName },
         });
@@ -37,7 +37,7 @@ test.describe('tag management', () => {
         expect(tagId, 'pwg.tags.add returned tag id').toBeGreaterThan(0);
 
         // Assign tag to photo
-        const setInfo = await request.post(pwgUrl('/ws.php?format=json'), {
+        const setInfo = await request.post(wsUrl({ format: 'json' }), {
             headers: { Cookie: cookie },
             form: {
                 method: 'pwg.images.setInfo',
@@ -54,7 +54,7 @@ test.describe('tag management', () => {
 
         // Tag images list returns the photo
         const tagImages = await request.get(
-            pwgUrl(`/ws.php?format=json&method=pwg.tags.getImages&tag_id=${tagId}`),
+            wsUrl({ format: 'json', method: 'pwg.tags.getImages', tag_id: String(tagId) }),
             { headers: { Cookie: cookie } }
         );
         const tagImagesBody = await tagImages.json();
@@ -66,14 +66,14 @@ test.describe('tag management', () => {
         ).toBe(true);
 
         // Delete tag
-        const deleteTag = await request.post(pwgUrl('/ws.php?format=json'), {
+        const deleteTag = await request.post(wsUrl({ format: 'json' }), {
             headers: { Cookie: cookie },
             form: { method: 'pwg.tags.delete', tag_id: String(tagId), pwg_token: pwgToken },
         });
         expect((await deleteTag.json()).stat, 'pwg.tags.delete stat').toBe('ok');
 
         // Tag no longer in list
-        const tagList = await request.get(pwgUrl('/ws.php?format=json&method=pwg.tags.getList'), {
+        const tagList = await request.get(wsUrl({ format: 'json', method: 'pwg.tags.getList' }), {
             headers: { Cookie: cookie },
         });
         const tags = (await tagList.json()).result.tags._content ?? [];
@@ -87,7 +87,7 @@ test.describe('tag management', () => {
         const monitor = attachMonitor(page);
         await loginAsAdmin(page);
         monitor.reset();
-        await gotoOk(page, pwgUrl('/admin.php?page=tags'), 'admin tags');
+        await gotoOk(page, adminUrl('tags'), 'admin tags');
         monitor.assertClean('admin tags');
     });
 });

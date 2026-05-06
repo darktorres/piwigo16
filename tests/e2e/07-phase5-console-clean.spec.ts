@@ -10,41 +10,41 @@
 
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
-import { pwgUrl } from './helpers/url';
+import { pwgUrl, adminUrl, identificationUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
 // ── Gallery (anonymous) routes ──────────────────────────────────────────────
 
-const ANON_ROUTES = [
-    { name: 'gallery home', path: '/index.php' },
-    { name: 'identification', path: '/identification.php' },
-    { name: 'search', path: '/search.php' },
-    { name: 'tags', path: '/tags.php' },
-] as const;
+const ANON_ROUTES: ReadonlyArray<{ name: string; url: () => string }> = [
+    { name: 'gallery home', url: () => pwgUrl('/index.php') },
+    { name: 'identification', url: () => identificationUrl() },
+    { name: 'search', url: () => pwgUrl('/index.php?/search') },
+    { name: 'tags', url: () => pwgUrl('/index.php?/tags') },
+];
 
 for (const route of ANON_ROUTES) {
     test(`${route.name} — clean (no JS errors, no failed XHRs)`, async ({ page }) => {
         const monitor = attachMonitor(page);
-        await gotoOk(page, pwgUrl(route.path), route.name);
+        await gotoOk(page, route.url(), route.name);
         monitor.assertClean(route.name);
     });
 }
 
 // ── Admin (authenticated) routes ────────────────────────────────────────────
 
-const ADMIN_ROUTES = [
-    { name: 'admin dashboard', path: '/admin.php' },
-    { name: 'admin albums', path: '/admin.php?page=albums' },
-    { name: 'admin batch_manager (filter=all)', path: '/admin.php?page=batch_manager&filter=all' },
-    { name: 'admin photos_add direct', path: '/admin.php?page=photos_add&section=direct' },
-    { name: 'admin configuration', path: '/admin.php?page=configuration' },
-    { name: 'admin history', path: '/admin.php?page=history' },
-    { name: 'admin plugins', path: '/admin.php?page=plugins' },
-    { name: 'admin languages', path: '/admin.php?page=languages' },
-    { name: 'admin themes', path: '/admin.php?page=themes' },
-    { name: 'admin maintenance', path: '/admin.php?page=maintenance' },
-] as const;
+const ADMIN_ROUTES: ReadonlyArray<{ name: string; url: () => string }> = [
+    { name: 'admin dashboard', url: () => adminUrl() },
+    { name: 'admin albums', url: () => adminUrl('albums') },
+    { name: 'admin batch_manager (filter=all)', url: () => adminUrl('batch_manager') + '&filter=all' },
+    { name: 'admin photos_add direct', url: () => adminUrl('photos_add') + '&section=direct' },
+    { name: 'admin configuration', url: () => adminUrl('configuration') },
+    { name: 'admin history', url: () => adminUrl('history') },
+    { name: 'admin plugins', url: () => adminUrl('plugins') },
+    { name: 'admin languages', url: () => adminUrl('languages') },
+    { name: 'admin themes', url: () => adminUrl('themes') },
+    { name: 'admin maintenance', url: () => adminUrl('maintenance') },
+];
 
 for (const route of ADMIN_ROUTES) {
     test(`${route.name} — clean (no JS errors, no failed XHRs)`, async ({ page }) => {
@@ -53,7 +53,7 @@ for (const route of ADMIN_ROUTES) {
         // Reset because loginAsAdmin's navigations may have triggered routine
         // requests that we don't want to attribute to this route's check.
         monitor.reset();
-        await gotoOk(page, pwgUrl(route.path), route.name);
+        await gotoOk(page, route.url(), route.name);
         monitor.assertClean(route.name);
     });
 }

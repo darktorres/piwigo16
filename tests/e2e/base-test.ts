@@ -26,6 +26,7 @@ import {
     clearDebugData,
 } from './helpers/debug-helpers';
 import { TEST_DATA } from './helpers/test-data';
+import { wsUrl } from './helpers/url';
 
 const baseUrl = process.env.PIWIGO_URL || 'http://localhost/piwigo16';
 
@@ -72,7 +73,7 @@ async function authenticateContext(context: BrowserContext): Promise<void> {
     const request = context.request;
 
     // Login via API
-    const loginResp = await request.post(`${baseUrl}/ws.php?format=json`, {
+    const loginResp = await request.post(wsUrl({ format: 'json' }), {
         form: {
             method: 'pwg.session.login',
             username: TEST_DATA.admin.username,
@@ -87,7 +88,7 @@ async function authenticateContext(context: BrowserContext): Promise<void> {
 
     // The login response sets the pwg_id cookie automatically on the context
     // Verify by checking session status
-    const statusResp = await request.post(`${baseUrl}/ws.php?format=json`, {
+    const statusResp = await request.post(wsUrl({ format: 'json' }), {
         form: { method: 'pwg.session.getStatus' },
     });
 
@@ -201,7 +202,7 @@ export const test = base.extend<TestFixtures>({
      * @example
      * ```typescript
      * test('admin dashboard test', async ({ adminPage }) => {
-     *   await adminPage.goto('/admin.php');
+     *   await adminPage.goto(adminUrl());
      *   // Page is already authenticated
      * });
      * ```

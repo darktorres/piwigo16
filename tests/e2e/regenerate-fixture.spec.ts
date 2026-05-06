@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { pwgUrl } from './helpers/url';
+import { pwgUrl, wsUrl } from './helpers/url';
 import { createAlbum, getCookieHeader, getPwgToken, uploadPhoto } from './helpers/upload-photo';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,7 +62,7 @@ async function callWs(
     method: string,
     params: Record<string, string> = {}
 ): Promise<{ stat?: string; result?: unknown; err?: unknown; message?: unknown }> {
-    const res = await request.post(pwgUrl('/ws.php?format=json'), {
+    const res = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form: { method, ...params },
     });
@@ -129,7 +129,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
         // gallery (no theme assets cached, identification.php sometimes 500s on
         // first hit). pwg.session.login is the same code path Piwigo uses
         // internally and returns a cookie we can reuse for subsequent calls.
-        const loginRes = await request.post(pwgUrl('/ws.php?format=json'), {
+        const loginRes = await request.post(wsUrl({ format: 'json' }), {
             form: { method: 'pwg.session.login', username: ADMIN_USER, password: ADMIN_PASS },
         });
         expect((await loginRes.json()).stat, 'fixture_admin login must succeed').toBe('ok');

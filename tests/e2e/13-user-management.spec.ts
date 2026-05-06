@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, getPwgToken } from './helpers/upload-photo';
-import { pwgUrl } from './helpers/url';
+import { wsUrl, adminUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -16,7 +16,7 @@ test.describe('user management', () => {
         const email = `e2e_${Date.now()}@example.com`;
 
         // Create user
-        const createRes = await request.post(pwgUrl('/ws.php?format=json'), {
+        const createRes = await request.post(wsUrl({ format: 'json' }), {
             headers: { Cookie: cookie },
             form: {
                 method: 'pwg.users.add',
@@ -37,7 +37,7 @@ test.describe('user management', () => {
         expect(userId, 'pwg.users.add returned user id').toBeGreaterThan(0);
 
         // User appears in list
-        const listRes = await request.get(pwgUrl('/ws.php?format=json&method=pwg.users.getList'), {
+        const listRes = await request.get(wsUrl({ format: 'json', method: 'pwg.users.getList' }), {
             headers: { Cookie: cookie },
         });
         const listBody = await listRes.json();
@@ -47,7 +47,7 @@ test.describe('user management', () => {
         expect(usernames, 'created user appears in list').toContain(username);
 
         // Delete user
-        const deleteRes = await request.post(pwgUrl('/ws.php?format=json'), {
+        const deleteRes = await request.post(wsUrl({ format: 'json' }), {
             headers: { Cookie: cookie },
             form: { method: 'pwg.users.delete', user_id: String(userId), pwg_token: pwgToken },
         });
@@ -55,7 +55,7 @@ test.describe('user management', () => {
 
         // User no longer in list
         const afterDelete = await request.get(
-            pwgUrl('/ws.php?format=json&method=pwg.users.getList'),
+            wsUrl({ format: 'json', method: 'pwg.users.getList' }),
             {
                 headers: { Cookie: cookie },
             }
@@ -69,7 +69,7 @@ test.describe('user management', () => {
         const monitor = attachMonitor(page);
         await loginAsAdmin(page);
         monitor.reset();
-        await gotoOk(page, pwgUrl('/admin.php?page=user_list'), 'admin user_list');
+        await gotoOk(page, adminUrl('user_list'), 'admin user_list');
         monitor.assertClean('admin user_list');
     });
 
@@ -77,7 +77,7 @@ test.describe('user management', () => {
         const monitor = attachMonitor(page);
         await loginAsAdmin(page);
         monitor.reset();
-        await gotoOk(page, pwgUrl('/admin.php?page=group_list'), 'admin group_list');
+        await gotoOk(page, adminUrl('group_list'), 'admin group_list');
         monitor.assertClean('admin group_list');
     });
 });

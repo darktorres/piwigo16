@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { APIRequestContext, Page } from '@playwright/test';
-import { pwgUrl } from './url';
+import { wsUrl } from './url';
 
 type MultipartValue = string | { name: string; mimeType: string; buffer: Buffer };
 
@@ -16,7 +16,7 @@ export async function getPwgToken(
     request: APIRequestContext,
     cookieHeader: string
 ): Promise<string> {
-    const res = await request.post(pwgUrl('/ws.php?format=json'), {
+    const res = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.session.getStatus' },
     });
@@ -29,7 +29,7 @@ export async function createAlbum(
     cookieHeader: string,
     name: string
 ): Promise<number> {
-    const res = await request.post(pwgUrl('/ws.php?format=json'), {
+    const res = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.categories.add', name },
     });
@@ -56,7 +56,7 @@ export async function uploadPhoto(
         form['name'] = photoName;
     }
 
-    const response = await request.post(pwgUrl('/ws.php?format=json'), {
+    const response = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         multipart: form,
     });
@@ -76,7 +76,7 @@ export async function uploadPhoto(
     // After enough photos accumulate in the gallery, Piwigo auto-activates the
     // "lounge" — uploads then sit pending and don't appear in getImages until
     // released. Flush it here so tests see what they just uploaded.
-    await request.post(pwgUrl('/ws.php?format=json'), {
+    await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.images.emptyLounge' },
     });

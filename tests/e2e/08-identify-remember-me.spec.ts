@@ -12,7 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { pwgUrl } from './helpers/url';
+import { identificationUrl } from './helpers/url';
 import { TEST_DATA } from './helpers/test-data';
 import { gotoOk, assertVisible } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
@@ -23,7 +23,7 @@ async function fillLoginForm(
     page: import('@playwright/test').Page,
     rememberMe: boolean
 ): Promise<void> {
-    await gotoOk(page, pwgUrl('/identification.php'), 'identification');
+    await gotoOk(page, identificationUrl(), 'identification');
     const usernameField = page.locator('input[name="username"]');
     const passwordField = page.locator('input[name="password"]');
     const loginButton = page.locator('input[name="login"]');
@@ -44,7 +44,7 @@ async function fillLoginForm(
     await loginButton.click();
     const outcome = await Promise.race([
         page
-            .waitForURL((url) => !url.pathname.includes('identification.php'), {
+            .waitForURL((url) => !url.search.includes('/identification'), {
                 timeout: 8000,
             })
             .then(() => 'redirected' as const)
@@ -100,7 +100,7 @@ test('logout clears the remember cookie', async ({ page, context }) => {
     ).toBeDefined();
 
     // Logout — Piwigo reads ?act=logout via include/user.inc.php
-    const logoutResp = await page.goto(pwgUrl('/identification.php?act=logout'));
+    const logoutResp = await page.goto(identificationUrl() + '&act=logout');
     expect(
         logoutResp?.status(),
         'logout navigation should return a successful HTTP status'

@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { pwgUrl } from './helpers/url';
+import { pwgUrl, identificationUrl } from './helpers/url';
 import { gotoOk, assertVisible } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 
@@ -11,7 +11,7 @@ test('gallery home page loads without errors', async ({ page }) => {
 
 test('identification page renders login form', async ({ page }) => {
     const monitor = attachMonitor(page);
-    await gotoOk(page, pwgUrl('/identification.php'), 'identification');
+    await gotoOk(page, identificationUrl(), 'identification');
     await assertVisible(page.locator('input[name="username"]'), 'identification: username field');
     await assertVisible(page.locator('input[name="password"]'), 'identification: password field');
     await assertVisible(page.locator('input[name="login"]'), 'identification: submit button');

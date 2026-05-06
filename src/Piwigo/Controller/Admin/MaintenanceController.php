@@ -825,7 +825,7 @@ final class MaintenanceController
 
         $tpl->set_filename('history', 'history.tpl');
         history_tabsheet();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search']);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
         if (isset($page['search_id'])) {
             $navbar = create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
@@ -882,7 +882,7 @@ final class MaintenanceController
         $tpl->assign('guest_id', Config::guestId());
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('History'));
         $tpl->assign('page_data_json', json_encode([
-            'API_METHOD'                  => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
+            'API_METHOD'                  => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search']),
             'filter_user_name'            => $form_param['user_name'] ?? null,
             'guest_id'                    => Config::guestId(),
             'today'                       => date('Y-m-d'),

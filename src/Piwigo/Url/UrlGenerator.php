@@ -184,13 +184,21 @@ final readonly class UrlGenerator
     public function ws(array $params = []): string
     {
         $base = $this->routeUrl('ws');
-        return !empty($params) ? $this->urls->addUrlParams($base, $params) : $base;
+        if (empty($params)) {
+            return $base;
+        }
+        $sep = str_contains($base, '?') ? '&' : '?';
+        return $base . $sep . http_build_query($params, '', '&');
     }
 
     public function admin(string $section = ''): string
     {
         $base = $this->routeUrl('admin');
-        return $section !== '' ? $base . '?page=' . $section : $base;
+        if ($section === '') {
+            return $base;
+        }
+        $sep = str_contains($base, '?') ? '&' : '?';
+        return $base . $sep . 'page=' . $section;
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

@@ -291,7 +291,7 @@ function initUppy() {
         show(qs('#uploadedPhotos')?.closest('fieldset'));
 
         html =
-            '<a href="' + config.adminUrl + '?page=photo-' +
+            '<a href="' + config.adminUrl + 'page=photo-' +
             data.result.image_id +
             '" style="position:relative" target="_blank">';
         html +=
@@ -365,7 +365,7 @@ function initUppy() {
         if (!formatMode) {
             html = sprintf(
                 albumSummary_label,
-                '<a href="' + config.adminUrl + '?page=album-' +
+                '<a href="' + config.adminUrl + 'page=album-' +
                     uploadCategory.id +
                     '">' +
                     uploadCategory.label +
@@ -379,7 +379,7 @@ function initUppy() {
         const batchSet = [...new Set<number>(uploadedPhotos)];
         const batchLink = qs<HTMLAnchorElement>('.batchLink');
         if (batchLink) {
-            batchLink.href = config.adminUrl + '?page=photos_add&section=direct&batch=' + batchSet.join(',');
+            batchLink.href = config.adminUrl + 'page=photos_add&section=direct&batch=' + batchSet.join(',');
             batchLink.innerHTML = sprintf(batch_Label, uploadedPhotos.length);
         }
         show(qs('.afterUploadActions'));

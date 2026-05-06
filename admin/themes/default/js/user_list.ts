@@ -803,7 +803,7 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
     const pwdInput = q<HTMLInputElement>('.user-property-password-change input');
     if (pwdInput) pwdInput.value = '';
     const permsLink = q<HTMLAnchorElement>('.user-property-permissions a');
-    if (permsLink) permsLink.href = `${config.adminUrl}?page=user_perm&user_id=${user_to_edit.id}`;
+    if (permsLink) permsLink.href = `${config.adminUrl}page=user_perm&user_id=${user_to_edit.id}`;
     const regEl = q('.user-property-register');
     if (regEl) {
         regEl.innerHTML = user_to_edit.registration_date_string;

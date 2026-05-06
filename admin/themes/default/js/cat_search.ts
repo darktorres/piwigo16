@@ -21,7 +21,7 @@ const str_albums_found = pageData.str_albums_found;
 const str_album_found = pageData.str_album_found;
 
 const RESULT_LIMIT = 100;
-const editLink = config.adminUrl + '?page=album-';
+const editLink = config.adminUrl + 'page=album-';
 const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -129,7 +129,7 @@ function addAlbumResult(
     if (nameEl) nameEl.innerHTML = name.slice(0, -2);
     newCatNode
         .querySelector<HTMLAnchorElement>('.search-album-edit')
-        ?.setAttribute('href', config.adminUrl + '?page=album-' + id);
+        ?.setAttribute('href', config.adminUrl + 'page=album-' + id);
 
     document.querySelector('.search-album-result')?.append(newCatNode);
 

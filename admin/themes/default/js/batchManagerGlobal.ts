@@ -528,7 +528,7 @@ function add_md5sum_block(blockSize: any) {
                 add_md5sum_block(undefined);
             } else {
                 document.location =
-                    `${config.adminUrl}?page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
+                    `${config.adminUrl}page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
             }
         })
         .catch((xhr: any) => {
@@ -564,7 +564,7 @@ function delete_orphans_block(blockSize: any) {
                 delete_orphans_block(undefined);
             } else {
                 document.location =
-                    `${config.adminUrl}?page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
+                    `${config.adminUrl}page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
             }
         })
         .catch((xhr: any) => {

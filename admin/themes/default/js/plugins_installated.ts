@@ -555,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetch(
-        config.adminUrl + '?' +
+        config.adminUrl +
             new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' })
     )
         .then((r) => r.json())

@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 boxes.forEach((box) => fragment.appendChild(box));
                 container.appendChild(fragment);
             }
-            fetch(config.adminUrl + '?plugins_new_order=' + sortOrder);
+            fetch(config.adminUrl + 'plugins_new_order=' + sortOrder);
         });
 
     document.getElementById('search')?.addEventListener('input', function (this: HTMLInputElement) {

@@ -171,7 +171,11 @@ final class AdminController implements ControllerInterface
         }
 
         $adminPage  = (string) $page['page'];
-        $link_start = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $adminBase  = ServiceLocator::get(UrlGenerator::class)->admin();
+        $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
+        $wsBase     = ServiceLocator::get(UrlGenerator::class)->ws();
+        $wsSep      = str_contains($wsBase, '?') ? '&' : '?';
+        $link_start = $adminBase . $adminSep . 'page=';
         $conf_link  = $link_start . 'configuration&amp;section=';
 
         check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
@@ -222,8 +226,8 @@ final class AdminController implements ControllerInterface
             'ADMIN_PAGE_OBJECT_ID'   => '',
             'U_SHOW_TEMPLATE_TAB'    => Config::showTemplateInSideMenu(),
             'SHOW_RATING'            => Config::rateEnabled(),
-            'WS_URL'                 => ServiceLocator::get(UrlGenerator::class)->ws(),
-            'ADMIN_URL'              => ServiceLocator::get(UrlGenerator::class)->admin(),
+            'WS_URL'                 => $wsBase . $wsSep,
+            'ADMIN_URL'              => $adminBase . $adminSep,
         ]);
 
         if (Config::enableCoreUpdate()) {

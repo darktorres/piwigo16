@@ -135,7 +135,7 @@ if (firstCheck) {
     });
 }
 
-const delete_deriv_URL = config.adminUrl + '?page=maintenance&action=derivatives&';
+const delete_deriv_URL = config.adminUrl + 'page=maintenance&action=derivatives&';
 document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((el) => {
     el.addEventListener('change', () => {
         const delete_deriv_with_token = delete_deriv_URL + 'pwg_token=' + pageData.pwg_token + '&';

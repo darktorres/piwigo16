@@ -290,7 +290,7 @@ function createGroup(group: any): HTMLElement {
         nbUsers.innerHTML =
             group.nb_users + ' ' + (group.nb_users > 1 ? str_members_default : str_member_default);
     const perms = q('.manage-permissions') as HTMLAnchorElement | null;
-    if (perms) perms.href = config.adminUrl + '?page=group_perm&group_id=' + group.id;
+    if (perms) perms.href = config.adminUrl + 'page=group_perm&group_id=' + group.id;
     hideAddGroupForm();
     const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
     q('.icon-users-1')?.classList.add(colors[Number(group.id) % 5]);
@@ -903,7 +903,7 @@ function openUserManager(grp_id: any) {
                 if (document.getElementById('UserList'))
                     document.getElementById('UserList')!.dataset['groupId'] = String(grp_id);
                 const linkEl = qs<HTMLAnchorElement>('.LinkUserManager a');
-                if (linkEl) linkEl.href = config.adminUrl + '?page=user_list&group=' + grp_id;
+                if (linkEl) linkEl.href = config.adminUrl + 'page=user_list&group=' + grp_id;
             }
         })
         .catch(console.log);

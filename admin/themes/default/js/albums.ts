@@ -462,12 +462,12 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
         '"></a>' +
         '<a class="move-cat-edit icon-pencil tiptip" title="' +
         str_edit_album +
-        '" href="' + config.adminUrl + '?page=album-' +
+        '" href="' + config.adminUrl + 'page=album-' +
         node.id +
         '"></a>' +
         '<a class="move-cat-upload icon-plus-circled tiptip" title="' +
         str_add_photo +
-        '" href="' + config.adminUrl + '?page=photos_add&album=' +
+        '" href="' + config.adminUrl + 'page=photos_add&album=' +
         node.id +
         '"></a>' +
         '<a class="move-cat-see icon-eye tiptip" title="' +

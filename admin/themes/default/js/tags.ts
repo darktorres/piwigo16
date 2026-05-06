@@ -133,7 +133,7 @@ function createTagBox(
     raw_name: any = null
 ): HTMLElement {
     if (raw_name === null) raw_name = name;
-    const u_edit = config.adminUrl + '?page=batch_manager&filter=tag-' + id;
+    const u_edit = config.adminUrl + 'page=batch_manager&filter=tag-' + id;
     const u_view = 'index.php?/tags/' + id + '-' + url_name;
     let html = qs('.tag-template')!
         .innerHTML.replace(/%name%/g, unescape(String(name)))
@@ -187,7 +187,7 @@ function recycleTagBox(
     const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view', tagBox);
     if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + url_name;
     const manageEl = qs<HTMLAnchorElement>('.dropdown-option.manage', tagBox);
-    if (manageEl) manageEl.href = config.adminUrl + '?page=batch_manager&filter=tag-' + id;
+    if (manageEl) manageEl.href = config.adminUrl + 'page=batch_manager&filter=tag-' + id;
     if (count > 0) {
         qsa('.dropdown-option.view, .dropdown-option.manage', tagBox).forEach((el) => {
             el.style.display = 'block';

@@ -266,7 +266,7 @@ function initialize_menu(): void
           [
             'TITLE'     => l10n('About Piwigo'),
             'NAME'      => l10n('About'),
-            'URL' => get_root_url().'about.php',
+            'URL' => ServiceLocator::get(UrlGenerator::class)->about(),
           ];
 
         // notification

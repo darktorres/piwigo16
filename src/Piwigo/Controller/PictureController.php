@@ -412,7 +412,7 @@ SELECT *
                 ]);
                 foreach ($formats as &$format) {
                     if (!isset($format['download_url'])) {
-                        $format['download_url'] = 'action.php?format=' . (is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : '') . '&amp;download';
+                        $format['download_url'] = ServiceLocator::get(UrlGenerator::class)->actionFormat((int) (is_scalar($format['format_id'] ?? null) ? $format['format_id'] : 0));
                     }
                     $extStr           = is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '';
                     $format['label']  = strtoupper($extStr);

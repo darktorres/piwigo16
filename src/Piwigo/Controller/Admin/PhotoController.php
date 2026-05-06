@@ -11,6 +11,7 @@ use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Upload\DirectPreparer;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
@@ -522,7 +523,7 @@ SELECT id
 
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
-        $upload_form_config = get_upload_form_config();
+        $upload_form_config = ServiceLocator::get(UploadService::class)->getUploadFormConfig();
         $GLOBALS['upload_form_config'] = $upload_form_config;
 
         if (isset($_GET['section'])) {

@@ -598,7 +598,7 @@ final class ImagesEndpoints
         $this->mergeChunks($filePath, $imageMd5sum, $originalType);
         chmod($filePath, 0644);
         if ($pTypeAf === 'file') {
-            $infos = pwg_image_infos($filePath);
+            $infos = ServiceLocator::get(UploadService::class)->pwgImageInfos($filePath);
             $doUpdate = false;
             foreach (['width', 'height', 'filesize'] as $imageInfo) {
                 if ($infos[$imageInfo] > $image[$imageInfo]) {
@@ -819,7 +819,7 @@ final class ImagesEndpoints
                 }
                 $image      = $images[0];
                 $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
-                $addStatus  = add_format($filePath, $formatExt ?? '', $imageIdStr);
+                $addStatus  = ServiceLocator::get(UploadService::class)->addFormat($filePath, $formatExt ?? '', $imageIdStr);
                 return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumb_url($image), 'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
             }
             $name          = stripslashes(is_scalar($params['name']) ? (string) $params['name'] : '');
@@ -1245,7 +1245,7 @@ final class ImagesEndpoints
     public function checkUpload(mixed $params, PwgServer $service): mixed
     {
         $ret = [];
-        $ret['message']        = ready_for_upload_message();
+        $ret['message']        = ServiceLocator::get(UploadService::class)->readyForUploadMessage();
         $ret['ready_for_upload'] = empty($ret['message']);
         return $ret;
     }

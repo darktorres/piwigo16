@@ -24,6 +24,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\BlockManager;
+use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
@@ -129,13 +130,13 @@ final class MiscController
             case 'subscribe':
                 if (isset($_POST['falsify']) && isset($_POST['cat_true'])) {
                     $cat_true = is_array($_POST['cat_true']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_true']) : [];
-                    $check_key_treated = unsubscribe_notification_by_mail(true, $cat_true);
+                    $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(true, $cat_true);
                     if ($this->doTimeoutTreatment('cat_true', $check_key_treated)) {
                         $this->mustRepost = true;
                     }
                 } elseif (isset($_POST['trueify']) && isset($_POST['cat_false'])) {
                     $cat_false = is_array($_POST['cat_false']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_false']) : [];
-                    $check_key_treated = subscribe_notification_by_mail(true, $cat_false);
+                    $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(true, $cat_false);
                     if ($this->doTimeoutTreatment('cat_false', $check_key_treated)) {
                         $this->mustRepost = true;
                     }
@@ -182,7 +183,7 @@ final class MiscController
             case 'subscribe':
                 $tpl->assign($page['mode'], true);
                 $tpl->assign(['L_CAT_OPTIONS_TRUE' => l10n('Subscribed'), 'L_CAT_OPTIONS_FALSE' => l10n('Unsubscribed')]);
-                $data_users = get_user_notifications('subscribe');
+                $data_users = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('subscribe');
                 $opt_true = $opt_true_selected = $opt_false = $opt_false_selected = [];
                 $cat_true_post  = is_array($_POST['cat_true'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_true']) : [];
                 $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_false']) : [];
@@ -1110,13 +1111,13 @@ final class MiscController
             $inserts        = [];
             $check_key_list = [];
             foreach ($users_without_notif as $nbm_user) {
-                $nbm_user['check_key'] = find_available_check_key();
+                $nbm_user['check_key'] = ServiceLocator::get(NotificationAdminService::class)->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
                 PageState::current()->addInfo(l10n('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), $nbm_user['mail_address']));
             }
             mass_inserts(USER_MAIL_NOTIFICATION_TABLE, ['user_id', 'check_key', 'enabled'], $inserts);
-            $check_key_treated = do_subscribe_unsubscribe_notification_by_mail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
+            $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
 
             if ($ctx->isSendmailTimeout) {
                 $untreated_keys = array_diff($check_key_list, $check_key_treated);
@@ -1152,7 +1153,7 @@ final class MiscController
         if (in_array($action, ['list_to_send', 'send'])) {
             $dbnow         = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $is_action_send = ($action == 'send');
-            $data_users    = get_user_notifications('send', $check_key_list);
+            $data_users    = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('send', $check_key_list);
             $is_list_all_without_test = ($ctx->isSendmailTimeout || Config::nbmListAllEnabledUsersToSend());
 
             if (!$is_list_all_without_test || $is_action_send) {
@@ -1164,18 +1165,18 @@ final class MiscController
                     $customize_mail_content = trigger_change('nbm_render_global_customize_mail_content', $customize_mail_content);
                     $msg_break_timeout = $is_action_send ? l10n('Time to send mail is limited. Others mails are skipped.') : l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
-                    begin_users_env_nbm($is_action_send);
+                    ServiceLocator::get(NotificationAdminService::class)->beginUsersEnvNbm($is_action_send);
                     foreach ($data_users as $nbm_user) {
-                        if (!$is_action_send && check_sendmail_timeout()) {
+                        if (!$is_action_send && ServiceLocator::get(NotificationAdminService::class)->checkSendmailTimeout()) {
                             PageState::current()->addInfo($msg_break_timeout);
                             break;
                         }
-                        if ($is_action_send && check_sendmail_timeout()) {
+                        if ($is_action_send && ServiceLocator::get(NotificationAdminService::class)->checkSendmailTimeout()) {
                             PageState::current()->addError($msg_break_timeout);
                             break;
                         }
 
-                        set_user_on_env_nbm($nbm_user, $is_action_send);
+                        ServiceLocator::get(NotificationAdminService::class)->setUserOnEnvNbm($nbm_user, $is_action_send);
 
                         if ($is_action_send) {
                             $auth = null;
@@ -1199,7 +1200,7 @@ final class MiscController
 
                             if ($exist_data) {
                                 $subject = '[' . Config::galleryTitle() . '] ' . l10n('New photos added');
-                                assign_vars_nbm_mail_content($nbm_user);
+                                ServiceLocator::get(NotificationAdminService::class)->assignVarsNbmMailContent($nbm_user);
                                 $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
 
                                 if (!is_null($nbm_user['last_send'])) {
@@ -1230,10 +1231,10 @@ final class MiscController
                                 $ret = pwg_mail(['name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
                                 if ($ret) {
-                                    inc_mail_sent_success($nbm_user);
+                                    ServiceLocator::get(NotificationAdminService::class)->incMailSentSuccess($nbm_user);
                                     $datas[] = ['user_id' => $nbm_user['user_id'], 'last_send' => $dbnow];
                                 } else {
-                                    inc_mail_sent_failed($nbm_user);
+                                    ServiceLocator::get(NotificationAdminService::class)->incMailSentFailed($nbm_user);
                                 }
                                 unset_make_full_url();
                             }
@@ -1243,13 +1244,13 @@ final class MiscController
                                 $return_list[] = $nbm_user;
                             }
                         }
-                        unset_user_on_env_nbm();
+                        ServiceLocator::get(NotificationAdminService::class)->unsetUserOnEnvNbm();
                     }
-                    end_users_env_nbm();
+                    ServiceLocator::get(NotificationAdminService::class)->endUsersEnvNbm();
 
                     if ($is_action_send) {
                         mass_updates(USER_MAIL_NOTIFICATION_TABLE, ['primary' => ['user_id'], 'update' => ['last_send']], $datas);
-                        display_counter_info();
+                        ServiceLocator::get(NotificationAdminService::class)->displayCounterInfo();
                     }
                 } else {
                     if ($is_action_send) {

@@ -30,10 +30,22 @@ final class ExceptionHandlerMiddleware implements MiddlewareInterface
                 $e->getCode() ?: 500,
             );
         } catch (\Throwable $e) {
-            LoggerRegistry::current()->error('Unhandled exception', [
-                'exception' => $e,
-                'uri'       => (string) $request->getUri(),
-            ]);
+            // In Xdebug develop mode re-throw so Xdebug can render the full
+            // stack trace; the handler registered by ExceptionHandler::register()
+            // is intentionally skipped in that mode, so we must propagate here.
+            if (extension_loaded('xdebug') && str_contains((string) ini_get('xdebug.mode'), 'develop')) {
+                throw $e;
+            }
+
+            if (LoggerRegistry::isInitialized()) {
+                LoggerRegistry::current()->error('Unhandled exception', [
+                    'exception' => $e,
+                    'uri'       => (string) $request->getUri(),
+                ]);
+            } else {
+                error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            }
+
             return ResponseFactory::html(
                 '<h1>Internal Server Error</h1>',
                 500,

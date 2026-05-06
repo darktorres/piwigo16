@@ -23,11 +23,17 @@ use Piwigo\Template\Template;
 // The "No Photo Yet" feature: if you have no photo yet in your gallery, the
 // gallery displays only a big box to show you the way for adding your first
 // photos
+// In the PSR-15 routing layer all requests go through index.php, so
+// script_basename() always returns 'index'. Also check the extracted route path
+// so that /ws requests are not blocked by the no_photo_yet splash screen.
+$_no_photo_yet_route = \Piwigo\Http\PathExtractor::fromServer($_SERVER);
+
 if (
     !(defined('IN_ADMIN') ? constant('IN_ADMIN') : false)   // no message inside administration
     and script_basename() != 'identification' // keep the ability to login
     and script_basename() != 'password'       // keep the ability to reset password
-    and script_basename() != 'ws'             // keep the ability to discuss with web API
+    and script_basename() != 'ws'             // keep the ability to discuss with web API (legacy script name)
+    and !str_starts_with($_no_photo_yet_route, '/ws')        // keep the ability to discuss with web API (routed)
     and script_basename() != 'popuphelp'      // keep the ability to display help popups
     and (is_a_guest() or is_admin())          // normal users are not concerned by no_photo_yet
     and !isset($_SESSION['no_photo_yet'])     // temporary hide

@@ -25,8 +25,8 @@ async function fillLoginForm(
 ): Promise<void> {
     await gotoOk(page, identificationUrl(), 'identification');
     const usernameField = page.locator('input.login[name="username"]');
-    const passwordField = page.locator('input[name="password"]');
-    const loginButton = page.locator('input[name="login"]');
+    const passwordField = page.locator('form[name="login_form"] input[name="password"]');
+    const loginButton = page.locator('form[name="login_form"] input[name="login"]');
     await assertVisible(usernameField, 'login form: username');
     await assertVisible(passwordField, 'login form: password');
     await assertVisible(loginButton, 'login form: submit');
@@ -34,7 +34,7 @@ async function fillLoginForm(
     await usernameField.fill(TEST_DATA.admin.username);
     await passwordField.fill(TEST_DATA.admin.password);
     if (rememberMe) {
-        const rememberCheckbox = page.locator('input[name="remember_me"]');
+        const rememberCheckbox = page.locator('form[name="login_form"] input[name="remember_me"]');
         await assertVisible(rememberCheckbox, 'login form: remember_me checkbox');
         await rememberCheckbox.check();
     }

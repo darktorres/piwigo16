@@ -13,7 +13,7 @@ test('identification page renders login form', async ({ page }) => {
     const monitor = attachMonitor(page);
     await gotoOk(page, identificationUrl(), 'identification');
     await assertVisible(page.locator('input.login[name="username"]'), 'identification: username field');
-    await assertVisible(page.locator('input[name="password"]'), 'identification: password field');
-    await assertVisible(page.locator('input[name="login"]'), 'identification: submit button');
+    await assertVisible(page.locator('form[name="login_form"] input[name="password"]'), 'identification: password field');
+    await assertVisible(page.locator('form[name="login_form"] input[name="login"]'), 'identification: submit button');
     monitor.assertClean('identification');
 });

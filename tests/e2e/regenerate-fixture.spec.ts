@@ -83,6 +83,9 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
         );
         if (fs.existsSync(DB_CONFIG_PATH)) fs.unlinkSync(DB_CONFIG_PATH);
         writeDbConfig();
+        // Clear the install sentinel so install.php shows the installation form.
+        const installedStamp = path.resolve(__dirname, '../../local/.installed.test');
+        if (fs.existsSync(installedStamp)) fs.unlinkSync(installedStamp);
     });
 
     test.afterAll(() => {

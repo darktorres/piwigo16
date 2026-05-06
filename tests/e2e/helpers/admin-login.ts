@@ -28,8 +28,8 @@ export async function loginAsAdmin(page: Page): Promise<void> {
     await assertNoServerErrors(page, 'login page initial render');
 
     const usernameField = page.locator('input.login[name="username"]');
-    const passwordField = page.locator('input[name="password"]');
-    const loginButton = page.locator('input[name="login"]');
+    const passwordField = page.locator('form[name="login_form"] input[name="password"]');
+    const loginButton = page.locator('form[name="login_form"] input[name="login"]');
 
     await assertVisible(usernameField, 'login form: username field');
     await assertVisible(passwordField, 'login form: password field');

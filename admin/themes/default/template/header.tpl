@@ -41,7 +41,7 @@
   {$elt}
 {/foreach}
 {/if}
-<script id="pwg-config" type="application/json">{ldelim}"wsUrl":"{$WS_URL}","adminUrl":"{$ADMIN_URL}"{rdelim}</script>
+<script id="pwg-config" type="application/json">{ "wsUrl":"{$WS_URL}","adminUrl":"{$ADMIN_URL}" }</script>
 </head>
 
 <body id="{$BODY_ID}">

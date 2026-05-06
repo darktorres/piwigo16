@@ -6,7 +6,6 @@ namespace Piwigo\Core;
 
 use Piwigo\Bootstrap\Container;
 use Piwigo\Config\Config;
-use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Http\Middleware\AuthMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
@@ -15,6 +14,7 @@ use Piwigo\Http\Middleware\FallbackHandler;
 use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
+use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;

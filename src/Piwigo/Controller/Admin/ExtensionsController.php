@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Exception\AuthException;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
@@ -13,14 +12,15 @@ use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 final class ExtensionsController
 {
@@ -35,22 +35,39 @@ final class ExtensionsController
 
     public function handle(string $page): void
     {
-        if ($page === 'plugins')               { $this->plugins(); }
-        elseif ($page === 'plugins_installed') { $this->pluginsInstalled(); }
-        elseif ($page === 'plugins_new')       { $this->pluginsNew(); }
-        elseif ($page === 'plugin')            { $this->plugin(); }
-        elseif ($page === 'themes')            { $this->themes(); }
-        elseif ($page === 'themes_installed')  { $this->themesInstalled(); }
-        elseif ($page === 'themes_new')        { $this->themesNew(); }
-        elseif ($page === 'themes_standard_pages') { $this->themesStandardPages(); }
-        elseif ($page === 'theme')             { $this->theme(); }
-        elseif ($page === 'languages')         { $this->languages(); }
-        elseif ($page === 'languages_installed') { $this->languagesInstalled(); }
-        elseif ($page === 'languages_new')     { $this->languagesNew(); }
-        elseif ($page === 'updates')           { $this->updates(); }
-        elseif ($page === 'updates_ext')       { $this->updatesExt(); }
-        elseif ($page === 'updates_pwg')       { $this->updatesPwg(); }
-        elseif ($page === 'extend_for_templates') { $this->extendForTemplates(); }
+        if ($page === 'plugins') {
+            $this->plugins();
+        } elseif ($page === 'plugins_installed') {
+            $this->pluginsInstalled();
+        } elseif ($page === 'plugins_new') {
+            $this->pluginsNew();
+        } elseif ($page === 'plugin') {
+            $this->plugin();
+        } elseif ($page === 'themes') {
+            $this->themes();
+        } elseif ($page === 'themes_installed') {
+            $this->themesInstalled();
+        } elseif ($page === 'themes_new') {
+            $this->themesNew();
+        } elseif ($page === 'themes_standard_pages') {
+            $this->themesStandardPages();
+        } elseif ($page === 'theme') {
+            $this->theme();
+        } elseif ($page === 'languages') {
+            $this->languages();
+        } elseif ($page === 'languages_installed') {
+            $this->languagesInstalled();
+        } elseif ($page === 'languages_new') {
+            $this->languagesNew();
+        } elseif ($page === 'updates') {
+            $this->updates();
+        } elseif ($page === 'updates_ext') {
+            $this->updatesExt();
+        } elseif ($page === 'updates_pwg') {
+            $this->updatesPwg();
+        } elseif ($page === 'extend_for_templates') {
+            $this->extendForTemplates();
+        }
     }
 
     // ── plugins ───────────────────────────────────────────────────────────────
@@ -114,10 +131,15 @@ final class ExtensionsController
 
         if (isset($_GET['incompatible_plugins'])) {
             $incompatible_plugins_raw = $plugins->get_incompatible_plugins();
-            if (false === $incompatible_plugins_raw) { echo json_encode([]); exit; }
+            if (false === $incompatible_plugins_raw) {
+                echo json_encode([]);
+                exit;
+            }
             $incompatible_plugins = [];
             foreach ($incompatible_plugins_raw as $plugin => $version) {
-                if ($plugin == '~~expire~~') { continue; }
+                if ($plugin == '~~expire~~') {
+                    continue;
+                }
                 $incompatible_plugins[] = $plugin;
             }
             echo json_encode($incompatible_plugins);
@@ -127,10 +149,15 @@ final class ExtensionsController
         $plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
         $settings_url_for_plugin_deprec = [];
         foreach ($plugin_menu_links_deprec as $value) {
-            if (!is_array($value)) { continue; }
+            if (!is_array($value)) {
+                continue;
+            }
             $vUrl = is_scalar($value['URL'] ?? null) ? (string) $value['URL'] : '';
-            if (preg_match('/^admin\.php\?page=plugin-(.*)$/', $vUrl, $matches)) { $settings_url_for_plugin_deprec[$matches[1]] = $vUrl; }
-            elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', $vUrl, $matches)) { $settings_url_for_plugin_deprec[$matches[1]] = $vUrl; }
+            if (preg_match('/^admin\.php\?page=plugin-(.*)$/', $vUrl, $matches)) {
+                $settings_url_for_plugin_deprec[$matches[1]] = $vUrl;
+            } elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', $vUrl, $matches)) {
+                $settings_url_for_plugin_deprec[$matches[1]] = $vUrl;
+            }
         }
 
         $plugins->sort_fs_plugins('name');
@@ -178,13 +205,17 @@ final class ExtensionsController
             }
 
             $pluginState = is_scalar($tpl_plugin['STATE']) ? (string) $tpl_plugin['STATE'] : 'inactive';
-            if (isset($count_types_plugins[$pluginState])) { $count_types_plugins[$pluginState]++; }
+            if (isset($count_types_plugins[$pluginState])) {
+                $count_types_plugins[$pluginState]++;
+            }
             $tpl_plugins[] = $tpl_plugin;
         }
 
         $tpl->append('plugin_states', 'active');
         $tpl->append('plugin_states', 'inactive');
-        if ($merged_plugins) { $tpl->append('plugin_states', 'merged'); }
+        if ($merged_plugins) {
+            $tpl->append('plugin_states', 'merged');
+        }
 
         $missing_plugin_ids = array_diff(array_keys($plugins->db_plugins_by_id), array_keys($plugins->fs_plugins));
         if (count($missing_plugin_ids) > 0) {
@@ -276,10 +307,14 @@ final class ExtensionsController
                         pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]);
                     }
                     break;
-                case 'temp_path_error':   PageState::current()->addError(l10n('Can\'t create temporary file.')); break;
-                case 'dl_archive_error':  PageState::current()->addError(l10n('Can\'t download archive.')); break;
-                case 'archive_error':     PageState::current()->addError(l10n('Can\'t read or extract archive.')); break;
-                default:                  PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : ''))); PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
+                case 'temp_path_error':   PageState::current()->addError(l10n('Can\'t create temporary file.'));
+                    break;
+                case 'dl_archive_error':  PageState::current()->addError(l10n('Can\'t download archive.'));
+                    break;
+                case 'archive_error':     PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+                    break;
+                default:                  PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
+                    PageState::current()->addError(l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
 
@@ -314,15 +349,22 @@ final class ExtensionsController
                 if ($beta_test) {
                     $compatVersions = is_array($plugin['compatible_with_versions'] ?? null) ? $plugin['compatible_with_versions'] : [];
                     foreach ($compatVersions as $vers) {
-                        if (get_branch_from_version(is_string($vers) ? $vers : '') == get_branch_from_version(PHPWG_VERSION)) { $has_compatible_version = true; }
+                        if (get_branch_from_version(is_string($vers) ? $vers : '') == get_branch_from_version(PHPWG_VERSION)) {
+                            $has_compatible_version = true;
+                        }
                     }
                 } else {
                     $has_compatible_version = true;
                 }
-                if (!$has_compatible_version)              { $certification = -1; }
-                elseif ($last_revision_diff->days < 90)   { $certification = 3; }
-                elseif ($last_revision_diff->days < 180)  { $certification = 2; }
-                elseif ($last_revision_diff->y > 3)       { $certification = 0; }
+                if (!$has_compatible_version) {
+                    $certification = -1;
+                } elseif ($last_revision_diff->days < 90) {
+                    $certification = 3;
+                } elseif ($last_revision_diff->days < 180) {
+                    $certification = 2;
+                } elseif ($last_revision_diff->y > 3) {
+                    $certification = 0;
+                }
 
                 $revDateStr = is_string($revisionDateRaw) ? $revisionDateRaw : null;
                 $tpl->append('plugins', [
@@ -348,7 +390,9 @@ final class ExtensionsController
             PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
-        if (!$beta_test && preg_match('/(beta|RC)/', PHPWG_VERSION)) { $tpl->assign('BETA_URL', $base_url . '&amp;beta-test=true'); }
+        if (!$beta_test && preg_match('/(beta|RC)/', PHPWG_VERSION)) {
+            $tpl->assign('BETA_URL', $base_url . '&amp;beta-test=true');
+        }
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
         $tpl->assign('BETA_TEST', $beta_test);
         $tpl->assign('page_data_json', json_encode([
@@ -369,23 +413,36 @@ final class ExtensionsController
         $raw_section = $_GET['section'] ?? '';
         $sections = explode('/', is_scalar($raw_section) ? (string) $raw_section : '');
         for ($i = 0; $i < count($sections); $i++) {
-            if (empty($sections[$i])) { unset($sections[$i]); $i--; continue; }
+            if (empty($sections[$i])) {
+                unset($sections[$i]);
+                $i--;
+                continue;
+            }
             if ($sections[$i] == '..' || !preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
                 throw new ValidationException('invalid section token [' . htmlentities($sections[$i]) . ']');
             }
         }
 
-        if (count($sections) < 2) { throw new ValidationException('Invalid plugin URL'); }
+        if (count($sections) < 2) {
+            throw new ValidationException('Invalid plugin URL');
+        }
         $plugin_id = $sections[0];
-        if (!preg_match('/^[\w-]+$/', $plugin_id)) { throw new ValidationException('Invalid plugin identifier'); }
+        if (!preg_match('/^[\w-]+$/', $plugin_id)) {
+            throw new ValidationException('Invalid plugin identifier');
+        }
 
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-        if (!isset($pwg_loaded_plugins[$plugin_id])) { throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active'); }
+        if (!isset($pwg_loaded_plugins[$plugin_id])) {
+            throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active');
+        }
 
         $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
-        if (is_file($filename)) { require_once $filename; }
-        else { throw new NotFoundException('Missing file ' . htmlentities($filename)); }
+        if (is_file($filename)) {
+            require_once $filename;
+        } else {
+            throw new NotFoundException('Missing file ' . htmlentities($filename));
+        }
     }
 
     // ── themes ────────────────────────────────────────────────────────────────
@@ -446,7 +503,9 @@ final class ExtensionsController
             $get_theme  = is_string($_GET['theme']) ? $_GET['theme'] : '';
             $page['errors'] = $themes->perform_action($get_action, $get_theme);
             if (empty($page['errors'])) {
-                if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') { $tpl->delete_compiled_templates(); }
+                if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') {
+                    $tpl->delete_compiled_templates();
+                }
                 redirect($base_url);
             }
         }
@@ -455,28 +514,48 @@ final class ExtensionsController
         $default_theme = get_default_theme();
         $db_themes     = $themes->get_db_themes();
         $db_theme_ids  = [];
-        foreach ($db_themes as $db_theme) { $db_theme_ids[] = $db_theme['id']; }
+        foreach ($db_themes as $db_theme) {
+            $db_theme_ids[] = $db_theme['id'];
+        }
 
         $tpl_themes = [];
         foreach ($themes->fs_themes as $theme_id => $fs_theme) {
-            if ($theme_id == 'default' || $theme_id == 'standard_pages') { continue; }
+            if ($theme_id == 'default' || $theme_id == 'standard_pages') {
+                continue;
+            }
             $tpl_theme = ['ID' => $theme_id, 'NAME' => $fs_theme['name'], 'VISIT_URL' => $fs_theme['uri'], 'VERSION' => $fs_theme['version'], 'DESC' => $fs_theme['description'], 'AUTHOR' => $fs_theme['author'], 'AUTHOR_URL' => $fs_theme['author uri'] ?? null, 'PARENT' => $fs_theme['parent'] ?? null, 'SCREENSHOT' => $fs_theme['screenshot'], 'IS_MOBILE' => $fs_theme['mobile'], 'ADMIN_URI' => $fs_theme['admin_uri'] ?? null];
 
             if (in_array($theme_id, $db_theme_ids)) {
                 $tpl_theme['STATE']      = 'active';
                 $tpl_theme['IS_DEFAULT'] = ($theme_id == $default_theme);
                 $tpl_theme['DEACTIVABLE'] = true;
-                if (count($db_theme_ids) <= 1) { $tpl_theme['DEACTIVABLE'] = false; $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate this theme, you need at least one theme.'); }
-                if ($tpl_theme['IS_DEFAULT']) { $tpl_theme['DEACTIVABLE'] = false; $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate the default theme.'); }
+                if (count($db_theme_ids) <= 1) {
+                    $tpl_theme['DEACTIVABLE'] = false;
+                    $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+                }
+                if ($tpl_theme['IS_DEFAULT']) {
+                    $tpl_theme['DEACTIVABLE'] = false;
+                    $tpl_theme['DEACTIVATE_TOOLTIP'] = l10n('Impossible to deactivate the default theme.');
+                }
             } else {
                 $tpl_theme['STATE'] = 'inactive';
-                if (isset($fs_theme['activable']) && !$fs_theme['activable']) { $tpl_theme['ACTIVABLE'] = false; $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('This theme was not designed to be directly activated'); }
-                else { $tpl_theme['ACTIVABLE'] = true; }
+                if (isset($fs_theme['activable']) && !$fs_theme['activable']) {
+                    $tpl_theme['ACTIVABLE'] = false;
+                    $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('This theme was not designed to be directly activated');
+                } else {
+                    $tpl_theme['ACTIVABLE'] = true;
+                }
                 $missing_parent = $themes->missing_parent_theme($theme_id);
-                if (isset($missing_parent)) { $tpl_theme['ACTIVABLE'] = false; $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('Impossible to activate this theme, the parent theme is missing: %s', $missing_parent); }
+                if (isset($missing_parent)) {
+                    $tpl_theme['ACTIVABLE'] = false;
+                    $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('Impossible to activate this theme, the parent theme is missing: %s', $missing_parent);
+                }
                 $children = $themes->get_children_themes($theme_id);
                 $tpl_theme['DELETABLE'] = true;
-                if (count($children) > 0) { $tpl_theme['DELETABLE'] = false; $tpl_theme['DELETE_TOOLTIP'] = l10n('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children)); }
+                if (count($children) > 0) {
+                    $tpl_theme['DELETABLE'] = false;
+                    $tpl_theme['DELETE_TOOLTIP'] = l10n('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children));
+                }
             }
             $tpl_themes[] = $tpl_theme;
         }
@@ -508,7 +587,9 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!Config::enableExtensionsInstall()) { throw new ConfigException('Piwigo extensions install/update system is disabled'); }
+        if (!Config::enableExtensionsInstall()) {
+            throw new ConfigException('Piwigo extensions install/update system is disabled');
+        }
 
         $tpl->set_filenames(['themes' => 'themes_new.tpl']);
 
@@ -518,11 +599,14 @@ final class ExtensionsController
         $themes   = new Themes();
 
         $themes_dir = PHPWG_ROOT_PATH . 'themes';
-        if (!is_writable($themes_dir)) { PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes')); }
+        if (!is_writable($themes_dir)) {
+            PageState::current()->addError(l10n('Add write access to the "%s" directory', 'themes'));
+        }
 
         if (isset($_GET['revision']) && isset($_GET['extension'])) {
-            if (!is_webmaster()) { PageState::current()->addError(l10n('Webmaster status is required.')); }
-            else {
+            if (!is_webmaster()) {
+                PageState::current()->addError(l10n('Webmaster status is required.'));
+            } else {
                 check_pwg_token();
                 $install_status = $themes->extract_theme_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
                 redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
@@ -534,11 +618,16 @@ final class ExtensionsController
                 case 'ok':
                     PageState::current()->addInfo(l10n('Theme has been successfully installed'));
                     $theme_id_str = is_string($_GET['theme_id'] ?? null) ? $_GET['theme_id'] : '';
-                    if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) { pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]); }
+                    if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
+                        pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]);
+                    }
                     break;
-                case 'temp_path_error':  PageState::current()->addError(l10n('Can\'t create temporary file.')); break;
-                case 'dl_archive_error': PageState::current()->addError(l10n('Can\'t download archive.')); break;
-                case 'archive_error':    PageState::current()->addError(l10n('Can\'t read or extract archive.')); break;
+                case 'temp_path_error':  PageState::current()->addError(l10n('Can\'t create temporary file.'));
+                    break;
+                case 'dl_archive_error': PageState::current()->addError(l10n('Can\'t download archive.'));
+                    break;
+                case 'archive_error':    PageState::current()->addError(l10n('Can\'t read or extract archive.'));
+                    break;
                 default:                 PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
             }
         }
@@ -576,8 +665,12 @@ final class ExtensionsController
         if (isset($_POST['submit']) && is_webmaster()) {
             check_pwg_token();
             conf_update_param('use_standard_pages', !empty($_POST['use_standard_pages']), true);
-            if (isset($_POST['std_pgs_display_logo']) && in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options)) { conf_update_param('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true); }
-            if (isset($_POST['std_pgs_selected_skin']) && in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options)) { conf_update_param('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true); }
+            if (isset($_POST['std_pgs_display_logo']) && in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options)) {
+                conf_update_param('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
+            }
+            if (isset($_POST['std_pgs_selected_skin']) && in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options)) {
+                conf_update_param('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
+            }
         }
 
         $std_pgs_logo_file = is_array($_FILES['std_pgs_logo'] ?? null) ? $_FILES['std_pgs_logo'] : [];
@@ -614,7 +707,10 @@ final class ExtensionsController
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];
         foreach ($themes->fs_themes as $theme) {
-            if (isset($theme['use_standard_pages']) && $theme['use_standard_pages']) { $is_standard_pages_used = true; array_push($standard_pages_used_by, $theme['name']); }
+            if (isset($theme['use_standard_pages']) && $theme['use_standard_pages']) {
+                $is_standard_pages_used = true;
+                array_push($standard_pages_used_by, $theme['name']);
+            }
         }
 
         $tpl->assign([
@@ -640,15 +736,22 @@ final class ExtensionsController
     {
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        if (empty($_GET['theme'])) { throw new ValidationException('Invalid theme URL'); }
+        if (empty($_GET['theme'])) {
+            throw new ValidationException('Invalid theme URL');
+        }
 
         $themes = new Themes();
-        if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) { throw new ValidationException('Invalid theme'); }
+        if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
+            throw new ValidationException('Invalid theme');
+        }
 
         $theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
         $filename   = PHPWG_THEMES_PATH . $theme_name . '/admin/admin.inc.php';
-        if (is_file($filename)) { require_once $filename; }
-        else { throw new NotFoundException('Missing file ' . $filename); }
+        if (is_file($filename)) {
+            require_once $filename;
+        } else {
+            throw new NotFoundException('Missing file ' . $filename);
+        }
     }
 
     // ── languages ─────────────────────────────────────────────────────────────
@@ -711,7 +814,9 @@ final class ExtensionsController
 
         if (isset($_GET['action']) && isset($_GET['language']) && is_webmaster()) {
             $page['errors'] = $languages->perform_action(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : '');
-            if (empty($page['errors'])) { redirect($base_url); }
+            if (empty($page['errors'])) {
+                redirect($base_url);
+            }
         }
 
         $default_language = get_default_language();
@@ -721,13 +826,24 @@ final class ExtensionsController
             if (in_array($language_id, array_keys($languages->db_languages))) {
                 $language['state']      = 'active';
                 $language['deactivable'] = true;
-                if (count($languages->db_languages) <= 1) { $language['deactivable'] = false; $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, you need at least one language.'); }
-                if ($language_id == $default_language) { $language['deactivable'] = false; $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, first set another language as default.'); }
+                if (count($languages->db_languages) <= 1) {
+                    $language['deactivable'] = false;
+                    $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, you need at least one language.');
+                }
+                if ($language_id == $default_language) {
+                    $language['deactivable'] = false;
+                    $language['deactivate_tooltip'] = l10n('Impossible to deactivate this language, first set another language as default.');
+                }
             } else {
                 $language['state'] = 'inactive';
             }
-            if ($language_id == $default_language) { $language['is_default'] = true; array_unshift($tpl_languages, $language); }
-            else { $language['is_default'] = false; $tpl_languages[] = $language; }
+            if ($language_id == $default_language) {
+                $language['is_default'] = true;
+                array_unshift($tpl_languages, $language);
+            } else {
+                $language['is_default'] = false;
+                $tpl_languages[] = $language;
+            }
         }
 
         $tpl->assign(['languages' => $tpl_languages]);
@@ -736,7 +852,10 @@ final class ExtensionsController
 
         $missing_language_ids = array_diff(array_keys($languages->db_languages), array_keys($languages->fs_languages));
         $langRepo = ServiceLocator::get(LanguageRepository::class);
-        foreach ($missing_language_ids as $language_id) { $langRepo->reassignUsers((string) $language_id, get_default_language()); $langRepo->deactivate((string) $language_id); }
+        foreach ($missing_language_ids as $language_id) {
+            $langRepo->reassignUsers((string) $language_id, get_default_language());
+            $langRepo->deactivate((string) $language_id);
+        }
 
         $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
@@ -753,7 +872,9 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!Config::enableExtensionsInstall()) { throw new ConfigException('Piwigo extensions install/update system is disabled'); }
+        if (!Config::enableExtensionsInstall()) {
+            throw new ConfigException('Piwigo extensions install/update system is disabled');
+        }
 
         $tpl->set_filenames(['languages' => 'languages_new.tpl']);
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages_new';
@@ -764,11 +885,14 @@ final class ExtensionsController
         $languages->get_db_languages();
 
         $languages_dir = PHPWG_ROOT_PATH . 'language';
-        if (!is_writable($languages_dir)) { PageState::current()->addError(l10n('Add write access to the "%s" directory', 'language')); }
+        if (!is_writable($languages_dir)) {
+            PageState::current()->addError(l10n('Add write access to the "%s" directory', 'language'));
+        }
 
         if (isset($_GET['revision'])) {
-            if (!is_webmaster()) { PageState::current()->addError(l10n('Webmaster status is required.')); }
-            else {
+            if (!is_webmaster()) {
+                PageState::current()->addError(l10n('Webmaster status is required.'));
+            } else {
                 check_pwg_token();
                 $install_status = $languages->extract_language_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
                 redirect($base_url . '&installstatus=' . $install_status);
@@ -874,12 +998,18 @@ final class ExtensionsController
             $server_ext = $autoupdate->$type->$server;
             $fs_ext     = $autoupdate->$type->$fs;
 
-            if (empty($server_ext)) { continue; }
+            if (empty($server_ext)) {
+                continue;
+            }
             $updates_extension[$type] = [];
 
             foreach ($fs_ext as $ext_id => $fs_ext_item) {
-                if (!isset($fs_ext_item['extension']) || !isset($server_ext[$fs_ext_item['extension']])) { continue; }
-                if ('auto' === $fs_ext_item['version']) { continue; }
+                if (!isset($fs_ext_item['extension']) || !isset($server_ext[$fs_ext_item['extension']])) {
+                    continue;
+                }
+                if ('auto' === $fs_ext_item['version']) {
+                    continue;
+                }
 
                 $ext_info = $server_ext[$fs_ext_item['extension']];
                 $updates_ignored     = Config::raw('updates_ignored');
@@ -896,7 +1026,9 @@ final class ExtensionsController
                         'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
                     ]);
                 }
-                if (!empty($updates_ignored_for_type)) { $show_reset = true; }
+                if (!empty($updates_ignored_for_type)) {
+                    $show_reset = true;
+                }
             }
         }
 
@@ -920,7 +1052,9 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!Config::enableCoreUpdate()) { throw new ConfigException('Piwigo core update system is disabled'); }
+        if (!Config::enableCoreUpdate()) {
+            throw new ConfigException('Piwigo core update system is disabled');
+        }
 
         require_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
@@ -941,28 +1075,45 @@ final class ExtensionsController
         $new_versions = $updates->get_piwigo_new_versions();
 
         if ($step == 0) {
-            if (isset($new_versions['minor']) && isset($new_versions['major']))     { $step = 1; $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : ''; }
-            elseif (isset($new_versions['minor']))                                  { $step = 2; $upgrade_to = is_scalar($new_versions['minor']) ? (string) $new_versions['minor'] : ''; }
-            elseif (isset($new_versions['major']))                                  { $step = 3; $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : ''; }
+            if (isset($new_versions['minor']) && isset($new_versions['major'])) {
+                $step = 1;
+                $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : '';
+            } elseif (isset($new_versions['minor'])) {
+                $step = 2;
+                $upgrade_to = is_scalar($new_versions['minor']) ? (string) $new_versions['minor'] : '';
+            } elseif (isset($new_versions['major'])) {
+                $step = 3;
+                $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : '';
+            }
             $tpl->assign('CHECK_VERSION', $new_versions['piwigo.org-checked']);
             $tpl->assign('DEV_VERSION', $new_versions['is_dev']);
         }
 
         if ($step == 2 && is_webmaster()) {
-            if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) { Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step); }
+            if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
+                Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+            }
         }
 
         if ($step == 3 && is_webmaster()) {
-            if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) { Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step); }
+            if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
+                Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+            }
             $updates->get_merged_extensions($upgrade_to);
             $updates->get_server_extensions($upgrade_to);
             $tpl->assign('missing', $updates->missing);
         }
 
-        if (isset($new_versions['minor_php']) && version_compare(phpversion(), is_scalar($new_versions['minor_php']) ? (string) $new_versions['minor_php'] : '', '<')) { $tpl->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']); }
-        if (isset($new_versions['major_php']) && version_compare(phpversion(), is_scalar($new_versions['major_php']) ? (string) $new_versions['major_php'] : '', '<')) { $tpl->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']); }
+        if (isset($new_versions['minor_php']) && version_compare(phpversion(), is_scalar($new_versions['minor_php']) ? (string) $new_versions['minor_php'] : '', '<')) {
+            $tpl->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']);
+        }
+        if (isset($new_versions['major_php']) && version_compare(phpversion(), is_scalar($new_versions['major_php']) ? (string) $new_versions['major_php'] : '', '<')) {
+            $tpl->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
+        }
 
-        if (!is_webmaster()) { PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'))); }
+        if (!is_webmaster()) {
+            PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+        }
 
         $pageUpdatedVersion = is_scalar($page['updated_version'] ?? null) ? (string) $page['updated_version'] : PHPWG_VERSION;
         $tpl->assign(['STEP' => $step, 'PIWIGO_CURRENT_VERSION' => $pageUpdatedVersion, 'UPGRADE_TO' => $upgrade_to]);
@@ -1015,10 +1166,16 @@ final class ExtensionsController
                 $original   = is_scalar($original_arr[$i] ?? null) ? (string) $original_arr[$i] : '';
                 $handle     = $eligible_templates[$original] ?? 'N/A';
                 $url_keyword = is_scalar($url_arr[$i] ?? null) ? (string) $url_arr[$i] : '';
-                if ($url_keyword == '----------') { $url_keyword = 'N/A'; }
+                if ($url_keyword == '----------') {
+                    $url_keyword = 'N/A';
+                }
                 $bound_tpl  = is_scalar($bound_arr[$i] ?? null) ? (string) $bound_arr[$i] : '';
-                if ($bound_tpl == '----------') { $bound_tpl = 'N/A'; }
-                if ($handle != 'N/A') { $replacements[$newtpl] = [$handle, $url_keyword, $bound_tpl]; }
+                if ($bound_tpl == '----------') {
+                    $bound_tpl = 'N/A';
+                }
+                if ($handle != 'N/A') {
+                    $replacements[$newtpl] = [$handle, $url_keyword, $bound_tpl];
+                }
                 $i++;
             }
             Config::override('extents_for_templates', serialize($replacements));
@@ -1029,17 +1186,24 @@ final class ExtensionsController
 
         foreach ($tpl_extension as $file => $conditions) {
             $fileStr = (string) $file;
-            if (!in_array($fileStr, $new_extensions)) { unset($tpl_extension[$file]); }
-            else { $new_extensions = array_diff($new_extensions, [$fileStr]); }
+            if (!in_array($fileStr, $new_extensions)) {
+                unset($tpl_extension[$file]);
+            } else {
+                $new_extensions = array_diff($new_extensions, [$fileStr]);
+            }
         }
-        foreach ($new_extensions as $file) { $tpl_extension[$file] = ['N/A', 'N/A', 'N/A']; }
+        foreach ($new_extensions as $file) {
+            $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
+        }
 
         $tpl->set_filenames(['extend_for_templates' => 'extend_for_templates.tpl']);
         $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=extend_for_templates']);
 
         ksort($tpl_extension);
         foreach ($tpl_extension as $file => $conditions) {
-            if (!is_array($conditions)) { continue; }
+            if (!is_array($conditions)) {
+                continue;
+            }
             $handle      = is_scalar($conditions[0] ?? null) ? (string) $conditions[0] : 'N/A';
             $url_keyword = is_scalar($conditions[1] ?? null) ? (string) $conditions[1] : 'N/A';
             $bound_tpl   = is_scalar($conditions[2] ?? null) ? (string) $conditions[2] : 'N/A';
@@ -1059,13 +1223,19 @@ final class ExtensionsController
     private function cmpThemes(array $a, array $b): int
     {
         $s = ['active' => 0, 'inactive' => 1];
-        if (!empty($a['IS_DEFAULT'])) { return -1; }
-        if (!empty($b['IS_DEFAULT'])) { return 1; }
+        if (!empty($a['IS_DEFAULT'])) {
+            return -1;
+        }
+        if (!empty($b['IS_DEFAULT'])) {
+            return 1;
+        }
         $a_state = is_string($a['STATE'] ?? null) ? $a['STATE'] : '';
         $b_state = is_string($b['STATE'] ?? null) ? $b['STATE'] : '';
         $a_name  = is_scalar($a['NAME'] ?? null) ? (string) $a['NAME'] : '';
         $b_name  = is_scalar($b['NAME'] ?? null) ? (string) $b['NAME'] : '';
-        if ($a_state == $b_state) { return strcasecmp($a_name, $b_name); }
+        if ($a_state == $b_state) {
+            return strcasecmp($a_name, $b_name);
+        }
         return (($s[$a_state] ?? 0) >= ($s[$b_state] ?? 0) ? 1 : -1);
     }
 }

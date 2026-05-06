@@ -17,7 +17,6 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\SrcImage;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;

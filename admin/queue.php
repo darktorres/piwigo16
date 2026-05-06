@@ -2,14 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Job\MessengerFactory;
-use Piwigo\Job\RegenerateAllDerivativesJob;
-use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

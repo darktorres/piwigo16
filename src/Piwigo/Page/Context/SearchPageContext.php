@@ -27,5 +27,6 @@ final readonly class SearchPageContext
         public array  $filters,
         public array  $results,
         public array  $pagination,
-    ) {}
+    ) {
+    }
 }

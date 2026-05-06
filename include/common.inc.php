@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Bootstrap\ExceptionHandler;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCacheRegistry;
@@ -16,10 +14,12 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserBootstrap;
 
 // +-----------------------------------------------------------------------+

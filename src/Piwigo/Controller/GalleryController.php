@@ -180,7 +180,9 @@ final class GalleryController implements ControllerInterface
                         'URL'   => make_index_url(['tags' => [$tag]]),
                     ]);
                 }
-                usort($relatedTags, static fn (array $a, array $b): int =>
+                usort(
+                    $relatedTags,
+                    static fn (array $a, array $b): int =>
                     (is_numeric($b['counter'] ?? null) ? (int) $b['counter'] : 0)
                     <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
                 );

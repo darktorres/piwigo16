@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Languages;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

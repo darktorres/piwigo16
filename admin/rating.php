@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -11,6 +10,7 @@ use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+

@@ -28,5 +28,6 @@ final readonly class PicturePageContext
         public array|null $category,
         public string     $commentAction,
         public string     $urlSelf,
-    ) {}
+    ) {
+    }
 }

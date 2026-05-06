@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
@@ -333,10 +333,14 @@ function send_derivative(int|false $expires, ImageDerivativeContext $ctx): void
     header('Connection: close');
     $ctype = 'application/octet-stream';
     switch (strtolower($ctx->derivativeExt)) {
-        case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg'; break;
-        case '.png':  $ctype = 'image/png';  break;
-        case '.gif':  $ctype = 'image/gif';  break;
-        case '.webp': $ctype = 'image/webp'; break;
+        case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg';
+            break;
+        case '.png':  $ctype = 'image/png';
+            break;
+        case '.gif':  $ctype = 'image/gif';
+            break;
+        case '.webp': $ctype = 'image/webp';
+            break;
     }
     header('Content-Type: ' . $ctype);
     fpassthru($fp);

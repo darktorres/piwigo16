@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
-use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -14,6 +13,7 @@ use Piwigo\Core\LanguageStack;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 final readonly class MailService

@@ -131,11 +131,11 @@ WHERE ' . $catClause . '
             ));
             $filter['visible_images'] = $visibleImageStr !== '' ? $visibleImageStr : -1;
 
-            pwg_set_session_var('filter_enabled',             $filter['enabled']);
-            pwg_set_session_var('filter_check_key',           $filterKey);
-            pwg_set_session_var('filter_categories',          serialize($computedCategories));
-            pwg_set_session_var('filter_visible_categories',  $filter['visible_categories']);
-            pwg_set_session_var('filter_visible_images',      $filter['visible_images']);
+            pwg_set_session_var('filter_enabled', $filter['enabled']);
+            pwg_set_session_var('filter_check_key', $filterKey);
+            pwg_set_session_var('filter_categories', serialize($computedCategories));
+            pwg_set_session_var('filter_visible_categories', $filter['visible_categories']);
+            pwg_set_session_var('filter_visible_images', $filter['visible_images']);
         } else {
             $filter['categories']         = unserialize(pwg_get_session_var('filter_categories', serialize([])));
             $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\MaintenanceService;
@@ -17,6 +16,7 @@ use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Core\PageState;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

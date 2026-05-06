@@ -49,6 +49,6 @@ final class CsrfMiddleware implements MiddlewareInterface
 
     private function isExempt(string $path): bool
     {
-        return array_any(self::EXEMPT_PREFIXES, fn($prefix): bool => $path === $prefix || str_starts_with($path, $prefix . '/'));
+        return array_any(self::EXEMPT_PREFIXES, fn ($prefix): bool => $path === $prefix || str_starts_with($path, $prefix . '/'));
     }
 }

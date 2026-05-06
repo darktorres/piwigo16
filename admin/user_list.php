@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+

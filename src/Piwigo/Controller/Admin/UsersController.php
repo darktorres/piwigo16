@@ -10,11 +10,11 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 final class UsersController
@@ -28,9 +28,13 @@ final class UsersController
 
     public function handle(string $page): void
     {
-        if ($page === 'user_list')       { $this->userList(); }
-        elseif ($page === 'user_perm')   { $this->userPerm(); }
-        elseif ($page === 'user_activity') { $this->userActivity(); }
+        if ($page === 'user_list') {
+            $this->userList();
+        } elseif ($page === 'user_perm') {
+            $this->userPerm();
+        } elseif ($page === 'user_activity') {
+            $this->userActivity();
+        }
     }
 
     // ── user_list ─────────────────────────────────────────────────────────────
@@ -86,7 +90,7 @@ final class UsersController
         $password_protected_users = [(string) Config::guestId()];
 
         if ($userStatus === 'admin') {
-            $admin_ids = array_column(get_dbal_connection()->executeQuery("SELECT user_id FROM " . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
+            $admin_ids = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
             $admin_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids);
             $protected_users = array_merge($protected_users, $admin_ids_str);
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids_str, [(string) $userId]));
@@ -115,7 +119,9 @@ final class UsersController
             'owner_username'            => $owner_username[0] ?? '',
         ]);
 
-        if (isset($_GET['show_add_user'])) { $tpl->assign('show_add_user', true); }
+        if (isset($_GET['show_add_user'])) {
+            $tpl->assign('show_add_user', true);
+        }
 
         // Status options
         $label_of_status = [];
@@ -130,7 +136,10 @@ final class UsersController
         $nb_users_by_status = array_merge($label_of_status, $nb_users_by_status);
 
         $pref_status_options = $label_of_status;
-        if ($userStatus === 'admin') { unset($pref_status_options['webmaster']); unset($pref_status_options['admin']); }
+        if ($userStatus === 'admin') {
+            unset($pref_status_options['webmaster']);
+            unset($pref_status_options['admin']);
+        }
 
         $tpl->assign('label_of_status', $label_of_status);
         $tpl->assign('pref_status_options', $pref_status_options);
@@ -289,15 +298,21 @@ final class UsersController
         }
 
         $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND user_id = " . $pageUser;
-        if (count($group_authorized) > 0) { $query_true .= ' AND cat_id NOT IN (' . implode(',', $group_authorized) . ')'; }
+        if (count($group_authorized) > 0) {
+            $query_true .= ' AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
+        }
         $query_true .= ';';
         display_select_cat_wrapper($query_true, [], 'category_option_true');
 
         $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findDirectUserCatIds($pageUser, $group_authorized);
 
-        $query_false = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE status = 'private'";
-        if (count($authorized_ids) > 0) { $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')'; }
-        if (count($group_authorized) > 0) { $query_false .= ' AND id NOT IN (' . implode(',', $group_authorized) . ')'; }
+        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private'";
+        if (count($authorized_ids) > 0) {
+            $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
+        }
+        if (count($group_authorized) > 0) {
+            $query_false .= ' AND id NOT IN (' . implode(',', $group_authorized) . ')';
+        }
         $query_false .= ';';
         display_select_cat_wrapper($query_false, [], 'category_option_false');
 
@@ -362,7 +377,7 @@ final class UsersController
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create')]),
         ]);
 
-        $nb_lines_for_user = array_column(get_dbal_connection()->executeQuery("SELECT performed_by, COUNT(*) as counter FROM " . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
+        $nb_lines_for_user = array_column(get_dbal_connection()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
 
         $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
         if (count($nb_lines_for_user) > 0) {
@@ -394,7 +409,9 @@ final class UsersController
             if (isset($_GET[$filter_key])) {
                 $filterId = is_scalar($_GET[$filter_key]) ? (string) $_GET[$filter_key] : '0';
                 $rows = get_dbal_connection()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
-                if (count($rows) == 0) { fatal_error($filter_key . ' #' . $filterId . ' does not exist'); }
+                if (count($rows) == 0) {
+                    fatal_error($filter_key . ' #' . $filterId . ' does not exist');
+                }
                 $additional_filt_type  = $filter_key;
                 $additional_filt_name  = $rows[0]['name'];
                 $additional_filt_value = $filterId;
@@ -404,8 +421,10 @@ final class UsersController
 
         $tpl->assign('ADDITIONAL_FILT', ['type' => $additional_filt_type, 'name' => $additional_filt_name, 'value' => $additional_filt_value]);
 
-        $query = "SELECT object, action, count(*) AS counter FROM " . ACTIVITY_TABLE . " WHERE object != 'system'";
-        if ($additional_filt_type) { $query .= ' AND object = "' . $additional_filt_type . '"'; }
+        $query = 'SELECT object, action, count(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system'";
+        if ($additional_filt_type) {
+            $query .= ' AND object = "' . $additional_filt_type . '"';
+        }
         $query .= ' GROUP BY action, object ORDER BY object ASC;';
 
         $actions = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
@@ -488,7 +507,9 @@ final class UsersController
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);
-            if ($real === false) { continue; }
+            if ($real === false) {
+                continue;
+            }
             $content = is_readable($real) ? file_get_contents($real) : false;
             if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"]webmaster_id[\'"]\s*\]\s*=/', $content) === 1) {
                 return true;

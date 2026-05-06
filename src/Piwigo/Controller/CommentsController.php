@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Db\SqlExpr;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\SqlExpr;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -115,7 +115,7 @@ final class CommentsController implements ControllerInterface
         $get_keyword = input_string('keyword', null, $_GET);
         if (!empty($get_keyword)) {
             $page['where_clauses'][] = '(' . implode(' AND ', array_map(
-                fn(string $s): string => "content LIKE '%$s%'",
+                fn (string $s): string => "content LIKE '%$s%'",
                 preg_split('/[\s,;]+/', $get_keyword) ?: []
             )) . ')';
         }
@@ -210,7 +210,7 @@ final class CommentsController implements ControllerInterface
         $tpl->assign([
             'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
             'F_KEYWORD' => !empty($get_keyword) ? htmlspecialchars(stripslashes($get_keyword)) : '',
-            'F_AUTHOR'  => !empty($get_author)  ? htmlspecialchars(stripslashes($get_author))  : '',
+            'F_AUTHOR'  => !empty($get_author) ? htmlspecialchars(stripslashes($get_author)) : '',
         ]);
 
         $blockname = 'categories';
@@ -297,10 +297,10 @@ SELECT *
 
             foreach ($comments as $comment) {
                 /** @var array<string, float|int|string|null> $comment */
-                $cImageId     = is_numeric($comment['image_id'])    ? (int) $comment['image_id']    : 0;
+                $cImageId     = is_numeric($comment['image_id']) ? (int) $comment['image_id'] : 0;
                 $cCategoryId  = is_numeric($comment['category_id']) ? (int) $comment['category_id'] : 0;
-                $cId          = is_numeric($comment['comment_id'])  ? (int) $comment['comment_id']  : 0;
-                $cAuthorId    = is_numeric($comment['author_id'])   ? (int) $comment['author_id']   : 0;
+                $cId          = is_numeric($comment['comment_id']) ? (int) $comment['comment_id'] : 0;
+                $cAuthorId    = is_numeric($comment['author_id']) ? (int) $comment['author_id'] : 0;
 
                 /** @var array<string, float|int|string|null> $element_row */
                 $element_row  = $elements[(string) $cImageId] ?? [];

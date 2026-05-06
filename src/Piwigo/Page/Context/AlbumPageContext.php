@@ -31,5 +31,6 @@ final readonly class AlbumPageContext
         public array      $pagination,
         public string     $baseUrl,
         public string     $section,
-    ) {}
+    ) {
+    }
 }

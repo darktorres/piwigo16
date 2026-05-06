@@ -25,5 +25,6 @@ readonly class AdminPageContext
         public array  $pageMeta,
         public array  $themeAssets,
         public array  $flashMessages,
-    ) {}
+    ) {
+    }
 }

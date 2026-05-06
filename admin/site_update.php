@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -15,6 +14,7 @@ use Piwigo\Exception\ValidationException;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Site\SiteRepository;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

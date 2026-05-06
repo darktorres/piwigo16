@@ -114,7 +114,7 @@ final class PwgServerTest extends TestCase
     public function test_multiple_methods_registered_independently(): void
     {
         $this->server->register(new MethodDefinition(name: 'pwg.alpha', callback: 'cb_a', description: 'Alpha'));
-        $this->server->register(new MethodDefinition(name: 'pwg.beta',  callback: 'cb_b', description: 'Beta'));
+        $this->server->register(new MethodDefinition(name: 'pwg.beta', callback: 'cb_b', description: 'Beta'));
 
         self::assertTrue($this->server->hasMethod('pwg.alpha'));
         self::assertTrue($this->server->hasMethod('pwg.beta'));

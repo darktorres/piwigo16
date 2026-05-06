@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

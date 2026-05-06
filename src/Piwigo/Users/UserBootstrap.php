@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Ws\PwgServer;
-use Piwigo\Ws\PwgError;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgServer;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.

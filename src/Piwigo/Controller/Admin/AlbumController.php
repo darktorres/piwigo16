@@ -11,7 +11,6 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\NotFoundException;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
@@ -20,6 +19,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 final class AlbumController
 {
@@ -36,14 +36,23 @@ final class AlbumController
 
     public function handle(string $page): void
     {
-        if ($page === 'album')                  { $this->album(); }
-        elseif ($page === 'albums')             { $this->albums(); }
-        elseif ($page === 'album_notification') { $this->albumNotification(); }
-        elseif ($page === 'cat_list')           { $this->catList(); }
-        elseif ($page === 'cat_modify')         { $this->catModify(); }
-        elseif ($page === 'cat_options')        { $this->catOptions(); }
-        elseif ($page === 'cat_perm')           { $this->catPerm(); }
-        elseif ($page === 'element_set_ranks')  { $this->elementSetRanks(); }
+        if ($page === 'album') {
+            $this->album();
+        } elseif ($page === 'albums') {
+            $this->albums();
+        } elseif ($page === 'album_notification') {
+            $this->albumNotification();
+        } elseif ($page === 'cat_list') {
+            $this->catList();
+        } elseif ($page === 'cat_modify') {
+            $this->catModify();
+        } elseif ($page === 'cat_options') {
+            $this->catOptions();
+        } elseif ($page === 'cat_perm') {
+            $this->catPerm();
+        } elseif ($page === 'element_set_ranks') {
+            $this->elementSetRanks();
+        }
     }
 
     // ── album ─────────────────────────────────────────────────────────────────
@@ -379,7 +388,7 @@ final class AlbumController
             }
         }
 
-        $all_user_ids = array_column(get_dbal_connection()->executeQuery("SELECT user_id FROM " . USER_INFOS_TABLE . " WHERE status != 'guest';")->fetchAllAssociative(), 'user_id');
+        $all_user_ids = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status != 'guest';")->fetchAllAssociative(), 'user_id');
 
         if ('private' == $category['status']) {
             $catIdInt2 = is_numeric($category['id']) ? (int) $category['id'] : 0;
@@ -799,16 +808,16 @@ final class AlbumController
 
         $query_true = $query_false = '';
         if ($page['section'] === 'comments') {
-            $query_true  = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE commentable = 'true';";
-            $query_false = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE commentable = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE commentable = 'true';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE commentable = 'false';";
             $tpl->assign(['L_SECTION' => l10n('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'), 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden')]);
         } elseif ($page['section'] === 'visible') {
-            $query_true  = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE visible = 'true';";
-            $query_false = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE visible = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE visible = 'true';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE visible = 'false';";
             $tpl->assign(['L_SECTION' => l10n('Lock albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Unlocked'), 'L_CAT_OPTIONS_FALSE' => l10n('Locked')]);
         } elseif ($page['section'] === 'status') {
-            $query_true  = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE status = 'public';";
-            $query_false = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE status = 'private';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'public';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private';";
             $tpl->assign(['L_SECTION' => l10n('Manage authorizations for selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Public'), 'L_CAT_OPTIONS_FALSE' => l10n('Private')]);
         } elseif ($page['section'] === 'representative') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' WHERE representative_picture_id IS NOT NULL;';
@@ -861,7 +870,9 @@ final class AlbumController
 
             if ('private' == $post_status) {
                 $groups_granted     = array_column(get_dbal_connection()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
-                if (!isset($_POST['groups'])) { $_POST['groups'] = []; }
+                if (!isset($_POST['groups'])) {
+                    $_POST['groups'] = [];
+                }
                 /** @var int[] $post_groups */
                 $post_groups        = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['groups']) ? $_POST['groups'] : []);
                 /** @var int[] $groups_granted_int */
@@ -875,17 +886,23 @@ final class AlbumController
                 $grant_groups = $post_groups;
                 if (count($grant_groups) > 0) {
                     $cat_ids = get_uppercat_ids([$pageCat]);
-                    if (isset($_POST['apply_on_sub'])) { $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat])); }
-                    $private_cats = array_column(get_dbal_connection()->executeQuery("SELECT id FROM " . CATEGORIES_TABLE . " WHERE id IN (" . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
+                    if (isset($_POST['apply_on_sub'])) {
+                        $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
+                    }
+                    $private_cats = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
                     $inserts = [];
                     foreach ($private_cats as $cid) {
-                        foreach ($grant_groups as $gid) { $inserts[] = ['group_id' => $gid, 'cat_id' => $cid]; }
+                        foreach ($grant_groups as $gid) {
+                            $inserts[] = ['group_id' => $gid, 'cat_id' => $cid];
+                        }
                     }
                     mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
                 }
 
                 $users_granted     = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
-                if (!isset($_POST['users'])) { $_POST['users'] = []; }
+                if (!isset($_POST['users'])) {
+                    $_POST['users'] = [];
+                }
                 /** @var int[] $post_users */
                 $post_users        = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['users']) ? $_POST['users'] : []);
                 /** @var int[] $users_granted_int */
@@ -895,7 +912,9 @@ final class AlbumController
                 if (count($deny_users) > 0) {
                     ServiceLocator::get(PermissionRepository::class)->deleteUserAccess(array_map(intval(...), $deny_users), array_map(intval(...), get_subcat_ids([$pageCat])));
                 }
-                if (count($post_users) > 0) { add_permission_on_category($pageCat, $post_users); }
+                if (count($post_users) > 0) {
+                    add_permission_on_category($pageCat, $post_users);
+                }
             }
 
             $tpl->assign(['save_success' => l10n('Album updated successfully')]);
@@ -924,11 +943,15 @@ final class AlbumController
             $granted_groups = [];
             foreach (ServiceLocator::get(GroupRepository::class)->findUserGroupMembersByGroupIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
                 $row_group_id = is_scalar($row['group_id']) ? (string) $row['group_id'] : '';
-                if (!isset($granted_groups[$row_group_id])) { $granted_groups[$row_group_id] = []; }
+                if (!isset($granted_groups[$row_group_id])) {
+                    $granted_groups[$row_group_id] = [];
+                }
                 $granted_groups[$row_group_id][] = is_scalar($row['user_id']) ? (string) $row['user_id'] : '';
             }
             $user_granted_by_group_ids = [];
-            foreach ($granted_groups as $group_users) { $user_granted_by_group_ids = array_merge($user_granted_by_group_ids, $group_users); }
+            foreach ($granted_groups as $group_users) {
+                $user_granted_by_group_ids = array_merge($user_granted_by_group_ids, $group_users);
+            }
             $user_granted_by_group_ids = array_unique($user_granted_by_group_ids);
             $user_granted_indirect_ids = array_diff($user_granted_by_group_ids, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $user_granted_direct_ids));
 
@@ -1049,7 +1072,9 @@ final class AlbumController
 
         $tpl->assign('image_order_options', $sort_fields);
         $image_order = explode(',', is_scalar($category['image_order'] ?? null) ? (string) $category['image_order'] : '');
-        for ($i = 0; $i < 3; $i++) { $tpl->append('image_order', $image_order[$i] ?? ''); }
+        for ($i = 0; $i < 3; $i++) {
+            $tpl->append('image_order', $image_order[$i] ?? '');
+        }
         $tpl->assign('image_order_choice', $image_order_choice);
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'element_set_ranks');
     }
@@ -1080,13 +1105,17 @@ final class AlbumController
             }
             $to_compare = [];
             foreach ($subcat_ids as $id) {
-                if (isset($ref_dates[$id])) { $to_compare[] = $ref_dates[$id]; }
+                if (isset($ref_dates[$id])) {
+                    $to_compare[] = $ref_dates[$id];
+                }
             }
             $ref_dates[$cat_id] = count($to_compare) > 0 ? ('max' == $minmax ? max($to_compare) : min($to_compare)) : null;
         }
 
         $return = [];
-        foreach ($ids as $id) { $return[$id] = $ref_dates[$id] ?? null; }
+        foreach ($ids as $id) {
+            $return[$id] = $ref_dates[$id] ?? null;
+        }
         return $return;
     }
 
@@ -1110,7 +1139,9 @@ final class AlbumController
     {
         $orderedTree = [];
         foreach ($assocT as $cat) {
-            if (!is_array($cat) || !is_array($cat['cat'] ?? null)) { continue; }
+            if (!is_array($cat) || !is_array($cat['cat'] ?? null)) {
+                continue;
+            }
             /** @var array<string, mixed> $catData */
             $catData     = $cat['cat'];
             $catId       = is_scalar($catData['id']) ? (string) $catData['id'] : '';
@@ -1158,7 +1189,9 @@ final class AlbumController
 
         $upper_array   = explode(',', $uppercats);
         $database_dirs = ServiceLocator::get(CategoryRepository::class)->findIdDirMap(array_map(intval(...), $upper_array));
-        foreach ($upper_array as $id) { $local_dir .= $database_dirs[$id] . '/'; }
+        foreach ($upper_array as $id) {
+            $local_dir .= $database_dirs[$id] . '/';
+        }
         return $local_dir;
     }
 
@@ -1170,7 +1203,9 @@ final class AlbumController
     private function getMinLocalDir(string $local_dir): string
     {
         $full_dir = explode('/', $local_dir);
-        if (count($full_dir) <= 3) { return $local_dir; }
+        if (count($full_dir) <= 3) {
+            return $local_dir;
+        }
         return $full_dir[0] . '/' . $full_dir[1] . '/&hellip;/' . end($full_dir);
     }
 }

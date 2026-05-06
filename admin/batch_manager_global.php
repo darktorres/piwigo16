@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -13,6 +12,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

@@ -29,7 +29,8 @@ final readonly class UrlGenerator
     public function __construct(
         private Router     $router,
         private UrlService $urls,
-    ) {}
+    ) {
+    }
 
     // ── Gallery / browse (delegate sub-token building to UrlService) ──────────
 
@@ -130,18 +131,48 @@ final readonly class UrlGenerator
 
     // ── Named PSR-15 routes (Router::generate() + URL-mode prefix) ────────────
 
-    public function random(): string         { return $this->routeUrl('random'); }
-    public function identification(): string { return $this->routeUrl('identification'); }
-    public function register(): string       { return $this->routeUrl('register'); }
-    public function password(): string       { return $this->routeUrl('password'); }
-    public function profile(): string        { return $this->routeUrl('profile'); }
-    public function comments(): string       { return $this->routeUrl('comments'); }
-    public function notification(): string   { return $this->routeUrl('notification'); }
-    public function feed(): string           { return $this->routeUrl('feed'); }
+    public function random(): string
+    {
+        return $this->routeUrl('random');
+    }
+    public function identification(): string
+    {
+        return $this->routeUrl('identification');
+    }
+    public function register(): string
+    {
+        return $this->routeUrl('register');
+    }
+    public function password(): string
+    {
+        return $this->routeUrl('password');
+    }
+    public function profile(): string
+    {
+        return $this->routeUrl('profile');
+    }
+    public function comments(): string
+    {
+        return $this->routeUrl('comments');
+    }
+    public function notification(): string
+    {
+        return $this->routeUrl('notification');
+    }
+    public function feed(): string
+    {
+        return $this->routeUrl('feed');
+    }
     /** Tags cloud / alphabetic listing page (bare /tags, no specific tags selected). */
-    public function tagsPage(): string       { return $this->routeUrl('tags'); }
+    public function tagsPage(): string
+    {
+        return $this->routeUrl('tags');
+    }
     /** Search form submission URL (bare /search, no saved-search ID yet). */
-    public function searchPage(): string     { return $this->routeUrl('search'); }
+    public function searchPage(): string
+    {
+        return $this->routeUrl('search');
+    }
 
     public function image(string $path): string
     {

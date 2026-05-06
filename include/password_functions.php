@@ -44,9 +44,9 @@ function process_verification_code(): bool
         $userdata = ['status' => 'guest', 'language' => get_default_language(), 'email' => ''];
     }
 
-    $status            = isset($userdata['status'])   && is_scalar($userdata['status'])   ? (string) $userdata['status']   : 'guest';
+    $status            = isset($userdata['status'])   && is_scalar($userdata['status']) ? (string) $userdata['status'] : 'guest';
     $userdata_language = isset($userdata['language']) && is_scalar($userdata['language']) ? (string) $userdata['language'] : get_default_language();
-    $userdata_email    = isset($userdata['email'])    && is_scalar($userdata['email'])    ? (string) $userdata['email']    : '';
+    $userdata_email    = isset($userdata['email'])    && is_scalar($userdata['email']) ? (string) $userdata['email'] : '';
 
     if ($is_user_found) {
         if (is_a_guest($status) || is_generic($status)) {
@@ -147,9 +147,9 @@ function process_password_request(): bool
     userprefs_delete_param('reset_password_forbidden_until');
 
     $temp_username = is_scalar($temp_user['username'] ?? null) ? (string) $temp_user['username'] : '';
-    $temp_email    = is_scalar($temp_user['email']    ?? null) ? (string) $temp_user['email']    : '';
+    $temp_email    = is_scalar($temp_user['email']    ?? null) ? (string) $temp_user['email'] : '';
     $temp_language = is_scalar($temp_user['language'] ?? null) ? (string) $temp_user['language'] : '';
-    $status        = is_scalar($temp_user['status']   ?? null) ? (string) $temp_user['status']   : '';
+    $status        = is_scalar($temp_user['status']   ?? null) ? (string) $temp_user['status'] : '';
     $has_no_email  = empty($temp_email);
 
     $_SESSION['valid_reset_password_code'] = [
@@ -184,7 +184,7 @@ function check_password_reset_key(string $reset_key): int|false
     $user_id = null;
     foreach (ServiceLocator::get(UserRepository::class)->findByActiveActivationKey() as $row) {
         $activation_key = is_scalar($row['activation_key'] ?? null) ? (string) $row['activation_key'] : '';
-        $row_status     = is_scalar($row['status']         ?? null) ? (string) $row['status']         : '';
+        $row_status     = is_scalar($row['status']         ?? null) ? (string) $row['status'] : '';
         if (password_verify($reset_key, $activation_key)) {
             if (is_a_guest($row_status) || is_generic($row_status)) {
                 PageState::current()->addKeyedError('password_page_error', l10n('Password reset is not allowed for this user'));

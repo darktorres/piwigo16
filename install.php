@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Controller\InstallController;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Controller\InstallController;
 use Piwigo\Http\RequestFactory;
 
 // +-----------------------------------------------------------------------+
@@ -26,4 +26,4 @@ require PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
 ConfigLoader::applyDefaults();
 
-(new InstallController)(RequestFactory::fromGlobals());
+(new InstallController())(RequestFactory::fromGlobals());

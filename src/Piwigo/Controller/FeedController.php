@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Core\ServiceLocator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

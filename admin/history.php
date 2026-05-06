@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Exception\AuthException;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+

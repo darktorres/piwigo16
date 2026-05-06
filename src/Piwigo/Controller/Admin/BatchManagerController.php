@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Piwigo\Cache\RequestCache;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Job\MessengerFactory;
-use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
-use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Url\UrlGenerator;
 
 final class BatchManagerController
 {
@@ -35,10 +32,15 @@ final class BatchManagerController
 
     public function handle(string $page): void
     {
-        if ($page === 'batch_manager')        { $this->batchManager(); }
-        elseif ($page === 'batch_manager_global') { $this->batchManagerGlobal(); }
-        elseif ($page === 'batch_manager_unit')   { $this->batchManagerUnit(); }
-        elseif ($page === 'queue')                { $this->queue(); }
+        if ($page === 'batch_manager') {
+            $this->batchManager();
+        } elseif ($page === 'batch_manager_global') {
+            $this->batchManagerGlobal();
+        } elseif ($page === 'batch_manager_unit') {
+            $this->batchManagerUnit();
+        } elseif ($page === 'queue') {
+            $this->queue();
+        }
     }
 
     // ── batch_manager ─────────────────────────────────────────────────────────
@@ -69,7 +71,9 @@ final class BatchManagerController
                 check_input_parameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
                 $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
                 if ($nb_orphans_deleted > 0) {
-                    if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+                    if (!is_array($_SESSION['page_infos'] ?? null)) {
+                        $_SESSION['page_infos'] = [];
+                    }
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = l10n_dec('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
@@ -81,7 +85,9 @@ final class BatchManagerController
                 check_input_parameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
                 $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
                 if ($nb_md5sum_added > 0) {
-                    if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+                    if (!is_array($_SESSION['page_infos'] ?? null)) {
+                        $_SESSION['page_infos'] = [];
+                    }
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = l10n_dec('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
@@ -101,17 +107,30 @@ final class BatchManagerController
                 $bmf['prefilter'] = $_POST['filter_prefilter'];
                 if ('duplicates' == $_POST['filter_prefilter']) {
                     $has_options = false;
-                    if (isset($_POST['filter_duplicates_checksum']))  { $bmf['duplicates_checksum']  = true; $has_options = true; }
-                    if (isset($_POST['filter_duplicates_date']))      { $bmf['duplicates_date']       = true; $has_options = true; }
-                    if (isset($_POST['filter_duplicates_dimensions'])) { $bmf['duplicates_dimensions'] = true; $has_options = true; }
-                    if (!$has_options || isset($_POST['filter_duplicates_filename'])) { $bmf['duplicates_filename'] = true; }
+                    if (isset($_POST['filter_duplicates_checksum'])) {
+                        $bmf['duplicates_checksum']  = true;
+                        $has_options = true;
+                    }
+                    if (isset($_POST['filter_duplicates_date'])) {
+                        $bmf['duplicates_date']       = true;
+                        $has_options = true;
+                    }
+                    if (isset($_POST['filter_duplicates_dimensions'])) {
+                        $bmf['duplicates_dimensions'] = true;
+                        $has_options = true;
+                    }
+                    if (!$has_options || isset($_POST['filter_duplicates_filename'])) {
+                        $bmf['duplicates_filename'] = true;
+                    }
                 }
             }
 
             if (isset($_POST['filter_category_use'])) {
                 check_input_parameter('filter_category', $_POST, false, PATTERN_ID);
                 $bmf['category'] = $_POST['filter_category'];
-                if (isset($_POST['filter_category_recursive'])) { $bmf['category_recursive'] = true; }
+                if (isset($_POST['filter_category_recursive'])) {
+                    $bmf['category_recursive'] = true;
+                }
             }
 
             if (isset($_POST['filter_tags_use'])) {
@@ -131,7 +150,9 @@ final class BatchManagerController
                 check_input_parameter('filter_level', $_POST, false, '/^\d+$/');
                 if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
                     $bmf['level'] = $_POST['filter_level'];
-                    if (isset($_POST['filter_level_include_lower'])) { $bmf['level_include_lower'] = true; }
+                    if (isset($_POST['filter_level_include_lower'])) {
+                        $bmf['level_include_lower'] = true;
+                    }
                 }
             }
 
@@ -190,13 +211,20 @@ final class BatchManagerController
                         }
                         break;
                     case 'album': case 'category': case 'cat':
-                        if (is_numeric($value)) { $bmf['category'] = $value; }
+                        if (is_numeric($value)) {
+                            $bmf['category'] = $value;
+                        }
                         break;
                     case 'tag':
-                        if (is_numeric($value)) { $bmf['tags'] = [$value]; $bmf['tag_mode'] = 'AND'; }
+                        if (is_numeric($value)) {
+                            $bmf['tags'] = [$value];
+                            $bmf['tag_mode'] = 'AND';
+                        }
                         break;
                     case 'level':
-                        if (is_numeric($value) && in_array($value, Config::availablePermissionLevels())) { $bmf['level'] = $value; }
+                        if (is_numeric($value) && in_array($value, Config::availablePermissionLevels())) {
+                            $bmf['level'] = $value;
+                        }
                         break;
                     case 'search':
                         $bmf['search'] = ['q' => $value];
@@ -212,9 +240,13 @@ final class BatchManagerController
                                 $filter_validate = ['width' => FILTER_VALIDATE_INT, 'height' => FILTER_VALIDATE_INT, 'ratio' => FILTER_VALIDATE_FLOAT];
                                 $valid = true;
                                 foreach ($values as $v) {
-                                    if (filter_var($v, $filter_validate[$dtype]) === false) { $valid = false; }
+                                    if (filter_var($v, $filter_validate[$dtype]) === false) {
+                                        $valid = false;
+                                    }
                                 }
-                                if ($valid) { [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values; }
+                                if ($valid) {
+                                    [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values;
+                                }
                             }
                         }
                         $bmf['dimension'] = $url_dim_filter;
@@ -223,7 +255,9 @@ final class BatchManagerController
                         $values = explode('..', $value);
                         $valid  = true;
                         foreach ($values as $v) {
-                            if (filter_var($v, FILTER_VALIDATE_FLOAT) === false) { $valid = false; }
+                            if (filter_var($v, FILTER_VALIDATE_FLOAT) === false) {
+                                $valid = false;
+                            }
                         }
                         if ($valid) {
                             /** @var array<string, string> $url_fs_filter */
@@ -288,12 +322,23 @@ final class BatchManagerController
                     break;
                 case 'duplicates':
                     $duplicates_on_fields = [];
-                    if (isset($bmf['duplicates_filename']))   { $duplicates_on_fields[] = 'file'; }
-                    if (isset($bmf['duplicates_checksum']))   { $duplicates_on_fields[] = 'md5sum'; }
-                    if (isset($bmf['duplicates_date']))       { $duplicates_on_fields[] = 'date_creation'; }
-                    if (isset($bmf['duplicates_dimensions'])) { $duplicates_on_fields[] = 'width'; $duplicates_on_fields[] = 'height'; }
+                    if (isset($bmf['duplicates_filename'])) {
+                        $duplicates_on_fields[] = 'file';
+                    }
+                    if (isset($bmf['duplicates_checksum'])) {
+                        $duplicates_on_fields[] = 'md5sum';
+                    }
+                    if (isset($bmf['duplicates_date'])) {
+                        $duplicates_on_fields[] = 'date_creation';
+                    }
+                    if (isset($bmf['duplicates_dimensions'])) {
+                        $duplicates_on_fields[] = 'width';
+                        $duplicates_on_fields[] = 'height';
+                    }
                     $query = 'SELECT GROUP_CONCAT(id) AS ids FROM ' . IMAGES_TABLE;
-                    if (in_array('md5sum', $duplicates_on_fields)) { $query .= ' WHERE md5sum IS NOT NULL'; }
+                    if (in_array('md5sum', $duplicates_on_fields)) {
+                        $query .= ' WHERE md5sum IS NOT NULL';
+                    }
                     $query .= ' GROUP BY ' . implode(',', $duplicates_on_fields) . ' HAVING COUNT(*) > 1;';
                     $ids = [];
                     foreach (array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
@@ -338,12 +383,22 @@ final class BatchManagerController
         if (isset($bmf['dimension'])) {
             $bmf_dimension = is_array($bmf['dimension']) ? $bmf['dimension'] : [];
             $where_clause  = [];
-            if (isset($bmf_dimension['min_width']))  { $where_clause[] = 'width >= '  . (is_scalar($bmf_dimension['min_width'])  ? (string) $bmf_dimension['min_width']  : '0'); }
-            if (isset($bmf_dimension['max_width']))  { $where_clause[] = 'width <= '  . (is_scalar($bmf_dimension['max_width'])  ? (string) $bmf_dimension['max_width']  : '0'); }
-            if (isset($bmf_dimension['min_height'])) { $where_clause[] = 'height >= ' . (is_scalar($bmf_dimension['min_height']) ? (string) $bmf_dimension['min_height'] : '0'); }
-            if (isset($bmf_dimension['max_height'])) { $where_clause[] = 'height <= ' . (is_scalar($bmf_dimension['max_height']) ? (string) $bmf_dimension['max_height'] : '0'); }
-            if (isset($bmf_dimension['min_ratio']))  { $where_clause[] = 'width/height >= ' . (is_scalar($bmf_dimension['min_ratio']) ? (string) $bmf_dimension['min_ratio'] : '0'); }
-            if (isset($bmf_dimension['max_ratio']))  {
+            if (isset($bmf_dimension['min_width'])) {
+                $where_clause[] = 'width >= '  . (is_scalar($bmf_dimension['min_width']) ? (string) $bmf_dimension['min_width'] : '0');
+            }
+            if (isset($bmf_dimension['max_width'])) {
+                $where_clause[] = 'width <= '  . (is_scalar($bmf_dimension['max_width']) ? (string) $bmf_dimension['max_width'] : '0');
+            }
+            if (isset($bmf_dimension['min_height'])) {
+                $where_clause[] = 'height >= ' . (is_scalar($bmf_dimension['min_height']) ? (string) $bmf_dimension['min_height'] : '0');
+            }
+            if (isset($bmf_dimension['max_height'])) {
+                $where_clause[] = 'height <= ' . (is_scalar($bmf_dimension['max_height']) ? (string) $bmf_dimension['max_height'] : '0');
+            }
+            if (isset($bmf_dimension['min_ratio'])) {
+                $where_clause[] = 'width/height >= ' . (is_scalar($bmf_dimension['min_ratio']) ? (string) $bmf_dimension['min_ratio'] : '0');
+            }
+            if (isset($bmf_dimension['max_ratio'])) {
                 $max_ratio    = is_numeric($bmf_dimension['max_ratio']) ? (float) $bmf_dimension['max_ratio'] : 0.0;
                 $where_clause[] = 'width/height < ' . ($max_ratio + 0.01);
             }
@@ -355,8 +410,14 @@ final class BatchManagerController
         if (isset($bmf['filesize'])) {
             $bmf_filesize = is_array($bmf['filesize']) ? $bmf['filesize'] : [];
             $where_clause = [];
-            if (isset($bmf_filesize['min'])) { $fs_min = is_numeric($bmf_filesize['min']) ? (float) $bmf_filesize['min'] : 0.0; $where_clause[] = 'filesize >= ' . (($fs_min - 0.1) * 1024); }
-            if (isset($bmf_filesize['max'])) { $fs_max = is_numeric($bmf_filesize['max']) ? (float) $bmf_filesize['max'] : 0.0; $where_clause[] = 'filesize <= ' . (($fs_max + 0.1) * 1024); }
+            if (isset($bmf_filesize['min'])) {
+                $fs_min = is_numeric($bmf_filesize['min']) ? (float) $bmf_filesize['min'] : 0.0;
+                $where_clause[] = 'filesize >= ' . (($fs_min - 0.1) * 1024);
+            }
+            if (isset($bmf_filesize['max'])) {
+                $fs_max = is_numeric($bmf_filesize['max']) ? (float) $bmf_filesize['max'] : 0.0;
+                $where_clause[] = 'filesize <= ' . (($fs_max + 0.1) * 1024);
+            }
             if (!empty($where_clause)) {
                 $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
             }
@@ -422,7 +483,11 @@ final class BatchManagerController
                 $ratios[]  = floor($row_width / $row_height * 100) / 100;
             }
         }
-        if (empty($widths)) { $widths = [600, 1920, 3500]; $heights = [480, 1080, 2300]; $ratios = [1.25, 1.52, 1.78]; }
+        if (empty($widths)) {
+            $widths = [600, 1920, 3500];
+            $heights = [480, 1080, 2300];
+            $ratios = [1.25, 1.52, 1.78];
+        }
 
         $dimensions = [];
         foreach (['widths', 'heights', 'ratios'] as $type) {
@@ -434,10 +499,15 @@ final class BatchManagerController
 
         $ratio_categories = ['portrait' => [], 'square' => [], 'landscape' => [], 'panorama' => []];
         foreach ($ratios as $ratio) {
-            if ($ratio < 0.95)                       { $ratio_categories['portrait'][]  = $ratio; }
-            elseif ($ratio >= 0.95 && $ratio <= 1.05) { $ratio_categories['square'][]    = $ratio; }
-            elseif ($ratio > 1.05 && $ratio < 2)     { $ratio_categories['landscape'][] = $ratio; }
-            elseif ($ratio >= 2)                     { $ratio_categories['panorama'][]  = $ratio; }
+            if ($ratio < 0.95) {
+                $ratio_categories['portrait'][]  = $ratio;
+            } elseif ($ratio >= 0.95 && $ratio <= 1.05) {
+                $ratio_categories['square'][]    = $ratio;
+            } elseif ($ratio > 1.05 && $ratio < 2) {
+                $ratio_categories['landscape'][] = $ratio;
+            } elseif ($ratio >= 2) {
+                $ratio_categories['panorama'][]  = $ratio;
+            }
         }
         foreach (array_keys($ratio_categories) as $rtype) {
             if (count($ratio_categories[$rtype]) > 0) {
@@ -458,7 +528,9 @@ final class BatchManagerController
         foreach (ServiceLocator::get(ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
             $filesizes[] = sprintf('%.1f', $filesize_kb / 1024);
         }
-        if (empty($filesizes)) { $filesizes = [0, 1, 2, 5, 8, 15]; }
+        if (empty($filesizes)) {
+            $filesizes = [0, 1, 2, 5, 8, 15];
+        }
         $filesizes = array_unique($filesizes);
         sort($filesizes);
 
@@ -509,7 +581,9 @@ final class BatchManagerController
 
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        if (!empty($_POST)) { check_pwg_token(); }
+        if (!empty($_POST)) {
+            check_pwg_token();
+        }
 
         trigger_notify('loc_begin_element_set_global');
 
@@ -525,7 +599,9 @@ final class BatchManagerController
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
             foreach ($collection as $id) {
-                if (!preg_match('/^\d+$/', $id)) { fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid'); }
+                if (!preg_match('/^\d+$/', $id)) {
+                    fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
+                }
             }
         } elseif (isset($_POST['selection'])) {
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
@@ -534,7 +610,9 @@ final class BatchManagerController
         $page['prefilter'] = 'none';
         /** @var array<string, mixed> $bmf */
         $bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
-        if (is_string($bmf['prefilter'] ?? null)) { $page['prefilter'] = $bmf['prefilter']; }
+        if (is_string($bmf['prefilter'] ?? null)) {
+            $page['prefilter'] = $bmf['prefilter'];
+        }
 
         $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
 
@@ -542,7 +620,9 @@ final class BatchManagerController
         $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
 
         if (isset($_POST['submit'])) {
-            if (count($collection_int) == 0) { PageState::current()->addError(l10n('Select at least one photo')); }
+            if (count($collection_int) == 0) {
+                PageState::current()->addError(l10n('Select at least one photo'));
+            }
 
             $action   = is_scalar($_POST['selectAction'] ?? null) ? (string) $_POST['selectAction'] : '';
             $redirect = false;
@@ -558,7 +638,9 @@ final class BatchManagerController
                     $add_tags_val = is_array($add_tags_raw) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $add_tags_raw) : (is_scalar($add_tags_raw) ? (string) $add_tags_raw : '');
                     $tag_ids = get_tag_ids($add_tags_val);
                     add_tags($tag_ids, $collection_int);
-                    if ('no_tag' == $page['prefilter']) { $redirect = true; }
+                    if ('no_tag' == $page['prefilter']) {
+                        $redirect = true;
+                    }
                 }
             } elseif ('del_tags' == $action) {
                 $del_tags_post = is_array($_POST['del_tags'] ?? null) ? $_POST['del_tags'] : [];
@@ -572,7 +654,9 @@ final class BatchManagerController
                     $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, compare_image_tag_lists($taglist_before, $taglist_after));
                     update_images_lastmodified($images_to_update);
                     $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags'] ?? null) ? $bmf['tags'] : []);
-                    if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) { $redirect = true; }
+                    if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) {
+                        $redirect = true;
+                    }
                 } else {
                     PageState::current()->addError(l10n('Select at least one tag'));
                 }
@@ -583,11 +667,14 @@ final class BatchManagerController
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
                     associate_images_to_categories($collection_int, $associate_raw);
                     $_SESSION['page_infos'] = [l10n('Information data registered in database')];
-                    if ('no_album' == $page['prefilter']) { $redirect = true; }
-                    elseif ('no_virtual_album' == $page['prefilter']) {
+                    if ('no_album' == $page['prefilter']) {
+                        $redirect = true;
+                    } elseif ('no_virtual_album' == $page['prefilter']) {
                         $associate_id  = is_scalar($_POST['associate']) ? (string) $_POST['associate'] : '';
                         $category_info = get_cat_info($associate_id);
-                        if (empty($category_info['dir'])) { $redirect = true; }
+                        if (empty($category_info['dir'])) {
+                            $redirect = true;
+                        }
                     }
                 }
             } elseif ('move' == $action) {
@@ -595,58 +682,84 @@ final class BatchManagerController
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
                 move_images_to_categories($collection_int, [$move_id_int]);
                 $_SESSION['page_infos'] = [l10n('Information data registered in database')];
-                if ('no_album' == $page['prefilter']) { $redirect = true; }
-                elseif ('no_virtual_album' == $page['prefilter']) {
+                if ('no_album' == $page['prefilter']) {
+                    $redirect = true;
+                } elseif ('no_virtual_album' == $page['prefilter']) {
                     $category_info = get_cat_info($move_id);
-                    if (empty($category_info['dir'])) { $redirect = true; }
+                    if (empty($category_info['dir'])) {
+                        $redirect = true;
+                    }
                 } elseif (isset($bmf['category']) && $move_id != (is_scalar($bmf['category']) ? (string) $bmf['category'] : '')) {
                     $redirect = true;
                 }
             } elseif ('dissociate' == $action) {
                 $dissociate_raw = is_scalar($_POST['dissociate'] ?? null) ? (string) $_POST['dissociate'] : '';
                 $nb_dissociated = dissociate_images_from_category($collection_int, $dissociate_raw);
-                if ($nb_dissociated > 0) { $_SESSION['page_infos'] = [l10n('Information data registered in database')]; $redirect = true; }
+                if ($nb_dissociated > 0) {
+                    $_SESSION['page_infos'] = [l10n('Information data registered in database')];
+                    $redirect = true;
+                }
             } elseif ('author' == $action) {
-                if (isset($_POST['remove_author'])) { $_POST['author'] = null; }
+                if (isset($_POST['remove_author'])) {
+                    $_POST['author'] = null;
+                }
                 $datas = [];
-                foreach ($collection_int as $image_id) { $datas[] = ['id' => $image_id, 'author' => $_POST['author']]; }
+                foreach ($collection_int as $image_id) {
+                    $datas[] = ['id' => $image_id, 'author' => $_POST['author']];
+                }
                 mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['author']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'author']);
             } elseif ('title' == $action) {
-                if (isset($_POST['remove_title'])) { $_POST['title'] = null; }
+                if (isset($_POST['remove_title'])) {
+                    $_POST['title'] = null;
+                }
                 $datas = [];
-                foreach ($collection_int as $image_id) { $datas[] = ['id' => $image_id, 'name' => $_POST['title']]; }
+                foreach ($collection_int as $image_id) {
+                    $datas[] = ['id' => $image_id, 'name' => $_POST['title']];
+                }
                 mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'title']);
             } elseif ('date_creation' == $action) {
                 $date_creation = (isset($_POST['remove_date_creation']) || empty($_POST['date_creation'])) ? null : $_POST['date_creation'];
                 $datas = [];
-                foreach ($collection_int as $image_id) { $datas[] = ['id' => $image_id, 'date_creation' => $date_creation]; }
+                foreach ($collection_int as $image_id) {
+                    $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
+                }
                 mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['date_creation']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
             } elseif ('level' == $action) {
                 $datas = [];
-                foreach ($collection_int as $image_id) { $datas[] = ['id' => $image_id, 'level' => $_POST['level']]; }
+                foreach ($collection_int as $image_id) {
+                    $datas[] = ['id' => $image_id, 'level' => $_POST['level']];
+                }
                 mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['level']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
                     $post_level_val = is_numeric($_POST['level'] ?? null) ? (int) $_POST['level'] : 0;
-                    if ($post_level_val < $bmf_level_val) { $redirect = true; }
+                    if ($post_level_val < $bmf_level_val) {
+                        $redirect = true;
+                    }
                 }
             } elseif ('add_to_caddie' == $action) {
                 fill_caddie($collection_int);
             } elseif ('delete' == $action) {
                 if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
                     if (count($collection_int) > 0) {
-                        if (!is_array($_SESSION['page_infos'] ?? null)) { $_SESSION['page_infos'] = []; }
+                        if (!is_array($_SESSION['page_infos'] ?? null)) {
+                            $_SESSION['page_infos'] = [];
+                        }
                         /** @var array<mixed> $page_infos_ref */
                         $page_infos_ref   = &$_SESSION['page_infos'];
                         $page_infos_ref[] = l10n_dec('%d photo was deleted', '%d photos were deleted', count($collection_int));
                         $redirect_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                         $redirect         = true;
-                    } else { PageState::current()->addError(l10n('No photo can be deleted')); }
-                } else { PageState::current()->addError(l10n('You need to confirm deletion')); }
+                    } else {
+                        PageState::current()->addError(l10n('No photo can be deleted'));
+                    }
+                } else {
+                    PageState::current()->addError(l10n('You need to confirm deletion'));
+                }
             } elseif ('metadata' == $action) {
                 PageState::current()->addInfo(l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>');
             } elseif ('delete_derivatives' == $action && !empty($_POST['del_derivatives_type'])) {
@@ -657,8 +770,12 @@ final class BatchManagerController
                     }
                 }
             } elseif ('generate_derivatives' == $action) {
-                if ($_POST['regenerateSuccess'] != '0') { PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess'])); }
-                if ($_POST['regenerateError'] != '0')   { PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError'])); }
+                if ($_POST['regenerateSuccess'] != '0') {
+                    PageState::current()->addInfo(l10n('%s photos have been regenerated', $_POST['regenerateSuccess']));
+                }
+                if ($_POST['regenerateError'] != '0') {
+                    PageState::current()->addWarning(l10n('%s photos can not be regenerated', $_POST['regenerateError']));
+                }
             }
 
             if (!in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'])) {
@@ -666,7 +783,9 @@ final class BatchManagerController
             }
 
             trigger_notify('element_set_global_action', $action, $collection_int);
-            if ($redirect) { redirect($redirect_url); }
+            if ($redirect) {
+                redirect($redirect_url);
+            }
         }
 
         // ── Template ──────────────────────────────────────────────────────────
@@ -694,7 +813,9 @@ final class BatchManagerController
         $tpl->assign(['used_metadata' => $used_metadata]);
 
         $del_deriv_map = [];
-        foreach (ImageStdParams::get_defined_type_map() as $params) { $del_deriv_map[$params->type] = l10n($params->type); }
+        foreach (ImageStdParams::get_defined_type_map() as $params) {
+            $del_deriv_map[$params->type] = l10n($params->type);
+        }
         $gen_deriv_map  = $del_deriv_map;
         $del_deriv_map[IMG_CUSTOM] = l10n(IMG_CUSTOM);
         $tpl->assign(['del_derivatives_types' => $del_deriv_map, 'generate_derivatives_types' => $gen_deriv_map]);
@@ -733,7 +854,9 @@ final class BatchManagerController
             }
 
             $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catElementsId)) . ')';
-            if ($is_category) { $query .= ' AND category_id = ' . $bmf_category_val; }
+            if ($is_category) {
+                $query .= ' AND category_id = ' . $bmf_category_val;
+            }
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart . ';';
 
             $batchRows   = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
@@ -744,7 +867,9 @@ final class BatchManagerController
                 $src_image   = new SrcImage($row);
                 $ttitle      = render_element_name($row);
                 $row_file    = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($ttitle != get_name_from_file($row_file)) { $ttitle .= ' (' . $row_file . ')'; }
+                if ($ttitle != get_name_from_file($row_file)) {
+                    $ttitle .= ' (' . $row_file . ')';
+                }
                 $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
                 $ttitle .= '<br>' . (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : '') . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
 
@@ -845,7 +970,9 @@ final class BatchManagerController
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
             foreach ($collection as $id) {
-                if (!preg_match('/^\d+$/', $id)) { fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid'); }
+                if (!preg_match('/^\d+$/', $id)) {
+                    fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
+                }
             }
         } elseif (isset($_POST['selection'])) {
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
@@ -913,7 +1040,9 @@ final class BatchManagerController
             }
 
             $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catElementsIdU)) . ')';
-            if ($is_category) { $query .= ' AND category_id = ' . $bmf_category_val; }
+            if ($is_category) {
+                $query .= ' AND category_id = ' . $bmf_category_val;
+            }
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU . ';';
 
             $images         = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
@@ -932,7 +1061,9 @@ final class BatchManagerController
                 $tag_selection = get_taglist_from_rows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
                 $legend        = render_element_name($row);
                 $row_file_str  = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($legend != get_name_from_file($row_file_str)) { $legend .= ' (' . $row_file_str . ')'; }
+                if ($legend != get_name_from_file($row_file_str)) {
+                    $legend .= ' (' . $row_file_str . ')';
+                }
                 $extTab        = explode('.', is_scalar($row['path'] ?? null) ? (string) $row['path'] : '');
 
                 $related_categories   = [];
@@ -943,7 +1074,9 @@ final class BatchManagerController
                 foreach (ServiceLocator::get(CategoryRepository::class)->findCategoryInfosByImageId($row_id_int) as $item) {
                     $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
                     $name = get_cat_display_name_cache($item_uppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
-                    if ($item['category_id'] == $storage_category_id) { $tpl->assign('STORAGE_CATEGORY', $name); }
+                    if ($item['category_id'] == $storage_category_id) {
+                        $tpl->assign('STORAGE_CATEGORY', $name);
+                    }
                     $item_cat_id = is_numeric($item['category_id'] ?? null) ? (int) $item['category_id'] : 0;
                     $related_categories[$item_cat_id] = ['name' => $name, 'unlinkable' => $item_cat_id != $storage_category_id];
                     $related_category_ids[] = $item_cat_id;

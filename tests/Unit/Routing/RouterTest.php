@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Routing;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Routing\RouteResult;
 use Piwigo\Routing\Router;
+use Piwigo\Routing\RouteResult;
 
 /**
  * Unit tests for Router — covers dispatch and generation.

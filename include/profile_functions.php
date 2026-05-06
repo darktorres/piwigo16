@@ -167,9 +167,9 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
         $template_prefixe . 'ACTIVATE_COMMENTS'      => Config::activateComments(),
         $template_prefixe . 'NB_IMAGE_PAGE'          => $userdata['nb_image_page'],
         $template_prefixe . 'RECENT_PERIOD'          => $userdata['recent_period'],
-        $template_prefixe . 'EXPAND'                 => $userdata['expand']           ? 'true' : 'false',
+        $template_prefixe . 'EXPAND'                 => $userdata['expand'] ? 'true' : 'false',
         $template_prefixe . 'NB_COMMENTS'            => $userdata['show_nb_comments'] ? 'true' : 'false',
-        $template_prefixe . 'NB_HITS'                => $userdata['show_nb_hits']     ? 'true' : 'false',
+        $template_prefixe . 'NB_HITS'                => $userdata['show_nb_hits'] ? 'true' : 'false',
         $template_prefixe . 'REDIRECT'               => $url_redirect,
         $template_prefixe . 'F_ACTION'               => $url_action,
     ]);

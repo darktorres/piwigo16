@@ -44,4 +44,4 @@ defined('MKGETDIR_PROTECT_INDEX')    or define('MKGETDIR_PROTECT_INDEX', 4);
 defined('MKGETDIR_PROTECT_HTACCESS') or define('MKGETDIR_PROTECT_HTACCESS', 8);
 defined('MKGETDIR_DEFAULT')          or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
 
-(new \Piwigo\Controller\ImageDerivativeController)(RequestFactory::fromGlobals());
+(new \Piwigo\Controller\ImageDerivativeController())(RequestFactory::fromGlobals());

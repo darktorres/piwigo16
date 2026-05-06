@@ -111,7 +111,7 @@ SELECT *
                 if ($row !== null) {
                     if (isset($row['width'])) {
                         $ctx->originalSize = [
-                            is_numeric($row['width'])  ? (int) $row['width']  : 0,
+                            is_numeric($row['width']) ? (int) $row['width'] : 0,
                             is_numeric($row['height']) ? (int) $row['height'] : 0,
                         ];
                     }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Tabsheet;
@@ -14,6 +13,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+

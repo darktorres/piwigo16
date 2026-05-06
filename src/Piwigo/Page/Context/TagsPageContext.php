@@ -26,5 +26,6 @@ final readonly class TagsPageContext
         public array  $selectedTags,
         public array  $photos,
         public string $displayMode,
-    ) {}
+    ) {
+    }
 }

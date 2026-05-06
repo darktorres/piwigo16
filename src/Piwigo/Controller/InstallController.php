@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Admin\Languages;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Template\TemplateRegistry;
-use Piwigo\Admin\Languages;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
+use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -35,16 +34,16 @@ final class InstallController implements ControllerInterface
             : DEFAULT_PREFIX_TABLE;
         $GLOBALS['prefixeTable'] = $prefixeTable;
 
-        $dbhost   = is_scalar($_POST['dbhost'] ?? null)  && !empty($_POST['dbhost'])  ? (string) $_POST['dbhost']  : 'localhost';
-        $dbuser   = is_scalar($_POST['dbuser'] ?? null)  && !empty($_POST['dbuser'])  ? (string) $_POST['dbuser']  : 'root';
+        $dbhost   = is_scalar($_POST['dbhost'] ?? null)  && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
+        $dbuser   = is_scalar($_POST['dbuser'] ?? null)  && !empty($_POST['dbuser']) ? (string) $_POST['dbuser'] : 'root';
         $dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) && !empty($_POST['dbpasswd']) ? (string) $_POST['dbpasswd'] : '1234';
-        $dbname   = is_scalar($_POST['dbname'] ?? null)  && !empty($_POST['dbname'])  ? (string) $_POST['dbname']  : 'piwigo';
+        $dbname   = is_scalar($_POST['dbname'] ?? null)  && !empty($_POST['dbname']) ? (string) $_POST['dbname'] : 'piwigo';
         $dblayer  = 'mysqli';
 
-        $admin_name  = is_scalar($_POST['admin_name']  ?? null) && !empty($_POST['admin_name'])  ? (string) $_POST['admin_name']  : 'darktorres';
+        $admin_name  = is_scalar($_POST['admin_name']  ?? null) && !empty($_POST['admin_name']) ? (string) $_POST['admin_name'] : 'darktorres';
         $admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) && !empty($_POST['admin_pass1']) ? (string) $_POST['admin_pass1'] : '1234';
         $admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) && !empty($_POST['admin_pass2']) ? (string) $_POST['admin_pass2'] : '1234';
-        $admin_mail  = is_scalar($_POST['admin_mail']  ?? null) && !empty($_POST['admin_mail'])  ? (string) $_POST['admin_mail']  : '';
+        $admin_mail  = is_scalar($_POST['admin_mail']  ?? null) && !empty($_POST['admin_mail']) ? (string) $_POST['admin_mail'] : '';
 
         $is_newsletter_subscribe = isset($_POST['install']) && isset($_POST['newsletter_subscribe']);
 
@@ -77,18 +76,31 @@ final class InstallController implements ControllerInterface
             }
         }
 
-        if ('fr_FR' == $language)      { define('PHPWG_DOMAIN', 'fr.piwigo.org'); }
-        elseif ('it_IT' == $language)  { define('PHPWG_DOMAIN', 'it.piwigo.org'); }
-        elseif ('de_DE' == $language)  { define('PHPWG_DOMAIN', 'de.piwigo.org'); }
-        elseif ('es_ES' == $language)  { define('PHPWG_DOMAIN', 'es.piwigo.org'); }
-        elseif ('pl_PL' == $language)  { define('PHPWG_DOMAIN', 'pl.piwigo.org'); }
-        elseif ('zh_CN' == $language)  { define('PHPWG_DOMAIN', 'cn.piwigo.org'); }
-        elseif ('ru_RU' == $language)  { define('PHPWG_DOMAIN', 'ru.piwigo.org'); }
-        elseif ('nl_NL' == $language)  { define('PHPWG_DOMAIN', 'nl.piwigo.org'); }
-        elseif ('tr_TR' == $language)  { define('PHPWG_DOMAIN', 'tr.piwigo.org'); }
-        elseif ('da_DK' == $language)  { define('PHPWG_DOMAIN', 'da.piwigo.org'); }
-        elseif ('pt_BR' == $language)  { define('PHPWG_DOMAIN', 'br.piwigo.org'); }
-        else                           { define('PHPWG_DOMAIN', 'piwigo.org'); }
+        if ('fr_FR' == $language) {
+            define('PHPWG_DOMAIN', 'fr.piwigo.org');
+        } elseif ('it_IT' == $language) {
+            define('PHPWG_DOMAIN', 'it.piwigo.org');
+        } elseif ('de_DE' == $language) {
+            define('PHPWG_DOMAIN', 'de.piwigo.org');
+        } elseif ('es_ES' == $language) {
+            define('PHPWG_DOMAIN', 'es.piwigo.org');
+        } elseif ('pl_PL' == $language) {
+            define('PHPWG_DOMAIN', 'pl.piwigo.org');
+        } elseif ('zh_CN' == $language) {
+            define('PHPWG_DOMAIN', 'cn.piwigo.org');
+        } elseif ('ru_RU' == $language) {
+            define('PHPWG_DOMAIN', 'ru.piwigo.org');
+        } elseif ('nl_NL' == $language) {
+            define('PHPWG_DOMAIN', 'nl.piwigo.org');
+        } elseif ('tr_TR' == $language) {
+            define('PHPWG_DOMAIN', 'tr.piwigo.org');
+        } elseif ('da_DK' == $language) {
+            define('PHPWG_DOMAIN', 'da.piwigo.org');
+        } elseif ('pt_BR' == $language) {
+            define('PHPWG_DOMAIN', 'br.piwigo.org');
+        } else {
+            define('PHPWG_DOMAIN', 'piwigo.org');
+        }
         define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
         load_language('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);

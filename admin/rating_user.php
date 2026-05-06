@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -11,6 +10,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 // +-----------------------------------------------------------------------+

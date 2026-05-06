@@ -129,8 +129,8 @@ final class SectionInitializer
 
         $section   = is_string($page['section'] ?? null) ? $page['section'] : 'categories';
         $category  = is_array($page['category'] ?? null) ? $page['category'] : null;
-        $pageTags  = is_array($page['tags'] ?? null)     ? $page['tags']     : [];
-        $pageList  = is_array($page['list'] ?? null)     ? $page['list']     : [];
+        $pageTags  = is_array($page['tags'] ?? null) ? $page['tags'] : [];
+        $pageList  = is_array($page['list'] ?? null) ? $page['list'] : [];
         $startcat  = is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0;
 
         $page['nb_image_page'] = is_numeric($user['nb_image_page'] ?? null)
@@ -266,7 +266,9 @@ SELECT DISTINCT(image_id)
         elseif ($section === 'tags') {
             $tagIds = [];
             foreach ($pageTags as $tag) {
-                if (!is_array($tag)) { continue; }
+                if (!is_array($tag)) {
+                    continue;
+                }
                 $tagId    = $tag['id'] ?? null;
                 $tagIds[] = is_numeric($tagId) ? (int) $tagId : 0;
             }
@@ -500,7 +502,9 @@ SELECT DISTINCT(id)
             if ($combinedCategories !== null) {
                 $bodyData['combined_category_ids'] = [];
                 foreach ($combinedCategories as $combinedCat) {
-                    if (!is_array($combinedCat)) { continue; }
+                    if (!is_array($combinedCat)) {
+                        continue;
+                    }
                     $combinedId = is_scalar($combinedCat['id'] ?? null) ? (string) $combinedCat['id'] : '0';
                     $bodyClasses[] = 'category-' . $combinedId;
                     $bodyData['combined_category_ids'][] = $combinedId;
@@ -509,7 +513,9 @@ SELECT DISTINCT(id)
         } elseif ($pageTags !== []) {
             $bodyData['tag_ids'] = [];
             foreach ($pageTags as $tag) {
-                if (!is_array($tag)) { continue; }
+                if (!is_array($tag)) {
+                    continue;
+                }
                 $tagId = is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '0';
                 $bodyClasses[] = 'tag-' . $tagId;
                 $bodyData['tag_ids'][] = $tagId;

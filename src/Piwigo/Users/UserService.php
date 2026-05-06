@@ -12,11 +12,11 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Job\SendNotificationEmailJob;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Url\UrlGenerator;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final readonly class UserService
 {

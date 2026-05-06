@@ -11,9 +11,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 final class ConfigurationController
 {
@@ -24,7 +24,9 @@ final class ConfigurationController
 
     public function handle(string $page): void
     {
-        if ($page === 'configuration') { $this->configuration(); }
+        if ($page === 'configuration') {
+            $this->configuration();
+        }
     }
 
     private function configuration(): void
@@ -116,16 +118,23 @@ final class ConfigurationController
                             $used = [];
                             foreach ($post_order_by as $i => $val) {
                                 $val_str = is_scalar($val) ? (string) $val : '';
-                                if (empty($val_str) || isset($used[$val_str])) { unset($post_order_by[$i]); }
-                                else { $used[$val_str] = true; }
+                                if (empty($val_str) || isset($used[$val_str])) {
+                                    unset($post_order_by[$i]);
+                                } else {
+                                    $used[$val_str] = true;
+                                }
                             }
                             $_POST['order_by'] = $post_order_by;
                             if (!count($post_order_by)) {
                                 PageState::current()->addError(l10n('No order field selected'));
                             } else {
                                 $order_by = $order_by_inside_category = array_slice($post_order_by, 0, (int) ceil(count($sort_fields) / 2));
-                                if (($idx = array_search('`rank` ASC', $order_by)) !== false) { unset($order_by[$idx]); }
-                                if (count($order_by) == 0) { $order_by = ['id ASC']; }
+                                if (($idx = array_search('`rank` ASC', $order_by)) !== false) {
+                                    unset($order_by[$idx]);
+                                }
+                                if (count($order_by) == 0) {
+                                    $order_by = ['id ASC'];
+                                }
                                 $_POST['order_by'] = 'ORDER BY ' . implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $order_by));
                                 $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
                             }
@@ -186,8 +195,12 @@ final class ConfigurationController
                     $post_filters_views_box = is_array($_POST['filters_views_box'] ?? null) ? $_POST['filters_views_box'] : [];
                     foreach ($filters_names_checkboxes as $checkbox) {
                         $fv_entry = is_array($post_filters_views[$checkbox] ?? null) ? $post_filters_views[$checkbox] : [];
-                        if (empty($post_filters_views_box[$checkbox])) { $fv_entry['access'] = 'nobody'; $fv_entry['default'] = false; }
-                        else { $fv_entry['default'] = empty($fv_entry['default']) ? false : true; }
+                        if (empty($post_filters_views_box[$checkbox])) {
+                            $fv_entry['access'] = 'nobody';
+                            $fv_entry['default'] = false;
+                        } else {
+                            $fv_entry['default'] = empty($fv_entry['default']) ? false : true;
+                        }
                         $post_filters_views[$checkbox] = $fv_entry;
                     }
                     $post_filters_views['last_filters_conf'] = empty($post_filters_views['last_filters_conf']) ? false : true;
@@ -201,7 +214,9 @@ final class ConfigurationController
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
                         $value = is_scalar($_POST[$row_param]) ? (string) $_POST[$row_param] : '';
-                        if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) { $value = strip_tags($value); }
+                        if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
+                            $value = strip_tags($value);
+                        }
                         conf_update_param($row_param, $value);
                     }
                 }
@@ -411,12 +426,24 @@ final class ConfigurationController
                 if ($tpl->get_template_vars('watermark') === null) {
                     $wm = ImageStdParams::get_watermark();
                     $position = 'custom';
-                    if ($wm->xpos == 0   && $wm->ypos == 0)   { $position = 'topleft'; }
-                    if ($wm->xpos == 100 && $wm->ypos == 0)   { $position = 'topright'; }
-                    if ($wm->xpos == 50  && $wm->ypos == 50)  { $position = 'middle'; }
-                    if ($wm->xpos == 0   && $wm->ypos == 100) { $position = 'bottomleft'; }
-                    if ($wm->xpos == 100 && $wm->ypos == 100) { $position = 'bottomright'; }
-                    if ($wm->xrepeat != 0 || $wm->yrepeat != 0) { $position = 'custom'; }
+                    if ($wm->xpos == 0   && $wm->ypos == 0) {
+                        $position = 'topleft';
+                    }
+                    if ($wm->xpos == 100 && $wm->ypos == 0) {
+                        $position = 'topright';
+                    }
+                    if ($wm->xpos == 50  && $wm->ypos == 50) {
+                        $position = 'middle';
+                    }
+                    if ($wm->xpos == 0   && $wm->ypos == 100) {
+                        $position = 'bottomleft';
+                    }
+                    if ($wm->xpos == 100 && $wm->ypos == 100) {
+                        $position = 'bottomright';
+                    }
+                    if ($wm->xrepeat != 0 || $wm->yrepeat != 0) {
+                        $position = 'custom';
+                    }
 
                     $tpl->assign('watermark', [
                         'file'     => $wm->file,
@@ -457,7 +484,9 @@ final class ConfigurationController
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);
-            if ($real === false) { continue; }
+            if ($real === false) {
+                continue;
+            }
             $content = is_readable($real) ? file_get_contents($real) : false;
             if ($content !== false && preg_match('/\$conf\s*\[\s*[\'"](order_by|order_by_inside_category)[\'"]\s*\]\s*=/', $content) === 1) {
                 return true;

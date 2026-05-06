@@ -11,13 +11,13 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 
 final class PhotoController
@@ -38,14 +38,23 @@ final class PhotoController
 
     public function handle(string $page): void
     {
-        if ($page === 'photo')                   { $this->photo(); }
-        elseif ($page === 'picture_modify')      { $this->pictureModify(); }
-        elseif ($page === 'picture_coi')         { $this->pictureCoi(); }
-        elseif ($page === 'picture_formats')     { $this->pictureFormats(); }
-        elseif ($page === 'photos_add')          { $this->photosAdd(); }
-        elseif ($page === 'photos_add_direct')   { $this->photosAddDirect(); }
-        elseif ($page === 'photos_add_ftp')      { $this->photosAddFtp(); }
-        elseif ($page === 'photos_add_applications') { $this->photosAddApplications(); }
+        if ($page === 'photo') {
+            $this->photo();
+        } elseif ($page === 'picture_modify') {
+            $this->pictureModify();
+        } elseif ($page === 'picture_coi') {
+            $this->pictureCoi();
+        } elseif ($page === 'picture_formats') {
+            $this->pictureFormats();
+        } elseif ($page === 'photos_add') {
+            $this->photosAdd();
+        } elseif ($page === 'photos_add_direct') {
+            $this->photosAddDirect();
+        } elseif ($page === 'photos_add_ftp') {
+            $this->photosAddFtp();
+        } elseif ($page === 'photos_add_applications') {
+            $this->photosAddApplications();
+        }
     }
 
     // ── photo ─────────────────────────────────────────────────────────────────
@@ -175,7 +184,9 @@ SELECT id
             }
             set_tags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
 
-            if (!isset($_POST['associate'])) { $_POST['associate'] = []; }
+            if (!isset($_POST['associate'])) {
+                $_POST['associate'] = [];
+            }
             check_input_parameter('associate', $_POST, true, PATTERN_ID);
             move_images_to_categories(
                 [is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0],
@@ -184,14 +195,18 @@ SELECT id
 
             invalidate_user_cache();
 
-            if (!isset($_POST['represent'])) { $_POST['represent'] = []; }
+            if (!isset($_POST['represent'])) {
+                $_POST['represent'] = [];
+            }
             check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
             $represented_albums_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $represented_albums);
             $represent_post_int     = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
 
             $no_longer = array_diff($represented_albums_int, $represent_post_int);
-            if (count($no_longer) > 0) { set_random_representant(array_values($no_longer)); }
+            if (count($no_longer) > 0) {
+                set_random_representant(array_values($no_longer));
+            }
 
             $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
             if (count($new_thumbnail_for) > 0) {
@@ -261,10 +276,14 @@ SELECT id
         $added_by  = 'N/A';
         $userFields = Config::userFields();
         $foundUsername = ServiceLocator::get(UserRepository::class)->findUsernameById(
-            $userFields['id'], $userFields['username'], USERS_TABLE,
+            $userFields['id'],
+            $userFields['username'],
+            USERS_TABLE,
             is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : 0
         );
-        if ($foundUsername !== null) { $row['added_by'] = $foundUsername; }
+        if ($foundUsername !== null) {
+            $row['added_by'] = $foundUsername;
+        }
 
         $extTab     = explode('.', (string) $row['file']);
         $intro_vars = [
@@ -509,7 +528,9 @@ SELECT id
 
         if (isset($_GET['section'])) {
             $page['tab'] = is_string($_GET['section']) ? $_GET['section'] : 'direct';
-            if ($page['tab'] === 'ploader') { $page['tab'] = 'applications'; }
+            if ($page['tab'] === 'ploader') {
+                $page['tab'] = 'applications';
+            }
         } else {
             $page['tab'] = 'direct';
         }

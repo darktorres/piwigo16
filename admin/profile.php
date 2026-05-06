@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\AuthException;
+use Piwigo\Url\UrlGenerator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

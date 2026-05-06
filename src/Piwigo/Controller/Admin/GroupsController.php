@@ -10,9 +10,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 final class GroupsController
 {
@@ -24,8 +24,11 @@ final class GroupsController
 
     public function handle(string $page): void
     {
-        if ($page === 'group_list') { $this->groupList(); }
-        elseif ($page === 'group_perm') { $this->groupPerm(); }
+        if ($page === 'group_list') {
+            $this->groupList();
+        } elseif ($page === 'group_perm') {
+            $this->groupPerm();
+        }
     }
 
     // ── group_list ────────────────────────────────────────────────────────────
@@ -174,13 +177,15 @@ final class GroupsController
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
         ]);
 
-        $query_true = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " INNER JOIN " . GROUP_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ";";
+        $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . GROUP_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';
         display_select_cat_wrapper($query_true, [], 'category_option_true');
 
         $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findAuthorizedPrivateCatIdsByGroup($group_id);
 
-        $query_false = "SELECT id,name,uppercats,global_rank FROM " . CATEGORIES_TABLE . " WHERE status = 'private'";
-        if (count($authorized_ids) > 0) { $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')'; }
+        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private'";
+        if (count($authorized_ids) > 0) {
+            $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
+        }
         $query_false .= ';';
         display_select_cat_wrapper($query_false, [], 'category_option_false');
 

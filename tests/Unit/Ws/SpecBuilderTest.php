@@ -133,7 +133,8 @@ final class SpecBuilderTest extends TestCase
     public function test_bool_param_maps_to_boolean_schema(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::optional(name: 'recursive', default: false, type: WS_TYPE_BOOL)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -144,7 +145,8 @@ final class SpecBuilderTest extends TestCase
     public function test_int_positive_notnull_maps_to_integer_minimum_1(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -156,7 +158,8 @@ final class SpecBuilderTest extends TestCase
     public function test_float_param_maps_to_number_schema(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required(name: 'rate', type: WS_TYPE_FLOAT)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -168,7 +171,8 @@ final class SpecBuilderTest extends TestCase
     public function test_untyped_param_defaults_to_string_schema(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required('username')],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -179,7 +183,8 @@ final class SpecBuilderTest extends TestCase
     public function test_force_array_flag_wraps_schema_in_array(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -191,7 +196,8 @@ final class SpecBuilderTest extends TestCase
     public function test_accept_array_flag_produces_oneOf_schema(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required(name: 'ids', type: WS_TYPE_ID, flags: WS_PARAM_ACCEPT_ARRAY)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -203,7 +209,8 @@ final class SpecBuilderTest extends TestCase
     public function test_maxvalue_is_included_as_maximum(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::optional(name: 'per_page', default: 100, type: WS_TYPE_INT | WS_TYPE_POSITIVE, maxValue: 500)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -218,7 +225,8 @@ final class SpecBuilderTest extends TestCase
     public function test_required_param_has_required_true(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];
@@ -229,7 +237,8 @@ final class SpecBuilderTest extends TestCase
     public function test_optional_param_has_required_false(): void
     {
         $this->server->register(new MethodDefinition(
-            name: 'pwg.test', callback: fn () => null,
+            name: 'pwg.test',
+            callback: fn () => null,
             params: [ParamDefinition::optional(name: 'cat_id', default: null, type: WS_TYPE_ID)],
         ));
         $params = $this->build()->toArray()['paths']['/ws/pwg.test']['get']['parameters'];

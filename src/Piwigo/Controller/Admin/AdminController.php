@@ -175,8 +175,8 @@ final class AdminController implements ControllerInterface
         $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
         $wsBase     = ServiceLocator::get(UrlGenerator::class)->ws();
         $wsSep      = str_contains($wsBase, '?') ? '&' : '?';
-        $link_start = $adminBase . $adminSep . 'page=';
-        $conf_link  = $link_start . 'configuration&amp;section=';
+        $GLOBALS['link_start'] = $link_start = $adminBase . $adminSep . 'page=';
+        $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&amp;section=';
 
         check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 

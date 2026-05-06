@@ -102,7 +102,7 @@ final class MaintenanceController
         ];
         $GLOBALS['maint_actions'] = $this->maintActions;
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         if (isset($_GET['tab'])) {
             check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');
@@ -990,7 +990,7 @@ final class MaintenanceController
 
         $tpl->set_filenames(['site_manager' => 'site_manager.tpl']);
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
@@ -1130,7 +1130,7 @@ final class MaintenanceController
             $tpl->assign(['save_error' => '<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . l10n('Some checksums are missing.') . '<i class="icon-right"></i></a>']);
         }
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');

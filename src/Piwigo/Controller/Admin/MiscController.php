@@ -81,7 +81,7 @@ final class MiscController
 
         check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
-        $base_url    = ServiceLocator::get(UrlGenerator::class)->admin();
+        $GLOBALS['base_url'] = $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
         $this->mustRepost = false;
 
         if (!isset($_GET['mode']) || !is_string($_GET['mode'])) {
@@ -308,7 +308,7 @@ final class MiscController
 
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('tags');
         $tabsheet->select('');
@@ -474,7 +474,7 @@ final class MiscController
             exit();
         }
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('admin_home');
         $tabsheet->select('');
@@ -717,7 +717,7 @@ final class MiscController
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('menus');
         $tabsheet->select('');
@@ -810,7 +810,7 @@ final class MiscController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->set_id('comments');
         $tabsheet->select('');

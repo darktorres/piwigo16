@@ -39,7 +39,7 @@ final class GroupsController
 
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('groups');

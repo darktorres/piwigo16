@@ -292,6 +292,7 @@ final class AlbumController
             }
         }
 
+        $GLOBALS['admin_album_base_url'] = $admin_album_base_url;
         $page['cat'] = $category['id'];
 
         if (isset($_POST['submitEmail'])) {
@@ -594,6 +595,7 @@ final class AlbumController
             }
         }
 
+        $GLOBALS['admin_album_base_url'] = $admin_album_base_url;
         foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
             if (!isset($category[$nullable])) {
                 $category[$nullable] = '';
@@ -853,7 +855,7 @@ final class AlbumController
         }
         $pageCat = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
 
-        $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id);
+        $GLOBALS['admin_album_base_url'] = $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id);
 
         if (!empty($_POST)) {
             check_pwg_token();

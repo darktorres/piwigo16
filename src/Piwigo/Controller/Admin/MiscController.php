@@ -322,7 +322,7 @@ final class MiscController
         }
 
         $tpl->set_filenames(['tags' => 'tags.tpl']);
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token()]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
         $orphan_tags      = get_orphan_tags();

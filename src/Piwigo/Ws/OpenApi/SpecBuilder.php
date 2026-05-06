@@ -48,7 +48,7 @@ final readonly class SpecBuilder
                 'title'       => 'Piwigo Web Services',
                 'version'     => $version,
                 'description' => 'Auto-generated from PwgServer registered methods. '
-                    . 'Access via `ws.php?method=<methodName>` (GET) or POST body.',
+                    . 'Access via the `/ws` route with `?method=<methodName>` (GET) or POST body.',
                 'contact'     => ['url' => 'https://piwigo.org'],
                 'license'     => ['name' => 'GPL-2.0-or-later'],
             ],

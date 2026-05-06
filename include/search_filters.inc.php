@@ -452,7 +452,7 @@ SELECT
                 $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
                     is_scalar($uppercats_val) ? (string) $uppercats_val : '',
-                    'admin.php?page=album-' // DEFERRED: admin URL may be inappropriate in gallery context
+                    ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
                 );
                 $row['fullname'] = strip_tags($cat_display_name);
 

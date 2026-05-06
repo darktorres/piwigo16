@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServerRegistry;
 use Psr\Http\Message\ResponseInterface;
@@ -46,10 +48,7 @@ final class WsController implements ControllerInterface
             $server = PwgServerRegistry::current();
             $server->populateMethods();
 
-            $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $host      = is_string($_SERVER['HTTP_HOST'] ?? null) ? $_SERVER['HTTP_HOST'] : 'localhost';
-            $script    = is_string($_SERVER['SCRIPT_NAME'] ?? null) ? $_SERVER['SCRIPT_NAME'] : '/ws.php';
-            $serverUrl = $scheme . '://' . $host . $script;
+            $serverUrl = ServiceLocator::get(UrlGenerator::class)->ws();
 
             $spec = new SpecBuilder($server, $serverUrl)->build();
 
@@ -64,8 +63,7 @@ final class WsController implements ControllerInterface
 
         // Swagger UI: /ws/docs  or  ?_openapi=ui
         if ($rest === '/docs' || $openApiParam === 'ui') {
-            $specUrl = (is_string($_SERVER['SCRIPT_NAME'] ?? null) ? $_SERVER['SCRIPT_NAME'] : '/ws.php')
-                . '/openapi.json';
+            $specUrl = ServiceLocator::get(UrlGenerator::class)->ws() . '/openapi.json';
 
             if (!headers_sent()) {
                 header('Content-Type: text/html; charset=utf-8');

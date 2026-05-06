@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 
 /**
  * @method bool rotate(int $rotation)
@@ -276,7 +278,7 @@ class PwgImage
 
         $rotation = 0;
 
-        $exif = pwg_safe_exif_read_data($source_filepath);
+        $exif = ServiceLocator::get(StringUtil::class)->pwgSafeExifReadData($source_filepath);
 
         if (isset($exif['Orientation']) and is_scalar($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
             $orientation = $matches[1];

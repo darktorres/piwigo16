@@ -195,7 +195,7 @@ final class ImageStdParams
           'w' => self::$watermark,
           'c' => self::$custom,
           ]);
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('derivatives', addslashes($ser));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('derivatives', $ser);
 
         if ($save_disabled) {
             self::save_disabled();
@@ -211,7 +211,7 @@ final class ImageStdParams
             return;
         }
         if (count(self::$disabled_type_map) > 0) {
-            $disabled = addslashes(serialize(self::$disabled_type_map));
+            $disabled = serialize(self::$disabled_type_map);
             ServiceLocator::get(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
         } else {
             ServiceLocator::get(Connection::class)->executeStatement(

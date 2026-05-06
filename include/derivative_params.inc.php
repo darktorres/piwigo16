@@ -278,4 +278,3 @@ final class SizingParams
         }
     }
 }
-

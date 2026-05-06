@@ -142,7 +142,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
-        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', fn(mixed ...$_): string => ServiceLocator::get(UrlGenerator::class)->gallery());
+        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', fn (mixed ...$_): string => ServiceLocator::get(UrlGenerator::class)->gallery());
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 

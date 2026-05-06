@@ -6,12 +6,12 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
-use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Template\TemplateRegistry;

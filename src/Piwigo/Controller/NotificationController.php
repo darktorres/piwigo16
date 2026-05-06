@@ -6,8 +6,8 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
-use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;

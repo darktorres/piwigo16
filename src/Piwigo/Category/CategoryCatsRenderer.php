@@ -130,7 +130,7 @@ SELECT
     MAX(date_creation) AS `to`
   FROM ' . IMAGE_CATEGORY_TABLE . '
     INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')
+  WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')
 ' . get_sql_condition_FandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
 ;';
@@ -149,7 +149,7 @@ SELECT
             $query = '
 SELECT *
   FROM ' . IMAGES_TABLE . '
-  WHERE id IN (' . implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)) . ')
+  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)) . ')
 ;';
             foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
                 if ($row['level'] <= $user['level']) {

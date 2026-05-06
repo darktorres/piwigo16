@@ -68,7 +68,7 @@ final class SearchFilterRenderer
                 if (!empty($pageItems)) {
                     $search_items = $pageItems;
                 }
-                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $search_items)) . ')';
+                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $search_items)) . ')';
             } else {
                 $search_items_clause = '1=1';
             }
@@ -788,7 +788,7 @@ SELECT
             if (0 == $page['start'] and !isset($page['chronology_field'])) {
                 $matchingCatIds = is_array($search_details['matching_cat_ids'] ?? null) ? $search_details['matching_cat_ids'] : null;
                 if ($matchingCatIds !== null) {
-                    $cat_ids = array_map(fn(mixed $v): string => is_scalar($v) ? (string) $v : '', $matchingCatIds);
+                    $cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $matchingCatIds);
                     if (count($cat_ids)) {
                         $query = '
 SELECT
@@ -816,7 +816,7 @@ SELECT
                 }
                 $matchingTagIds = is_array($search_details['matching_tag_ids'] ?? null) ? $search_details['matching_tag_ids'] : null;
                 if ($matchingTagIds !== null) {
-                    $tag_ids = array_map(fn(mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingTagIds);
+                    $tag_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingTagIds);
 
                     if (count($tag_ids) > 0) {
                         $tags = get_available_tags($tag_ids);

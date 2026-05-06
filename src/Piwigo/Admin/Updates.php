@@ -483,10 +483,7 @@ class Updates
         $template = TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
-            // DEFERRED: redirect target uses basename(__DIR__) = "Admin", producing
-            // "page=plugin-Admin" — a leftover from when the updater was a plugin.
-            // Revisit when the admin updates page URL is finalised (#7 cleanup).
-            redirect(ServiceLocator::get(UrlGenerator::class)->admin('plugin-'.basename(__DIR__)));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('updates'));
         }
 
         $obsolete_list = null;

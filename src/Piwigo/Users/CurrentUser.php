@@ -7,9 +7,9 @@ namespace Piwigo\Users;
 /**
  * Static accessor for the authenticated user singleton.
  *
- * Wave A: Kernel::boot() calls attachGlobals() once common.inc.php has fully
- * populated $GLOBALS['user']. After that, CurrentUser::get() returns a User
- * entity whose typed properties match the $user global at boot time.
+ * Kernel::boot() calls attachGlobals() once include/user.inc.php has fully
+ * populated $GLOBALS['user']. After that, CurrentUser::get() returns a typed
+ * User entity backed by that global.
  */
 final class CurrentUser
 {

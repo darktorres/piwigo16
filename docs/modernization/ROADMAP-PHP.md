@@ -1655,15 +1655,16 @@ $routes->add('admin', new Route('/admin{rest}', [...], ['rest' => '(/.*)?'], met
 
 Pipeline order wired in `Kernel::handle()`:
 
-| # | Middleware | Phase-3 state |
+| # | Middleware | Final state |
 |---|---|---|
 | 1 | `ExceptionHandlerMiddleware` | Active — catches `PiwigoException`, logs others |
 | 2 | `SessionMiddleware` | Active — `session_start()` if not already active |
-| 3 | `AuthMiddleware` | Stub — pass-through; `user.inc.php` still runs via `common.inc.php` |
-| 4 | `CsrfMiddleware` | Stub — pass-through; enforcement wires in Wave A |
-| 5 | `RoutingMiddleware` | Active — calls `Router::dispatch()`, attaches `RouteResult` |
-| 6 | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke` |
-| — | `FallbackHandler` | Returns 404; removed once all routes have controllers |
+| 3 | `AuthMiddleware` | Active — calls `UserBootstrap::bootstrap()`; attaches `CurrentUser` |
+| 4 | `FilterMiddleware` | Active — inlines filter.inc.php; populates `$GLOBALS['filter']` |
+| 5 | `CsrfMiddleware` | Active — verifies `pwg_token` on POST (exempt: /ws, /install, /upgrade, /identification, /register) |
+| 6 | `RoutingMiddleware` | Active — calls `Router::dispatch()`, attaches `RouteResult` |
+| 7 | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke` |
+| — | `FallbackHandler` | Returns 404 for unmapped routes |
 
 `Kernel::handle(ServerRequestInterface): ResponseInterface` added. `index.php` is unchanged — the pipeline activates when Wave A lands `GalleryController` and flips the index.
 

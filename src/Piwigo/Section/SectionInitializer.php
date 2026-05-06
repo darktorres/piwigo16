@@ -7,7 +7,9 @@ namespace Piwigo\Section;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Calendar\CalendarService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
@@ -288,10 +290,9 @@ SELECT DISTINCT(image_id)
                 'items' => $items,
             ]);
         } elseif ($section === 'search') {
-            require_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
             $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
             $pageSearch   = is_scalar($page['search'] ?? null) ? (string) $page['search'] : '';
-            $searchResult = get_search_results($pageSearch, $superOrderBy);
+            $searchResult = ServiceLocator::get(SearchService::class)->getSearchResults($pageSearch, $superOrderBy);
             if (isset($searchResult['qs'])) {
                 $page['qsearch_details'] = $searchResult['qs'];
             } elseif (isset($searchResult['search_details'])) {
@@ -410,8 +411,7 @@ SELECT DISTINCT(id)
 
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            require_once PHPWG_ROOT_PATH . 'include/functions_calendar.inc.php';
-            initialize_calendar();
+            ServiceLocator::get(CalendarService::class)->initializeCalendar();
         }
 
         // ── Title ─────────────────────────────────────────────────────────────

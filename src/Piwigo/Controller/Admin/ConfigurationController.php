@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Config\SizesProcessor;
+use Piwigo\Users\ProfileService;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
@@ -322,16 +323,15 @@ final class ConfigurationController
 
             case 'default':
                 $edit_user = build_user(Config::guestId(), false);
-                require_once PHPWG_ROOT_PATH . 'include/profile_functions.php';
                 $errors = [];
-                if (save_profile_from_post($edit_user, $errors)) {
+                if (ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors)) {
                     $edit_user = build_user(Config::guestId(), false);
                     PageState::current()->addInfo(l10n('Information data registered in database'));
                 }
                 $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
                 $page['errors'] = array_merge($pageErrors2, $errors);
 
-                load_profile_in_template($action, '', $edit_user, 'GUEST_');
+                ServiceLocator::get(ProfileService::class)->loadProfileInTemplate($action, '', $edit_user, 'GUEST_');
                 $tpl->assign('default', []);
                 break;
 

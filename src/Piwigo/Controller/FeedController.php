@@ -6,7 +6,9 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Feed\PiwigoFeedCreator;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,7 +21,6 @@ final class FeedController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/feed_functions.php';
 
         check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
@@ -50,7 +51,7 @@ final class FeedController implements ControllerInterface
         $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         set_make_full_url();
 
-        $rss           = new \PiwigoFeedCreator();
+        $rss           = new PiwigoFeedCreator();
         $rss->encoding = get_pwg_charset();
         $rss->title    = Config::galleryTitle();
         $username      = is_scalar($user['username'] ?? null) ? (string) $user['username'] : '';
@@ -73,7 +74,7 @@ final class FeedController implements ControllerInterface
                 }
                 $item->description .= '</ul>';
                 $item->descriptionHtmlSyndicated = true;
-                $item->date   = ts_to_iso8601(datetime_to_ts($dbnow));
+                $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($dbnow));
                 $item->author = Config::rssReedAuthor();
                 $item->guid   = sprintf('%s', $dbnow);
                 $rss->addItem($item);
@@ -85,7 +86,7 @@ final class FeedController implements ControllerInterface
         if (!empty($feed_id) && empty($news)) {
             $lastCheck = isset($feed_row['last_check']) && is_scalar($feed_row['last_check'])
                 ? (string) $feed_row['last_check'] : '';
-            if (!isset($feed_row['last_check']) || time() - datetime_to_ts($lastCheck) > 30 * 24 * 3600) {
+            if (!isset($feed_row['last_check']) || time() - FeedHelper::datetimeToTs($lastCheck) > 30 * 24 * 3600) {
                 $keepAliveDate = new \DateTimeImmutable($dbnow)->modify('+15 days')->format('Y-m-d H:i:s');
                 ServiceLocator::get(FeedRepository::class)->updateLastCheck((string) $feed_id, $keepAliveDate);
             }
@@ -108,7 +109,7 @@ final class FeedController implements ControllerInterface
             $item->description = '<a href="' . make_index_url() . '">' . Config::galleryTitle() . '</a><br> ';
             $item->description .= get_html_description_recent_post_date($date_detail);
             $item->descriptionHtmlSyndicated = true;
-            $item->date   = ts_to_iso8601(datetime_to_ts($date));
+            $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($date));
             $item->author = Config::rssReedAuthor();
             $item->guid   = sprintf('%s', 'pics-' . $date);
             $rss->addItem($item);

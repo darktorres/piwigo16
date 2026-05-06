@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Search\SearchService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
@@ -431,8 +432,7 @@ final class BatchManagerController
             $bmf_search   = is_array($bmf['search']) ? $bmf['search'] : [];
             $bmf_search_q = is_string($bmf_search['q'] ?? null) ? $bmf_search['q'] : '';
             if (strlen($bmf_search_q) > 0) {
-                require_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-                $res       = get_quick_search_results_no_cache($bmf_search_q, ['permissions' => false]);
+                $res       = ServiceLocator::get(SearchService::class)->getQuickSearchResultsNoCache($bmf_search_q, ['permissions' => false]);
                 $res_qs    = is_array($res['qs'] ?? null) ? $res['qs'] : [];
                 if (!empty($res['items']) && !empty($res_qs['unmatched_terms'])) {
                     $tpl->assign('no_search_results', array_map(static fn (mixed $v): string => htmlspecialchars(is_scalar($v) ? (string) $v : ''), is_array($res_qs['unmatched_terms']) ? $res_qs['unmatched_terms'] : []));

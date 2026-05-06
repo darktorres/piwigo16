@@ -20,6 +20,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
@@ -312,7 +313,7 @@ final class ImagesEndpoints
             Config::override('order_by', 'ORDER BY ' . $orderBy);
             $superOrderBy = true;
         }
-        $searchResult = get_quick_search_results($pQuery, ['super_order_by' => $superOrderBy, 'images_where' => implode(' AND ', $whereClauses)]);
+        $searchResult = ServiceLocator::get(SearchService::class)->getQuickSearchResults($pQuery, ['super_order_by' => $superOrderBy, 'images_where' => implode(' AND ', $whereClauses)]);
         $searchItems  = is_array($searchResult['items'] ?? null) ? $searchResult['items'] : [];
         $imageIds     = array_slice($searchItems, $pPage * $pPerPage, $pPerPage);
         if (count($imageIds)) {
@@ -355,10 +356,10 @@ final class ImagesEndpoints
         $searchInfo = null;
         if (isset($params['search_id'])) {
             $pSearchId = is_scalar($params['search_id']) ? (string) $params['search_id'] : '';
-            if (empty(get_search_id_pattern($pSearchId))) {
+            if (empty(ServiceLocator::get(SearchService::class)->getSearchIdPattern($pSearchId))) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
             }
-            $searchInfo = get_search_info($pSearchId);
+            $searchInfo = ServiceLocator::get(SearchService::class)->getSearchInfo($pSearchId);
             if (empty($searchInfo)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
             }
@@ -385,7 +386,7 @@ final class ImagesEndpoints
                 }
             }
             $search['fields']['allwords']['fields'] = $pAllwordsFields;
-            $search['fields']['allwords']['words']  = split_allwords(is_scalar($params['allwords']) ? (string) $params['allwords'] : '');
+            $search['fields']['allwords']['words']  = ServiceLocator::get(SearchService::class)->splitAllwords(is_scalar($params['allwords']) ? (string) $params['allwords'] : '');
         }
         if (isset($params['tags'])) {
             $pTags = is_array($params['tags']) ? $params['tags'] : [];
@@ -497,7 +498,7 @@ final class ImagesEndpoints
             }
         }
         $forkedFrom = isset($searchInfo['id']) && is_scalar($searchInfo['id']) ? (string) $searchInfo['id'] : null;
-        [$searchUuid, $searchUrl] = save_search($search, $forkedFrom);
+        [$searchUuid, $searchUrl] = ServiceLocator::get(SearchService::class)->saveSearch($search, $forkedFrom);
         return ['search_id' => $searchUuid, 'search_url' => $searchUrl];
     }
 

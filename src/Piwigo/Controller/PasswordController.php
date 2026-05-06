@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\PasswordService;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
@@ -22,7 +23,6 @@ final class PasswordController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/password_functions.php';
 
         check_status(ACCESS_FREE);
 
@@ -41,19 +41,19 @@ final class PasswordController implements ControllerInterface
             check_pwg_token();
 
             if ('lost' == $get_action) {
-                if (process_verification_code()) {
+                if (ServiceLocator::get(PasswordService::class)->processVerificationCode()) {
                     PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
                     $page['action'] = 'lost_code';
                 }
             }
             if ('lost_code' == $get_action) {
-                if (process_password_request()) {
+                if (ServiceLocator::get(PasswordService::class)->processPasswordRequest()) {
                     PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
                     $page['action'] = 'reset';
                 }
             }
             if ('reset' == $get_action) {
-                if (reset_password()) {
+                if (ServiceLocator::get(PasswordService::class)->resetPassword()) {
                     $page['action'] = 'reset_end';
                 }
             }
@@ -66,7 +66,7 @@ final class PasswordController implements ControllerInterface
         $first_login = false;
         $get_key     = input_string('key', null, $_GET);
         if ($get_key !== null && input_string('submit', null, $_POST) === null) {
-            $user_id = check_password_reset_key($get_key);
+            $user_id = ServiceLocator::get(PasswordService::class)->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
                 $userdata = getuserdata($user_id, false);
                 $page['username'] = $userdata !== false ? $userdata['username'] : '';

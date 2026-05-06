@@ -23,6 +23,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
+use Piwigo\Auth\PasswordService;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
@@ -92,6 +93,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
@@ -138,11 +140,13 @@ return [
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
     AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn): AuthService => new AuthService($u, $ak, $conn)),
+    PasswordService::class     => factory(static fn (): PasswordService => new PasswordService()),
     CalendarService::class     => factory(static fn (): CalendarService => new CalendarService()),
     MailService::class         => factory(static fn (Connection $conn): MailService => new MailService($conn)),
     PermissionService::class   => factory(static fn (Connection $conn): PermissionService => new PermissionService($conn)),
     PreferencesService::class  => factory(static fn (): PreferencesService => new PreferencesService()),
     UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak): UserService => new UserService($u, $conn, $h, $a, $g, $ak)),
+    ProfileService::class      => factory(static fn (): ProfileService => new ProfileService()),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn): CategoryService => new CategoryService($cat, $conn)),
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
     NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),

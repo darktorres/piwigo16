@@ -1,14 +1,10 @@
 <?php
 
 declare(strict_types=1);
-// +-----------------------------------------------------------------------+
-// | This file is part of Piwigo.                                          |
-// |                                                                       |
-// | For copyright and license information, please view the COPYING.txt    |
-// | file that was distributed with this source code.                      |
-// +-----------------------------------------------------------------------+
 
-class Inflector_fr implements InflectorInterface
+namespace Piwigo\Search\Inflector;
+
+final class InflectorFr implements InflectorInterface
 {
     /** @var array<string,string> */
     private array $exceptions;
@@ -31,10 +27,10 @@ class Inflector_fr implements InflectorInterface
 
         $this->pluralizers = array_reverse([ '/$/' => 's',
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)$/' => '\1x',
-          '/(bleu|�meu|landau|lieu|pneu|sarrau)$/' => '\1s',
+          '/(bleu|émeu|landau|lieu|pneu|sarrau)$/' => '\1s',
           '/al$/' => 'aux',
           '/ail$/' => 'ails',
-          '/(b|cor|�m|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
+          '/(b|cor|ém|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
           '/(s|x|z)$/' => '\1',
         ]);
 
@@ -43,13 +39,10 @@ class Inflector_fr implements InflectorInterface
           '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)x$/' => '\1',
           '/(journ|chev)aux$/' => '\1al',
           '/ails$/' => 'ail',
-          '/(b|cor|�m|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
+          '/(b|cor|ém|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
         ]);
     }
 
-    /**
-     * @return mixed[]
-     */
     /** @return string[] */
     public function get_variants(string $word): array
     {

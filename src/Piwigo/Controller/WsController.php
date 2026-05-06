@@ -38,7 +38,6 @@ final class WsController implements ControllerInterface
             page_forbidden('Web services are disabled');
         }
 
-        require_once PHPWG_ROOT_PATH . 'include/ws_default_methods.php';
         PwgServer::boot();
 
         $rest         = $args['rest'] ?? '';

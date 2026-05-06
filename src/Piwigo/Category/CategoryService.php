@@ -7,7 +7,9 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Filter\FilterService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
@@ -113,9 +115,7 @@ WHERE ' . $where . '
         }
         usort($cats, $this->globalRankCompare(...));
 
-        if (function_exists('update_cats_with_filtered_data')) {
-            update_cats_with_filtered_data($cats);
-        }
+        ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($cats);
 
         return $cats;
     }

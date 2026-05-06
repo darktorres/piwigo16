@@ -7,6 +7,8 @@ namespace Piwigo\Search;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Search\Inflector\InflectorEn;
+use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Db\DbInfo;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Template\TemplateRegistry;
@@ -894,12 +896,9 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $langCode = substr(get_default_language(), 0, 2);
-        require_once(PHPWG_ROOT_PATH . 'include/inflectors/InflectorInterface.php');
-        require_once(PHPWG_ROOT_PATH . 'include/inflectors/en.php');
-        require_once(PHPWG_ROOT_PATH . 'include/inflectors/fr.php');
         $inflector = match ($langCode) {
-            'en'    => new \Inflector_en(),
-            'fr'    => new \Inflector_fr(),
+            'en'    => new InflectorEn(),
+            'fr'    => new InflectorFr(),
             default => null,
         };
         if ($inflector !== null) {

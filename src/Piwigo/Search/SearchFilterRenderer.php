@@ -49,10 +49,8 @@ final class SearchFilterRenderer
                 }
             }
 
-            require_once(PHPWG_ROOT_PATH . 'include/functions_search.inc.php');
-
             /** @var array<string, mixed> $my_search */
-            $my_search = get_search_array($page['search']);
+            $my_search = ServiceLocator::get(SearchService::class)->getSearchArray($page['search']);
             /** @var array<string, mixed> $my_search_fields_tmp */
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;

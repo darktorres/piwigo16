@@ -10,6 +10,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Filter\FilterService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
@@ -205,9 +206,7 @@ SELECT *
         }
 
         if (count($categories) > 0) {
-            if (function_exists('update_cats_with_filtered_data')) {
-                update_cats_with_filtered_data($categories);
-            }
+            ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($categories);
 
             $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
             trigger_notify('loc_begin_index_category_thumbnails', $categories);

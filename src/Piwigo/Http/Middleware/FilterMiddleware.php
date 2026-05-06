@@ -150,6 +150,5 @@ WHERE ' . $catClause . '
             );
         }
 
-        require_once PHPWG_ROOT_PATH . 'include/functions_filter.inc.php';
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
@@ -148,6 +149,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             tags:        ['reflection'],
         ));
 
+        WsMethodRegistrar::register($this);
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
     }
@@ -466,8 +468,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             define('WS_XML_ATTRIBUTES', 'attributes_xml_');
         }
 
-        add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
-        add_event_handler('ws_invoke_allowed', 'ws_isInvokeAllowed', EVENT_HANDLER_PRIORITY_NEUTRAL);
+        add_event_handler('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EVENT_HANDLER_PRIORITY_NEUTRAL);
 
         $requestFormat = 'rest';
         $responseFormat = null;

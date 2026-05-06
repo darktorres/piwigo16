@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Search\Inflector;
+
 interface InflectorInterface
 {
     /** @return string[] */

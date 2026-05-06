@@ -1,14 +1,10 @@
 <?php
 
 declare(strict_types=1);
-// +-----------------------------------------------------------------------+
-// | This file is part of Piwigo.                                          |
-// |                                                                       |
-// | For copyright and license information, please view the COPYING.txt    |
-// | file that was distributed with this source code.                      |
-// +-----------------------------------------------------------------------+
 
-class Inflector_en implements InflectorInterface
+namespace Piwigo\Search\Inflector;
+
+final class InflectorEn implements InflectorInterface
 {
     /** @var array<string, int|string> */
     private array $exceptions;
@@ -32,9 +28,9 @@ class Inflector_en implements InflectorInterface
           'move' => 'moves',
           'mouse' => 'mice',
           'ox' => 'oxen',
-          'zombie' => 'zombies', // pl->sg exc.
-                'serie' => 'series', // pl->sg exc.
-                'movie' => 'movies', // pl->sg exc.
+          'zombie' => 'zombies',
+                'serie' => 'series',
+                'movie' => 'movies',
         ];
 
         $this->exceptions = $tmp;
@@ -98,7 +94,6 @@ class Inflector_en implements InflectorInterface
           '/(th|hous|dur|spr|wedd)ing$/' => '\0',
           '/(liv|draw)ing$/' => '\0',
         ]);
-
     }
 
     /** @return string[] */
@@ -130,10 +125,6 @@ class Inflector_en implements InflectorInterface
         return $res;
     }
 
-    /**
- * @param array<string,string> $rules
- * @param string[] $res
- */
     /**
      * @param array<string,string> $rules
      * @param array<string> $res

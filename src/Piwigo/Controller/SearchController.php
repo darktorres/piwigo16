@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Search\SearchService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -17,8 +19,6 @@ final class SearchController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
-
         check_status(ACCESS_GUEST);
 
         trigger_notify('loc_begin_search');
@@ -65,7 +65,7 @@ final class SearchController implements ControllerInterface
         $words = [];
         $q     = input_string('q', null, $_GET);
         if (!empty($q)) {
-            $words = split_allwords($q);
+            $words = ServiceLocator::get(SearchService::class)->splitAllwords($q);
         }
 
         if (count($words ?? []) > 0 || in_array('allwords', $fields)) {
@@ -143,7 +143,7 @@ SELECT id
             }
         }
 
-        [$search_uuid, $search_url] = save_search($search);
+        [$search_uuid, $search_url] = ServiceLocator::get(SearchService::class)->saveSearch($search);
         redirect(is_scalar($search_url) ? (string) $search_url : '');
 
         return ResponseFactory::create(200); // unreachable after redirect

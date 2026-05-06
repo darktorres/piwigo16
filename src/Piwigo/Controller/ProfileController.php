@@ -10,6 +10,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,14 +18,11 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Handles the user profile / preferences page (/profile).
  * Corresponds to the former profile.php entry-point (direct-access block).
- * Helper functions (save_profile_from_post, load_profile_in_template) live
- * in include/profile_functions.php.
  */
 final class ProfileController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/profile_functions.php';
 
         check_status(ACCESS_CLASSIC);
 
@@ -52,7 +50,7 @@ final class ProfileController implements ControllerInterface
         }
 
         $pgErrors = is_array($page['errors'] ?? null) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $page['errors']) : [];
-        save_profile_from_post($userdata, $pgErrors);
+        ServiceLocator::get(ProfileService::class)->saveProfileFromPost($userdata, $pgErrors);
         $page['errors'] = $pgErrors;
 
         $title = l10n('Your Gallery Customization');
@@ -60,7 +58,7 @@ final class ProfileController implements ControllerInterface
         $tpl->set_filename('profile', 'profile.tpl');
         $tpl->set_filename('profile_content', 'profile_content.tpl');
 
-        load_profile_in_template(ServiceLocator::get(UrlGenerator::class)->profile(), make_index_url(), $userdata);
+        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), make_index_url(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
         $special_user = in_array($userdata_id, [Config::guestId(), Config::defaultUserId()]);

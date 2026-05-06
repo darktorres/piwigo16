@@ -29,6 +29,7 @@ use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
+use Piwigo\Users\ProfileService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -1050,12 +1051,10 @@ final class MiscController
             check_pwg_token();
         }
 
-        require_once PHPWG_ROOT_PATH . 'include/profile_functions.php';
-
         $errors = [];
-        save_profile_from_post($edit_user, $errors);
+        ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors);
 
-        load_profile_in_template(
+        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(
             ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&amp;user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
             ServiceLocator::get(UrlGenerator::class)->admin('user_list'),
             $edit_user

@@ -13,6 +13,7 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Picture\PictureContentRenderer;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
@@ -34,7 +35,6 @@ final class PictureController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/picture_functions.php';
 
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'picture');
 
@@ -122,7 +122,7 @@ SELECT id
             }
         }
 
-        add_event_handler('render_element_content', 'default_picture_content');
+        add_event_handler('render_element_content', PictureContentRenderer::defaultContent(...));
         add_event_handler('render_element_description', 'pwg_nl2br');
 
         trigger_notify('loc_begin_picture');

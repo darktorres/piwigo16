@@ -6,6 +6,7 @@ namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -541,11 +542,11 @@ final class CategoriesEndpoints
         if (!$catRepo3->hasCategoryImages($categoryId)) {
             return new PwgError(401, 'not permitted');
         }
-        set_random_representant([$categoryId]);
+        ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant([$categoryId]);
         pwg_activity('album', $categoryId, 'edit');
         $category = $catRepo3->findCategoryById($categoryId);
         $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
-        return get_category_representant_properties($repId, IMG_SMALL);
+        return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, IMG_SMALL);
     }
 
     /** @param array<mixed> $params */

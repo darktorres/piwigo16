@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
@@ -148,7 +149,7 @@ final class GroupsController
             ServiceLocator::get(PermissionRepository::class)->deleteGroupAccessForGroup($group_id, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
             $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
-            $uppercats     = get_uppercat_ids($post_cat_false_ids);
+            $uppercats     = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($post_cat_false_ids);
             $uppercats_str = array_map(fn (string $v): string => $v, $uppercats);
 
             $permRepo = ServiceLocator::get(PermissionRepository::class);

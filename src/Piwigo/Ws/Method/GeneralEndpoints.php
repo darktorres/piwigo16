@@ -6,6 +6,8 @@ namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\History\HistoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -170,7 +172,7 @@ final class GeneralEndpoints
         $pathCache = Config::dataLocation();
         $infos['cache_size'] = $this->directorySizeBytes($pathCache);
         $pathMsizes = Config::dataLocation() . 'i';
-        $msizes     = get_cache_size_derivatives($pathMsizes);
+        $msizes     = ServiceLocator::get(ImageAdminService::class)->getCacheSizeDerivatives($pathMsizes);
         $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
         $infos['msizes']['custom'] = 0;
         $all = 0;
@@ -337,7 +339,7 @@ final class GeneralEndpoints
         if ('none' === Config::activityDisplayConnections()) {
             $where .= " AND action NOT IN ('login', 'logout')";
         } elseif ('admins_only' === Config::activityDisplayConnections()) {
-            $where .= ' AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', get_admins()) . '))';
+            $where .= ' AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', ServiceLocator::get(UserAdminService::class)->getAdmins()) . '))';
         }
         $moreRowsAvailable = true;
         while (count($outputLines) < $pageSize && $moreRowsAvailable) {

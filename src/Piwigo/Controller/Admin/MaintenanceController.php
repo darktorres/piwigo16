@@ -1028,7 +1028,7 @@ final class MaintenanceController
         if (isset($_GET['action']) && $siteIdSm !== null) {
             $galleries_url = ServiceLocator::get(SiteRepository::class)->findGalleriesUrlById($siteIdSm);
             switch ($_GET['action']) {
-                case 'delete': delete_site($page['site']);
+                case 'delete': ServiceLocator::get(CategoryAdminService::class)->deleteSite($page['site']);
                     PageState::current()->addInfo($galleries_url . ' ' . l10n('deleted'));
                     break;
             }
@@ -1468,7 +1468,7 @@ final class MaintenanceController
             if (!$simulate) {
                 $start = get_moment();
                 ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- update_category(all) : ' . get_elapsed_time($start, get_moment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . get_elapsed_time($start, get_moment()) . ' -->');
                 $start = get_moment();
                 ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
                 $tpl->append('footer_elements', '<!-- ordering categories : ' . get_elapsed_time($start, get_moment()) . ' -->');

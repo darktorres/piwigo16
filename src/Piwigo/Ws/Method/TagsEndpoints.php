@@ -128,7 +128,7 @@ final class TagsEndpoints
      */
     public function add(array $params, PwgServer &$service): PwgError|array
     {
-        $creationOutput = create_tag(is_scalar($params['name']) ? (string) $params['name'] : '');
+        $creationOutput = ServiceLocator::get(TagAdminService::class)->createTag(is_scalar($params['name']) ? (string) $params['name'] : '');
         if (isset($creationOutput['error'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, is_scalar($creationOutput['error']) ? (string) $creationOutput['error'] : '');
         }

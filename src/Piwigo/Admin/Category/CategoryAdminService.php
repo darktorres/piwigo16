@@ -469,7 +469,7 @@ SELECT DISTINCT id
             $this->addPermissionOnCategory($insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
             $userId = CurrentUser::get()->id;
-            $this->addPermissionOnCategory($insertedId, array_unique(array_merge(get_admins(), [$userId])));
+            $this->addPermissionOnCategory($insertedId, array_unique(array_merge(ServiceLocator::get(UserAdminService::class)->getAdmins(), [$userId])));
         }
         trigger_notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
         pwg_activity('album', $insertedId, 'add');

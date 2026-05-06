@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -47,7 +48,7 @@ class LocalSiteReader
     /** @return string[] */
     public function get_full_directories(string $basedir): array
     {
-        return get_fs_directories($basedir);
+        return ServiceLocator::get(ImageAdminService::class)->getFsDirectories($basedir);
     }
 
     /**

@@ -517,18 +517,18 @@ final class MiscController
             if (!$uagent_obj->DetectIos() && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
                 $userLang  = is_string($user['language'] ?? null) ? $user['language'] : '';
                 $userEmail = is_string($user['email'] ?? null) ? $user['email'] : '';
-                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => get_newsletter_subscribe_base_url($userLang), 'old_newsletters_url' => get_old_newsletters_base_url($userLang), 'str_subscribe_title' => l10n('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => l10n('Sign up to the newsletter'), 'str_see_previous' => l10n('See previous newsletters'), 'str_dismiss' => l10n('Understood, do not show again')];
+                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => ServiceLocator::get(AdminService::class)->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => l10n('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => l10n('Sign up to the newsletter'), 'str_see_previous' => l10n('See previous newsletters'), 'str_dismiss' => l10n('Understood, do not show again')];
             }
         }
 
-        $stats      = get_pwg_general_statitics();
+        $stats      = ServiceLocator::get(AdminService::class)->getPwgGeneralStatitics();
         $du_decimals = 1;
         $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024 * 1024);
         if ($du_gb > 100) {
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => number_format_human_readable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', ServiceLocator::get(CommentRepository::class)->countAll());

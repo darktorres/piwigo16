@@ -749,14 +749,14 @@ final readonly class Util
                 'db_version'        => DbInfo::version(),
                 'php_datetime'      => date('Y-m-d H:i:s'),
                 'db_datetime'       => $dbCurrentDate,
-                'graphics_library'  => get_graphics_library(),
+                'graphics_library'  => ServiceLocator::get(AdminService::class)->getGraphicsLibrary(),
             ],
-            'general_stats' => get_pwg_general_statitics(),
+            'general_stats' => ServiceLocator::get(AdminService::class)->getPwgGeneralStatitics(),
         ];
 
         $du = $piwigoInfos['general_stats']['disk_usage'] ?? 0;
         $piwigoInfos['general_stats']['disk_usage']        = intval((is_numeric($du) ? $du : 0) / 1024);
-        $piwigoInfos['general_stats']['installed_on']      = get_installation_date();
+        $piwigoInfos['general_stats']['installed_on']      = ServiceLocator::get(AdminService::class)->getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced']  = 0;
         $piwigoInfos['general_stats']['last_photo_synced'] = null;
         $piwigoInfos['general_stats']['last_photo']        = null;

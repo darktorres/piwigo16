@@ -332,7 +332,7 @@ class Languages
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            deltree($path, PHPWG_ROOT_PATH.'language/trash');
+                                            ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_ROOT_PATH.'language/trash');
                                         }
                                     }
                                 }

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 
 class CheckIntegrity
@@ -273,7 +275,7 @@ class CheckIntegrity
      */
     public function get_htlm_links_more_info(): string
     {
-        $pwg_links = pwg_URL();
+        $pwg_links = ServiceLocator::get(AdminService::class)->pwgURL();
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(

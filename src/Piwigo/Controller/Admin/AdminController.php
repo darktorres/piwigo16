@@ -369,7 +369,7 @@ final class AdminController implements ControllerInterface
 
         // ── Render ────────────────────────────────────────────────────────────
 
-        $tpl->assign('pwgmenu', pwg_URL());
+        $tpl->assign('pwgmenu', ServiceLocator::get(AdminService::class)->pwgURL());
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
 

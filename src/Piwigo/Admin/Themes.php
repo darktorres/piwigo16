@@ -555,7 +555,7 @@ class Themes
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            deltree($path, PHPWG_THEMES_PATH . 'trash');
+                                            ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_THEMES_PATH . 'trash');
                                         }
                                     }
                                 }

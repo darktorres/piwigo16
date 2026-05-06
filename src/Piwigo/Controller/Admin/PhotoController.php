@@ -223,10 +223,10 @@ SELECT id
             $tpl->assign(['save_success' => l10n('Photo informations updated')]);
             pwg_activity('photo', is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0, 'edit');
 
-            $page['image'] = get_image_infos(is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '', true);
+            $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos(is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '', true);
         }
 
-        $tag_selection = get_taglist_from_rows(
+        $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(
             ServiceLocator::get(TagRepository::class)
                 ->findTagsByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)
         );
@@ -423,10 +423,10 @@ SELECT id
         if (isset($_POST['submit'])) {
             foreach (ImageStdParams::get_defined_type_map() as $params) {
                 if ($params->sizing->max_crop != 0) {
-                    delete_element_derivatives($row, $params->type);
+                    ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, $params->type);
                 }
             }
-            delete_element_derivatives($row, IMG_CUSTOM);
+            ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, IMG_CUSTOM);
             $uid = '&b=' . time();
             Config::override('question_mark_in_urls', true);
             Config::override('php_extension_in_urls', true);

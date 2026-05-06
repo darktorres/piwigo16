@@ -41,7 +41,7 @@ final class ImagesEndpoints
         if (empty($categoriesString)) {
             if ($replaceMode) {
                 ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
-                update_category([]);
+                ServiceLocator::get(CategoryAdminService::class)->updateCategory([]);
             }
             return true;
         }
@@ -63,7 +63,7 @@ final class ImagesEndpoints
         if (count($catIds) === 0) {
             if ($replaceMode) {
                 ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([is_numeric($imageId) ? (int) $imageId : 0]);
-                update_category([]);
+                ServiceLocator::get(CategoryAdminService::class)->updateCategory([]);
             }
             return true;
         }
@@ -77,7 +77,7 @@ final class ImagesEndpoints
             $toRemoveCatIds = array_diff($existingCatIds, $catIds);
             if (count($toRemoveCatIds) > 0) {
                 ServiceLocator::get(CategoryRepository::class)->removeImageFromCategories(is_numeric($imageId) ? (int) $imageId : 0, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
-                update_category(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
+                ServiceLocator::get(CategoryAdminService::class)->updateCategory(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
             }
         }
         $newCatIds = array_diff($catIds, $existingCatIds);
@@ -100,7 +100,7 @@ final class ImagesEndpoints
             $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, 'rank' => $rankOnCategory[$catId]];
         }
         mass_inserts(IMAGE_CATEGORY_TABLE, array_keys($inserts[0]), $inserts);
-        update_category($newCatIds);
+        ServiceLocator::get(CategoryAdminService::class)->updateCategory($newCatIds);
         return true;
     }
 
@@ -724,7 +724,7 @@ final class ImagesEndpoints
             $tagIds = [];
             if (is_array($params['tags'])) {
                 foreach ($params['tags'] as $tagName) {
-                    $tagIds[] = tag_id_from_tag_name(is_scalar($tagName) ? (string) $tagName : '');
+                    $tagIds[] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName(is_scalar($tagName) ? (string) $tagName : '');
                 }
             } else {
                 $tagNames = preg_split('~(?<!\\\),~', is_scalar($params['tags']) ? (string) $params['tags'] : '') ?: [];
@@ -1292,13 +1292,13 @@ final class ImagesEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $noMd5sumIds    = get_photos_no_md5sum();
+        $noMd5sumIds    = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
         $addedCount     = 0;
         if (count($noMd5sumIds) > 0) {
             $md5sumIdsToAdd = array_slice($noMd5sumIds, 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
-            $addedCount     = add_md5sum($md5sumIdsToAdd);
+            $addedCount     = ServiceLocator::get(ImageAdminService::class)->addMd5sum($md5sumIdsToAdd);
         }
-        return ['nb_added' => $addedCount, 'nb_no_md5sum' => count(get_photos_no_md5sum())];
+        return ['nb_added' => $addedCount, 'nb_no_md5sum' => count(ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum())];
     }
 
     /**
@@ -1342,10 +1342,10 @@ final class ImagesEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $orphanIdsToDelete = array_slice(get_orphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
+        $orphanIdsToDelete = array_slice(ServiceLocator::get(ImageAdminService::class)->getOrphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
         $deletedCount      = ServiceLocator::get(ImageAdminService::class)->deleteElements($orphanIdsToDelete, true);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        return ['nb_deleted' => $deletedCount, 'nb_orphans' => count(get_orphans())];
+        return ['nb_deleted' => $deletedCount, 'nb_orphans' => count(ServiceLocator::get(ImageAdminService::class)->getOrphans())];
     }
 
     /** @param array<mixed> $params */

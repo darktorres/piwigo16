@@ -57,7 +57,6 @@ if (Config::updateNotifyCheckPeriod() > 0) {
     if ($check_for_updates) {
         $exec_id = pwg_unique_exec_begins('check_for_updates');
         if (false !== $exec_id) {
-            require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
             $updates = new Updates();
             $updates->notify_piwigo_new_versions();
 

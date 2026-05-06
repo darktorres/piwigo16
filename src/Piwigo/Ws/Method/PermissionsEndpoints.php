@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
@@ -82,7 +83,7 @@ final class PermissionsEndpoints
         }
         if (!empty($params['group_id'])) {
             $catIdParamInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
-            $catIds        = get_uppercat_ids($catIdParamInt);
+            $catIds        = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($catIdParamInt);
             if ($params['recursive']) {
                 $catIds = array_merge($catIds, get_subcat_ids($catIdParamInt));
             }
@@ -104,7 +105,7 @@ final class PermissionsEndpoints
             }
             $catIdParam2Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
             $userIdParamInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['user_id']) ? $params['user_id'] : []);
-            add_permission_on_category($catIdParam2Int, $userIdParamInt);
+            ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($catIdParam2Int, $userIdParamInt);
         }
         return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
     }

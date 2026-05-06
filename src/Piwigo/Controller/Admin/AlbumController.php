@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
@@ -547,7 +548,7 @@ final class AlbumController
                 'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'U_MOVE'           => $base_url . 'albums#cat-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'IS_VIRTUAL'       => empty($category['dir']),
-                'CAT_ADMIN_ACCESS' => cat_admin_access(is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0),
+                'CAT_ADMIN_ACCESS' => ServiceLocator::get(UserAdminService::class)->catAdminAccess(is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0),
             ];
 
             if (empty($category['dir'])) {
@@ -640,7 +641,7 @@ final class AlbumController
             'CAT_NAME'              => htmlspecialchars($catName),
             'CAT_COMMENT'           => htmlspecialchars($catComment),
             'IS_VISIBLE'            => BoolUtil::toString($catVisible),
-            'CAT_ADMIN_ACCESS'      => cat_admin_access($catIntId),
+            'CAT_ADMIN_ACCESS'      => ServiceLocator::get(UserAdminService::class)->catAdminAccess($catIntId),
             'U_DELETE'              => $base_url . 'albums',
             'U_JUMPTO'              => make_index_url(['category' => $category]),
             'U_ADD_PHOTOS_ALBUM'    => $base_url . 'photos_add&amp;album=' . $catId,
@@ -702,7 +703,7 @@ final class AlbumController
         if ($category['has_images'] || $catRepPic !== '') {
             $tpl_representant = [];
             if ($catRepPic !== '') {
-                $tpl_representant['picture'] = get_category_representant_properties($catRepPic, IMG_MEDIUM);
+                $tpl_representant['picture'] = ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($catRepPic, IMG_MEDIUM);
             }
             $tpl_representant['ALLOW_SET_RANDOM'] = (bool) $category['has_images'];
             if (($category['has_images'] && Config::allowRandomRepresentative()) || (!$category['has_images'] && $catRepPic !== '')) {
@@ -873,7 +874,7 @@ final class AlbumController
 
                 $grant_groups = $post_groups;
                 if (count($grant_groups) > 0) {
-                    $cat_ids = get_uppercat_ids([$pageCat]);
+                    $cat_ids = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds([$pageCat]);
                     if (isset($_POST['apply_on_sub'])) {
                         $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
                     }

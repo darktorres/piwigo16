@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
@@ -1128,7 +1129,7 @@ final class ExtensionsController
     {
         $tpl = TemplateRegistry::current();
         $tpl_extension = safe_unserialize(Config::extentsForTemplates() ?? '');
-        $new_extensions = get_extents();
+        $new_extensions = ServiceLocator::get(AdminService::class)->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];
         $permalinks = array_column(get_dbal_connection()->executeQuery('SELECT permalink FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
@@ -1137,7 +1138,7 @@ final class ExtensionsController
         $eligible_templates = ['----------' => 'N/A', 'about.tpl' => 'about', 'comments.tpl' => 'comments', 'comment_list.tpl' => 'comment_list', 'footer.tpl' => 'tail', 'header.tpl' => 'header', 'identification.tpl' => 'identification', 'index.tpl' => 'index', 'mainpage_categories.tpl' => 'index_category_thumbnails', 'menubar.tpl' => 'menubar', 'menubar_categories.tpl' => 'mbCategories', 'menubar_identification.tpl' => 'mbIdentification', 'menubar_links.tpl' => 'mbLinks', 'menubar_menu.tpl' => 'mbMenu', 'menubar_specials.tpl' => 'mbSpecials', 'menubar_tags.tpl' => 'mbTags', 'month_calendar.tpl' => 'month_calendar', 'navigation_bar.tpl' => 'navbar', 'nbm.tpl' => 'nbm', 'notification.tpl' => 'notification', 'password.tpl' => 'password', 'picture.tpl' => 'picture', 'picture_content.tpl' => 'default_content', 'picture_nav_buttons.tpl' => 'picture_nav_buttons', 'popuphelp.tpl' => 'popuphelp', 'profile.tpl' => 'profile', 'profile_content.tpl' => 'profile_content', 'redirect.tpl' => 'redirect', 'register.tpl' => 'register', 'search.tpl' => 'search', 'slideshow.tpl' => 'slideshow', 'tags.tpl' => 'tags', 'thumbnails.tpl' => 'index_thumbnails'];
 
         $flip_templates      = array_flip($eligible_templates);
-        $available_templates = array_merge(['N/A' => '----------'], get_dirs(PHPWG_ROOT_PATH . 'themes'));
+        $available_templates = array_merge(['N/A' => '----------'], ServiceLocator::get(AdminService::class)->getDirs(PHPWG_ROOT_PATH . 'themes'));
 
         if (isset($_POST['submit'])) {
             $reptpl_arr  = is_array($_POST['reptpl'] ?? null) ? $_POST['reptpl'] : [];

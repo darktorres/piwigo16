@@ -497,7 +497,7 @@ SELECT DISTINCT f.image_id
 
         $paramUserId = is_array($params['user_id']) ? $params['user_id'] : [];
         if (count($paramUserId) == 1) {
-            if (get_username(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0) === false) {
+            if (ServiceLocator::get(UserAdminService::class)->getUsername(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0) === false) {
                 return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'This user does not exist.']];
             }
 

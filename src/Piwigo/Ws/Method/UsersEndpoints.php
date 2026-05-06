@@ -6,6 +6,7 @@ namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
@@ -277,7 +278,7 @@ final class UsersEndpoints
         $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));
         $counter   = 0;
         foreach ($userIdArr as $userId) {
-            delete_user($userId);
+            ServiceLocator::get(UserAdminService::class)->deleteUser($userId);
             $counter++;
         }
         return l10n_dec('%d user deleted', '%d users deleted', $counter);
@@ -428,7 +429,7 @@ final class UsersEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        if (get_username($targetUserId) === false) {
+        if (ServiceLocator::get(UserAdminService::class)->getUsername($targetUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
         $userLost = getuserdata($targetUserId);
@@ -470,7 +471,7 @@ final class UsersEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        if (get_username($mainUserId) === false) {
+        if (ServiceLocator::get(UserAdminService::class)->getUsername($mainUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
         $newMainUser = getuserdata($mainUserId);

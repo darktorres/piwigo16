@@ -768,7 +768,7 @@ final class BatchManagerController
                 foreach (ServiceLocator::get(ImageRepository::class)->findPathsAndRepresentativesByIds($collection_int) as $info) {
                     $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
                     foreach ($del_types as $dtype) {
-                        delete_element_derivatives($info, is_scalar($dtype) ? (string) $dtype : '');
+                        ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($info, is_scalar($dtype) ? (string) $dtype : '');
                     }
                 }
             } elseif ('generate_derivatives' == $action) {
@@ -1052,7 +1052,7 @@ final class BatchManagerController
                 $element_ids[] = is_scalar($row['id']) ? (string) $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];
-                $tag_selection = get_taglist_from_rows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
+                $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
                 $legend        = render_element_name($row);
                 $row_file_str  = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
                 if ($legend != get_name_from_file($row_file_str)) {

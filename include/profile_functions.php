@@ -190,7 +190,7 @@ function load_profile_in_template(string $url_action, string $url_redirect, arra
     $tpl->assign('SPECIAL_USER', $special_user);
     $tpl->assign('IN_ADMIN', defined('IN_ADMIN'));
 
-    $dbnow    = (new \DateTimeImmutable('+1 day'))->format('Y-m-d H:i:s');
+    $dbnow    = new \DateTimeImmutable('+1 day')->format('Y-m-d H:i:s');
     $tpl->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);
 
     $duration         = [];

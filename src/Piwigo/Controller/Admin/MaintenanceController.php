@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Db\SchemaHelper;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Integrity\CheckIntegrity;
@@ -267,7 +268,7 @@ final class MaintenanceController
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
-        $db_current_date       = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $db_current_date       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         $tpl->assign([
             'maint_actions'               => $maint_actions,
@@ -422,7 +423,7 @@ final class MaintenanceController
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
-        $db_current_date       = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $db_current_date       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         [$container_name, $container_version] = get_container_info();
         if (!in_array($container_name, ['Official', 'none'])) { $container_name = '(unofficial) ' . $container_name; }
 
@@ -616,7 +617,7 @@ final class MaintenanceController
         require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
         require_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
-        $types = array_merge(['none'], \Piwigo\Db\SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
+        $types = array_merge(['none'], SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail'    => l10n('No display'),
@@ -878,7 +879,7 @@ final class MaintenanceController
         $site_url_str  = (string) $site_url;
         $site_is_remote = url_is_remote($site_url_str);
 
-        defined('CURRENT_DATE') or define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+        defined('CURRENT_DATE') or define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
         $error_labels = [
             'PWG-UPDATE-1'    => [l10n('wrong filename'), l10n('The name of directories and files must be composed of letters, numbers, "-", "_" or "."')],
@@ -1361,7 +1362,7 @@ final class MaintenanceController
         }
 
         foreach ($months as $key => $val) {
-            $lastDate = (new \DateTime($key))->add(new \DateInterval('P1M'))->sub(new \DateInterval('P1D'));
+            $lastDate = new \DateTime($key)->add(new \DateInterval('P1M'))->sub(new \DateInterval('P1D'));
             if ($lastDate > new \DateTime()) { $lastDate = new \DateTime(); }
             $result['month'][] = $this->setMissingValues('day', $val, new \DateTime($key), $lastDate);
         }

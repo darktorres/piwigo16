@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Controller\UpgradeController;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Http\RequestFactory;
 
@@ -27,4 +28,4 @@ ConfigLoader::applyDefaults();
 ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
 ConfigLoader::applyEnvOverrides();
 
-(new \Piwigo\Controller\UpgradeController)(RequestFactory::fromGlobals());
+(new UpgradeController)(RequestFactory::fromGlobals());

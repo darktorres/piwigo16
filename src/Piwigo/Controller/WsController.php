@@ -51,7 +51,7 @@ final class WsController implements ControllerInterface
             $script    = is_string($_SERVER['SCRIPT_NAME'] ?? null) ? $_SERVER['SCRIPT_NAME'] : '/ws.php';
             $serverUrl = $scheme . '://' . $host . $script;
 
-            $spec = (new SpecBuilder($server, $serverUrl))->build();
+            $spec = new SpecBuilder($server, $serverUrl)->build();
 
             if (!headers_sent()) {
                 header('Content-Type: application/json; charset=utf-8');

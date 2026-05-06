@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Cache\RequestCache;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
@@ -472,7 +473,7 @@ final class BatchManagerController
             'widths'    => ['values' => array_map(floatval(...), explode(',', $dimensions['widths'])),   'selected' => ['min' => $dimensions['selected']['min_width'],  'max' => $dimensions['selected']['max_width']],  'text' => l10n('between %d and %d pixels')],
             'heights'   => ['values' => array_map(floatval(...), explode(',', $dimensions['heights'])),  'selected' => ['min' => $dimensions['selected']['min_height'], 'max' => $dimensions['selected']['max_height']], 'text' => l10n('between %d and %d pixels')],
             'ratios'    => ['values' => array_map(floatval(...), explode(',', $dimensions['ratios'])),   'selected' => ['min' => $dimensions['selected']['min_ratio'],  'max' => $dimensions['selected']['max_ratio']],  'text' => l10n('between %.2f and %.2f')],
-            'filesizes' => ['values' => array_map(floatval(...), explode(',', $filesize['list'])),       'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],                  'text' => l10n('between %s and %s MB')],
+            'filesizes' => ['values' => array_map(floatval(...), explode(',', (string) $filesize['list'])),       'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],                  'text' => l10n('between %s and %s MB')],
         ];
 
         $filter_category_selected_val = $selected_category ?? null;
@@ -953,7 +954,7 @@ final class BatchManagerController
                     explode(',', calculate_permissions($user['id'], is_string($user['status']) ? $user['status'] : ''))
                 );
 
-                $catNames = \Piwigo\Cache\RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $url_img  = null;
                 if (isset($row['cat_id']) && in_array($row['cat_id'], $authorizeds)) {
                     $url_img = make_picture_url(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);

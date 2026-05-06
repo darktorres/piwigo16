@@ -16,12 +16,12 @@ use Psr\Http\Server\RequestHandlerInterface;
  * the fallback handler is invoked.  This class is immutable — process() creates
  * a new instance for each layer, so the original pipeline can be reused.
  */
-final class MiddlewarePipeline implements RequestHandlerInterface
+final readonly class MiddlewarePipeline implements RequestHandlerInterface
 {
     /** @param list<MiddlewareInterface> $middleware */
     public function __construct(
-        private readonly array                  $middleware,
-        private readonly RequestHandlerInterface $fallback,
+        private array                  $middleware,
+        private RequestHandlerInterface $fallback,
     ) {
     }
 

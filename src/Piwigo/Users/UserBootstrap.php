@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\PwgError;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 
@@ -77,8 +79,8 @@ final class UserBootstrap
                 if (!$authenticated) {
                     require_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
                     $serviceRaw = $GLOBALS['service'] ?? null;
-                    if ($serviceRaw instanceof \Piwigo\Ws\PwgServer) {
-                        $serviceRaw->sendResponse(new \Piwigo\Ws\PwgError(401, 'Invalid api_key'));
+                    if ($serviceRaw instanceof PwgServer) {
+                        $serviceRaw->sendResponse(new PwgError(401, 'Invalid api_key'));
                     }
                     exit;
                 }
@@ -106,7 +108,7 @@ final class UserBootstrap
                 'password' => $_POST['password'],
             ];
             $serviceRaw = $GLOBALS['service'] ?? null;
-            if ($serviceRaw instanceof \Piwigo\Ws\PwgServer) {
+            if ($serviceRaw instanceof PwgServer) {
                 $login = ws_session_login($credentials, $serviceRaw);
                 if (true !== $login) {
                     $serviceRaw->sendResponse($login);

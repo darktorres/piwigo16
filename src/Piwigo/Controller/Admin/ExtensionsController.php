@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Exception\AuthException;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
@@ -379,7 +380,7 @@ final class ExtensionsController
 
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-        if (!isset($pwg_loaded_plugins[$plugin_id])) { throw new \Piwigo\Exception\AuthException('Invalid URL - plugin ' . $plugin_id . ' not active'); }
+        if (!isset($pwg_loaded_plugins[$plugin_id])) { throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active'); }
 
         $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
         if (is_file($filename)) { require_once $filename; }
@@ -774,13 +775,13 @@ final class ExtensionsController
         }
 
         if (isset($_GET['installstatus'])) {
-            switch ($_GET['installstatus']) {
-                case 'ok':               PageState::current()->addInfo(l10n('Language has been successfully installed')); break;
-                case 'temp_path_error':  PageState::current()->addError(l10n('Can\'t create temporary file.')); break;
-                case 'dl_archive_error': PageState::current()->addError(l10n('Can\'t download archive.')); break;
-                case 'archive_error':    PageState::current()->addError(l10n('Can\'t read or extract archive.')); break;
-                default:                 PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
-            }
+            match ($_GET['installstatus']) {
+                'ok' => PageState::current()->addInfo(l10n('Language has been successfully installed')),
+                'temp_path_error' => PageState::current()->addError(l10n('Can\'t create temporary file.')),
+                'dl_archive_error' => PageState::current()->addError(l10n('Can\'t download archive.')),
+                'archive_error' => PageState::current()->addError(l10n('Can\'t read or extract archive.')),
+                default => PageState::current()->addError(l10n('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : ''))),
+            };
         }
 
         if ($languages->get_server_languages(true)) {

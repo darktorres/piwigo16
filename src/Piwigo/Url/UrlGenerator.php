@@ -24,11 +24,11 @@ use Piwigo\Routing\Router;
  *
  * @see UrlService  lower-level URL building used by legacy callers
  */
-final class UrlGenerator
+final readonly class UrlGenerator
 {
     public function __construct(
-        private readonly Router     $router,
-        private readonly UrlService $urls,
+        private Router     $router,
+        private UrlService $urls,
     ) {}
 
     // ── Gallery / browse (delegate sub-token building to UrlService) ──────────

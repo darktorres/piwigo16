@@ -19,7 +19,7 @@ final class RequestFactory
     public static function fromGlobals(): ServerRequestInterface
     {
         $factory = new Psr17Factory();
-        $request = (new ServerRequestCreator($factory, $factory, $factory, $factory))
+        $request = new ServerRequestCreator($factory, $factory, $factory, $factory)
             ->fromGlobals();
 
         return $request->withAttribute('_route_path', PathExtractor::fromServer($_SERVER));

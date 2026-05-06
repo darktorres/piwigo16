@@ -24,23 +24,23 @@ namespace Piwigo\Ws;
  *       requiresAuth: false,
  *   ));
  */
-final class MethodDefinition
+final readonly class MethodDefinition
 {
     /**
      * @param list<ParamDefinition> $params
      * @param list<string>          $tags
      */
     public function __construct(
-        public readonly string $name,
-        public readonly mixed $callback,
-        public readonly string $description = '',
-        public readonly array $params = [],
-        public readonly string $returns = '',
-        public readonly array $tags = [],
-        public readonly bool $requiresAuth = false,
-        public readonly bool $postOnly = false,
-        public readonly bool $hidden = false,
-        public readonly string $includeFile = '',
+        public string $name,
+        public mixed $callback,
+        public string $description = '',
+        public array $params = [],
+        public string $returns = '',
+        public array $tags = [],
+        public bool $requiresAuth = false,
+        public bool $postOnly = false,
+        public bool $hidden = false,
+        public string $includeFile = '',
     ) {
     }
 }

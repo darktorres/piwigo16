@@ -19,9 +19,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  * exist (Wave-A/B migration in progress), the next handler (FallbackHandler)
  * is called instead.
  */
-final class ControllerInvokerMiddleware implements MiddlewareInterface
+final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
 {
-    public function __construct(private readonly ContainerInterface $container)
+    public function __construct(private ContainerInterface $container)
     {
     }
 

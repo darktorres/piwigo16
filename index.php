@@ -17,6 +17,6 @@ define('PHPWG_ROOT_PATH', './');
 require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 Kernel::boot();
 
-(new ResponseEmitter())->emit(
+new ResponseEmitter()->emit(
     Kernel::handle(RequestFactory::fromGlobals())
 );

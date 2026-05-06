@@ -18,7 +18,7 @@ use Symfony\Component\Routing\RouteCollection;
  * from the same RouteCollection, so route names are the single source of
  * truth for both incoming and outgoing URLs.
  */
-final class Router
+final readonly class Router
 {
     private RouteCollection $routes;
 
@@ -38,7 +38,7 @@ final class Router
     {
         $context = new RequestContext('', $method);
         try {
-            $params  = (new UrlMatcher($this->routes, $context))->match($path);
+            $params  = new UrlMatcher($this->routes, $context)->match($path);
             $handler = is_string($params['_controller'] ?? null) ? $params['_controller'] : '';
             unset($params['_controller'], $params['_route']);
             // Coerce Symfony's scalar route params to string[]
@@ -62,6 +62,6 @@ final class Router
     public function generate(string $routeName, array $params = [], string $baseUrl = ''): string
     {
         $context = new RequestContext($baseUrl);
-        return (new SymfonyUrlGenerator($this->routes, $context))->generate($routeName, $params);
+        return new SymfonyUrlGenerator($this->routes, $context)->generate($routeName, $params);
     }
 }

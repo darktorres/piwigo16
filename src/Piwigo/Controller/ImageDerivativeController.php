@@ -97,9 +97,9 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         $ctx->coi = null;
-        if (strpos($ctx->srcLocation, '/pwg_representative/') === false
-            && strpos($ctx->srcLocation, 'themes/') === false
-            && strpos($ctx->srcLocation, 'plugins/') === false
+        if (!str_contains($ctx->srcLocation, '/pwg_representative/')
+            && !str_contains($ctx->srcLocation, 'themes/')
+            && !str_contains($ctx->srcLocation, 'plugins/')
         ) {
             try {
                 $query = '

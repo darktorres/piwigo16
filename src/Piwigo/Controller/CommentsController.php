@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Db\SqlExpr;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Http\ResponseFactory;
@@ -50,9 +51,9 @@ final class CommentsController implements ControllerInterface
         }
 
         $since_options = [
-            1 => ['label' => l10n('today'),              'clause' => 'date > ' . \Piwigo\Db\SqlExpr::recentPeriodExpr(1)],
-            2 => ['label' => l10n('last %d days', 7),    'clause' => 'date > ' . \Piwigo\Db\SqlExpr::recentPeriodExpr(7)],
-            3 => ['label' => l10n('last %d days', 30),   'clause' => 'date > ' . \Piwigo\Db\SqlExpr::recentPeriodExpr(30)],
+            1 => ['label' => l10n('today'),              'clause' => 'date > ' . SqlExpr::recentPeriodExpr(1)],
+            2 => ['label' => l10n('last %d days', 7),    'clause' => 'date > ' . SqlExpr::recentPeriodExpr(7)],
+            3 => ['label' => l10n('last %d days', 30),   'clause' => 'date > ' . SqlExpr::recentPeriodExpr(30)],
             4 => ['label' => l10n('the beginning'),      'clause' => '1=1'],
         ];
 
@@ -113,7 +114,7 @@ final class CommentsController implements ControllerInterface
         $get_keyword = input_string('keyword', null, $_GET);
         if (!empty($get_keyword)) {
             $page['where_clauses'][] = '(' . implode(' AND ', array_map(
-                function (string $s): string { return "content LIKE '%$s%'"; },
+                fn(string $s): string => "content LIKE '%$s%'",
                 preg_split('/[\s,;]+/', $get_keyword) ?: []
             )) . ')';
         }
@@ -301,7 +302,7 @@ SELECT *
                 $cAuthorId    = is_numeric($comment['author_id'])   ? (int) $comment['author_id']   : 0;
 
                 /** @var array<string, float|int|string|null> $element_row */
-                $element_row  = isset($elements[(string) $cImageId]) ? $elements[(string) $cImageId] : [];
+                $element_row  = $elements[(string) $cImageId] ?? [];
                 $name         = !empty($element_row['name']) ? (string) $element_row['name'] : get_name_from_file((string) ($element_row['file'] ?? ''));
                 $src_image    = new SrcImage($element_row);
                 $url          = make_picture_url([

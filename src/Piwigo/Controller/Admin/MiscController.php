@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Exception\AuthException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
@@ -379,7 +380,7 @@ final class MiscController
             if ($help_content == false) { $help_content = ''; }
             $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
         } else {
-            throw new \Piwigo\Exception\AuthException('Hacking attempt!');
+            throw new AuthException('Hacking attempt!');
         }
 
         $tpl->set_filename('popuphelp', 'popuphelp.tpl');
@@ -661,7 +662,7 @@ final class MiscController
 
     // ── index ─────────────────────────────────────────────────────────────────
 
-    private function index(): void
+    private function index(): never
     {
         $url = '../';
         header('Request-URI: ' . $url);
@@ -775,7 +776,7 @@ final class MiscController
             $tpl_image     = ['id' => $image['id'], 'U_THUMB' => $thumbnail_src, 'U_URL' => $image_url, 'SCORE_RATE' => $image['score'], 'AVG_RATE' => $image['avg_rates'], 'SUM_RATE' => $image['sum_rates'], 'NB_RATES' => is_numeric($image['nb_rates']) ? (int) $image['nb_rates'] : 0, 'NB_RATES_TOTAL' => count($all_rates), 'FILE' => $image['file'], 'rates' => []];
             foreach ($all_rates as $row) {
                 $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
-                $user_rate = isset($users[$user_id]) ? $users[$user_id] : '? ' . $user_id;
+                $user_rate = $users[$user_id] ?? '? ' . $user_id;
                 $anon_id_str = is_scalar($row['anonymous_id']) ? (string) $row['anonymous_id'] : '';
                 if (strlen($anon_id_str) > 0) { $user_rate .= '(' . $anon_id_str . ')'; }
                 $row['USER'] = $user_rate;
@@ -1003,7 +1004,7 @@ final class MiscController
         $return_list = [];
 
         if (in_array($action, ['list_to_send', 'send'])) {
-            $dbnow         = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+            $dbnow         = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $is_action_send = ($action == 'send');
             $data_users    = get_user_notifications('send', $check_key_list);
             $is_list_all_without_test = ($ctx->isSendmailTimeout || Config::nbmListAllEnabledUsersToSend());

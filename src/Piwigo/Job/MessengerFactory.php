@@ -52,9 +52,9 @@ final class MessengerFactory
             $messengerConfig['routing']
         );
 
-        $transportMap = new class (['async' => $asyncTransport, 'failed' => $failedTransport]) implements ContainerInterface {
+        $transportMap = new readonly class (['async' => $asyncTransport, 'failed' => $failedTransport]) implements ContainerInterface {
             /** @param array<string, DoctrineTransport> $transports */
-            public function __construct(private readonly array $transports)
+            public function __construct(private array $transports)
             {
             }
 

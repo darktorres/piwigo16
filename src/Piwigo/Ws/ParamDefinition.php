@@ -13,16 +13,16 @@ namespace Piwigo\Ws;
  *
  * @phpstan-import-type WsParamDef from PwgServer
  */
-final class ParamDefinition
+final readonly class ParamDefinition
 {
     private function __construct(
-        public readonly string $name,
-        public readonly int $type,
-        public readonly int $flags,
-        public readonly mixed $default,
-        public readonly bool $hasDefault,
-        public readonly int|float|null $maxValue,
-        public readonly string $info,
+        public string $name,
+        public int $type,
+        public int $flags,
+        public mixed $default,
+        public bool $hasDefault,
+        public int|float|null $maxValue,
+        public string $info,
     ) {
     }
 

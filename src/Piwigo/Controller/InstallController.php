@@ -193,7 +193,7 @@ final class InstallController implements ControllerInterface
                 mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
                 create_user_infos([1, 2], ['language' => $language]);
 
-                define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+                define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
                 $datas = [];
                 foreach (get_available_upgrade_ids() as $upgrade_id) {
                     $datas[] = ['id' => $upgrade_id, 'applied' => CURRENT_DATE, 'description' => 'upgrade included in installation'];

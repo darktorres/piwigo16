@@ -14,7 +14,7 @@ namespace Piwigo\Ws\OpenApi;
  *   public function getVersion(...): string { ... }
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_FUNCTION)]
-final class ApiMethod
+final readonly class ApiMethod
 {
     /**
      * @param string   $summary       Short one-line description (overrides addMethod description).
@@ -22,9 +22,9 @@ final class ApiMethod
      * @param string[] $tags          OpenAPI tag names for grouping in Swagger UI.
      */
     public function __construct(
-        public readonly string $summary = '',
-        public readonly string $responseClass = '',
-        public readonly array $tags = [],
+        public string $summary = '',
+        public string $responseClass = '',
+        public array $tags = [],
     ) {
     }
 }

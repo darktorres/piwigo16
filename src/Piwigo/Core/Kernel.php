@@ -85,7 +85,7 @@ final class Kernel
             throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
         }
 
-        return (new MiddlewarePipeline(
+        return new MiddlewarePipeline(
             [
                 ServiceLocator::get(ExceptionHandlerMiddleware::class),
                 ServiceLocator::get(SessionMiddleware::class),
@@ -96,7 +96,7 @@ final class Kernel
                 ServiceLocator::get(ControllerInvokerMiddleware::class),
             ],
             ServiceLocator::get(FallbackHandler::class),
-        ))->handle($request);
+        )->handle($request);
     }
 
     public static function container(): ContainerInterface

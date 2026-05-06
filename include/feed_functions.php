@@ -27,5 +27,6 @@ function ts_to_iso8601(int $ts): string
 class PiwigoFeedCreator extends UniversalFeedCreator
 {
     /** @var string */
+    #[\Override]
     public $encoding = 'UTF-8';
 }

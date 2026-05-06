@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Core\PageState;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
@@ -38,13 +39,13 @@ final class PasswordController implements ControllerInterface
 
             if ('lost' == $get_action) {
                 if (process_verification_code()) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
+                    PageState::current()->addInfo(l10n('If your account exists, a verification code has been sent to your email address.'));
                     $page['action'] = 'lost_code';
                 }
             }
             if ('lost_code' == $get_action) {
                 if (process_password_request()) {
-                    \Piwigo\Core\PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
+                    PageState::current()->addInfo(l10n('Verification successful! You can now choose a new password.'));
                     $page['action'] = 'reset';
                 }
             }

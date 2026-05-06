@@ -47,7 +47,7 @@ final class FeedController implements ControllerInterface
 
         check_status(ACCESS_GUEST);
 
-        $dbnow = (new \DateTimeImmutable())->format('Y-m-d H:i:s');
+        $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         set_make_full_url();
 
         $rss           = new \PiwigoFeedCreator();
@@ -86,7 +86,7 @@ final class FeedController implements ControllerInterface
             $lastCheck = isset($feed_row['last_check']) && is_scalar($feed_row['last_check'])
                 ? (string) $feed_row['last_check'] : '';
             if (!isset($feed_row['last_check']) || time() - datetime_to_ts($lastCheck) > 30 * 24 * 3600) {
-                $keepAliveDate = (new \DateTimeImmutable($dbnow))->modify('+15 days')->format('Y-m-d H:i:s');
+                $keepAliveDate = new \DateTimeImmutable($dbnow)->modify('+15 days')->format('Y-m-d H:i:s');
                 ServiceLocator::get(FeedRepository::class)->updateLastCheck((string) $feed_id, $keepAliveDate);
             }
         }

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Filesystem;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
@@ -35,13 +38,13 @@ if (!function_exists('mkgetdir')) {
     function mkgetdir(string $dir, int $flags = 0): bool
     {
         if (!is_dir($dir)) {
-            if (substr(PHP_OS, 0, 3) == 'WIN') {
+            if (str_starts_with(PHP_OS, 'WIN')) {
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
             $umask = umask(0);
             set_error_handler(static fn (): bool => true);
             try {
-                $mkd = mkdir($dir, \Piwigo\Config\Config::chmodValue(), true);
+                $mkd = mkdir($dir, Config::chmodValue(), true);
             } finally {
                 restore_error_handler();
             }
@@ -84,7 +87,7 @@ if (!function_exists('safe_unserialize')) {
 
 function ierror(string $msg, int $code): never
 {
-    $logger = \Piwigo\Core\LoggerRegistry::current();
+    $logger = LoggerRegistry::current();
     if ($code == 301 || $code == 302) {
         if (ob_get_length() !== false) {
             ob_clean();
@@ -157,7 +160,7 @@ function parse_custom_params(array $tokens): DerivativeParams
 
 function parse_request(ImageDerivativeContext $ctx): DerivativeParams
 {
-    if (\Piwigo\Config\Config::questionMarkInUrls() == false
+    if (Config::questionMarkInUrls() == false
         && isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])
     ) {
         $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
@@ -176,7 +179,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     $req = ltrim($req, '/');
 
     foreach (preg_split('#/+#', $req) ?: [] as $token) {
-        preg_match(\Piwigo\Config\Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
+        preg_match(Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
     $ctx->derivativePath = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
@@ -293,7 +296,7 @@ function try_switch_source(DerivativeParams $params, ?int $original_mtime, Image
     }
     foreach (array_reverse($candidates) as $candidate) {
         $candidate_path  = str_replace('-' . derivative_to_url($params->type), '-' . derivative_to_url($candidate->type), $ctx->derivativePath);
-        $candidate_mtime = \Piwigo\Core\Filesystem::tryFileMtime($candidate_path);
+        $candidate_mtime = Filesystem::tryFileMtime($candidate_path);
         if ($candidate_mtime === false
             || $candidate_mtime < $original_mtime
             || $candidate_mtime < $candidate->last_mod_time

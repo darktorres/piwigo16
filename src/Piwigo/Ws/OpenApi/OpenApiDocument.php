@@ -7,10 +7,10 @@ namespace Piwigo\Ws\OpenApi;
 /**
  * Immutable value object wrapping an OpenAPI 3.1 document.
  */
-final class OpenApiDocument
+final readonly class OpenApiDocument
 {
     /** @param array<mixed> $spec */
-    public function __construct(private readonly array $spec)
+    public function __construct(private array $spec)
     {
     }
 

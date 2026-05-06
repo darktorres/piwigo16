@@ -44,7 +44,7 @@ final class SearchController implements ControllerInterface
 
         $filters_conf = [];
         foreach ($filters_views as $filter_name => $filter_value) {
-            $key                 = isset($filter_rename_for[$filter_name]) ? $filter_rename_for[$filter_name] : $filter_name;
+            $key                 = $filter_rename_for[$filter_name] ?? $filter_name;
             $filters_conf[$key]  = $filter_value;
         }
 

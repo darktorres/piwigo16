@@ -87,7 +87,7 @@ final class UpgradeController implements ControllerInterface
 
         upgrade_db_connect();
 
-        define('CURRENT_DATE', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+        define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'roma');
         TemplateRegistry::set($tpl);

@@ -359,23 +359,23 @@ final class AdminController implements ControllerInterface
     private function dispatchToSubController(string $page): void
     {
         if (in_array($page, AlbumController::PAGES, true)) {
-            (new AlbumController())->handle($page);
+            new AlbumController()->handle($page);
         } elseif (in_array($page, PhotoController::PAGES, true)) {
-            (new PhotoController())->handle($page);
+            new PhotoController()->handle($page);
         } elseif (in_array($page, BatchManagerController::PAGES, true)) {
-            (new BatchManagerController())->handle($page);
+            new BatchManagerController()->handle($page);
         } elseif (in_array($page, ConfigurationController::PAGES, true)) {
-            (new ConfigurationController())->handle($page);
+            new ConfigurationController()->handle($page);
         } elseif (in_array($page, UsersController::PAGES, true)) {
-            (new UsersController())->handle($page);
+            new UsersController()->handle($page);
         } elseif (in_array($page, GroupsController::PAGES, true)) {
-            (new GroupsController())->handle($page);
+            new GroupsController()->handle($page);
         } elseif (in_array($page, ExtensionsController::PAGES, true)) {
-            (new ExtensionsController())->handle($page);
+            new ExtensionsController()->handle($page);
         } elseif (in_array($page, MaintenanceController::PAGES, true)) {
-            (new MaintenanceController())->handle($page);
+            new MaintenanceController()->handle($page);
         } else {
-            (new MiscController())->handle($page);
+            new MiscController()->handle($page);
         }
     }
 }

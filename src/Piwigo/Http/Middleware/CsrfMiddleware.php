@@ -24,7 +24,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class CsrfMiddleware implements MiddlewareInterface
 {
-    private const EXEMPT_PREFIXES = [
+    private const array EXEMPT_PREFIXES = [
         '/ws',
         '/install',
         '/upgrade',
@@ -49,11 +49,6 @@ final class CsrfMiddleware implements MiddlewareInterface
 
     private function isExempt(string $path): bool
     {
-        foreach (self::EXEMPT_PREFIXES as $prefix) {
-            if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
-                return true;
-            }
-        }
-        return false;
+        return array_any(self::EXEMPT_PREFIXES, fn($prefix): bool => $path === $prefix || str_starts_with($path, $prefix . '/'));
     }
 }

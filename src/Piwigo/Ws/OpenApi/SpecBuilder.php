@@ -20,11 +20,11 @@ use Piwigo\Ws\WsType;
  * @phpstan-import-type WsMethod   from PwgServer
  * @phpstan-import-type WsParamDef from PwgServer
  */
-final class SpecBuilder
+final readonly class SpecBuilder
 {
     public function __construct(
-        private readonly PwgServer $server,
-        private readonly string $serverUrl = '',
+        private PwgServer $server,
+        private string $serverUrl = '',
     ) {
     }
 
@@ -112,7 +112,7 @@ final class SpecBuilder
                 }
             }
 
-            $info = isset($paramDef['info']) ? $paramDef['info'] : '';
+            $info = $paramDef['info'] ?? '';
 
             if ($isPost) {
                 if ($info !== '') {

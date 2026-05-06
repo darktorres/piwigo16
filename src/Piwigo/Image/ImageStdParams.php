@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ServiceLocator;
 
 /**
@@ -144,7 +145,7 @@ final class ImageStdParams
             self::save(false);
         }
 
-        $rawDisabled = safe_unserialize(self::get_disabled_type_map());
+        $rawDisabled = \safe_unserialize(self::get_disabled_type_map());
         $filteredDisabled = [];
         foreach ($rawDisabled as $k => $v) {
             if ($v instanceof DerivativeParams) {
@@ -185,13 +186,16 @@ final class ImageStdParams
      */
     public static function save(bool $save_disabled = true): void
     {
+        if (!ServiceLocator::has(ConfigService::class)) {
+            return;
+        }
         $ser = serialize([
           'd' => self::$type_map,
           'q' => self::$quality,
           'w' => self::$watermark,
           'c' => self::$custom,
           ]);
-        conf_update_param('derivatives', addslashes($ser));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('derivatives', addslashes($ser));
 
         if ($save_disabled) {
             self::save_disabled();
@@ -203,9 +207,12 @@ final class ImageStdParams
      */
     public static function save_disabled(): void
     {
+        if (!ServiceLocator::has(ConfigService::class)) {
+            return;
+        }
         if (count(self::$disabled_type_map) > 0) {
             $disabled = addslashes(serialize(self::$disabled_type_map));
-            conf_update_param('disabled_derivatives', $disabled);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
         } else {
             ServiceLocator::get(Connection::class)->executeStatement(
                 'DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\''

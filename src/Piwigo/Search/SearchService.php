@@ -134,7 +134,7 @@ final readonly class SearchService
         }
 
         $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
-        if (isset($searchFields['allwords']) and !empty($allwordsFields['words']) and count(is_array($allwordsFields['fields'] ?? null) ? $allwordsFields['fields'] : []) > 0 and $allwordsFilter['access']) {
+        if (isset($searchFields['allwords']) and !empty($allwordsFields['words']) and count(is_array($allwordsFields['fields'] ?? null) ? $allwordsFields['fields'] : []) > 0 and ($allwordsFilter['access'] ?? false)) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
             $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($allwordsFields['fields'] ?? null) ? $allwordsFields['fields'] : []);

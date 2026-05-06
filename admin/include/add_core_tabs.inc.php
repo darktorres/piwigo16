@@ -119,9 +119,9 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'nbm':
-            $sheets['param'] = ['caption' => l10n('Parameter'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=param'];
-            $sheets['subscribe'] = ['caption' => l10n('Subscribe'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=subscribe'];
-            $sheets['send'] = ['caption' => l10n('Send'), 'url' => $base_url.'?page=notification_by_mail&amp;mode=send'];
+            $sheets['param'] = ['caption' => l10n('Parameter'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=param'];
+            $sheets['subscribe'] = ['caption' => l10n('Subscribe'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=subscribe'];
+            $sheets['send'] = ['caption' => l10n('Send'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=send'];
             break;
 
         case 'photo':

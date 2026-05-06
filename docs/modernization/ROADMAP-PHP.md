@@ -1731,7 +1731,7 @@ require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 | Controller | Pages handled |
 |---|---|
-| `AlbumController` | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks *(fully inlined)* |
+| `AlbumController` | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks |
 | `PhotoController` | photo, picture_modify/coi/formats, photos_add, photos_add_direct/ftp/applications |
 | `BatchManagerController` | batch_manager, batch_manager_global/unit, queue |
 | `ConfigurationController` | configuration |
@@ -1741,9 +1741,9 @@ require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 | `MaintenanceController` | maintenance + sub-tabs, history, stats, site_manager, site_reader_local, site_update |
 | `MiscController` | notification_by_mail, permalinks, tags, help, popuphelp, intro, menubar, index, comments, rating, rating_user, profile |
 
-`AlbumController` page bodies are fully inlined into class methods. All other sub-controllers use explicit static `require` inside typed methods — the dispatch is static and named, eliminating the dynamic-filename anti-pattern. Complex sub-pages (batch_manager 819 lines, site_update 975 lines, etc.) continue to supply their bodies from `admin/*.php` files.
+All 63 admin pages are **fully inlined** — page bodies moved into private class methods. Free functions defined in the original files become private methods (e.g. `cmpDay()`, `parseSortVariables()`, `getCategoriesRefDate()`). No `admin/*.php` files are `require()`d from within the controller classes; the dynamic-filename dispatch is completely eliminated.
 
-Wave B is **complete** — all admin pages now dispatch through named, typed methods.
+Wave B is **complete** — all 63 admin pages fully converted to typed class methods.
 
 ### Remaining steps
 

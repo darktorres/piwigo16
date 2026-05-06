@@ -134,15 +134,15 @@ class Template
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
-        $this->smarty->registerPlugin('modifier', 'l10n', 'l10n');
+        $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', 'is_admin');
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', 'is_classic_user');
+        $this->smarty->registerPlugin('modifier', 'is_admin', is_admin(...));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', is_classic_user(...));
         $this->smarty->registerPlugin('modifier', 'get_device', 'get_device');
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
-        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', 'get_gallery_home_url');
+        $this->smarty->registerPlugin('modifier', 'get_gallery_home_url', fn(mixed ...$_): string => ServiceLocator::get(UrlGenerator::class)->gallery());
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 

@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Integrity;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -204,7 +205,7 @@ class C13yInternal
                             $updates
                         );
 
-                        PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), get_username($id)));
+                        PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), ServiceLocator::get(UserAdminService::class)->getUsername($id)));
 
                         $result = true;
                     }

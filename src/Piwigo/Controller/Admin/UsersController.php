@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -272,12 +275,12 @@ final class UsersController
             ServiceLocator::get(PermissionRepository::class)->deleteUserAccessForUser($pageUser, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
             $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
-            add_permission_on_category($post_cat_false_ids, $pageUser);
+            ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
         $tpl->set_filenames(['user_perm' => 'user_perm.tpl', 'double_select' => 'double_select.tpl']);
         $tpl->assign([
-            'TITLE'              => l10n('Manage permissions for user "%s"', get_username($pageUser)),
+            'TITLE'              => l10n('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
             'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&amp;user_id=' . $pageUser,
@@ -370,7 +373,7 @@ final class UsersController
         $tpl->set_filename('user_activity', 'user_activity.tpl');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 
-        $cache_keys = get_admin_client_cache_keys(['users']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['users']);
         $tpl->assign([
             'PWG_TOKEN'                    => get_pwg_token(),
             'INHERIT'                      => Config::inheritanceByDefault(),

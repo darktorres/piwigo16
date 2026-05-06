@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -102,7 +103,7 @@ final class ImageAdminService
         $imgRepo->deleteByIds($ids);
         $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
         if (count($categoryIds) > 0) {
-            update_category($categoryIds);
+            ServiceLocator::get(CategoryAdminService::class)->updateCategory($categoryIds);
         }
         trigger_notify('delete_elements', $ids);
         pwg_activity('photo', $ids, 'delete');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\PageState;
@@ -468,7 +469,7 @@ class Updates
                 if (is_file($path)) {
                     Filesystem::tryUnlink($path);
                 } elseif (is_dir($path)) {
-                    deltree($path, PHPWG_ROOT_PATH.'_trash');
+                    ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_ROOT_PATH.'_trash');
                 }
             }
         }
@@ -578,8 +579,8 @@ class Updates
                             self::process_obsolete_list($obsolete_list);
                         }
 
-                        deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
-                        invalidate_user_cache(true);
+                        ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                        ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
                         pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', ['from_version' => PHPWG_VERSION, 'to_version' => $upgrade_to]);
 
@@ -607,7 +608,7 @@ class Updates
                         ));
                     }
                 } else {
-                    deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                    ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
                     PageState::current()->addError(l10n('An error has occured during upgrade.'));
                 }
             } else {

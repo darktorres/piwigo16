@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Upload\DirectPreparer;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -73,7 +79,7 @@ final class PhotoController
         $this->adminPhotoBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_str);
         $GLOBALS['admin_photo_base_url'] = $this->adminPhotoBaseUrl;
 
-        $page['image'] = get_image_infos($image_id_str, true);
+        $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos($image_id_str, true);
 
         if (isset($_GET['cat_id'])) {
             $GLOBALS['category'] = ServiceLocator::get(CategoryRepository::class)
@@ -129,7 +135,7 @@ final class PhotoController
         $admin_photo_base_url = $this->adminPhotoBaseUrl;
 
         if (!isset($page['image'])) {
-            $page['image'] = get_image_infos($image_id_str, true);
+            $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos($image_id_str, true);
         }
 
         $query = '
@@ -141,8 +147,8 @@ SELECT id
 
         if (isset($_GET['delete'])) {
             check_pwg_token();
-            delete_elements([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0], true);
-            invalidate_user_cache();
+            ServiceLocator::get(ImageAdminService::class)->deleteElements([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0], true);
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
 
             if ($custom_context = get_edit_context(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
                 redirect(str_replace('list/1,2', $custom_context, make_index_url(['list' => [1, 2]])));
@@ -151,7 +157,7 @@ SELECT id
         }
 
         if (isset($_GET['sync_metadata'])) {
-            sync_metadata([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0]);
+            ServiceLocator::get(MetadataAdminService::class)->syncMetadata([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0]);
             PageState::current()->addInfo(l10n('Metadata synchronized from file'));
         }
 
@@ -176,23 +182,23 @@ SELECT id
             if (!empty($_POST['tags'])) {
                 $tags_post = $_POST['tags'];
                 if (is_scalar($tags_post)) {
-                    $tag_ids = get_tag_ids((string) $tags_post);
+                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds((string) $tags_post);
                 } elseif (is_array($tags_post)) {
-                    $tag_ids = get_tag_ids(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $tags_post));
+                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $tags_post));
                 }
             }
-            set_tags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
+            ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
 
             if (!isset($_POST['associate'])) {
                 $_POST['associate'] = [];
             }
             check_input_parameter('associate', $_POST, true, PATTERN_ID);
-            move_images_to_categories(
+            ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories(
                 [is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0],
                 is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
             );
 
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
 
             if (!isset($_POST['represent'])) {
                 $_POST['represent'] = [];
@@ -204,7 +210,7 @@ SELECT id
 
             $no_longer = array_diff($represented_albums_int, $represent_post_int);
             if (count($no_longer) > 0) {
-                set_random_representant(array_values($no_longer));
+                ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant(array_values($no_longer));
             }
 
             $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
@@ -357,7 +363,7 @@ SELECT id
 
         $associated_albums = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
 
-        $cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
             'associated_albums'             => $associated_albums,
             'represented_albums'            => $represented_albums,
@@ -597,7 +603,7 @@ SELECT id
         if ($display_formats && $_GET['formats']) {
             check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
             $formatsId             = is_scalar($_GET['formats']) ? (string) $_GET['formats'] : '';
-            $formats_original_info = get_image_infos($formatsId);
+            $formats_original_info = ServiceLocator::get(ImageAdminService::class)->getImageInfos($formatsId);
             if ($formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
                 $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);

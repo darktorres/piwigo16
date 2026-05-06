@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -52,7 +54,7 @@ final class GroupsController
 
         $tpl->set_filenames(['group_list' => 'group_list.tpl']);
 
-        $cache_keys = get_admin_client_cache_keys(['groups', 'users']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
             'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
             'PWG_TOKEN'                 => get_pwg_token(),
@@ -166,12 +168,12 @@ final class GroupsController
                 $inserts[] = ['group_id' => $group_id, 'cat_id' => $to_autorize_id];
             }
             mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
         $tpl->set_filenames(['group_perm' => 'group_perm.tpl', 'double_select' => 'double_select.tpl']);
         $tpl->assign([
-            'TITLE'              => l10n('Manage permissions for group "%s"', get_groupname($group_id)),
+            'TITLE'              => l10n('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
             'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,

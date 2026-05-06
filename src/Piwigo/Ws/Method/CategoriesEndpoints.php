@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -384,11 +386,11 @@ final class CategoriesEndpoints
         }
         $catName   = (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) ? strip_tags(is_scalar($params['name']) ? (string) $params['name'] : '') : (is_scalar($params['name']) ? (string) $params['name'] : '');
         $catParent = is_numeric($params['parent']) ? (int) $params['parent'] : (is_string($params['parent']) ? $params['parent'] : null);
-        $creationOutput = create_virtual_category($catName, $catParent, $options);
+        $creationOutput = ServiceLocator::get(CategoryAdminService::class)->createVirtualCategory($catName, $catParent, $options);
         if (isset($creationOutput['error'])) {
             return new PwgError(500, is_scalar($creationOutput['error']) ? (string) $creationOutput['error'] : '');
         }
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return $creationOutput;
     }
 
@@ -434,7 +436,7 @@ final class CategoriesEndpoints
                 $orderNew[] = $singleCatId;
             }
         }
-        save_categories_order($orderNew);
+        ServiceLocator::get(CategoryAdminService::class)->saveCategoriesOrder($orderNew);
         return null;
     }
 
@@ -455,7 +457,7 @@ final class CategoriesEndpoints
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
             }
             if ($params['status'] !== $category['status']) {
-                set_cat_status([$categoryId], is_scalar($params['status']) ? (string) $params['status'] : '');
+                ServiceLocator::get(CategoryAdminService::class)->setCatStatus([$categoryId], is_scalar($params['status']) ? (string) $params['status'] : '');
             }
         }
         $update = ['id' => $categoryId];
@@ -466,7 +468,7 @@ final class CategoriesEndpoints
             }
         }
         if (!empty($params['visible']) && ($params['visible'] !== $category['visible'])) {
-            set_cat_visible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
+            ServiceLocator::get(CategoryAdminService::class)->setCatVisible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
         }
         $infoColumns    = ['name', 'comment', 'commentable'];
         $performUpdate  = false;
@@ -571,9 +573,9 @@ final class CategoriesEndpoints
         if (count($rawCategoryIds) === 0) {
             return null;
         }
-        delete_categories(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCategoryIds), $photoDeletionMode);
-        update_global_rank();
-        invalidate_user_cache();
+        ServiceLocator::get(CategoryAdminService::class)->deleteCategories(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCategoryIds), $photoDeletionMode);
+        ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return null;
     }
 
@@ -617,8 +619,8 @@ final class CategoriesEndpoints
                 return new PwgError(403, 'Unknown parent category id');
             }
         }
-        move_categories($categoryIds, $parentId);
-        invalidate_user_cache();
+        ServiceLocator::get(CategoryAdminService::class)->moveCategories($categoryIds, $parentId);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         $catDisplayName = '';
         foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
             $catDisplayName = get_cat_display_name_cache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');

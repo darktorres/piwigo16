@@ -6,6 +6,8 @@ namespace Piwigo\Users;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -109,14 +111,13 @@ final class UserBootstrap
             && isset($_POST['password'])
         ) {
             PwgServer::boot();
-            require_once PHPWG_ROOT_PATH . 'include/ws_functions/pwg.php';
             $credentials = [
                 'username' => $_POST['username'],
                 'password' => $_POST['password'],
             ];
             $serviceRaw = $GLOBALS['service'] ?? null;
             if ($serviceRaw instanceof PwgServer) {
-                $login = ws_session_login($credentials, $serviceRaw);
+                $login = ServiceLocator::get(GeneralEndpoints::class)->sessionLogin($credentials, $serviceRaw);
                 if (true !== $login) {
                     $serviceRaw->sendResponse($login);
                     exit();

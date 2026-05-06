@@ -86,7 +86,7 @@ class Languages
                 // Set default language to users who are using this language
                 ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, get_default_language());
 
-                deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
+                ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
                 break;
 
             case 'set_default':

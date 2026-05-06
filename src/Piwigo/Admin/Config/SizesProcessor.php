@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -37,7 +40,7 @@ final class SizesProcessor
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         /** @var string[] $pageErrors */
         $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        save_upload_form_config($updates, $pageErrors, $errors);
+        ServiceLocator::get(UploadService::class)->saveUploadFormConfig($updates, $pageErrors, $errors);
         $page['errors'] = $pageErrors;
         $GLOBALS['page'] = $page;
 
@@ -205,7 +208,7 @@ final class SizesProcessor
             ImageStdParams::set_and_save_disabled($disabled);
 
             if (count($changed_types)) {
-                clear_derivative_cache($changed_types);
+                ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
             }
 
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);

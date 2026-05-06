@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -172,7 +175,7 @@ final class AlbumController
             }
 
             array_multisort($sort, $order_by_field === 'natural_order' ? SORT_NATURAL : SORT_REGULAR, 'ASC' == $order_by_asc ? SORT_ASC : SORT_DESC, $categories);
-            save_categories_order($categories);
+            ServiceLocator::get(CategoryAdminService::class)->saveCategoriesOrder($categories);
             $open_cat = is_scalar($_POST['id']) ? (string) $_POST['id'] : '-1';
         }
 
@@ -447,21 +450,21 @@ final class AlbumController
             if (isset($_GET['photo_deletion_mode'])) {
                 $photo_deletion_mode = $_GET['photo_deletion_mode'];
             }
-            delete_categories([(int) $_GET['delete']], is_scalar($photo_deletion_mode) ? (string) $photo_deletion_mode : 'no_delete');
+            ServiceLocator::get(CategoryAdminService::class)->deleteCategories([(int) $_GET['delete']], is_scalar($photo_deletion_mode) ? (string) $photo_deletion_mode : 'no_delete');
             $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
-            update_global_rank();
-            invalidate_user_cache();
+            ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
             $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
             if (isset($_GET['parent_id'])) {
                 $redirect_url .= '&parent_id=' . (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : '');
             }
             redirect($redirect_url);
         } elseif (isset($_POST['submitAdd'])) {
-            $output_create = create_virtual_category(
+            $output_create = ServiceLocator::get(CategoryAdminService::class)->createVirtualCategory(
                 is_scalar($_POST['virtual_name']) ? (string) $_POST['virtual_name'] : '',
                 isset($_GET['parent_id']) ? (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : null) : null
             );
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
             if (isset($output_create['error'])) {
                 PageState::current()->addError(is_scalar($output_create['error']) ? (string) $output_create['error'] : '');
             } else {
@@ -693,7 +696,7 @@ final class AlbumController
             'NB_SUBCATS'               => $category['nb_subcats'],
         ]);
 
-        $tpl->assign(['U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $catId, 'CACHE_KEYS' => get_admin_client_cache_keys(['categories'])]);
+        $tpl->assign(['U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $catId, 'CACHE_KEYS' => ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories'])]);
 
         if (!$category['is_virtual']) {
             $category['cat_full_dir'] = $this->getCompleteDir((string) $_GET['cat_id']);
@@ -774,8 +777,8 @@ final class AlbumController
             $current_section = is_scalar($_GET['section'] ?? null) ? (string) $_GET['section'] : '';
             match ($current_section) {
                 'comments'       => ServiceLocator::get(CategoryRepository::class)->setCommentable($cat_true, false),
-                'visible'        => set_cat_visible($cat_true, 'false'),
-                'status'         => set_cat_status($cat_true, 'private'),
+                'visible'        => ServiceLocator::get(CategoryAdminService::class)->setCatVisible($cat_true, 'false'),
+                'status'         => ServiceLocator::get(CategoryAdminService::class)->setCatStatus($cat_true, 'private'),
                 'representative' => ServiceLocator::get(CategoryRepository::class)->clearRepresentatives($cat_true),
                 default          => null,
             };
@@ -786,9 +789,9 @@ final class AlbumController
             $current_section = is_scalar($_GET['section'] ?? null) ? (string) $_GET['section'] : '';
             match ($current_section) {
                 'comments'       => ServiceLocator::get(CategoryRepository::class)->setCommentable($cat_false, true),
-                'visible'        => set_cat_visible($cat_false, 'true'),
-                'status'         => set_cat_status($cat_false, 'public'),
-                'representative' => set_random_representant($cat_false),
+                'visible'        => ServiceLocator::get(CategoryAdminService::class)->setCatVisible($cat_false, 'true'),
+                'status'         => ServiceLocator::get(CategoryAdminService::class)->setCatStatus($cat_false, 'public'),
+                'representative' => ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant($cat_false),
                 default          => null,
             };
             pwg_activity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
@@ -865,7 +868,7 @@ final class AlbumController
                 if (isset($_POST['apply_on_sub'])) {
                     $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
                 }
-                set_cat_status($cat_ids, $post_status);
+                ServiceLocator::get(CategoryAdminService::class)->setCatStatus($cat_ids, $post_status);
                 $category['status'] = $post_status;
             }
 
@@ -914,7 +917,7 @@ final class AlbumController
                     ServiceLocator::get(PermissionRepository::class)->deleteUserAccess(array_map(intval(...), $deny_users), array_map(intval(...), get_subcat_ids([$pageCat])));
                 }
                 if (count($post_users) > 0) {
-                    add_permission_on_category($pageCat, $post_users);
+                    ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($pageCat, $post_users);
                 }
             }
 
@@ -968,7 +971,7 @@ final class AlbumController
             }
         }
 
-        $cache_keys = get_admin_client_cache_keys(['groups', 'users']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
             'PWG_TOKEN'               => get_pwg_token(),
             'INHERIT'                 => Config::inheritanceByDefault(),

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Metadata\MetadataAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
@@ -208,7 +211,7 @@ final class UploadService
         if (Config::useExif() && !function_exists('exif_read_data')) {
             Config::override('use_exif', false);
         }
-        sync_metadata([$imageId]);
+        ServiceLocator::get(MetadataAdminService::class)->syncMetadata([$imageId]);
 
         $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
         if ($imageInfos === null) {
@@ -236,13 +239,13 @@ final class UploadService
         }
         if (isset($categories) && count($categories) > 0) {
             if (Config::loungeActive()) {
-                fill_lounge([$imageId], $categories);
+                ServiceLocator::get(CategoryAdminService::class)->fillLounge([$imageId], $categories);
             } else {
-                associate_images_to_categories([$imageId], $categories);
+                ServiceLocator::get(CategoryAdminService::class)->associateImagesToCategories([$imageId], $categories);
             }
         }
         if (!Config::loungeActive()) {
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
     }
 

@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Config\SizesProcessor;
 use Piwigo\Admin\Config\WatermarkProcessor;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -233,7 +234,7 @@ final class ConfigurationController
 
         if ($section === 'sizes' && isset($_GET['action']) && 'restore_settings' == $_GET['action']) {
             ImageStdParams::restore_default();
-            clear_derivative_cache();
+            ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
             load_conf_from_db();
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
             pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);

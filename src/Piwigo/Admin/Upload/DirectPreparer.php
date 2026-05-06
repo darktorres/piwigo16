@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -26,7 +27,7 @@ final class DirectPreparer
 
         if (PwgImage::get_library() == 'gd') {
             $fudge_factor = 1.7;
-            $available_memory = (int) get_ini_size('memory_limit') - memory_get_usage();
+            $available_memory = (int) ServiceLocator::get(UploadService::class)->getIniSize('memory_limit') - memory_get_usage();
             $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));
             $max_upload_height = round(2 * $max_upload_width / 3);
             $max_upload_width = round($max_upload_width / 100) * 100;
@@ -103,7 +104,7 @@ final class DirectPreparer
         ]);
 
         $setup_errors = [];
-        $error_message = ready_for_upload_message();
+        $error_message = ServiceLocator::get(UploadService::class)->readyForUploadMessage();
         if (!empty($error_message)) {
             $setup_errors[] = $error_message;
         }
@@ -112,7 +113,7 @@ final class DirectPreparer
         }
         $tpl->assign([
             'setup_errors' => $setup_errors,
-            'CACHE_KEYS' => get_admin_client_cache_keys(['categories']),
+            'CACHE_KEYS' => ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']),
         ]);
 
         if (isset($_GET['hide_warnings'])) {
@@ -123,18 +124,18 @@ final class DirectPreparer
             if (Config::useExif() && !function_exists('exif_read_data')) {
                 $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
             }
-            if (get_ini_size('upload_max_filesize') > get_ini_size('post_max_size')) {
+            if (ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') > ServiceLocator::get(UploadService::class)->getIniSize('post_max_size')) {
                 $setup_warnings[] = l10n(
                     'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
-                    get_ini_size('upload_max_filesize', false),
-                    get_ini_size('post_max_size', false)
+                    ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize', false),
+                    ServiceLocator::get(UploadService::class)->getIniSize('post_max_size', false)
                 );
             }
-            if (get_ini_size('upload_max_filesize') < Config::uploadFormChunkSize() * 1024) {
+            if (ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') < Config::uploadFormChunkSize() * 1024) {
                 $setup_warnings[] = sprintf(
                     'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
                     Config::uploadFormChunkSize(),
-                    ceil((int) get_ini_size('upload_max_filesize') / 1024)
+                    ceil((int) ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') / 1024)
                 );
             }
             $tpl->assign([

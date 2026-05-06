@@ -224,7 +224,7 @@ class Plugins
                 }
 
                 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-                deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
+                ServiceLocator::get(AdminService::class)->deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
                 break;
         }
 

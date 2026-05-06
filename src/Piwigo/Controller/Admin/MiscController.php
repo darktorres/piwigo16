@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -317,7 +320,7 @@ final class MiscController
 
         if (isset($_GET['action']) && 'delete_orphans' == $_GET['action']) {
             check_pwg_token();
-            delete_orphan_tags();
+            ServiceLocator::get(TagAdminService::class)->deleteOrphanTags();
             $_SESSION['message_tags'] = l10n('Orphan tags deleted');
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
@@ -326,7 +329,7 @@ final class MiscController
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
-        $orphan_tags      = get_orphan_tags();
+        $orphan_tags      = ServiceLocator::get(TagAdminService::class)->getOrphanTags();
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
             if (!is_array($tag)) {
@@ -491,7 +494,7 @@ final class MiscController
 
         $nb_orphans = is_numeric($page['nb_orphans'] ?? null) ? (int) $page['nb_orphans'] : 0;
         if (is_numeric($page['nb_photos_total'] ?? null) && (int) $page['nb_photos_total'] >= 100000) {
-            $nb_orphans = count_orphans();
+            $nb_orphans = ServiceLocator::get(ImageAdminService::class)->countOrphans();
         }
 
         if ($nb_orphans > 0) {
@@ -507,7 +510,7 @@ final class MiscController
             PageState::current()->addWarning($message);
         }
 
-        fs_quick_check();
+        ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
 
         $tpl->set_filenames(['intro' => 'intro.tpl']);
 
@@ -540,7 +543,7 @@ final class MiscController
         }
 
         if (Config::showPiwigoLatestNews()) {
-            $latest_news = get_piwigo_news();
+            $latest_news = ServiceLocator::get(AdminService::class)->getPiwigoNews();
             if (isset($latest_news['id']) && $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
                 PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', l10n('Latest Piwigo news'), is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '', time_since(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_scalar($latest_news['posted']) ? (string) $latest_news['posted'] : '') . ')', is_scalar($latest_news['subject']) ? (string) $latest_news['subject'] : ''));
             }
@@ -875,7 +878,7 @@ final class MiscController
         $nb_elements   = ServiceLocator::get(ImageRepository::class)->countRatings();
 
         $tpl->set_filename('rating', 'rating.tpl');
-        $cache_keys  = get_admin_client_cache_keys(['categories']);
+        $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
 
         $tpl->assign(['navbar' => create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);

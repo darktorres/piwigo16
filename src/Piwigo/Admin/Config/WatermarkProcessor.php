@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
@@ -153,7 +155,7 @@ final class WatermarkProcessor
             ImageStdParams::save();
 
             if (count($changed_types)) {
-                clear_derivative_cache($changed_types);
+                ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
             }
 
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Category;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -27,7 +29,7 @@ final readonly class CategoryAdminService
         $repo        = ServiceLocator::get(CategoryRepository::class);
         $intId       = is_numeric($id) ? (int) $id : 0;
         $categoryIds = $repo->findIdsBySiteId($intId);
-        delete_categories($categoryIds);
+        $this->deleteCategories($categoryIds);
         $repo->deleteSiteById($intId);
     }
 
@@ -39,7 +41,7 @@ final readonly class CategoryAdminService
         }
         $ids        = get_subcat_ids($ids);
         $elementIds = ServiceLocator::get(ImageRepository::class)->findIdsByStorageCategoryIds($ids);
-        delete_elements($elementIds);
+        ServiceLocator::get(ImageAdminService::class)->deleteElements($elementIds);
 
         if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
             $catRepo         = ServiceLocator::get(CategoryRepository::class);
@@ -53,7 +55,7 @@ final readonly class CategoryAdminService
                 if ($photoDeletionMode === 'force_delete') {
                     $imageIdsToDelete = $imageIdsLinked;
                 }
-                delete_elements($imageIdsToDelete, true);
+                ServiceLocator::get(ImageAdminService::class)->deleteElements($imageIdsToDelete, true);
             }
         }
 
@@ -509,7 +511,7 @@ SELECT DISTINCT id
         }
         if (count($inserts)) {
             mass_inserts(IMAGE_CATEGORY_TABLE, array_keys($inserts[0]), $inserts);
-            update_category($categories);
+            $this->updateCategory($categories);
         }
     }
 
@@ -668,7 +670,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         }
         ServiceLocator::get(ImageRepository::class)->deleteLoungeBeforeId($maxImageId);
         if ($invalidateUserCache) {
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
         conf_delete_param('empty_lounge_running');
         $logger->debug('empty_lounge, exec=' . $execId . ', ends');

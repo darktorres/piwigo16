@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -142,7 +146,7 @@ final class BatchManagerController
                 } else {
                     $filter_tags_raw = is_scalar($filter_tags_post) ? (string) $filter_tags_post : '';
                 }
-                $bmf['tags'] = get_tag_ids($filter_tags_raw, false);
+                $bmf['tags'] = ServiceLocator::get(TagAdminService::class)->getTagIds($filter_tags_raw, false);
                 if (isset($_POST['tag_mode']) && in_array($_POST['tag_mode'], ['AND', 'OR'])) {
                     $bmf['tag_mode'] = $_POST['tag_mode'];
                 }
@@ -314,10 +318,10 @@ final class BatchManagerController
                     $filter_sets[] = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual));
                     break;
                 case 'no_album':
-                    $filter_sets[] = get_orphans();
+                    $filter_sets[] = ServiceLocator::get(ImageAdminService::class)->getOrphans();
                     break;
                 case 'no_sync_md5sum':
-                    $filter_sets[] = get_photos_no_md5sum();
+                    $filter_sets[] = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
                     break;
                 case 'no_tag':
                     $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
@@ -636,8 +640,8 @@ final class BatchManagerController
                 } else {
                     $add_tags_raw = $_POST['add_tags'];
                     $add_tags_val = is_array($add_tags_raw) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $add_tags_raw) : (is_scalar($add_tags_raw) ? (string) $add_tags_raw : '');
-                    $tag_ids = get_tag_ids($add_tags_val);
-                    add_tags($tag_ids, $collection_int);
+                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds($add_tags_val);
+                    ServiceLocator::get(TagAdminService::class)->addTags($tag_ids, $collection_int);
                     if ('no_tag' == $page['prefilter']) {
                         $redirect = true;
                     }
@@ -647,12 +651,12 @@ final class BatchManagerController
                 /** @var array<int> $del_tags_int */
                 $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
                 if (count($del_tags_int) > 0) {
-                    $taglist_before = get_image_tag_ids($collection_int);
+                    $taglist_before = ServiceLocator::get(TagAdminService::class)->getImageTagIds($collection_int);
                     ServiceLocator::get(TagRepository::class)->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
-                    $taglist_after  = get_image_tag_ids($collection_int);
+                    $taglist_after  = ServiceLocator::get(TagAdminService::class)->getImageTagIds($collection_int);
                     /** @var array<int> $images_to_update */
-                    $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, compare_image_tag_lists($taglist_before, $taglist_after));
-                    update_images_lastmodified($images_to_update);
+                    $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, ServiceLocator::get(TagAdminService::class)->compareImageTagLists($taglist_before, $taglist_after));
+                    ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($images_to_update);
                     $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags'] ?? null) ? $bmf['tags'] : []);
                     if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) {
                         $redirect = true;
@@ -779,7 +783,7 @@ final class BatchManagerController
             }
 
             if (!in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'])) {
-                invalidate_user_cache();
+                ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
             }
 
             trigger_notify('element_set_global_action', $action, $collection_int);
@@ -882,7 +886,7 @@ final class BatchManagerController
             $tpl->assign('thumb_params', $thumb_params);
         }
 
-        $cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
             'nb_thumbs_page'                      => $nb_thumbs_page,
             'nb_thumbs_set'                        => count($catElementsId),
@@ -952,14 +956,14 @@ final class BatchManagerController
                 if (!empty($_POST[$tags_key])) {
                     $tags_val = $_POST[$tags_key];
                     $tags_val = is_array($tags_val) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_val) : (is_scalar($tags_val) ? (string) $tags_val : '');
-                    $tag_ids  = get_tag_ids($tags_val);
+                    $tag_ids  = ServiceLocator::get(TagAdminService::class)->getTagIds($tags_val);
                 }
-                set_tags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
+                ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
             }
 
             mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name', 'author', 'level', 'comment', 'date_creation']], $datas);
             PageState::current()->addInfo(l10n('Photo informations updated'));
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
         $collection = [];
@@ -1068,7 +1072,7 @@ final class BatchManagerController
                 $related_categories   = [];
                 $related_category_ids = [];
                 $row_id_int           = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $media_image          = get_image_infos($row_id_int, true);
+                $media_image          = ServiceLocator::get(ImageAdminService::class)->getImageInfos($row_id_int, true);
 
                 foreach (ServiceLocator::get(CategoryRepository::class)->findCategoryInfosByImageId($row_id_int) as $item) {
                     $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
@@ -1148,7 +1152,7 @@ final class BatchManagerController
             $tpl->assign(['ELEMENT_IDS' => implode(',', $element_ids)]);
         }
 
-        $cache_keys = get_admin_client_cache_keys(['tags', 'categories']);
+        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
             'CACHE_KEYS'                          => $cache_keys,
             'batch_manager_unit_page_data_json'   => json_encode([
@@ -1170,7 +1174,7 @@ final class BatchManagerController
     {
         $tpl = TemplateRegistry::current();
 
-        fs_quick_check();
+        ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
 
         $tableName = Config::dbPrefix() . 'messenger_messages';
         $conn      = ServiceLocator::get(Connection::class);

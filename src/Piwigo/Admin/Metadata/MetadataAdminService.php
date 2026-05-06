@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Metadata;
 
+use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
@@ -217,7 +218,7 @@ final class MetadataAdminService
                         $tags_of[$id] = [];
                     }
                     foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
-                        $tags_of[$id][] = tag_id_from_tag_name($tag_name);
+                        $tags_of[$id][] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName($tag_name);
                     }
                 }
             }
@@ -239,7 +240,7 @@ final class MetadataAdminService
             );
         }
 
-        set_tags_of($tags_of);
+        ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
     }
 
     /** @return array<mixed> */

@@ -174,7 +174,7 @@ class Themes
                 $theme_maintain->delete();
 
                 require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-                deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
+                ServiceLocator::get(AdminService::class)->deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
                 break;
 
             case 'set_default':

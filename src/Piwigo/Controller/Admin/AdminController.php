@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Controller\ControllerInterface;
@@ -74,7 +77,7 @@ final class AdminController implements ControllerInterface
                 $perform_fsqc = true;
             }
             if ($perform_fsqc) {
-                fs_quick_check();
+                ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
             }
         }
 
@@ -113,7 +116,7 @@ final class AdminController implements ControllerInterface
         // ── Sync user info ────────────────────────────────────────────────────
 
         if (Config::externalAuthentification()) {
-            sync_users();
+            ServiceLocator::get(UserAdminService::class)->syncUsers();
         }
 
         // ── Variables init ────────────────────────────────────────────────────
@@ -270,7 +273,7 @@ final class AdminController implements ControllerInterface
         }
 
         if (in_array($adminPage, ['site_update', 'batch_manager'], true)) {
-            $nb_no_md5sum = count(get_photos_no_md5sum());
+            $nb_no_md5sum = count(ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum());
             if ($nb_no_md5sum > 0) {
                 $page['no_md5sum_number'] = $nb_no_md5sum;
             }
@@ -279,7 +282,7 @@ final class AdminController implements ControllerInterface
         $page['nb_orphans']      = 0;
         $page['nb_photos_total'] = ServiceLocator::get(ImageRepository::class)->countAll();
         if ($page['nb_photos_total'] < 100000) {
-            $page['nb_orphans'] = count_orphans();
+            $page['nb_orphans'] = ServiceLocator::get(ImageAdminService::class)->countOrphans();
         }
 
         $tpl->assign([
@@ -293,7 +296,7 @@ final class AdminController implements ControllerInterface
             in_array($adminPage, ['site_manager', 'site_update'], true)
             || (!empty($_POST) && in_array($adminPage, ['album', 'albums', 'cat_options', 'user_list', 'user_perm'], true))
         ) {
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
         // ── What's new ────────────────────────────────────────────────────────
@@ -364,7 +367,7 @@ final class AdminController implements ControllerInterface
         trigger_notify('loc_begin_admin_page');
         $this->dispatchToSubController($adminPage);
 
-        $tpl->assign('ACTIVE_MENU', get_active_menu($adminPage));
+        $tpl->assign('ACTIVE_MENU', ServiceLocator::get(AdminService::class)->getActiveMenu($adminPage));
 
         // ── Render ────────────────────────────────────────────────────────────
 

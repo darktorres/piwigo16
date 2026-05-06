@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Tag;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Tag\TagRepository;
@@ -26,7 +28,7 @@ final readonly class TagAdminService
                     $ids[] = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
                 }
             }
-            delete_tags($ids);
+            $this->deleteTags($ids);
         }
     }
 
@@ -62,8 +64,8 @@ final readonly class TagAdminService
         mass_inserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
         $taglistAfter  = $this->getImageTagIds($imagesArr);
         $toUpdate      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
-        update_images_lastmodified($toUpdate);
-        invalidate_user_cache_nb_tags();
+        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($toUpdate);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
     }
 
     /** @param int[]|int $tagIds */
@@ -78,8 +80,8 @@ final readonly class TagAdminService
         $tagRepo->deleteByIds($tagIds);
         trigger_notify('delete_tags', $tagIds);
         pwg_activity('tag', $tagIds, 'delete');
-        update_images_lastmodified($imageIds);
-        invalidate_user_cache_nb_tags();
+        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($imageIds);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
     }
 
     public function tagIdFromTagName(string $tagName): int|string
@@ -115,7 +117,7 @@ final readonly class TagAdminService
                     }
                     $newId = (int) get_dbal_connection()->lastInsertId();
                     $page['tag_id_from_tag_name_cache'][$tagName] = $newId;
-                    invalidate_user_cache_nb_tags();
+                    ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
                     return $newId;
                 }
             }
@@ -153,8 +155,8 @@ final readonly class TagAdminService
         $logger->debug('taglist_after', $taglistAfter);
         $toUpdate = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
         $logger->debug('images_to_update', $toUpdate);
-        update_images_lastmodified($toUpdate);
-        invalidate_user_cache_nb_tags();
+        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($toUpdate);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
     }
 
     /**
@@ -242,7 +244,7 @@ final readonly class TagAdminService
             if (preg_match('/^~~(\d+)~~$/', is_scalar($rawTag) ? (string) $rawTag : '', $matches)) {
                 $tagIds[] = (int) $matches[1];
             } elseif ($allowCreate) {
-                $tagIds[] = (int) tag_id_from_tag_name(strip_tags(is_scalar($rawTag) ? (string) $rawTag : ''));
+                $tagIds[] = (int) $this->tagIdFromTagName(strip_tags(is_scalar($rawTag) ? (string) $rawTag : ''));
             }
         }
         return $tagIds;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 
 final class FilterResolver
@@ -84,7 +86,7 @@ SELECT
   FROM ' . TAGS_TABLE . '
   WHERE id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
 ;';
-            $filter_tags = get_taglist($query);
+            $filter_tags = ServiceLocator::get(TagAdminService::class)->getTaglist($query);
         }
         $tpl->assign('filter_tags', $filter_tags);
 

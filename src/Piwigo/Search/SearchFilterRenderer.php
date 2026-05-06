@@ -77,7 +77,7 @@ final class SearchFilterRenderer
 
             if (isset($my_search['fields']['tags']) and $display_filters['tags']['access']) {
                 $filter_tags = [];
-                $other_filters_items = get_items_for_filter('tags');
+                $other_filters_items = ServiceLocator::get(SearchService::class)->getItemsForFilter('tags');
                 if (false === $other_filters_items) {
                     $filter_tags = get_available_tags();
                     usort($filter_tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
@@ -118,7 +118,7 @@ final class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
-                $filter_clause = get_clause_for_filter('author');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('author');
 
                 $query = '
 SELECT
@@ -160,7 +160,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
-                $filter_clause = get_clause_for_filter('date_posted');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_posted');
                 $cache_key = $persistent_cache->make_key('filter_date_posted' . $userId . $userCacheTime);
                 $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_posted = false;
@@ -258,7 +258,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
-                $filter_clause = get_clause_for_filter('date_created');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_created');
                 $cache_key = $persistent_cache->make_key('filter_date_created' . $userId . $userCacheTime);
                 $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_created = false;
@@ -358,7 +358,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
-                $filter_clause = get_clause_for_filter('added_by');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('added_by');
 
                 $query = '
 SELECT
@@ -451,7 +451,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
-                $filter_clause = get_clause_for_filter('filetypes');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('filetypes');
 
                 $cache_key = $persistent_cache->make_key('file_exts' . $userId . $userCacheTime);
                 $all_exts_raw = [];
@@ -500,7 +500,7 @@ SELECT
                 $template->assign('SHOW_FILTER_RATINGS', true);
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
-                    $filter_clause = get_clause_for_filter('ratings');
+                    $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratings');
                     $cache_key = $persistent_cache->make_key('filter_ratings' . $userId . $userCacheTime);
                     $ratings_raw = null;
                     $cache_hit_ratings = false;
@@ -550,7 +550,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
-                $filter_clause = get_clause_for_filter('filesize');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('filesize');
                 $filesizes = [];
                 $filesize = [];
 
@@ -592,7 +592,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
-                $filter_clause = get_clause_for_filter('ratios');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratios');
                 $cache_key = $persistent_cache->make_key('filter_ratios' . $userId . $userCacheTime);
                 $ratios_raw = null;
                 $cache_hit_ratios = false;
@@ -643,7 +643,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
-                $filter_clause = get_clause_for_filter('height');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('height');
 
                 $query = '
 SELECT
@@ -684,7 +684,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
-                $filter_clause = get_clause_for_filter('width');
+                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('width');
 
                 $query = '
 SELECT

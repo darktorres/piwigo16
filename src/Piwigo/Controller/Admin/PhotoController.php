@@ -100,8 +100,6 @@ final class PhotoController
             $this->pictureCoi();
         } elseif ($tab === 'formats' && Config::isFormatsEnabled()) {
             $this->pictureFormats();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/photo_' . $tab . '.php';
         }
     }
 
@@ -549,8 +547,6 @@ SELECT id
             $this->photosAddFtp();
         } elseif ($tab === 'applications') {
             $this->photosAddApplications();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/photos_add_' . $tab . '.php';
         }
     }
 

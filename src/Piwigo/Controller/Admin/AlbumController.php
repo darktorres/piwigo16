@@ -98,8 +98,6 @@ final class AlbumController
         } elseif ($tab === 'permissions') {
             $_GET['cat'] = $_GET['cat_id'];
             $this->catPerm();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/album_' . $tab . '.php';
         }
     }
 

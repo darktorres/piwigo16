@@ -564,8 +564,6 @@ final class BatchManagerController
             $this->batchManagerGlobal();
         } elseif ($tab === 'unit') {
             $this->batchManagerUnit();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/batch_manager_' . $tab . '.php';
         }
     }
 

@@ -100,8 +100,6 @@ final class ExtensionsController
             $this->pluginsInstalled();
         } elseif ($tab === 'new') {
             $this->pluginsNew();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/plugins_' . $tab . '.php';
         }
     }
 
@@ -477,8 +475,6 @@ final class ExtensionsController
             $this->themesNew();
         } elseif ($tab === 'standard_pages') {
             $this->themesStandardPages();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/themes_' . $tab . '.php';
         }
     }
 
@@ -785,8 +781,6 @@ final class ExtensionsController
             $this->languagesInstalled();
         } elseif ($tab === 'new') {
             $this->languagesNew();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/languages_' . $tab . '.php';
         }
     }
 
@@ -957,8 +951,6 @@ final class ExtensionsController
             $this->updatesPwg();
         } elseif ($tab === 'ext') {
             $this->updatesExt();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/updates_' . $tab . '.php';
         }
     }
 

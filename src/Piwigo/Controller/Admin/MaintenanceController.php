@@ -123,8 +123,6 @@ final class MaintenanceController
             $this->maintenanceEnv();
         } elseif ($tab === 'sys') {
             $this->maintenanceSys();
-        } else {
-            require PHPWG_ROOT_PATH . 'admin/maintenance_' . $tab . '.php';
         }
 
         $tpl->assign(['ADMIN_PAGE_TITLE' => l10n('Maintenance')]);

@@ -1,3 +1,5 @@
+import { config } from './config';
+
 interface ActivityLine {
     id: string | number;
     username: string;
@@ -121,9 +123,7 @@ function line_constructor(line: ActivityLine): void {
 }
 
 function get_system_activities(): void {
-    const url = new URL(window.location.href);
-    url.searchParams.set('method', 'pwg.activity_sys.getList');
-    fetch(url.toString())
+    fetch(config.wsUrl + 'format=json&method=pwg.activity_sys.getList')
         .then((r) => r.json())
         .then((response: { data: ActivityLine[] }) => {
             document.querySelectorAll<HTMLElement>('.loading').forEach((el) => {

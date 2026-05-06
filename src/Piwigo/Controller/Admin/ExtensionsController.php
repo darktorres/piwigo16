@@ -939,7 +939,7 @@ final class ExtensionsController
             throw new ConfigException('update system is disabled');
         }
 
-        $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
+        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
 
         if (isset($_GET['tab'])) {
             $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';

@@ -84,7 +84,7 @@ final class UserBootstrap
             if ($authHeader) {
                 $authenticated = auth_key_login($authHeader, true);
                 if (!$authenticated) {
-                    require_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+                    PwgServer::boot();
                     $serviceRaw = $GLOBALS['service'] ?? null;
                     if ($serviceRaw instanceof PwgServer) {
                         $serviceRaw->sendResponse(new PwgError(401, 'Invalid api_key'));
@@ -108,7 +108,7 @@ final class UserBootstrap
             && isset($_POST['username'])
             && isset($_POST['password'])
         ) {
-            require_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+            PwgServer::boot();
             require_once PHPWG_ROOT_PATH . 'include/ws_functions/pwg.php';
             $credentials = [
                 'username' => $_POST['username'],

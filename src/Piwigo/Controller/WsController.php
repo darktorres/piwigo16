@@ -9,6 +9,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\OpenApi\SpecBuilder;
+use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -38,7 +39,7 @@ final class WsController implements ControllerInterface
         }
 
         require_once PHPWG_ROOT_PATH . 'include/ws_default_methods.php';
-        require_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+        PwgServer::boot();
 
         $rest         = $args['rest'] ?? '';
         $openApiParam = is_string($_GET['_openapi'] ?? null) ? $_GET['_openapi'] : '';

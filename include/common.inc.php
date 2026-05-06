@@ -16,6 +16,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -288,7 +289,7 @@ if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
 TemplateRegistry::set($template);
 
 if (!Config::has('no_photo_yet')) {
-    require(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php');
+    ServiceLocator::get(NoPhotoYetRenderer::class)->render();
 }
 
 $user_arr_gs = $GLOBALS['user'];

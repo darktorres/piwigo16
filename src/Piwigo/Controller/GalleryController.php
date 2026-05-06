@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Section\SectionInitializer;
+use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
@@ -187,7 +190,7 @@ final class GalleryController implements ControllerInterface
                     <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
                 );
 
-                require_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php';
+                ServiceLocator::get(SelectedTagsRenderer::class)->render();
 
                 $tagIds = $bodyDataArr['tag_ids'];
                 $tpl->assign([
@@ -292,11 +295,11 @@ final class GalleryController implements ControllerInterface
                 && ($section === 'recent_cats' || $section === 'categories')
                 && ($countCats === null || $countCats > 0)
             ) {
-                require PHPWG_ROOT_PATH . 'include/category_cats.inc.php';
+                ServiceLocator::get(CategoryCatsRenderer::class)->render();
             }
 
             if (!empty($items)) {
-                require PHPWG_ROOT_PATH . 'include/category_default.inc.php';
+                ServiceLocator::get(CategoryDefaultRenderer::class)->render();
 
                 if (Config::indexSizesIcon()) {
                     $url        = add_url_params(duplicate_index_url(), ['display' => '']);

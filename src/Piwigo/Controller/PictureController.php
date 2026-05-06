@@ -14,6 +14,9 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
+use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -565,12 +568,12 @@ SELECT *
 
         $tpl->assign('U_CANONICAL', make_picture_url(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
 
-        require PHPWG_ROOT_PATH . 'include/picture_rate.inc.php';
+        ServiceLocator::get(PictureRateRenderer::class)->render();
         if (Config::activateComments()) {
-            require PHPWG_ROOT_PATH . 'include/picture_comment.inc.php';
+            ServiceLocator::get(PictureCommentRenderer::class)->render($edit_comment ?? null);
         }
         if ($metadata_showable && isset($_SESSION['pwg_show_metadata'])) {
-            require PHPWG_ROOT_PATH . 'include/picture_metadata.inc.php';
+            ServiceLocator::get(PictureMetadataRenderer::class)->render();
         }
 
         $themeconf    = $tpl->get_template_vars('themeconf');

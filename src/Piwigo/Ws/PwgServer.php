@@ -451,6 +451,9 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
 
     public static function boot(): void
     {
+        if (PwgServerRegistry::isInitialized()) {
+            return;
+        }
         include_once PHPWG_ROOT_PATH . 'include/ws_core.inc.php';
 
         add_event_handler('ws_add_methods', 'ws_addDefaultMethods');

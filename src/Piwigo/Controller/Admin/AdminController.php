@@ -51,8 +51,6 @@ final class AdminController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_plugins.inc.php';
         require_once PHPWG_ROOT_PATH . 'admin/include/add_core_tabs.inc.php';
 
         trigger_notify('loc_begin_admin');

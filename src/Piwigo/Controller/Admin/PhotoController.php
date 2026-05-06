@@ -523,9 +523,6 @@ SELECT id
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $upload_form_config = get_upload_form_config();
@@ -566,9 +563,6 @@ SELECT id
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
@@ -628,6 +622,8 @@ SELECT id
             }
         }
 
+        $nb_albums        = 0;
+        $selected_category = [];
         ServiceLocator::get(DirectPreparer::class)->prepare(PHOTOS_ADD_BASE_URL);
 
         trigger_notify('loc_end_photo_add_direct');
@@ -658,11 +654,11 @@ SELECT id
                 'formatsUpdated_label'    => l10n('%d formats updated for %d photos'),
                 'haveFormatsOriginal'     => $have_formats_original,
                 'imageFormatsExtensions'  => $formats_ext_info ?? '',
-                'nb_albums'               => (int) ($nb_albums ?? 0),
+                'nb_albums'               => $nb_albums,
                 'originalImageId'         => $have_formats_original ? (is_numeric($formats_original_info['id'] ?? null) ? (int) $formats_original_info['id'] : -1) : -1,
                 'photosAdded_label'       => l10n('%d photos uploaded'),
                 'photosUpdated_label'     => l10n('%d photos updated'),
-                'related_categories_ids'  => $selected_category ?? [],
+                'related_categories_ids'  => $selected_category,
                 'str_and_X_others'        => l10n('and %d more'),
                 'str_drop_album_ab'       => l10n('Drop into album'),
                 'str_format_warning'      => l10n('Error when trying to detect formats'),

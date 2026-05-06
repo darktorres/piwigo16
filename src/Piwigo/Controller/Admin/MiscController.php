@@ -81,8 +81,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
+        MailNotificationContext::init();
 
         check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
@@ -239,8 +238,6 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_permalinks.php';
-
         check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 
         $selected_cat = [];
@@ -310,8 +307,6 @@ final class MiscController
     private function tags(): void
     {
         $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
@@ -391,8 +386,6 @@ final class MiscController
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $selected = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'add_photos';
 
         $tabsheet = new Tabsheet();
@@ -471,8 +464,6 @@ final class MiscController
         $user = $GLOBALS['user'];
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) {
             userprefs_update_param('show_newsletter_subscription', 'false');
@@ -801,8 +792,6 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $tpl->set_filenames(['comments' => 'comments.tpl']);
         $tpl->assign([
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
@@ -832,8 +821,6 @@ final class MiscController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         check_input_parameter('display', $_GET, false, PATTERN_ID);
 

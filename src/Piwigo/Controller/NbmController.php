@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,9 +20,7 @@ final class NbmController implements ControllerInterface
     {
         check_status(ACCESS_FREE);
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
-
+        MailNotificationContext::init();
         load_language('admin.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
@@ -29,9 +29,9 @@ final class NbmController implements ControllerInterface
         $unsubscribe = is_string($_GET['unsubscribe'] ?? null) ? $_GET['unsubscribe'] : null;
 
         if ($subscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
-            subscribe_notification_by_mail(false, [$subscribe]);
+            ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(false, [$subscribe]);
         } elseif ($unsubscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
-            unsubscribe_notification_by_mail(false, [$unsubscribe]);
+            ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(false, [$unsubscribe]);
         } else {
             PageState::current()->addError(l10n('Unknown identifier'));
         }

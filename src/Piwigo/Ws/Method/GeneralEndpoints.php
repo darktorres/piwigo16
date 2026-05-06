@@ -460,8 +460,6 @@ final class GeneralEndpoints
      */
     public function historySearch(array $param, PwgServer &$service): array
     {
-        require_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
-        require_once(PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php');
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         if (isset($_GET['start']) && is_numeric($_GET['start'])) {
             $page['start'] = (int) $_GET['start'];

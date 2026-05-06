@@ -38,9 +38,6 @@ final class ConfigurationController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-
         if (!is_webmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }

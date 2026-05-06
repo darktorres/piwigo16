@@ -16,8 +16,6 @@ use Piwigo\Core\ServiceLocator;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-require_once(PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php');
-
 // ── CategoryAdminService delegates ───────────────────────────────────────
 
 function delete_site(mixed $id): void

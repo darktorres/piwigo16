@@ -196,7 +196,7 @@ function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, i
         if (v !== undefined && v !== null) body.append(k, String(v));
     });
 
-    fetch(config.wsUrl + '?format=json&method=pwg.activity.getList', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json&method=pwg.activity.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((data: any) => {
             uid_filter = uid;

@@ -176,7 +176,7 @@ export class CategoriesCache extends AbstractSelectizer {
             ...options,
             key: 'categoriesAdminList',
             loader: (callback) => {
-                fetch(`${options.wsUrl ?? config.wsUrl}?format=json&method=pwg.categories.getAdminList`)
+                fetch(`${options.wsUrl ?? config.wsUrl}format=json&method=pwg.categories.getAdminList`)
                     .then((r) => r.json())
                     .then((data: { result: { categories: CacheItem[] } }) => {
                         const cats = data.result.categories.map((c, i) => {
@@ -211,7 +211,7 @@ export class TagsCache extends AbstractSelectizer {
             ...options,
             key: 'tagsAdminList',
             loader: (callback) => {
-                fetch(`${options.wsUrl ?? config.wsUrl}?format=json&method=pwg.tags.getAdminList`)
+                fetch(`${options.wsUrl ?? config.wsUrl}format=json&method=pwg.tags.getAdminList`)
                     .then((r) => r.json())
                     .then((data: { result: { tags: CacheItem[] } }) => {
                         const tags = data.result.tags.map((t) => {
@@ -247,7 +247,7 @@ export class GroupsCache extends AbstractSelectizer {
             key: 'groupsAdminList',
             loader: (callback) => {
                 fetch(
-                    `${options.wsUrl ?? config.wsUrl}?format=json&method=pwg.groups.getList&per_page=9999`
+                    `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.groups.getList&per_page=9999`
                 )
                     .then((r) => r.json())
                     .then((data: { result: { groups: CacheItem[] } }) => {
@@ -284,7 +284,7 @@ export class UsersCache extends AbstractSelectizer {
                 let users: CacheItem[] = [];
                 const load = (page: number): void => {
                     fetch(
-                        `${options.wsUrl ?? config.wsUrl}?format=json&method=pwg.users.getList&display=username&per_page=9999&page=${page}`
+                        `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.users.getList&display=username&per_page=9999&page=${page}`
                     )
                         .then((r) => r.json())
                         .then(

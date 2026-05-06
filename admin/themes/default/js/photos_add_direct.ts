@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedAlbumEdit?.addEventListener('click', () => ab.open());
 
     qs('.dont-show-again')?.addEventListener('click', () => {
-        fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
+        fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({ param: 'promote-mobile-apps', value: 'false' }),
         }).then(() => {
@@ -177,7 +177,7 @@ function initUppy() {
             proudlyDisplayPoweredByUppy: false,
         } as any)
         .use(XHRUpload, {
-            endpoint: config.wsUrl + '?method=pwg.images.upload&format=json',
+            endpoint: config.wsUrl + 'method=pwg.images.upload&format=json',
             formData: true,
             fieldName: 'file',
             allowedMetaFields: ['pwg_token', 'category', 'name', 'format_of', 'update_mode'],
@@ -206,7 +206,7 @@ function initUppy() {
                 // Search for original images
                 const body = new URLSearchParams({ filename_list: JSON.stringify(fileNames) });
                 const result = await fetch(
-                    config.wsUrl + '?format=json&method=pwg.images.formats.searchImage',
+                    config.wsUrl + 'format=json&method=pwg.images.formats.searchImage',
                     { method: 'POST', body }
                 )
                     .then((r) => r.json())
@@ -331,7 +331,7 @@ function initUppy() {
         Piecon.reset();
 
         if (!formatMode) {
-            fetch(config.wsUrl + '?format=json&method=pwg.images.uploadCompleted', {
+            fetch(config.wsUrl + 'format=json&method=pwg.images.uploadCompleted', {
                 method: 'POST',
                 body: new URLSearchParams({
                     pwg_token,
@@ -461,7 +461,7 @@ function hide_first_album(cat_name: string) {
 
 function add_first_album(add_cat: any) {
     const name = inputFirstAlbum?.value ?? '';
-    fetch(config.wsUrl + '?format=json&method=pwg.categories.add', {
+    fetch(config.wsUrl + 'format=json&method=pwg.categories.add', {
         method: 'POST',
         body: new URLSearchParams({ name, pwg_token }),
     })

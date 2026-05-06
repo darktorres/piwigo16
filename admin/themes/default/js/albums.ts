@@ -123,7 +123,7 @@ function pwgPost(method: string, data: Record<string, any>): Promise<any> {
         if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item)));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(`${config.wsUrl}?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
+    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then((r) =>
         r.json()
     );
 }

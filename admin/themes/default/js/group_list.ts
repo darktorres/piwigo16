@@ -96,7 +96,7 @@ const grp = (id: any) => document.getElementById('group-' + id);
 const grpQ = (id: any, sel: string) => grp(id)?.querySelector<HTMLElement>(sel);
 
 function pwgPost(method: string, body: string | URLSearchParams): Promise<any> {
-    return fetch(`${config.wsUrl}?format=json&method=${method}`, {
+    return fetch(`${config.wsUrl}format=json&method=${method}`, {
         method: 'POST',
         ...(typeof body === 'string'
             ? { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }
@@ -720,7 +720,7 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
         }
     });
 
-    fetch(`${config.wsUrl}?format=json&method=pwg.groups.merge`, {
+    fetch(`${config.wsUrl}format=json&method=pwg.groups.merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `destination_group_id=${dest_grp}${str_merge_group}&pwg_token=${pwg_token}`,
@@ -781,7 +781,7 @@ qs('.ConfirmDeleteButton')?.addEventListener('click', () => {
     ts.removeClass(deleteBtn, 'icon-ok');
 
     const body = ids.map((id) => `group_id[]=${id}`).join('&') + `&pwg_token=${pwg_token}`;
-    fetch(config.wsUrl + '?format=json&method=pwg.groups.delete', {
+    fetch(config.wsUrl + 'format=json&method=pwg.groups.delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,

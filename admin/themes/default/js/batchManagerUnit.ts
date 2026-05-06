@@ -109,13 +109,13 @@ function pwgPost(method: string, data: Record<string, any>): Promise<any> {
         if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(config.wsUrl + '?format=json', { method: 'POST', body }).then((r) => r.json());
+    return fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then((r) => r.json());
 }
 
 function pwgGet(method: string, data: Record<string, any>): Promise<any> {
     const params = new URLSearchParams({ method });
     for (const [k, v] of Object.entries(data)) params.append(k, String(v ?? ''));
-    return fetch(config.wsUrl + '?format=json?' + params).then((r) => r.json());
+    return fetch(config.wsUrl + 'format=json&' + params).then((r) => r.json());
 }
 
 function pwgToken(): string {
@@ -547,7 +547,7 @@ function updateBlock(pictureId: any) {
         method: 'pwg.images.getInfo',
         image_id: String(pictureId),
     });
-    fetch(config.wsUrl + '?format=json&' + params)
+    fetch(config.wsUrl + 'format=json&' + params)
         .then((r) => r.json())
         .then((response: any) => {
             if (response.stat === 'ok') {

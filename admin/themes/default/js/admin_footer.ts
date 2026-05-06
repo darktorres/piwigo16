@@ -23,7 +23,7 @@ function hideWhatsNew(): void {
     if (!whatsNew) return;
     const version = whatsNew.dataset['whatsNewVersion'] ?? '';
     if (version) {
-        fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
+        fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({
                 param: 'show_whats_new_' + version,

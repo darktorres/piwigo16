@@ -157,7 +157,7 @@ function pluginAction(id: string, action: string): Promise<any> {
         pwg_token,
         format: 'json',
     });
-    return fetch(config.wsUrl + '?' + params).then((r) => r.json());
+    return fetch(config.wsUrl + params.toString()).then((r) => r.json());
 }
 
 function activatePlugin(id: string) {
@@ -295,7 +295,7 @@ function uninstallPlugin(id: string) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
+    fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'plugin-manager-view', value: view_type }),
     });

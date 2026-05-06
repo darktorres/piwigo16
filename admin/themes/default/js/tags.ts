@@ -287,7 +287,7 @@ qs('#add-tag .icon-validate')?.addEventListener('click', () => {
 });
 
 function addTag(name: any): Promise<any> {
-    return fetch(config.wsUrl + '?format=json&method=pwg.tags.add', {
+    return fetch(config.wsUrl + 'format=json&method=pwg.tags.add', {
         method: 'POST',
         body: new URLSearchParams({ name }),
     })
@@ -391,7 +391,7 @@ function cleanCheckmark() {
 
 function removeTag(id: any, name: any) {
     const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: id, pwg_token });
-    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -415,7 +415,7 @@ function renameTag(id: any, new_name: any): Promise<any> {
         new_name,
         pwg_token,
     });
-    return fetch(config.wsUrl + '?format=json', { method: 'POST', body })
+    return fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -456,7 +456,7 @@ function duplicateTag(id: any, name: any): Promise<any> {
         copy_name,
         pwg_token,
     });
-    return fetch(config.wsUrl + '?format=json', { method: 'POST', body })
+    return fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -742,7 +742,7 @@ function removeSelectedTags() {
     const body = new URLSearchParams({ pwg_token });
     selected.forEach((id: any) => body.append('tag_id[]', id));
     body.append('method', 'pwg.tags.delete');
-    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
@@ -779,7 +779,7 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
         method: 'pwg.tags.merge',
     });
     merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
-    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));

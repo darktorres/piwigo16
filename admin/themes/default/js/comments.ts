@@ -166,7 +166,7 @@ function pwgFetch(url: string, data: Record<string, any>): Promise<any> {
 function getComments(params: any) {
     const query = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) query.append(k, String(v ?? ''));
-    fetch(config.wsUrl + '?format=json&method=pwg.userComments.getList&' + query.toString())
+    fetch(config.wsUrl + 'format=json&method=pwg.userComments.getList&' + query.toString())
         .then((r) => r.json())
         .then((data) => {
             if (data.stat === 'ok') {
@@ -460,7 +460,7 @@ function closeModalViewComment() {
 
 function validateComment(id: any) {
     const idLength = id.length ?? 1;
-    pwgFetch(config.wsUrl + '?format=json&method=pwg.userComments.validate', { comment_id: id, pwg_token })
+    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.validate', { comment_id: id, pwg_token })
         .then((res) => {
             if (res.stat === 'ok') {
                 window.alert(idLength > 1 ? str_comments_validated : str_comment_validated);
@@ -482,7 +482,7 @@ function deleteComment(id: any) {
             ? str_deletes.replace('%d', String(idLength))
             : str_delete.replace('%s', String(id));
     if (!window.confirm(msg)) return;
-    pwgFetch(config.wsUrl + '?format=json&method=pwg.userComments.delete', { comment_id: id, pwg_token })
+    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.delete', { comment_id: id, pwg_token })
         .then((res) => {
             if (res.stat === 'ok') getComments(commentsParams);
         })

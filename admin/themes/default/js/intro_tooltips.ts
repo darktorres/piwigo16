@@ -41,7 +41,7 @@ const piwigo_need_update_msg = `<a href="${config.adminUrl}?page=updates">${dash
 const ext_need_update_msg = `<a href="${config.adminUrl}?page=updates&tab=ext">${dashboard.str_ext_need_update} <i class="icon-right"></i></a>`;
 
 if (dashboard.check_for_updates) {
-    fetch(config.wsUrl + '?format=json&method=pwg.extensions.checkUpdates', {
+    fetch(config.wsUrl + 'format=json&method=pwg.extensions.checkUpdates', {
         signal: AbortSignal.timeout(5000),
     })
         .then((r) => r.json())

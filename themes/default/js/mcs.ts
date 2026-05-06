@@ -2488,7 +2488,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function performSearch(params: Record<string, any>, reload: boolean = false): void {
-    fetch(config.wsUrl + '?format=json&method=pwg.images.filteredSearch.create', {
+    fetch(config.wsUrl + 'format=json&method=pwg.images.filteredSearch.create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams(

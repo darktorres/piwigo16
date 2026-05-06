@@ -13,7 +13,7 @@ let hasActivePlugins = false;
 let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetch(config.wsUrl + '?format=json&method=pwg.plugins.getList')
+    fetch(config.wsUrl + 'format=json&method=pwg.plugins.getList')
         .then((r) => r.json())
         .then((data: { result: Array<{ name: string; state: string }> }) => {
             plugins = data.result;

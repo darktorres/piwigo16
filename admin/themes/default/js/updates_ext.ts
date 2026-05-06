@@ -34,7 +34,8 @@ const queuedManager = {
                     return acc;
                 }, {})
             );
-            return fetch((opts.url ?? config.wsUrl) + '?' + params.toString())
+            const baseUrl = opts.url ?? config.wsUrl;
+            return fetch(baseUrl + (baseUrl.includes('?') ? '&' : '?') + params.toString())
                 .then((r) => r.json())
                 .then((data: Record<string, unknown>) => opts.success?.(data))
                 .catch((err) => opts.error?.(err))
@@ -177,7 +178,7 @@ function ignoreAll(): void {
 
 function resetIgnored(): void {
     fetch(
-        config.wsUrl + '?' +
+        config.wsUrl +
             new URLSearchParams({
                 method: 'pwg.extensions.ignoreUpdate',
                 reset: 'true',

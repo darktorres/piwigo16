@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('.refresh-cache-size').forEach((btn) => {
         btn.addEventListener('click', () => {
             btn.querySelector('.refresh-icon')?.classList.add('animate-spin');
-            fetch(config.wsUrl + '?format=json&method=pwg.getCacheSize', {
+            fetch(config.wsUrl + 'format=json&method=pwg.getCacheSize', {
                 method: 'POST',
                 body: new URLSearchParams({ param: 'test_param', service: 'test_service' }),
             })

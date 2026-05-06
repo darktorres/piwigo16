@@ -200,7 +200,7 @@ function pwgPost(method: string, params: Record<string, any>): Promise<any> {
         if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
         else if (v !== undefined && v !== null) body.append(k, String(v));
     }
-    return fetch(`${config.wsUrl}?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
+    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then((r) =>
         r.json()
     );
 }
@@ -1186,7 +1186,7 @@ function get_first_selection_usernames(callback: any) {
     const body = new URLSearchParams({ display: 'username', order: 'id' });
     ids.forEach((id) => body.append('user_id[]', id));
     body.append('exclude[]', String(guest_id));
-    fetch(config.wsUrl + '?format=json&method=pwg.users.getList', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((d) => {
             d.result.users.forEach((u: any) => {
@@ -1214,7 +1214,7 @@ function select_whole_set() {
     });
     body.append('exclude[]', String(guest_id));
     show(qs('#checkActions .loading'));
-    fetch(config.wsUrl + '?format=json&method=pwg.users.getList', { method: 'POST', body })
+    fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((d) => {
             selection = d.result.map((x: any) => ({ id: x }));
@@ -1786,7 +1786,7 @@ function event_validate_main_user(new_main_username: string, user_id: any) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
+    fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'user-manager-view', value: view_type }),
     });
@@ -2376,7 +2376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else formData.append(key, val);
             });
 
-            fetch(config.wsUrl + '?format=json&method=' + method, { method: 'POST', body: formData })
+            fetch(config.wsUrl + 'format=json&method=' + method, { method: 'POST', body: formData })
                 .then(() => {
                     if (applyActionLoading) applyActionLoading.style.display = 'none';
                     if (applyActionInfos) applyActionInfos.style.display = 'inline-block';

@@ -1,0 +1,25 @@
+
+> test:e2e
+> playwright test
+
+
+Running 54 tests using 1 worker
+
+  ✓   1 [chromium] › tests\e2e\02-smoke-gallery.spec.ts:6:1 › gallery home page loads without errors (3.7s)
+  ✘   2 [chromium] › tests\e2e\02-smoke-gallery.spec.ts:12:1 › identification page renders login form (421ms)
+  ✘   3 [chromium] › tests\e2e\03-smoke-admin.spec.ts:7:1 › admin login and dashboard load (388ms)
+  ✘   4 [chromium] › tests\e2e\03-smoke-admin.spec.ts:18:1 › admin albums page loads (466ms)
+  ✘   5 [chromium] › tests\e2e\04-create-album.spec.ts:5:1 › create album via web service API (410ms)
+  ✘   6 [chromium] › tests\e2e\05-upload-photo.spec.ts:7:1 › upload photo page loads via admin route (477ms)
+  ✘   7 [chromium] › tests\e2e\05-upload-photo.spec.ts:14:1 › photos_add page loads without errors (367ms)
+  ✘   8 [chromium] › tests\e2e\06-change-setting.spec.ts:7:1 › gallery title setting round-trips through $conf write path (492ms)
+  ✓   9 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:27:5 › gallery home — clean (no JS errors, no failed XHRs) (382ms)
+  ✓  10 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:27:5 › identification — clean (no JS errors, no failed XHRs) (358ms)
+  ✓  11 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:27:5 › search — clean (no JS errors, no failed XHRs) (466ms)
+  ✓  12 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:27:5 › tags — clean (no JS errors, no failed XHRs) (279ms)
+  ✘  13 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin dashboard — clean (no JS errors, no failed XHRs) (377ms)
+  ✘  14 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin albums — clean (no JS errors, no failed XHRs) (394ms)
+  ✘  15 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin batch_manager (filter=all) — clean (no JS errors, no failed XHRs) (361ms)
+  ✘  16 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin photos_add direct — clean (no JS errors, no failed XHRs) (435ms)
+  ✘  17 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin configuration — clean (no JS errors, no failed XHRs) (405ms)
+  ✘  18 [chromium] › tests\e2e\07-phase5-console-clean.spec.ts:50:5 › admin history — clean (no JS errors, no failed XHRs) (458ms)

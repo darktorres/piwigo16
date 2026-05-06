@@ -12,6 +12,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -221,6 +222,8 @@ final class AdminController implements ControllerInterface
             'ADMIN_PAGE_OBJECT_ID'   => '',
             'U_SHOW_TEMPLATE_TAB'    => Config::showTemplateInSideMenu(),
             'SHOW_RATING'            => Config::rateEnabled(),
+            'WS_URL'                 => ServiceLocator::get(UrlGenerator::class)->ws(),
+            'ADMIN_URL'              => ServiceLocator::get(UrlGenerator::class)->admin(),
         ]);
 
         if (Config::enableCoreUpdate()) {

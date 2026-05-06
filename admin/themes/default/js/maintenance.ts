@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface MaintenancePageData {
     unit_MB: string;
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('.refresh-cache-size').forEach((btn) => {
         btn.addEventListener('click', () => {
             btn.querySelector('.refresh-icon')?.classList.add('animate-spin');
-            fetch('ws.php?format=json&method=pwg.getCacheSize', {
+            fetch(config.wsUrl + '?format=json&method=pwg.getCacheSize', {
                 method: 'POST',
                 body: new URLSearchParams({ param: 'test_param', service: 'test_service' }),
             })
@@ -134,7 +135,7 @@ if (firstCheck) {
     });
 }
 
-const delete_deriv_URL = 'admin.php?page=maintenance&action=derivatives&';
+const delete_deriv_URL = config.adminUrl + '?page=maintenance&action=derivatives&';
 document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((el) => {
     el.addEventListener('change', () => {
         const delete_deriv_with_token = delete_deriv_URL + 'pwg_token=' + pageData.pwg_token + '&';

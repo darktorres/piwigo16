@@ -4,6 +4,7 @@ import 'tippy.js/dist/tippy.css';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface BatchManagerGlobalPageData {
     CACHE_KEYS: { tags: string; categories: string; _hash: string };
@@ -286,7 +287,7 @@ function getDerivativeUrls() {
 
     const body = new URLSearchParams({ max_urls: '100000', types: types.join(',') });
     ids.forEach((id: any) => body.append('ids[]', id));
-    fetch('ws.php?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json&method=pwg.getMissingDerivatives', { method: 'POST', body })
         .then((r) => r.json())
         .then((data: any) => {
             if (!data.stat || data.stat !== 'ok') return;
@@ -402,7 +403,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
             queuedMgr.add(async () => {
                 try {
                     const body = new URLSearchParams({ pwg_token, image_id: ids.join(',') });
-                    await fetch('ws.php?format=json&method=pwg.images.syncMetadata', {
+                    await fetch(config.wsUrl + '?format=json&method=pwg.images.syncMetadata', {
                         method: 'POST',
                         body,
                     }).then((r) => r.json());
@@ -465,7 +466,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
                     pwg_token,
                     image_id: ids.join(','),
                 });
-                await fetch('ws.php?format=json', { method: 'POST', body }).then((r) => r.json());
+                await fetch(config.wsUrl + '?format=json', { method: 'POST', body }).then((r) => r.json());
             } finally {
                 todo += thisBatchSize;
                 const badge = qs('#regenerationStatus .badge-number');
@@ -514,7 +515,7 @@ qs('#sync_md5sum')?.addEventListener('click', (e) => {
 
 function add_md5sum_block(blockSize: any) {
     const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch('ws.php?format=json&method=pwg.images.setMd5sum', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json&method=pwg.images.setMd5sum', { method: 'POST', body })
         .then((r) => r.json())
         .then((data: any) => {
             const el = qs('#md5sum_to_add');
@@ -527,7 +528,7 @@ function add_md5sum_block(blockSize: any) {
                 add_md5sum_block(undefined);
             } else {
                 document.location =
-                    `admin.php?page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
+                    `${config.adminUrl}?page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
             }
         })
         .catch((xhr: any) => {
@@ -550,7 +551,7 @@ qs('#delete_orphans')?.addEventListener('click', (e) => {
 
 function delete_orphans_block(blockSize: any) {
     const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch('ws.php?format=json&method=pwg.images.deleteOrphans', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json&method=pwg.images.deleteOrphans', { method: 'POST', body })
         .then((r) => r.json())
         .then((data: any) => {
             const el = qs('#orphans_to_delete');
@@ -563,7 +564,7 @@ function delete_orphans_block(blockSize: any) {
                 delete_orphans_block(undefined);
             } else {
                 document.location =
-                    `admin.php?page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
+                    `${config.adminUrl}?page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
             }
         })
         .catch((xhr: any) => {

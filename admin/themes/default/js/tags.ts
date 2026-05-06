@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface TagsPageData {
     pwg_token: string;
@@ -132,7 +133,7 @@ function createTagBox(
     raw_name: any = null
 ): HTMLElement {
     if (raw_name === null) raw_name = name;
-    const u_edit = 'admin.php?page=batch_manager&filter=tag-' + id;
+    const u_edit = config.adminUrl + '?page=batch_manager&filter=tag-' + id;
     const u_view = 'index.php?/tags/' + id + '-' + url_name;
     let html = qs('.tag-template')!
         .innerHTML.replace(/%name%/g, unescape(String(name)))
@@ -186,7 +187,7 @@ function recycleTagBox(
     const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view', tagBox);
     if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + url_name;
     const manageEl = qs<HTMLAnchorElement>('.dropdown-option.manage', tagBox);
-    if (manageEl) manageEl.href = 'admin.php?page=batch_manager&filter=tag-' + id;
+    if (manageEl) manageEl.href = config.adminUrl + '?page=batch_manager&filter=tag-' + id;
     if (count > 0) {
         qsa('.dropdown-option.view, .dropdown-option.manage', tagBox).forEach((el) => {
             el.style.display = 'block';
@@ -286,7 +287,7 @@ qs('#add-tag .icon-validate')?.addEventListener('click', () => {
 });
 
 function addTag(name: any): Promise<any> {
-    return fetch('ws.php?format=json&method=pwg.tags.add', {
+    return fetch(config.wsUrl + '?format=json&method=pwg.tags.add', {
         method: 'POST',
         body: new URLSearchParams({ name }),
     })
@@ -390,7 +391,7 @@ function cleanCheckmark() {
 
 function removeTag(id: any, name: any) {
     const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: id, pwg_token });
-    fetch('ws.php?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -414,7 +415,7 @@ function renameTag(id: any, new_name: any): Promise<any> {
         new_name,
         pwg_token,
     });
-    return fetch('ws.php?format=json', { method: 'POST', body })
+    return fetch(config.wsUrl + '?format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -455,7 +456,7 @@ function duplicateTag(id: any, name: any): Promise<any> {
         copy_name,
         pwg_token,
     });
-    return fetch('ws.php?format=json', { method: 'POST', body })
+    return fetch(config.wsUrl + '?format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
@@ -741,7 +742,7 @@ function removeSelectedTags() {
     const body = new URLSearchParams({ pwg_token });
     selected.forEach((id: any) => body.append('tag_id[]', id));
     body.append('method', 'pwg.tags.delete');
-    fetch('ws.php?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
@@ -778,7 +779,7 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
         method: 'pwg.tags.merge',
     });
     merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
-    fetch('ws.php?format=json', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));

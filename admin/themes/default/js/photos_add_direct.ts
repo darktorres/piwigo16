@@ -5,6 +5,7 @@ import '@uppy/core/css/style.css';
 import '@uppy/dashboard/css/style.css';
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
+import { config } from './config';
 import Piecon from '../../../../themes/default/js/plugins/piecon';
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
@@ -125,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedAlbumEdit?.addEventListener('click', () => ab.open());
 
     qs('.dont-show-again')?.addEventListener('click', () => {
-        fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+        fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({ param: 'promote-mobile-apps', value: 'false' }),
         }).then(() => {
@@ -176,7 +177,7 @@ function initUppy() {
             proudlyDisplayPoweredByUppy: false,
         } as any)
         .use(XHRUpload, {
-            endpoint: 'ws.php?method=pwg.images.upload&format=json',
+            endpoint: config.wsUrl + '?method=pwg.images.upload&format=json',
             formData: true,
             fieldName: 'file',
             allowedMetaFields: ['pwg_token', 'category', 'name', 'format_of', 'update_mode'],
@@ -205,7 +206,7 @@ function initUppy() {
                 // Search for original images
                 const body = new URLSearchParams({ filename_list: JSON.stringify(fileNames) });
                 const result = await fetch(
-                    'ws.php?format=json&method=pwg.images.formats.searchImage',
+                    config.wsUrl + '?format=json&method=pwg.images.formats.searchImage',
                     { method: 'POST', body }
                 )
                     .then((r) => r.json())
@@ -290,7 +291,7 @@ function initUppy() {
         show(qs('#uploadedPhotos')?.closest('fieldset'));
 
         html =
-            '<a href="admin.php?page=photo-' +
+            '<a href="' + config.adminUrl + '?page=photo-' +
             data.result.image_id +
             '" style="position:relative" target="_blank">';
         html +=
@@ -330,7 +331,7 @@ function initUppy() {
         Piecon.reset();
 
         if (!formatMode) {
-            fetch('ws.php?format=json&method=pwg.images.uploadCompleted', {
+            fetch(config.wsUrl + '?format=json&method=pwg.images.uploadCompleted', {
                 method: 'POST',
                 body: new URLSearchParams({
                     pwg_token,
@@ -364,7 +365,7 @@ function initUppy() {
         if (!formatMode) {
             html = sprintf(
                 albumSummary_label,
-                '<a href="admin.php?page=album-' +
+                '<a href="' + config.adminUrl + '?page=album-' +
                     uploadCategory.id +
                     '">' +
                     uploadCategory.label +
@@ -378,7 +379,7 @@ function initUppy() {
         const batchSet = [...new Set<number>(uploadedPhotos)];
         const batchLink = qs<HTMLAnchorElement>('.batchLink');
         if (batchLink) {
-            batchLink.href = 'admin.php?page=photos_add&section=direct&batch=' + batchSet.join(',');
+            batchLink.href = config.adminUrl + '?page=photos_add&section=direct&batch=' + batchSet.join(',');
             batchLink.innerHTML = sprintf(batch_Label, uploadedPhotos.length);
         }
         show(qs('.afterUploadActions'));
@@ -460,7 +461,7 @@ function hide_first_album(cat_name: string) {
 
 function add_first_album(add_cat: any) {
     const name = inputFirstAlbum?.value ?? '';
-    fetch('ws.php?format=json&method=pwg.categories.add', {
+    fetch(config.wsUrl + '?format=json&method=pwg.categories.add', {
         method: 'POST',
         body: new URLSearchParams({ name, pwg_token }),
     })

@@ -1,3 +1,5 @@
+import { config } from './config';
+
 function pwgAddAlbum(
     buttonEl: HTMLElement,
     options: {
@@ -69,7 +71,7 @@ function pwgAddAlbum(
                 b.style.display = 'none';
             });
 
-            fetch('ws.php?format=json', {
+            fetch(config.wsUrl + '?format=json', {
                 method: 'POST',
                 body: new URLSearchParams({
                     method: 'pwg.categories.add',

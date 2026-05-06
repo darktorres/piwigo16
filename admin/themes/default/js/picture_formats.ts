@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface PictureFormatsPageData {
     pwg_token: string;
@@ -30,7 +31,7 @@ document.querySelectorAll<HTMLElement>('.format-card').forEach((card) => {
 function deleteFormat(card: HTMLElement): void {
     const icon = card.querySelector('.format-delete i');
     if (icon) icon.className = 'icon-spin6 animate-spin';
-    fetch('ws.php?format=json&method=pwg.images.formats.delete', {
+    fetch(config.wsUrl + '?format=json&method=pwg.images.formats.delete', {
         method: 'POST',
         body: new URLSearchParams({ pwg_token, format_id: card.dataset['id'] ?? '' }),
     })

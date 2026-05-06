@@ -2,6 +2,7 @@ import TomSelect from 'tom-select';
 import tippy from 'tippy.js';
 import { getPageData } from './page-data';
 import { pwgDoubleSlider } from './doubleSlider';
+import { config } from './config';
 
 declare let sprintf: (fmt: string, ...args: any[]) => string;
 
@@ -2487,7 +2488,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function performSearch(params: Record<string, any>, reload: boolean = false): void {
-    fetch('ws.php?format=json&method=pwg.images.filteredSearch.create', {
+    fetch(config.wsUrl + '?format=json&method=pwg.images.filteredSearch.create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams(

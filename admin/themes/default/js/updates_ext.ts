@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface UpdatesExtPageData {
     pwg_token: string;
@@ -33,7 +34,7 @@ const queuedManager = {
                     return acc;
                 }, {})
             );
-            return fetch((opts.url ?? 'ws.php') + '?' + params.toString())
+            return fetch((opts.url ?? config.wsUrl) + '?' + params.toString())
                 .then((r) => r.json())
                 .then((data: Record<string, unknown>) => opts.success?.(data))
                 .catch((err) => opts.error?.(err))
@@ -110,7 +111,7 @@ function checkFieldsets(): void {
 function updateExtension(type: string, id: string, revision: string): void {
     queuedManager.add({
         beforeSend: () => autoupdate_bar_toggle(1),
-        url: 'ws.php',
+        url: config.wsUrl,
         data: {
             method: 'pwg.extensions.update',
             type,
@@ -136,7 +137,7 @@ function updateExtension(type: string, id: string, revision: string): void {
 function ignoreExtension(type: string, id: string): void {
     queuedManager.add({
         beforeSend: () => autoupdate_bar_toggle(1),
-        url: 'ws.php',
+        url: config.wsUrl,
         data: {
             method: 'pwg.extensions.ignoreUpdate',
             type,
@@ -176,7 +177,7 @@ function ignoreAll(): void {
 
 function resetIgnored(): void {
     fetch(
-        'ws.php?' +
+        config.wsUrl + '?' +
             new URLSearchParams({
                 method: 'pwg.extensions.ignoreUpdate',
                 reset: 'true',

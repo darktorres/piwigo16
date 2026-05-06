@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface MaintenanceEnvPageData {
     no_active_plugin: string;
@@ -12,7 +13,7 @@ let hasActivePlugins = false;
 let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetch('ws.php?format=json&method=pwg.plugins.getList')
+    fetch(config.wsUrl + '?format=json&method=pwg.plugins.getList')
         .then((r) => r.json())
         .then((data: { result: Array<{ name: string; state: string }> }) => {
             plugins = data.result;

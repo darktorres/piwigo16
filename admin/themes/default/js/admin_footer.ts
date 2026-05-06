@@ -1,3 +1,5 @@
+import { config } from './config';
+
 // Externally-targeted links open in a new tab/window.
 document.querySelectorAll<HTMLAnchorElement>('a.externalLink').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -21,7 +23,7 @@ function hideWhatsNew(): void {
     if (!whatsNew) return;
     const version = whatsNew.dataset['whatsNewVersion'] ?? '';
     if (version) {
-        fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+        fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({
                 param: 'show_whats_new_' + version,

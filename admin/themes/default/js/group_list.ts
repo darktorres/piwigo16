@@ -2,6 +2,7 @@ import TomSelect from 'tom-select';
 import Cookies from 'js-cookie';
 import { getPageData } from './page-data';
 import { UsersCache } from './LocalStorageCache';
+import { config } from './config';
 
 interface GroupListPageData {
     pwg_token: string;
@@ -95,7 +96,7 @@ const grp = (id: any) => document.getElementById('group-' + id);
 const grpQ = (id: any, sel: string) => grp(id)?.querySelector<HTMLElement>(sel);
 
 function pwgPost(method: string, body: string | URLSearchParams): Promise<any> {
-    return fetch(`ws.php?format=json&method=${method}`, {
+    return fetch(`${config.wsUrl}?format=json&method=${method}`, {
         method: 'POST',
         ...(typeof body === 'string'
             ? { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }
@@ -289,7 +290,7 @@ function createGroup(group: any): HTMLElement {
         nbUsers.innerHTML =
             group.nb_users + ' ' + (group.nb_users > 1 ? str_members_default : str_member_default);
     const perms = q('.manage-permissions') as HTMLAnchorElement | null;
-    if (perms) perms.href = 'admin.php?page=group_perm&group_id=' + group.id;
+    if (perms) perms.href = config.adminUrl + '?page=group_perm&group_id=' + group.id;
     hideAddGroupForm();
     const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
     q('.icon-users-1')?.classList.add(colors[Number(group.id) % 5]);
@@ -719,7 +720,7 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
         }
     });
 
-    fetch(`ws.php?format=json&method=pwg.groups.merge`, {
+    fetch(`${config.wsUrl}?format=json&method=pwg.groups.merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `destination_group_id=${dest_grp}${str_merge_group}&pwg_token=${pwg_token}`,
@@ -780,7 +781,7 @@ qs('.ConfirmDeleteButton')?.addEventListener('click', () => {
     ts.removeClass(deleteBtn, 'icon-ok');
 
     const body = ids.map((id) => `group_id[]=${id}`).join('&') + `&pwg_token=${pwg_token}`;
-    fetch('ws.php?format=json&method=pwg.groups.delete', {
+    fetch(config.wsUrl + '?format=json&method=pwg.groups.delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
@@ -902,7 +903,7 @@ function openUserManager(grp_id: any) {
                 if (document.getElementById('UserList'))
                     document.getElementById('UserList')!.dataset['groupId'] = String(grp_id);
                 const linkEl = qs<HTMLAnchorElement>('.LinkUserManager a');
-                if (linkEl) linkEl.href = 'admin.php?page=user_list&group=' + grp_id;
+                if (linkEl) linkEl.href = config.adminUrl + '?page=user_list&group=' + grp_id;
             }
         })
         .catch(console.log);

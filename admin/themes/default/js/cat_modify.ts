@@ -2,6 +2,7 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
+import { config } from './config';
 
 interface CatModifyPageData {
     album_id: number;
@@ -54,7 +55,7 @@ let default_parent_album = _default_parent_album;
 let temp_txt = '';
 
 function pwgPost(method: string, data: Record<string, any>): Promise<any> {
-    return fetch(`ws.php?format=json&method=${method}`, {
+    return fetch(`${config.wsUrl}?format=json&method=${method}`, {
         method: 'POST',
         body: new URLSearchParams(
             Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
@@ -64,7 +65,7 @@ function pwgPost(method: string, data: Record<string, any>): Promise<any> {
 
 function pwgGet(method: string, data: Record<string, any>): Promise<any> {
     return fetch(
-        `ws.php?format=json&method=${method}&` +
+        `${config.wsUrl}?format=json&method=${method}&` +
             new URLSearchParams(
                 Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
             )

@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from '../../default/js/config';
 
 interface ProfilePageData {
     canUpdatePreferences: boolean;
@@ -238,7 +239,7 @@ function setInfos(
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries({ ...params, pwg_token: PWG_TOKEN }))
         body.append(k, String(v ?? ''));
-    fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body })
+    fetch(`${config.wsUrl}?format=json&method=${method}`, { method: 'POST', body })
         .then((r) => r.json())
         .then((data: any) => {
             if (data.stat === 'ok') {
@@ -262,7 +263,7 @@ function setInfos(
 }
 
 function getAllApiKeys(reset = false): void {
-    fetch('ws.php?format=json&method=pwg.users.api_key.get', {
+    fetch(config.wsUrl + '?format=json&method=pwg.users.api_key.get', {
         method: 'POST',
         body: new URLSearchParams({ pwg_token: PWG_TOKEN }),
     })

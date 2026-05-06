@@ -5,6 +5,7 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface PluginsNewPageData {
     str_confirm_msg: string;
@@ -172,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 boxes.forEach((box) => fragment.appendChild(box));
                 container.appendChild(fragment);
             }
-            fetch('admin.php?plugins_new_order=' + sortOrder);
+            fetch(config.adminUrl + '?plugins_new_order=' + sortOrder);
         });
 
     document.getElementById('search')?.addEventListener('input', function (this: HTMLInputElement) {

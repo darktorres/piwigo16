@@ -4,6 +4,7 @@ import 'nouislider/dist/nouislider.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface UserListPageData {
     pwg_token: string;
@@ -199,7 +200,7 @@ function pwgPost(method: string, params: Record<string, any>): Promise<any> {
         if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
         else if (v !== undefined && v !== null) body.append(k, String(v));
     }
-    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
+    return fetch(`${config.wsUrl}?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
         r.json()
     );
 }
@@ -802,7 +803,7 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
     const pwdInput = q<HTMLInputElement>('.user-property-password-change input');
     if (pwdInput) pwdInput.value = '';
     const permsLink = q<HTMLAnchorElement>('.user-property-permissions a');
-    if (permsLink) permsLink.href = `admin.php?page=user_perm&user_id=${user_to_edit.id}`;
+    if (permsLink) permsLink.href = `${config.adminUrl}?page=user_perm&user_id=${user_to_edit.id}`;
     const regEl = q('.user-property-register');
     if (regEl) {
         regEl.innerHTML = user_to_edit.registration_date_string;
@@ -1185,7 +1186,7 @@ function get_first_selection_usernames(callback: any) {
     const body = new URLSearchParams({ display: 'username', order: 'id' });
     ids.forEach((id) => body.append('user_id[]', id));
     body.append('exclude[]', String(guest_id));
-    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json&method=pwg.users.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((d) => {
             d.result.users.forEach((u: any) => {
@@ -1213,7 +1214,7 @@ function select_whole_set() {
     });
     body.append('exclude[]', String(guest_id));
     show(qs('#checkActions .loading'));
-    fetch('ws.php?format=json&method=pwg.users.getList', { method: 'POST', body })
+    fetch(config.wsUrl + '?format=json&method=pwg.users.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((d) => {
             selection = d.result.map((x: any) => ({ id: x }));
@@ -1785,7 +1786,7 @@ function event_validate_main_user(new_main_username: string, user_id: any) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+    fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'user-manager-view', value: view_type }),
     });
@@ -2375,7 +2376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 else formData.append(key, val);
             });
 
-            fetch('ws.php?format=json&method=' + method, { method: 'POST', body: formData })
+            fetch(config.wsUrl + '?format=json&method=' + method, { method: 'POST', body: formData })
                 .then(() => {
                     if (applyActionLoading) applyActionLoading.style.display = 'none';
                     if (applyActionInfos) applyActionInfos.style.display = 'inline-block';

@@ -2,6 +2,7 @@ import { mount, type AlbumTree, type TreeNode, type MoveInfo, type NodeData } fr
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
+import { config } from './config';
 
 // ---------------------------------------------------------------------------
 // Page-data interface — values injected by PHP via #pwg-page-data JSON block
@@ -122,7 +123,7 @@ function pwgPost(method: string, data: Record<string, any>): Promise<any> {
         if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item)));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(`ws.php?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
+    return fetch(`${config.wsUrl}?format=json&method=${method}`, { method: 'POST', body }).then((r) =>
         r.json()
     );
 }
@@ -461,12 +462,12 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
         '"></a>' +
         '<a class="move-cat-edit icon-pencil tiptip" title="' +
         str_edit_album +
-        '" href="admin.php?page=album-' +
+        '" href="' + config.adminUrl + '?page=album-' +
         node.id +
         '"></a>' +
         '<a class="move-cat-upload icon-plus-circled tiptip" title="' +
         str_add_photo +
-        '" href="admin.php?page=photos_add&album=' +
+        '" href="' + config.adminUrl + '?page=photos_add&album=' +
         node.id +
         '"></a>' +
         '<a class="move-cat-see icon-eye tiptip" title="' +

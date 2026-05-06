@@ -153,7 +153,7 @@ final readonly class UrlGenerator
     /** @param array<string,mixed> $params */
     public function ws(array $params = []): string
     {
-        $base = $this->urls->getRootUrl() . 'ws.php';
+        $base = $this->routeUrl('ws');
         return !empty($params) ? $this->urls->addUrlParams($base, $params) : $base;
     }
 

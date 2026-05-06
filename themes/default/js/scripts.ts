@@ -1,3 +1,5 @@
+import { config } from './config';
+
 function phpWGOpenWindow(theURL: string, winName: string, features: string): void {
     const img = new Image();
     img.src = theURL;
@@ -71,7 +73,7 @@ class PwgWS {
         this.xhr = new XMLHttpRequest();
         this.xhr.onreadystatechange = pwgBind(this, this.onStateChange) as () => void;
 
-        let url = this.urlRoot + 'ws.php?format=json&method=' + method;
+        let url = config.wsUrl + '?format=json&method=' + method;
         let body = '';
         if (parameters) {
             for (const prop in parameters) {

@@ -6,7 +6,9 @@ namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Url\UrlGenerator;
 use Smarty\Debug;
 use Smarty\Smarty;
 use Smarty\TemplateBase;
@@ -454,6 +456,7 @@ class Template
         }
 
         $this->smarty->assign('ROOT_URL', get_root_url());
+        $this->smarty->assign('WS_URL', ServiceLocator::get(UrlGenerator::class)->ws());
 
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);

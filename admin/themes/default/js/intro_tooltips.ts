@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface IntroTooltipsPageData {
     storage_details: Record<
@@ -36,11 +37,11 @@ const { storage_details, str_gb, str_mb, translate_type, translate_files, dashbo
 
 /*---- Dashboard extras (migrated from intro.tpl {footer_script}) ----*/
 
-const piwigo_need_update_msg = `<a href="admin.php?page=updates">${dashboard.str_piwigo_need_update} <i class="icon-right"></i></a>`;
-const ext_need_update_msg = `<a href="admin.php?page=updates&tab=ext">${dashboard.str_ext_need_update} <i class="icon-right"></i></a>`;
+const piwigo_need_update_msg = `<a href="${config.adminUrl}?page=updates">${dashboard.str_piwigo_need_update} <i class="icon-right"></i></a>`;
+const ext_need_update_msg = `<a href="${config.adminUrl}?page=updates&tab=ext">${dashboard.str_ext_need_update} <i class="icon-right"></i></a>`;
 
 if (dashboard.check_for_updates) {
-    fetch('ws.php?format=json&method=pwg.extensions.checkUpdates', {
+    fetch(config.wsUrl + '?format=json&method=pwg.extensions.checkUpdates', {
         signal: AbortSignal.timeout(5000),
     })
         .then((r) => r.json())
@@ -111,7 +112,7 @@ if (dashboard.newsletter) {
         el.addEventListener('click', (e) => {
             const promo = document.querySelector<HTMLElement>('.promote-newsletter');
             if (promo) promo.style.display = 'none';
-            fetch('admin.php?action=hide_newsletter_subscription').catch(() => {
+            fetch(config.adminUrl + '?action=hide_newsletter_subscription').catch(() => {
                 /* best-effort */
             });
             if (el.classList.contains('newsletter-hide')) {

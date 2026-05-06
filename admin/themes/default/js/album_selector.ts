@@ -1,4 +1,5 @@
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface AlbumSelectorPageData {
     str_album_modal_title: string;
@@ -557,7 +558,7 @@ class AlbumSelector {
     }
 
     #apiPost(params: Record<string, any>): Promise<any> {
-        return fetch('ws.php?format=json&method=' + this.#methodPwg, {
+        return fetch(config.wsUrl + '?format=json&method=' + this.#methodPwg, {
             method: 'POST',
             body: new URLSearchParams(
                 Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
@@ -657,7 +658,7 @@ class AlbumSelector {
             return;
         }
 
-        fetch('ws.php?format=json&method=pwg.categories.add', {
+        fetch(config.wsUrl + '?format=json&method=pwg.categories.add', {
             method: 'POST',
             body: new URLSearchParams({
                 name: cat_name,
@@ -675,7 +676,7 @@ class AlbumSelector {
 
     #get_album_by_id(cat_id: any) {
         fetch(
-            `ws.php?format=json&method=pwg.categories.getAdminList&` +
+            `${config.wsUrl}?format=json&method=pwg.categories.getAdminList&` +
                 new URLSearchParams({
                     cat_id: String(cat_id),
                     additional_output: 'full_name_with_admin_links',

@@ -1,6 +1,7 @@
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';
+import { config } from './config';
 
 interface PluginsInstalledPageData {
     pwg_token: string;
@@ -156,7 +157,7 @@ function pluginAction(id: string, action: string): Promise<any> {
         pwg_token,
         format: 'json',
     });
-    return fetch('ws.php?' + params).then((r) => r.json());
+    return fetch(config.wsUrl + '?' + params).then((r) => r.json());
 }
 
 function activatePlugin(id: string) {
@@ -294,7 +295,7 @@ function uninstallPlugin(id: string) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch('ws.php?format=json&method=pwg.users.preferences.set', {
+    fetch(config.wsUrl + '?format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'plugin-manager-view', value: view_type }),
     });
@@ -554,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetch(
-        'admin.php?' +
+        config.adminUrl + '?' +
             new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' })
     )
         .then((r) => r.json())

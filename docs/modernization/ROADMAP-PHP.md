@@ -1763,8 +1763,19 @@ Method groups:
 
 **Unit tests:** `tests/Unit/Url/UrlGeneratorTest.php` — 17 cases covering all method groups.
 
-**Deferred:**
-- `src/Piwigo/Page/Context/` typed page DTOs — deferred to **#23** (Latte template migration); DTOs are only useful once Latte templates receive typed objects.
+**Context DTOs** — `src/Piwigo/Page/Context/`: five `readonly` value objects defining the type contracts that #23 Wave 0 Latte partials will be declared against:
+
+| DTO | Properties |
+|---|---|
+| `AlbumPageContext` | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl`, `section` |
+| `PicturePageContext` | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
+| `SearchPageContext` | `query`, `filters`, `results`, `pagination` |
+| `TagsPageContext` | `tags`, `selectedTags`, `photos`, `displayMode` |
+| `AdminPageContext` *(base, non-final)* | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages` |
+
+No controllers populate them yet — that migration happens as each `.latte` partial is written in #23.
+
+**Still deferred:**
 - Deletion of root shims + legacy `include/` bridges — deferred until `AuthMiddleware` absorbs `user.inc.php` and `SectionInitializer` absorbs `section_init.inc.php`.
 
 ### Verification

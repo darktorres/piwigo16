@@ -89,6 +89,7 @@ final class RegisterController implements ControllerInterface
             'F_LOGIN'                     => $login,
             'F_EMAIL'                     => $email,
             'obligatory_user_mail_address' => Config::obligatoryUserMailAddress(),
+            'U_IDENTIFICATION'             => ServiceLocator::get(UrlGenerator::class)->identification(),
         ]);
 
         $themeconf    = $tpl->get_template_vars('themeconf');

@@ -94,7 +94,7 @@
       </form>
 
       <div class="secondary-links">
-        <p>{'Already have an account ?'|translate} <a href="identification.php" title="{'Login'|translate}">{'Login'|translate}</a></p>
+        <p>{'Already have an account ?'|translate} <a href="{$U_IDENTIFICATION}" title="{'Login'|translate}">{'Login'|translate}</a></p>
       </div>
             
     </div>

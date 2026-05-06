@@ -120,11 +120,13 @@ final class PasswordController implements ControllerInterface
         $tpl->set_filenames(['password' => 'password.tpl']);
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
-            'title'       => $title,
-            'form_action' => ServiceLocator::get(UrlGenerator::class)->password(),
-            'action'      => $page['action'],
-            'username'    => is_scalar($page['username'] ?? null) ? $page['username'] : ($user['username'] ?? ''),
-            'PWG_TOKEN'   => get_pwg_token(),
+            'title'          => $title,
+            'form_action'    => ServiceLocator::get(UrlGenerator::class)->password(),
+            'action'         => $page['action'],
+            'username'       => is_scalar($page['username'] ?? null) ? $page['username'] : ($user['username'] ?? ''),
+            'PWG_TOKEN'      => get_pwg_token(),
+            'U_IDENTIFICATION' => ServiceLocator::get(UrlGenerator::class)->identification(),
+            'U_REGISTER'     => ServiceLocator::get(UrlGenerator::class)->register(),
         ]);
 
         $themeconf    = $tpl->get_template_vars('themeconf');

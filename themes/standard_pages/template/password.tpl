@@ -131,7 +131,7 @@
       </form>
 
       <div class="secondary-links">
-        <p>{'Return to <a href="identification.php" title="Sign in">Sign in</a>'|translate}</p>
+        <p>{'Return to <a href="identification.php" title="Sign in">Sign in</a>'|translate|replace:'identification.php':$U_IDENTIFICATION}</p>
       </div>
 {else}
     {if $action eq 'lost_end'}
@@ -146,9 +146,9 @@
           {'Your password was successfully reset'|translate}
         {/if}
       </span>
-      <a href="identification.php" title="{'Login'|translate}" class="btn-main">{'Login'|translate}</a>
+      <a href="{$U_IDENTIFICATION}" title="{'Login'|translate}" class="btn-main">{'Login'|translate}</a>
     {else}
-      <p>{'An error has occured please got back to <a href="identification.php" title="Sign in">Sign in</a> or <a href="register.php">Register</a>'|translate}</p>
+      <p>{'An error has occured please got back to <a href="identification.php" title="Sign in">Sign in</a> or <a href="register.php">Register</a>'|translate|replace:'identification.php':$U_IDENTIFICATION|replace:'register.php':$U_REGISTER}</p>
     {/if}
 {/if}
             

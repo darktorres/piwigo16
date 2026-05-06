@@ -197,7 +197,7 @@ final class GalleryController implements ControllerInterface
             }
 
             if ($category !== null && is_admin() && Config::indexEditIcon()) {
-                $tpl->assign('U_EDIT', get_root_url() . 'admin.php?page=album-' . $catId);
+                $tpl->assign('U_EDIT', ServiceLocator::get(UrlGenerator::class)->admin('album-' . $catId));
             }
 
             if (is_admin() && !empty($items) && Config::indexCaddieIcon()) {

@@ -201,7 +201,7 @@ function initialize_menu(): void
 
         $block->data['random'] =
           [
-            'URL' => get_root_url().'random.php',
+            'URL' => ServiceLocator::get(UrlGenerator::class)->random(),
             'TITLE' => l10n('display a set of random photos'),
             'NAME' => l10n('Random photos'),
             'REL' => 'rel="nofollow"',
@@ -237,7 +237,7 @@ function initialize_menu(): void
           [
             'TITLE' => l10n('display available tags'),
             'NAME' => l10n('Tags'),
-            'URL' => get_root_url().'tags.php',
+            'URL' => ServiceLocator::get(UrlGenerator::class)->tagsPage(),
             'COUNTER' => get_nb_available_tags(),
           ];
 
@@ -246,7 +246,7 @@ function initialize_menu(): void
           [
             'TITLE' => l10n('search'),
             'NAME' => l10n('Search'),
-            'URL' => get_root_url().'search.php',
+            'URL' => ServiceLocator::get(UrlGenerator::class)->searchPage(),
             'REL' => 'rel="search"',
           ];
 
@@ -256,7 +256,7 @@ function initialize_menu(): void
               [
                 'TITLE' => l10n('display last user comments'),
                 'NAME' => l10n('Comments'),
-                'URL' => get_root_url().'comments.php',
+                'URL' => ServiceLocator::get(UrlGenerator::class)->comments(),
                 'COUNTER' => get_nb_available_comments(),
               ];
         }
@@ -274,7 +274,7 @@ function initialize_menu(): void
           [
             'TITLE' => l10n('RSS feed'),
             'NAME' => l10n('Notification'),
-            'URL' => get_root_url().'notification.php',
+            'URL' => ServiceLocator::get(UrlGenerator::class)->notification(),
             'REL' => 'rel="nofollow"',
           ];
         $block->template = 'menubar_menu.tpl';
@@ -291,12 +291,12 @@ function initialize_menu(): void
             ]
         );
         if (Config::allowUserRegistration()) {
-            $template->assign('U_REGISTER', get_root_url().'register.php');
+            $template->assign('U_REGISTER', ServiceLocator::get(UrlGenerator::class)->register());
         }
     } else {
         $template->assign('USERNAME', stripslashes(CurrentUser::get()->username));
         if (is_autorize_status(ACCESS_CLASSIC)) {
-            $template->assign('U_PROFILE', get_root_url().'profile.php');
+            $template->assign('U_PROFILE', ServiceLocator::get(UrlGenerator::class)->profile());
         }
 
         // the logout link has no meaning with Apache authentication : it is not

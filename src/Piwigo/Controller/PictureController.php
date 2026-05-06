@@ -17,6 +17,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -469,7 +470,7 @@ SELECT *
                 $tpl->assign(['U_SET_AS_REPRESENTATIVE' => add_url_params($url_self, ['action' => 'set_as_representative'])]);
             }
             if (Config::pictureEditIcon()) {
-                $tpl->assign('U_PHOTO_ADMIN', get_root_url() . 'admin.php?page=photo-' . $imageId);
+                $tpl->assign('U_PHOTO_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId));
             }
             if (Config::pictureCaddieIcon()) {
                 $tpl->assign('U_CADDIE', add_url_params($url_self, ['action' => 'add_to_caddie']));

@@ -58,8 +58,13 @@ if (
 
         if (is_admin()) {
             $url = Config::noPhotoYetUrl();
-            if (!str_starts_with((string) $url, 'http')) {
-                $url = get_root_url().$url;
+            if (str_starts_with((string) $url, 'http')) {
+                // absolute URL set by admin — use as-is
+            } elseif ($url === '' || $url === 'admin.php?page=photos_add') {
+                // default or legacy value — use the routed URL
+                $url = ServiceLocator::get(UrlGenerator::class)->admin('photos_add');
+            } else {
+                $url = get_root_url() . $url;
             }
 
             $template->assign(

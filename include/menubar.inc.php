@@ -305,7 +305,7 @@ function initialize_menu(): void
             $template->assign('U_LOGOUT', get_root_url().'?act=logout');
         }
         if (is_admin()) {
-            $template->assign('U_ADMIN', get_root_url().'admin.php');
+            $template->assign('U_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin());
         }
     }
     if (($block = $menu->get_block('mbIdentification')) != null) {

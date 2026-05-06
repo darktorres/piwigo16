@@ -159,7 +159,7 @@ final readonly class UrlGenerator
 
     public function admin(string $section = ''): string
     {
-        $base = $this->urls->getRootUrl() . 'admin.php';
+        $base = $this->routeUrl('admin');
         return $section !== '' ? $base . '?page=' . $section : $base;
     }
 

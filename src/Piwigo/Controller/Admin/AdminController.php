@@ -10,6 +10,7 @@ use Piwigo\Controller\ControllerInterface;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
@@ -32,6 +33,14 @@ final class AdminController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         defined('IN_ADMIN') or define('IN_ADMIN', true);
+
+        // common.inc.php creates the frontend template (IN_ADMIN not yet set).
+        // Replace it with the admin-theme template now that IN_ADMIN is defined.
+        $admin_theme_raw = userprefs_get_param('admin_theme', 'roma');
+        $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'roma';
+        $adminTpl        = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
+        TemplateRegistry::set($adminTpl);
+        $GLOBALS['template'] = $adminTpl;
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];

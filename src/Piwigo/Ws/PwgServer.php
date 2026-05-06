@@ -454,7 +454,21 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if (PwgServerRegistry::isInitialized()) {
             return;
         }
-        include_once PHPWG_ROOT_PATH . 'include/ws_core.inc.php';
+        if (!defined('WS_PARAM_OPTIONAL')) {
+            define('WS_PARAM_ACCEPT_ARRAY', WsParam::AcceptArray->value);
+            define('WS_PARAM_FORCE_ARRAY', WsParam::ForceArray->value);
+            define('WS_PARAM_OPTIONAL', WsParam::Optional->value);
+            define('WS_TYPE_BOOL', WsType::Bool->value);
+            define('WS_TYPE_INT', WsType::Int->value);
+            define('WS_TYPE_FLOAT', WsType::Float->value);
+            define('WS_TYPE_POSITIVE', WsType::Positive->value);
+            define('WS_TYPE_NOTNULL', WsType::NotNull->value);
+            define('WS_TYPE_ID', WsType::Id->value);
+            define('WS_ERR_INVALID_METHOD', 501);
+            define('WS_ERR_MISSING_PARAM', 1002);
+            define('WS_ERR_INVALID_PARAM', 1003);
+            define('WS_XML_ATTRIBUTES', 'attributes_xml_');
+        }
 
         add_event_handler('ws_add_methods', 'ws_addDefaultMethods');
         add_event_handler('ws_invoke_allowed', 'ws_isInvokeAllowed', EVENT_HANDLER_PRIORITY_NEUTRAL);

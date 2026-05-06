@@ -25,22 +25,21 @@ final class HistoryAdminService
         $tabsheet->assign();
     }
 
-    /**
-     * @param array<mixed> $a
-     * @param array<mixed> $b
-     */
-    public function historyCompare(array $a, array $b): int
+    public function historyCompare(mixed $a, mixed $b): int
     {
-        $aStr = (is_scalar($a['date'] ?? null) ? (string) $a['date'] : '') . (is_scalar($a['time'] ?? null) ? (string) $a['time'] : '');
-        $bStr = (is_scalar($b['date'] ?? null) ? (string) $b['date'] : '') . (is_scalar($b['time'] ?? null) ? (string) $b['time'] : '');
+        $aArr = is_array($a) ? $a : [];
+        $bArr = is_array($b) ? $b : [];
+        $aStr = (is_scalar($aArr['date'] ?? null) ? (string) $aArr['date'] : '') . (is_scalar($aArr['time'] ?? null) ? (string) $aArr['time'] : '');
+        $bStr = (is_scalar($bArr['date'] ?? null) ? (string) $bArr['date'] : '') . (is_scalar($bArr['time'] ?? null) ? (string) $bArr['time'] : '');
         return strcmp($aStr, $bStr);
     }
 
     /**
      * @param array<mixed> $data
      * @param array<mixed> $search
+     * @param list<array<string, mixed>> $data
      * @param string[]|string $types
-     * @return array<mixed>
+     * @return list<array<string, mixed>>
      */
     public function getHistory(array $data, array $search, array|string $types): array
     {

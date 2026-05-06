@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
@@ -12,8 +13,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 final class TagsEndpoints
 {
@@ -155,7 +154,7 @@ final class TagsEndpoints
             return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
         }
         if (count($tagIdsDel) > 0) {
-            delete_tags($tagIdsDel);
+            ServiceLocator::get(TagAdminService::class)->deleteTags($tagIdsDel);
             return ['id' => $tagIdsDel];
         }
         return ['id' => []];
@@ -252,7 +251,7 @@ final class TagsEndpoints
             pwg_activity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);
         }
         trigger_notify('merge_tags', $mergeDestId, $mergeTag);
-        delete_tags($mergeTag);
+        ServiceLocator::get(TagAdminService::class)->deleteTags($mergeTag);
         return ['destination_tag' => $mergeDestId, 'deleted_tag' => $mergeTagIds, 'images_in_merged_tag' => array_merge($imageInDest, $imageToAdd)];
     }
 }

@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Admin\Metadata\MetadataAdminService;
+use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
@@ -21,11 +27,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
-include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
-include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
 final class ImagesEndpoints
 {
@@ -511,7 +512,7 @@ final class ImagesEndpoints
         $affected  = ServiceLocator::get(ImageRepository::class)->setLevelForIds($pLevel, $pImageIds);
         pwg_activity('photo', $pImageIds, 'edit');
         if ($affected) {
-            invalidate_user_cache();
+            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
         return $affected;
     }
@@ -525,7 +526,7 @@ final class ImagesEndpoints
         $pImageIdArr   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
         $pCategoryId   = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         if (count($pImageIdArr) > 1) {
-            save_images_order($pCategoryId, $pImageIdArr);
+            ServiceLocator::get(CategoryAdminService::class)->saveImagesOrder($pCategoryId, $pImageIdArr);
             $imageIds = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
             return ['image_id' => $imageIds, 'category_id' => $pCategoryId];
         }
@@ -609,7 +610,7 @@ final class ImagesEndpoints
                 return true;
             }
         }
-        add_uploaded_file($filePath, $imageFile, null, null, $pImageId, $imageMd5sum);
+        ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $imageFile, null, null, $pImageId, $imageMd5sum);
         return null;
     }
 
@@ -650,7 +651,7 @@ final class ImagesEndpoints
         $filePath = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-original';
         $this->mergeChunks($filePath, $pOriginalSum, $originalType);
         chmod($filePath, 0644);
-        $imageId = add_uploaded_file($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
+        $imageId = ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
         $update  = [];
         foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
             if (isset($params[$key])) {
@@ -671,9 +672,9 @@ final class ImagesEndpoints
             }
         }
         if (isset($params['tag_ids']) && !empty($params['tag_ids'])) {
-            set_tags(explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''), $imageId);
+            ServiceLocator::get(TagAdminService::class)->setTags(explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''), $imageId);
         }
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return ['image_id' => $imageId, 'url' => make_picture_url($urlParams)];
     }
 
@@ -710,7 +711,7 @@ final class ImagesEndpoints
         }
         $filesTmp  = is_scalar($filesImage['tmp_name']) ? (string) $filesImage['tmp_name'] : '';
         $filesName = is_scalar($filesImage['name']) ? (string) $filesImage['name'] : null;
-        $imageId   = add_uploaded_file($filesTmp, $filesName, $pCategoryAs, 8, $pImageIdAs > 0 ? $pImageIdAs : null);
+        $imageId   = ServiceLocator::get(UploadService::class)->addUploadedFile($filesTmp, $filesName, $pCategoryAs, 8, $pImageIdAs > 0 ? $pImageIdAs : null);
         $update    = [];
         foreach (['name', 'author', 'comment', 'level', 'date_creation'] as $key) {
             if (isset($params[$key])) {
@@ -727,10 +728,10 @@ final class ImagesEndpoints
             } else {
                 $tagNames = preg_split('~(?<!\\\),~', is_scalar($params['tags']) ? (string) $params['tags'] : '') ?: [];
                 foreach ($tagNames as $tagName) {
-                    $tagIds[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tagName) ?? '');
+                    $tagIds[] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName(preg_replace('#\\\\*,#', ',', $tagName) ?? '');
                 }
             }
-            add_tags($tagIds, [$imageId]);
+            ServiceLocator::get(TagAdminService::class)->addTags($tagIds, [$imageId]);
         }
         $urlParams = ['image_id' => $imageId];
         if (!empty($pCategoryAs)) {
@@ -739,7 +740,7 @@ final class ImagesEndpoints
             $urlParams['section']  = 'categories';
             $urlParams['category'] = $category;
         }
-        sync_metadata([$imageId]);
+        ServiceLocator::get(MetadataAdminService::class)->syncMetadata([$imageId]);
         return ['image_id' => $imageId, 'url' => make_picture_url($urlParams)];
     }
 
@@ -834,7 +835,7 @@ final class ImagesEndpoints
                     $addStatus = 'update';
                 }
             }
-            $imageId = add_uploaded_file($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
+            $imageId = ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
             $catRepo2   = ServiceLocator::get(CategoryRepository::class);
             $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
             $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
@@ -952,10 +953,10 @@ final class ImagesEndpoints
         $pCategoryAsync  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
         $pLevelAsync     = is_numeric($params['level']) ? (int) $params['level'] : null;
         $pImageIdUpload  = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
-        $imageId         = add_uploaded_file($outputFilepath, $pFilename, $pCategoryAsync, $pLevelAsync, $pImageIdUpload, $pOriginalSum);
+        $imageId         = ServiceLocator::get(UploadService::class)->addUploadedFile($outputFilepath, $pFilename, $pCategoryAsync, $pLevelAsync, $pImageIdUpload, $pOriginalSum);
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $imageId);
         if (isset($params['tag_ids']) && !empty($params['tag_ids'])) {
-            set_tags(explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''), $imageId);
+            ServiceLocator::get(TagAdminService::class)->setTags(explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''), $imageId);
         }
         $update = [];
         foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
@@ -966,7 +967,7 @@ final class ImagesEndpoints
         if (count($update) > 0) {
             single_update(IMAGES_TABLE, $update, ['id' => $imageId]);
         }
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         $userRef = &$GLOBALS['user'];
         if (is_array($userRef) && !empty($params['level']) && $params['level'] > ($userRef['level'] ?? 0)) {
             $userRef['level'] = $params['level'];
@@ -1113,7 +1114,7 @@ final class ImagesEndpoints
             }
         }
         $imgRepo->deleteFormatsByFormatIds(array_map(intval(...), $formatIds));
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return $ok;
     }
 
@@ -1201,9 +1202,9 @@ final class ImagesEndpoints
                 }
             }
             if ($multipleValueMode === 'replace') {
-                set_tags($tagIds, $setImageId);
+                ServiceLocator::get(TagAdminService::class)->setTags($tagIds, $setImageId);
             } elseif ($multipleValueMode === 'append') {
-                add_tags($tagIds, [$setImageId]);
+                ServiceLocator::get(TagAdminService::class)->addTags($tagIds, [$setImageId]);
             } else {
                 return new PwgError(500, '[ws_images_setInfo] invalid parameter multiple_value_mode "' . $multipleValueMode . '", possible values are {replace, append}.');
             }
@@ -1216,10 +1217,10 @@ final class ImagesEndpoints
             foreach ($requestTagList as $idx => $tagCandidate) {
                 $requestTagList[$idx] = strip_tags(stripslashes(is_scalar($tagCandidate) ? (string) $tagCandidate : ''));
             }
-            $tagList = get_tag_ids($requestTagList);
-            set_tags($tagList, $setImageId);
+            $tagList = ServiceLocator::get(TagAdminService::class)->getTagIds($requestTagList);
+            ServiceLocator::get(TagAdminService::class)->setTags($tagList, $setImageId);
         }
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return null;
     }
 
@@ -1235,8 +1236,8 @@ final class ImagesEndpoints
         }
         $delImageIdsRaw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $delImageIdsRaw);
         $imageIds       = array_filter($delImageIdsRaw, fn (int $v): bool => $v > 0);
-        $ret            = delete_elements(array_values($imageIds), true);
-        invalidate_user_cache();
+        $ret            = ServiceLocator::get(ImageAdminService::class)->deleteElements(array_values($imageIds), true);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return $ret;
     }
 
@@ -1255,7 +1256,7 @@ final class ImagesEndpoints
      */
     public function emptyLounge(array $params, PwgServer $service): array
     {
-        return ['rows' => empty_lounge()];
+        return ['rows' => ServiceLocator::get(CategoryAdminService::class)->emptyLounge()];
     }
 
     /**
@@ -1274,7 +1275,7 @@ final class ImagesEndpoints
         $ucImageIdsRaw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ucImageIdsRaw);
         $imageIds      = array_values(array_filter($ucImageIdsRaw, fn (int $v): bool => $v > 0));
         $ucCategoryId  = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $movedFromLounge  = empty_lounge();
+        $movedFromLounge  = ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
         $categoryInfos    = ['nb_photos' => ServiceLocator::get(CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
         $categoryName     = get_cat_display_name_from_id($ucCategoryId, null);
         trigger_notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
@@ -1327,7 +1328,7 @@ final class ImagesEndpoints
         if (empty($imageIds)) {
             return new PwgError(403, 'No image found');
         }
-        sync_metadata($imageIds);
+        ServiceLocator::get(MetadataAdminService::class)->syncMetadata($imageIds);
         return ['nb_synchronized' => count($imageIds)];
     }
 
@@ -1341,8 +1342,8 @@ final class ImagesEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $orphanIdsToDelete = array_slice(get_orphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
-        $deletedCount      = delete_elements($orphanIdsToDelete, true);
-        invalidate_user_cache();
+        $deletedCount      = ServiceLocator::get(ImageAdminService::class)->deleteElements($orphanIdsToDelete, true);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return ['nb_deleted' => $deletedCount, 'nb_orphans' => count(get_orphans())];
     }
 
@@ -1360,13 +1361,13 @@ final class ImagesEndpoints
         }
         $scAction = is_string($params['action'] ?? null) ? $params['action'] : '';
         if ($scAction === 'associate') {
-            associate_images_to_categories($scImageIds, [$scCategoryId]);
+            ServiceLocator::get(CategoryAdminService::class)->associateImagesToCategories($scImageIds, [$scCategoryId]);
         } elseif ($scAction === 'dissociate') {
-            dissociate_images_from_category($scImageIds, (string) $scCategoryId);
+            ServiceLocator::get(CategoryAdminService::class)->dissociateImagesFromCategory($scImageIds, (string) $scCategoryId);
         } elseif ($scAction === 'move') {
-            move_images_to_categories($scImageIds, [$scCategoryId]);
+            ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories($scImageIds, [$scCategoryId]);
         }
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return null;
     }
 }

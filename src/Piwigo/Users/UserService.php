@@ -11,6 +11,7 @@ use Piwigo\Auth\PwgTOTP;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
@@ -625,7 +626,7 @@ SELECT DISTINCT f.image_id
             }
         }
 
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('user', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit');
 
         return ['user_id' => $params['user_id'], 'infos' => $updatesInfos, 'account' => $updates];

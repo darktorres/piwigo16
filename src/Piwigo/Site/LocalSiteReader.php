@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Site;
 
+use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -130,7 +132,7 @@ class LocalSiteReader
     /** @return array<mixed> */
     public function get_metadata_attributes(): array
     {
-        return get_sync_metadata_attributes();
+        return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadataAttributes();
     }
 
     /**
@@ -139,7 +141,7 @@ class LocalSiteReader
      */
     public function get_element_metadata(array $infos): array|false
     {
-        return get_sync_metadata($infos);
+        return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadata($infos);
     }
 
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string

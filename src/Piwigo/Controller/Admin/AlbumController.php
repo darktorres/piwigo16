@@ -1015,7 +1015,7 @@ final class AlbumController
             if (isset($_POST['rank_of_image'])) {
                 $rank_of_image = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['rank_of_image']) ? $_POST['rank_of_image'] : []);
                 asort($rank_of_image, SORT_NUMERIC);
-                save_images_order((int) $page['category_id'], array_keys($rank_of_image));
+                ServiceLocator::get(CategoryAdminService::class)->saveImagesOrder((int) $page['category_id'], array_keys($rank_of_image));
             }
 
             if (!empty($_POST['image_order_choice']) && in_array($_POST['image_order_choice'], $image_order_choices)) {

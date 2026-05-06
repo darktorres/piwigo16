@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Languages;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
@@ -274,8 +276,8 @@ final class InstallController implements ControllerInterface
                 $user['preferences']['show_whats_new_' . get_branch_from_version(PHPWG_VERSION)] = false;
 
                 if ($is_newsletter_subscribe) {
-                    fetchRemote(
-                        get_newsletter_subscribe_base_url($language) . $admin_mail,
+                    ServiceLocator::get(AdminService::class)->fetchRemote(
+                        ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
                         $result,
                         [],
                         ['origin' => 'installation']

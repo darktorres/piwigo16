@@ -27,6 +27,7 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\PermalinkService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -248,9 +249,9 @@ final class MiscController
             $permalink  = is_scalar($_POST['permalink'] ?? null) ? (string) $_POST['permalink'] : '';
             $postCatId  = is_scalar($_POST['cat_id']) ? (string) $_POST['cat_id'] : '';
             if (empty($permalink)) {
-                delete_cat_permalink($postCatId, isset($_POST['save']));
+                ServiceLocator::get(PermalinkService::class)->deleteCatPermalink($postCatId, isset($_POST['save']));
             } else {
-                set_cat_permalink($postCatId, $permalink, isset($_POST['save']));
+                ServiceLocator::get(PermalinkService::class)->setCatPermalink($postCatId, $permalink, isset($_POST['save']));
             }
             $selected_cat = [(int) $postCatId];
         } elseif (isset($_GET['delete_permanent'])) {

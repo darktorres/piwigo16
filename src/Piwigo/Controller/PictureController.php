@@ -11,6 +11,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
@@ -179,8 +180,7 @@ SELECT id
                     if (is_admin() && $category !== null) {
                         ServiceLocator::get(CategoryRepository::class)->setRepresentativePicture([$catId], $imageId);
                         pwg_activity('album', $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]);
-                        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                        invalidate_user_cache();
+                        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
                     }
                     redirect($url_self);
                     break;

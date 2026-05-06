@@ -64,6 +64,7 @@ use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\PermalinkService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -209,6 +210,7 @@ return [
     ThemeRepository::class        => factory(static fn (Connection $conn): ThemeRepository => new ThemeRepository($conn, Config::dbPrefix())),
     LanguageRepository::class     => factory(static fn (Connection $conn): LanguageRepository => new LanguageRepository($conn, Config::dbPrefix())),
     PermalinkRepository::class    => factory(static fn (Connection $conn): PermalinkRepository => new PermalinkRepository($conn, Config::dbPrefix())),
+    PermalinkService::class        => factory(static fn (): PermalinkService => new PermalinkService()),
     PermissionRepository::class   => factory(static fn (Connection $conn): PermissionRepository => new PermissionRepository($conn, Config::dbPrefix())),
     SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository => new SiteRepository($conn, Config::dbPrefix())),
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository => new ActivityRepository($conn, Config::dbPrefix())),

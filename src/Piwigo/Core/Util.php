@@ -6,6 +6,8 @@ namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
@@ -533,12 +535,10 @@ final readonly class Util
             $tagsString ?? null
         );
         if ($historyId % 1000 === 0) {
-            include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-            history_summarize(50000);
+            ServiceLocator::get(HistoryAdminService::class)->historySummarize(50000);
         }
         if (Config::historyAutopurgeEvery() > 0 && $historyId % Config::historyAutopurgeEvery() === 0) {
-            include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-            history_autopurge();
+            ServiceLocator::get(HistoryAdminService::class)->historyAutopurge();
         }
         return true;
     }
@@ -642,8 +642,7 @@ final readonly class Util
             $voyager = $voyagers[0];
             $age = strtotime(is_scalar($voyager['dbnow']) ? (string) $voyager['dbnow'] : '') - strtotime(is_scalar($voyager['date_available']) ? (string) $voyager['date_available'] : '');
             if ($age > Config::loungeMaxDuration()) {
-                include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-                empty_lounge();
+                ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
             }
         }
     }

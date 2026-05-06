@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
@@ -11,8 +12,6 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 final class GroupsEndpoints
 {
@@ -67,8 +66,8 @@ final class GroupsEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $groupIdInt = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
-        $groupnames = array_values(delete_groups($groupIdInt) ?: []);
-        invalidate_user_cache();
+        $groupnames = array_values(ServiceLocator::get(UserAdminService::class)->deleteGroups($groupIdInt) ?: []);
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return new PwgNamedArray($groupnames, 'group_deleted');
     }
 
@@ -120,7 +119,7 @@ final class GroupsEndpoints
             $inserts[] = ['group_id' => $adduserGroupId, 'user_id' => $userId];
         }
         mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('group', $adduserGroupId, 'edit');
         pwg_activity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $adduserGroupId]);
@@ -152,13 +151,13 @@ final class GroupsEndpoints
             $inserts[] = ['group_id' => $destGroupId, 'user_id' => $user];
         }
         mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('group', $destGroupId, 'edit');
         foreach ($userToAdd as $userId) {
             $userIdInt = is_numeric($userId) ? (int) $userId : (string) $userId;
             pwg_activity('user', $userIdInt, 'edit', ['associated' => $destGroupId]);
         }
-        delete_groups($mergeGroup);
+        ServiceLocator::get(UserAdminService::class)->deleteGroups($mergeGroup);
         return ['destination_group' => $service->invoke('pwg.groups.getList', ['group_id' => $destGroupId]), 'deleted_group' => $mergeGroupObj];
     }
 
@@ -187,7 +186,7 @@ final class GroupsEndpoints
             $inserts[] = ['group_id' => $insertedId, 'user_id' => $user];
         }
         mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         foreach ($users as $userId) {
             $uid = is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0);
             pwg_activity('user', $uid, 'edit', ['associated' => $dupGroupId]);
@@ -208,7 +207,7 @@ final class GroupsEndpoints
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
         $groupRepo->deleteUserGroupMembers($deluserGroupId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds));
-        invalidate_user_cache();
+        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('group', $deluserGroupId, 'edit');
         pwg_activity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds), 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $deluserGroupId]);

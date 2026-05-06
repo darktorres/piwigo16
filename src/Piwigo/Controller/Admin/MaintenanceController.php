@@ -84,8 +84,6 @@ final class MaintenanceController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (isset($_GET['action'])) {
             check_pwg_token();
         }
@@ -255,7 +253,7 @@ final class MaintenanceController
                 PageState::current()->addInfo(l10n('action successfully performed.'));
                 break;
             case 'check_upgrade':
-                if (!fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
+                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
                     PageState::current()->addError(l10n('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => PHPWG_VERSION];
@@ -408,8 +406,6 @@ final class MaintenanceController
     {
         $tpl = TemplateRegistry::current();
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (isset($_GET['action'])) {
             check_pwg_token();
         }
@@ -482,7 +478,7 @@ final class MaintenanceController
                 ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($dtype);
                 break;
             case 'check_upgrade':
-                if (!fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
+                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
                     PageState::current()->addError(l10n('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => PHPWG_VERSION];
@@ -814,9 +810,6 @@ final class MaintenanceController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-
         $types = array_merge(['none'], SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
 
         $display_thumbnails = [
@@ -924,9 +917,6 @@ final class MaintenanceController
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
-
         ServiceLocator::get(HistoryAdminService::class)->historySummarize();
 
         $tpl->set_filename('stats', 'stats.tpl');
@@ -983,8 +973,6 @@ final class MaintenanceController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         if (!Config::enableSynchronization()) {
             throw new ConfigException('synchronization is disabled');
@@ -1096,8 +1084,6 @@ final class MaintenanceController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         if (!Config::enableSynchronization()) {
             throw new ConfigException('synchronization is disabled');
@@ -1227,18 +1213,19 @@ final class MaintenanceController
                 if (preg_match(Config::syncCharsRegex(), $dir)) {
                     $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toString(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toString(Config::newcatDefaultVisible())];
                     if (isset($db_fulldirs[dirname((string) $fulldir)])) {
-                        $parent = $db_fulldirs[dirname((string) $fulldir)];
+                        $parent    = $db_fulldirs[dirname((string) $fulldir)];
                         $parentKey = (string) $parent;
+                        $parentRow = is_array($db_categories[$parent] ?? null) ? $db_categories[$parent] : [];
                         $insert['id_uppercat'] = $parent;
-                        $insert['uppercats']   = $db_categories[$parent]['uppercats'] . ',' . $insert['id'];
+                        $insert['uppercats']   = (is_scalar($parentRow['uppercats'] ?? null) ? (string) $parentRow['uppercats'] : '') . ',' . $insert['id'];
                         $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
                         $insert['rank']        = $nextRankParent;
                         $next_rank[$parentKey] = $nextRankParent + 1;
-                        $insert['global_rank'] = (is_scalar($db_categories[$parent]['global_rank'] ?? null) ? (string) $db_categories[$parent]['global_rank'] : '') . '.' . $insert['rank'];
-                        if ('private' == $db_categories[$parent]['status']) {
+                        $insert['global_rank'] = (is_scalar($parentRow['global_rank'] ?? null) ? (string) $parentRow['global_rank'] : '') . '.' . $insert['rank'];
+                        if ('private' == ($parentRow['status'] ?? '')) {
                             $insert['status'] = 'private';
                         }
-                        if ('false' == $db_categories[$parent]['visible']) {
+                        if ('false' == ($parentRow['visible'] ?? '')) {
                             $insert['visible'] = 'false';
                         }
                     } else {
@@ -1296,11 +1283,13 @@ final class MaintenanceController
                     }
                     $insert_granted_users = $insert_granted_grps = [];
                     foreach ($category_ids as $ids) {
-                        $parent_id = $db_categories[$ids]['parent'];
-                        while (in_array($parent_id, $category_ids)) {
-                            $parent_id = $db_categories[$parent_id]['parent'];
+                        $idsRow    = is_array($db_categories[$ids] ?? null) ? $db_categories[$ids] : [];
+                        $parent_id = is_numeric($idsRow['parent'] ?? null) ? (int) $idsRow['parent'] : null;
+                        while ($parent_id !== null && in_array($parent_id, $category_ids)) {
+                            $pidRow    = is_array($db_categories[$parent_id] ?? null) ? $db_categories[$parent_id] : [];
+                            $parent_id = is_numeric($pidRow['parent'] ?? null) ? (int) $pidRow['parent'] : null;
                         }
-                        if ($db_categories[$ids]['status'] == 'private' && !is_null($parent_id)) {
+                        if (($idsRow['status'] ?? '') == 'private' && $parent_id !== null) {
                             if (isset($granted_grps[$parent_id])) {
                                 foreach ($granted_grps[$parent_id] as $granted_grp) {
                                     $insert_granted_grps[] = ['group_id' => $granted_grp, 'cat_id' => $ids];
@@ -1316,7 +1305,7 @@ final class MaintenanceController
                     mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
                     mass_inserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
                 } else {
-                    ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($category_ids, get_admins());
+                    ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($category_ids, ServiceLocator::get(UserAdminService::class)->getAdmins());
                 }
             }
             $counts['new_categories'] = count($inserts);

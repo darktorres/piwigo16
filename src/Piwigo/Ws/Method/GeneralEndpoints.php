@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -24,8 +25,6 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 final class GeneralEndpoints
 {
@@ -506,9 +505,9 @@ final class GeneralEndpoints
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
         $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
-        /** @var list<array<string, mixed>> $data */
-        $data = trigger_change('get_history', [], $page['search'], $types);
-        usort($data, history_compare(...));
+        $search = is_array($page['search'] ?? null) ? $page['search'] : [];
+        $data = ServiceLocator::get(HistoryAdminService::class)->getHistory([], $search, $types);
+        usort($data, ServiceLocator::get(HistoryAdminService::class)->historyCompare(...));
         $page['nb_lines'] = count($data);
         $historyLines     = [];
         $userIds          = [];

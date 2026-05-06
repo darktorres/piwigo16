@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Upload;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Users\UserAdminService;
@@ -110,7 +111,7 @@ final class UploadService
             if ($filePath === null) {
                 throw new NotFoundException('[addUploadedFile] photo does not exist in database');
             }
-            delete_element_files([$imageId]);
+            ServiceLocator::get(ImageAdminService::class)->deleteElementFiles([$imageId]);
         } else {
             $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];

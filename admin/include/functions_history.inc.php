@@ -24,10 +24,10 @@ function history_compare(array $a, array $b): int
 }
 
 /**
- * @param array<mixed> $data
+ * @param list<array<string, mixed>> $data
  * @param array<mixed> $search
  * @param string[]|string $types
- * @return array<mixed>
+ * @return list<array<string, mixed>>
  */
 function get_history(array $data, array $search, array|string $types): array
 {

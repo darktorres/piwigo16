@@ -8,13 +8,16 @@ Audience: contributors and plugin authors working against the `16.x-rewrite` bra
 
 ## How the codebase boots
 
-Every entry point (`index.php`, `admin.php`, `picture.php`, `ws.php`, …) follows the same prologue:
+`index.php` is the **only** HTTP entry point. It runs the PSR-15 pipeline for every request. The non-kernel files (`i.php`, `action.php`, `install.php`, `upgrade.php`, `qsearch.php`) have their own minimal bootstraps and bypass the pipeline deliberately — see `ROUTING-AUDIT.md` for the full list.
+
+`index.php` prologue:
 
 ```php
 define('PHPWG_ROOT_PATH', './');
 require __DIR__ . '/vendor/autoload.php';
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 Kernel::boot();
+Kernel::handle(RequestFactory::fromGlobals());
 ```
 
 **`include/common.inc.php`** is the legacy bridge. It calls
@@ -26,14 +29,20 @@ into globals.
 **`Kernel::boot()`** (`src/Piwigo/Core/Kernel.php`) wires the typed service layer on top
 of those globals via PHP reference bridges. The call is idempotent. Boot order:
 
-1. `Config::attachGlobals()` — `$GLOBALS['conf']` becomes a reference into `Config::$data`
-2. `PageState::attachGlobals()` — binds `$GLOBALS['page']` keys by reference
-3. `Lang::attachGlobals()` — binds `$GLOBALS['lang']` and `$GLOBALS['lang_info']`
-4. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys
-5. `ServiceLocator::register()` — registers `Config` and `PageState` instances
+1. `PageState::attachGlobals()` — binds `$GLOBALS['page']` keys by reference
+2. `Lang::attachGlobals()` — binds `$GLOBALS['lang']` and `$GLOBALS['lang_info']`
+3. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys
+4. `Container::build()` + `ServiceLocator::setContainer()` — wires DI container
+5. `StorageRegistry` eager-wired for upload code
+6. `MigrationRunner::migrate()` — runs pending DB migrations if `auto_migrate` is set
 
 After boot, both `$conf['key']` and the typed `Config` accessors read the same backing
 storage. Legacy `include/` free-function libraries keep working unchanged.
+
+**`Kernel::handle()`** runs the middleware pipeline:
+`ExceptionHandler → Session → Auth → Filter → CSRF → Routing → ControllerInvoker`
+
+`ControllerInvokerMiddleware` resolves the matched controller from the DI container and invokes it. Unmatched routes get a 404 response directly from this middleware.
 
 ---
 

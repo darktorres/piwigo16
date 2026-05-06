@@ -1634,7 +1634,7 @@ This is the capstone item. It depends on items #1–#12 landing first — especi
 
 `Router` wraps `Symfony\Component\Routing\Matcher\UrlMatcher` (dispatch) and `UrlGenerator` (generation) from the same `RouteCollection`. `RouteResult` is an immutable DTO: `FOUND | NOT_FOUND | METHOD_NOT_ALLOWED`.
 
-`config/routes.php` returns a named `RouteCollection` with 22 routes. Route names are the keys for `Router::generate()`. Sub-token parsing (pagination, chronology, slugs) is done by `SectionInitializer` inside each controller — the router only identifies the section via a `{rest}` catch-all.
+`config/routes.php` returns a named `RouteCollection` with 27 routes (22 original + `about`, `nbm`, `popuphelp`, `gallery_search_paged` added post-completion). Route names are the keys for `Router::generate()`. Sub-token parsing (pagination, chronology, slugs) is done by `SectionInitializer` inside each controller — the router only identifies the section via a `{rest}` catch-all.
 
 Key route patterns:
 
@@ -1663,8 +1663,7 @@ Pipeline order wired in `Kernel::handle()`:
 | 4 | `FilterMiddleware` | Active — inlines filter.inc.php; populates `$GLOBALS['filter']` |
 | 5 | `CsrfMiddleware` | Active — verifies `pwg_token` on POST (exempt: /ws, /install, /upgrade, /identification, /register) |
 | 6 | `RoutingMiddleware` | Active — calls `Router::dispatch()`, attaches `RouteResult` |
-| 7 | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke` |
-| — | `FallbackHandler` | Returns 404 for unmapped routes |
+| 7 | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke`; returns 404 directly for unmatched routes |
 
 `Kernel::handle(ServerRequestInterface): ResponseInterface` added. `index.php` is unchanged — the pipeline activates when Wave A lands `GalleryController` and flips the index.
 
@@ -1720,15 +1719,7 @@ Wave A is **complete** — all 15 root entry-point files are now controller shim
 
 ### Completed — Wave B (admin sub-controllers)
 
-`AdminController` dispatches via `dispatchToSubController()` to 9 typed sub-controller classes — no more dynamic-filename `require`. `admin.php` is a 6-line shim:
-
-```php
-define('PHPWG_ROOT_PATH', './');
-define('IN_ADMIN', true);
-require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
-\Piwigo\Core\Kernel::boot();
-(new AdminController)(RequestFactory::fromGlobals());
-```
+`AdminController` dispatches via `dispatchToSubController()` to 9 typed sub-controller classes. The former `admin.php` entry-point shim has been deleted; all admin requests now enter via `index.php` and the kernel route `/admin{rest}`.
 
 | Controller | Pages handled |
 |---|---|
@@ -1742,7 +1733,7 @@ require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 | `MaintenanceController` | maintenance + sub-tabs, history, stats, site_manager, site_reader_local, site_update |
 | `MiscController` | notification_by_mail, permalinks, tags, help, popuphelp, intro, menubar, index, comments, rating, rating_user, profile |
 
-All 63 admin pages are **fully inlined** — page bodies moved into private class methods. Free functions defined in the original files become private methods (e.g. `cmpDay()`, `parseSortVariables()`, `getCategoriesRefDate()`). No `admin/*.php` files are `require()`d from within the controller classes; the dynamic-filename dispatch is completely eliminated.
+All 63 admin page-body files are **deleted** — logic inlined into private class methods of each sub-controller. No `admin/*.php` page files are `require()`d from within the controller classes; the dynamic-filename dispatch is completely eliminated. Remaining in `admin/`: `site_reader_local.php` (sync helper, still `require`d by two controllers) and `admin/include/*.php` shared helpers.
 
 Wave B is **complete** — all 63 admin pages fully converted to typed class methods.
 

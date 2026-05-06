@@ -1,6 +1,6 @@
 # Routing Migration Audit
 
-This document captures the state of the 16.x rewrite routing migration as of the current branch. It answers three questions: what legacy entry points remain, what routing shims still exist, and why `admin/` has not been folded into `src/`.
+This document captures the state of the 16.x rewrite routing migration. The migration is **complete**: all entry-point files have been converted to kernel-routed controllers or classified as permanent non-kernel shims, and all procedural `admin/*.php` page bodies have been inlined into typed sub-controllers.
 
 ---
 
@@ -34,6 +34,9 @@ All routes defined in `config/routes.php`. Every request matching these paths go
 | `image`           | `/i/{rest}`                 | `ImageDerivativeController`         |
 | `ws`              | `/ws{rest}`                 | `WsController`                      |
 | `admin`           | `/admin{rest}`              | `AdminController`                   |
+| `about`           | `/about`                    | `AboutController`                   |
+| `nbm`             | `/nbm`                      | `NbmController`                     |
+| `popuphelp`       | `/popuphelp`                | `PopuphelpController`               |
 | `install`         | `/install`                  | `InstallController`                 |
 | `upgrade`         | `/upgrade`                  | `UpgradeController`                 |
 
@@ -70,21 +73,19 @@ These files are served directly by Apache and have no kernel route. They each de
 
 ---
 
-## 3. The `admin/` Directory — Why It Exists Alongside `src/`
+## 3. The `admin/` Directory
 
-The admin pages are being migrated to `src/Piwigo/Controller/Admin/` in what the codebase calls **Wave B**. The migration is **partially complete**: typed sub-controllers exist, but the page bodies remain as procedural `admin/*.php` includes.
+Wave-B is **complete**. All 63 procedural `admin/<page>.php` page-body files have been deleted; their logic is inlined into typed private methods of the 10 sub-controllers.
 
 ### Architecture
 
 ```
 HTTP request → index.php → Kernel → AdminController
-    → dispatches to: AlbumController | BatchManagerController | PhotoController
-                     ExtensionsController | GroupsController | MiscController
-                     MaintenanceController | ConfigurationController | UsersController
-    → each sub-controller calls: require PHPWG_ROOT_PATH . 'admin/<page>.php'
+    → dispatches to typed sub-controllers
+    → each method contains the page logic directly — no require of admin/*.php
 ```
 
-### What is in `src/Piwigo/Controller/Admin/`
+### Controllers in `src/Piwigo/Controller/Admin/`
 
 | Controller | Pages handled |
 |---|---|
@@ -92,25 +93,19 @@ HTTP request → index.php → Kernel → AdminController
 | `AlbumController` | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks |
 | `BatchManagerController` | batch_manager, batch_manager_global, batch_manager_unit, queue |
 | `ConfigurationController` | configuration |
-| `ExtensionsController` | plugins, plugins_installed, plugins_new, themes, themes_installed, themes_new, themes_standard_pages, languages, languages_installed, languages_new, updates, updates_ext, updates_pwg, extend_for_templates |
+| `ExtensionsController` | plugins, plugins_installed, plugins_new, plugin, themes, themes_installed, themes_new, themes_standard_pages, theme, languages, languages_installed, languages_new, updates, updates_ext, updates_pwg, extend_for_templates |
 | `GroupsController` | group_list, group_perm |
-| `MaintenanceController` | maintenance, maintenance_actions, maintenance_env, maintenance_sys, stats, history, site_manager, site_update |
-| `MiscController` | comments, menubar, notification_by_mail, permalinks, rating, rating_user, tags, profile |
+| `MaintenanceController` | maintenance, maintenance_actions, maintenance_env, maintenance_sys, stats, history, site_manager, site_reader_local, site_update |
+| `MiscController` | comments, menubar, notification_by_mail, permalinks, popuphelp, rating, rating_user, tags, profile, help, intro |
 | `PhotoController` | photo, picture_modify, picture_coi, picture_formats, photos_add, photos_add_direct, photos_add_ftp, photos_add_applications |
 | `UsersController` | user_list, user_perm, user_activity |
 
-### What remains in `admin/*.php`
+### What remains in `admin/`
 
-~60 procedural page scripts. They are **not independent entry points** — each file begins with:
-
-```php
-defined('PHPWG_ROOT_PATH') or throw new AuthException('Hacking attempt!');
-global $template, $user, $page, $persistent_cache, $lang;
-```
-
-They are loaded via `require PHPWG_ROOT_PATH . 'admin/<page>.php'` from within typed sub-controller methods. The page logic still lives procedurally; only routing, dispatch, and URL generation have been lifted into the typed controllers.
-
-**Why not moved to `src/` yet:** Each `admin/*.php` file does a full Smarty-based page render with complex procedural logic (queries, conditionals, template assignments). Migrating them fully to typed controller methods requires converting every `$template->assign(...)` call and removing all reliance on `$GLOBALS`. This is ongoing Wave-B work.
+| File | Status |
+|---|---|
+| `admin/site_reader_local.php` | Still `require`d by `BatchManagerController` and `MaintenanceController`; contains the local site-reader sync logic |
+| `admin/include/*.php` | Shared helper includes (`functions.php`, `functions_notification_by_mail.inc.php`, etc.) loaded via `require_once` throughout the sub-controllers |
 
 ---
 
@@ -124,7 +119,7 @@ After the mass URL cleanup (replacing `admin.php`, `ws.php`, `identification.php
 - `UrlGenerator::actionDownload(int $id, string $part, string $pwgToken): string`
 - `UrlGenerator::actionFormat(int $formatId): string`
 
-All three former hardcoded `'action.php?...'` strings in `PhotoController` and `BatchManagerController` now use these methods.
+All former hardcoded `'action.php?...'` strings in `PhotoController`, `BatchManagerController`, and `PictureController` now use these methods.
 
 ### 4b. `admin/popuphelp.php` — help button links
 

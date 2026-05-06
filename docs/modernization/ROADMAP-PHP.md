@@ -1587,7 +1587,7 @@ openapi-generator-cli generate -i 'ws.php?_openapi=json' -g typescript-axios -o 
 
 ## #22 — Single front controller + PSR-7/15 routing
 
-**Status:** In progress &nbsp;|&nbsp; **Size:** XL (capstone)
+**Status:** ✅ Complete &nbsp;|&nbsp; **Size:** XL (capstone)
 
 ### Goal
 
@@ -1775,8 +1775,21 @@ Method groups:
 
 No controllers populate them yet — that migration happens as each `.latte` partial is written in #23.
 
-**Still deferred:**
-- Deletion of root shims + legacy `include/` bridges — deferred until `AuthMiddleware` absorbs `user.inc.php` and `SectionInitializer` absorbs `section_init.inc.php`.
+**Phase 6c — SectionInitializer + UserBootstrap + shim deletion (complete):**
+
+`SectionInitializer` (`src/Piwigo/Section/SectionInitializer.php`) — inlines `include/section_init.inc.php`. `initialize(request, 'index'|'picture')` replaces every `require section_init.inc.php`. URL token parsing uses the `_route_path` request attribute; global replacements: `$persistent_cache` → `PersistentCacheRegistry`, `$logger` → `LoggerRegistry`, `$template` → `TemplateRegistry`, `script_basename()` → `$scriptContext`.
+
+`UserBootstrap` (`src/Piwigo/Users/UserBootstrap.php`) — inlines `include/user.inc.php`. `UserBootstrap::bootstrap()` handles guest default, session cookie, logout, auto-login, Apache auth, auth-key login, and `build_user()`.
+
+`AuthMiddleware` — no longer a stub. Calls `UserBootstrap::bootstrap()` and attaches `CurrentUser::get()` as `'_current_user'` request attribute.
+
+`common.inc.php` — `require user.inc.php` removed; user bootstrap is now done by the middleware.
+
+**Deleted:**
+- Root shims: `admin.php`, `picture.php`, `search.php`, `tags.php`, `comments.php`, `feed.php`, `identification.php`, `register.php`, `password.php`, `profile.php`, `notification.php`, `ws.php`
+- Include files: `include/user.inc.php`, `include/section_init.inc.php`
+
+**Kept** (still used): `install.php`, `upgrade.php` (own minimal bootstrap), `i.php` (minimal derivative bootstrap), `random.php` (standalone procedural redirect, not converted), `about.php`, `action.php`, `check_admin.php`, `migrations.php`, `nbm.php`, `osmmap.php`, `popuphelp.php`, `qsearch.php`, `upgrade_feed.php` (standalone scripts, not part of #22 scope), `include/functions_user.inc.php` (still used by many callers), `include/functions_calendar.inc.php` (still required by SectionInitializer for chronology).
 
 ### Verification
 

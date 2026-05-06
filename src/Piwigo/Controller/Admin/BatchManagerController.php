@@ -457,7 +457,7 @@ final class BatchManagerController
 
         // ── Tabs ──────────────────────────────────────────────────────────────
 
-        $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
+        $GLOBALS['manager_link'] = $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
 
         if (isset($_GET['mode'])) {
             check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');

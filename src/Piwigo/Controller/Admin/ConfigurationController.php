@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Config\SizesProcessor;
+use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -157,11 +159,11 @@ final class ConfigurationController
                     break;
 
                 case 'watermark':
-                    require PHPWG_ROOT_PATH . 'admin/include/configuration_watermark_process.inc.php';
+                    ServiceLocator::get(WatermarkProcessor::class)->process();
                     break;
 
                 case 'sizes':
-                    require PHPWG_ROOT_PATH . 'admin/include/configuration_sizes_process.inc.php';
+                    ServiceLocator::get(SizesProcessor::class)->process();
                     break;
 
                 case 'comments':

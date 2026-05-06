@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
@@ -792,7 +793,7 @@ final class BatchManagerController
         $tpl->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
-        require PHPWG_ROOT_PATH . 'admin/include/batch_manager_filters.inc.php';
+        ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
 
         $catElementsId = is_array($page['cat_elements_id']) ? $page['cat_elements_id'] : [];
         $pageStart     = is_int($page['start']) ? $page['start'] : 0;
@@ -986,7 +987,7 @@ final class BatchManagerController
             'PWG_TOKEN'       => get_pwg_token(),
         ]);
 
-        require PHPWG_ROOT_PATH . 'admin/include/batch_manager_filters.inc.php';
+        ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
 
         $tpl->assign('page_data_json', json_encode([
             'str_are_you_sure' => l10n('Are you sure?'),

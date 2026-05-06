@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Tabsheet;
@@ -259,7 +260,7 @@ final class MiscController
 
         $tpl->set_filename('permalinks', 'permalinks.tpl');
         $page['tab'] = 'permalinks';
-        require PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+        ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
         $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . CATEGORIES_TABLE;
         display_select_cat_wrapper($query, $selected_cat, 'categories', false);

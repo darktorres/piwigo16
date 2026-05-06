@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -118,7 +119,7 @@ final class AlbumController
         check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 
         $page['tab'] = 'list';
-        require PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+        ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
         $raw_open_cat = $_GET['parent_id'] ?? -1;
         $open_cat = is_scalar($raw_open_cat) ? (int) $raw_open_cat : -1;
@@ -439,7 +440,7 @@ final class AlbumController
         $navigation = '<a href="' . $base_url . '">' . l10n('Home') . '</a>';
 
         $page['tab'] = 'list';
-        require PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
+        ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
         if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             $photo_deletion_mode = 'no_delete';

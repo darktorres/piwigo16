@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Admin\Upload\DirectPreparer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -621,7 +622,7 @@ SELECT id
             }
         }
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/photos_add_direct_prepare.inc.php';
+        ServiceLocator::get(DirectPreparer::class)->prepare(PHOTOS_ADD_BASE_URL);
 
         trigger_notify('loc_end_photo_add_direct');
 

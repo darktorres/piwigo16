@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -53,7 +54,7 @@ final class UsersController
         check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
         $page['tab'] = 'user_list';
-        require PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php';
+        ServiceLocator::get(UserTabRenderer::class)->render();
 
         // ── Groups ──────────────────────────────────────────────────────────
 
@@ -336,7 +337,7 @@ final class UsersController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         $page['tab'] = 'user_activity';
-        require PHPWG_ROOT_PATH . 'admin/include/user_tabs.inc.php';
+        ServiceLocator::get(UserTabRenderer::class)->render();
 
         if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
             $usernameField = Config::userFields()['username'];

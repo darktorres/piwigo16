@@ -406,8 +406,6 @@ final class ExtensionsController
 
     private function plugin(): void
     {
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $raw_section = $_GET['section'] ?? '';
         $sections = explode('/', is_scalar($raw_section) ? (string) $raw_section : '');
         for ($i = 0; $i < count($sections); $i++) {
@@ -730,8 +728,6 @@ final class ExtensionsController
 
     private function theme(): void
     {
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (empty($_GET['theme'])) {
             throw new ValidationException('Invalid theme URL');
         }
@@ -1131,9 +1127,6 @@ final class ExtensionsController
     private function extendForTemplates(): void
     {
         $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $tpl_extension = safe_unserialize(Config::extentsForTemplates() ?? '');
         $new_extensions = get_extents();
 

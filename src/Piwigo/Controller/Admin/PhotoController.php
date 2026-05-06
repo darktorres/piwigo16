@@ -119,9 +119,6 @@ final class PhotoController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         check_input_parameter('image_id', $_GET, false, PATTERN_ID);
         check_input_parameter('level', $_POST, false, '/^\d+$/');
         check_input_parameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
@@ -268,10 +265,10 @@ SELECT id
             'FILE_SRC'           => DerivativeImage::url(IMG_LARGE, $src_image),
             'NAME'               => isset($_POST['name']) ? stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : ($row['name'] ?? null),
             'TITLE'              => render_element_name($row),
-            'DIMENSIONS'         => ($row['width'] ?? '') . ' * ' . ($row['height'] ?? ''),
-            'FORMAT'             => ($row['width'] >= $row['height']) ? 1 : 0,
-            'FILESIZE'           => ($row['filesize'] ?? '') . ' KB',
-            'REGISTRATION_DATE'  => format_date($row['date_available']),
+            'DIMENSIONS'         => (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''),
+            'FORMAT'             => ((is_numeric($row['width'] ?? null) ? (int) $row['width'] : 0) >= (is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0)) ? 1 : 0,
+            'FILESIZE'           => (is_scalar($row['filesize'] ?? null) ? (string) $row['filesize'] : '') . ' KB',
+            'REGISTRATION_DATE'  => format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : null),
             'AUTHOR'             => htmlspecialchars(isset($_POST['author']) ? stripslashes(is_scalar($_POST['author']) ? (string) $_POST['author'] : '') : (empty($row['author']) ? '' : (is_scalar($row['author']) ? (string) $row['author'] : ''))),
             'DATE_CREATION'      => $row['date_creation'],
             'DESCRIPTION'        => htmlspecialchars(isset($_POST['comment']) ? stripslashes(is_scalar($_POST['comment']) ? (string) $_POST['comment'] : '') : (empty($row['comment']) ? '' : (is_scalar($row['comment']) ? (string) $row['comment'] : ''))),
@@ -290,13 +287,13 @@ SELECT id
             $row['added_by'] = $foundUsername;
         }
 
-        $extTab     = explode('.', (string) $row['file']);
+        $extTab     = explode('.', is_scalar($row['file'] ?? null) ? (string) $row['file'] : '');
         $intro_vars = [
             'file'    => l10n('%s', $row['file']),
-            'date'    => l10n('Posted the %s', format_date($row['date_available'], ['day', 'month', 'year'])),
-            'age'     => l10n(ucfirst(time_since($row['date_available'], 'year'))),
+            'date'    => l10n('Posted the %s', format_date(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, ['day', 'month', 'year'])),
+            'age'     => l10n(ucfirst(time_since(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, 'year'))),
             'added_by' => l10n('Added by %s', $row['added_by']),
-            'size'    => l10n('%s pixels, %.2f MB', $row['width'] . '&times;' . $row['height'], (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
+            'size'    => l10n('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
             'stats'   => l10n('Visited %d times', $row['hit']),
             'id'      => l10n(is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''),
             'ext'     => l10n('%s file type', strtoupper(end($extTab))),
@@ -306,10 +303,10 @@ SELECT id
         if (Config::rateEnabled() && !empty($row['rating_score'])) {
             $row['nb_rates'] = ServiceLocator::get(RateRepository::class)
                 ->countByElementId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
-            $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), $row['nb_rates'], $row['rating_score']);
+            $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), (int) $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $row['id'] . ';')->fetchAllAssociative();
+        $formats = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
@@ -320,7 +317,7 @@ SELECT id
 
         $tpl->assign('INTRO', $intro_vars);
 
-        if (in_array(get_extension($row['path']), Config::pictureExtensions())) {
+        if (in_array(get_extension(is_scalar($row['path'] ?? null) ? (string) $row['path'] : ''), Config::pictureExtensions())) {
             $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''));
         }
 

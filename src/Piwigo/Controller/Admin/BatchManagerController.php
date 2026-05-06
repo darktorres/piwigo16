@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
@@ -58,9 +59,6 @@ final class BatchManagerController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         check_input_parameter('selection', $_POST, true, PATTERN_ID);
         check_input_parameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
@@ -555,7 +553,8 @@ final class BatchManagerController
             'filesizes' => ['values' => array_map(floatval(...), explode(',', (string) $filesize['list'])),       'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],                  'text' => l10n('between %s and %s MB')],
         ];
 
-        $filter_category_selected_val = $selected_category ?? null;
+        $selected_category            = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : null;
+        $filter_category_selected_val = $selected_category;
         $tpl->assign('batch_filter_page_data_json', json_encode([
             'sliders'                  => $sliders_json,
             'selected_filter_cat_ids'  => $filter_category_selected_val !== null ? [$filter_category_selected_val] : [],
@@ -582,9 +581,8 @@ final class BatchManagerController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
+        $duplicates_on_fields = [];
+        $associated_categories = [];
         if (!empty($_POST)) {
             check_pwg_token();
         }
@@ -669,7 +667,7 @@ final class BatchManagerController
                     PageState::current()->addError(l10n('Select at least one album'));
                 } else {
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
-                    associate_images_to_categories($collection_int, $associate_raw);
+                    ServiceLocator::get(CategoryAdminService::class)->associateImagesToCategories($collection_int, $associate_raw);
                     $_SESSION['page_infos'] = [l10n('Information data registered in database')];
                     if ('no_album' == $page['prefilter']) {
                         $redirect = true;
@@ -684,7 +682,7 @@ final class BatchManagerController
             } elseif ('move' == $action) {
                 $move_id     = is_scalar($_POST['move'] ?? null) ? (string) $_POST['move'] : '';
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
-                move_images_to_categories($collection_int, [$move_id_int]);
+                ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories($collection_int, [$move_id_int]);
                 $_SESSION['page_infos'] = [l10n('Information data registered in database')];
                 if ('no_album' == $page['prefilter']) {
                     $redirect = true;
@@ -698,7 +696,7 @@ final class BatchManagerController
                 }
             } elseif ('dissociate' == $action) {
                 $dissociate_raw = is_scalar($_POST['dissociate'] ?? null) ? (string) $_POST['dissociate'] : '';
-                $nb_dissociated = dissociate_images_from_category($collection_int, $dissociate_raw);
+                $nb_dissociated = ServiceLocator::get(CategoryAdminService::class)->dissociateImagesFromCategory($collection_int, $dissociate_raw);
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [l10n('Information data registered in database')];
                     $redirect = true;
@@ -841,11 +839,6 @@ final class BatchManagerController
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
             $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 
-            if (is_string($bmf['prefilter'] ?? null) && 'duplicates' === $bmf['prefilter'] && isset($duplicates_on_fields)) {
-                $order_by_fields = array_merge($duplicates_on_fields, ['id']);
-                Config::override('order_by', ' ORDER BY ' . join(', ', $order_by_fields));
-            }
-
             $query = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM ' . IMAGES_TABLE;
             if ($is_category) {
                 $category_info = get_cat_info($bmf_category_val);
@@ -894,7 +887,7 @@ final class BatchManagerController
             'batch_manager_global_page_data_json'  => json_encode([
                 'CACHE_KEYS'              => $cache_keys,
                 'ROOT_URL'                => get_root_url(),
-                'associated_categories'   => $associated_categories ?? [],
+                'associated_categories'   => $associated_categories,
                 'str_create'              => l10n('Create'),
                 'nb_thumbs_page'          => $nb_thumbs_page,
                 'nb_thumbs_set'           => count($catElementsId),
@@ -917,6 +910,7 @@ final class BatchManagerController
 
     private function batchManagerUnit(): void
     {
+        $associated_categories = [];
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -924,9 +918,6 @@ final class BatchManagerController
         $user = $GLOBALS['user'];
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         trigger_notify('loc_begin_element_set_unit');
 
         if (isset($_POST['submit'])) {
@@ -1158,7 +1149,7 @@ final class BatchManagerController
             'batch_manager_unit_page_data_json'   => json_encode([
                 'CACHE_KEYS'            => $cache_keys,
                 'ROOT_URL'              => get_root_url(),
-                'associated_categories' => $associated_categories ?? [],
+                'associated_categories' => $associated_categories,
                 'str_create'            => l10n('Create'),
                 'active_plugins'        => array_keys($pwg_loaded_plugins),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),

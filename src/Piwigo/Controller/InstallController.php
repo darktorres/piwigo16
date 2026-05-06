@@ -57,7 +57,6 @@ final class InstallController implements ControllerInterface
         }
 
         require PHPWG_ROOT_PATH . 'include/constants.php';
-        require PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
         Kernel::boot();
 

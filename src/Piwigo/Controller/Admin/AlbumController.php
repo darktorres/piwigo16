@@ -114,9 +114,6 @@ final class AlbumController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $albums_counter = ServiceLocator::get(CategoryRepository::class)->countAll();
 
         check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
@@ -277,9 +274,6 @@ final class AlbumController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $category = $this->albumCategory;
         $admin_album_base_url = $this->adminAlbumBaseUrl;
 
@@ -419,10 +413,7 @@ final class AlbumController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        trigger_notify('loc_begin_cat_list');
+        $page = &$GLOBALS['page'];        trigger_notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
             check_pwg_token();
@@ -576,10 +567,7 @@ final class AlbumController
 
     private function catModify(): void
     {
-        $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-        trigger_notify('loc_begin_cat_modify');
+        $tpl = TemplateRegistry::current();        trigger_notify('loc_begin_cat_modify');
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
             trigger_error('missing cat_id param', E_USER_ERROR);
@@ -761,9 +749,6 @@ final class AlbumController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (!empty($_POST)) {
             check_pwg_token();
             check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
@@ -842,9 +827,6 @@ final class AlbumController
     private function catPerm(): void
     {
         $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
         $cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
         if (empty($cat_id)) {
@@ -989,9 +971,6 @@ final class AlbumController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $sort_fields = [
             '' => '', 'file ASC' => l10n('File name, A &rarr; Z'), 'file DESC' => l10n('File name, Z &rarr; A'),
             'name ASC' => l10n('Photo title, A &rarr; Z'), 'name DESC' => l10n('Photo title, Z &rarr; A'),

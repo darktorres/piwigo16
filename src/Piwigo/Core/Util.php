@@ -730,8 +730,6 @@ final readonly class Util
             return;
         }
 
-        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $dbCurrentDate = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         if (!Config::has('send_piwigo_infos_origin_hash')) {

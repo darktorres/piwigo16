@@ -50,9 +50,6 @@ final class UsersController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         check_input_parameter('group', $_GET, false, PATTERN_ID);
         check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
@@ -250,9 +247,6 @@ final class UsersController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (!empty($_POST)) {
             check_pwg_token();
             check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
@@ -330,9 +324,6 @@ final class UsersController
     private function userActivity(): void
     {
         $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         check_input_parameter('photo', $_GET, false, PATTERN_ID);
         check_input_parameter('album', $_GET, false, PATTERN_ID);
         check_input_parameter('group', $_GET, false, PATTERN_ID);

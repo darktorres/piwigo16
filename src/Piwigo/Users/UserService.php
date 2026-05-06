@@ -492,8 +492,6 @@ SELECT DISTINCT f.image_id
         }
 
         $currentUser = CurrentUser::get();
-        require_once(PHPWG_ROOT_PATH . 'admin/include/functions.php');
-
         $updates = $updatesInfos = [];
         $updateStatus = null;
 

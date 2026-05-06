@@ -22,8 +22,6 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
-include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
 final class CategoriesEndpoints
 {
     /**

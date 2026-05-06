@@ -38,9 +38,6 @@ final class GroupsController
     private function groupList(): void
     {
         $tpl = TemplateRegistry::current();
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
@@ -128,9 +125,6 @@ final class GroupsController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
-
         if (!empty($_POST)) {
             check_pwg_token();
             check_input_parameter('cat_true', $_POST, true, PATTERN_ID);

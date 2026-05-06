@@ -89,6 +89,7 @@ use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Http\Middleware\FallbackHandler;
+use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Routing\Router;
@@ -202,6 +203,7 @@ return [
     ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
     SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
+    FilterMiddleware::class           => factory(static fn (): FilterMiddleware => new FilterMiddleware()),
     CsrfMiddleware::class             => factory(static fn (): CsrfMiddleware => new CsrfMiddleware()),
     RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
     ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),

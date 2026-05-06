@@ -10,16 +10,50 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * CSRF token verification for state-changing requests.
+ * CSRF token verification for state-changing POST requests.
  *
- * Phase-3 stub: no-op while legacy entry-scripts each verify pwg_token
- * themselves.  Wave-A+ will enable enforcement by reading the '_csrf_exempt'
- * request attribute and verifying the pwg_token body parameter.
+ * Verifies the pwg_token body parameter on every POST request except:
+ *   /ws*          — web service API (manages its own auth)
+ *   /install      — installer (no session yet)
+ *   /upgrade      — upgrader (no session yet)
+ *   /identification — login form (no token in the standard form)
+ *   /register     — registration form (no token in the standard form)
+ *
+ * If the token is present but wrong, check_pwg_token() calls access_denied().
+ * If the token is missing, check_pwg_token() calls bad_request().
  */
 final class CsrfMiddleware implements MiddlewareInterface
 {
+    private const EXEMPT_PREFIXES = [
+        '/ws',
+        '/install',
+        '/upgrade',
+        '/identification',
+        '/register',
+    ];
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        if ($request->getMethod() === 'POST') {
+            $path = is_string($request->getAttribute('_route_path'))
+                ? $request->getAttribute('_route_path')
+                : '/';
+
+            if (!$this->isExempt($path)) {
+                check_pwg_token();
+            }
+        }
+
         return $handler->handle($request);
+    }
+
+    private function isExempt(string $path): bool
+    {
+        foreach (self::EXEMPT_PREFIXES as $prefix) {
+            if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
+                return true;
+            }
+        }
+        return false;
     }
 }

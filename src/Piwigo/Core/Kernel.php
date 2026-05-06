@@ -12,6 +12,7 @@ use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Http\Middleware\FallbackHandler;
+use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Migrations\MigrationRunner;
@@ -89,6 +90,7 @@ final class Kernel
                 ServiceLocator::get(ExceptionHandlerMiddleware::class),
                 ServiceLocator::get(SessionMiddleware::class),
                 ServiceLocator::get(AuthMiddleware::class),
+                ServiceLocator::get(FilterMiddleware::class),
                 ServiceLocator::get(CsrfMiddleware::class),
                 ServiceLocator::get(RoutingMiddleware::class),
                 ServiceLocator::get(ControllerInvokerMiddleware::class),

@@ -323,11 +323,9 @@ if (count($header_msgs) > 0) {
     $header_msgs = [];
 }
 
-if (!empty(Config::filterPages()) and get_filter_page_value('used')) {
-    require(PHPWG_ROOT_PATH.'include/filter.inc.php');
-} else {
-    $filter['enabled'] = false;
-}
+// Filter bootstrap is handled by FilterMiddleware in the PSR-15 pipeline.
+// For scripts that bypass the pipeline (random.php, etc.) filter stays disabled.
+$filter['enabled'] = false;
 
 if (Config::has('header_notes')) {
     $header_notes = array_merge($header_notes, Config::headerNotes());

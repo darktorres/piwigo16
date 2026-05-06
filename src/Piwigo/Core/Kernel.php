@@ -81,7 +81,7 @@ final class Kernel
             throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
         }
 
-        $unreachable = new class implements RequestHandlerInterface {
+        $unreachable = new class () implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
                 throw new \LogicException('Pipeline terminal handler reached — this is a bug.');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 
 global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
@@ -452,7 +453,7 @@ SELECT
                 $uppercats_val = $row['uppercats'];
                 $cat_display_name = get_cat_display_name_cache(
                     is_scalar($uppercats_val) ? (string) $uppercats_val : '',
-                    ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+                    ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
                 );
                 $row['fullname'] = strip_tags($cat_display_name);
 

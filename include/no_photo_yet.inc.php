@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Http\PathExtractor;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -26,7 +27,7 @@ use Piwigo\Template\Template;
 // In the PSR-15 routing layer all requests go through index.php, so
 // script_basename() always returns 'index'. Also check the extracted route path
 // so that /ws requests are not blocked by the no_photo_yet splash screen.
-$_no_photo_yet_route = \Piwigo\Http\PathExtractor::fromServer($_SERVER);
+$_no_photo_yet_route = PathExtractor::fromServer($_SERVER);
 
 if (
     !(defined('IN_ADMIN') ? constant('IN_ADMIN') : false)   // no message inside administration

@@ -1,6 +1,0 @@
-- generic [ref=e1]:
-  - paragraph [ref=e2]: Hello admin, your Piwigo photo gallery is empty!
-  - link "I want to add photos" [ref=e4] [cursor=pointer]:
-    - /url: admin.php?page=photos_add
-  - link "... or please deactivate this message, I will find my own way" [ref=e6] [cursor=pointer]:
-    - /url: "?no_photo_yet=deactivate"

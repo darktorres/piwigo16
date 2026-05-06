@@ -161,10 +161,21 @@ final class AdminController implements ControllerInterface
             $getPage = 'photo';
         }
 
-        if ($getPage !== ''
-            && preg_match('/^[a-z_]*$/', $getPage)
-            && is_file(PHPWG_ROOT_PATH . 'admin/' . $getPage . '.php')
-        ) {
+        // Validate $getPage against the union of all sub-controller PAGES arrays
+        // plus MiscController's known pages.  The old is_file('admin/{page}.php')
+        // check was removed when Wave-B deleted those files.
+        $allKnownPages = array_merge(
+            AlbumController::PAGES,
+            PhotoController::PAGES,
+            BatchManagerController::PAGES,
+            ConfigurationController::PAGES,
+            UsersController::PAGES,
+            GroupsController::PAGES,
+            ExtensionsController::PAGES,
+            MaintenanceController::PAGES,
+            MiscController::PAGES,
+        );
+        if ($getPage !== '' && preg_match('/^[a-z_]*$/', $getPage) && in_array($getPage, $allKnownPages, true)) {
             $page['page'] = $getPage;
         } else {
             $page['page'] = 'intro';

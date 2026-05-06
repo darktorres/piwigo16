@@ -1745,13 +1745,27 @@ All 63 admin pages are **fully inlined** — page bodies moved into private clas
 
 Wave B is **complete** — all 63 admin pages fully converted to typed class methods.
 
-### Remaining steps
+### As-built — Phase 6
 
-**Phase 6 — DTOs + URL generator + cleanup:**
-- `src/Piwigo/Page/Context/` typed page DTOs
-- `src/Piwigo/Url/UrlGenerator` wrapping `Router::generate()`
-- Deprecate `question_mark_in_urls` / `php_extension_in_urls` config flags
-- Delete root shims + legacy include bridges
+**`src/Piwigo/Url/UrlGenerator`** — typed facade over `UrlService` + `Router`. Registered in `config/container.php`.
+
+Method groups:
+
+| Group | Methods | Implementation |
+|---|---|---|
+| Gallery browse | `gallery()`, `category()`, `picture()`, `tags()`, `search()`, `favorites()`, `recentPics()`, `bestRated()`, `mostVisited()`, `recentAlbums()` | Delegates to `UrlService` (complex sub-token format) |
+| Named PSR-15 routes | `random()`, `identification()`, `register()`, `password()`, `profile()`, `comments()`, `notification()`, `feed()`, `image()` | `Router::generate()` + `applyUrlMode()` |
+| Legacy query-param | `admin(string $section)`, `ws(array $params)` | Builds `admin.php?page=…` / `ws.php?…` directly |
+
+`applyUrlMode()` reads `Config::phpExtensionInUrls()` and `Config::questionMarkInUrls()` so all URL forms (clean, `index.php/`, `index.php?/`) are respected automatically.
+
+`config/routes.php` named routes are the single source of truth for the Router-backed methods.
+
+**Unit tests:** `tests/Unit/Url/UrlGeneratorTest.php` — 17 cases covering all method groups.
+
+**Deferred:**
+- `src/Piwigo/Page/Context/` typed page DTOs — deferred to **#23** (Latte template migration); DTOs are only useful once Latte templates receive typed objects.
+- Deletion of root shims + legacy `include/` bridges — deferred until `AuthMiddleware` absorbs `user.inc.php` and `SectionInitializer` absorbs `section_init.inc.php`.
 
 ### Verification
 
@@ -1763,7 +1777,7 @@ curl -s 'http://localhost:8765/index.php/picture/1'  # PATH_INFO mode
 curl -s 'http://localhost:8765/?_openapi=json' | php -r "echo json_decode(file_get_contents('php://stdin'))->info->title;"
 # → Piwigo Web Services
 
-vendor/bin/phpunit --no-progress    # 366 tests, all green
+vendor/bin/phpunit --no-progress    # 383 tests, all green
 vendor/bin/phpstan analyse --no-progress   # 0 errors
 
 # E2E suite green (once Wave A lands)

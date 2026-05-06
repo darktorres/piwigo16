@@ -66,6 +66,7 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Theme\ThemeRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PermissionService;
@@ -139,6 +140,7 @@ return [
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (): UrlService => new UrlService()),
+    UrlGenerator::class        => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     GeneralEndpoints::class          => factory(static fn (): GeneralEndpoints => new GeneralEndpoints()),
     TagsEndpoints::class             => factory(static fn (): TagsEndpoints => new TagsEndpoints()),
     CommentsEndpoints::class         => factory(static fn (): CommentsEndpoints => new CommentsEndpoints()),

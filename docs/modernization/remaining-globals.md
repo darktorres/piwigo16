@@ -80,107 +80,35 @@ Root cause: `redirect_html()` does `include 'page_header.php'` and `include 'pag
 
 ---
 
-## Tier 3 — Remaining (~78 declarations, 89 files, ~4-6 weeks)
+## Tier 3 — Partially complete (~40 declarations remaining, ~2-3 weeks)
 
 The real modernization. The reason every entry-script declares `global $template, $user, $page, $persistent_cache, $lang;` is that they are 200-2000-line procedural scripts reading those at file scope. The fix is MVC.
 
 Tier 3 is **distributed across `ROADMAP-PHP.md`** rather than executed as a single megacommit. Each bucket below is owned by a roadmap item; each wave that lands lets `tools/phpstan-bootstrap.php` shed one stub entry and unblocks step 4–5 of roadmap item #6 incrementally.
 
-| Bucket                                      | Owning roadmap item                                            | What lands there                                                                                                                                                                                                 |
-| ------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Front controller + PSR-7/15 routing         | **#22** steps 1–4                                              | `public/index.php`, `Router`, middleware pipeline, route table                                                                                                                                                   |
-| Root controllers (15 files)                 | **#22** step 5 (Wave A)                                        | One controller per repo-root entry-script                                                                                                                                                                        |
-| Admin controllers (57 files)                | **#22** step 5b (Wave B)                                       | One controller per `admin/*.php` entry-script                                                                                                                                                                    |
-| Per-page Context DTOs (~15)                 | **#22** step 5c                                                | `AlbumPageContext`, `PicturePageContext`, etc. — built alongside their controllers                                                                                                                               |
-| Pre-boot includes that are _services_       | **#17** ("Pre-boot and admin includes → services" sub-section) | `SectionInitializer`, `UserBootstrap`, `FilterResolver`, `PwgServer`, `Ws\Method\*Endpoints`, `Config::dbPrefix()`                                                                                               |
-| Admin includes that are _services_          | **#17**                                                        | `AlbumsTabRenderer`, `BatchManager\FilterResolver`, `Config\SizesProcessor`, `Config\WatermarkProcessor`, `Upload\DirectPreparer`, `Users\UserTabRenderer`                                                       |
-| Pre-boot includes that are _pure rendering_ | **#24** Wave 0                                                 | `page_header`, `page_tail`, `picture_comment`, `picture_metadata`, `picture_rate`, `no_photo_yet`, `search_filters`, `selected_tags`, `category_cats`, `category_default` → `.latte` partials with typed context |
+| Bucket                                      | Owning roadmap item                                            | Status | What lands there                                                                                                                                                                                                 |
+| ------------------------------------------- | -------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Front controller + PSR-7/15 routing         | **#22** steps 1–4                                              | ✅ Done | `index.php`, `Router`, middleware pipeline, 27-route table                                                                                                                                                       |
+| Root controllers (15 files)                 | **#22** Wave A                                                 | ✅ Done | One controller per repo-root entry-script; source files deleted                                                                                                                                                  |
+| Admin controllers (63 files)                | **#22** Wave B                                                 | ✅ Done | All 63 `admin/*.php` page bodies inlined into 10 typed sub-controllers; files deleted                                                                                                                            |
+| Per-page Context DTOs (~15)                 | **#22** step 5c                                                | ⏳ Remaining | `AlbumPageContext`, `PicturePageContext`, etc. — built alongside Tier 3 rendering work                                                                                                                           |
+| Pre-boot includes that are _services_       | **#17** ("Pre-boot and admin includes → services" sub-section) | ⏳ Remaining | `SectionInitializer`, `UserBootstrap`, `FilterResolver`, `PwgServer`, `Ws\Method\*Endpoints`, `Config::dbPrefix()`                                                                                               |
+| Admin includes that are _services_          | **#17**                                                        | ⏳ Remaining | `AlbumsTabRenderer`, `BatchManager\FilterResolver`, `Config\SizesProcessor`, `Config\WatermarkProcessor`, `Upload\DirectPreparer`, `Users\UserTabRenderer`                                                       |
+| Pre-boot includes that are _pure rendering_ | **#24** Wave 0                                                 | ⏳ Remaining | `page_header`, `page_tail`, `picture_comment`, `picture_metadata`, `picture_rate`, `no_photo_yet`, `search_filters`, `selected_tags`, `category_cats`, `category_default` → `.latte` partials with typed context |
 
 The inventory tables below remain the source of truth — cross rows off as each roadmap-item wave lands.
 
 ### Inventory by directory
 
-#### Root entry-scripts (15 files)
+#### ✅ Root entry-scripts (15 files) — Wave A complete
 
-| File                 | Line | Becomes                                                           |
-| -------------------- | ---- | ----------------------------------------------------------------- |
-| `comments.php`       | 7    | `CommentsController`                                              |
-| `feed.php`           | 5    | `FeedController`                                                  |
-| `i.php`              | 5    | file-top global only; function-internal already removed in Tier 1 |
-| `identification.php` | 5    | `IdentificationController`                                        |
-| `index.php`          | 5    | `IndexController`                                                 |
-| `install.php`        | 5    | `InstallController`                                               |
-| `notification.php`   | 5    | `NotificationController`                                          |
-| `password.php`       | 5    | file-top global only; function-internal already removed in Tier 1 |
-| `picture.php`        | 5    | `PictureController`                                               |
-| `profile.php`        | 5    | `ProfileController`                                               |
-| `register.php`       | 5    | `RegisterController`                                              |
-| `search.php`         | 5    | `SearchController`                                                |
-| `tags.php`           | 5    | `TagsController`                                                  |
-| `upgrade.php`        | 5    | `UpgradeController`                                               |
-| `ws.php`             | 5    | `WebServiceController`                                            |
+All 15 root entry-point `.php` files converted to controllers and deleted. Source files no longer exist in the repo.
 
-#### Admin entry-scripts (57 files in `admin/`)
+#### ✅ Admin entry-scripts (63 files) — Wave B complete
 
-| File                                | Line | Extra vars (today)                 | Becomes                                                                         |
-| ----------------------------------- | ---- | ---------------------------------- | ------------------------------------------------------------------------------- |
-| `admin/album.php`                   | 18   | —                                  | `Admin\AlbumController`                                                         |
-| `admin/album_notification.php`      | 18   | `$category, $admin_album_base_url` | `Admin\AlbumNotificationController`                                             |
-| `admin/albums.php`                  | 15   | —                                  | `Admin\AlbumsController`                                                        |
-| `admin/batch_manager.php`           | 24   | `$logger, $pwg_loaded_plugins`     | `Admin\BatchManagerController`                                                  |
-| `admin/batch_manager_global.php`    | 26   | `$logger, $pwg_loaded_plugins`     | `Admin\BatchManagerGlobalController`                                            |
-| `admin/batch_manager_unit.php`      | 25   | `$pwg_loaded_plugins, $cache`      | `Admin\BatchManagerUnitController`                                              |
-| `admin/cat_list.php`                | 15   | —                                  | `Admin\CategoryListController`                                                  |
-| `admin/cat_modify.php`              | 15   | `$category, $admin_album_base_url` | `Admin\CategoryModifyController`                                                |
-| `admin/cat_options.php`             | 18   | —                                  | `Admin\CategoryOptionsController`                                               |
-| `admin/cat_perm.php`                | 15   | `$category, $admin_album_base_url` | `Admin\CategoryPermissionsController`                                           |
-| `admin/comments.php`                | 18   | —                                  | `Admin\CommentsController`                                                      |
-| `admin/configuration.php`           | 20   | —                                  | `Admin\ConfigurationController`                                                 |
-| `admin/element_set_ranks.php`       | 25   | —                                  | `Admin\ElementSetRanksController`                                               |
-| `admin/extend_for_templates.php`    | 33   | —                                  | `Admin\ExtendForTemplatesController`                                            |
-| `admin/group_list.php`              | 18   | —                                  | `Admin\GroupListController`                                                     |
-| `admin/group_perm.php`              | 15   | —                                  | `Admin\GroupPermissionsController`                                              |
-| `admin/help.php`                    | 16   | —                                  | `Admin\HelpController`                                                          |
-| `admin/history.php`                 | 27   | —                                  | `Admin\HistoryController`                                                       |
-| `admin/intro.php`                   | 20   | `$logger, $pwg_loaded_plugins`     | `Admin\IntroController`                                                         |
-| `admin/languages.php`               | 18   | —                                  | `Admin\LanguagesController`                                                     |
-| `admin/languages_installed.php`     | 18   | —                                  | `Admin\LanguagesInstalledController`                                            |
-| `admin/languages_new.php`           | 18   | —                                  | `Admin\LanguagesNewController`                                                  |
-| `admin/maintenance.php`             | 18   | —                                  | `Admin\MaintenanceController`                                                   |
-| `admin/maintenance_actions.php`     | 23   | `$maint_actions`                   | `Admin\MaintenanceActionsController`                                            |
-| `admin/maintenance_env.php`         | 20   | —                                  | `Admin\MaintenanceEnvController`                                                |
-| `admin/maintenance_sys.php`         | 15   | —                                  | `Admin\MaintenanceSysController`                                                |
-| `admin/menubar.php`                 | 19   | —                                  | `Admin\MenubarController`                                                       |
-| `admin/notification_by_mail.php`    | 22   | —                                  | `Admin\NotificationByMailController` (function-internal already done in Tier 1) |
-| `admin/permalinks.php`              | 79   | —                                  | `Admin\PermalinksController`                                                    |
-| `admin/photo.php`                   | 18   | —                                  | `Admin\PhotoController`                                                         |
-| `admin/photos_add.php`              | 18   | —                                  | `Admin\PhotosAddController`                                                     |
-| `admin/photos_add_applications.php` | 5    | —                                  | `Admin\PhotosAddApplicationsController`                                         |
-| `admin/photos_add_direct.php`       | 19   | `$logger, $pwg_loaded_plugins`     | `Admin\PhotosAddDirectController`                                               |
-| `admin/photos_add_ftp.php`          | 5    | —                                  | `Admin\PhotosAddFtpController`                                                  |
-| `admin/picture_coi.php`             | 20   | —                                  | `Admin\PictureCoiController`                                                    |
-| `admin/picture_formats.php`         | 19   | —                                  | `Admin\PictureFormatsController`                                                |
-| `admin/picture_modify.php`          | 19   | `$admin_photo_base_url, $cache`    | `Admin\PictureModifyController`                                                 |
-| `admin/plugins.php`                 | 18   | —                                  | `Admin\PluginsController`                                                       |
-| `admin/plugins_installed.php`       | 18   | —                                  | `Admin\PluginsInstalledController`                                              |
-| `admin/plugins_new.php`             | 18   | —                                  | `Admin\PluginsNewController`                                                    |
-| `admin/popuphelp.php`               | 17   | —                                  | `Admin\PopupHelpController`                                                     |
-| `admin/profile.php`                 | 15   | —                                  | `Admin\ProfileController`                                                       |
-| `admin/rating.php`                  | 19   | —                                  | `Admin\RatingController`                                                        |
-| `admin/rating_user.php`             | 18   | —                                  | `Admin\RatingUserController`                                                    |
-| `admin/site_manager.php`            | 18   | —                                  | `Admin\SiteManagerController`                                                   |
-| `admin/site_update.php`             | 18   | `$logger, $pwg_loaded_plugins`     | `Admin\SiteUpdateController`                                                    |
-| `admin/stats.php`                   | 15   | —                                  | `Admin\StatsController`                                                         |
-| `admin/tags.php`                    | 18   | —                                  | `Admin\TagsController`                                                          |
-| `admin/themes.php`                  | 18   | —                                  | `Admin\ThemesController`                                                        |
-| `admin/themes_installed.php`        | 18   | —                                  | `Admin\ThemesInstalledController`                                               |
-| `admin/themes_new.php`              | 18   | —                                  | `Admin\ThemesNewController`                                                     |
-| `admin/themes_standard_pages.php`   | 18   | —                                  | `Admin\ThemesStandardPagesController`                                           |
-| `admin/updates_ext.php`             | 18   | —                                  | `Admin\UpdatesExtController`                                                    |
-| `admin/updates_pwg.php`             | 18   | —                                  | `Admin\UpdatesPwgController`                                                    |
-| `admin/user_activity.php`           | 15   | —                                  | `Admin\UserActivityController`                                                  |
-| `admin/user_list.php`               | 25   | —                                  | `Admin\UserListController`                                                      |
-| `admin/user_perm.php`               | 17   | —                                  | `Admin\UserPermissionsController`                                               |
+All 63 `admin/*.php` page-body files deleted. Logic inlined into 10 typed sub-controllers in `src/Piwigo/Controller/Admin/`. Remaining in `admin/`: `site_reader_local.php` (still `require`d by two controllers) and `admin/include/*.php` shared helpers.
+
+<!-- legacy table removed; kept for reference in git history -->
 
 #### Admin includes (`admin/include/*.inc.php`, 7 files)
 
@@ -277,10 +205,11 @@ cache, filter
 
 ## Effort summary
 
-| Tier                                        | Sites        | Cost       | Status    |
-| ------------------------------------------- | ------------ | ---------- | --------- |
-| Tier 1 — 5 typed classes                    | 33           | ~1.5 weeks | **Done**  |
-| Tier 2 — LanguageStack + PageRenderer       | 16           | ~1 week    | Remaining |
-| Tier 3 — MVC (file-top + 5k–10k read sites) | ~78 file-top | ~4–6 weeks | Remaining |
+| Tier                                                            | Sites        | Cost       | Status    |
+| --------------------------------------------------------------- | ------------ | ---------- | --------- |
+| Tier 1 — 5 typed classes                                        | 33           | ~1.5 weeks | **Done**  |
+| Tier 2 — LanguageStack + PageRenderer                           | 16           | ~1 week    | Remaining |
+| Tier 3 Wave A/B — root + admin controllers                      | ~78 file-top | —          | **Done**  |
+| Tier 3 remaining — admin/include + pre-boot includes → services | ~40          | ~2–3 weeks | Remaining |
 
 End state: zero `global $X;` in `src/`, `include/`, `admin/`, root entry-scripts. `tools/` is a documented carve-out.

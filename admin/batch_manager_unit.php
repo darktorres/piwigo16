@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -143,7 +144,7 @@ $template->set_filenames(
     ['batch_manager_unit' => 'batch_manager_unit.tpl']
 );
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
 
 $template->assign(
@@ -296,7 +297,7 @@ SELECT
             $name =
               get_cat_display_name_cache(
                   $item_uppercats,
-                  \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+                  ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
               );
 
             if ($item['category_id'] == $storage_category_id) {
@@ -347,7 +348,7 @@ SELECT
                 break;
             }
         }
-        $admin_photo_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$row_id_str);
+        $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-'.$row_id_str);
         $admin_url_start = $admin_photo_base_url.'-properties';
         $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id='.(is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
         $selected_level = $row['level'] ?? $row['level'];
@@ -362,7 +363,7 @@ SELECT
         'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
         'LEGEND' => $legend,
-        'U_EDIT' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$row_id_str),
+        'U_EDIT' => ServiceLocator::get(UrlGenerator::class)->admin('photo-'.$row_id_str),
         'NAME' => htmlspecialchars(is_scalar($row['name']) ? (string) $row['name'] : ''),
         'AUTHOR' => htmlspecialchars(is_scalar($row['author']) ? (string) $row['author'] : ''),
         'LEVEL' => !empty($row['level']) ? $row['level'] : '0',
@@ -386,8 +387,8 @@ SELECT
         'U_JUMPTO' => (isset($url_img) and $user['level'] >= ($media['image']['level'] ?? 0)) ? $url_img : null,
         'tag_selection' => $tag_selection,
         'U_DOWNLOAD' => 'action.php?id='.$row_id_str.'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
-        'U_HISTORY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history') . '&amp;filter_image_id='.$row_id_str,
-        'U_ACTIVITY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_activity') . '&photo='.$row_id_str,
+        'U_HISTORY' => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id='.$row_id_str,
+        'U_ACTIVITY' => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo='.$row_id_str,
         'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.get_pwg_token(),
         'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
         'PATH' => $row['path'],

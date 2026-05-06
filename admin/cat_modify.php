@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -127,7 +128,7 @@ $category['nb_subcats'] = count($subcat_ids) - 1;
 // Navigation path
 $navigation = get_cat_display_name_cache(
     $category['uppercats'],
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+    ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
 );
 
 // Parent navigation path
@@ -136,7 +137,7 @@ if (count($uppercats_array) > 1) {
     array_pop($uppercats_array);
     $parent_navigation = get_cat_display_name_cache(
         implode(',', $uppercats_array),
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+        ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
     );
 } else {
     $parent_navigation = l10n('Root');
@@ -145,7 +146,7 @@ if (count($uppercats_array) > 1) {
 //----------------------------------------------------- template initialization
 $template->set_filename('album_properties', 'cat_modify.tpl');
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 $cat_list_url = $base_url.'albums';
 
 $self_url = $cat_list_url;
@@ -178,7 +179,7 @@ $template->assign(
     'U_ADD_PHOTOS_ALBUM' => $base_url.'photos_add&amp;album='.$category['id'],
     'U_CHILDREN' => $cat_list_url.'&amp;parent_id='.$category['id'],
     'U_MOVE' => $base_url.'albums&amp;parent_id='.$category['id'],
-    'U_ACTIVITY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_activity') . '&album='.$category['id'],
+    'U_ACTIVITY' => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&album='.$category['id'],
     ]
 );
 

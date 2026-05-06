@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -46,7 +48,7 @@ function make_consecutive(array &$orders, int $step = 50): void
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('menus');
@@ -160,7 +162,7 @@ foreach ($mb_conf as $id => $pos) {
     );
 }
 
-$action = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('menubar');
+$action = ServiceLocator::get(UrlGenerator::class)->admin('menubar');
 $template->assign(['F_ACTION' => $action]);
 
 $template->assign('isWebmaster', (is_webmaster()) ? 1 : 0);

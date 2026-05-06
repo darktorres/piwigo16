@@ -474,7 +474,7 @@ final class UrlService
 
             $page['tags'] = find_tags($requestedTagIds, $requestedTagUrlNames);
             if (empty($page['tags'])) {
-                page_not_found(l10n('Requested tag does not exist'), ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->tagsPage());
+                page_not_found(l10n('Requested tag does not exist'), ServiceLocator::get(UrlGenerator::class)->tagsPage());
             }
         } elseif ('favorites' == ($tokens[$nextToken] ?? null)) {
             $page['section'] = 'favorites';

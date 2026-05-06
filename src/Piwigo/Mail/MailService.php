@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -788,7 +789,7 @@ SELECT
     public function pwgGenerateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
         set_make_full_url();
-        $profileUrl = ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->profile();
+        $profileUrl = ServiceLocator::get(UrlGenerator::class)->profile();
 
         $message  = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';

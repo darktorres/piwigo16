@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Languages;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -28,7 +30,7 @@ if (!Config::enableExtensionsInstall()) {
 
 $template->set_filenames(['languages' => 'languages_new.tpl']);
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
 
 $languages = new Languages();
 $languages->get_db_languages();

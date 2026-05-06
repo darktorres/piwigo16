@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\ServiceLocator;
@@ -31,7 +32,7 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
 $cat_id_str = is_scalar($_GET['cat_id']) ? (string) $_GET['cat_id'] : '';
-$admin_album_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('album-'.$cat_id_str);
+$admin_album_base_url = ServiceLocator::get(UrlGenerator::class)->admin('album-'.$cat_id_str);
 
 $category = ServiceLocator::get(CategoryRepository::class)
     ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);

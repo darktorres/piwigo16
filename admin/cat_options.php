@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\ServiceLocator;
@@ -122,7 +123,7 @@ $template->set_filenames(
 
 $get_section = $_GET['section'] ?? null;
 $page['section'] = is_scalar($get_section) ? (string) $get_section : 'status';
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_options') . '&amp;section=';
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&amp;section=';
 
 $template->assign(
     [

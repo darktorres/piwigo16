@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Exception\AuthException;
@@ -167,7 +169,7 @@ foreach ($new_extensions as $file) {
 $template->set_filenames(['extend_for_templates'
      => 'extend_for_templates.tpl']);
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('extend_for_templates');
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin('extend_for_templates');
 
 $template->assign(
     [

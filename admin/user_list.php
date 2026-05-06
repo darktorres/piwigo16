@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -113,7 +114,7 @@ $owner_username = array_column(get_dbal_connection()->executeQuery($query)->fetc
 
 $template->assign(
     [
-    'U_HISTORY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history') . '&filter_user_id=',
+    'U_HISTORY' => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
     'PWG_TOKEN' => get_pwg_token(),
     'NB_IMAGE_PAGE' => $default_user['nb_image_page'] ?? null,
     'RECENT_PERIOD' => $default_user['recent_period'] ?? null,
@@ -254,7 +255,7 @@ $template->assign('page_data_json', json_encode([
         $v = userprefs_get_param('user-manager-pagination', userprefs_get_param('user-manager-view', 'line') === 'line' ? 5 : 10);
         return is_numeric($v) ? (int) $v : 0;
     })(),
-    'history_base_url'         => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history') . '&filter_user_id=',
+    'history_base_url'         => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
     'register_dates'           => $register_dates,
     'groups_arr'               => $groups_arr_json,
     'months'                   => [

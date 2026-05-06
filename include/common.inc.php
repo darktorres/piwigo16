@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Bootstrap\ExceptionHandler;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCacheRegistry;
@@ -237,7 +239,7 @@ if (is_a_guest()) {
 if (PageState::current()->authKeyInvalid) {
     PageState::current()->addError(
         l10n('Your authentication key is no longer valid.')
-      .sprintf(' <a href="%s">%s</a>', \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->identification(), l10n('Login'))
+      .sprintf(' <a href="%s">%s</a>', ServiceLocator::get(UrlGenerator::class)->identification(), l10n('Login'))
     );
 }
 
@@ -306,7 +308,7 @@ if (Config::galleryLocked()) {
             header('Retry-After: 900');
         }
         header('Content-Type: text/html; charset='.get_pwg_charset());
-        echo '<a href="'.\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->identification().'">'.l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
+        echo '<a href="'.ServiceLocator::get(UrlGenerator::class)->identification().'">'.l10n('The gallery is locked for maintenance. Please, come back later.').'</a>';
         echo str_repeat(' ', 512); //IE6 doesn't error output if below a size
         exit();
     }

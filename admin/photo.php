@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -32,7 +33,7 @@ check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 $image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : '';
-$admin_photo_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$image_id_str);
+$admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-'.$image_id_str);
 
 // retrieving direct information about picture
 $page['image'] = get_image_infos($image_id_str, true);

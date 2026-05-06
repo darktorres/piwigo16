@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Themes;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -25,7 +27,7 @@ if (!is_webmaster()) {
     PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
 }
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']);
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin($page['page']);
 
 $themes = new Themes();
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Plugins;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -37,7 +38,7 @@ if (isset($_GET['show_details'])) {
     $show_details = pwg_get_session_var('plugins_show_details', false);
 }
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']);
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin($page['page']);
 $pwg_token = get_pwg_token();
 $action_url = $base_url.'&amp;plugin='.'%s'.'&amp;pwg_token='.$pwg_token;
 
@@ -104,7 +105,7 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
 
     $setting_url = '';
     if ($fs_plugin['hasSettings']) { // new version
-        $setting_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('plugin-'.$plugin_id);
+        $setting_url = ServiceLocator::get(UrlGenerator::class)->admin('plugin-'.$plugin_id);
 
         if (preg_match('/^piwigo-(videojs|openstreetmap)$/', (string) $plugin_id)) {
             $setting_url = str_replace('piwigo-', 'piwigo_', $setting_url);

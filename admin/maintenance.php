@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Exception\AuthException;
 
@@ -105,7 +107,7 @@ $maint_actions = [
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 if (isset($_GET['tab'])) {
     check_input_parameter('tab', $_GET, false, '/^(actions|env|sys)$/');

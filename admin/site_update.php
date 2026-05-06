@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -79,7 +80,7 @@ if ($site_is_remote) {
 if (isset($page['no_md5sum_number'])) {
     $template->assign(
         [
-        'save_error' => '<a href="'.\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('batch_manager').'&amp;filter=prefilter-no_sync_md5sum">'.l10n('Some checksums are missing.').'<i class="icon-right"></i></a>',
+        'save_error' => '<a href="'.ServiceLocator::get(UrlGenerator::class)->admin('batch_manager').'&amp;filter=prefilter-no_sync_md5sum">'.l10n('Some checksums are missing.').'<i class="icon-right"></i></a>',
     ]
     );
 
@@ -89,7 +90,7 @@ if (isset($page['no_md5sum_number'])) {
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('site_update');
@@ -865,7 +866,7 @@ $used_metadata = implode(', ', array_map(fn ($v): string => is_scalar($v) ? (str
 $template->assign(
     [
     'SITE_URL' => $site_url_str,
-    'U_SITE_MANAGER' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('site_manager'),
+    'U_SITE_MANAGER' => ServiceLocator::get(UrlGenerator::class)->admin('site_manager'),
     'L_RESULT_UPDATE' => $result_title.l10n('Search for new images in the directories'),
     'L_RESULT_METADATA' => $result_title.l10n('Metadata synchronization results'),
     'METADATA_LIST' => $used_metadata,

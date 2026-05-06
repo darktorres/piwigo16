@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 
 // +-----------------------------------------------------------------------+
@@ -33,7 +35,7 @@ function add_core_tabs(array $sheets, string $tab_id): array
 
     switch ($tab_id) {
         case 'admin_home':
-            $sheets[''] = ['caption' => l10n('Administration Home'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin()];
+            $sheets[''] = ['caption' => l10n('Administration Home'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin()];
             break;
 
         case 'tags':
@@ -147,8 +149,8 @@ function add_core_tabs(array $sheets, string $tab_id): array
             break;
 
         case 'rating':
-            $sheets['rating'] = ['caption' => l10n('Photos'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('rating')];
-            $sheets['rating_user'] = ['caption' => l10n('Users'), 'url' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('rating_user')];
+            $sheets['rating'] = ['caption' => l10n('Photos'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin('rating')];
+            $sheets['rating_user'] = ['caption' => l10n('Users'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin('rating_user')];
             break;
 
         case 'themes':

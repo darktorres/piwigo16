@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
@@ -351,7 +352,7 @@ $tabsheet->set_id('configuration');
 $tabsheet->select($section_str);
 $tabsheet->assign();
 
-$action = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('configuration');
+$action = ServiceLocator::get(UrlGenerator::class)->admin('configuration');
 $action .= '&amp;section='.$section_str;
 
 $template->assign(

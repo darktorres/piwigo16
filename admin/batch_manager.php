@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -54,7 +55,7 @@ if (isset($_GET['action'])) {
           l10n('Information data registered in database'),
           ];
 
-        redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+        redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
     }
 
     if ('delete_orphans' == $_GET['action'] and isset($_GET['nb_orphans_deleted'])) {
@@ -73,7 +74,7 @@ if (isset($_GET['action'])) {
                 $nb_orphans_deleted
             );
 
-            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
         }
     }
 
@@ -92,7 +93,7 @@ if (isset($_GET['action'])) {
                 $nb_md5sum_added
             );
 
-            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
         }
     }
 }
@@ -495,7 +496,7 @@ if (isset($bmf['category'])) {
     // we need to check the category still exists (it may have been deleted since it was added in the session)
     if (!ServiceLocator::get(CategoryRepository::class)->existsById($bmf_category)) {
         unset($_SESSION['bulk_manager_filter']);
-        redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+        redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
     }
 
     if (isset($bmf['category_recursive'])) {
@@ -649,7 +650,7 @@ if (!isset($_REQUEST['start'])
 // +-----------------------------------------------------------------------+
 // |                                 Tabs                                  |
 // +-----------------------------------------------------------------------+
-$manager_link = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
+$manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
 
 if (isset($_GET['mode'])) {
     check_input_parameter('mode', $_GET, false, '/^(global|unit)$/');

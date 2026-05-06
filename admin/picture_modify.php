@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -220,8 +221,8 @@ $template->assign(
     'U_DOWNLOAD' => 'action.php?id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : '').'&amp;part=e&amp;pwg_token='.get_pwg_token().'&amp;download',
     'U_SYNC' => $admin_url_start.'&amp;sync_metadata=1',
     'U_DELETE' => $admin_url_start.'&amp;delete=1&amp;pwg_token='.get_pwg_token(),
-    'U_HISTORY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history') . '&amp;filter_image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''),
-    'U_ACTIVITY' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_activity') . '&photo='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''),
+    'U_HISTORY' => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''),
+    'U_ACTIVITY' => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''),
 
     'PATH' => $row['path'],
 
@@ -258,7 +259,7 @@ $template->assign(
       ),
 
     'F_ACTION' =>
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin()
+        ServiceLocator::get(UrlGenerator::class)->admin()
         .get_query_string_diff(['sync_metadata']),
     ]
 );
@@ -318,7 +319,7 @@ $template->assign('INTRO', $intro_vars);
 
 
 if (in_array(get_extension($row['path']), Config::pictureExtensions())) {
-    $template->assign('U_COI', \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('picture_coi') . '&amp;image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''));
+    $template->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id='.(is_scalar($_GET['image_id'] ?? null) ? (string)$_GET['image_id'] : ''));
 }
 
 // image level options
@@ -339,7 +340,7 @@ foreach (ServiceLocator::get(CategoryRepository::class)
     $name =
       get_cat_display_name_cache(
           is_scalar($row['uppercats'] ?? null) ? (string)$row['uppercats'] : '',
-          \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+          ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
       );
 
     if ($row['category_id'] == $storage_category_id) {

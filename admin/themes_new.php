@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Themes;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -26,7 +28,7 @@ if (!Config::enableExtensionsInstall()) {
     throw new ConfigException('Piwigo extensions install/update system is disabled');
 }
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin($page['page']) . '&tab='.$page['tab'];
 
 $themes = new Themes();
 

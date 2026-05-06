@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -122,12 +123,12 @@ $rating_page_data = [
 $template->assign(
     [
     'navbar' => create_navigation_bar(
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin().get_query_string_diff(['start','del']),
+        ServiceLocator::get(UrlGenerator::class)->admin().get_query_string_diff(['start','del']),
         $nb_images,
         $start,
         $elements_per_page
     ),
-    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin(),
+    'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(),
     'DISPLAY' => $elements_per_page,
     'NB_ELEMENTS' => $nb_elements,
     'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []),
@@ -207,7 +208,7 @@ foreach ($images as $image) {
     $thumbnail_src = DerivativeImage::thumb_url($image);
 
     $image_id_int = is_numeric($image['id']) ? (int) $image['id'] : 0;
-    $image_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$image_id_int);
+    $image_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-'.$image_id_int);
 
     $all_rates = ServiceLocator::get(RateRepository::class)
         ->findByElementId($image_id_int);

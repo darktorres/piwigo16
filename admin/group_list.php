@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -29,7 +30,7 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('groups');
@@ -62,7 +63,7 @@ $group_list_page_data = [
 
 $template->assign(
     [
-    'F_ADD_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('group_list'),
+    'F_ADD_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
     // 'U_HELP' => get_root_url().'admin/popuphelp.php?page=group_list',
     'PWG_TOKEN' => get_pwg_token(),
     'CACHE_KEYS' => $cache_keys,
@@ -104,7 +105,7 @@ $template->assign(
 $groupRepo = ServiceLocator::get(GroupRepository::class);
 $userFields = Config::userFields();
 
-$admin_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$admin_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 $perm_url    = $admin_url.'group_perm&amp;group_id=';
 $users_url = $admin_url.'user_list&amp;group=';
 $del_url     = $admin_url.'group_list&amp;delete=';

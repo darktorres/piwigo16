@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Exception\AuthException;
 
@@ -19,7 +21,7 @@ if (!defined('PHPWG_ROOT_PATH')) {
 global $template, $user, $page, $persistent_cache, $lang;
 
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('plugins');
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins');
 
 if (isset($_GET['tab'])) {
     $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';

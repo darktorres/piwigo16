@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ValidationException;
@@ -85,7 +86,7 @@ $template->assign(
     'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
     'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
 
-    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_perm') . '&amp;user_id='.$page['user'],
+    'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&amp;user_id='.$page['user'],
     ]
 );
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
@@ -183,7 +184,7 @@ $template->assign(
       trim(
           get_cat_display_name_from_id(
               $page['cat'],
-              \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=album-'
+              ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
           )
       ),
     'F_ACTION' => $admin_album_base_url.'-notification',

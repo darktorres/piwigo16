@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -48,7 +49,7 @@ if (isset($_GET['batch'])) {
         $inserts
     );
 
-    redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
+    redirect(ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
 }
 
 if (userprefs_get_param('promote-mobile-apps', true)) {
@@ -113,7 +114,7 @@ SELECT *
 
         $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
 
-        $formats_original_info['u_edit'] = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.$fmtId);
+        $formats_original_info['u_edit'] = ServiceLocator::get(UrlGenerator::class)->admin('photo-'.$fmtId);
 
         $have_formats_original = true;
     } else {
@@ -147,7 +148,7 @@ $template->assign([
   'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
   'FORMATS_ORIGINAL_INFO' => $formats_original_info,
   'FORMATS_EXT_INFO' => $formats_ext_info,
-  'SWITCH_FORMAT_MODE_URL' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photos_add').($display_formats ? '' : '&formats'),
+  'SWITCH_FORMAT_MODE_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add').($display_formats ? '' : '&formats'),
   'format_ext' =>  implode(',', Config::formatExtensions()),
   'str_format_ext' =>  implode(', ', Config::formatExtensions()),
   'page_data_json' => json_encode([

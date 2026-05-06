@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\AuthException;
 
 // +-----------------------------------------------------------------------+
@@ -33,8 +35,8 @@ $errors = [];
 save_profile_from_post($edit_user, $errors);
 
 load_profile_in_template(
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('profile') . '&amp;user_id='.(is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('user_list'),
+    ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&amp;user_id='.(is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
+    ServiceLocator::get(UrlGenerator::class)->admin('user_list'),
     $edit_user
 );
 $page['errors'] = array_merge($page['errors'], $errors);

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -134,7 +135,7 @@ $template->set_filename('albums', 'albums.tpl');
 
 $template->assign(
     [
-    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('albums'),
+    'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('albums'),
     ]
 );
 

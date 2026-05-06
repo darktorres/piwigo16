@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
@@ -164,7 +165,7 @@ $template->set_filename('stats', 'stats.tpl');
 // TabSheet initialization
 history_tabsheet();
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history');
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin('history');
 
 $template->assign(
     [

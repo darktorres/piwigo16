@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -95,7 +96,7 @@ if (is_string($bmf['prefilter'] ?? null)) {
     $page['prefilter'] = $bmf['prefilter'];
 }
 
-$redirect_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+$redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
 
 /** @var array<int> $collection_int */
 $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
@@ -340,7 +341,7 @@ if (isset($_POST['submit'])) {
                     count($collection_int)
                 );
 
-                $redirect_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+                $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
                 $redirect = true;
             } else {
                 PageState::current()->addError(l10n('No photo can be deleted'));
@@ -387,7 +388,7 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 $template->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
 require(PHPWG_ROOT_PATH.'admin/include/batch_manager_filters.inc.php');
 
@@ -544,7 +545,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         'thumb' => new DerivativeImage($thumb_params, $src_image),
         'TITLE' => $ttitle,
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
-        'U_EDIT' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photo-'.(is_scalar($row['id']) ? (string)$row['id'] : '')),
+        'U_EDIT' => ServiceLocator::get(UrlGenerator::class)->admin('photo-'.(is_scalar($row['id']) ? (string)$row['id'] : '')),
         ]
             )
         );

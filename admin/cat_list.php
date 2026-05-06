@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Exception\AuthException;
@@ -125,7 +127,7 @@ check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 
 $categories = [];
 
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_list');
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
 $navigation = '<a href="'.$base_url.'">';
 $navigation .= l10n('Home');
 $navigation .= '</a>';
@@ -152,7 +154,7 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     update_global_rank();
     invalidate_user_cache();
 
-    $redirect_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_list');
+    $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
     if (isset($_GET['parent_id'])) {
         $redirect_url .= '&parent_id='.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '');
     }
@@ -169,7 +171,7 @@ elseif (isset($_POST['submitAdd'])) {
     if (isset($output_create['error'])) {
         PageState::current()->addError(is_scalar($output_create['error']) ? (string)$output_create['error'] : '');
     } else {
-        $edit_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('album-'.(is_scalar($output_create['id'] ?? '') ? (string)($output_create['id'] ?? '') : ''));
+        $edit_url = ServiceLocator::get(UrlGenerator::class)->admin('album-'.(is_scalar($output_create['id'] ?? '') ? (string)($output_create['id'] ?? '') : ''));
         PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string)($output_create['info'] ?? '') : '').' <a class="icon-pencil" href="'.$edit_url.'">'.l10n('Edit album').'</a>');
     }
 }
@@ -190,7 +192,7 @@ if (isset($_GET['parent_id'])) {
 // +-----------------------------------------------------------------------+
 $template->set_filename('categories', 'cat_list.tpl');
 
-$form_action = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('cat_list');
+$form_action = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
 if (isset($_GET['parent_id'])) {
     $form_action .= '&amp;parent_id='.(is_scalar($_GET['parent_id']) ? (string)$_GET['parent_id'] : '');
 }
@@ -269,7 +271,7 @@ SELECT
 }
 
 $template->assign('categories', []);
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 if (isset($_GET['parent_id'])) {
     $template->assign(

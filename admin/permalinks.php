@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -170,7 +171,7 @@ $sort_by = parse_sort_variables(
     '#old_permalinks'
 );
 
-$url_del_base = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('permalinks');
+$url_del_base = ServiceLocator::get(UrlGenerator::class)->admin('permalinks');
 $sortByOld0 = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
 $oldPermalinkQuery = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
 if (count($sort_by) && $sortByOld0 !== '') {

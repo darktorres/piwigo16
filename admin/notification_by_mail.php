@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
@@ -44,7 +45,7 @@ check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 // +-----------------------------------------------------------------------+
 // | Initialization                                                        |
 // +-----------------------------------------------------------------------+
-$base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin();
+$base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 $must_repost = false;
 
 // +-----------------------------------------------------------------------+

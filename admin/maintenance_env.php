@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\MaintenanceService;
 use Piwigo\Config\Config;
@@ -57,14 +58,14 @@ switch ($action) {
     case 'lock_gallery':
         {
             conf_update_param('gallery_locked', 'true');
-            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance'));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
             break;
         }
     case 'unlock_gallery':
         {
             conf_update_param('gallery_locked', 'false');
             $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
-            redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance'));
+            redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
             break;
         }
     case 'categories':
@@ -202,7 +203,7 @@ switch ($action) {
                 } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                     PageState::current()->addInfo(l10n('A new version of Piwigo is available.'));
 
-                    $update_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('updates');
+                    $update_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
                     PageState::current()->addInfo('<a href="'. $update_url . '">' . l10n('Update to Piwigo %s', $versions['latest']) . '</a>');
                 } else {
                     PageState::current()->addInfo(l10n('You are running the latest version of Piwigo.'));
@@ -229,7 +230,7 @@ $template->assign('page_data_json', json_encode([
     'error_occured'    => l10n('an error happened'),
 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-$url_format = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token='.get_pwg_token();
+$url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token='.get_pwg_token();
 
 $purge_urls[l10n('All')] = sprintf($url_format, 'derivatives').'&amp;type=all';
 foreach (ImageStdParams::get_defined_type_map() as $params) {

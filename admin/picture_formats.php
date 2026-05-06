@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -59,7 +61,7 @@ foreach ($formats as &$format) {
 }
 
 $template->assign([
-    'ADD_FORMATS_URL' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photos_add') . '&formats='.$picFmtId,
+    'ADD_FORMATS_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add') . '&formats='.$picFmtId,
     'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
     'FORMATS'         => $formats,
     'PWG_TOKEN'       => get_pwg_token(),

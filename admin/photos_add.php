@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Exception\AuthException;
 
@@ -24,7 +26,7 @@ require_once(PHPWG_ROOT_PATH.'admin/include/functions_upload.inc.php');
 
 define(
     'PHOTOS_ADD_BASE_URL',
-    \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('photos_add')
+    ServiceLocator::get(UrlGenerator::class)->admin('photos_add')
 );
 
 // +-----------------------------------------------------------------------+

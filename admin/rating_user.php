@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
@@ -240,7 +241,7 @@ $x = uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
 
 $template->assign([
-  'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin(),
+  'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(),
   'F_MIN_RATES' => $filter_min_rates,
   'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
   'available_rates' => Config::rateItems(),

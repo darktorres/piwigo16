@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
@@ -65,8 +66,8 @@ history_tabsheet();
 
 $template->assign(
     [
-    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('history'),
-    'API_METHOD' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
+    'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'),
+    'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
     ]
 );
 
@@ -76,7 +77,7 @@ $template->assign(
 
 if (isset($page['search_id'])) {
     $navbar = create_navigation_bar(
-        \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . get_query_string_diff(['start']),
+        ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start']),
         $page['nb_lines'],
         $page['start'],
         Config::nbLogsPage()
@@ -154,7 +155,7 @@ $template->assign('guest_id', Config::guestId());
 $template->assign('ADMIN_PAGE_TITLE', l10n('History'));
 
 $template->assign('page_data_json', json_encode([
-    'API_METHOD'                  => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
+    'API_METHOD'                  => ServiceLocator::get(UrlGenerator::class)->ws() . '?format=json&method=pwg.history.search',
     'filter_user_name'            => $form_param['user_name'] ?? null,
     'guest_id'                    => Config::guestId(),
     'today'                       => date('Y-m-d'),

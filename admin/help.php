@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\PageState;
 
@@ -21,7 +23,7 @@ global $template, $user, $page, $persistent_cache, $lang;
 // +-----------------------------------------------------------------------+
 check_status(ACCESS_ADMINISTRATOR);
 
-$help_link = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('help') . '&section=';
+$help_link = ServiceLocator::get(UrlGenerator::class)->admin('help') . '&section=';
 $selected = null;
 
 if (!isset($_GET['section']) || !is_string($_GET['section'])) {

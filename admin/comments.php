@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Exception\AuthException;
@@ -37,10 +39,10 @@ $template->set_filenames(['comments' => 'comments.tpl']);
 $comments_disabled = !Config::activateComments();
 
 $template->assign([
-    'F_ACTION'           => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('comments'),
+    'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
     'PWG_TOKEN'          => get_pwg_token(),
     'COMMENTS_DISABLED'  => $comments_disabled,
-    'U_CONFIGURATION'    => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
+    'U_CONFIGURATION'    => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
     'page_data_json'     => json_encode([
         'pwg_token'                => get_pwg_token(),
         'str_yes_delete_confirmation' => l10n('Yes, delete'),
@@ -59,7 +61,7 @@ $template->assign([
 // | Tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('comments');

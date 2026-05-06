@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
@@ -28,7 +29,7 @@ check_status(ACCESS_ADMINISTRATOR);
 // | tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-$my_base_url = \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin() . '&page=';
+$my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
 $tabsheet = new Tabsheet();
 $tabsheet->set_id('tags');
@@ -44,7 +45,7 @@ if (isset($_GET['action']) and 'delete_orphans' == $_GET['action']) {
 
     delete_orphan_tags();
     $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-    redirect(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags'));
+    redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
 }
 
 // +-----------------------------------------------------------------------+
@@ -55,7 +56,7 @@ $template->set_filenames(['tags' => 'tags.tpl']);
 
 $template->assign(
     [
-    'F_ACTION' => \Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags'),
+    'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'),
     'PWG_TOKEN' => get_pwg_token(),
     ]
 );
@@ -85,7 +86,7 @@ if (count($orphan_tag_names) > 0) {
         count($orphan_tag_names),
         '<a 
       class="icon-eye"
-      data-url="'.\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->admin('tags').'&amp;action=delete_orphans&amp;pwg_token='.get_pwg_token().'">'
+      data-url="'.ServiceLocator::get(UrlGenerator::class)->admin('tags').'&amp;action=delete_orphans&amp;pwg_token='.get_pwg_token().'">'
         .l10n('Review').'</a>'
     );
 

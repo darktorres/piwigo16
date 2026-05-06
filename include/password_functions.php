@@ -6,6 +6,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
@@ -240,7 +241,7 @@ function reset_password(): bool
 
     pwg_activity('user', $user_id, 'reset_password_success');
     PageState::current()->addInfo(l10n('Your password has been reset'));
-    PageState::current()->addInfo('<a href="' . get_root_url() . 'identification.php">' . l10n('Login') . '</a>');
+    PageState::current()->addInfo('<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . l10n('Login') . '</a>');
 
     return true;
 }

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 // +-----------------------------------------------------------------------+
@@ -283,8 +285,8 @@ function initialize_menu(): void
     if (is_a_guest()) {
         $template->assign(
             [
-              'U_LOGIN' => get_root_url().'identification.php',
-              'U_LOST_PASSWORD' => get_root_url().'password.php',
+              'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
+              'U_LOST_PASSWORD' => ServiceLocator::get(UrlGenerator::class)->password(),
               'AUTHORIZE_REMEMBERING' => Config::authorizeRemembering(),
             ]
         );

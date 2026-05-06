@@ -6,6 +6,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlGenerator;
 
 global $template, $user, $page, $persistent_cache, $lang;
 
@@ -77,7 +78,7 @@ if (
             $template->assign(
                 [
                 'step' => 1,
-                'U_LOGIN' => 'identification.php',
+                'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
                 'deactivate_url' => get_root_url().'?no_photo_yet=browse',
                 ]
             );

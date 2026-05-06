@@ -49,7 +49,10 @@
   "autoload": {
     "psr-4": {
       "Piwigo\\": "src/Piwigo/"
-    }
+    },
+    "files": [
+      "src/Piwigo/Search/QConstants.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

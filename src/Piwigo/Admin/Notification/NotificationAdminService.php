@@ -10,6 +10,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 
 final class NotificationAdminService
@@ -148,8 +149,8 @@ final class NotificationAdminService
         $tpl->assign([
             'USERNAME'        => stripslashes((string) $nbmUser['username']),
             'SEND_AS_NAME'    => $ctx->sendAsName,
-            'UNSUBSCRIBE_LINK' => add_url_params(get_gallery_home_url() . '/nbm.php', ['unsubscribe' => $nbmUser['check_key']]),
-            'SUBSCRIBE_LINK'   => add_url_params(get_gallery_home_url() . '/nbm.php', ['subscribe' => $nbmUser['check_key']]),
+            'UNSUBSCRIBE_LINK' => add_url_params(ServiceLocator::get(UrlGenerator::class)->nbm(), ['unsubscribe' => $nbmUser['check_key']]),
+            'SUBSCRIBE_LINK'   => add_url_params(ServiceLocator::get(UrlGenerator::class)->nbm(), ['subscribe' => $nbmUser['check_key']]),
             'CONTACT_EMAIL'    => $ctx->sendAsMailAddress,
         ]);
         unset_make_full_url();

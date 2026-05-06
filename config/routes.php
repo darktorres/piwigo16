@@ -165,6 +165,24 @@ $routes->add('feed', new Route(
     methods:  $get,
 ));
 
+$routes->add('about', new Route(
+    path:     '/about',
+    defaults: ['_controller' => 'Piwigo\Controller\AboutController'],
+    methods:  $get,
+));
+
+$routes->add('nbm', new Route(
+    path:     '/nbm',
+    defaults: ['_controller' => 'Piwigo\Controller\NbmController'],
+    methods:  $gp,
+));
+
+$routes->add('popuphelp', new Route(
+    path:     '/popuphelp',
+    defaults: ['_controller' => 'Piwigo\Controller\PopuphelpController'],
+    methods:  $get,
+));
+
 // ── Technical ─────────────────────────────────────────────────────────────────
 
 // Image derivative: /i/path/to/image-thumb.jpg

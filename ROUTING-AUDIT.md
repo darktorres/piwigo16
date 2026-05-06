@@ -56,6 +56,7 @@ Files at `/` that Apache serves directly as PHP scripts, **bypassing the kernel*
 | `migrations.php` | Doctrine Migrations CLI config — not a request handler |
 | `rector.php` | Rector static analysis config — not a request handler |
 | `upgrade_feed.php` | Feed-based DB upgrade runner; gated by `Config::checkUpgradeFeed()`; custom bootstrap, not kernel-routed |
+| `action.php` | **Performance shim** — binary file server (downloads, format variants); 223-line handler with direct HTTP header control and `readfile()`; kernel overhead would defeat its purpose. `UrlGenerator::actionDownload()` / `actionFormat()` generate the correct URLs. |
 
 ### 2b. Legacy PHP entry points — not yet routed
 
@@ -63,21 +64,9 @@ These files are served directly by Apache and have no kernel route. They each de
 
 | File | What it does | Notes |
 |------|-------------|-------|
-| `action.php` | Serves image file downloads (part=e/r/f) and format downloads | Referenced by download links in PhotoController, BatchManagerController |
-| `qsearch.php` | Quick-search redirect: reads `?q=` and redirects to search results | Redirects to legacy `search.php` (broken — should target `/search`) |
-| `about.php` | Renders the gallery "About" page via Smarty | Not in routes.php; no controller |
-| `random.php` | Generates a random list of images and redirects to a gallery URL | Route `random` now exists in routes.php — this file is dead code |
-| `nbm.php` | Notification-by-mail subscribe/unsubscribe handler | Used in email links; not routed |
-| `popuphelp.php` | Gallery-side help popup | Also exists as `admin/popuphelp.php`; neither is routed |
-| `check_admin.php` | **Dev debug script** — dumps admin user's password hash and tests two hardcoded passwords | **Delete immediately** — exposes credential material; was never a real entry point |
+| `qsearch.php` | Quick-search redirect: reads `?q=` and redirects to `/search` routed URL | Kept as shim; internal redirect now uses `UrlGenerator::searchPage()` |
 
-**Action items:**
-- `check_admin.php` → delete immediately (exposes password hashes; dev artifact)
-- `action.php` → add `/action` route + `ActionController`, update download URL generation in `PhotoController` and `BatchManagerController`
-- `qsearch.php` → fix redirect target from `search.php` to the routed search URL; or route `/qsearch` directly
-- `about.php` → add `/about` route + `AboutController`
-- `random.php` → route already exists (`/random`); this file is now dead code — remove it
-- `nbm.php` → add `/nbm` route + `NbmController`
+*(All other unrouted entry points have been migrated: `about.php` → `/about`, `nbm.php` → `/nbm`, `popuphelp.php` → `/popuphelp`, `random.php` deleted, `check_admin.php` deleted.)*
 
 ---
 
@@ -131,29 +120,15 @@ After the mass URL cleanup (replacing `admin.php`, `ws.php`, `identification.php
 
 ### 4a. `action.php` — download links
 
-Three locations still generate `action.php?id=...` URLs because `action.php` has no kernel route yet:
+`action.php` is a permanent lightweight shim (like `i.php`). URL generation is centralised:
+- `UrlGenerator::actionDownload(int $id, string $part, string $pwgToken): string`
+- `UrlGenerator::actionFormat(int $formatId): string`
 
-| File | Usage |
-|------|-------|
-| `src/Piwigo/Controller/Admin/PhotoController.php` | `'U_DOWNLOAD' => 'action.php?id=...'` (photo download) |
-| `src/Piwigo/Controller/Admin/PhotoController.php` | `'download_url' => 'action.php?format=...'` (format download) |
-| `src/Piwigo/Controller/Admin/BatchManagerController.php` | `'U_DOWNLOAD' => 'action.php?id=...'` (batch download) |
-
-**Fix:** Add `UrlGenerator::action()` + `/action` route, or treat `action.php` as a permanent lightweight shim like `i.php`.
+All three former hardcoded `'action.php?...'` strings in `PhotoController` and `BatchManagerController` now use these methods.
 
 ### 4b. `admin/popuphelp.php` — help button links
 
-10 locations across admin sub-controllers assign `U_HELP` pointing to `admin/popuphelp.php`. The file exists on disk and works; these links are not broken.
-
-| Controller | Page |
-|---|---|
-| `AlbumController` | cat_options, cat_perm |
-| `ConfigurationController` | configuration |
-| `ExtensionsController` | extend_for_templates |
-| `MaintenanceController` | maintenance (×2), history, synchronize |
-| `MiscController` | notification_by_mail, permalinks |
-
-Low priority — not broken, just not routed.
+All 10 `U_HELP` assignments now use `UrlGenerator::adminPopupHelp(string $helpPage)` which routes through the kernel (`?page=popuphelp&help=xxx`). The `help=` param avoids collision with the admin dispatcher's own `page=` routing param. `MiscController::popupHelp()` was updated to read `$_GET['help']`. `admin/popuphelp.php` has been deleted.
 
 ---
 
@@ -181,14 +156,15 @@ If the route result is NOT_FOUND or the controller class doesn't exist, delegate
 
 ## 6. Summary: What Needs Routing Work
 
-| Item | Priority | Effort |
+| Item | Status | Notes |
 |---|---|---|
-| `check_admin.php` — dev debug script, exposes password hashes | **Critical** | Delete file |
-| `random.php` — route exists, file is dead code | Low | Delete file |
-| `qsearch.php` — fix redirect target to `/search` | Low | 1 line |
-| `action.php` — add route or promote to permanent shim | Medium | New controller or shim decision |
-| `about.php` — add `/about` route | Low | New controller |
-| `nbm.php` — add `/nbm` route | Low | New controller |
-| `admin/popuphelp.php` help links — add `/popuphelp` route | Low | New controller |
-| `admin/*.php` page bodies → typed controller methods | High (ongoing) | Wave-B continuation |
-| Remove `FallbackHandler` once all routes have controllers | Low | Delete + cleanup |
+| `check_admin.php` — dev debug script | ✅ Done | Deleted |
+| `random.php` — dead code | ✅ Done | Deleted |
+| `qsearch.php` — fix redirect | ✅ Done | Now targets `UrlGenerator::searchPage()` |
+| `action.php` — permanent shim decision | ✅ Done | Stays as shim; `UrlGenerator::actionDownload/Format()` added |
+| `about.php` → `/about` route | ✅ Done | `AboutController` + route added |
+| `nbm.php` → `/nbm` route | ✅ Done | `NbmController` + route added; email links updated |
+| `popuphelp.php` → `/popuphelp` route | ✅ Done | `PopuphelpController` + route added |
+| `admin/popuphelp.php` help links → kernel-routed | ✅ Done | 10 `U_HELP` assignments use `adminPopupHelp()`; file deleted |
+| `admin/*.php` page bodies → typed controllers | 🔄 Wave-B ongoing | See `docs/modernization/ROUTING-MIGRATION-PLAN.md` |
+| Remove `FallbackHandler` | ⏳ Blocked on Wave-B | — |

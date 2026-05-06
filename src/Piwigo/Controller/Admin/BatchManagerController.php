@@ -1136,7 +1136,7 @@ final class BatchManagerController
                     'related_category_ids'  => json_encode($related_category_ids),
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
                     'tag_selection'         => $tag_selection,
-                    'U_DOWNLOAD'            => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
+                    'U_DOWNLOAD'            => ServiceLocator::get(UrlGenerator::class)->actionDownload((int) $row_id_str, 'e', get_pwg_token()),
                     'U_HISTORY'             => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . $row_id_str,
                     'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $row_id_str,
                     'U_DELETE'              => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),

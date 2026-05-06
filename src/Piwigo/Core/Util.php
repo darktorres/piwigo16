@@ -109,7 +109,7 @@ final readonly class Util
             load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
             TemplateRegistry::set($tpl);
-        } elseif (defined('IN_ADMIN') && IN_ADMIN) {
+        } elseif (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
             TemplateRegistry::set($tpl);
         }

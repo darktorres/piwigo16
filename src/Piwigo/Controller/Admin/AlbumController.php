@@ -801,7 +801,7 @@ final class AlbumController
         $page['section'] = is_scalar($get_section) ? (string) $get_section : 'status';
         $base_url        = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&amp;section=';
 
-        $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=cat_options', 'F_ACTION' => $base_url . $page['section']]);
+        $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_options'), 'F_ACTION' => $base_url . $page['section']]);
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');
@@ -925,7 +925,7 @@ final class AlbumController
         $tpl->set_filename('cat_perm', 'cat_perm.tpl');
         $tpl->assign([
             'CATEGORIES_NAV' => get_cat_display_name_from_id($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'),
-            'U_HELP'         => get_root_url() . 'admin/popuphelp.php?page=cat_perm',
+            'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_perm'),
             'F_ACTION'       => $admin_album_base_url . '-permissions',
             'private'        => ('private' == $category['status']),
         ]);

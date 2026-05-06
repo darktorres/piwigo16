@@ -150,7 +150,7 @@ final class MiscController
         }
 
         $tpl->set_filenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
-        $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=notification_by_mail', 'F_ACTION' => $base_url . get_query_string_diff([])]);
+        $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . get_query_string_diff([])]);
 
         if (is_autorize_status(ACCESS_WEBMASTER)) {
             $tabsheet = new Tabsheet();
@@ -296,7 +296,7 @@ final class MiscController
             $deleted_permalinks[] = $row;
         }
 
-        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=permalinks', 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => l10n('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => l10n('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
     }
 
@@ -432,13 +432,13 @@ final class MiscController
             require PHPWG_ROOT_PATH . 'include/page_header.php';
         }
 
-        $helpPage = is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '';
-        if (isset($_GET['page']) && preg_match('/^[a-z_]*$/', $helpPage)) {
+        $helpPage = is_scalar($_GET['help'] ?? null) ? (string) $_GET['help'] : '';
+        if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
             $help_content = load_language('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
             if ($help_content == false) {
                 $help_content = '';
             }
-            $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
+            $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['help']);
         } else {
             throw new AuthException('Hacking attempt!');
         }

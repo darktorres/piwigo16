@@ -332,7 +332,7 @@ final class MaintenanceController
             'U_MAINT_COMPILED_TEMPLATES'  => sprintf($url_format, 'compiled-templates'),
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
-            'U_HELP'                      => get_root_url() . 'admin/popuphelp.php?page=maintenance',
+            'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
             'PWG_VERSION'                 => PHPWG_VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
@@ -539,7 +539,7 @@ final class MaintenanceController
             'U_MAINT_COMPILED_TEMPLATES'  => sprintf($url_format, 'compiled-templates'),
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
-            'U_HELP'                      => get_root_url() . 'admin/popuphelp.php?page=maintenance',
+            'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
             'PWG_VERSION'                 => PHPWG_VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
@@ -925,7 +925,7 @@ final class MaintenanceController
 
         $tpl->set_filename('stats', 'stats.tpl');
         history_tabsheet();
-        $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=history', 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
+        $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('history'), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
 
         $actual_date = new \DateTime();
         $actual_date->add(new \DateInterval('PT1S'));
@@ -1571,7 +1571,7 @@ final class MaintenanceController
             'L_RESULT_UPDATE' => $result_title . l10n('Search for new images in the directories'),
             'L_RESULT_METADATA' => $result_title . l10n('Metadata synchronization results'),
             'METADATA_LIST'  => $used_metadata,
-            'U_HELP'         => get_root_url() . 'admin/popuphelp.php?page=synchronize',
+            'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('synchronize'),
             'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
         ]);
 

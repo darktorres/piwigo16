@@ -172,6 +172,23 @@ final readonly class UrlGenerator
     {
         return $this->routeUrl('search');
     }
+    public function about(): string
+    {
+        return $this->routeUrl('about');
+    }
+    public function nbm(): string
+    {
+        return $this->routeUrl('nbm');
+    }
+    public function popuphelp(string $page = ''): string
+    {
+        $base = $this->routeUrl('popuphelp');
+        if ($page === '') {
+            return $base;
+        }
+        $sep = str_contains($base, '?') ? '&' : '?';
+        return $base . $sep . 'page=' . urlencode($page);
+    }
 
     public function image(string $path): string
     {
@@ -199,6 +216,21 @@ final readonly class UrlGenerator
         }
         $sep = str_contains($base, '?') ? '&' : '?';
         return $base . $sep . 'page=' . $section;
+    }
+    public function adminPopupHelp(string $helpPage): string
+    {
+        return $this->admin('popuphelp') . '&help=' . urlencode($helpPage);
+    }
+
+    /** URL for downloading original/representative image (action.php permanent shim). */
+    public function actionDownload(int $id, string $part, string $pwgToken): string
+    {
+        return get_root_url() . 'action.php?id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
+    }
+    /** URL for downloading a specific image format (action.php permanent shim). */
+    public function actionFormat(int $formatId): string
+    {
+        return get_root_url() . 'action.php?format=' . $formatId . '&amp;download';
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

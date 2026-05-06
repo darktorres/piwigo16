@@ -1197,7 +1197,7 @@ final class ExtensionsController
         }
 
         $tpl->set_filenames(['extend_for_templates' => 'extend_for_templates.tpl']);
-        $tpl->assign(['U_HELP' => get_root_url() . 'admin/popuphelp.php?page=extend_for_templates']);
+        $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('extend_for_templates')]);
 
         ksort($tpl_extension);
         foreach ($tpl_extension as $file => $conditions) {

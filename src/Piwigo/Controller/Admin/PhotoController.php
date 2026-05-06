@@ -253,7 +253,7 @@ SELECT id
 
         $tpl->assign([
             'tag_selection'      => $tag_selection,
-            'U_DOWNLOAD'         => 'action.php?id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '') . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
+            'U_DOWNLOAD'         => ServiceLocator::get(UrlGenerator::class)->actionDownload((int) (is_scalar($_GET['image_id'] ?? null) ? $_GET['image_id'] : 0), 'e', get_pwg_token()),
             'U_SYNC'             => $admin_url_start . '&amp;sync_metadata=1',
             'U_DELETE'           => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),
             'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
@@ -482,7 +482,7 @@ SELECT id
         $lang = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
 
         foreach ($formats as &$format) {
-            $format['download_url'] = 'action.php?format=' . (is_scalar($format['format_id']) ? (string) $format['format_id'] : '') . '&amp;download';
+            $format['download_url'] = ServiceLocator::get(UrlGenerator::class)->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
             $format['label']        = strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
             $lang_key = 'format ' . strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
             if (isset($lang[$lang_key]) && is_string($lang[$lang_key])) {

@@ -249,7 +249,7 @@ final class ConfigurationController
         $action = ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=' . $section;
 
         $tpl->assign([
-            'U_HELP'    => get_root_url() . 'admin/popuphelp.php?page=configuration',
+            'U_HELP'    => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('configuration'),
             'PWG_TOKEN' => get_pwg_token(),
             'F_ACTION'  => $action,
         ]);

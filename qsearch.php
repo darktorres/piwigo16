@@ -21,4 +21,5 @@ check_status(ACCESS_GUEST);
 //   redirect( make_index_url() );
 // }
 
-redirect(get_root_url().'search.php?q='.$_GET['q']);
+$q = isset($_GET['q']) ? (string)$_GET['q'] : '';
+redirect(add_url_params(\Piwigo\Core\ServiceLocator::get(\Piwigo\Url\UrlGenerator::class)->searchPage(), ['q' => $q]));

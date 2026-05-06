@@ -279,5 +279,3 @@ final class SizingParams
     }
 }
 
-require_once __DIR__ . '/../vendor/autoload.php';
-class_alias(DerivativeParams::class, 'DerivativeParams');

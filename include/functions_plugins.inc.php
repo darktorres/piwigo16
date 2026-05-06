@@ -26,15 +26,6 @@ define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH.'plugins/');
 define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 
 
-// Vendor plugins/themes do `class foo_maintain extends PluginMaintain`
-// without a namespace prefix, so PluginMaintain must be reachable in the
-// global namespace. Aliases — not duplicate class definitions — keep the
-// signatures in lockstep with src/Piwigo/Admin/{Plugin,Theme}Maintain.php
-// so vendor LSP checks pass against the real (relaxed) parent.
-class_alias(PluginMaintain::class, 'PluginMaintain');
-class_alias(ThemeMaintain::class, 'ThemeMaintain');
-
-
 // The 6 functions below call EventDispatcher/LoadedPluginRegistry directly —
 // they are invoked from file-level code before Kernel::boot() and must never
 // go through ServiceLocator. The PluginService wraps them for callers that

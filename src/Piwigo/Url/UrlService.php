@@ -591,10 +591,10 @@ final class UrlService
     {
         $url = is_scalar($elementInfo['path']) ? (string) $elementInfo['path'] : '';
         if (!$this->urlIsRemote($url)) {
-            $result = $this->embellishUrl($this->getRootUrl() . $url);
-            return is_string($result) ? $result : '';
+            $url = $this->embellishUrl($this->getRootUrl() . $url);
+            $url = is_string($url) ? $url : '';
         }
-        return $url;
+        return (string) trigger_change('get_element_url', $url, $elementInfo);
     }
 
     public function setMakeFullUrl(): void

@@ -40,7 +40,6 @@ final readonly class MethodDefinition
         public bool $requiresAuth = false,
         public bool $postOnly = false,
         public bool $hidden = false,
-        public string $includeFile = '',
     ) {
     }
 }

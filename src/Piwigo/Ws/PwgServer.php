@@ -15,7 +15,7 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
- * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParamDef>, include: string, options: array<string, mixed>}
+ * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParamDef>, options: array<string, mixed>}
  */
 class PwgServer
 {
@@ -74,7 +74,6 @@ class PwgServer
             'callback'    => $def->callback,
             'description' => $def->description,
             'signature'   => $signature,
-            'include'     => $def->includeFile,
             'options'     => $options,
         ];
     }
@@ -361,9 +360,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method invocation not allowed');
         }
 
-        if (!empty($method['include'])) {
-            require_once($method['include']);
-        }
         $callback = $method['callback'];
         if (!is_callable($callback)) {
             return new PwgError(WS_ERR_INVALID_METHOD, 'Invalid method callback');

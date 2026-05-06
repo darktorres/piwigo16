@@ -1283,9 +1283,21 @@ final class MiscController
         if ($url_components === false) {
             $url_components = ['path' => '', 'query' => ''];
         }
-        $base_url        = $url_components['path'] ?? '';
-        parse_str($url_components['query'] ?? '', $vars);
-        $is_first = true;
+        $base_url = $url_components['path'] ?? '';
+        $query    = $url_components['query'] ?? '';
+
+        // Piwigo's question_mark_in_urls mode: QUERY_STRING starts with '/' (e.g. '/admin&page=...')
+        // PHP's parse_str converts '/' to '_' in key names, producing '_admin' which is not
+        // a real GET param. Strip the routing path prefix and append it verbatim to base_url.
+        if (str_starts_with($query, '/')) {
+            $amp_pos  = strpos($query, '&');
+            $route    = $amp_pos !== false ? substr($query, 0, $amp_pos) : $query;
+            $query    = $amp_pos !== false ? substr($query, $amp_pos + 1) : '';
+            $base_url .= '?' . $route;
+        }
+
+        parse_str($query, $vars);
+        $is_first = $base_url === ($url_components['path'] ?? '');
         foreach ($vars as $key => $value) {
             if (!in_array($key, $get_rejects ?? []) && $key != $get_param) {
                 $base_url .= $is_first ? '?' : '&amp;';

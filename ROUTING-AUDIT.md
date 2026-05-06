@@ -15,8 +15,9 @@ All routes defined in `config/routes.php`. Every request matching these paths go
 | `gallery_pic`     | `/picture/{rest}`           | `PictureController`                 |
 | `tags`            | `/tags`                     | `TagsController`                    |
 | `gallery_tags`    | `/tags/{rest}`              | `TagsController`                    |
-| `search`          | `/search`                   | `SearchController`                  |
-| `gallery_search`  | `/search/{id}/{rest}`       | `SearchController`                  |
+| `search`              | `/search`                   | `SearchController`                  |
+| `gallery_search`      | `/search/{id}`              | `GalleryController`                 |
+| `gallery_search_paged`| `/search/{id}/{rest}`       | `GalleryController`                 |
 | `favorites`       | `/favorites`                | `GalleryController`                 |
 | `recent_pics`     | `/recent`                   | `GalleryController`                 |
 | `best_rated`      | `/best-rated`               | `GalleryController`                 |
@@ -54,6 +55,7 @@ Files at `/` that Apache serves directly as PHP scripts, **bypassing the kernel*
 | `i.php` | **Performance shim** — image derivative server; deliberately avoids the full Piwigo stack to minimize per-image overhead. Calls `ImageDerivativeController` directly after only `ConfigLoader`. |
 | `migrations.php` | Doctrine Migrations CLI config — not a request handler |
 | `rector.php` | Rector static analysis config — not a request handler |
+| `upgrade_feed.php` | Feed-based DB upgrade runner; gated by `Config::checkUpgradeFeed()`; custom bootstrap, not kernel-routed |
 
 ### 2b. Legacy PHP entry points — not yet routed
 
@@ -66,10 +68,11 @@ These files are served directly by Apache and have no kernel route. They each de
 | `about.php` | Renders the gallery "About" page via Smarty | Not in routes.php; no controller |
 | `random.php` | Generates a random list of images and redirects to a gallery URL | Route `random` now exists in routes.php — this file is dead code |
 | `nbm.php` | Notification-by-mail subscribe/unsubscribe handler | Used in email links; not routed |
-| `osmmap.php` | OpenStreetMap plugin bridge | Plugin-owned; not a candidate for routing |
 | `popuphelp.php` | Gallery-side help popup | Also exists as `admin/popuphelp.php`; neither is routed |
+| `check_admin.php` | **Dev debug script** — dumps admin user's password hash and tests two hardcoded passwords | **Delete immediately** — exposes credential material; was never a real entry point |
 
 **Action items:**
+- `check_admin.php` → delete immediately (exposes password hashes; dev artifact)
 - `action.php` → add `/action` route + `ActionController`, update download URL generation in `PhotoController` and `BatchManagerController`
 - `qsearch.php` → fix redirect target from `search.php` to the routed search URL; or route `/qsearch` directly
 - `about.php` → add `/about` route + `AboutController`
@@ -180,6 +183,7 @@ If the route result is NOT_FOUND or the controller class doesn't exist, delegate
 
 | Item | Priority | Effort |
 |---|---|---|
+| `check_admin.php` — dev debug script, exposes password hashes | **Critical** | Delete file |
 | `random.php` — route exists, file is dead code | Low | Delete file |
 | `qsearch.php` — fix redirect target to `/search` | Low | 1 line |
 | `action.php` — add route or promote to permanent shim | Medium | New controller or shim decision |

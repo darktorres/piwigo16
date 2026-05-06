@@ -19,8 +19,15 @@ use Piwigo\Core\LoggerRegistry;
  */
 final class UserBootstrap
 {
+    private static bool $bootstrapped = false;
+
     public static function bootstrap(): void
     {
+        if (self::$bootstrapped) {
+            return;
+        }
+        self::$bootstrapped = true;
+
         /** @var array<string,mixed> $user */
         $user = &$GLOBALS['user'];
         /** @var array<string,mixed> $page */
@@ -149,5 +156,10 @@ final class UserBootstrap
 
         // Re-attach CurrentUser after build_user() populated $GLOBALS['user']
         CurrentUser::attachGlobals();
+    }
+
+    public static function reset(): void
+    {
+        self::$bootstrapped = false;
     }
 }

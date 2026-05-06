@@ -18,6 +18,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\UserBootstrap;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -153,14 +154,15 @@ if (!Kernel::isBooted()) :
         }
     }
 
-    ImageStdParams::load_from_db();
-
     // Boot the container before session_start() so the session handler callbacks
     // (pwg_session_read, pwg_session_write, etc.) can resolve SessionRepository
     // from ServiceLocator. Entry-point Kernel::boot() calls remain idempotent.
     Kernel::boot();
 
+    ImageStdParams::load_from_db();
+
     session_start();
+    UserBootstrap::bootstrap();
     EventDispatcher::init();
     load_plugins();
 
@@ -188,8 +190,8 @@ if (Config::has('order_by_inside_category_custom')) {
 
 check_lounge();
 
-// User bootstrap is now handled by AuthMiddleware → UserBootstrap::bootstrap().
-// include/user.inc.php has been deleted; see src/Piwigo/Users/UserBootstrap.php.
+// User bootstrap runs once here (idempotent guard in UserBootstrap prevents
+// AuthMiddleware from re-running it). Replaces the former include/user.inc.php.
 
 // Use GLOBALS access to bypass type narrowing from $user initialization
 $user_globals = $GLOBALS['user'];

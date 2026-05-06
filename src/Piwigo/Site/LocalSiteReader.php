@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Site;
+
 use Piwigo\Config\Config;
 
 // +-----------------------------------------------------------------------+
@@ -11,7 +13,6 @@ use Piwigo\Config\Config;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// provides data for site synchronization from the local file system
 class LocalSiteReader
 {
     public function __construct(public string $site_url)
@@ -24,9 +25,6 @@ class LocalSiteReader
         }
     }
 
-    /**
-     * Is this local site ok ?
-     */
     public function open(): bool
     {
         if (!is_dir($this->site_url)) {
@@ -44,24 +42,15 @@ class LocalSiteReader
         return true;
     }
 
-    // retrieve file system sub-directories fulldirs
-    /**
-     * @return mixed[]
-     */
     /** @return string[] */
     public function get_full_directories(string $basedir): array
     {
-        $fs_fulldirs = get_fs_directories($basedir);
-        return $fs_fulldirs;
+        return get_fs_directories($basedir);
     }
 
     /**
-     * Returns an array with all file system files according to \Piwigo\Config\Config::fileExtensions()
-     * and \Piwigo\Config\Config::pictureExtensions()
-     * @param string $path recurse in this directory
-     * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
+     * @return array<mixed>
      */
-    /** @return array<mixed> */
     public function get_elements(string $path): array
     {
         $subdirs = [];
@@ -95,7 +84,7 @@ class LocalSiteReader
                          and $node != 'thumbnail') {
                     $subdirs[] = $node;
                 }
-            } //end while readdir
+            }
             closedir($contents);
 
             foreach ($subdirs as $subdir) {
@@ -103,12 +92,10 @@ class LocalSiteReader
                 $fs = array_merge($fs, $tmp_fs);
             }
             ksort($fs);
-        } //end if is_dir
+        }
         return $fs;
     }
 
-    // returns the name of the attributes that are supported for
-    // files update/synchronization
     /** @return array<mixed> */
     public function get_update_attributes(): array
     {
@@ -116,9 +103,9 @@ class LocalSiteReader
     }
 
     /**
- * @param array<mixed>|string $file
- * @return array<mixed>
- */
+     * @param array<mixed>|string $file
+     * @return array<mixed>
+     */
     public function get_element_update_attributes(mixed $file): array
     {
         $data = [];
@@ -140,26 +127,21 @@ class LocalSiteReader
         return $data;
     }
 
-    // returns the name of the attributes that are supported for
-    // metadata update/synchronization according to configuration
     /** @return array<mixed> */
     public function get_metadata_attributes(): array
     {
         return get_sync_metadata_attributes();
     }
 
-    // returns a hash of attributes (metadata+filesize+width,...) for file
     /**
- * @param array<mixed> $infos
- * @return array<mixed>|false
- */
+     * @param array<mixed> $infos
+     * @return array<mixed>|false
+     */
     public function get_element_metadata(array $infos): array|false
     {
         return get_sync_metadata($infos);
     }
 
-
-    //-------------------------------------------------- private functions --------
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
@@ -172,18 +154,14 @@ class LocalSiteReader
         return null;
     }
 
-    /**
-     * @return float[]
-     */
+    /** @return float[] */
     public function get_formats(string $path, string $filename_wo_ext): array
     {
         $formats = [];
-
         $base_test = $path.'/pwg_format/'.$filename_wo_ext.'.';
 
         foreach (Config::formatExtensions() as $ext) {
             $test = $base_test.$ext;
-
             if (is_file($test)) {
                 $formats[$ext] = floor(filesize($test) / 1024);
             }
@@ -191,5 +169,4 @@ class LocalSiteReader
 
         return $formats;
     }
-
 }

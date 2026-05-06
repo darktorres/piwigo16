@@ -27,6 +27,7 @@ use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
+use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\TemplateRegistry;
@@ -1076,7 +1077,6 @@ final class MaintenanceController
 
     private function siteReaderLocal(): void
     {
-        require PHPWG_ROOT_PATH . 'admin/site_reader_local.php';
     }
 
     // ── site_update ───────────────────────────────────────────────────────────
@@ -1120,8 +1120,7 @@ final class MaintenanceController
         if ($site_is_remote) {
             fatal_error('remote sites not supported');
         } else {
-            require_once PHPWG_ROOT_PATH . 'admin/site_reader_local.php';
-            $site_reader = new \LocalSiteReader($site_url_str);
+            $site_reader = new LocalSiteReader($site_url_str);
         }
 
         if (isset($page['no_md5sum_number'])) {

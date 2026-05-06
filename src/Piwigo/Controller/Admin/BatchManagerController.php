@@ -17,6 +17,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 
@@ -805,8 +806,7 @@ final class BatchManagerController
         $tpl->assign('DATE_CREATION', empty($_POST['date_creation']) ? date('Y-m-d') . ' 00:00:00' : $_POST['date_creation']);
         $tpl->assign(['level_options' => get_privacy_level_options(), 'level_options_selected' => 0]);
 
-        require_once PHPWG_ROOT_PATH . 'admin/site_reader_local.php';
-        $site_reader  = new \LocalSiteReader('./');
+        $site_reader  = new LocalSiteReader('./');
         $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
         $tpl->assign(['used_metadata' => $used_metadata]);
 

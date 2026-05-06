@@ -10,7 +10,6 @@ use Piwigo\Http\Middleware\AuthMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
-use Piwigo\Http\Middleware\FallbackHandler;
 use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
@@ -21,6 +20,7 @@ use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -73,17 +73,20 @@ final class Kernel
 
     /**
      * Run the PSR-15 middleware pipeline for the given request.
-     *
-     * Must be called after boot(). During the Wave-A/B migration the pipeline
-     * falls back to FallbackHandler (404) for routes whose controllers are not
-     * yet implemented; that is expected and harmless while index.php still uses
-     * the legacy procedural flow.
+     * Must be called after boot().
      */
     public static function handle(ServerRequestInterface $request): ResponseInterface
     {
         if (self::$container === null) {
             throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
         }
+
+        $unreachable = new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                throw new \LogicException('Pipeline terminal handler reached — this is a bug.');
+            }
+        };
 
         return new MiddlewarePipeline(
             [
@@ -95,7 +98,7 @@ final class Kernel
                 ServiceLocator::get(RoutingMiddleware::class),
                 ServiceLocator::get(ControllerInvokerMiddleware::class),
             ],
-            ServiceLocator::get(FallbackHandler::class),
+            $unreachable,
         )->handle($request);
     }
 

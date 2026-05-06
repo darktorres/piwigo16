@@ -134,22 +134,13 @@ All 10 `U_HELP` assignments now use `UrlGenerator::adminPopupHelp(string $helpPa
 
 ## 5. Routing Shims and Migration Scaffolding
 
-### `FallbackHandler`
-`src/Piwigo/Http/Middleware/FallbackHandler.php`
+`FallbackHandler` has been deleted. `ControllerInvokerMiddleware` now returns a 404 response directly for unmatched routes; the pipeline terminal handler is an unreachable `\LogicException` guard.
 
-Returns a bare `<h1>404 Not Found</h1>` for any request the router cannot match. **Temporary scaffolding** for the Wave-A/B migration — prevents crashes when a route is defined but the controller class doesn't exist yet. Remove when all routes have working controllers.
-
-### `ControllerInvokerMiddleware`
-`src/Piwigo/Http/Middleware/ControllerInvokerMiddleware.php`
-
-If the route result is NOT_FOUND or the controller class doesn't exist, delegates to `FallbackHandler`. Explicitly marked as migration scaffolding in the source comment.
-
-### Wave-A/B DEFERRED items in source
+### Remaining DEFERRED items in source
 
 | Location | Issue |
 |---|---|
 | `src/Piwigo/Admin/Updates.php:486` | `redirect()` to `page=plugin-Admin` — leftover from when the updater was a plugin; wrong page name |
-| `src/Piwigo/Core/Kernel.php:77` | Comment notes FallbackHandler is temporary migration scaffolding |
 | `src/Piwigo/Users/CurrentUser.php:10` | "Wave A: Kernel::boot() calls attachGlobals()" |
 
 ---
@@ -166,5 +157,5 @@ If the route result is NOT_FOUND or the controller class doesn't exist, delegate
 | `nbm.php` → `/nbm` route | ✅ Done | `NbmController` + route added; email links updated |
 | `popuphelp.php` → `/popuphelp` route | ✅ Done | `PopuphelpController` + route added |
 | `admin/popuphelp.php` help links → kernel-routed | ✅ Done | 10 `U_HELP` assignments use `adminPopupHelp()`; file deleted |
-| `admin/*.php` page bodies → typed controllers | 🔄 Wave-B ongoing | See `docs/modernization/ROUTING-MIGRATION-PLAN.md` |
-| Remove `FallbackHandler` | ⏳ Blocked on Wave-B | — |
+| `admin/*.php` page bodies → typed controllers | ✅ Done | 61 files deleted; all logic inlined |
+| Remove `FallbackHandler` | ✅ Done | Deleted; `ControllerInvokerMiddleware` returns 404 directly |

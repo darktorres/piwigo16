@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http\Middleware;
 
 use Piwigo\Controller\ControllerInterface;
+use Piwigo\Http\ResponseFactory;
 use Piwigo\Routing\RouteResult;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -14,10 +15,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Resolves the matched controller from the DI container and invokes it.
- *
- * If the RouteResult was NOT_FOUND, or if the controller class does not yet
- * exist (Wave-A/B migration in progress), the next handler (FallbackHandler)
- * is called instead.
+ * Returns a 404 response for unmatched routes.
  */
 final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
 {
@@ -30,20 +28,13 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
         $result = $request->getAttribute('_route_result');
 
         if (!$result instanceof RouteResult || !$result->isFound()) {
-            return $handler->handle($request);
+            return ResponseFactory::html('<h1>404 Not Found</h1>', 404);
         }
 
-        $fqcn = $result->handler;
-
-        if ($fqcn === '' || !class_exists($fqcn)) {
-            // Controller not yet implemented — fall through to FallbackHandler.
-            return $handler->handle($request);
-        }
-
-        $controller = $this->container->get($fqcn);
+        $controller = $this->container->get($result->handler);
 
         if (!$controller instanceof ControllerInterface) {
-            return $handler->handle($request);
+            throw new \LogicException(sprintf('Controller "%s" does not implement ControllerInterface.', $result->handler));
         }
 
         return $controller($request, $result->args);

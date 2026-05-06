@@ -24,6 +24,8 @@ use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Calendar\CalendarService;
+use Piwigo\Category\CategoryCatsRenderer;
+use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
@@ -46,7 +48,6 @@ use Piwigo\Http\Middleware\AuthMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
-use Piwigo\Http\Middleware\FallbackHandler;
 use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
@@ -54,6 +55,7 @@ use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Job\MessengerFactory;
 use Piwigo\Lang\LangService;
+use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Lang\Translator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Mail\MailService;
@@ -61,13 +63,18 @@ use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Routing\Router;
+use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionInitializer;
@@ -75,6 +82,7 @@ use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Theme\ThemeRepository;
@@ -166,6 +174,15 @@ return [
     FilterResolver::class            => factory(static fn (): FilterResolver => new FilterResolver()),
     SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
     WatermarkProcessor::class        => factory(static fn (): WatermarkProcessor => new WatermarkProcessor()),
+    MenubarRenderer::class           => factory(static fn (): MenubarRenderer => new MenubarRenderer()),
+    SearchFilterRenderer::class      => factory(static fn (): SearchFilterRenderer => new SearchFilterRenderer()),
+    CategoryCatsRenderer::class      => factory(static fn (): CategoryCatsRenderer => new CategoryCatsRenderer()),
+    CategoryDefaultRenderer::class   => factory(static fn (): CategoryDefaultRenderer => new CategoryDefaultRenderer()),
+    SelectedTagsRenderer::class      => factory(static fn (): SelectedTagsRenderer => new SelectedTagsRenderer()),
+    NoPhotoYetRenderer::class        => factory(static fn (): NoPhotoYetRenderer => new NoPhotoYetRenderer()),
+    PictureRateRenderer::class       => factory(static fn (): PictureRateRenderer => new PictureRateRenderer()),
+    PictureCommentRenderer::class    => factory(static fn (): PictureCommentRenderer => new PictureCommentRenderer()),
+    PictureMetadataRenderer::class   => factory(static fn (): PictureMetadataRenderer => new PictureMetadataRenderer()),
     MetadataAdminService::class      => factory(static fn (): MetadataAdminService => new MetadataAdminService()),
     HistoryAdminService::class       => factory(static fn (): HistoryAdminService => new HistoryAdminService()),
     WsHelper::class                  => factory(static fn (): WsHelper => new WsHelper()),
@@ -207,5 +224,4 @@ return [
     CsrfMiddleware::class             => factory(static fn (): CsrfMiddleware => new CsrfMiddleware()),
     RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
     ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),
-    FallbackHandler::class            => factory(static fn (): FallbackHandler => new FallbackHandler()),
 ];

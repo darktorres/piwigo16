@@ -18,9 +18,8 @@ use Piwigo\Routing\Router;
  * Gallery / picture / tags / search URLs delegate to UrlService, which owns
  * the complex sub-token format (category/12-name/start-24, etc.).
  *
- * Admin and web-service URLs preserve the legacy query-param form
- * (admin.php?page=xxx, ws.php?method=xxx) for backward compatibility with
- * plugins and embedded link templates that were never updated.
+ * Admin and web-service URLs are built via named routes (/admin, /ws)
+ * with optional query params appended for section and method arguments.
  *
  * @see UrlService  lower-level URL building used by legacy callers
  */
@@ -179,7 +178,7 @@ final readonly class UrlGenerator
         return $this->routeUrl('image', ['rest' => ltrim($path, '/')]);
     }
 
-    // ── Legacy query-param URLs (backward-compatible format) ──────────────────
+    // ── Admin / WS URLs ───────────────────────────────────────────────────────
 
     /** @param array<string,mixed> $params */
     public function ws(array $params = []): string

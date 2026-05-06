@@ -13,7 +13,7 @@ use Piwigo\Url\UrlService;
  * Unit tests for UrlGenerator.
  *
  * Tests the PSR-15 named-route methods (identification, register, …) and the
- * legacy query-param methods (admin, ws) without any DB bootstrap.
+ * routed admin/ws methods without any DB bootstrap.
  *
  * Config defaults (php_extension_in_urls=true, question_mark_in_urls=true) are
  * used because the Config store is not initialised in unit-test context.
@@ -121,19 +121,19 @@ final class UrlGeneratorTest extends TestCase
         self::assertSame($withSlash, $withoutSlash);
     }
 
-    // ── Admin URL (legacy query-param format) ────────────────────────────────
+    // ── Admin URL ────────────────────────────────────────────────────────────
 
     public function test_admin_no_section_has_no_page_param(): void
     {
         $url = $this->gen->admin();
-        self::assertStringContainsString('admin.php', $url);
+        self::assertStringContainsString('/admin', $url);
         self::assertStringNotContainsString('page=', $url);
     }
 
     public function test_admin_section_appended_as_page_param(): void
     {
         $url = $this->gen->admin('batch_manager');
-        self::assertStringContainsString('admin.php', $url);
+        self::assertStringContainsString('/admin', $url);
         self::assertStringContainsString('page=batch_manager', $url);
     }
 
@@ -145,19 +145,19 @@ final class UrlGeneratorTest extends TestCase
         );
     }
 
-    // ── WS URL (legacy query-param format) ───────────────────────────────────
+    // ── WS URL ───────────────────────────────────────────────────────────────
 
     public function test_ws_no_params_has_no_query_string(): void
     {
         $url = $this->gen->ws();
-        self::assertStringContainsString('ws.php', $url);
-        self::assertStringNotContainsString('?', $url);
+        self::assertStringContainsString('/ws', $url);
+        self::assertStringEndsWith('/ws', $url);
     }
 
     public function test_ws_params_added_as_query_string(): void
     {
         $url = $this->gen->ws(['method' => 'pwg.images.list', 'format' => 'json']);
-        self::assertStringContainsString('ws.php', $url);
+        self::assertStringContainsString('/ws', $url);
         self::assertStringContainsString('method=pwg.images.list', $url);
         self::assertStringContainsString('format=json', $url);
     }

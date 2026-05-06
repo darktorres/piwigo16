@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlGenerator;
@@ -17,7 +18,7 @@ final class PasswordService
 {
     public function processVerificationCode(): bool
     {
-        $logger = \Piwigo\Core\LoggerRegistry::current();
+        $logger = LoggerRegistry::current();
         if (isset($_SESSION['reset_password_code'])) {
             return true;
         }

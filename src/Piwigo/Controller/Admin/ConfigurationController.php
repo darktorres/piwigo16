@@ -6,7 +6,6 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Config\SizesProcessor;
-use Piwigo\Users\ProfileService;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
@@ -18,6 +17,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\ProfileService;
 
 final class ConfigurationController
 {

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Calendar\CalendarService;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Calendar\CalendarService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;

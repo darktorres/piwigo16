@@ -10,6 +10,7 @@ use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryRepository;
@@ -24,16 +25,15 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\BlockManager;
-use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
-use Piwigo\Users\ProfileService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 
 final class MiscController

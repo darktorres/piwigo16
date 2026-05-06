@@ -8,9 +8,9 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Filter\FilterService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 

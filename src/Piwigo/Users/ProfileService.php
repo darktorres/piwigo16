@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Piwigo\Config\Config;
-use Piwigo\Users\AuthService;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\UserRepository;
 
 final class ProfileService
 {

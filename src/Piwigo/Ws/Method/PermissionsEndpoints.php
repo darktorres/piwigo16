@@ -9,6 +9,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+
 final class PermissionsEndpoints
 {
     /**

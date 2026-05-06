@@ -413,7 +413,8 @@ final class AlbumController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];        trigger_notify('loc_begin_cat_list');
+        $page = &$GLOBALS['page'];
+        trigger_notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
             check_pwg_token();
@@ -567,7 +568,8 @@ final class AlbumController
 
     private function catModify(): void
     {
-        $tpl = TemplateRegistry::current();        trigger_notify('loc_begin_cat_modify');
+        $tpl = TemplateRegistry::current();
+        trigger_notify('loc_begin_cat_modify');
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
             trigger_error('missing cat_id param', E_USER_ERROR);

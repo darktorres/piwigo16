@@ -6,12 +6,12 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;

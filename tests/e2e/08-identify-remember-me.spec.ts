@@ -24,7 +24,7 @@ async function fillLoginForm(
     rememberMe: boolean
 ): Promise<void> {
     await gotoOk(page, identificationUrl(), 'identification');
-    const usernameField = page.locator('input[name="username"]');
+    const usernameField = page.locator('input.login[name="username"]');
     const passwordField = page.locator('input[name="password"]');
     const loginButton = page.locator('input[name="login"]');
     await assertVisible(usernameField, 'login form: username');

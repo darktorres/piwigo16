@@ -36,13 +36,14 @@ test.describe('search functionality', () => {
 
     test('gallery search page renders without JS errors', async ({ page }) => {
         const monitor = attachMonitor(page);
-        await gotoOk(page, pwgUrl('/index.php?q=sunset'), 'gallery search');
+        // Use ?/search&q=... so PathExtractor routes to SearchController, not gallery home.
+        await gotoOk(page, pwgUrl('/index.php?/search&q=sunset'), 'gallery search');
         monitor.assertClean('gallery search');
     });
 
     test('search with no results renders empty state without errors', async ({ page }) => {
         const monitor = attachMonitor(page);
-        await gotoOk(page, pwgUrl('/index.php?q=zzznomatch99xqz'), 'gallery search (no match)');
+        await gotoOk(page, pwgUrl('/index.php?/search&q=zzznomatch99xqz'), 'gallery search (no match)');
         monitor.assertClean('gallery search (no match)');
     });
 });

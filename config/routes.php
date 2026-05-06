@@ -67,11 +67,19 @@ $routes->add('search', new Route(
     methods:  $gp,
 ));
 
-// /search/42/start-12   → id = "42", rest = "start-12"
+// /search/42  or  /search/psk-HASH   → display search results (GalleryController)
 $routes->add('gallery_search', new Route(
+    path:         '/search/{id}',
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController', 'rest' => ''],
+    requirements: ['id' => '[a-zA-Z0-9\-]+'],
+    methods:      $gp,
+));
+
+// /search/42/start-12  or  /search/psk-HASH/start-12   → id + pagination rest
+$routes->add('gallery_search_paged', new Route(
     path:         '/search/{id}/{rest}',
-    defaults:     ['_controller' => 'Piwigo\Controller\SearchController', 'rest' => ''],
-    requirements: ['id' => '\d+', 'rest' => '.*'],
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController'],
+    requirements: ['id' => '[a-zA-Z0-9\-]+', 'rest' => '.+'],
     methods:      $gp,
 ));
 

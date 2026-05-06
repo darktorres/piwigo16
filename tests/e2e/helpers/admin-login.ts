@@ -27,7 +27,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
     assertHttpOk(navResp, 'login page navigation');
     await assertNoServerErrors(page, 'login page initial render');
 
-    const usernameField = page.locator('input[name="username"]');
+    const usernameField = page.locator('input.login[name="username"]');
     const passwordField = page.locator('input[name="password"]');
     const loginButton = page.locator('input[name="login"]');
 

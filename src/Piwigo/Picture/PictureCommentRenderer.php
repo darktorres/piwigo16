@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -54,18 +60,18 @@ final class PictureCommentRenderer
 
             $post_key = $_POST['key'] ?? '';
             $pageStateErrors = &PageState::current()->errors;
-            $comment_action = insert_user_comment($comm, is_scalar($post_key) ? (string) $post_key : '', $pageStateErrors);
+            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_scalar($post_key) ? (string) $post_key : '', $pageStateErrors);
 
             switch ($comment_action) {
                 case 'moderate':
-                    PageState::current()->addInfo(l10n('An administrator must authorize your comment before it is visible.'));
+                    PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
                     // no break
                 case 'validate':
-                    PageState::current()->addInfo(l10n('Your comment has been registered'));
+                    PageState::current()->addInfo(Lang::t('Your comment has been registered'));
                     break;
                 case 'reject':
-                    set_status_header(403);
-                    PageState::current()->addError(l10n('Your comment has NOT been registered because it did not pass the validation rules'));
+                    ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
+                    PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                     break;
                 default:
                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -73,7 +79,7 @@ final class PictureCommentRenderer
 
             EventDispatcher::notify('user_comment_insertion', array_merge($comm, ['action' => $comment_action]));
         } elseif (isset($_POST['content'])) {
-            set_status_header(403);
+            ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
             throw new AuthException('ugly spammer');
         }
 
@@ -99,7 +105,7 @@ final class PictureCommentRenderer
             $startOffset = (int) $page['start'];
             $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
-            $navigation_bar = create_navigation_bar(
+            $navigation_bar = ServiceLocator::get(Util::class)->createNavigationBar(
                 UrlService::get()->duplicatePictureUrl([], ['start']),
                 $nb_comments,
                 $startOffset,
@@ -116,13 +122,14 @@ final class PictureCommentRenderer
             if ($nb_comments > 0) {
                 $get_comments_order = $_GET['comments_order'] ?? null;
                 if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
-                    pwg_set_session_var('comments_order', $get_comments_order);
+                    ServiceLocator::get(SessionService::class)->setSessionVar('comments_order', $get_comments_order);
                 }
-                $comments_order = pwg_get_session_var('comments_order', Config::commentsOrder());
+                $rawOrder       = ServiceLocator::get(SessionService::class)->getSessionVar('comments_order', Config::commentsOrder());
+                $comments_order = is_string($rawOrder) ? $rawOrder : Config::commentsOrder();
 
                 $template->assign([
                     'COMMENTS_ORDER_URL' => UrlService::get()->addUrlParams(UrlService::get()->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
-                    'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
+                    'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
                 ]);
 
                 $query = '
@@ -151,7 +158,7 @@ SELECT
 
                 foreach ($commentRows as $row) {
                     if ($row['author'] == 'guest') {
-                        $row['author'] = l10n('guest');
+                        $row['author'] = Lang::t('guest');
                     }
 
                     $email = null;
@@ -164,7 +171,7 @@ SELECT
                     $tpl_comment = [
                         'ID' => $row['id'],
                         'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
-                        'DATE' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => EventDispatcher::dispatch('render_comment_content', $row['content']),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
@@ -173,7 +180,7 @@ SELECT
                         $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
-                            'pwg_token' => get_pwg_token(),
+                            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
                         ]);
                     }
                     if (PermissionService::get()->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
@@ -183,10 +190,10 @@ SELECT
                         ]);
                         if ($editComment !== null && $row['id'] == $editComment) {
                             $tpl_comment['IN_EDIT'] = true;
-                            $key = get_ephemeral_key(2, (string) $imageId);
+                            $key = ServiceLocator::get(Util::class)->getEphemeralKey(2, (string) $imageId);
                             $tpl_comment['KEY'] = $key;
                             $tpl_comment['CONTENT'] = $row['content'];
-                            $tpl_comment['PWG_TOKEN'] = get_pwg_token();
+                            $tpl_comment['PWG_TOKEN'] = ServiceLocator::get(Util::class)->getPwgToken();
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
                     }
@@ -197,7 +204,7 @@ SELECT
                             $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],
-                                'pwg_token' => get_pwg_token(),
+                                'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
                             ]);
                         }
                     }
@@ -214,7 +221,7 @@ SELECT
             }
 
             if ($show_add_comment_form) {
-                $key = get_ephemeral_key(3, (string) $imageId);
+                $key = ServiceLocator::get(Util::class)->getEphemeralKey(3, (string) $imageId);
 
                 $tpl_var = [
                     'F_ACTION' => $url_self,

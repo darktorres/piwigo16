@@ -9,6 +9,9 @@ use MatthiasMullie\Minify\CSS;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
@@ -39,7 +42,7 @@ final class FileCombiner
             return;
         }
         while ($file = readdir($dir)) {
-            if (get_extension($file) == 'js' || get_extension($file) == 'css') {
+            if (ServiceLocator::get(StringUtil::class)->getExtension($file) == 'js' || ServiceLocator::get(StringUtil::class)->getExtension($file) == 'css') {
                 unlink(PHPWG_ROOT_PATH.Config::combinedDir().$file);
             }
         }
@@ -122,7 +125,7 @@ final class FileCombiner
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                mkgetdir(dirname(PHPWG_ROOT_PATH.$file));
+                Util::get()->mkgetdir(dirname(PHPWG_ROOT_PATH.$file));
                 file_put_contents(PHPWG_ROOT_PATH.$file, $output);
                 Filesystem::tryChmod(PHPWG_ROOT_PATH.$file, 0644);
             }

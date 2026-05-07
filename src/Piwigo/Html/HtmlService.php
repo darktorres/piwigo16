@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Html;
 
 use Piwigo\Cache\RequestCache;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Plugins\EventDispatcher;
@@ -131,7 +136,7 @@ SELECT id, name, permalink
 
     public function getCatDisplayNameFromId(int|string $catId, ?string $url = ''): string
     {
-        $catInfo    = get_cat_info($catId);
+        $catInfo    = ServiceLocator::get(CategoryService::class)->getCatInfo($catId);
         $upperNames = $catInfo['upper_names'] ?? [];
         return $this->getCatDisplayName(is_array($upperNames) ? $upperNames : [], $url);
     }
@@ -176,7 +181,7 @@ SELECT id, name, permalink
     {
         foreach ([$a, $b] as $tag) {
             $tagName = is_scalar($tag['name']) ? (string) $tag['name'] : '';
-            RequestCache::remember('tag_alpha', $tagName, static fn (): string => pwg_transliterate($tagName));
+            RequestCache::remember('tag_alpha', $tagName, static fn (): string => ServiceLocator::get(StringUtil::class)->pwgTransliterate($tagName));
         }
 
         $aName = is_scalar($a['name']) ? (string) $a['name'] : '';
@@ -199,25 +204,25 @@ SELECT id, name, permalink
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
     <img src="themes/_base/icon/warning-triangle.svg" alt="warning-triangle" >
-    <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
-    <a href="' . UrlService::get()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
+    <p style="max-width: 400px; margin-top 20px;">' . Lang::t('You are not authorized to access the requested page') . '</p>
+    <a href="' . UrlService::get()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::t('Home') . '</a>
   </div>
 </div>';
             exit();
         }
 
         $requestUri = is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '';
-        redirect_http(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
+        Util::get()->redirectHttp(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg, ?string $alternateUrl = null): void
     {
         $this->setStatusHeader(403);
         $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
-        redirect_html(
+        Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>' . $msg . '</div>',
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Forbidden') . '</h1><br>' . $msg . '</div>',
             5
         );
     }
@@ -226,10 +231,10 @@ SELECT id, name, permalink
     {
         $this->setStatusHeader(400);
         $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
-        redirect_html(
+        Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>' . $msg . '</div>',
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Bad request') . '</h1><br>' . $msg . '</div>',
             5
         );
     }
@@ -238,18 +243,18 @@ SELECT id, name, permalink
     {
         $this->setStatusHeader(404);
         $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
-        redirect_html(
+        Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>' . $msg . '</div>',
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>' . $msg . '</div>',
             5
         );
     }
 
-    public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
+    public static function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if (empty($title)) {
-            $title = l10n('Piwigo encountered a non recoverable error');
+            $title = Lang::t('Piwigo encountered a non recoverable error');
         }
 
         $btraceMsg = '';
@@ -271,7 +276,7 @@ $btraceMsg
 </pre>\n";
 
         if (!headers_sent()) {
-            $this->setStatusHeader(500);
+            header('HTTP/1.0 500 Server error', true, 500);
         }
         echo $display . str_repeat(' ', 300);
 
@@ -286,8 +291,8 @@ $btraceMsg
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
-        $title = '<a href="' . ServiceLocator::get(UrlGenerator::class)->tagsPage() . '" title="' . l10n('display available tags') . '">'
-          . l10n(count($tags) > 1 ? 'Tags' : 'Tag')
+        $title = '<a href="' . ServiceLocator::get(UrlGenerator::class)->tagsPage() . '" title="' . Lang::t('display available tags') . '">'
+          . Lang::t(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
 
         return $title;
@@ -297,7 +302,7 @@ $btraceMsg
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
-        $title    = l10n('Albums') . ' ';
+        $title    = Lang::t('Albums') . ' ';
         $isFirst  = true;
         $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
         $allCategories = array_merge([$page['category'] ?? []], $combined);
@@ -320,9 +325,9 @@ $btraceMsg
 
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="'
-                  . l10n('remove this tag from the list')
+                  . Lang::t('remove this tag from the list')
                   . '"><img src="'
-                    . UrlService::getRootUrl() . (is_string(get_themeconf('icon_dir')) ? get_themeconf('icon_dir') : '') . '/remove_s.png'
+                    . UrlService::getRootUrl() . (is_string(ServiceLocator::get(Util::class)->getThemeconf('icon_dir')) ? ServiceLocator::get(Util::class)->getThemeconf('icon_dir') : '') . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';
@@ -379,7 +384,7 @@ $btraceMsg
         $menu->registerBlock(new RegisteredBlock('mbMenu', 'Menu', 'piwigo'));
         $menu->registerBlock(new RegisteredBlock('mbRelatedCategories', 'Related albums', 'piwigo'));
 
-        if (script_basename() != 'identification') {
+        if (StringUtil::scriptBasename() != 'identification') {
             $menu->registerBlock(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }
@@ -390,7 +395,7 @@ $btraceMsg
         if (!empty($info['name'])) {
             return (string) EventDispatcher::dispatch('render_element_name', is_scalar($info['name']) ? (string) $info['name'] : '', $info);
         }
-        return get_name_from_file(is_string($info['file'] ?? null) ? $info['file'] : '');
+        return ServiceLocator::get(StringUtil::class)->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
 
     /** @param array<string, mixed> $info */
@@ -408,15 +413,15 @@ $btraceMsg
         $details = [];
 
         if (!empty($info['hit'])) {
-            $details[] = l10n('%d visits', $info['hit']);
+            $details[] = Lang::t('%d visits', $info['hit']);
         }
 
         if (Config::rateEnabled() and !empty($info['rating_score'])) {
-            $details[] = l10n('rating score %s', $info['rating_score']);
+            $details[] = Lang::t('rating score %s', $info['rating_score']);
         }
 
         if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
-            $details[] = l10n_dec('%d comment', '%d comments', is_numeric($info['nb_comments']) ? (int) $info['nb_comments'] : 0);
+            $details[] = Translator::get()->plural('%d comment', '%d comments', is_numeric($info['nb_comments']) ? (int) $info['nb_comments'] : 0);
         }
 
         if (count($details) > 0) {
@@ -443,7 +448,7 @@ $btraceMsg
     public function getElementUrlProtectionHandler(string $url, array $infos): string
     {
         if ('images' == Config::originalUrlProtection()) {
-            $ext = get_extension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
+            $ext = ServiceLocator::get(StringUtil::class)->getExtension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
             if (!in_array($ext, Config::pictureExtensions())) {
                 return $url;
             }

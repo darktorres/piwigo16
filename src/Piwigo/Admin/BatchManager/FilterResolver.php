@@ -6,9 +6,13 @@ namespace Piwigo\Admin\BatchManager;
 
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -25,18 +29,18 @@ final class FilterResolver
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
         $prefilters = [
-            ['ID' => 'caddie', 'NAME' => l10n('Caddie')],
-            ['ID' => 'favorites', 'NAME' => l10n('Your favorites')],
-            ['ID' => 'last_import', 'NAME' => l10n('Last import')],
-            ['ID' => 'no_album', 'NAME' => l10n('With no album') . ' (' . l10n('Orphans') . ')'],
-            ['ID' => 'no_tag', 'NAME' => l10n('With no tag')],
-            ['ID' => 'duplicates', 'NAME' => l10n('Duplicates')],
-            ['ID' => 'all_photos', 'NAME' => l10n('All')],
+            ['ID' => 'caddie', 'NAME' => Lang::t('Caddie')],
+            ['ID' => 'favorites', 'NAME' => Lang::t('Your favorites')],
+            ['ID' => 'last_import', 'NAME' => Lang::t('Last import')],
+            ['ID' => 'no_album', 'NAME' => Lang::t('With no album') . ' (' . Lang::t('Orphans') . ')'],
+            ['ID' => 'no_tag', 'NAME' => Lang::t('With no tag')],
+            ['ID' => 'duplicates', 'NAME' => Lang::t('Duplicates')],
+            ['ID' => 'all_photos', 'NAME' => Lang::t('All')],
         ];
 
         if (Config::enableSynchronization()) {
-            $prefilters[] = ['ID' => 'no_virtual_album', 'NAME' => l10n('With no virtual album')];
-            $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => l10n('With no checksum')];
+            $prefilters[] = ['ID' => 'no_virtual_album', 'NAME' => Lang::t('With no virtual album')];
+            $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => Lang::t('With no checksum')];
         }
 
         /** @var list<array<string, string>> $prefilters */
@@ -56,10 +60,10 @@ final class FilterResolver
             'selection' => $collection,
             'all_elements' => $catElementsId,
             'START' => $start,
-            'PWG_TOKEN' => get_pwg_token(),
+            'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(),
             'U_DISPLAY' => $baseUrl . UrlService::get()->getQueryStringDiff(['display']),
             'F_ACTION' => $baseUrl . UrlService::get()->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
-            'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
+            'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
         ]);
 
         if (isset($page['no_md5sum_number'])) {
@@ -70,9 +74,9 @@ final class FilterResolver
 
         $level_options = [];
         foreach (Config::availablePermissionLevels() as $level) {
-            $level_options[$level] = l10n(sprintf('Level %d', $level));
+            $level_options[$level] = Lang::t(sprintf('Level %d', $level));
             if (0 == $level) {
-                $level_options[$level] = l10n('Everybody');
+                $level_options[$level] = Lang::t('Everybody');
             }
         }
         $tpl->assign([
@@ -99,7 +103,7 @@ SELECT
         $filterCategory = $bulk_manager_filter['category'] ?? null;
         if (isset($filterCategory)) {
             $selected_category = is_numeric($filterCategory) ? (int) $filterCategory : 0;
-            $selected_category_name = get_cat_display_name_from_id($selected_category);
+            $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($selected_category);
         }
         $tpl->assign('filter_category_selected_name', strip_tags($selected_category_name));
         $tpl->assign('filter_category_selected', $selected_category);
@@ -121,6 +125,6 @@ SELECT
         }
         $tpl->assign('associated_categories', $associated_categories);
 
-        load_language('help_quick_search.lang');
+        LangService::get()->loadLanguage('help_quick_search.lang');
     }
 }

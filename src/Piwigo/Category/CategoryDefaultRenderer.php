@@ -6,13 +6,17 @@ namespace Piwigo\Category;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -50,7 +54,7 @@ final class CategoryDefaultRenderer
                 $pictures[] = $row;
             }
 
-            usort($pictures, rank_compare(...));
+            usort($pictures, ServiceLocator::get(CategoryService::class)->rankCompare(...));
             unset($rank_of);
         }
 
@@ -93,21 +97,21 @@ SELECT image_id, COUNT(*) AS nb_comments
                 $row['NB_COMMENTS'] = $row['nb_comments'] = is_numeric($nbVal) ? (int) $nbVal : 0;
             }
 
-            $name = render_element_name($row);
-            $desc = render_element_description($row, 'main_page_element_description');
+            $name = ServiceLocator::get(HtmlService::class)->renderElementName($row);
+            $desc = ServiceLocator::get(HtmlService::class)->renderElementDescription($row, 'main_page_element_description');
 
             $tpl_var = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
-                'TN_TITLE' => get_thumbnail_title($row, $name, $desc),
+                'TN_TITLE' => ServiceLocator::get(HtmlService::class)->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(get_extension(is_string($row['path'] ?? null) ? $row['path'] : '')),
-                'file_ext' => strtolower(get_extension(is_string($row['file'] ?? null) ? $row['file'] : '')),
+                'path_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($row['path'] ?? null) ? $row['path'] : '')),
+                'file_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($row['file'] ?? null) ? $row['file'] : '')),
             ]);
 
             if (Config::indexNewIcon()) {
-                $tpl_var['icon_ts'] = get_icon(is_string($row['date_available'] ?? null) ? $row['date_available'] : null);
+                $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($row['date_available'] ?? null) ? $row['date_available'] : null);
             }
 
             if ($user['show_nb_hits']) {
@@ -128,8 +132,10 @@ SELECT image_id, COUNT(*) AS nb_comments
             $tpl_thumbnails_var[] = $tpl_var;
         }
 
+        $derivRaw = ServiceLocator::get(SessionService::class)->getSessionVar('index_deriv', DerivativeSize::Thumb->value);
+        $derivType = is_string($derivRaw) ? $derivRaw : DerivativeSize::Thumb->value;
         $template->assign([
-            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', DerivativeSize::Thumb->value))),
+            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType($derivType)),
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);
@@ -139,6 +145,6 @@ SELECT image_id, COUNT(*) AS nb_comments
         $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tpl_thumbnails_var);
         $template->clearAssign('thumbnails');
-        pwg_debug('end CategoryDefaultRenderer');
+        ServiceLocator::get(Util::class)->pwgDebug('end CategoryDefaultRenderer');
     }
 }

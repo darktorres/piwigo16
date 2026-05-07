@@ -8,9 +8,14 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
@@ -18,6 +23,8 @@ use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
@@ -200,11 +207,11 @@ final class UsersEndpoints
                 $curUid = is_numeric($curUser['id'] ?? null) ? (int) $curUser['id'] : 0;
                 if (isset($params['display']['registration_date_string'])) {
                     $regDate = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
-                    $users[$curUid]['registration_date_string'] = format_date($regDate, ['day', 'month', 'year']);
+                    $users[$curUid]['registration_date_string'] = ServiceLocator::get(DateService::class)->formatDate($regDate, ['day', 'month', 'year']);
                 }
                 if (isset($params['display']['registration_date_since'])) {
                     $regDate2 = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
-                    $users[$curUid]['registration_date_since'] = time_since($regDate2, 'month');
+                    $users[$curUid]['registration_date_since'] = ServiceLocator::get(DateService::class)->timeSince($regDate2, 'month');
                 }
                 if (isset($params['display']['last_visit'])) {
                     $lastVisit = $curUser['last_visit'] ?? null;
@@ -215,11 +222,11 @@ final class UsersEndpoints
                     }
                     if (isset($params['display']['last_visit_string'])) {
                         $lvStr = is_scalar($lastVisit) ? (string) $lastVisit : null;
-                        $users[$curUid]['last_visit_string'] = format_date($lvStr, ['day', 'month', 'year']);
+                        $users[$curUid]['last_visit_string'] = ServiceLocator::get(DateService::class)->formatDate($lvStr, ['day', 'month', 'year']);
                     }
                     if (isset($params['display']['last_visit_since'])) {
                         $lvSince = is_scalar($lastVisit) ? (string) $lastVisit : null;
-                        $users[$curUid]['last_visit_since'] = time_since($lvSince, 'day');
+                        $users[$curUid]['last_visit_since'] = ServiceLocator::get(DateService::class)->timeSince($lvSince, 'day');
                     }
                 }
             }
@@ -239,17 +246,17 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (strlen(str_replace(' ', '', is_scalar($params['username']) ? (string) $params['username'] : '')) === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
         if (Config::doublePasswordTypeInAdmin() && $params['password'] !== $params['password_confirm']) {
-            return new PwgError(WS_ERR_INVALID_PARAM, l10n('The passwords do not match'));
+            return new PwgError(WS_ERR_INVALID_PARAM, Lang::t('The passwords do not match'));
         }
         if ($params['auto_password']) {
-            $params['password'] = generate_key(random_int(15, 20));
+            $params['password'] = StringUtil::generateKey(random_int(15, 20));
         }
         $errors = [];
         $userId = UserService::get()->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($params['password']) ? $params['password'] : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
@@ -262,7 +269,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function getAuthKey(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $authkey = AuthService::get()->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
@@ -275,7 +282,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $currentUser = CurrentUser::get();
@@ -290,13 +297,13 @@ final class UsersEndpoints
             ServiceLocator::get(UserAdminService::class)->deleteUser($userId);
             $counter++;
         }
-        return l10n_dec('%d user deleted', '%d users deleted', $counter);
+        return Translator::get()->plural('%d user deleted', '%d users deleted', $counter);
     }
 
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $updatedUsers = UserService::get()->checkAndSaveUserInfos($params);
@@ -311,7 +318,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function setMyInfo(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (PermissionService::get()->isAGuest()) {
@@ -330,12 +337,12 @@ final class UsersEndpoints
         }
         if (!empty($params['password'])) {
             if ($params['new_password'] !== $params['conf_new_password']) {
-                return new PwgError(403, l10n('The passwords do not match'));
+                return new PwgError(403, Lang::t('The passwords do not match'));
             }
             $userFields      = Config::userFields();
             $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), (int) $currentUser->id);
             if (!password_verify(is_scalar($params['password']) ? (string) $params['password'] : '', is_string($currentPassword) ? $currentPassword : '')) {
-                return new PwgError(403, l10n('Current password is wrong'));
+                return new PwgError(403, Lang::t('Current password is wrong'));
             }
             $params['password'] = $params['new_password'];
         }
@@ -346,7 +353,7 @@ final class UsersEndpoints
             $err2 = is_array($updatedUsers2['error']) ? $updatedUsers2['error'] : [];
             return new PwgError(is_int($err2['code'] ?? null) ? $err2['code'] : null, is_string($err2['message'] ?? null) ? $err2['message'] : '');
         }
-        return l10n('Your changes have been applied.');
+        return Lang::t('Your changes have been applied.');
     }
 
     /** @param array<mixed> $params */
@@ -434,7 +441,7 @@ final class UsersEndpoints
      */
     public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
@@ -456,17 +463,17 @@ final class UsersEndpoints
         $sendByMailResp = null;
         $userLostLanguage = is_string($userLost['language'] ?? null) ? $userLost['language'] : '';
         $langToUse      = $firstLogin ? UserService::get()->getDefaultLanguage() : $userLostLanguage;
-        switch_lang_to($langToUse);
+        ServiceLocator::get(MailService::class)->switchLangTo($langToUse);
         $generateLink = AuthService::get()->generatePasswordLink($targetUserId, $firstLogin);
         $userLostEmail    = is_string($userLost['email'] ?? null) ? $userLost['email'] : '';
         $userLostUsername = is_string($userLost['username'] ?? null) ? $userLost['username'] : '';
         $genPasswordLink  = is_string($generateLink['password_link'] ?? null) ? $generateLink['password_link'] : '';
         $genTimeValidation = is_string($generateLink['time_validation'] ?? null) ? $generateLink['time_validation'] : '';
         if ($params['send_by_mail'] && !empty($userLostEmail)) {
-            $emailParams = $firstLogin ? pwg_generate_set_password_mail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : pwg_generate_reset_password_mail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
-            $sendByMailResp = pwg_mail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
+            $emailParams = $firstLogin ? ServiceLocator::get(MailService::class)->pwgGenerateSetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : ServiceLocator::get(MailService::class)->pwgGenerateResetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
+            $sendByMailResp = ServiceLocator::get(MailService::class)->pwgMail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
         }
-        switch_lang_back();
+        ServiceLocator::get(MailService::class)->switchLangBack();
         return ['generated_link' => $genPasswordLink, 'send_by_mail' => $sendByMailResp, 'time_validation' => $genTimeValidation];
     }
 
@@ -476,7 +483,7 @@ final class UsersEndpoints
         if (!PermissionService::get()->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
@@ -490,7 +497,7 @@ final class UsersEndpoints
         if ($newMainUser['status'] !== 'webmaster') {
             return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
         }
-        conf_update_param('webmaster_id', $params['user_id']);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('webmaster_id', $params['user_id']);
         return 'The main user has been changed.';
     }
 
@@ -505,7 +512,7 @@ final class UsersEndpoints
         if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if ($params['duration'] < 1 || $params['duration'] > 999999) {
@@ -529,19 +536,19 @@ final class UsersEndpoints
         if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (get_pwg_token() !== $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
         $revokePkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revokePkid)) {
-            return new PwgError(403, l10n('Invalid pkid format'));
+            return new PwgError(403, Lang::t('Invalid pkid format'));
         }
         $revokedKey = UserService::get()->revokeApiKey($userId, $revokePkid);
         if (true !== $revokedKey) {
             return new PwgError(403, is_string($revokedKey) ? $revokedKey : '');
         }
         $logger->info('[api_key][user_id=' . $userId . '][action=revoke][pkid=' . $revokePkid . ']');
-        return l10n('API Key has been successfully revoked.');
+        return Lang::t('API Key has been successfully revoked.');
     }
 
     /** @param array<mixed> $params */
@@ -552,12 +559,12 @@ final class UsersEndpoints
         if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (get_pwg_token() !== $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
         $editPkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $editPkid)) {
-            return new PwgError(403, l10n('Invalid pkid format'));
+            return new PwgError(403, Lang::t('Invalid pkid format'));
         }
         $keyName  = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
         $editedKey = UserService::get()->editApiKey($userId, $editPkid, $keyName);
@@ -565,7 +572,7 @@ final class UsersEndpoints
             return new PwgError(403, $editedKey);
         }
         $logger->info('[api_key][user_id=' . $userId . '][action=edit][pkid=' . $editPkid . '][new_name=' . $keyName . ']');
-        return l10n('API Key has been successfully edited.');
+        return Lang::t('API Key has been successfully edited.');
     }
 
     /**
@@ -577,10 +584,10 @@ final class UsersEndpoints
         if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $apiKeys = UserService::get()->getApiKey((string) CurrentUser::get()->id);
-        return $apiKeys ?: new PwgError(404, l10n('No API key found'));
+        return $apiKeys ?: new PwgError(404, Lang::t('No API key found'));
     }
 }

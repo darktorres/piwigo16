@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -37,7 +38,7 @@ final class WsController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!Config::allowWebServices()) {
-            page_forbidden('Web services are disabled');
+            ServiceLocator::get(HtmlService::class)->pageForbidden('Web services are disabled');
         }
 
         PwgServer::boot();

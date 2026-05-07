@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -83,10 +87,10 @@ final class CommentsEndpoints
             if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
                 $authorName = $row['author'];
             } else {
-                $coalesced  = $row['username'] ?? $row['author'] ?? l10n('guest');
-                $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : l10n('guest'));
+                $coalesced  = $row['username'] ?? $row['author'] ?? Lang::t('guest');
+                $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : Lang::t('guest'));
             }
-            $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];
@@ -100,26 +104,26 @@ final class CommentsEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds    = is_array($params['comment_id']) ? $params['comment_id'] : [];
         $strIds    = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawIds);
         $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
-        delete_user_comment($commentIds);
+        ServiceLocator::get(CommentService::class)->deleteUserComment($commentIds);
         return 'Comment successfully deleted';
     }
 
     /** @param array<mixed> $params */
     public function validate(array $params, PwgServer &$service): PwgError|string
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
-            return new PwgError(403, l10n('Invalid security token'));
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+            return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds     = is_array($params['comment_id']) ? $params['comment_id'] : [];
         $strIds     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawIds);
         $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
-        validate_user_comment($commentIds);
+        ServiceLocator::get(CommentService::class)->validateUserComment($commentIds);
         return 'Comment successfully validated';
     }
 }

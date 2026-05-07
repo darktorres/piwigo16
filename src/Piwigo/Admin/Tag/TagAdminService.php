@@ -7,11 +7,14 @@ namespace Piwigo\Admin\Tag;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 
@@ -83,7 +86,7 @@ final readonly class TagAdminService
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
         EventDispatcher::notify('delete_tags', $tagIds);
-        pwg_activity('tag', $tagIds, 'delete');
+        ServiceLocator::get(Util::class)->pwgActivity('tag', $tagIds, 'delete');
         ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($imageIds);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
     }
@@ -229,9 +232,9 @@ final readonly class TagAdminService
                 }
             }
         }
-        usort($taglist, tag_alpha_compare(...));
+        usort($taglist, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         if (count($altlist)) {
-            usort($altlist, tag_alpha_compare(...));
+            usort($altlist, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
             $taglist = array_merge($taglist, $altlist);
         }
         return $taglist;
@@ -261,8 +264,8 @@ final readonly class TagAdminService
         $existingId = ServiceLocator::get(TagRepository::class)->findIdByExactName($tagName);
         if ($existingId === null) {
             Dml::singleInsert(Tables::tags(), ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)]);
-            return ['info' => l10n('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) DbConnection::get()->lastInsertId()];
+            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) DbConnection::get()->lastInsertId()];
         }
-        return ['error' => l10n('Tag "%s" already exists', stripslashes($tagName))];
+        return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];
     }
 }

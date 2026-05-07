@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 
 final class PreferencesService
 {
@@ -40,7 +41,7 @@ final class PreferencesService
         array_multisort($qValues, SORT_DESC, SORT_NUMERIC, $indices, SORT_ASC, SORT_NUMERIC, $acceptLanguagesFull, $acceptLanguagesShort);
 
         $languagesAvailable = [];
-        foreach (get_languages() as $languageCode => $languageName) {
+        foreach (Util::get()->getLanguages() as $languageCode => $languageName) {
             $lowercaseFull   = strtolower((string) $languageCode);
             $lowercaseParts  = explode('_', $lowercaseFull, 2);
             $lowercasePrefix = $lowercaseParts[0];

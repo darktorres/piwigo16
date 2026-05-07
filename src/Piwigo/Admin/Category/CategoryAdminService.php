@@ -8,15 +8,21 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -43,7 +49,7 @@ final readonly class CategoryAdminService
         if (count($ids) === 0) {
             return;
         }
-        $ids        = get_subcat_ids($ids);
+        $ids        = ServiceLocator::get(CategoryService::class)->getSubcatIds($ids);
         $elementIds = ServiceLocator::get(ImageRepository::class)->findIdsByStorageCategoryIds($ids);
         ServiceLocator::get(ImageAdminService::class)->deleteElements($elementIds);
 
@@ -73,7 +79,7 @@ final readonly class CategoryAdminService
         $userRepo2->deleteUserCacheByCategoryIds($ids);
 
         EventDispatcher::notify('delete_categories', $ids);
-        pwg_activity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
+        ServiceLocator::get(Util::class)->pwgActivity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
     }
 
     public function imagesIntegrity(): void
@@ -216,11 +222,11 @@ SELECT DISTINCT id
         if ($value) {
             $cats = $this->getUppercatIds($categories);
             if ($unlockChild) {
-                $cats = array_merge($cats, get_subcat_ids($categories));
+                $cats = array_merge($cats, ServiceLocator::get(CategoryService::class)->getSubcatIds($categories));
             }
             $catRepo->setVisible(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cats), true);
         } else {
-            $subcats = get_subcat_ids($categories);
+            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
             $catRepo->setVisible(array_map(fn (mixed $v): int => (int) $v, $subcats), false);
         }
     }
@@ -241,13 +247,13 @@ SELECT DISTINCT id
             $catRepo->setStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $uppercats), 'public');
         }
         if ($value === 'private') {
-            $subcats = get_subcat_ids($categories);
+            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
             $catRepo->setStatus(array_map(fn (mixed $v): int => (int) $v, $subcats), 'private');
 
             $topCategories = [];
             $parentIds     = [];
             $allCategories = $catRepo->findDetailsByIds($categories);
-            usort($allCategories, global_rank_compare(...));
+            usort($allCategories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
 
             foreach ($allCategories as $cat) {
                 $isTop = true;
@@ -277,7 +283,7 @@ SELECT DISTINCT id
                 if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercat]) && $parentCats[$topCatUppercat]['status'] === 'private') {
                     $refCatId = $topCatUppercat;
                 }
-                $subCatsForRef = get_subcat_ids([is_scalar($topCategory['id']) ? (string) $topCategory['id'] : '0']);
+                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_scalar($topCategory['id']) ? (string) $topCategory['id'] : '0']);
                 foreach ($tables as $table => $field) {
                     $refAccess = array_column(DbConnection::get()->executeQuery(
                         'SELECT ' . $field . ' FROM ' . $table . ' WHERE cat_id = ' . $refCatId
@@ -402,7 +408,7 @@ SELECT DISTINCT id
             foreach ($categories as $category) {
                 $catUppercats = is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '';
                 if (preg_match('/^' . $catUppercats . '(,|$)/', $newParentUppercatsStr)) {
-                    PageState::current()->addError(l10n('You cannot move an album in its own sub album'));
+                    PageState::current()->addError(Lang::t('You cannot move an album in its own sub album'));
                     return;
                 }
             }
@@ -414,8 +420,8 @@ SELECT DISTINCT id
         if ($parentStatus === 'private') {
             $this->setCatStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($categories)), 'private');
         }
-        PageState::current()->addInfo(l10n_dec('%d album moved', '%d albums moved', count($categories)));
-        pwg_activity('album', $catIdsInt, 'move', ['parent' => $newParent]);
+        PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
+        ServiceLocator::get(Util::class)->pwgActivity('album', $catIdsInt, 'move', ['parent' => $newParent]);
     }
 
     /**
@@ -425,7 +431,7 @@ SELECT DISTINCT id
     public function createVirtualCategory(string $categoryName, int|string|null $parentId = null, array $options = []): array
     {
         if (preg_match('/^\s*$/', $categoryName)) {
-            return ['error' => l10n('The name of an album must not be empty')];
+            return ['error' => Lang::t('The name of an album must not be empty')];
         }
         $rank = 0;
         if (Config::newcatDefaultPosition() === 'last') {
@@ -476,8 +482,8 @@ SELECT DISTINCT id
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge(ServiceLocator::get(UserAdminService::class)->getAdmins(), [$userId])));
         }
         EventDispatcher::notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
-        pwg_activity('album', $insertedId, 'add');
-        return ['info' => l10n('Album added'), 'id' => $insertedId];
+        ServiceLocator::get(Util::class)->pwgActivity('album', $insertedId, 'add');
+        return ['info' => Lang::t('Album added'), 'id' => $insertedId];
     }
 
     /**
@@ -591,7 +597,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         }
         $catIds = $this->getUppercatIds($categoryIds);
         if (isset($_POST['apply_on_sub'])) {
-            $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
+            $catIds = array_merge($catIds, ServiceLocator::get(CategoryService::class)->getSubcatIds($categoryIds));
         }
         $privateCats = array_column(DbConnection::get()->executeQuery(
             'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_numeric($v) ? (string)(int)$v : '0', $catIds)) . ") AND status = 'private'"
@@ -646,10 +652,10 @@ SELECT id FROM ' . Tables::imageCategory() . '
             [$runningExecId, $runningExecStartTime] = explode('-', (string) Config::emptyLoungeRunning());
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug('empty_lounge, exec=' . $runningExecId . ', timeout stopped by another call');
-                conf_delete_param('empty_lounge_running');
+                ServiceLocator::get(ConfigService::class)->confDeleteParam('empty_lounge_running');
             }
         }
-        $execId = generate_key(4);
+        $execId = StringUtil::generateKey(4);
         $logger->debug('empty_lounge, exec=' . $execId . ', begins');
         $this->conn->executeStatement('INSERT IGNORE INTO ' . Tables::config() . ' SET param="empty_lounge_running", value=?', [$execId . '-' . time()]);
         $emptyLoungeRunning = $this->conn->executeQuery('SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"')->fetchOne();
@@ -676,7 +682,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         if ($invalidateUserCache) {
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
-        conf_delete_param('empty_lounge_running');
+        ServiceLocator::get(ConfigService::class)->confDeleteParam('empty_lounge_running');
         $logger->debug('empty_lounge, exec=' . $execId . ', ends');
         EventDispatcher::notify('empty_lounge', $rows);
         return $rows;

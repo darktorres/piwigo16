@@ -369,7 +369,13 @@ final class StringUtil
         return $path;
     }
 
-    public function scriptBasename(): string
+    public static function generateKey(int $size): string
+    {
+        $bytes = random_bytes(max(1, $size + 10));
+        return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
+    }
+
+    public static function scriptBasename(): string
     {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
             if (!empty($_SERVER[$value])) {

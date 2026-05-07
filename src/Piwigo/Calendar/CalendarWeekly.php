@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
 
 /**
@@ -26,7 +27,7 @@ class CalendarWeekly extends CalendarBase
         $lang = &$GLOBALS['lang'];
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
-            $week_no_labels[$i] = l10n('Week %d', $i);
+            $week_no_labels[$i] = Lang::t('Week %d', $i);
             //$week_no_labels[$i] = $i;
         }
 

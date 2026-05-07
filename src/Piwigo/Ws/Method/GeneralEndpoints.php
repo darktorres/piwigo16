@@ -12,20 +12,29 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
+use Piwigo\Picture\PictureService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
@@ -197,7 +206,7 @@ final class GeneralEndpoints
         foreach ($infos as $name => $value) {
             $output[] = ['name' => $name, 'value' => $value];
         }
-        conf_update_param('cache_sizes', $output, true);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('cache_sizes', $output, true);
         return ['infos' => new PwgNamedArray($output, 'item')];
     }
 
@@ -230,7 +239,7 @@ final class GeneralEndpoints
         }
         $changes = DbConnection::get()->executeStatement($query);
         if ($changes > 0) {
-            update_rating_score();
+            ServiceLocator::get(RateService::class)->updateRatingScore();
         }
         return $changes;
     }
@@ -273,11 +282,11 @@ final class GeneralEndpoints
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
-        $res['pwg_token'] = get_pwg_token();
-        $res['charset']   = get_pwg_charset();
+        $res['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
+        $res['charset']   = ServiceLocator::get(StringUtil::class)->getPwgCharset();
         $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = AppInfo::VERSION;
-        $res['save_visits'] = do_log();
+        $res['save_visits'] = ServiceLocator::get(Util::class)->doLog();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
         $httpUserAgent = isset($_SERVER['HTTP_USER_AGENT']) && is_string($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
         if ($httpUserAgent !== '' && preg_match('/^PiwigoRemoteSync/', $httpUserAgent)) {
@@ -300,7 +309,7 @@ final class GeneralEndpoints
     public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (!empty($param[$datefield]) && !is_valid_mysql_datetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
+            if (!empty($param[$datefield]) && !ServiceLocator::get(StringUtil::class)->isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
@@ -383,7 +392,7 @@ final class GeneralEndpoints
                         }
                         [$date, $hour]     = explode(' ', is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '');
                         $rowPerformedBy    = $row['performed_by'];
-                        $outputLines[]     = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => format_date($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
+                        $outputLines[]     = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => ServiceLocator::get(DateService::class)->formatDate($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
                         $userIdKey = is_scalar($rowPerformedBy) ? (string) $rowPerformedBy : '';
                         if ($userIdKey !== '') {
                             $userIds[$userIdKey] = 1;
@@ -459,10 +468,10 @@ final class GeneralEndpoints
         }
         $logImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
         if (!empty($params['image_id']) && $logImageId !== null) {
-            increase_image_visit_counter($logImageId);
+            ServiceLocator::get(PictureService::class)->increaseImageVisitCounter($logImageId);
         }
         $imageType = $params['is_download'] ? 'high' : 'picture';
-        pwg_log($logImageId, $imageType);
+        ServiceLocator::get(Util::class)->pwgLog($logImageId, $imageType);
     }
 
     /**
@@ -478,21 +487,21 @@ final class GeneralEndpoints
             $page['start'] = 0;
         }
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
-        $displayThumbnails = ['no_display_thumbnail' => l10n('No display'), 'display_thumbnail_classic' => l10n('Classic display'), 'display_thumbnail_hoverbox' => l10n('Hoverbox display')];
+        $displayThumbnails = ['no_display_thumbnail' => Lang::t('No display'), 'display_thumbnail_classic' => Lang::t('Classic display'), 'display_thumbnail_hoverbox' => Lang::t('Hoverbox display')];
         $page['errors'] = [];
         $search         = [];
         if (!empty($param['start'])) {
-            check_input_parameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            ServiceLocator::get(Util::class)->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
         if (!empty($param['end'])) {
-            check_input_parameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            ServiceLocator::get(Util::class)->checkInputParameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
         if (empty($param['types'])) {
             $search['fields']['types'] = $types;
         } else {
-            check_input_parameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
+            ServiceLocator::get(Util::class)->checkInputParameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
             $search['fields']['types'] = $param['types'];
         }
         $search['fields']['user'] = is_numeric($param['user_id']) ? (int) $param['user_id'] : 0;
@@ -505,7 +514,7 @@ final class GeneralEndpoints
         if (!empty($param['ip'])) {
             $search['fields']['ip'] = str_replace('*', '%', is_scalar($param['ip']) ? (string) $param['ip'] : '');
         }
-        check_input_parameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
+        ServiceLocator::get(Util::class)->checkInputParameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         $displayThumbnailStr = is_scalar($param['display_thumbnail']) ? (string) $param['display_thumbnail'] : '';
         $cookieVal           = ($displayThumbnailStr !== '' && isset($displayThumbnails[$displayThumbnailStr])) ? $displayThumbnailStr : null;
@@ -594,9 +603,9 @@ final class GeneralEndpoints
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
                 $albumBase = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-';
-                $fullCatPath[$categoryId] = get_cat_display_name_cache($uppercatsS, $albumBase);
+                $fullCatPath[$categoryId] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($uppercatsS, $albumBase);
                 $uppercatsParts       = explode(',', $uppercatsS);
-                $nameOfCategory[$categoryId] = get_cat_display_name_cache(end($uppercatsParts) ?: '', $albumBase);
+                $nameOfCategory[$categoryId] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(end($uppercatsParts) ?: '', $albumBase);
             }
         }
         if (count($imageIds) > 0) {
@@ -702,7 +711,7 @@ final class GeneralEndpoints
             }
             $sortedMembers[$userName] = ($sortedMembers[$userName] ?? 0) + 1;
             $lineDate                 = is_scalar($line['date'] ?? null) ? $line['date'] : null;
-            array_push($result, ['DATE' => format_date(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags((string) $fullCatPath[$lineCatIdStr]) : l10n('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : l10n('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', (string) $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
+            array_push($result, ['DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags((string) $fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', (string) $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
         }
         $maxPage = ceil(count($result) / 300);
         $result  = array_reverse($result, true);
@@ -720,7 +729,7 @@ final class GeneralEndpoints
         }
         arsort($sortedMembers);
         unset($sortedMembers['guest']);
-        $searchSummary = ['NB_LINES' => l10n_dec('%d line filtered', '%d lines filtered', $page['nb_lines']), 'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize'] / 1024) : 0, 'USERS' => l10n_dec('%d user', '%d users', $summary['nb_members'] + $summary['nb_guests']), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => l10n_dec('%d guest', '%d guests', $summary['nb_guests'])];
+        $searchSummary = ['NB_LINES' => Translator::get()->plural('%d line filtered', '%d lines filtered', $page['nb_lines']), 'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize'] / 1024) : 0, 'USERS' => Translator::get()->plural('%d user', '%d users', $summary['nb_members'] + $summary['nb_guests']), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => Translator::get()->plural('%d guest', '%d guests', $summary['nb_guests'])];
         unset($nameOfTag);
         return ['lines' => $result, 'params' => $param, 'maxPage' => ($maxPage == 0) ? 1 : $maxPage, 'summary' => $searchSummary];
     }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+
 class ImageGd implements ImageInterface
 {
     public \GdImage $image;
@@ -12,7 +15,7 @@ class ImageGd implements ImageInterface
     public function __construct(string $source_filepath)
     {
         $gd_info = gd_info();
-        $extension = strtolower(get_extension($source_filepath));
+        $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($source_filepath));
 
         if (in_array($extension, ['jpg', 'jpeg'])) {
             $img = imagecreatefromjpeg($source_filepath);
@@ -123,7 +126,7 @@ class ImageGd implements ImageInterface
 
     public function write(string $destination_filepath): bool
     {
-        $extension = strtolower(get_extension($destination_filepath));
+        $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($destination_filepath));
 
         if ($extension == 'png') {
             return imagepng($this->image, $destination_filepath);

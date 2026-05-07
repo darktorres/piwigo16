@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Core\ServiceLocator;
+
 /**
  * Typed facade over Piwigo's runtime configuration.
  *
@@ -1497,10 +1499,10 @@ final class Config
     {
         self::$data[$key] = $value;
     }
-    /** Persists via existing conf_update_param() free function — DB write. */
+    /** Persists via existing ServiceLocator::get(ConfigService::class)->confUpdateParam() free function — DB write. */
     public static function persist(string $key, mixed $value): void
     {
-        \conf_update_param($key, $value);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam($key, $value);
         self::$data[$key] = $value;
     }
     // ---- Test helpers ----------------------------------------------------

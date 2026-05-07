@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\LangService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -81,25 +86,25 @@ class Template
 
         if (!Config::has('data_dir_checked')) {
             $dir = PHPWG_ROOT_PATH.Config::dataLocation();
-            mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            Util::get()->mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (!is_writable($dir)) {
-                load_language('admin.lang');
-                fatal_error(
-                    l10n(
+                LangService::get()->loadLanguage('admin.lang');
+                HtmlService::fatalError(
+                    Lang::t(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
                         Config::dataLocation()
                     ),
-                    l10n('an error happened'),
+                    Lang::t('an error happened'),
                     false // show trace
                 );
             }
             if (Config::dbName() !== '') {
-                conf_update_param('data_dir_checked', 1);
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('data_dir_checked', 1);
             }
         }
 
         $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
-        mkgetdir($compile_dir);
+        Util::get()->mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
 
@@ -184,8 +189,8 @@ class Template
         // standard pages can't get the header to load the html header
         if (
             '_base' != $theme
-            and in_array(script_basename(), ['identification', 'register', 'password', 'profile'])
-            and (($themeconf['use_standard_pages'] ?? false) or conf_get_param('use_standard_pages', false))
+            and in_array(StringUtil::scriptBasename(), ['identification', 'register', 'password', 'profile'])
+            and (($themeconf['use_standard_pages'] ?? false) or ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->loadThemeconf($root.'/'.$theme);

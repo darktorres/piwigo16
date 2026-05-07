@@ -8,6 +8,7 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -65,8 +66,8 @@ class LocalSiteReader
                 }
 
                 if (is_file($path.'/'.$node)) {
-                    $extension = strtolower(get_extension($node));
-                    $filename_wo_ext = get_filename_wo_extension($node);
+                    $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($node));
+                    $filename_wo_ext = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($node);
 
                     if (isset(Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
@@ -117,12 +118,12 @@ class LocalSiteReader
         }
 
         $filename = basename($file);
-        $extension = get_extension($filename);
+        $extension = ServiceLocator::get(StringUtil::class)->getExtension($filename);
 
         $representative_ext = null;
         if (! isset(Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
-            $filename_wo_ext = get_filename_wo_extension($filename);
+            $filename_wo_ext = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($filename);
             $representative_ext = $this->getRepresentativeExt($dirname, $filename_wo_ext);
         }
 

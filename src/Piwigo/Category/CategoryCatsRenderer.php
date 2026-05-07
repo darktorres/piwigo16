@@ -6,12 +6,15 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -94,7 +97,7 @@ SELECT SQL_CALC_FOUND_ROWS
             } elseif (!empty($row['representative_picture_id'])) {
                 $image_id = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $image_id = get_random_image_in_category($row);
+                $image_id = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                 $subquery = '
 SELECT representative_picture_id
@@ -147,7 +150,7 @@ SELECT
         }
 
         if ('recent_cats' == $page['section']) {
-            usort($categories, global_rank_compare(...));
+            usort($categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         }
 
         if (count($categories) > 0) {
@@ -165,7 +168,7 @@ SELECT *
                 } else {
                     foreach ($categories as &$category) {
                         if ($row['id'] == $category['representative_picture_id']) {
-                            $image_id = get_random_image_in_category($category);
+                            $image_id = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category);
                             if (isset($image_id) and !in_array($image_id, $image_ids)) {
                                 $new_image_ids[] = $image_id;
                             }
@@ -231,7 +234,7 @@ SELECT *
                 );
 
                 if ($page['section'] == 'recent_cats') {
-                    $name = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null);
+                    $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null);
                 } else {
                     $name = $category['name'];
                 }
@@ -245,7 +248,7 @@ SELECT *
                     'representative' => $representative_infos,
                     'TN_ALT' => strip_tags((string) $category['name']),
                     'URL' => UrlService::get()->makeIndexUrl(['category' => $category]),
-                    'CAPTION_NB_IMAGES' => get_display_images_count(
+                    'CAPTION_NB_IMAGES' => ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
                         is_numeric($category['nb_images'] ?? null) ? (int) $category['nb_images'] : 0,
                         is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
                         is_numeric($category['count_categories'] ?? null) ? (int) $category['count_categories'] : 0,
@@ -259,7 +262,7 @@ SELECT *
                     'NAME' => $name,
                 ]);
                 if (Config::indexNewIcon()) {
-                    $tpl_var['icon_ts'] = get_icon(
+                    $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(
                         is_scalar($category['max_date_last'] ?? null) ? (string) $category['max_date_last'] : null,
                         (bool) ($category['is_child_date_last'] ?? false)
                     );
@@ -272,7 +275,7 @@ SELECT *
                         $from = $dates_of_category[$catId]['from'] ?? null;
                         $to = $dates_of_category[$catId]['to'] ?? null;
                         if (!empty($from)) {
-                            $tpl_var['INFO_DATES'] = format_fromto(
+                            $tpl_var['INFO_DATES'] = ServiceLocator::get(DateService::class)->formatFromto(
                                 (is_string($from) || is_int($from)) ? $from : null,
                                 (is_string($to) || is_int($to)) ? $to : null
                             );
@@ -296,7 +299,7 @@ SELECT *
 
             $page['cats_navigation_bar'] = [];
             if ($page['total_categories'] > Config::nbCategoriesPage()) {
-                $page['cats_navigation_bar'] = create_navigation_bar(
+                $page['cats_navigation_bar'] = ServiceLocator::get(Util::class)->createNavigationBar(
                     UrlService::get()->duplicateIndexUrl([], ['startcat']),
                     is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
                     is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
@@ -309,6 +312,6 @@ SELECT *
             $template->assign('cats_navbar', $page['cats_navigation_bar']);
         }
 
-        pwg_debug('end CategoryCatsRenderer');
+        ServiceLocator::get(Util::class)->pwgDebug('end CategoryCatsRenderer');
     }
 }

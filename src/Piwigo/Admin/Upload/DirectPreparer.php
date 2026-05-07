@@ -8,8 +8,11 @@ use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
 
@@ -23,7 +26,7 @@ final class DirectPreparer
             'F_ADD_ACTION' => $photosAddBaseUrl,
             'chunk_size' => Config::uploadFormChunkSize(),
             'max_file_size' => Config::uploadFormMaxFileSize(),
-            'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
+            'ADMIN_PAGE_TITLE' => Lang::t('Upload Photos'),
         ]);
 
         if (PwgImage::getLibrary() == 'gd') {
@@ -52,7 +55,7 @@ final class DirectPreparer
 
         $tpl->assign([
             'form_action' => $photosAddBaseUrl,
-            'pwg_token' => get_pwg_token(),
+            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
         ]);
 
         $unique_exts = array_unique(
@@ -72,24 +75,24 @@ final class DirectPreparer
         $selected_category = [];
 
         if (isset($_GET['album'])) {
-            check_input_parameter('album', $_GET, false, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
             $album_id_int = is_scalar($_GET['album']) ? (int) $_GET['album'] : 0;
             $cat = ServiceLocator::get(CategoryRepository::class)->findCategoryById($album_id_int);
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
-                $tpl->assign('ADD_TO_ALBUM', get_cat_display_name_cache(
+                $tpl->assign('ADD_TO_ALBUM', ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
                     is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '',
                     null
                 ));
             } else {
                 $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';
-                fatal_error('[Hacking attempt] the album id = "' . $album_id . '" is not valid');
+                HtmlService::fatalError('[Hacking attempt] the album id = "' . $album_id . '" is not valid');
             }
         } else {
             $last_cat = ServiceLocator::get(ImageRepository::class)->findLastUploadedCategoryInfo();
             if ($last_cat !== null) {
                 $selected_category = [$last_cat['category_id']];
-                $selected_category_name = get_cat_display_name_cache((string) $last_cat['uppercats'], null);
+                $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache((string) $last_cat['uppercats'], null);
                 $tpl->assign('selected_category_name', $selected_category_name);
             }
         }
@@ -100,7 +103,7 @@ final class DirectPreparer
 
         $selected_level = $_POST['level'] ?? 0;
         $tpl->assign([
-            'level_options' => get_privacy_level_options(),
+            'level_options' => ServiceLocator::get(Util::class)->getPrivacyLevelOptions(),
             'level_options_selected' => [$selected_level],
         ]);
 
@@ -110,7 +113,7 @@ final class DirectPreparer
             $setup_errors[] = $error_message;
         }
         if (!function_exists('gd_info')) {
-            $setup_errors[] = l10n('GD library is missing');
+            $setup_errors[] = Lang::t('GD library is missing');
         }
         $tpl->assign([
             'setup_errors' => $setup_errors,
@@ -123,10 +126,10 @@ final class DirectPreparer
         if (!isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
             if (Config::useExif() && !function_exists('exif_read_data')) {
-                $setup_warnings[] = l10n('Exif extension not available, admin should disable exif use');
+                $setup_warnings[] = Lang::t('Exif extension not available, admin should disable exif use');
             }
             if (ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') > ServiceLocator::get(UploadService::class)->getIniSize('post_max_size')) {
-                $setup_warnings[] = l10n(
+                $setup_warnings[] = Lang::t(
                     'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
                     ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize', false),
                     ServiceLocator::get(UploadService::class)->getIniSize('post_max_size', false)

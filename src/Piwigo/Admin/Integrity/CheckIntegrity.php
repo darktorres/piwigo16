@@ -6,9 +6,12 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
@@ -61,7 +64,7 @@ class CheckIntegrity
             if (!isset($GLOBALS['header_notes']) || !is_array($GLOBALS['header_notes'])) {
                 $GLOBALS['header_notes'] = [];
             }
-            $GLOBALS['header_notes'][] = l10n_dec(
+            $GLOBALS['header_notes'][] = Translator::get()->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)
@@ -97,14 +100,14 @@ class CheckIntegrity
             }
 
             if ($corrected_count > 0) {
-                PageState::current()->addInfo(l10n_dec(
+                PageState::current()->addInfo(Translator::get()->plural(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
                 ));
             }
             if ($not_corrected_count > 0) {
-                PageState::current()->addError(l10n_dec(
+                PageState::current()->addError(Translator::get()->plural(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
@@ -123,7 +126,7 @@ class CheckIntegrity
                 }
 
                 if ($ignored_count > 0) {
-                    PageState::current()->addInfo(l10n_dec(
+                    PageState::current()->addInfo(Translator::get()->plural(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count
@@ -256,7 +259,7 @@ class CheckIntegrity
         $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        conf_update_param('c13y_ignore', serialize($conf_c13y_ignore));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
     }
 
     /**
@@ -281,9 +284,9 @@ class CheckIntegrity
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(
-              l10n('Go to %s or %s for more informations'),
-              sprintf($link_fmt, $pwg_links['FORUM'], l10n('the forum')),
-              sprintf($link_fmt, $pwg_links['WIKI'], l10n('the wiki'))
+              Lang::t('Go to %s or %s for more informations'),
+              sprintf($link_fmt, $pwg_links['FORUM'], Lang::t('the forum')),
+              sprintf($link_fmt, $pwg_links['WIKI'], Lang::t('the wiki'))
           );
     }
 

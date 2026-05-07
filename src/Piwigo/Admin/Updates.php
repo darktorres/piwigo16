@@ -6,11 +6,16 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Mail\MailService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -88,11 +93,11 @@ class Updates
           'is_dev' => true,
           ];
 
-        [$env, $build_version] = get_container_info();
+        [$env, $build_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
         $build_version = is_scalar($build_version) ? (string) $build_version : '';
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
-            $actual_branch = get_branch_from_version(
+            $actual_branch = AppInfo::branchFromVersion(
                 ('Official' === $env)
         ? substr($build_version, 0, -1)
         : AppInfo::VERSION
@@ -110,13 +115,13 @@ class Updates
                 if ('Official' === $env) {
                     // Check if build_version is lower than the latest version
                     if ($this->containerVersionCompare($build_version, $last_version) == '-1') {
-                        $last_branch = get_branch_from_version(substr($last_version, 0, -1));
+                        $last_branch = AppInfo::branchFromVersion(substr($last_version, 0, -1));
                         if ($last_branch == $actual_branch) {
                             $new_versions['minor'] = $last_version;
                         } else {
                             $new_versions['major'] = $last_version;
                             foreach ($all_versions as $version) {
-                                $branch = get_branch_from_version(substr($version, 0, -1));
+                                $branch = AppInfo::branchFromVersion(substr($version, 0, -1));
                                 if ($branch == $actual_branch) {
                                     if ($this->containerVersionCompare($build_version, $version) == '-1') {
                                         $new_versions['minor'] = $version;
@@ -132,7 +137,7 @@ class Updates
                     $last_version_php = $parts0[1] ?? '';
 
                     if (version_compare(AppInfo::VERSION, $last_version_number, '<')) {
-                        $last_branch = get_branch_from_version($last_version_number);
+                        $last_branch = AppInfo::branchFromVersion($last_version_number);
 
                         if ($last_branch == $actual_branch) {
                             $new_versions['minor'] = $last_version_number;
@@ -146,7 +151,7 @@ class Updates
                                 $vparts = explode('/', trim($version));
                                 $version_number = $vparts[0];
                                 $version_php = $vparts[1] ?? '';
-                                $branch = get_branch_from_version($version_number);
+                                $branch = AppInfo::branchFromVersion($version_number);
 
                                 if ($branch == $actual_branch) {
                                     if (version_compare(AppInfo::VERSION, $version_number, '<')) {
@@ -172,12 +177,12 @@ class Updates
      */
     public function notifyPiwigoNewVersions(): void
     {
-        if (!pwg_is_dbconf_writeable()) {
+        if (!ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
             return;
         }
 
         $new_versions = $this->getPiwigoNewVersions();
-        conf_update_param('update_notify_last_check', date('c'));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('update_notify_last_check', date('c'));
 
         if ($new_versions['is_dev']) {
             return;
@@ -220,20 +225,20 @@ class Updates
         if ($notify) {
             // send email
 
-            switch_lang_to(UserService::get()->getDefaultLanguage());
+            ServiceLocator::get(MailService::class)->switchLangTo(UserService::get()->getDefaultLanguage());
 
-            $content = l10n('Hello,');
-            $content .= "\n\n".l10n(
+            $content = Lang::t('Hello,');
+            $content .= "\n\n".Lang::t(
                 'Time has come to update your Piwigo with version %s, go to %s',
                 $new_versions_string,
                 ServiceLocator::get(UrlGenerator::class)->admin('updates')
             );
-            $content .= "\n\n".l10n('It only takes a few clicks.');
-            $content .= "\n\n".l10n('Running on an up-to-date Piwigo is important for security.');
+            $content .= "\n\n".Lang::t('It only takes a few clicks.');
+            $content .= "\n\n".Lang::t('Running on an up-to-date Piwigo is important for security.');
 
-            pwg_mail_admins(
+            ServiceLocator::get(MailService::class)->pwgMailAdmins(
                 [
-                'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
+                'subject' => Lang::t('Piwigo %s is available, please update', $new_versions_string),
                 'content' => $content,
                 'content_format' => 'text/plain',
                 ],
@@ -244,10 +249,10 @@ class Updates
                 true // only webmasters
             );
 
-            switch_lang_back();
+            ServiceLocator::get(MailService::class)->switchLangBack();
 
             // save notify
-            conf_update_param(
+            ServiceLocator::get(ConfigService::class)->confUpdateParam(
                 'update_notify_last_notification',
                 [
                 'version' => $new_versions_string,
@@ -272,7 +277,7 @@ class Updates
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
                 $version = is_scalar($pem_ver0_name) ? (string) $pem_ver0_name : $version;
             }
-            $branch = get_branch_from_version($version);
+            $branch = AppInfo::branchFromVersion($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
@@ -388,7 +393,7 @@ class Updates
                         continue;
                     }
 
-                    if (!safe_version_compare($fs_ext_item['version'], is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '', '>=')) {
+                    if (!ServiceLocator::get(StringUtil::class)->safeVersionCompare($fs_ext_item['version'], is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '', '>=')) {
                         if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;
                         } else {
@@ -400,7 +405,7 @@ class Updates
             $updatesIgnoredArr[$type] = $ignore_list;
             Config::override('updates_ignored', $updatesIgnoredArr);
         }
-        conf_update_param('updates_ignored', serialize(Config::raw('updates_ignored')));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
         return [];
     }
 
@@ -417,7 +422,7 @@ class Updates
                         ? (string) $typeUpdates[$ext_id]
                         : '';
                     if (isset($typeUpdates[$ext_id])
-                      and safe_version_compare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
+                      and ServiceLocator::get(StringUtil::class)->safeVersionCompare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
                         // Extension have been upgraded
                         $this->checkExtensions();
                         break;
@@ -488,13 +493,13 @@ class Updates
         $template = TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, AppInfo::VERSION, '>')) {
-            redirect(ServiceLocator::get(UrlGenerator::class)->admin('updates'));
+            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('updates'));
         }
 
         $obsolete_list = null;
 
         if ($step == 2) {
-            $code = get_branch_from_version(AppInfo::VERSION).'.x_to_'.$upgrade_to;
+            $code = AppInfo::branchFromVersion(AppInfo::VERSION).'.x_to_'.$upgrade_to;
             $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
             // no longer try to delete files on a minor upgrade
@@ -511,7 +516,7 @@ class Updates
         if (empty($pageErrors)) {
             $path = PHPWG_ROOT_PATH.Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
-            mkgetdir($path);
+            Util::get()->mkgetdir($path);
 
             $chunk_num = 0;
             $end = false;
@@ -585,8 +590,8 @@ class Updates
 
                         ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
                         ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
-                        conf_update_param('piwigo_installed_version', $upgrade_to);
-                        pwg_activity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
+                        ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', $upgrade_to);
+                        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
 
                         if ($step == 2) {
                             // only delete compiled templates on minor update. Doing this on
@@ -594,29 +599,29 @@ class Updates
                             // changes. Anyway, a compiled template purge will be performed
                             // by upgrade.php
                             $template->deleteCompiledTemplates();
-                            conf_delete_param('fs_quick_check_last_check');
+                            ServiceLocator::get(ConfigService::class)->confDeleteParam('fs_quick_check_last_check');
 
-                            PageState::current()->addInfo(l10n('Update Complete'));
+                            PageState::current()->addInfo(Lang::t('Update Complete'));
                             PageState::current()->addInfo($upgrade_to);
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
-                            redirect(PHPWG_ROOT_PATH.'index.php?/upgrade&now=');
+                            Util::get()->redirect(PHPWG_ROOT_PATH.'index.php?/upgrade&now=');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);
 
-                        PageState::current()->addError(l10n(
+                        PageState::current()->addError(Lang::t(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                             UrlService::getRootUrl().Config::dataLocation().'update/log_error.txt'
                         ));
                     }
                 } else {
                     ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
-                    PageState::current()->addError(l10n('An error has occured during upgrade.'));
+                    PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
                 }
             } else {
-                PageState::current()->addError(l10n('Piwigo cannot retrieve upgrade file from server'));
+                PageState::current()->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
             }
         }
     }

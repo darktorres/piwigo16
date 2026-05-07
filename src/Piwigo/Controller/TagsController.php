@@ -6,12 +6,16 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -34,7 +38,7 @@ final class TagsController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $title = l10n('Tags');
+        $title = Lang::t('Tags');
         $page['body_id'] = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
@@ -56,10 +60,10 @@ final class TagsController implements ControllerInterface
         $displayMode = (string) $page['display_mode'];
         $tpl->assign('display_mode', $displayMode);
 
-        $tags = get_available_tags();
+        $tags = ServiceLocator::get(TagService::class)->getAvailableTags();
 
         if ($displayMode === 'letters') {
-            usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
             $current_letter   = null;
             $nb_tags          = count($tags);
@@ -70,7 +74,7 @@ final class TagsController implements ControllerInterface
             foreach ($tags as $tag) {
                 $tagArr      = is_array($tag) ? $tag : [];
                 $tagName     = is_string($tagArr['name'] ?? null) ? $tagArr['name'] : '';
-                $tag_letter  = mb_strtoupper(mb_substr(pwg_transliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
+                $tag_letter  = mb_strtoupper(mb_substr(ServiceLocator::get(StringUtil::class)->pwgTransliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
 
                 if ($current_tag_idx === 0) {
                     $current_letter  = $tag_letter;
@@ -99,10 +103,10 @@ final class TagsController implements ControllerInterface
                 $tpl->append('letters', $letter);
             }
         } else {
-            usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(TagService::class)->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
             $tags = array_slice($tags, 0, Config::fullTagCloudItemsNumber());
-            $tags = add_level_to_tags($tags);
-            usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            $tags = ServiceLocator::get(TagService::class)->addLevelToTags($tags);
+            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
@@ -119,7 +123,7 @@ final class TagsController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_tags');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->pparse('tags');
         PageTailRenderer::render();
 

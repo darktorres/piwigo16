@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+
 class Dml
 {
     public const SKIP_EMPTY             = 1;
@@ -86,7 +89,7 @@ class Dml
                 $columns[] = $col;
             }
 
-            $tmp = $tablename . '_' . micro_seconds();
+            $tmp = $tablename . '_' . ServiceLocator::get(StringUtil::class)->microSeconds();
             $conn->executeStatement(
                 'CREATE TABLE ' . $tmp . ' (' .
                 implode(",\n  ", $columns) . ',' .

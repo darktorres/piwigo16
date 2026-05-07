@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -81,7 +87,7 @@ final readonly class CommentService
         if (!PermissionService::get()->isClassicUser()) {
             if (empty($comm['author'])) {
                 if (Config::commentsAuthorMandatory()) {
-                    $infos[]       = l10n('Username is mandatory');
+                    $infos[]       = Lang::t('Username is mandatory');
                     $commentAction = 'reject';
                 }
                 $comm['author'] = 'guest';
@@ -92,7 +98,7 @@ final readonly class CommentService
                 $authorStr     = is_scalar($comm['author']) ? (string) $comm['author'] : '';
                 $count = $this->repo->countByUsername($usernameField, $authorStr);
                 if ($count > 0) {
-                    $infos[]       = l10n('This login is already used by another user');
+                    $infos[]       = Lang::t('This login is already used by another user');
                     $commentAction = 'reject';
                 }
             }
@@ -106,7 +112,7 @@ final readonly class CommentService
             $commentAction = 'reject';
         }
 
-        if (!verify_ephemeral_key($key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
+        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
             $commentAction = 'reject';
             if (!is_array($_POST['cr'] ?? null)) {
                 $_POST['cr'] = [];
@@ -126,8 +132,8 @@ final readonly class CommentService
                 if (!preg_match('/^https?/i', $comm['website_url'])) {
                     $comm['website_url'] = 'http://' . $comm['website_url'];
                 }
-                if (!url_check_format($comm['website_url'])) {
-                    $infos[]       = l10n('Your website URL is invalid');
+                if (!ServiceLocator::get(StringUtil::class)->urlCheckFormat($comm['website_url'])) {
+                    $infos[]       = Lang::t('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
             }
@@ -138,11 +144,11 @@ final readonly class CommentService
             if ($currentUserEmail !== '') {
                 $comm['email'] = $currentUserEmail;
             } elseif (Config::commentsEmailMandatory()) {
-                $infos[]       = l10n('Email address is missing. Please specify an email address.');
+                $infos[]       = Lang::t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
-        } elseif (!email_check_format(is_scalar($comm['email']) ? (string) $comm['email'] : '')) {
-            $infos[]       = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+        } elseif (!ServiceLocator::get(StringUtil::class)->emailCheckFormat(is_scalar($comm['email']) ? (string) $comm['email'] : '')) {
+            $infos[]       = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             $commentAction = 'reject';
         }
 
@@ -159,7 +165,7 @@ final readonly class CommentService
                 PermissionService::get()->isClassicUser() ? '' : $anonymousId
             );
             if ($counter > 0) {
-                $infos[]       = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
+                $infos[]       = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
                 $commentAction = 'reject';
                 if (!is_array($_POST['cr'] ?? null)) {
                     $_POST['cr'] = [];
@@ -190,19 +196,19 @@ final readonly class CommentService
                 $commentUrl = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => (string) $comm['id']]);
 
                 $keyargsContent = [
-                    get_l10n_args('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
-                    get_l10n_args('Email: %s', stripslashes(is_scalar($comm['email']) ? (string) $comm['email'] : '')),
-                    get_l10n_args('Comment: %s', stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
-                    get_l10n_args(''),
-                    get_l10n_args('Manage this user comment: %s', $commentUrl),
+                    LangService::get()->getL10nArgs('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
+                    LangService::get()->getL10nArgs('Email: %s', stripslashes(is_scalar($comm['email']) ? (string) $comm['email'] : '')),
+                    LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
+                    LangService::get()->getL10nArgs(''),
+                    LangService::get()->getL10nArgs('Manage this user comment: %s', $commentUrl),
                 ];
 
                 if ('moderate' == $commentAction) {
-                    $keyargsContent[] = get_l10n_args('(!) This comment requires validation');
+                    $keyargsContent[] = LangService::get()->getL10nArgs('(!) This comment requires validation');
                 }
 
-                pwg_mail_notification_admins(
-                    get_l10n_args('Comment by %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
+                ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
+                    LangService::get()->getL10nArgs('Comment by %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
                     $keyargsContent
                 );
             }
@@ -248,7 +254,7 @@ final readonly class CommentService
     {
         $commentAction = 'validate';
 
-        if (!verify_ephemeral_key($postKey, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
+        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($postKey, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
             $commentAction = 'reject';
         } elseif (!Config::commentsValidation() or PermissionService::get()->isAdmin()) {
             $commentAction = 'validate';
@@ -269,8 +275,8 @@ final readonly class CommentService
             if (!preg_match('/^https?/i', $comment['website_url'])) {
                 $comment['website_url'] = 'http://' . $comment['website_url'];
             }
-            if (!url_check_format($comment['website_url'])) {
-                PageState::current()->addError(l10n('Your website URL is invalid'));
+            if (!ServiceLocator::get(StringUtil::class)->urlCheckFormat($comment['website_url'])) {
+                PageState::current()->addError(Lang::t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }
         }
@@ -291,15 +297,15 @@ final readonly class CommentService
 
                 $commentUrl     = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0']);
                 $keyargsContent = [
-                    get_l10n_args('Author: %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
-                    get_l10n_args('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
-                    get_l10n_args(''),
-                    get_l10n_args('Manage this user comment: %s', $commentUrl),
-                    get_l10n_args('(!) This comment requires validation'),
+                    LangService::get()->getL10nArgs('Author: %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
+                    LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
+                    LangService::get()->getL10nArgs(''),
+                    LangService::get()->getL10nArgs('Manage this user comment: %s', $commentUrl),
+                    LangService::get()->getL10nArgs('(!) This comment requires validation'),
                 ];
 
-                pwg_mail_notification_admins(
-                    get_l10n_args('Comment by %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
+                ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
+                    LangService::get()->getL10nArgs('Comment by %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
                     $keyargsContent
                 );
             } elseif ($result) {
@@ -327,17 +333,17 @@ final readonly class CommentService
         }
 
 
-        $keyargsContent = [get_l10n_args('Author: %s', $comment['author'])];
+        $keyargsContent = [LangService::get()->getL10nArgs('Author: %s', $comment['author'])];
 
         if ($action == 'delete') {
-            $keyargsContent[] = get_l10n_args('This author removed the comment with id %d', $comment['comment_id']);
+            $keyargsContent[] = LangService::get()->getL10nArgs('This author removed the comment with id %d', $comment['comment_id']);
         } else {
-            $keyargsContent[] = get_l10n_args('This author modified following comment:');
-            $keyargsContent[] = get_l10n_args('Comment: %s', $comment['content']);
+            $keyargsContent[] = LangService::get()->getL10nArgs('This author modified following comment:');
+            $keyargsContent[] = LangService::get()->getL10nArgs('Comment: %s', $comment['content']);
         }
 
-        pwg_mail_notification_admins(
-            get_l10n_args('Comment by %s', $comment['author']),
+        ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
+            LangService::get()->getL10nArgs('Comment by %s', $comment['author']),
             $keyargsContent
         );
     }
@@ -348,7 +354,7 @@ final readonly class CommentService
 
         if ($authorId === null) {
             if ($dieOnError) {
-                fatal_error('Unknown comment identifier');
+                HtmlService::fatalError('Unknown comment identifier');
             } else {
                 return false;
             }

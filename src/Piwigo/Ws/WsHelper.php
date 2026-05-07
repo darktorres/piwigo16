@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
@@ -36,7 +38,7 @@ final class WsHelper
     public function imageSqlFilter(array $params, string $tbl_name = ''): array
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
-            if (isset($params[$datefield]) && !is_valid_mysql_datetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
+            if (isset($params[$datefield]) && !ServiceLocator::get(StringUtil::class)->isValidMysqlDatetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
                 PwgServerRegistry::current()->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield));
                 exit;
             }

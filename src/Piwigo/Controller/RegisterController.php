@@ -6,8 +6,13 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -32,7 +37,7 @@ final class RegisterController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!Config::allowUserRegistration()) {
-            page_forbidden('User registration closed');
+            ServiceLocator::get(HtmlService::class)->pageForbidden('User registration closed');
         }
 
         EventDispatcher::notify('loc_begin_register');
@@ -51,17 +56,17 @@ final class RegisterController implements ControllerInterface
             /** @var string[] $pgErrors */
             $pgErrors = [];
 
-            if (!verify_ephemeral_key($post_key)) {
-                set_status_header(403);
-                $pgErrors['register_page_error'] = l10n('Invalid/expired form key');
+            if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($post_key)) {
+                ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
+                $pgErrors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
             if (empty($_POST['password'])) {
-                $pgErrors['register_form_error'] = l10n('Password is missing. Please enter the password.');
+                $pgErrors['register_form_error'] = Lang::t('Password is missing. Please enter the password.');
             } elseif (empty($_POST['password_conf'])) {
-                $pgErrors['register_form_error'] = l10n('Password confirmation is missing. Please confirm the chosen password.');
+                $pgErrors['register_form_error'] = Lang::t('Password confirmation is missing. Please confirm the chosen password.');
             } elseif ($_POST['password'] != $_POST['password_conf']) {
-                $pgErrors['register_form_error'] = l10n('The passwords do not match');
+                $pgErrors['register_form_error'] = Lang::t('The passwords do not match');
             }
 
             $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
@@ -69,21 +74,21 @@ final class RegisterController implements ControllerInterface
             $page['errors'] = $pgErrors;
 
             if (count($pgErrors) == 0) {
-                if ($post_send_mail && email_check_format($post_mail ?? '')) {
+                if ($post_send_mail && ServiceLocator::get(StringUtil::class)->emailCheckFormat($post_mail ?? '')) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
                         $_SESSION['page_infos'] = [];
                     }
-                    $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                    $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
                 }
                 $user_id = UserService::get()->getUserid($post_login ?? '');
                 if ($user_id !== false) {
                     AuthService::get()->logUser((int) $user_id, false);
                 }
-                redirect(UrlService::get()->makeIndexUrl());
+                Util::get()->redirect(UrlService::get()->makeIndexUrl());
             }
-            $registration_post_key = get_ephemeral_key(2);
+            $registration_post_key = ServiceLocator::get(Util::class)->getEphemeralKey(2);
         } else {
-            $registration_post_key = get_ephemeral_key(6);
+            $registration_post_key = ServiceLocator::get(Util::class)->getEphemeralKey(6);
         }
 
         $login = !empty($post_login) ? htmlspecialchars(stripslashes($post_login)) : '';
@@ -110,15 +115,15 @@ final class RegisterController implements ControllerInterface
 
         $cookie_lang = input_string('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, get_languages())) {
-                fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            load_language('common.lang', '', ['language' => $cookie_lang]);
+            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
@@ -136,7 +141,7 @@ final class RegisterController implements ControllerInterface
 
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_register');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->parse('register');
         PageTailRenderer::render();
 

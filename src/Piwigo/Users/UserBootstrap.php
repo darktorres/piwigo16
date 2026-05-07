@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
@@ -43,7 +44,7 @@ final class UserBootstrap
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_scalar($_GET['act']) && (string) $_GET['act'] === 'logout') {
                 AuthService::get()->logoutUser();
-                redirect(UrlService::get()->getGalleryHomeUrl());
+                Util::get()->redirect(UrlService::get()->getGalleryHomeUrl());
             } elseif (!empty($_SESSION['pwg_uid'])) {
                 $user['id'] = $_SESSION['pwg_uid'];
             }
@@ -96,7 +97,7 @@ final class UserBootstrap
                     exit;
                 }
                 define('PWG_API_KEY_REQUEST', true);
-                $_POST['pwg_token'] = $_GET['pwg_token'] = get_pwg_token();
+                $_POST['pwg_token'] = $_GET['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
                 LoggerRegistry::current()->info(
                     '[api_key][pkid=' . explode(':', $authHeader)[0] . ']'
                     . '[method=' . (is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '') . ']'

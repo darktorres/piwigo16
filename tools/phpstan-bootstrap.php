@@ -46,6 +46,13 @@ $service = null;
 /** @var array<string,mixed> $persistent_cache */
 $persistent_cache = [];
 
+// Runtime constants from CommonBootstrap::run() — placeholder values for static analysis.
+if (!defined('PHPWG_DOMAIN')) {
+    define('PHPWG_DOMAIN', 'piwigo.org');
+    define('PHPWG_URL', 'https://piwigo.org');
+    define('PEM_URL', 'https://piwigo.org/ext');
+}
+
 // Admin URL constants — defined at runtime by PhotoController; declared here for static analysis.
 if (!defined('PHOTOS_ADD_BASE_URL')) {
     define('PHOTOS_ADD_BASE_URL', 'index.php?/admin&page=photos_add');

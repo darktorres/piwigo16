@@ -7,12 +7,16 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -49,7 +53,7 @@ final readonly class CategoryService
     {
         $forbidden = CurrentUser::get()->rawAttributes['forbidden_categories'] ?? '';
         if (in_array($categoryId, explode(',', is_scalar($forbidden) ? (string) $forbidden : ''))) {
-            access_denied();
+            ServiceLocator::get(HtmlService::class)->accessDenied();
         }
     }
 
@@ -110,7 +114,7 @@ WHERE ' . $where . '
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
             ]);
             if (Config::indexNewIcon()) {
-                $row['icon_ts'] = get_icon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
+                $row['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
             }
             $cats[] = $row;
             if ($selectedCategory !== null && $row['id'] == ($selectedCategory['id'] ?? null)) {
@@ -168,18 +172,18 @@ WHERE ' . $where . '
     {
         $page   = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $result = EventDispatcher::dispatch('get_category_preferred_image_orders', [
-            [l10n('Default'),                        '',                     true],
-            [l10n('Photo title, A &rarr; Z'),        'name ASC',             true],
-            [l10n('Photo title, Z &rarr; A'),        'name DESC',            true],
-            [l10n('Date created, new &rarr; old'),   'date_creation DESC',   true],
-            [l10n('Date created, old &rarr; new'),   'date_creation ASC',    true],
-            [l10n('Date posted, new &rarr; old'),    'date_available DESC',  true],
-            [l10n('Date posted, old &rarr; new'),    'date_available ASC',   true],
-            [l10n('Rating score, high &rarr; low'),  'rating_score DESC',    Config::rateEnabled()],
-            [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     Config::rateEnabled()],
-            [l10n('Visits, high &rarr; low'),        'hit DESC',             true],
-            [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
-            [l10n('Permissions'),                    'level DESC',           PermissionService::get()->isAdmin()],
+            [Lang::t('Default'),                        '',                     true],
+            [Lang::t('Photo title, A &rarr; Z'),        'name ASC',             true],
+            [Lang::t('Photo title, Z &rarr; A'),        'name DESC',            true],
+            [Lang::t('Date created, new &rarr; old'),   'date_creation DESC',   true],
+            [Lang::t('Date created, old &rarr; new'),   'date_creation ASC',    true],
+            [Lang::t('Date posted, new &rarr; old'),    'date_available DESC',  true],
+            [Lang::t('Date posted, old &rarr; new'),    'date_available ASC',   true],
+            [Lang::t('Rating score, high &rarr; low'),  'rating_score DESC',    Config::rateEnabled()],
+            [Lang::t('Rating score, low &rarr; high'),  'rating_score ASC',     Config::rateEnabled()],
+            [Lang::t('Visits, high &rarr; low'),        'hit DESC',             true],
+            [Lang::t('Visits, low &rarr; high'),        'hit ASC',              true],
+            [Lang::t('Permissions'),                    'level DESC',           PermissionService::get()->isAdmin()],
         ]);
         return $result;
     }
@@ -194,7 +198,7 @@ WHERE ' . $where . '
         $tplCats  = [];
         foreach ($categories as $category) {
             if ($fullname) {
-                $option = strip_tags(get_cat_display_name_cache(is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '', null));
+                $option = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '', null));
             } else {
                 $option  = str_repeat('&nbsp;', (3 * substr_count(is_scalar($category['global_rank']) ? (string) $category['global_rank'] : '', '.')));
                 $option .= '- ';
@@ -290,14 +294,14 @@ SELECT id, permalink, 0 AS is_old
                 $catNbImages     = 0;
             }
 
-            $displayText .= l10n_dec('%d photo', '%d photos', $catCountImages);
+            $displayText .= Translator::get()->plural('%d photo', '%d photos', $catCountImages);
 
             if ($catCountCategories == 0 or $catNbImages == $catCountImages) {
                 if (!$shortMessage) {
-                    $displayText .= ' ' . l10n('in this album');
+                    $displayText .= ' ' . Lang::t('in this album');
                 }
             } else {
-                $displayText .= ' ' . l10n_dec('in %d sub-album', 'in %d sub-albums', $catCountCategories);
+                $displayText .= ' ' . Translator::get()->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
             }
         }
 

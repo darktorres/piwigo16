@@ -6,11 +6,14 @@ namespace Piwigo\Notification;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Lang\Translator;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -218,7 +221,7 @@ final readonly class NotificationService
     public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, ?string $url = '', bool $addUrl = false): void
     {
         if ($count > 0) {
-            $line = l10n_dec($singularKey, $pluralKey, $count);
+            $line = Translator::get()->plural($singularKey, $pluralKey, $count);
             if ($addUrl and !empty($url)) {
                 $line = '<a href="' . $url . '">' . $line . '</a>';
             }
@@ -347,8 +350,8 @@ SELECT
 
         $description  = '<ul>';
         $description .= '<li>'
-          . l10n_dec('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0)
-          . ' (<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams) . '">' . l10n('Recent photos') . '</a>)'
+          . Translator::get()->plural('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0)
+          . ' (<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams) . '">' . Lang::t('Recent photos') . '</a>)'
           . '</li><br>';
 
         $elements = is_array($dateDetail['elements'] ?? null) ? $dateDetail['elements'] : [];
@@ -363,7 +366,7 @@ SELECT
         $description .= '...<br>';
 
         $description .= '<li>'
-          . l10n_dec('%d album updated', '%d albums updated', is_numeric($dateDetail['nb_cats'] ?? null) ? (int) $dateDetail['nb_cats'] : 0)
+          . Translator::get()->plural('%d album updated', '%d albums updated', is_numeric($dateDetail['nb_cats'] ?? null) ? (int) $dateDetail['nb_cats'] : 0)
           . '</li>';
 
         $description .= '<ul>';
@@ -371,8 +374,8 @@ SELECT
         foreach ($categories as $cat) {
             $cat = is_array($cat) ? $cat : [];
             $description .= '<li>'
-              . get_cat_display_name_cache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $authKey)
-              . ' (' . l10n_dec('%d new photo', '%d new photos', is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0) . ')'
+              . ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $authKey)
+              . ' (' . Translator::get()->plural('%d new photo', '%d new photos', is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0) . ')'
               . '</li>';
         }
         $description .= '</ul></ul>';
@@ -383,7 +386,7 @@ SELECT
     /** @param array<mixed> $dateDetail */
     public function getTitleRecentPostDate(array $dateDetail): string
     {
-        $title = l10n_dec('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0);
+        $title = Translator::get()->plural('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0);
 
         if (preg_match('/^\d+-(\d+)-(\d+) /', is_scalar($dateDetail['date_available'] ?? null) ? (string) $dateDetail['date_available'] : '', $matches)) {
             $lang      = is_array($GLOBALS['lang'] ?? null) ? $GLOBALS['lang'] : [];

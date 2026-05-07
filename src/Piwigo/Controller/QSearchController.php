@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -23,7 +24,7 @@ final class QSearchController implements ControllerInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
         $q = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : '';
-        redirect(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['q' => $q]));
+        Util::get()->redirect(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['q' => $q]));
         return ResponseFactory::create(302);
     }
 }

@@ -11,9 +11,13 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
@@ -47,10 +51,10 @@ final class ConfigurationController
         $page = &$GLOBALS['page'];
 
         if (!PermissionService::get()->isWebmaster()) {
-            PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        check_input_parameter('section', $_GET, false, '/^[a-z]+$/i');
+        ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
 
         $page['section'] = isset($_GET['section']) && is_scalar($_GET['section']) ? (string) $_GET['section'] : 'main';
         $section = (string) $page['section'];
@@ -91,37 +95,37 @@ final class ConfigurationController
 
         $sort_fields = [
             ''                    => '',
-            'file ASC'            => l10n('File name, A &rarr; Z'),
-            'file DESC'           => l10n('File name, Z &rarr; A'),
-            'name ASC'            => l10n('Photo title, A &rarr; Z'),
-            'name DESC'           => l10n('Photo title, Z &rarr; A'),
-            'date_creation DESC'  => l10n('Date created, new &rarr; old'),
-            'date_creation ASC'   => l10n('Date created, old &rarr; new'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old'),
-            'date_available ASC'  => l10n('Date posted, old &rarr; new'),
-            'rating_score DESC'   => l10n('Rating score, high &rarr; low'),
-            'rating_score ASC'    => l10n('Rating score, low &rarr; high'),
-            'hit DESC'            => l10n('Visits, high &rarr; low'),
-            'hit ASC'             => l10n('Visits, low &rarr; high'),
-            'id ASC'              => l10n('Numeric identifier, 1 &rarr; 9'),
-            'id DESC'             => l10n('Numeric identifier, 9 &rarr; 1'),
-            '`rank` ASC'          => l10n('Manual sort order'),
+            'file ASC'            => Lang::t('File name, A &rarr; Z'),
+            'file DESC'           => Lang::t('File name, Z &rarr; A'),
+            'name ASC'            => Lang::t('Photo title, A &rarr; Z'),
+            'name DESC'           => Lang::t('Photo title, Z &rarr; A'),
+            'date_creation DESC'  => Lang::t('Date created, new &rarr; old'),
+            'date_creation ASC'   => Lang::t('Date created, old &rarr; new'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old'),
+            'date_available ASC'  => Lang::t('Date posted, old &rarr; new'),
+            'rating_score DESC'   => Lang::t('Rating score, high &rarr; low'),
+            'rating_score ASC'    => Lang::t('Rating score, low &rarr; high'),
+            'hit DESC'            => Lang::t('Visits, high &rarr; low'),
+            'hit ASC'             => Lang::t('Visits, low &rarr; high'),
+            'id ASC'              => Lang::t('Numeric identifier, 1 &rarr; 9'),
+            'id DESC'             => Lang::t('Numeric identifier, 9 &rarr; 1'),
+            '`rank` ASC'          => Lang::t('Manual sort order'),
         ];
 
-        $comments_order = ['ASC' => l10n('Show oldest comments first'), 'DESC' => l10n('Show latest comments first')];
+        $comments_order = ['ASC' => Lang::t('Show oldest comments first'), 'DESC' => Lang::t('Show latest comments first')];
         $mail_themes    = ['light' => 'Light', 'dark' => 'Dark'];
 
         // ── POST submission ───────────────────────────────────────────────────
 
         if (isset($_POST['submit'])) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
             $int_pattern = '/^\d+$/';
 
             switch ($section) {
                 case 'main':
                     if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
                         if (!empty($_POST['order_by'])) {
-                            check_input_parameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                            ServiceLocator::get(Util::class)->checkInputParameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
                             $used = [];
                             foreach ($post_order_by as $i => $val) {
@@ -134,7 +138,7 @@ final class ConfigurationController
                             }
                             $_POST['order_by'] = $post_order_by;
                             if (!count($post_order_by)) {
-                                PageState::current()->addError(l10n('No order field selected'));
+                                PageState::current()->addError(Lang::t('No order field selected'));
                             } else {
                                 $order_by = $order_by_inside_category = array_slice($post_order_by, 0, (int) ceil(count($sort_fields) / 2));
                                 if (($idx = array_search('`rank` ASC', $order_by)) !== false) {
@@ -147,7 +151,7 @@ final class ConfigurationController
                                 $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
                             }
                         } else {
-                            PageState::current()->addError(l10n('No order field selected'));
+                            PageState::current()->addError(Lang::t('No order field selected'));
                         }
                     }
 
@@ -176,7 +180,7 @@ final class ConfigurationController
                     if (!preg_match($int_pattern, is_scalar($_POST['nb_comment_page']) ? (string) $_POST['nb_comment_page'] : '')
                         || (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] < 5)
                         || (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] > 50)) {
-                        PageState::current()->addError(l10n('The number of comments a page must be between 5 and 50 included.'));
+                        PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -186,7 +190,7 @@ final class ConfigurationController
                 case 'display':
                     if (!preg_match($int_pattern, is_scalar($_POST['nb_categories_page']) ? (string) $_POST['nb_categories_page'] : '')
                         || (is_numeric($_POST['nb_categories_page']) && $_POST['nb_categories_page'] < 4)) {
-                        PageState::current()->addError(l10n('The number of albums a page must be above 4.'));
+                        PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
@@ -225,14 +229,14 @@ final class ConfigurationController
                         if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
                             $value = strip_tags($value);
                         }
-                        conf_update_param($row_param, $value);
+                        ServiceLocator::get(ConfigService::class)->confUpdateParam($row_param, $value);
                     }
                 }
-                $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-                pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
+                $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
+                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
             }
 
-            load_conf_from_db();
+            ServiceLocator::get(ConfigService::class)->loadConfFromDb();
         }
 
         // ── Restore default derivatives ───────────────────────────────────────
@@ -240,9 +244,9 @@ final class ConfigurationController
         if ($section === 'sizes' && isset($_GET['action']) && 'restore_settings' == $_GET['action']) {
             ImageStdParams::restoreDefault();
             ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
-            load_conf_from_db();
-            $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
+            ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+            $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
+            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
         }
 
         // ── Template init ─────────────────────────────────────────────────────
@@ -258,7 +262,7 @@ final class ConfigurationController
 
         $tpl->assign([
             'U_HELP'    => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('configuration'),
-            'PWG_TOKEN' => get_pwg_token(),
+            'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(),
             'F_ACTION'  => $action,
         ]);
 
@@ -267,7 +271,7 @@ final class ConfigurationController
         switch ($section) {
             case 'main':
                 if ($this->orderByIsLocal()) {
-                    PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>' . '$' . 'conf[\'order_by_custom\']</i> !'));
+                    PageState::current()->addWarning(Lang::t('You have specified <i>' . '$' . 'conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>' . '$' . 'conf[\'order_by_custom\']</i> !'));
                 }
 
                 if (Config::has('order_by_custom') || Config::has('order_by_inside_category_custom')) {
@@ -333,7 +337,7 @@ final class ConfigurationController
                 $errors = [];
                 if (ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors)) {
                     $edit_user = UserService::get()->buildUser(Config::guestId(), false);
-                    PageState::current()->addInfo(l10n('Information data registered in database'));
+                    PageState::current()->addInfo(Lang::t('Information data registered in database'));
                 }
                 $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
                 $page['errors'] = array_merge($pageErrors2, $errors);
@@ -400,17 +404,17 @@ final class ConfigurationController
                     $now = time();
                     foreach (ImageStdParams::$custom as $custom => $time) {
                         $time_int         = is_numeric($time) ? (int) $time : 0;
-                        $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? l10n('today') : time_since($time_int, 'day');
+                        $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? Lang::t('today') : ServiceLocator::get(DateService::class)->timeSince($time_int, 'day');
                     }
                     $tpl->assign('custom_derivatives', $tpl_vars);
                 }
 
                 $tpl->assign('page_data_json', json_encode([
-                    'str_restore_confirm' => l10n('Are you sure you want to restore to default settings?'),
-                    'str_max_width'       => l10n('Maximum width'),
-                    'str_width'           => l10n('Width'),
-                    'str_max_height'      => l10n('Maximum height'),
-                    'str_height'          => l10n('Height'),
+                    'str_restore_confirm' => Lang::t('Are you sure you want to restore to default settings?'),
+                    'str_max_width'       => Lang::t('Maximum width'),
+                    'str_width'           => Lang::t('Width'),
+                    'str_max_height'      => Lang::t('Maximum height'),
+                    'str_height'          => Lang::t('Height'),
                 ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
                 break;
 
@@ -479,7 +483,7 @@ final class ConfigurationController
         }
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'config');
     }
 

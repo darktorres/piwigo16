@@ -6,7 +6,9 @@ namespace Piwigo\Picture;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\SrcImage;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Template\TemplateRegistry;
 
 final class PictureMetadataRenderer
@@ -24,10 +26,10 @@ final class PictureMetadataRenderer
                 $exif_mapping[$field] = $field;
             }
 
-            $exif = get_exif_data($srcImage->getPath(), $exif_mapping);
+            $exif = ServiceLocator::get(MetadataService::class)->getExifData($srcImage->getPath(), $exif_mapping);
 
             if (count($exif) > 0) {
-                $tpl_meta = ['TITLE' => l10n('EXIF Metadata'), 'lines' => []];
+                $tpl_meta = ['TITLE' => Lang::t('EXIF Metadata'), 'lines' => []];
 
                 foreach (Config::showExifFields() as $field) {
                     if (!str_contains((string) $field, ';')) {
@@ -54,10 +56,10 @@ final class PictureMetadataRenderer
         }
 
         if (Config::showIptc() and $srcImage !== null) {
-            $iptc = get_iptc_data($srcImage->getPath(), Config::showIptcMapping(), ', ');
+            $iptc = ServiceLocator::get(MetadataService::class)->getIptcData($srcImage->getPath(), Config::showIptcMapping(), ', ');
 
             if (count($iptc) > 0) {
-                $tpl_meta = ['TITLE' => l10n('IPTC Metadata'), 'lines' => []];
+                $tpl_meta = ['TITLE' => Lang::t('IPTC Metadata'), 'lines' => []];
 
                 foreach ($iptc as $field => $value) {
                     $key = $field;

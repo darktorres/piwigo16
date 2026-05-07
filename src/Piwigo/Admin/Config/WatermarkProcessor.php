@@ -6,8 +6,11 @@ namespace Piwigo\Admin\Config;
 
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
@@ -32,17 +35,17 @@ final class WatermarkProcessor
             $tmp_name = is_scalar($watermarkImage['tmp_name']) ? (string) $watermarkImage['tmp_name'] : '';
             [$width, $height, $type] = getimagesize($tmp_name) ?: [0, 0, 0];
             if (IMAGETYPE_PNG != $type) {
-                $errors['watermarkImage'] = sprintf(l10n('Allowed file types: %s.'), 'PNG');
+                $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
-                if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (Util::get()->mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     $wm_file_name = is_scalar($watermarkImage['name']) ? (string) $watermarkImage['name'] : '';
-                    $new_name = str2url(get_filename_wo_extension($wm_file_name));
+                    $new_name = ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
                     if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = get_filename_wo_extension(
+                            $watermark_files[] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(
                                 substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
                             );
                         }
@@ -59,10 +62,10 @@ final class WatermarkProcessor
                         fclose($wmStream);
                         $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
                     } else {
-                        PageState::current()->addError($errors['watermarkImage'] = "$file_path " . l10n('no write access'));
+                        PageState::current()->addError($errors['watermarkImage'] = "$file_path " . Lang::t('no write access'));
                     }
                 } else {
-                    PageState::current()->addError($errors['watermarkImage'] = sprintf(l10n('Add write access to the "%s" directory'), $upload_dir));
+                    PageState::current()->addError($errors['watermarkImage'] = sprintf(Lang::t('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }
@@ -160,8 +163,8 @@ final class WatermarkProcessor
                 ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
             }
 
-            $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
+            $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
+            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
         } else {
             $tpl->assign('watermark', $pwatermark);
             $tpl->assign('ferrors', $errors);

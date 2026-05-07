@@ -8,8 +8,11 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
@@ -70,7 +73,7 @@ final readonly class AdminService
             $path = $start . '/' . $file;
             if (is_dir($path)) {
                 $extents = array_merge($extents, $this->getExtents($path));
-            } elseif (!is_link($path) && file_exists($path) && get_extension($path) === 'tpl') {
+            } elseif (!is_link($path) && file_exists($path) && ServiceLocator::get(StringUtil::class)->getExtension($path) === 'tpl') {
                 $extents[] = substr($path, 21);
             }
         }
@@ -116,7 +119,7 @@ final readonly class AdminService
             }
             if (!empty($trashPath)) {
                 if (!is_dir($trashPath)) {
-                    mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
+                    Util::get()->mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
                 }
                 while ($r = $trashPath . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                     if (!is_dir($r)) {
@@ -417,11 +420,11 @@ final readonly class AdminService
                         'id'        => $topic['topic_id'] ?? null,
                         'subject'   => $topic['subject'] ?? null,
                         'posted_on' => $postedOn,
-                        'posted'    => format_date($postedOn),
+                        'posted'    => ServiceLocator::get(DateService::class)->formatDate($postedOn),
                         'url'       => $topic['url'] ?? null,
                     ];
                 }
-                if (mkgetdir(dirname($cachePath))) {
+                if (Util::get()->mkgetdir(dirname($cachePath))) {
                     file_put_contents($cachePath, serialize($news));
                 }
             } else {

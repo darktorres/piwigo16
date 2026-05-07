@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -36,7 +42,7 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
             if (isset($page['category']) && is_array($page['category'])) {
                 $subIds = array_diff(
-                    get_subcat_ids([is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0]),
+                    ServiceLocator::get(CategoryService::class)->getSubcatIds([is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0]),
                     explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
                 );
 
@@ -71,11 +77,11 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
 WHERE id IN (' . implode(',', $items) . ')';
         }
 
-        pwg_debug('start initialize_calendar');
+        ServiceLocator::get(Util::class)->pwgDebug('start initialize_calendar');
 
         $fields = [
-            'created' => ['label' => l10n('Creation date')],
-            'posted'  => ['label' => l10n('Post date')],
+            'created' => ['label' => Lang::t('Creation date')],
+            'posted'  => ['label' => Lang::t('Post date')],
         ];
 
         $styles = [
@@ -86,7 +92,7 @@ WHERE id IN (' . implode(',', $items) . ')';
         $views = [CAL_VIEW_LIST, CAL_VIEW_CALENDAR];
 
         $chronologyField = is_scalar($page['chronology_field'] ?? null) ? (string) $page['chronology_field'] : '';
-        isset($fields[$chronologyField]) or fatal_error('bad chronology field');
+        isset($fields[$chronologyField]) or HtmlService::fatalError('bad chronology field');
 
         $chronologyStyle = is_scalar($page['chronology_style'] ?? null) ? (string) $page['chronology_style'] : '';
         if (!isset($styles[$chronologyStyle])) {
@@ -142,7 +148,7 @@ WHERE id IN (' . implode(',', $items) . ')';
         $calendar->initialize($innerSql);
 
         $mustShowList = true;
-        if (script_basename() != 'picture') {
+        if (StringUtil::scriptBasename() != 'picture') {
             if ($calendar->generateCategoryContent()) {
                 $page['items']  = [];
                 $mustShowList   = false;
@@ -176,7 +182,7 @@ WHERE id IN (' . implode(',', $items) . ')';
 
                         $template->append('chronology_views', [
                             'VALUE'    => $url,
-                            'CONTENT'  => l10n('chronology_' . $style . '_' . $view),
+                            'CONTENT'  => Lang::t('chronology_' . $style . '_' . $view),
                             'SELECTED' => $selected,
                         ]);
                     }
@@ -224,6 +230,6 @@ WHERE id IN (' . implode(',', $items) . ')';
                 }
             }
         }
-        pwg_debug('end initialize_calendar');
+        ServiceLocator::get(Util::class)->pwgDebug('end initialize_calendar');
     }
 }

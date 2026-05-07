@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Method;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
@@ -59,14 +60,14 @@ final class GroupsEndpoints
         $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
         Dml::singleInsert(Tables::groups(), ['name' => $params['name'], 'is_default' => BoolUtil::toString($isDefaultVal)]);
         $insertedId = (int) DbConnection::get()->lastInsertId();
-        pwg_activity('group', $insertedId, 'add');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $insertedId, 'add');
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
 
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $groupIdInt = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
@@ -78,7 +79,7 @@ final class GroupsEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $setinfoName = is_scalar($params['name']) ? (string) $params['name'] : '';
@@ -103,14 +104,14 @@ final class GroupsEndpoints
             $updates['is_default'] = BoolUtil::toString(is_bool($isDefaultUpd) ? $isDefaultUpd : (is_string($isDefaultUpd) ? $isDefaultUpd : ''));
         }
         Dml::singleUpdate(Tables::groups(), $updates, ['id' => $setinfoGroupId]);
-        pwg_activity('group', $setinfoGroupId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $setinfoGroupId, 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $setinfoGroupId]);
     }
 
     /** @param array<mixed> $params */
     public function addUser(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $adduserGroupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -124,8 +125,8 @@ final class GroupsEndpoints
         }
         Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        pwg_activity('group', $adduserGroupId, 'edit');
-        pwg_activity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $adduserGroupId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $adduserGroupId]);
     }
 
@@ -135,7 +136,7 @@ final class GroupsEndpoints
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $destGroupId   = is_numeric($params['destination_group_id']) ? (int) $params['destination_group_id'] : 0;
@@ -156,10 +157,10 @@ final class GroupsEndpoints
         }
         Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        pwg_activity('group', $destGroupId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $destGroupId, 'edit');
         foreach ($userToAdd as $userId) {
             $userIdInt = is_numeric($userId) ? (int) $userId : (string) $userId;
-            pwg_activity('user', $userIdInt, 'edit', ['associated' => $destGroupId]);
+            ServiceLocator::get(Util::class)->pwgActivity('user', $userIdInt, 'edit', ['associated' => $destGroupId]);
         }
         ServiceLocator::get(UserAdminService::class)->deleteGroups($mergeGroup);
         return ['destination_group' => $service->invoke('pwg.groups.getList', ['group_id' => $destGroupId]), 'deleted_group' => $mergeGroupObj];
@@ -168,7 +169,7 @@ final class GroupsEndpoints
     /** @param array<mixed> $params */
     public function duplicate(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $dupGroupId  = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -183,7 +184,7 @@ final class GroupsEndpoints
         $isDefault = $groupRepo->findIsDefault($dupGroupId);
         Dml::singleInsert(Tables::groups(), ['name' => $copyNameStr, 'is_default' => BoolUtil::toString(is_string($isDefault) ? $isDefault : '')]);
         $insertedId = (int) DbConnection::get()->lastInsertId();
-        pwg_activity('group', $insertedId, 'add');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $insertedId, 'add');
         $users   = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM `' . Tables::userGroup() . '` WHERE group_id = ' . $dupGroupId . ';')->fetchAllAssociative(), 'user_id');
         $inserts = [];
         foreach ($users as $user) {
@@ -193,7 +194,7 @@ final class GroupsEndpoints
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         foreach ($users as $userId) {
             $uid = is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0);
-            pwg_activity('user', $uid, 'edit', ['associated' => $dupGroupId]);
+            ServiceLocator::get(Util::class)->pwgActivity('user', $uid, 'edit', ['associated' => $dupGroupId]);
         }
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
@@ -201,7 +202,7 @@ final class GroupsEndpoints
     /** @param array<mixed> $params */
     public function deleteUser(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $deluserGroupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -212,8 +213,8 @@ final class GroupsEndpoints
         }
         $groupRepo->deleteUserGroupMembers($deluserGroupId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds));
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        pwg_activity('group', $deluserGroupId, 'edit');
-        pwg_activity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds), 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $deluserGroupId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds), 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $deluserGroupId]);
     }
 }

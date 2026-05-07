@@ -6,7 +6,9 @@ namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
@@ -112,7 +114,7 @@ class PwgServer
     public function run(): void
     {
         if (is_null($this->_responseEncoder)) {
-            set_status_header(400);
+            ServiceLocator::get(HtmlService::class)->setStatusHeader(400);
             if (!headers_sent()) {
                 header('Content-Type: text/plain');
             }
@@ -169,7 +171,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         $contentType = $this->_responseEncoder->getContentType();
 
         if (!headers_sent()) {
-            header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());
+            header('Content-Type: '.$contentType.'; charset='.ServiceLocator::get(StringUtil::class)->getPwgCharset());
         }
         print_r($encodedResponse);
         EventDispatcher::notify('sendResponse', $encodedResponse);

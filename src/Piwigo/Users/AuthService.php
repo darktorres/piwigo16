@@ -8,12 +8,18 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 
@@ -34,12 +40,12 @@ final readonly class AuthService
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null
     {
         if (empty($mailAddress) and
-            !(Config::obligatoryUserMailAddress() and in_array(script_basename(), ['register', 'profile']))) {
+            !(Config::obligatoryUserMailAddress() and in_array(StringUtil::scriptBasename(), ['register', 'profile']))) {
             return '';
         }
 
-        if (!email_check_format($mailAddress ?? '')) {
-            return l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+        if (!ServiceLocator::get(StringUtil::class)->emailCheckFormat($mailAddress ?? '')) {
+            return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
         if (InstallSentinel::isInstalled() and !empty($mailAddress)) {
@@ -52,7 +58,7 @@ final readonly class AuthService
                 is_numeric($userId) ? (int) $userId : null
             );
             if ($count != 0) {
-                return l10n('this email address is already in use');
+                return Lang::t('this email address is already in use');
             }
         }
         return null;
@@ -67,7 +73,7 @@ final readonly class AuthService
                 is_scalar($login) ? (string) $login : ''
             );
             if ($count > 0) {
-                return l10n('this login is already used');
+                return Lang::t('this login is already used');
             }
         }
         return null;
@@ -113,8 +119,8 @@ final readonly class AuthService
     {
         $cookieLang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
         if ($cookieLang !== '' and CurrentUser::get()->language != $cookieLang) {
-            if (!array_key_exists($cookieLang, get_languages())) {
-                fatal_error('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
+            if (!array_key_exists($cookieLang, Util::get()->getLanguages())) {
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
             Dml::singleUpdate(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
             setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
@@ -146,7 +152,7 @@ final readonly class AuthService
         $_SESSION['pwg_uid'] = $uid;
 
         EventDispatcher::notify('user_login', $uid);
-        pwg_activity('user', $uid, 'login');
+        ServiceLocator::get(Util::class)->pwgActivity('user', $uid, 'login');
     }
 
     public function autoLogin(): bool
@@ -161,7 +167,7 @@ final readonly class AuthService
                 and time() >= $cookie[1]) {
                 $key = $this->calculateAutoLoginKey((int) $cookie[0], (int) $cookie[1], $username);
                 if ($key !== false and $key === $cookie[2]) {
-                    if (script_basename() != 'ws') {
+                    if (StringUtil::scriptBasename() != 'ws') {
                         $_SESSION['connected_with'] = 'pwg_ui';
                     }
                     $this->logUser((int) $cookie[0], true);
@@ -185,7 +191,7 @@ final readonly class AuthService
             return true;
         }
 
-        pwg_session_gc();
+        ServiceLocator::get(SessionService::class)->sessionGc();
 
         $userFound = $this->findUserByUsernameOrEmail($username);
         $fakeUser  = $this->generateFakeUser();
@@ -195,7 +201,7 @@ final readonly class AuthService
 
         if (empty($userFound) || 'guest' === $userFound['status'] || !$passwordVerify) {
             if (!empty($userFound) && !$passwordVerify) {
-                pwg_activity('user', $ufId, 'login_failure_wrong_password');
+                ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, 'login_failure_wrong_password');
             }
             EventDispatcher::notify('login_failure', stripslashes($username));
             return false;
@@ -206,7 +212,7 @@ final readonly class AuthService
 
         if (!$state['can_login']) {
             $stateReason = is_scalar($state['reason']) ? (string) $state['reason'] : 'login_failure_before_log_user';
-            pwg_activity('user', $ufId, $stateReason);
+            ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, $stateReason);
             EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
@@ -263,7 +269,7 @@ final readonly class AuthService
     {
         $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
         EventDispatcher::notify('user_logout', $logoutUid);
-        pwg_activity('user', $logoutUid, 'logout');
+        ServiceLocator::get(Util::class)->pwgActivity('user', $logoutUid, 'logout');
 
         $_SESSION = [];
         session_unset();
@@ -384,7 +390,7 @@ SELECT
             return false;
         }
 
-        $candidate = generate_key(30);
+        $candidate = StringUtil::generateKey(30);
         if (!$this->authKeyRepo->existsByKey($candidate)) {
             $now      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $duration = Config::authKeyDuration();
@@ -419,7 +425,7 @@ SELECT
     /** @return array<string,mixed> */
     public function generatePasswordLink(int $userId, bool $firstLogin = false): array
     {
-        $activationKey = generate_key(20);
+        $activationKey = StringUtil::generateKey(20);
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
         $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
@@ -432,7 +438,7 @@ SELECT
         $passwordLink = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
         UrlService::get()->unsetMakeFullUrl();
 
-        $timeValidation = time_since(strtotime('now -' . $duration . ' second') ?: null, 'second', null, false);
+        $timeValidation = ServiceLocator::get(DateService::class)->timeSince(strtotime('now -' . $duration . ' second') ?: null, 'second', null, false);
 
         return ['time_validation' => $timeValidation, 'password_link' => $passwordLink];
     }

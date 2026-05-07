@@ -7,8 +7,12 @@ namespace Piwigo\Controller;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -32,7 +36,7 @@ final class IdentificationController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!PermissionService::get()->isAGuest()) {
-            redirect(UrlService::get()->getGalleryHomeUrl());
+            Util::get()->redirect(UrlService::get()->getGalleryHomeUrl());
         }
 
         EventDispatcher::notify('loc_begin_identification');
@@ -43,7 +47,7 @@ final class IdentificationController implements ControllerInterface
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
-        check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
+        ServiceLocator::get(Util::class)->checkInputParameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -54,7 +58,7 @@ final class IdentificationController implements ControllerInterface
             $redirect_to = urldecode($get_redirect);
             if (Config::guestAccess() && input_string('hide_redirect_error', null, $_GET) === null) {
                 $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $pgErrors['login_page_error'] = l10n('You are not authorized to access the requested page');
+                $pgErrors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
                 $page['errors'] = $pgErrors;
             }
         }
@@ -62,7 +66,7 @@ final class IdentificationController implements ControllerInterface
         if (input_string('login', null, $_POST) !== null) {
             if (!isset($_COOKIE[session_name()])) {
                 $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $pgErrors['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
+                $pgErrors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
                 $page['errors'] = $pgErrors;
             } else {
                 $username = input_string('username', null, $_POST) ?? '';
@@ -75,14 +79,14 @@ final class IdentificationController implements ControllerInterface
                 if (AuthService::get()->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
                     $_SESSION['connected_with'] = 'pwg_ui';
-                    redirect(
+                    Util::get()->redirect(
                         empty($redirect_to)
                         ? UrlService::get()->getGalleryHomeUrl()
                         : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) CookieService::cookiePath())) . $redirect_to
                     );
                 } else {
                     $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                    $pgErrors['login_form_error'] = l10n('Invalid username or password!');
+                    $pgErrors['login_form_error'] = Lang::t('Invalid username or password!');
                     $page['errors'] = $pgErrors;
                 }
             }
@@ -115,15 +119,15 @@ final class IdentificationController implements ControllerInterface
 
         $cookie_lang = input_string('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, get_languages())) {
-                fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            load_language('common.lang', '', ['language' => $cookie_lang]);
+            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
@@ -141,7 +145,7 @@ final class IdentificationController implements ControllerInterface
 
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_identification');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->pparse('identification');
         PageTailRenderer::render();
 

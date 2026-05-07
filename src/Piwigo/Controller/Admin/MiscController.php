@@ -14,25 +14,36 @@ use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\LangService;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Permalink\PermalinkRepository;
@@ -99,7 +110,7 @@ final class MiscController
 
         MailNotificationContext::init();
 
-        check_input_parameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
+        ServiceLocator::get(Util::class)->checkInputParameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
         $GLOBALS['base_url'] = $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
         $this->mustRepost = false;
@@ -120,25 +131,25 @@ final class MiscController
         }
 
         if (!empty($_POST)) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
         switch ($page['mode']) {
             case 'param':
                 if (isset($_POST['param_submit'])) {
                     $_POST['nbm_send_mail_as'] = strip_tags(is_scalar($_POST['nbm_send_mail_as'] ?? null) ? (string) $_POST['nbm_send_mail_as'] : '');
-                    check_input_parameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
-                    check_input_parameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
-                    check_input_parameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
+                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
+                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
+                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
                     foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
                         $param = is_scalar($nbm_user['param']) ? (string) $nbm_user['param'] : '';
                         if (isset($_POST[$param])) {
-                            conf_update_param($param, $_POST[$param], true);
+                            ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $_POST[$param], true);
                             $updated_param_count++;
                         }
                     }
-                    $tpl->assign(['save_success' => l10n_dec('%d parameter was updated.', '%d parameters were updated.', $updated_param_count)]);
+                    $tpl->assign(['save_success' => Translator::get()->plural('%d parameter was updated.', '%d parameters were updated.', $updated_param_count)]);
                 }
                 // fall through
                 // no break
@@ -170,7 +181,7 @@ final class MiscController
         }
 
         $tpl->setFilenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
-        $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
+        $tpl->assign(['PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
@@ -197,7 +208,7 @@ final class MiscController
                 break;
             case 'subscribe':
                 $tpl->assign($page['mode'], true);
-                $tpl->assign(['L_CAT_OPTIONS_TRUE' => l10n('Subscribed'), 'L_CAT_OPTIONS_FALSE' => l10n('Unsubscribed')]);
+                $tpl->assign(['L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed')]);
                 $data_users = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('subscribe');
                 $opt_true = $opt_true_selected = $opt_false = $opt_false_selected = [];
                 $cat_true_post  = is_array($_POST['cat_true'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_true']) : [];
@@ -237,12 +248,12 @@ final class MiscController
                 }
                 $tpl->assign($page['mode'], $tpl_var);
                 if (Config::authKeyDuration() > 0) {
-                    $tpl->assign('auth_key_duration', time_since(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
+                    $tpl->assign('auth_key_duration', ServiceLocator::get(DateService::class)->timeSince(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
                 }
                 break;
         }
 
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Send mail to users'));
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Send mail to users'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
     }
 
@@ -254,11 +265,11 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('cat_id', $_POST, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         if (isset($_POST['set_permalink']) && $_POST['cat_id'] > 0) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
             $permalink  = is_scalar($_POST['permalink'] ?? null) ? (string) $_POST['permalink'] : '';
             $postCatId  = is_scalar($_POST['cat_id']) ? (string) $_POST['cat_id'] : '';
             if (empty($permalink)) {
@@ -268,10 +279,10 @@ final class MiscController
             }
             $selected_cat = [(int) $postCatId];
         } elseif (isset($_GET['delete_permanent'])) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
             $deleted = ServiceLocator::get(PermalinkRepository::class)->deleteOldPermalinkByValue(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '');
             if (!$deleted) {
-                PageState::current()->addError(l10n('Cannot delete the old permalink !'));
+                PageState::current()->addError(Lang::t('Cannot delete the old permalink !'));
             }
         }
 
@@ -280,9 +291,9 @@ final class MiscController
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
         $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . Tables::categories();
-        display_select_cat_wrapper($query, $selected_cat, 'categories', false);
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
 
-        $pwg_token = get_pwg_token();
+        $pwg_token = ServiceLocator::get(Util::class)->getPwgToken();
 
         $sort_by = $this->parseSortVariables(['id', 'name', 'permalink'], 'name', 'psf', ['delete_permanent'], 'SORT_');
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
@@ -292,11 +303,11 @@ final class MiscController
         }
         $categories = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
-            $row['name'] = get_cat_display_name_cache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
+            $row['name'] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
             $categories[] = $row;
         }
         if ($sort_by[0] == 'name') {
-            usort($categories, global_rank_compare(...));
+            usort($categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         }
         $tpl->assign('permalinks', $categories);
 
@@ -309,12 +320,12 @@ final class MiscController
         }
         $deleted_permalinks = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
-            $row['name']     = get_cat_display_name_cache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
+            $row['name']     = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
             $row['U_DELETE'] = UrlService::get()->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
             $deleted_permalinks[] = $row;
         }
 
-        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => l10n('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => Lang::t('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'permalinks');
     }
 
@@ -331,14 +342,14 @@ final class MiscController
         $tabsheet->assign();
 
         if (isset($_GET['action']) && 'delete_orphans' == $_GET['action']) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
             ServiceLocator::get(TagAdminService::class)->deleteOrphanTags();
-            $_SESSION['message_tags'] = l10n('Orphan tags deleted');
-            redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
+            $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
+            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
 
         $tpl->setFilenames(['tags' => 'tags.tpl']);
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
         $orphan_tags      = ServiceLocator::get(TagAdminService::class)->getOrphanTags();
@@ -353,7 +364,7 @@ final class MiscController
 
         $orphan_tag_names_array = '[]';
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = sprintf(l10n('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . get_pwg_token() . '">' . l10n('Review') . '</a>');
+            $warning_tags = sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '">' . Lang::t('Review') . '</a>');
             $orphan_tag_names_array = '["' . implode('" ,"', array_map(htmlentities(...), $orphan_tag_names, array_fill(0, count($orphan_tag_names), ENT_QUOTES))) . '"]';
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
@@ -384,12 +395,12 @@ final class MiscController
             }
             $all_tags[] = $tag;
         }
-        usort($all_tags, tag_alpha_compare(...));
+        usort($all_tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
 
-        $tpl->assign(['first_tags' => array_slice($all_tags, 0, $per_page), 'data' => $all_tags, 'total' => count($all_tags), 'per_page' => $per_page, 'ADMIN_PAGE_TITLE' => l10n('Tags')]);
+        $tpl->assign(['first_tags' => array_slice($all_tags, 0, $per_page), 'data' => $all_tags, 'total' => count($all_tags), 'per_page' => $per_page, 'ADMIN_PAGE_TITLE' => Lang::t('Tags')]);
         $tpl->assign('page_data_json', json_encode([
-            'pwg_token' => get_pwg_token(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
-            'str_already_exist' => l10n('Tag "%s" already exists'), 'str_and_others_tags' => l10n('and %s others'), 'str_clear_selection' => l10n('Clear Selection'), 'str_copy' => l10n(' (copy)'), 'str_delete' => l10n('Delete tag "%s"?'), 'str_delete_orphan_tags' => l10n('Delete orphan tags ?'), 'str_delete_tags' => l10n('Delete tags {%s}?'), 'str_delete_them' => l10n('Delete them'), 'str_keep_them' => l10n('Keep them'), 'str_merged_into' => l10n('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => l10n('No, I have changed my mind'), 'str_no_photos' => l10n('no photo'), 'str_number_photos' => l10n('%d photos'), 'str_orphan_tags' => l10n('You have %s1 orphan : %s2'), 'str_other_copy' => l10n(' (copy %s)'), 'str_select_all_tag' => l10n('Select all %d tags'), 'str_selection_done' => l10n('The %d tags on this page are selected'), 'str_tag_created' => l10n('Tag "%s" created'), 'str_tag_deleted' => l10n('Tag "%s" succesfully deleted'), 'str_tag_found' => l10n('<b>%d</b> tag found'), 'str_tag_rename' => l10n('Rename "%s"'), 'str_tag_selected' => l10n('<b>%d</b> tag selected'), 'str_tags_deleted' => l10n('Tags {%s} succesfully deleted'), 'str_tags_found' => l10n('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => l10n('Yes, delete'), 'str_yes_rename_confirmation' => l10n('Yes, rename'),
+            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
+            'str_already_exist' => Lang::t('Tag "%s" already exists'), 'str_and_others_tags' => Lang::t('and %s others'), 'str_clear_selection' => Lang::t('Clear Selection'), 'str_copy' => Lang::t(' (copy)'), 'str_delete' => Lang::t('Delete tag "%s"?'), 'str_delete_orphan_tags' => Lang::t('Delete orphan tags ?'), 'str_delete_tags' => Lang::t('Delete tags {%s}?'), 'str_delete_them' => Lang::t('Delete them'), 'str_keep_them' => Lang::t('Keep them'), 'str_merged_into' => Lang::t('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_no_photos' => Lang::t('no photo'), 'str_number_photos' => Lang::t('%d photos'), 'str_orphan_tags' => Lang::t('You have %s1 orphan : %s2'), 'str_other_copy' => Lang::t(' (copy %s)'), 'str_select_all_tag' => Lang::t('Select all %d tags'), 'str_selection_done' => Lang::t('The %d tags on this page are selected'), 'str_tag_created' => Lang::t('Tag "%s" created'), 'str_tag_deleted' => Lang::t('Tag "%s" succesfully deleted'), 'str_tag_found' => Lang::t('<b>%d</b> tag found'), 'str_tag_rename' => Lang::t('Rename "%s"'), 'str_tag_selected' => Lang::t('<b>%d</b> tag selected'), 'str_tags_deleted' => Lang::t('Tags {%s} succesfully deleted'), 'str_tags_found' => Lang::t('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_yes_rename_confirmation' => Lang::t('Yes, rename'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'tags');
     }
@@ -413,7 +424,7 @@ final class MiscController
 
         $tpl->setFilenames(['help' => 'help.tpl']);
         $tpl->assign([
-            'HELP_CONTENT'       => load_language('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]),
+            'HELP_CONTENT'       => LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]),
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',
         ]);
 
@@ -439,7 +450,7 @@ final class MiscController
 
         if (!isset($_GET['output']) || 'content_only' != $_GET['output']) {
             $page['body_id']    = 'thePopuphelpPage';
-            $title              = l10n('Piwigo Help');
+            $title              = Lang::t('Piwigo Help');
             $page['page_banner'] = '<h1>' . $title . '</h1>';
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
             $tpl->assign(['U_RETURN' => '', 'USERNAME' => '', 'U_FAQ' => '', 'U_CHANGE_THEME' => '', 'U_LOGOUT' => '']);
@@ -448,7 +459,7 @@ final class MiscController
 
         $helpPage = is_scalar($_GET['help'] ?? null) ? (string) $_GET['help'] : '';
         if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
-            $help_content = load_language('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
+            $help_content = LangService::get()->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
             if ($help_content == false) {
                 $help_content = '';
             }
@@ -493,9 +504,9 @@ final class MiscController
         $tabsheet->assign();
 
         if (isset($page['nb_pending_comments'])) {
-            $message = l10n('User comments') . ' <i class="icon-chat"></i> ';
+            $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $my_base_url . 'comments">';
-            $message .= l10n('%d waiting for validation', $page['nb_pending_comments']);
+            $message .= Lang::t('%d waiting for validation', $page['nb_pending_comments']);
             $message .= ' <i class="icon-right"></i></a>';
             PageState::current()->addMessage($message);
         }
@@ -507,14 +518,14 @@ final class MiscController
 
         if ($nb_orphans > 0) {
             $orphans_url = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_album';
-            $message     = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>' . l10n('Orphans') . '</a><span class="adminMenubarCounter">' . $nb_orphans . '</span>';
+            $message     = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>' . Lang::t('Orphans') . '</a><span class="adminMenubarCounter">' . $nb_orphans . '</span>';
             PageState::current()->addWarning($message);
         }
 
         $locked_album = ServiceLocator::get(CategoryRepository::class)->countHidden();
         if ($locked_album > 0) {
             $locked_album_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&section=visible';
-            $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>' . l10n('Locked album') . '</a><span class="adminMenubarCounter">' . $locked_album . '</span>';
+            $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>' . Lang::t('Locked album') . '</a><span class="adminMenubarCounter">' . $locked_album . '</span>';
             PageState::current()->addWarning($message);
         }
 
@@ -531,7 +542,7 @@ final class MiscController
             if (!$uagent_obj->DetectIos() && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
                 $userLang  = is_string($user['language'] ?? null) ? $user['language'] : '';
                 $userEmail = is_string($user['email'] ?? null) ? $user['email'] : '';
-                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => ServiceLocator::get(AdminService::class)->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => l10n('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => l10n('Sign up to the newsletter'), 'str_see_previous' => l10n('See previous newsletters'), 'str_dismiss' => l10n('Understood, do not show again')];
+                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => ServiceLocator::get(AdminService::class)->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => Lang::t('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => Lang::t('Sign up to the newsletter'), 'str_see_previous' => Lang::t('See previous newsletters'), 'str_dismiss' => Lang::t('Understood, do not show again')];
             }
         }
 
@@ -542,7 +553,7 @@ final class MiscController
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', ServiceLocator::get(CommentRepository::class)->countAll());
@@ -553,7 +564,7 @@ final class MiscController
         if (Config::showPiwigoLatestNews()) {
             $latest_news = ServiceLocator::get(AdminService::class)->getPiwigoNews();
             if (isset($latest_news['id']) && $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
-                PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', l10n('Latest Piwigo news'), is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '', time_since(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_scalar($latest_news['posted']) ? (string) $latest_news['posted'] : '') . ')', is_scalar($latest_news['subject']) ? (string) $latest_news['subject'] : ''));
+                PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_scalar($latest_news['posted']) ? (string) $latest_news['posted'] : '') . ')', is_scalar($latest_news['subject']) ? (string) $latest_news['subject'] : ''));
             }
         }
 
@@ -578,7 +589,7 @@ final class MiscController
 
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
-            $start_time = get_moment();
+            $start_time = ServiceLocator::get(StringUtil::class)->getMoment();
             $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
@@ -592,10 +603,10 @@ final class MiscController
                 $day_nb = $day_date->format('N');
                 $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_scalar($action['object']) ? (string) $action['object'] : '')][ucfirst(is_scalar($action['action']) ? (string) $action['action'] : '')] = $action['activity_counter'];
                 $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + (is_numeric($action['activity_counter']) ? (int) $action['activity_counter'] : 0);
-                $activity_last_weeks[$week][$day_nb]['date']   = format_date($day_date->getTimestamp());
+                $activity_last_weeks[$week][$day_nb]['date']   = ServiceLocator::get(DateService::class)->formatDate($day_date->getTimestamp());
             }
 
-            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . get_elapsed_time($start_time, get_moment()));
+            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . get_elapsed_time($start_time, ServiceLocator::get(StringUtil::class)->getMoment()));
             $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
         }
 
@@ -702,15 +713,15 @@ final class MiscController
 
         $translate_type = [];
         foreach ($data_storage as $type => $_unused) {
-            $translate_type[$type] = l10n($type);
+            $translate_type[$type] = Lang::t($type);
         }
 
-        $intro_dashboard_extras = ['check_for_updates' => (bool) Config::dashboardCheckForUpdates(), 'storage_total' => $total_storage, 'str_gb_used' => l10n('%s GB used'), 'str_mb_used' => l10n('%s MB used'), 'str_piwigo_need_update' => l10n('A new version of Piwigo is available.'), 'str_ext_need_update' => l10n('Some upgrades are available for extensions.')];
+        $intro_dashboard_extras = ['check_for_updates' => (bool) Config::dashboardCheckForUpdates(), 'storage_total' => $total_storage, 'str_gb_used' => Lang::t('%s GB used'), 'str_mb_used' => Lang::t('%s MB used'), 'str_piwigo_need_update' => Lang::t('A new version of Piwigo is available.'), 'str_ext_need_update' => Lang::t('Some upgrades are available for extensions.')];
         if ($intro_newsletter_data !== null) {
             $intro_dashboard_extras['newsletter'] = $intro_newsletter_data;
         }
 
-        $tpl->assign('page_data_json', json_encode(['storage_details' => $data_storage, 'str_gb' => l10n('%sGB'), 'str_mb' => l10n('%sMB'), 'translate_type' => $translate_type, 'translate_files' => l10n('%d files'), 'dashboard' => $intro_dashboard_extras], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+        $tpl->assign('page_data_json', json_encode(['storage_details' => $data_storage, 'str_gb' => Lang::t('%sGB'), 'str_mb' => Lang::t('%sMB'), 'translate_type' => $translate_type, 'translate_files' => Lang::t('%d files'), 'dashboard' => $intro_dashboard_extras], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'intro');
 
         $c13y = new CheckIntegrity();
@@ -726,7 +737,7 @@ final class MiscController
         $tpl = TemplateRegistry::current();
 
         if (!PermissionService::get()->isWebmaster()) {
-            PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
+            PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
@@ -773,8 +784,8 @@ final class MiscController
             }
             $this->makeConsecutive($mb_conf);
             $mb_conf_db = $mb_conf;
-            conf_update_param('blk_' . $menu->getId(), serialize($mb_conf_db));
-            $tpl->assign(['save_success' => l10n('Order of menubar items has been updated successfully.')]);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('blk_' . $menu->getId(), serialize($mb_conf_db));
+            $tpl->assign(['save_success' => Lang::t('Order of menubar items has been updated successfully.')]);
         }
 
         $this->makeConsecutive($mb_conf);
@@ -786,7 +797,7 @@ final class MiscController
         $action = ServiceLocator::get(UrlGenerator::class)->admin('menubar');
         $tpl->assign(['F_ACTION' => $action]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
         $tpl->setFilename('menubar_admin_content', 'menubar.tpl');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'menubar_admin_content');
     }
@@ -811,12 +822,12 @@ final class MiscController
         $tpl->setFilenames(['comments' => 'comments.tpl']);
         $tpl->assign([
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
-            'PWG_TOKEN'         => get_pwg_token(),
+            'PWG_TOKEN'         => ServiceLocator::get(Util::class)->getPwgToken(),
             'COMMENTS_DISABLED' => !Config::activateComments(),
             'U_CONFIGURATION'   => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
             'page_data_json'    => json_encode([
-                'pwg_token' => get_pwg_token(),
-                'str_yes_delete_confirmation' => l10n('Yes, delete'), 'str_no_delete_confirmation' => l10n('No, I have changed my mind'), 'str_delete' => l10n('Are you sure you want to delete comment #%s?'), 'str_deletes' => l10n('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => l10n('No comments selected, no actions possible.'), 'str_an_error_has' => l10n('An error has occured'), 'str_comment_validated' => l10n('The comment has been validated.'), 'str_comments_validated' => l10n('The comments have been validated.'), 'str_and_others' => l10n('and %s others'),
+                'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
+                'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_delete' => Lang::t('Are you sure you want to delete comment #%s?'), 'str_deletes' => Lang::t('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => Lang::t('No comments selected, no actions possible.'), 'str_an_error_has' => Lang::t('An error has occured'), 'str_comment_validated' => Lang::t('The comment has been validated.'), 'str_comments_validated' => Lang::t('The comments have been validated.'), 'str_and_others' => Lang::t('and %s others'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
@@ -826,7 +837,7 @@ final class MiscController
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('User comments'));
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('User comments'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'comments');
     }
 
@@ -838,7 +849,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('display', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('display', $_GET, false, ValidationPattern::ID);
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
@@ -860,7 +871,7 @@ final class MiscController
 
         $page['cat_filter'] = '';
         if (isset($_GET['cat']) && is_numeric($_GET['cat'])) {
-            $cat_ids = get_subcat_ids([(int) $_GET['cat']]);
+            $cat_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds([(int) $_GET['cat']]);
             if (count($cat_ids) > 0) {
                 $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
             }
@@ -883,20 +894,20 @@ final class MiscController
 
         $tpl->setFilename('rating', 'rating.tpl');
         $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
-        $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
+        $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
 
-        $tpl->assign(['navbar' => create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
+        $tpl->assign(['navbar' => ServiceLocator::get(Util::class)->createNavigationBar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
-        $available_order_by = [[l10n('Rate date'), 'recently_rated DESC'], [l10n('Rating score'), 'score DESC'], [l10n('Average rate'), 'avg_rates DESC'], [l10n('Number of rates'), 'nb_rates DESC'], [l10n('Sum of rates'), 'sum_rates DESC'], [l10n('File name'), 'file DESC'], [l10n('Creation date'), 'date_creation DESC'], [l10n('Post date'), 'date_available DESC']];
+        $available_order_by = [[Lang::t('Rate date'), 'recently_rated DESC'], [Lang::t('Rating score'), 'score DESC'], [Lang::t('Average rate'), 'avg_rates DESC'], [Lang::t('Number of rates'), 'nb_rates DESC'], [Lang::t('Sum of rates'), 'sum_rates DESC'], [Lang::t('File name'), 'file DESC'], [Lang::t('Creation date'), 'date_creation DESC'], [Lang::t('Post date'), 'date_available DESC']];
         for ($i = 0; $i < count($available_order_by); $i++) {
             $tpl->append('order_by_options', $available_order_by[$i][0]);
         }
         $tpl->assign('order_by_options_selected', [$order_by_index]);
 
-        $user_options = ['all' => l10n('all'), 'user' => l10n('Users'), 'guest' => l10n('Guests')];
+        $user_options = ['all' => Lang::t('all'), 'user' => Lang::t('Users'), 'guest' => Lang::t('Guests')];
         $tpl->assign('user_options', $user_options);
         $tpl->assign('user_options_selected', [$_GET['users'] ?? null]);
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
 
         $query = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM ' . Tables::rate() . ' AS r LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
         if (!empty($page['cat_filter'])) {
@@ -1028,11 +1039,11 @@ final class MiscController
 
         $order_by_index = isset($_GET['order_by']) && is_numeric($_GET['order_by']) ? (int) $_GET['order_by'] : 4;
         $available_order_by = [
-            [l10n('Average rate'),        $this->avgCompare(...)],
-            [l10n('Number of rates'),     $this->countCompare(...)],
-            [l10n('Variation'),           $this->cvCompare(...)],
-            [l10n('Consensus deviation'), $this->consensusDevCompare(...)],
-            [l10n('Last'),                $this->lastRateCompare(...)],
+            [Lang::t('Average rate'),        $this->avgCompare(...)],
+            [Lang::t('Number of rates'),     $this->countCompare(...)],
+            [Lang::t('Variation'),           $this->cvCompare(...)],
+            [Lang::t('Consensus deviation'), $this->consensusDevCompare(...)],
+            [Lang::t('Last'),                $this->lastRateCompare(...)],
         ];
 
         for ($i = 0; $i < count($available_order_by); $i++) {
@@ -1043,7 +1054,7 @@ final class MiscController
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->setFilename('rating', 'rating_user.tpl');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
@@ -1056,13 +1067,13 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 
         $editUserId = is_numeric($_GET['user_id'] ?? null) ? (int) $_GET['user_id'] : 0;
         $edit_user  = UserService::get()->buildUser($editUserId, false);
 
         if (!empty($_POST)) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
         $errors = [];
@@ -1092,10 +1103,10 @@ final class MiscController
                 $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST[$post_keyname]) : [];
                 $post_count       = count($post_keyname_val);
                 $treated_count    = count($check_key_treated);
-                $time_refresh     = $treated_count !== 0 ? (int) ceil((get_moment() - $ctx->startTime) * $post_count / $treated_count) : 0;
+                $time_refresh     = $treated_count !== 0 ? (int) ceil((ServiceLocator::get(StringUtil::class)->getMoment() - $ctx->startTime) * $post_count / $treated_count) : 0;
                 $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
                 $this->mustRepost = true;
-                PageState::current()->addError(l10n_dec('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));
+                PageState::current()->addError(Translator::get()->plural('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));
                 return true;
             }
         }
@@ -1127,7 +1138,7 @@ final class MiscController
                 $nbm_user['check_key'] = ServiceLocator::get(NotificationAdminService::class)->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
-                PageState::current()->addInfo(l10n('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), $nbm_user['mail_address']));
+                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), $nbm_user['mail_address']));
             }
             Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
@@ -1136,7 +1147,7 @@ final class MiscController
                 $untreated_keys = array_diff($check_key_list, $check_key_treated);
                 if (count($untreated_keys) != 0) {
                     ServiceLocator::get(NotificationRepository::class)->deleteByCheckKeys(array_values($untreated_keys));
-                    redirect($base_url . UrlService::get()->getQueryStringDiff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
+                    Util::get()->redirect($base_url . UrlService::get()->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }
             }
         }
@@ -1176,7 +1187,7 @@ final class MiscController
                         $customize_mail_content = Config::nbmComplementaryMailContent();
                     }
                     $customize_mail_content = EventDispatcher::dispatch('nbm_render_global_customize_mail_content', $customize_mail_content);
-                    $msg_break_timeout = $is_action_send ? l10n('Time to send mail is limited. Others mails are skipped.') : l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
+                    $msg_break_timeout = $is_action_send ? Lang::t('Time to send mail is limited. Others mails are skipped.') : Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
                     ServiceLocator::get(NotificationAdminService::class)->beginUsersEnvNbm($is_action_send);
                     foreach ($data_users as $nbm_user) {
@@ -1205,14 +1216,14 @@ final class MiscController
                             $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
 
                             if (Config::nbmSendDetailedContent()) {
-                                $news = news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
+                                $news = ServiceLocator::get(NotificationService::class)->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
                                 $exist_data = count($news) > 0;
                             } else {
-                                $exist_data = news_exists($last_send, $dbnow);
+                                $exist_data = ServiceLocator::get(NotificationService::class)->newsExists($last_send, $dbnow);
                             }
 
                             if ($exist_data) {
-                                $subject = '[' . Config::galleryTitle() . '] ' . l10n('New photos added');
+                                $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('New photos added');
                                 ServiceLocator::get(NotificationAdminService::class)->assignVarsNbmMailContent($nbm_user);
                                 $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
 
@@ -1232,16 +1243,16 @@ final class MiscController
                                 }
 
                                 if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
-                                    $recent_post_dates = get_recent_post_dates_array(Config::recentPostDates()['NBM']);
+                                    $recent_post_dates = ServiceLocator::get(NotificationService::class)->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
                                     foreach ($recent_post_dates as $date_detail) {
                                         $date_detail_arr = is_array($date_detail) ? $date_detail : [];
-                                        $nbmTpl->append('recent_posts', ['TITLE' => get_title_recent_post_date($date_detail_arr), 'HTML_DATA' => get_html_description_recent_post_date($date_detail_arr, is_string($auth) ? $auth : null)]);
+                                        $nbmTpl->append('recent_posts', ['TITLE' => ServiceLocator::get(NotificationService::class)->getTitleRecentPostDate($date_detail_arr), 'HTML_DATA' => ServiceLocator::get(NotificationService::class)->getHtmlDescriptionRecentPostDate($date_detail_arr, is_string($auth) ? $auth : null)]);
                                     }
                                 }
 
                                 $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
 
-                                $ret = pwg_mail(['name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
+                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
                                 if ($ret) {
                                     ServiceLocator::get(NotificationAdminService::class)->incMailSentSuccess($nbm_user);
@@ -1253,7 +1264,7 @@ final class MiscController
                             }
                         } else {
                             $last_send = isset($nbm_user['last_send']) ? (string) $nbm_user['last_send'] : null;
-                            if (news_exists($last_send, $dbnow)) {
+                            if (ServiceLocator::get(NotificationService::class)->newsExists($last_send, $dbnow)) {
                                 $return_list[] = $nbm_user;
                             }
                         }
@@ -1267,7 +1278,7 @@ final class MiscController
                     }
                 } else {
                     if ($is_action_send) {
-                        PageState::current()->addError(l10n('No user to send notifications by mail.'));
+                        PageState::current()->addError(Lang::t('No user to send notifications by mail.'));
                     }
                 }
             } else {
@@ -1309,7 +1320,7 @@ final class MiscController
                 $base_url .= $is_first ? '?' : '&amp;';
                 $is_first  = false;
                 if (!in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
-                    fatal_error('unexpected URL get key');
+                    HtmlService::fatalError('unexpected URL get key');
                 }
                 $base_url .= urlencode((string) $key) . '=' . urlencode(is_string($value) ? $value : '');
             }
@@ -1330,7 +1341,7 @@ final class MiscController
                 $disp = '<em>' . $disp . '</em>';
             }
             if (isset($template_var)) {
-                $tpl->assign($template_var . strtoupper((string) $field), '<a href="' . $url . $anchor . '" title="' . l10n('Sort order') . '">' . $disp . '</a>');
+                $tpl->assign($template_var . strtoupper((string) $field), '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>');
             }
         }
         return $ret;

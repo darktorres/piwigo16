@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Scans the Piwigo source for static l10n_dec('singular', 'plural', ...) calls
+ * Scans the Piwigo source for static Translator::get()->plural('singular', 'plural', ...) calls
  * and returns a map of singular_key → plural_key.
  *
  * Usage (as a library, included by php-to-po.php):

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -81,14 +83,14 @@ final class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['group_id'])) {
             $catIdParamInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
             $catIds        = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($catIdParamInt);
             if ($params['recursive']) {
-                $catIds = array_merge($catIds, get_subcat_ids($catIdParamInt));
+                $catIds = array_merge($catIds, ServiceLocator::get(CategoryService::class)->getSubcatIds($catIdParamInt));
             }
             $catIdsStr = array_map(fn (mixed $v): string => (string) $v, $catIds);
             $query     = 'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
@@ -116,11 +118,11 @@ final class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function remove(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $catIdParam3Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
-        $catIds         = get_subcat_ids($catIdParam3Int);
+        $catIds         = ServiceLocator::get(CategoryService::class)->getSubcatIds($catIdParam3Int);
         $catIdsStr      = array_map(fn (mixed $v): string => (string) $v, $catIds);
         $permRepo2      = ServiceLocator::get(PermissionRepository::class);
         $catIdsInt      = array_map(fn (string $v): int => (int) $v, $catIdsStr);

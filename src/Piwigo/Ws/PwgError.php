@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
+
 /**
  * PwgError object can be returned from any web service function implementation.
  */
@@ -15,7 +18,7 @@ class PwgError
     public function __construct(int|null $code, string $codeText)
     {
         if ($code !== null && $code >= 400 and $code < 600) {
-            set_status_header($code, $codeText);
+            ServiceLocator::get(HtmlService::class)->setStatusHeader($code, $codeText);
         }
 
         $this->_code = $code;

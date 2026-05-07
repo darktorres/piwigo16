@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 
 /**
  * Typed facade over the $lang global array.
  *
  * Wave A: self::$data IS the same array as $GLOBALS['lang'] (via reference after
- * attachGlobals()). The free function l10n() continues to read from $lang, so
+ * attachGlobals()). The free function Lang::t() continues to read from $lang, so
  * old call-sites and new call-sites through Lang::t() see identical translation
  * strings without double-loading.
  */
@@ -20,7 +21,7 @@ final class Lang
     private static array $data = [];
 
     /**
-     * Called by Kernel::boot() after load_language() has populated $GLOBALS['lang'].
+     * Called by Kernel::boot() after LangService::get()->loadLanguage() has populated $GLOBALS['lang'].
      */
     public static function attachGlobals(): void
     {

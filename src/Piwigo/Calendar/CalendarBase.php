@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Template\TemplateRegistry;
@@ -107,7 +108,7 @@ abstract class CalendarBase
             $rawLabel = $labelsArr[$date_component];
             $label = is_string($rawLabel) ? $rawLabel : (is_int($rawLabel) ? (string) $rawLabel : $label);
         } elseif ('any' === (string) $date_component) {
-            $label = l10n('All');
+            $label = Lang::t('All');
         }
         return $label;
     }
@@ -198,7 +199,7 @@ abstract class CalendarBase
                 [ 'start' ]
             );
             $nav_bar_datas[] = [
-              'LABEL' => l10n('All'),
+              'LABEL' => Lang::t('All'),
               'URL' => $url,
             ];
         }

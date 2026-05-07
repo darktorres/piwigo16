@@ -7,7 +7,7 @@ namespace Piwigo\Cache;
 /**
  * Per-request memoisation cache, replacing direct $cache global array writes.
  *
- * Usage: RequestCache::remember('get_icon', 'title', fn() => l10n(...))
+ * Usage: RequestCache::remember('get_icon', 'title', fn() => Lang::t(...))
  */
 final class RequestCache
 {

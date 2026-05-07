@@ -6,9 +6,14 @@ namespace Piwigo\Controller;
 
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
@@ -18,7 +23,9 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionInitializer;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\SelectedTagsRenderer;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -55,10 +62,10 @@ final class GalleryController implements ControllerInterface
             ? (int) $category['count_categories'] : null;
 
         if ($category !== null) {
-            check_restrictions($catId);
+            ServiceLocator::get(CategoryService::class)->checkRestrictions($catId);
         }
         if ($start > 0 && $start >= count($items)) {
-            page_not_found('', UrlService::get()->duplicateIndexUrl(['start' => 0]));
+            ServiceLocator::get(HtmlService::class)->pageNotFound('', UrlService::get()->duplicateIndexUrl(['start' => 0]));
         }
 
         EventDispatcher::notify('loc_begin_index');
@@ -67,11 +74,11 @@ final class GalleryController implements ControllerInterface
         $imageOrder = input_int('image_order', null, $_GET);
         if ($imageOrder !== null) {
             if ($imageOrder > 0) {
-                pwg_set_session_var('image_order', $imageOrder);
+                ServiceLocator::get(SessionService::class)->setSessionVar('image_order', $imageOrder);
             } else {
-                pwg_unset_session_var('image_order');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('image_order');
             }
-            redirect(UrlService::get()->duplicateIndexUrl([], ['start']));
+            Util::get()->redirect(UrlService::get()->duplicateIndexUrl([], ['start']));
         }
 
         $display = input_string('display', null, $_GET);
@@ -80,7 +87,7 @@ final class GalleryController implements ControllerInterface
             $metaRobots['noindex']  = 1;
             $page['meta_robots']    = $metaRobots;
             if (array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
-                pwg_set_session_var('index_deriv', $display);
+                ServiceLocator::get(SessionService::class)->setSessionVar('index_deriv', $display);
             }
         }
 
@@ -89,7 +96,7 @@ final class GalleryController implements ControllerInterface
         // Navigation bar
         $page['navigation_bar'] = [];
         if (count($items) > $nbImagePage) {
-            $page['navigation_bar'] = create_navigation_bar(
+            $page['navigation_bar'] = ServiceLocator::get(Util::class)->createNavigationBar(
                 UrlService::get()->duplicateIndexUrl([], ['start']),
                 count($items),
                 $start,
@@ -102,8 +109,8 @@ final class GalleryController implements ControllerInterface
 
         // Caddie filling
         if (input_string('caddie', null, $_GET) !== null) {
-            fill_caddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
-            redirect(UrlService::get()->duplicateIndexUrl());
+            ServiceLocator::get(Util::class)->fillCaddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
+            Util::get()->redirect(UrlService::get()->duplicateIndexUrl());
         }
 
         // Canonical URL
@@ -117,7 +124,7 @@ final class GalleryController implements ControllerInterface
             $canonicalUrl = UrlService::get()->duplicateIndexUrl(['start' => $safeStart]);
         }
         $tpl->assign('U_CANONICAL', $canonicalUrl);
-        $tpl->assign('use_standard_pages', conf_get_param('use_standard_pages', false));
+        $tpl->assign('use_standard_pages', ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false));
 
         // Page title
         $tpl->assign('TITLE', is_string($page['section_title'] ?? null) ? $page['section_title'] : '');
@@ -182,8 +189,8 @@ final class GalleryController implements ControllerInterface
                     : [];
                 $pageTags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
 
-                $tags        = get_common_tags($items, Config::menubarTagCloudItemsNumber(), $pageTagIds);
-                $tags        = add_level_to_tags($tags);
+                $tags        = ServiceLocator::get(TagService::class)->getCommonTags($items, Config::menubarTagCloudItemsNumber(), $pageTagIds);
+                $tags        = ServiceLocator::get(TagService::class)->addLevelToTags($tags);
                 $relatedTags = [];
                 foreach ($tags as $tag) {
                     $tagArr = is_array($tag) ? $tag : [];
@@ -226,13 +233,13 @@ final class GalleryController implements ControllerInterface
                     is_array($qd['matching_cats'] ?? null) ? $qd['matching_cats'] : []
                 );
                 if (count($cats) > 0) {
-                    usort($cats, static fn (mixed $a, mixed $b): int => name_compare(
+                    usort($cats, static fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->nameCompare(
                         is_array($a) ? $a : [],
                         is_array($b) ? $b : []
                     ));
                     $hints = [];
                     foreach ($cats as $cat) {
-                        $hints[] = get_cat_display_name([$cat], '');
+                        $hints[] = ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], '');
                     }
                     $tpl->assign('category_search_results', $hints);
                 }
@@ -257,8 +264,9 @@ final class GalleryController implements ControllerInterface
 
             // Image-order selector
             if (Config::indexSortOrderInput() && count($items) > 0 && $section !== 'most_visited' && $section !== 'best_rated') {
-                $preferredOrders = get_category_preferred_image_orders();
-                $orderIdx        = (int) pwg_get_session_var('image_order', 0);
+                $preferredOrders = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
+                $rawOrder        = ServiceLocator::get(SessionService::class)->getSessionVar('image_order', 0);
+                $orderIdx        = is_numeric($rawOrder) ? (int) $rawOrder : 0;
                 $firstOrder      = trim(substr((string) Config::orderBy(), 9));
                 if (($pos = strpos($firstOrder, ',')) !== false) {
                     $firstOrder = substr($firstOrder, 0, $pos);
@@ -319,7 +327,7 @@ final class GalleryController implements ControllerInterface
                     unset($typeMap[DerivativeSize::TwoXLarge->value], $typeMap[DerivativeSize::XLarge->value]);
                     foreach ($typeMap as $params) {
                         $tpl->append('image_derivatives', [
-                            'DISPLAY'  => l10n($params->type),
+                            'DISPLAY'  => Lang::t($params->type),
                             'URL'      => $url . $params->type,
                             'SELECTED' => $params->type === $selType,
                         ]);
@@ -331,7 +339,7 @@ final class GalleryController implements ControllerInterface
             if (!empty($page['cat_slideshow_url'])) {
                 $slideshowUrl = is_string($page['cat_slideshow_url']) ? $page['cat_slideshow_url'] : '';
                 if (input_string('slideshow', null, $_GET) !== null) {
-                    redirect($slideshowUrl);
+                    Util::get()->redirect($slideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
                     $tpl->assign('U_SLIDESHOW', $slideshowUrl);
                 }
@@ -340,7 +348,7 @@ final class GalleryController implements ControllerInterface
             // Related tags (for non-tags sections)
             if (!empty($items) && ($bodyDataArr['section'] ?? '') !== 'tags') {
                 $selection  = array_slice($items, $start, $nbImagePage);
-                $commonTags = add_level_to_tags(get_common_tags($selection, Config::contentTagCloudItemsNumber()));
+                $commonTags = ServiceLocator::get(TagService::class)->addLevelToTags(ServiceLocator::get(TagService::class)->getCommonTags($selection, Config::contentTagCloudItemsNumber()));
                 $relTags    = [];
                 foreach ($commonTags as $tag) {
                     $relTags[] = array_merge(is_array($tag) ? $tag : [], [
@@ -357,11 +365,11 @@ final class GalleryController implements ControllerInterface
         // Render page (outputs directly — legacy Smarty model)
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_index');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->parseIndexButtons();
         $tpl->pparse('index');
 
-        pwg_log();
+        ServiceLocator::get(Util::class)->pwgLog();
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

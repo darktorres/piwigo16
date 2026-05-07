@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
@@ -49,7 +52,7 @@ final class NotificationController implements ControllerInterface
             $feed_image_only_url = $feed_url . '&amp;image_only';
         }
 
-        $title = l10n('Notification');
+        $title = Lang::t('Notification');
         $page['body_id'] = 'theNotificationPage';
         $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
@@ -66,7 +69,7 @@ final class NotificationController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_notification');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->pparse('notification');
         PageTailRenderer::render();
 
@@ -77,7 +80,7 @@ final class NotificationController implements ControllerInterface
     {
         $feedRepo = ServiceLocator::get(FeedRepository::class);
         while (true) {
-            $key = generate_key(50);
+            $key = StringUtil::generateKey(50);
             if (!$feedRepo->existsById($key)) {
                 return $key;
             }

@@ -12,6 +12,7 @@ use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
@@ -19,10 +20,13 @@ use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeRepository;
@@ -34,6 +38,11 @@ use Psr\Log\LoggerInterface;
 
 final readonly class Util
 {
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
     public function __construct(
         private Connection $conn,
         private LoggerInterface $log,
@@ -58,7 +67,7 @@ final readonly class Util
                 if (!($flags & MKGETDIR_DIE_ON_ERROR)) {
                     return false;
                 }
-                fatal_error("$dir " . l10n('no write access'));
+                HtmlService::fatalError("$dir " . Lang::t('no write access'));
             }
             if ($flags & MKGETDIR_PROTECT_INDEX) {
                 $file = $dir . '/index.htm';
@@ -71,7 +80,7 @@ final readonly class Util
             if (!($flags & MKGETDIR_DIE_ON_ERROR)) {
                 return false;
             }
-            fatal_error("$dir " . l10n('no write access'));
+            HtmlService::fatalError("$dir " . Lang::t('no write access'));
         }
         return true;
     }
@@ -108,9 +117,9 @@ final readonly class Util
     {
         if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
             CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
-            load_language('common.lang');
+            LangService::get()->loadLanguage('common.lang');
             EventDispatcher::notify('loading_lang');
-            load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+            LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
         } elseif (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
@@ -119,7 +128,7 @@ final readonly class Util
         }
 
         if (empty($msg)) {
-            $msg = nl2br(l10n('Redirection...'));
+            $msg = nl2br(Lang::t('Redirection...'));
         }
 
         $refresh  = $refreshTime;
@@ -149,6 +158,19 @@ final readonly class Util
     }
 
     /** @return array<string,string> */
+    /** @return string[] */
+    public function getLanguages(): array
+    {
+        $languages = [];
+        foreach (ServiceLocator::get(\Piwigo\Language\LanguageRepository::class)->findIdNameMap() as $id => $name) {
+            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
+                $languages[$id] = $name;
+            }
+        }
+        return $languages;
+    }
+
+    /** @return array<string,string> */
     public function getPwgThemes(bool $showMobile = false): array
     {
         $themes = [];
@@ -162,15 +184,15 @@ final readonly class Util
                 if (!$showMobile) {
                     continue;
                 }
-                $row['name'] = (is_scalar($row['name']) ? (string) $row['name'] : '') . (' (' . l10n('Mobile') . ')');
+                $row['name'] = (is_scalar($row['name']) ? (string) $row['name'] : '') . (' (' . Lang::t('Mobile') . ')');
             }
             $themeId = is_scalar($row['id']) ? (string) $row['id'] : '';
             if ($this->checkThemeInstalled($themeId)) {
                 $themes[$themeId] = is_scalar($row['name']) ? (string) $row['name'] : '';
             }
         }
-        $themes = EventDispatcher::dispatch('get_pwg_themes', $themes);
-        return $themes;
+        $dispatched = EventDispatcher::dispatch('get_pwg_themes', $themes);
+        return $dispatched;
     }
 
     public function checkThemeInstalled(string $themeId): bool
@@ -187,7 +209,7 @@ final readonly class Util
 
     public function getFilterPageValue(string $valueName): mixed
     {
-        $pageName = script_basename();
+        $pageName = StringUtil::scriptBasename();
         /** @var array<string, array<string, mixed>> $filterPages */
         $filterPages = Config::filterPages();
         return $filterPages[$pageName][$valueName] ?? $filterPages['default'][$valueName] ?? null;
@@ -250,10 +272,10 @@ final readonly class Util
     {
         if (!empty($_REQUEST['pwg_token'])) {
             if ($this->getPwgToken() !== $_REQUEST['pwg_token']) {
-                access_denied();
+                ServiceLocator::get(HtmlService::class)->accessDenied();
             }
         } else {
-            bad_request('missing token');
+            ServiceLocator::get(HtmlService::class)->badRequest('missing token');
         }
     }
 
@@ -271,23 +293,23 @@ final readonly class Util
         }
         if (empty($paramValue)) {
             if ($mandatory) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
             return true;
         }
         if ($isArray) {
             if (!is_array($paramValue)) {
-                fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
             }
             foreach ($paramValue as $key => $itemToCheck) {
                 if (!preg_match(ValidationPattern::ID, (string) $key) || !preg_match($pattern ?? '', is_scalar($itemToCheck) ? (string) $itemToCheck : '')) {
-                    fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    HtmlService::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
             return true;
         }
         if (!preg_match($pattern ?? '', is_scalar($paramValue) ? (string) $paramValue : '')) {
-            fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+            HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
         }
         return true;
     }
@@ -299,12 +321,12 @@ final readonly class Util
         $label   = '';
         foreach (array_reverse(Config::availablePermissionLevels()) as $level) {
             if ($level === 0) {
-                $label = l10n('Everybody');
+                $label = Lang::t('Everybody');
             } else {
                 if (strlen($label)) {
                     $label .= ', ';
                 }
-                $label .= l10n(sprintf('Level %d', $level));
+                $label .= Lang::t(sprintf('Level %d', $level));
             }
             $options[$level] = $label;
         }
@@ -319,7 +341,7 @@ final readonly class Util
         }
         $raw         = CurrentUser::get()->rawAttributes;
         $recentPeriod = is_scalar($raw['recent_period'] ?? null) ? (int) $raw['recent_period'] : 7;
-        $title = RequestCache::remember('get_icon', 'title', static fn (): string => l10n(
+        $title = RequestCache::remember('get_icon', 'title', static fn (): string => Lang::t(
             'photos posted during the last %d days',
             $recentPeriod
         ));
@@ -409,7 +431,8 @@ final readonly class Util
 
     public function getDevice(): string
     {
-        $device = pwg_get_session_var('device', '');
+        $rawDevice = ServiceLocator::get(SessionService::class)->getSessionVar('device', '');
+        $device = is_string($rawDevice) ? $rawDevice : '';
         if ($device === '') {
             $uagentObj = new \uagent_info();
             if ($uagentObj->DetectSmartphone()) {
@@ -419,7 +442,7 @@ final readonly class Util
             } else {
                 $device = 'desktop';
             }
-            pwg_set_session_var('device', $device);
+            ServiceLocator::get(SessionService::class)->setSessionVar('device', $device);
         }
         return $device;
     }
@@ -431,13 +454,13 @@ final readonly class Util
         }
         if (isset($_GET['mobile'])) {
             $isMobileTheme = BoolUtil::fromMixed($_GET['mobile']);
-            pwg_set_session_var('mobile_theme', $isMobileTheme);
+            ServiceLocator::get(SessionService::class)->setSessionVar('mobile_theme', $isMobileTheme);
         } else {
-            $isMobileTheme = pwg_get_session_var('mobile_theme');
+            $isMobileTheme = ServiceLocator::get(SessionService::class)->getSessionVar('mobile_theme');
         }
         if (is_null($isMobileTheme)) {
             $isMobileTheme = ($this->getDevice() === 'mobile');
-            pwg_set_session_var('mobile_theme', $isMobileTheme);
+            ServiceLocator::get(SessionService::class)->setSessionVar('mobile_theme', $isMobileTheme);
         }
         return (bool) $isMobileTheme;
     }
@@ -498,7 +521,7 @@ final readonly class Util
 
         if ($pageSection !== '') {
             if (!Config::has('history_sections_cache')) {
-                conf_update_param('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
             }
             $historySectionsCache = safe_unserialize(Config::historySectionsCache() ?? '');
             Config::override('history_sections_cache', $historySectionsCache);
@@ -514,7 +537,7 @@ final readonly class Util
                     'ALTER TABLE ' . Tables::history() . " CHANGE section section enum('" .
                     implode("','", array_unique($historySections)) . "') DEFAULT NULL"
                 );
-                conf_update_param('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
                 $section = $pageSection;
             }
         }
@@ -563,7 +586,7 @@ final readonly class Util
         if (isset($_REQUEST['method'])) {
             $details['method'] = $_REQUEST['method'];
         } else {
-            $details['script'] = script_basename();
+            $details['script'] = StringUtil::scriptBasename();
             if ($details['script'] === 'admin' && isset($_GET['page'])) {
                 $details['script'] .= '/' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : '');
             }
@@ -683,7 +706,7 @@ final readonly class Util
 
     public function pwgUniqueExecEnds(string $tokenName): void
     {
-        conf_delete_param($tokenName . '_running');
+        ServiceLocator::get(ConfigService::class)->confDeleteParam($tokenName . '_running');
         $this->log->info('[' . $tokenName . '] ends now');
     }
 
@@ -691,23 +714,23 @@ final readonly class Util
     {
         $lastNotice = Config::has('send_piwigo_infos_last_notice') ? strtotime(Config::sendPiwigoInfosLastNotice() ?? '') : time();
         $lastNotice += $waitTime;
-        conf_update_param('send_piwigo_infos_last_notice', date('c', $lastNotice), true);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', date('c', $lastNotice), true);
         $this->log->info('[sendPiwigoInfosRetryLater] new send_piwigo_infos_last_notice=' . Config::sendPiwigoInfosLastNotice());
     }
 
     public function sendPiwigoInfos(): void
     {
-        $startTime = get_moment();
+        $startTime = ServiceLocator::get(StringUtil::class)->getMoment();
 
         if (!Config::sendPiwigoInfos()) {
             return;
         }
 
-        load_conf_from_db('param = "send_piwigo_infos_last_notice"', false);
+        ServiceLocator::get(ConfigService::class)->loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
 
         $doSend = false;
         if (Config::has('send_piwigo_infos_last_notice')) {
-            $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+            $period = ServiceLocator::get(ConfigService::class)->confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
             if (strtotime(Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800') . ' second ago')) {
                 $doSend = true;
             }
@@ -721,7 +744,7 @@ final readonly class Util
 
         $this->log->info('[sendPiwigoInfos] last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? 'notFound') . ' => lets do it');
 
-        if (!pwg_is_dbconf_writeable()) {
+        if (!ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
             $this->log->info('[sendPiwigoInfos] conf is not writeable, abort');
             return;
         }
@@ -735,10 +758,10 @@ final readonly class Util
         $dbCurrentDate = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         if (!Config::has('send_piwigo_infos_origin_hash')) {
-            conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
-        [$containerType, $containerVersion] = get_container_info();
+        [$containerType, $containerVersion] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
 
         $piwigoInfos = [
             'origin_hash' => Config::sendPiwigoInfosOriginHash(),
@@ -805,7 +828,7 @@ final readonly class Util
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->sendPiwigoInfosRetryLater(1 * 60 * 60);
             $this->pwgUniqueExecEnds('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, get_moment()));
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
             return;
         }
 
@@ -973,7 +996,7 @@ final readonly class Util
             $piwigoInfos['features'][$feature] = Config::raw($feature) ? 'yes' : 'no';
         }
 
-        $updateUrl = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
+        $updateUrl = ServiceLocator::get(ConfigService::class)->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
         $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL) . '/ws.php';
 
         $getData  = ['format' => 'php', 'method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
@@ -984,11 +1007,11 @@ final readonly class Util
             $this->sendPiwigoInfosRetryLater(24 * 60 * 60);
         } else {
             $lastNotice = date('c');
-            conf_update_param('send_piwigo_infos_last_notice', $lastNotice, true);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . Config::sendPiwigoInfosLastNotice());
         }
 
         $this->pwgUniqueExecEnds('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, get_moment()));
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
     }
 }

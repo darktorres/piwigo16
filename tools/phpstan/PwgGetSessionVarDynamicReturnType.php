@@ -11,9 +11,11 @@ use PHPStan\Type\DynamicFunctionReturnTypeExtension;
 use PHPStan\Type\GeneralizePrecision;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Session\SessionService;
 
 /**
- * Teaches PHPStan that pwg_get_session_var() returns the same type as its $default argument.
+ * Teaches PHPStan that ServiceLocator::get(SessionService::class)->getSessionVar() returns the same type as its $default argument.
  * When the session key exists, it was stored with the same type (via pwg_set_session_var).
  * When absent, $default is returned exactly. Either way the return type matches $default.
  */

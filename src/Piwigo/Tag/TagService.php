@@ -6,9 +6,11 @@ namespace Piwigo\Tag;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -118,7 +120,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]          = $row;
         }
-        usort($tags, tag_alpha_compare(...));
+        usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         return $tags;
     }
 
@@ -228,7 +230,7 @@ SELECT id
             $row['name'] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]      = $row;
         }
-        usort($tags, tag_alpha_compare(...));
+        usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         return $tags;
     }
 

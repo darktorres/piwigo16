@@ -12,22 +12,30 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -180,10 +188,10 @@ final class ImagesEndpoints
         }
         $comm = ['author' => trim(is_scalar($params['author']) ? (string) $params['author'] : ''), 'content' => trim(is_scalar($params['content']) ? (string) $params['content'] : ''), 'image_id' => $pImageId];
         $infos         = [];
-        $commentAction = insert_user_comment($comm, is_scalar($params['key']) ? (string) $params['key'] : '', $infos);
+        $commentAction = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_scalar($params['key']) ? (string) $params['key'] : '', $infos);
         switch ($commentAction) {
             case 'reject':
-                $infos[] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                $infos[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                 return new PwgError(403, implode('; ', $infos));
             case 'validate':
             case 'moderate':
@@ -228,12 +236,12 @@ final class ImagesEndpoints
             $row['name']     = strip_tags(is_scalar($catNameRaw) ? (string) $catNameRaw : '');
             $relatedCategories[] = $row;
         }
-        usort($relatedCategories, global_rank_compare(...));
+        usort($relatedCategories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         if (empty($relatedCategories) && !PermissionService::get()->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
         /** @var list<array<string, mixed>> $relatedTags */
-        $relatedTags = get_common_tags([$imageRowId], -1);
+        $relatedTags = ServiceLocator::get(TagService::class)->getCommonTags([$imageRowId], -1);
         foreach ($relatedTags as $i => $tag) {
             $tag['url']      = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
             $tag['page_url'] = UrlService::get()->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'tags' => [$tag]]);
@@ -264,7 +272,7 @@ final class ImagesEndpoints
         $commentPostData = null;
         if (Config::activateComments() && $isCommentable && (!PermissionService::get()->isAGuest() || Config::commentsForall())) {
             $commentPostData['author'] = stripslashes(CurrentUser::get()->username);
-            $commentPostData['key']    = get_ephemeral_key(2, (string) $pImageId);
+            $commentPostData['key']    = ServiceLocator::get(Util::class)->getEphemeralKey(2, (string) $pImageId);
         }
         $ret = $imageRow;
         foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
@@ -296,7 +304,7 @@ final class ImagesEndpoints
         if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
-        $res = rate_picture($pImageId, $pRate);
+        $res = ServiceLocator::get(RateService::class)->ratePicture($pImageId, $pRate);
         if ($res === false) {
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', Config::rateItems()));
         }
@@ -519,7 +527,7 @@ final class ImagesEndpoints
         $pLevel    = is_numeric($params['level']) ? (int) $params['level'] : 0;
         $pImageIds = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
         $affected  = ServiceLocator::get(ImageRepository::class)->setLevelForIds($pLevel, $pImageIds);
-        pwg_activity('photo', $pImageIds, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('photo', $pImageIds, 'edit');
         if ($affected) {
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
@@ -569,7 +577,7 @@ final class ImagesEndpoints
     {
         $logger    = LoggerRegistry::current();
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::get()->mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         $pOriginalSum = is_scalar($params['original_sum']) ? (string) $params['original_sum'] : '';
@@ -757,7 +765,7 @@ final class ImagesEndpoints
     public function upload(array $params, PwgServer $service): mixed
     {
         $formatExt = null;
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (isset($params['format_of'])) {
@@ -773,7 +781,7 @@ final class ImagesEndpoints
             }
         }
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::get()->mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         if (isset($_REQUEST['name'])) {
@@ -849,7 +857,7 @@ final class ImagesEndpoints
             $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
             $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
             $nbPhotosLounge = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')', [$pCategoryFirst])->fetchOne();
-            $categoryName   = get_cat_display_name_from_id($pCategoryFirst, null);
+            $categoryName   = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pCategoryFirst, null);
             if ($imageInfos === null) {
                 return null;
             }
@@ -876,10 +884,10 @@ final class ImagesEndpoints
         $outputFilepathPrefix  = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-u' . $pUserId;
         $chunkfilePathPattern  = $outputFilepathPrefix . '-%03uof%03u.chunk';
         $chunkfilePath         = sprintf($chunkfilePathPattern, $pChunk + 1, $pChunks);
-        if (!mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::get()->mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
-        secure_directory(dirname($chunkfilePath));
+        ServiceLocator::get(StringUtil::class)->secureDirectory(dirname($chunkfilePath));
         $filesFile2        = is_array($_FILES['file'] ?? null) ? $_FILES['file'] : [];
         $filesFile2TmpName = is_scalar($filesFile2['tmp_name'] ?? null) ? (string) $filesFile2['tmp_name'] : '';
         $chunkRoot     = PHPWG_ROOT_PATH . Config::uploadDir();
@@ -1025,7 +1033,7 @@ final class ImagesEndpoints
         $candidates = json_decode(stripslashes(is_scalar($params['filename_list']) ? (string) $params['filename_list'] : ''), true);
         $uniqueFilenamesDb = [];
         foreach (ServiceLocator::get(ImageRepository::class)->findAllIdFilename() as $row) {
-            $filenameWoExt = get_filename_wo_extension(is_scalar($row['file']) ? (string) $row['file'] : '');
+            $filenameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($row['file']) ? (string) $row['file'] : '');
             $uniqueFilenamesDb[$filenameWoExt][] = $row['id'];
         }
         $formatExtensions = Config::formatExtensions();
@@ -1075,7 +1083,7 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['format_id'])) {
@@ -1107,11 +1115,11 @@ final class ImagesEndpoints
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
-            $imagePath = get_element_path($row);
+            $imagePath = ServiceLocator::get(StringUtil::class)->getElementPath($row);
             $files     = [];
             if (isset($formatsOf[$rowId])) {
                 foreach ($formatsOf[$rowId] as $formatExt) {
-                    $files[] = original_to_format($imagePath, $formatExt);
+                    $files[] = ServiceLocator::get(StringUtil::class)->originalToFormat($imagePath, $formatExt);
                 }
             }
             foreach ($files as $path) {
@@ -1158,7 +1166,7 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer $service): mixed
     {
-        if (isset($params['pwg_token']) && get_pwg_token() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $setImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -1197,7 +1205,7 @@ final class ImagesEndpoints
         if (count($update) > 0) {
             $update['id'] = $setImageId;
             Dml::singleUpdate(Tables::images(), $update, ['id' => $update['id']]);
-            pwg_activity('photo', $setImageId, 'edit');
+            ServiceLocator::get(Util::class)->pwgActivity('photo', $setImageId, 'edit');
         }
         if (isset($params['categories'])) {
             $this->addImageCategoryRelations($setImageId, is_string($params['categories']) ? $params['categories'] : '', $multipleValueMode === 'replace');
@@ -1236,7 +1244,7 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer $service): PwgError|int
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $delImageIdsRaw = $params['image_id'];
@@ -1274,7 +1282,7 @@ final class ImagesEndpoints
      */
     public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $ucImageIdsRaw = $params['image_id'];
@@ -1286,7 +1294,7 @@ final class ImagesEndpoints
         $ucCategoryId  = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $movedFromLounge  = ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
         $categoryInfos    = ['nb_photos' => ServiceLocator::get(CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
-        $categoryName     = get_cat_display_name_from_id($ucCategoryId, null);
+        $categoryName     = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($ucCategoryId, null);
         EventDispatcher::notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
         return ['moved_from_lounge' => $movedFromLounge, 'category' => ['id' => $ucCategoryId, 'nb_photos' => $categoryInfos['nb_photos'], 'label' => $categoryName]];
     }
@@ -1297,7 +1305,7 @@ final class ImagesEndpoints
      */
     public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $noMd5sumIds    = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
@@ -1315,7 +1323,7 @@ final class ImagesEndpoints
      */
     public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $syncImageIdsRaw = $params['image_id'];
@@ -1347,7 +1355,7 @@ final class ImagesEndpoints
      */
     public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $orphanIdsToDelete = array_slice(ServiceLocator::get(ImageAdminService::class)->getOrphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
@@ -1359,7 +1367,7 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function setCategory(array $params, PwgServer $service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;

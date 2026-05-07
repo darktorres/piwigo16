@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
@@ -79,7 +81,7 @@ final class UpgradeService
                 $pluginRepo->updateState($pluginId, 'inactive');
             }
             PageState::current()->addInfo(
-                l10n('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
+                Lang::t('As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:')
                 . '<p><i>' . implode(', ', $plugins) . '</i></p>'
             );
         }
@@ -106,7 +108,7 @@ final class UpgradeService
                 $themeRepo->deactivate($tid);
             }
             PageState::current()->addInfo(
-                l10n('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
+                Lang::t('As a precaution, following themes have been deactivated. You must check for themes upgrade before reactiving them:')
                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>'
             );
 
@@ -126,7 +128,7 @@ final class UpgradeService
 
     public static function deactivateTemplates(): void
     {
-        conf_update_param('extents_for_templates', []);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('extents_for_templates', []);
     }
 
     public static function checkUpgradeAccessRights(): void
@@ -167,9 +169,9 @@ final class UpgradeService
         $row = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative() ?: null;
 
         if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
-            PageState::current()->addError(l10n('Invalid password!'));
+            PageState::current()->addError(Lang::t('Invalid password!'));
         } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
-            PageState::current()->addError(l10n('You do not have access rights to run upgrade'));
+            PageState::current()->addError(Lang::t('You do not have access rights to run upgrade'));
         } else {
             define('PHPWG_IN_UPGRADE', true);
         }

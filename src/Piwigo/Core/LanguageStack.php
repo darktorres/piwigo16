@@ -31,7 +31,7 @@ final class LanguageStack
     private static bool $switchInitialized = false;
 
     /**
-     * Plugin/theme language files registered by load_language(), keyed by
+     * Plugin/theme language files registered by LangService::get()->loadLanguage(), keyed by
      * dirname → filename → options. Stored as a private static property so
      * we don't need $GLOBALS['language_files'] for the switch_lang_to reload.
      *

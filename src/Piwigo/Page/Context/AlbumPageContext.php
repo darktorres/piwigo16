@@ -22,7 +22,7 @@ final readonly class AlbumPageContext
      * @param array<string,mixed>|null  $category   Current album row, or null for virtual sections.
      * @param list<array<string,mixed>> $subAlbums  Direct sub-album rows (empty when not applicable).
      * @param list<int>                 $photos     Image IDs in current page slice.
-     * @param array<string,mixed>       $pagination Navigation-bar data from create_navigation_bar().
+     * @param array<string,mixed>       $pagination Navigation-bar data from ServiceLocator::get(Util::class)->createNavigationBar().
      */
     public function __construct(
         public array|null $category,

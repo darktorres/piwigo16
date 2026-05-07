@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -20,8 +23,8 @@ use Psr\Http\Server\RequestHandlerInterface;
  *   /identification — login form (no token in the standard form)
  *   /register     — registration form (no token in the standard form)
  *
- * If the token is present but wrong, check_pwg_token() calls access_denied().
- * If the token is missing, check_pwg_token() calls bad_request().
+ * If the token is present but wrong, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->accessDenied().
+ * If the token is missing, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->badRequest().
  */
 final class CsrfMiddleware implements MiddlewareInterface
 {
@@ -42,7 +45,7 @@ final class CsrfMiddleware implements MiddlewareInterface
                 : '/';
 
             if (!$this->isExempt($path)) {
-                check_pwg_token();
+                ServiceLocator::get(Util::class)->checkPwgToken();
             }
         }
 

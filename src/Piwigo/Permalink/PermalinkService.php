@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permalink;
 
 use Piwigo\Cache\RequestCache;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 
@@ -23,7 +24,7 @@ final class PermalinkService
             if (isset($oldCatId) && $oldCatId != $catId) {
                 PageState::current()->addError(
                     sprintf(
-                        l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                        Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                         $permalink,
                         $oldCatId
                     )
@@ -52,7 +53,7 @@ final class PermalinkService
         $sanitized = trim((string) $sanitized, '/');
         $sanitized = str_replace('//', '/', $sanitized);
         if ($sanitized !== $permalink || preg_match('#^(\d)+(-.*)?$#', $permalink)) {
-            PageState::current()->addError('{' . $permalink . '} ' . l10n('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
+            PageState::current()->addError('{' . $permalink . '} ' . Lang::t('The permalink name must be composed of a-z, A-Z, 0-9, "-", "_" or "/". It must not be numeric or start with number followed by "-"'));
             return false;
         }
 
@@ -64,7 +65,7 @@ final class PermalinkService
                 return true;
             }
             PageState::current()->addError(
-                sprintf(l10n('Permalink %s is already used by album %s'), $permalink, $existingCatId)
+                sprintf(Lang::t('Permalink %s is already used by album %s'), $permalink, $existingCatId)
             );
             return false;
         }
@@ -73,7 +74,7 @@ final class PermalinkService
         if (isset($oldCatId) && $oldCatId != $catId) {
             PageState::current()->addError(
                 sprintf(
-                    l10n('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
+                    Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
                     $permalink,
                     $oldCatId
                 )

@@ -55,7 +55,7 @@ final class LangTest extends TestCase
     }
 
     /**
-     * Step 4 exit signal: l10n('guest') returns same value pre- and post-conversion.
+     * Step 4 exit signal: Lang::t('guest') returns same value pre- and post-conversion.
      * Before attachGlobals() Lang falls back to $GLOBALS['lang']; after, it reads
      * self::$data which IS $GLOBALS['lang'] via reference.
      */

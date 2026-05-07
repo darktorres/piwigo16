@@ -9,18 +9,27 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\PwgTOTP;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -46,19 +55,19 @@ final readonly class UserService
     public function registerUser(string $login, string $password, ?string $mailAddress = null, bool $notifyAdmin = true, array &$errors = [], bool $notifyUser = false): int|false
     {
         if ($login == '') {
-            $errors[] = l10n('Please, enter a login');
+            $errors[] = Lang::t('Please, enter a login');
         }
         if (preg_match('/^.* $/', $login)) {
-            $errors[] = l10n('login mustn\'t end with a space character');
+            $errors[] = Lang::t('login mustn\'t end with a space character');
         }
         if (preg_match('/^ .*$/', $login)) {
-            $errors[] = l10n('login mustn\'t start with a space character');
+            $errors[] = Lang::t('login mustn\'t start with a space character');
         }
         if ($this->getUserid($login)) {
-            $errors[] = l10n('this login is already used');
+            $errors[] = Lang::t('this login is already used');
         }
         if ($login != strip_tags($login)) {
-            $errors[] = l10n('html tags are not allowed in login');
+            $errors[] = Lang::t('html tags are not allowed in login');
         }
         $mailError = AuthService::get()->validateMailAddress(null, $mailAddress);
         if ('' != $mailError) {
@@ -102,45 +111,45 @@ final readonly class UserService
             if ($notifyAdmin and 'none' != Config::emailAdminOnNewUser()) {
                 $adminUrl     = ServiceLocator::get(UrlGenerator::class)->admin('user_list') . '&user_id=' . $userId;
                 $keyargsContent = [
-                    get_l10n_args('User: %s', stripslashes($login)),
-                    get_l10n_args('Email: %s', $mailAddress),
-                    get_l10n_args(''),
-                    get_l10n_args('Admin: %s', $adminUrl),
+                    LangService::get()->getL10nArgs('User: %s', stripslashes($login)),
+                    LangService::get()->getL10nArgs('Email: %s', $mailAddress),
+                    LangService::get()->getL10nArgs(''),
+                    LangService::get()->getL10nArgs('Admin: %s', $adminUrl),
                 ];
                 $groupId = null;
                 if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
                     $groupId = $matches[1];
                 }
-                pwg_mail_notification_admins(get_l10n_args('Registration of %s', stripslashes($login)), $keyargsContent, true, (int) $groupId);
+                ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(LangService::get()->getL10nArgs('Registration of %s', stripslashes($login)), $keyargsContent, true, (int) $groupId);
             }
 
-            if ($notifyUser and email_check_format($mailAddress ?? '')) {
+            if ($notifyUser and ServiceLocator::get(StringUtil::class)->emailCheckFormat($mailAddress ?? '')) {
                 $length = random_int(10, 15);
                 $keyargsContent = [
-                    get_l10n_args('Hello %s,', stripslashes($login)),
-                    get_l10n_args('Thank you for registering at %s!', Config::galleryTitle()),
-                    get_l10n_args('', ''),
-                    get_l10n_args('Here are your connection settings', ''),
-                    get_l10n_args('', ''),
-                    get_l10n_args('Link: %s', UrlService::getAbsoluteRootUrl()),
-                    get_l10n_args('Username: %s', stripslashes($login)),
-                    get_l10n_args('Password: %s', str_repeat('*', $length)),
-                    get_l10n_args('Email: %s', $mailAddress),
-                    get_l10n_args('', ''),
-                    get_l10n_args('If you think you\'ve received this email in error, please contact us at %s', get_webmaster_mail_address()),
+                    LangService::get()->getL10nArgs('Hello %s,', stripslashes($login)),
+                    LangService::get()->getL10nArgs('Thank you for registering at %s!', Config::galleryTitle()),
+                    LangService::get()->getL10nArgs('', ''),
+                    LangService::get()->getL10nArgs('Here are your connection settings', ''),
+                    LangService::get()->getL10nArgs('', ''),
+                    LangService::get()->getL10nArgs('Link: %s', UrlService::getAbsoluteRootUrl()),
+                    LangService::get()->getL10nArgs('Username: %s', stripslashes($login)),
+                    LangService::get()->getL10nArgs('Password: %s', str_repeat('*', $length)),
+                    LangService::get()->getL10nArgs('Email: %s', $mailAddress),
+                    LangService::get()->getL10nArgs('', ''),
+                    LangService::get()->getL10nArgs('If you think you\'ve received this email in error, please contact us at %s', ServiceLocator::get(Util::class)->getWebmasterMailAddress()),
                 ];
                 ServiceLocator::get(MessageBusInterface::class)->dispatch(
                     new SendNotificationEmailJob((int) $userId, 'registration', [
                         'to'             => $mailAddress ?? '',
-                        'subject'        => '[' . Config::galleryTitle() . '] ' . l10n('Registration'),
-                        'content'        => l10n_args($keyargsContent),
+                        'subject'        => '[' . Config::galleryTitle() . '] ' . Lang::t('Registration'),
+                        'content'        => LangService::get()->l10nArgs($keyargsContent),
                         'content_format' => 'text/plain',
                     ])
                 );
             }
 
             EventDispatcher::notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
-            pwg_activity('user', $userId, 'add');
+            ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'add');
 
             return (int) $userId;
         } else {
@@ -162,7 +171,7 @@ final readonly class UserService
             $user['internal_status']['guest_must_be_guest'] = true;
         }
 
-        if (!isset($user['theme_name']) or !check_theme_installed(is_scalar($user['theme']) ? (string) $user['theme'] : '')) {
+        if (!isset($user['theme_name']) or !ServiceLocator::get(Util::class)->checkThemeInstalled(is_scalar($user['theme']) ? (string) $user['theme'] : '')) {
             $user['theme']      = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -237,32 +246,32 @@ final readonly class UserService
             if (!isset($userdata['need_update']) or !is_bool($userdata['need_update']) or $userdata['need_update'] == true) {
                 $logger->info($loggerMsgPrefix . 'needs user_cache to be rebuilt');
 
-                $execId = pwg_unique_exec_begins($cacheTokenName);
+                $execId = ServiceLocator::get(Util::class)->pwgUniqueExecBegins($cacheTokenName);
                 if (false === $execId) {
                     $logger->info($loggerMsgPrefix . 'starts to wait for another request to build user_cache');
-                    $waitStart = get_moment();
+                    $waitStart = ServiceLocator::get(StringUtil::class)->getMoment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
                         $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::userCache() . ' WHERE user_id=' . $udId . ';')->fetchOne();
-                        $waitingTime  = get_elapsed_time($waitStart, get_moment());
+                        $waitingTime  = get_elapsed_time($waitStart, ServiceLocator::get(StringUtil::class)->getMoment());
 
                         if ($nbCacheLines > 0) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt, after waiting ' . $waitingTime);
                             return $this->getuserdata($userId, false);
-                        } elseif (!pwg_unique_exec_is_running($cacheTokenName)) {
+                        } elseif (!ServiceLocator::get(Util::class)->pwgUniqueExecIsRunning($cacheTokenName)) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt but has been reset since, after waiting ' . $waitingTime);
                             return $this->getuserdata($userId, true);
                         } else {
                             $logger->info($loggerMsgPrefix . 'user_cache not ready yet, after waiting ' . $waitingTime);
                         }
                     }
-                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . get_elapsed_time($waitStart, get_moment()));
-                    set_status_header(503, 'Service Unavailable');
+                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . get_elapsed_time($waitStart, ServiceLocator::get(StringUtil::class)->getMoment()));
+                    ServiceLocator::get(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
                     if (!headers_sent()) {
                         header('Retry-After: 900');
                     }
-                    header('Content-Type: text/html; charset=' . get_pwg_charset());
-                    echo l10n('Rebuilding user cache takes long. Please, come back later.');
+                    header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
+                    echo Lang::t('Rebuilding user cache takes long. Please, come back later.');
                     echo str_repeat(' ', 512);
                     exit();
                 } else {
@@ -271,7 +280,7 @@ final readonly class UserService
             }
 
             if ($generateUserCache) {
-                $genStart                    = get_moment();
+                $genStart                    = ServiceLocator::get(StringUtil::class)->getMoment();
                 $userdata['cache_update_time'] = time();
                 $userdata['need_update']       = false;
 
@@ -291,13 +300,13 @@ final readonly class UserService
                 $query = 'SELECT COUNT(DISTINCT(image_id)) as total FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . $udForbiddenCats . ') AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
                 $userdata['nb_total_images'] = $this->conn->executeQuery($query)->fetchOne();
 
-                $userCacheCats = get_computed_categories($userdata, null);
+                $userCacheCats = ServiceLocator::get(CategoryService::class)->getComputedCategories($userdata, null);
                 if (!PermissionService::get()->isAdmin($udStatus)) {
                     $forbiddenIds = [];
                     foreach ($userCacheCats as $cat) {
                         if ($cat['count_images'] == 0) {
                             $forbiddenIds[] = is_numeric($cat['cat_id']) ? (int) $cat['cat_id'] : 0;
-                            remove_computed_category($userCacheCats, $cat);
+                            ServiceLocator::get(CategoryService::class)->removeComputedCategory($userCacheCats, $cat);
                         }
                     }
                     if (!empty($forbiddenIds)) {
@@ -331,8 +340,8 @@ final readonly class UserService
                     $cacheParams
                 );
 
-                pwg_unique_exec_ends($cacheTokenName);
-                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . get_elapsed_time($genStart, get_moment()));
+                ServiceLocator::get(Util::class)->pwgUniqueExecEnds($cacheTokenName);
+                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . get_elapsed_time($genStart, ServiceLocator::get(StringUtil::class)->getMoment()));
             }
         }
 
@@ -423,10 +432,10 @@ SELECT DISTINCT f.image_id
     {
         $themeRaw = $this->getDefaultUserValue('theme', AppInfo::DEFAULT_TEMPLATE);
         $theme    = is_scalar($themeRaw) ? (string) $themeRaw : AppInfo::DEFAULT_TEMPLATE;
-        if (check_theme_installed($theme)) {
+        if (ServiceLocator::get(Util::class)->checkThemeInstalled($theme)) {
             return $theme;
         }
-        $activeThemes = array_keys(get_pwg_themes());
+        $activeThemes = array_keys(ServiceLocator::get(Util::class)->getPwgThemes());
         return $activeThemes[0] ?? '_base';
     }
 
@@ -515,11 +524,11 @@ SELECT DISTINCT f.image_id
             if (!empty($params['username'])) {
                 $userId = $this->getUserid(is_scalar($params['username']) ? (string) $params['username'] : '');
                 if ($userId and $userId != $paramUserId[0]) {
-                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => l10n('this login is already used')]];
+                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('this login is already used')]];
                 }
                 $usernameStr = is_scalar($params['username']) ? (string) $params['username'] : '';
                 if ($usernameStr != strip_tags($usernameStr)) {
-                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => l10n('html tags are not allowed in login')]];
+                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('html tags are not allowed in login')]];
                 }
                 $updates[Config::userFields()['username']] = $params['username'];
             }
@@ -576,10 +585,10 @@ SELECT DISTINCT f.image_id
                 return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid level']];
             }
         }
-        if (!empty($params['language']) and !in_array($params['language'], array_keys(get_languages()))) {
+        if (!empty($params['language']) and !in_array($params['language'], array_keys(Util::get()->getLanguages()))) {
             return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid language']];
         }
-        if (!empty($params['theme']) and !in_array($params['theme'], array_keys(get_pwg_themes()))) {
+        if (!empty($params['theme']) and !in_array($params['theme'], array_keys(ServiceLocator::get(Util::class)->getPwgThemes()))) {
             return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid theme']];
         }
 
@@ -601,7 +610,7 @@ SELECT DISTINCT f.image_id
             $this->userRepo->updateStatusForUsers($updateStatusStr, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserIdForStatus));
             if ('guest' == $updateStatus) {
                 foreach ($paramUserIdForStatus as $uidForStatus) {
-                    delete_user_sessions(is_numeric($uidForStatus) ? (int) $uidForStatus : 0);
+                    ServiceLocator::get(SessionService::class)->deleteUserSessions(is_numeric($uidForStatus) ? (int) $uidForStatus : 0);
                 }
             }
         }
@@ -636,7 +645,7 @@ SELECT DISTINCT f.image_id
         }
 
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        pwg_activity('user', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('user', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit');
 
         return ['user_id' => $params['user_id'], 'infos' => $updatesInfos, 'account' => $updates];
     }
@@ -644,8 +653,8 @@ SELECT DISTINCT f.image_id
     /** @return array<string,mixed> */
     public function createApiKey(int $userId, int $duration, string $keyName): array
     {
-        $keyId     = 'pkid-' . date('Ymd') . '-' . generate_key(20);
-        $keySecret = generate_key(40);
+        $keyId     = 'pkid-' . date('Ymd') . '-' . StringUtil::generateKey(20);
+        $keySecret = StringUtil::generateKey(40);
         $dbnow     = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         $key = [
@@ -673,7 +682,7 @@ SELECT DISTINCT f.image_id
     {
         $uid = is_numeric($userId) ? (int) $userId : 0;
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
-            return l10n('API Key not found');
+            return Lang::t('API Key not found');
         }
         Dml::singleUpdate(Tables::userAuthKeys(), ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
         return true;
@@ -682,7 +691,7 @@ SELECT DISTINCT f.image_id
     public function editApiKey(int $userId, string $pkid, string $apiName): string|true
     {
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
-            return l10n('API Key not found');
+            return Lang::t('API Key not found');
         }
         Dml::singleUpdate(Tables::userAuthKeys(), ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
         return true;
@@ -706,27 +715,27 @@ SELECT DISTINCT f.image_id
             $akExpiredOn                   = is_scalar($apiKey['expired_on']) ? (string) $apiKey['expired_on'] : null;
             $akLastUsedOn                  = is_scalar($apiKey['last_used_on']) ? (string) $apiKey['last_used_on'] : null;
             $akRevokedOn                   = is_scalar($apiKey['revoked_on']) ? (string) $apiKey['revoked_on'] : null;
-            $apiKey['created_on_format']   = format_date($akCreatedOn, ['day', 'month', 'year']);
-            $apiKey['expired_on_format']   = format_date($akExpiredOn, ['day', 'month', 'year']);
-            $apiKey['last_used_on_since']  = $akLastUsedOn ? time_since($akLastUsedOn, 'day') : l10n('Never');
-            $expiredOn                     = str2DateTime($akExpiredOn);
-            $nowDt                         = str2DateTime($now);
+            $apiKey['created_on_format']   = ServiceLocator::get(DateService::class)->formatDate($akCreatedOn, ['day', 'month', 'year']);
+            $apiKey['expired_on_format']   = ServiceLocator::get(DateService::class)->formatDate($akExpiredOn, ['day', 'month', 'year']);
+            $apiKey['last_used_on_since']  = $akLastUsedOn ? ServiceLocator::get(DateService::class)->timeSince($akLastUsedOn, 'day') : Lang::t('Never');
+            $expiredOn                     = ServiceLocator::get(DateService::class)->str2DateTime($akExpiredOn);
+            $nowDt                         = ServiceLocator::get(DateService::class)->str2DateTime($now);
             $apiKey['is_expired']          = $expiredOn < $nowDt;
             if ($apiKey['is_expired']) {
-                $apiKey['expiration'] = l10n('Expired');
+                $apiKey['expiration'] = Lang::t('Expired');
             } elseif ($nowDt !== false && $expiredOn !== false) {
-                $diff = dateDiff($nowDt, $expiredOn);
+                $diff = ServiceLocator::get(DateService::class)->dateDiff($nowDt, $expiredOn);
                 if ($diff->days > 0) {
-                    $apiKey['expiration'] = l10n('%d days', $diff->days);
+                    $apiKey['expiration'] = Lang::t('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
-                    $apiKey['expiration'] = l10n('%d hours', $diff->h);
+                    $apiKey['expiration'] = Lang::t('%d hours', $diff->h);
                 } else {
-                    $apiKey['expiration'] = l10n('%d minutes', $diff->i);
+                    $apiKey['expiration'] = Lang::t('%d minutes', $diff->i);
                 }
             }
-            $apiKey['expired_on_since'] = time_since($akExpiredOn, 'day');
-            $apiKey['revoked_on_since'] = $akRevokedOn ? time_since($akRevokedOn, 'day') : null;
-            $apiKey['revoked_on_message'] = $akRevokedOn ? l10n('This API key was manually revoked on %s', format_date($akRevokedOn, ['day', 'month', 'year'])) : null;
+            $apiKey['expired_on_since'] = ServiceLocator::get(DateService::class)->timeSince($akExpiredOn, 'day');
+            $apiKey['revoked_on_since'] = $akRevokedOn ? ServiceLocator::get(DateService::class)->timeSince($akRevokedOn, 'day') : null;
+            $apiKey['revoked_on_message'] = $akRevokedOn ? Lang::t('This API key was manually revoked on %s', ServiceLocator::get(DateService::class)->formatDate($akRevokedOn, ['day', 'month', 'year'])) : null;
             $apiKeys[$i] = $apiKey;
         }
 
@@ -751,12 +760,12 @@ SELECT DISTINCT f.image_id
 
     public function notificationApiKeyExpiration(string $username, string $email, int $daysLeft): bool
     {
-        $daysLeftStr = $daysLeft <= 1 ? l10n('Your API key will expire in %d day.', $daysLeft) : l10n('Your API key will expire in %d days.', $daysLeft);
-        $message     = '<p style="margin: 20px 0">' . l10n('Hello %s,', $username) . '</p>';
+        $daysLeftStr = $daysLeft <= 1 ? Lang::t('Your API key will expire in %d day.', $daysLeft) : Lang::t('Your API key will expire in %d days.', $daysLeft);
+        $message     = '<p style="margin: 20px 0">' . Lang::t('Hello %s,', $username) . '</p>';
         $message    .= '<p style="margin: 20px 0">' . $daysLeftStr . '</p>';
-        $message    .= '<p style="margin: 20px 0">' . l10n('To continue using the API, please renew your key before it expires.') . '</p>';
-        $message    .= '<p style="margin: 20px 0">' . l10n('You can manage your API keys in your <a href="%s">account settings.</a>', ServiceLocator::get(UrlGenerator::class)->profile()) . '</p>';
-        return pwg_mail($email, ['subject' => '[' . Config::galleryTitle() . '] ' . l10n('Your API key will expire soon'), 'content' => $message, 'content_format' => 'text/html']);
+        $message    .= '<p style="margin: 20px 0">' . Lang::t('To continue using the API, please renew your key before it expires.') . '</p>';
+        $message    .= '<p style="margin: 20px 0">' . Lang::t('You can manage your API keys in your <a href="%s">account settings.</a>', ServiceLocator::get(UrlGenerator::class)->profile()) . '</p>';
+        return ServiceLocator::get(MailService::class)->pwgMail($email, ['subject' => '[' . Config::galleryTitle() . '] ' . Lang::t('Your API key will expire soon'), 'content' => $message, 'content_format' => 'text/html']);
     }
 
     /** @return array<string,mixed> */

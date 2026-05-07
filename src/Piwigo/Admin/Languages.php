@@ -9,6 +9,8 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
@@ -107,7 +109,7 @@ class Languages
     public function getFsLanguages(?string $target_charset = null): void
     {
         if (empty($target_charset)) {
-            $target_charset = get_pwg_charset();
+            $target_charset = ServiceLocator::get(StringUtil::class)->getPwgCharset();
         }
         $target_charset = strtolower((string) $target_charset);
 
@@ -133,7 +135,7 @@ class Languages
 
                     if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $language['name'] = convert_charset($language['name'], 'utf-8', $target_charset);
+                        $language['name'] = ServiceLocator::get(StringUtil::class)->convertCharset($language['name'], 'utf-8', $target_charset);
                     }
 
                     // IMPORTANT SECURITY !
@@ -143,7 +145,7 @@ class Languages
             }
         }
         closedir($dir);
-        uasort($this->fs_languages, name_compare(...));
+        uasort($this->fs_languages, ServiceLocator::get(HtmlService::class)->nameCompare(...));
     }
 
     public function getDbLanguages(): void
@@ -177,7 +179,7 @@ class Languages
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
                 $version = is_scalar($pem_ver0_name) ? (string) $pem_ver0_name : $version;
             }
-            $branch = get_branch_from_version($version);
+            $branch = AppInfo::branchFromVersion($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;

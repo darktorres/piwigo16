@@ -10,16 +10,22 @@ use Piwigo\Admin\Languages;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -113,14 +119,14 @@ final class InstallController implements ControllerInterface
         }
         define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-        load_language('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
-        load_language('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
-        load_language('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        LangService::get()->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        LangService::get()->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        LangService::get()->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
 
         header('Content-Type: text/html; charset=UTF-8');
 
         if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
-            $errors[] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
+            $errors[] = Lang::t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
@@ -145,15 +151,15 @@ final class InstallController implements ControllerInterface
 
             $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', (string) $admin_name));
             if (empty($webmaster)) {
-                $errors[] = l10n('enter a login for webmaster');
+                $errors[] = Lang::t('enter a login for webmaster');
             } elseif (preg_match('/[\'"]/', $webmaster)) {
-                $errors[] = l10n('webmaster login can\'t contain characters \' or "');
+                $errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
             }
             if (empty($_POST['admin_pass1'] ?? '') || empty($_POST['admin_pass2'] ?? '') || $_POST['admin_pass1'] !== $_POST['admin_pass2']) {
-                $errors[] = l10n('please enter your password again');
+                $errors[] = Lang::t('please enter your password again');
             }
             if (empty($_POST['admin_mail'] ?? '')) {
-                $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+                $errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             } else {
                 $error_mail_address = AuthService::get()->validateMailAddress(null, $admin_mail);
                 if (!empty($error_mail_address)) {
@@ -173,7 +179,7 @@ final class InstallController implements ControllerInterface
                 $envTmp = $envPath . '.tmp.' . bin2hex(random_bytes(4));
                 if (file_put_contents($envTmp, $envBody) === false || !rename($envTmp, $envPath)) {
                     Filesystem::tryUnlink($envTmp);
-                    fatal_error('Could not write ' . $envPath . ' — check filesystem permissions.');
+                    HtmlService::fatalError('Could not write ' . $envPath . ' — check filesystem permissions.');
                 }
 
                 Config::override('db_host', $dbhost);
@@ -191,12 +197,12 @@ final class InstallController implements ControllerInterface
                     'comment' => 'a secret key specific to the gallery for internal use',
                 ]);
 
-                conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
-                conf_update_param('gallery_title', l10n('Just another Piwigo gallery'));
-                conf_update_param('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . l10n('Welcome to my photo gallery') . '</p>');
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
 
                 $languages->performAction('activate', $language);
-                load_conf_from_db();
+                ServiceLocator::get(ConfigService::class)->loadConfFromDb();
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 
@@ -244,14 +250,14 @@ final class InstallController implements ControllerInterface
             'F_ADMIN_EMAIL'          => $admin_mail,
             'EMAIL'                  => '<span class="adminEmail">' . $admin_mail . '</span>',
             'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,
-            'L_INSTALL_HELP'         => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+            'L_INSTALL_HELP'         => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
         ]);
 
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            pwg_activity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
-            $infos[] = l10n('Congratulations, Piwigo installation is completed');
+            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
+            $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {
                 session_set_save_handler(new PwgSession());
@@ -273,7 +279,7 @@ final class InstallController implements ControllerInterface
                 if (!is_array($user['preferences'] ?? null)) {
                     $user['preferences'] = [];
                 }
-                $user['preferences']['show_whats_new_' . get_branch_from_version(AppInfo::VERSION)] = false;
+                $user['preferences']['show_whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION)] = false;
 
                 if ($is_newsletter_subscribe) {
                     ServiceLocator::get(AdminService::class)->fetchRemote(
@@ -289,19 +295,19 @@ final class InstallController implements ControllerInterface
 
                 if (isset($_POST['send_credentials_by_mail'])) {
                     $keyargs_content = [
-                        get_l10n_args('Hello %s,', $admin_name),
-                        get_l10n_args('Welcome to your new installation of Piwigo!', ''),
-                        get_l10n_args('', ''),
-                        get_l10n_args('Here are your connection settings', ''),
-                        get_l10n_args('', ''),
-                        get_l10n_args('Link: %s', UrlService::getAbsoluteRootUrl()),
-                        get_l10n_args('Username: %s', $admin_name),
-                        get_l10n_args('Password: ********** (no copy by email)', ''),
-                        get_l10n_args('Email: %s', $admin_mail),
-                        get_l10n_args('', ''),
-                        get_l10n_args('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                        LangService::get()->getL10nArgs('Hello %s,', $admin_name),
+                        LangService::get()->getL10nArgs('Welcome to your new installation of Piwigo!', ''),
+                        LangService::get()->getL10nArgs('', ''),
+                        LangService::get()->getL10nArgs('Here are your connection settings', ''),
+                        LangService::get()->getL10nArgs('', ''),
+                        LangService::get()->getL10nArgs('Link: %s', UrlService::getAbsoluteRootUrl()),
+                        LangService::get()->getL10nArgs('Username: %s', $admin_name),
+                        LangService::get()->getL10nArgs('Password: ********** (no copy by email)', ''),
+                        LangService::get()->getL10nArgs('Email: %s', $admin_mail),
+                        LangService::get()->getL10nArgs('', ''),
+                        LangService::get()->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
                     ];
-                    pwg_mail($admin_mail, ['subject' => l10n('Just another Piwigo gallery'), 'content' => l10n_args($keyargs_content), 'content_format' => 'text/plain']);
+                    ServiceLocator::get(MailService::class)->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
                 }
             }
         }

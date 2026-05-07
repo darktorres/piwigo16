@@ -8,7 +8,9 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
@@ -215,8 +217,8 @@ final class SizesProcessor
                 ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
             }
 
-            $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => 'sizes']);
+            $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
+            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'sizes']);
         } else {
             foreach ($original_fields as $field) {
                 if (isset($_POST[$field])) {

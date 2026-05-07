@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\LangService;
+use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -42,17 +47,17 @@ final class ProfileService
         if (Config::allowUserCustomization() or defined('IN_ADMIN')) {
             $int_pattern = '/^\d+$/';
             if (empty($_POST['nb_image_page']) or (!preg_match($int_pattern, is_scalar($_POST['nb_image_page']) ? (string) $_POST['nb_image_page'] : ''))) {
-                $errors[] = l10n('The number of photos per page must be a not null scalar');
+                $errors[] = Lang::t('The number of photos per page must be a not null scalar');
             }
             if (!preg_match($int_pattern, is_scalar($_POST['recent_period'] ?? null) ? (string) $_POST['recent_period'] : '')
                 or (is_numeric($_POST['recent_period'] ?? null) ? $_POST['recent_period'] : 0) < 0
             ) {
-                $errors[] = l10n('Recent period must be a positive integer value');
+                $errors[] = Lang::t('Recent period must be a positive integer value');
             }
-            if (!in_array($_POST['language'] ?? null, array_keys(get_languages()))) {
+            if (!in_array($_POST['language'] ?? null, array_keys(Util::get()->getLanguages()))) {
                 die('Hacking attempt, incorrect language value');
             }
-            if (!in_array($_POST['theme'] ?? null, array_keys(get_pwg_themes()))) {
+            if (!in_array($_POST['theme'] ?? null, array_keys(ServiceLocator::get(Util::class)->getPwgThemes()))) {
                 die('Hacking attempt, incorrect theme value');
             }
         }
@@ -66,7 +71,7 @@ final class ProfileService
 
         if (!empty($_POST['use_new_pwd'])) {
             if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
-                $errors[] = l10n('The passwords do not match');
+                $errors[] = Lang::t('The passwords do not match');
             }
             if (!defined('IN_ADMIN')) {
                 $current_password = ServiceLocator::get(UserRepository::class)->findPasswordById(
@@ -76,7 +81,7 @@ final class ProfileService
                     is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0
                 );
                 if (!password_verify(is_scalar($_POST['password']) ? (string) $_POST['password'] : '', is_string($current_password) ? $current_password : '')) {
-                    $errors[] = l10n('Current password is wrong');
+                    $errors[] = Lang::t('Current password is wrong');
                 }
             }
         }
@@ -98,22 +103,22 @@ final class ProfileService
 
                 if (!empty($_POST['username'])) {
                     if ($_POST['username'] != $userdata['username'] and UserService::get()->getUserid(is_string($_POST['username']) ? $_POST['username'] : '')) {
-                        PageState::current()->addError(l10n('this login is already used'));
+                        PageState::current()->addError(Lang::t('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
                         $fields[]                                   = Config::userFields()['username'];
                         $data[Config::userFields()['username']]     = $_POST['username'];
                         if ($_POST['username'] != $userdata['username']) {
-                            switch_lang_to(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
+                            ServiceLocator::get(MailService::class)->switchLangTo(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
                             $keyargs_content = [
-                                get_l10n_args('Hello', ''),
-                                get_l10n_args('Your username has been successfully changed to : %s', $_POST['username']),
+                                LangService::get()->getL10nArgs('Hello', ''),
+                                LangService::get()->getL10nArgs('Your username has been successfully changed to : %s', $_POST['username']),
                             ];
-                            pwg_mail(
+                            ServiceLocator::get(MailService::class)->pwgMail(
                                 is_string($_POST['mail_address']) ? $_POST['mail_address'] : '',
-                                ['subject' => '[' . Config::galleryTitle() . '] ' . l10n('Username modification'), 'content' => l10n_args($keyargs_content), 'content_format' => 'text/plain']
+                                ['subject' => '[' . Config::galleryTitle() . '] ' . Lang::t('Username modification'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']
                             );
-                            switch_lang_back();
+                            ServiceLocator::get(MailService::class)->switchLangBack();
                         }
                     }
                 }
@@ -144,10 +149,10 @@ final class ProfileService
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
             EventDispatcher::notify('save_profile_from_post', $userId);
-            pwg_activity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
+            ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
 
             if (!empty($_POST['redirect'])) {
-                redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
+                Util::get()->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
             }
         }
         return true;
@@ -163,7 +168,7 @@ final class ProfileService
         $tpl  = TemplateRegistry::current();
         $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
 
-        $tpl->assign('radio_options', ['true' => l10n('Yes'), 'false' => l10n('No')]);
+        $tpl->assign('radio_options', ['true' => Lang::t('Yes'), 'false' => Lang::t('No')]);
         $tpl->assign([
             $template_prefixe . 'USERNAME'               => stripslashes(is_scalar($userdata['username'] ?? null) ? (string) $userdata['username'] : ''),
             $template_prefixe . 'EMAIL'                  => $userdata['email'] ?? null,
@@ -179,10 +184,10 @@ final class ProfileService
         ]);
 
         $tpl->assign('template_selection', $userdata['theme']);
-        $tpl->assign('template_options', get_pwg_themes());
+        $tpl->assign('template_options', ServiceLocator::get(Util::class)->getPwgThemes());
 
         $language_options = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
             if (isset($_POST['submit']) or $userdata['language'] == $language_code) {
                 $tpl->assign('language_selection', $language_code);
             }
@@ -212,10 +217,10 @@ final class ProfileService
         $query  = 'SELECT ' . implode(', ', $duration) . ';';
         $result = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
         foreach ($result as $day => $date) {
-            $display_duration[$day] = l10n('%d days', $day) . ' (' . format_date(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . ServiceLocator::get(DateService::class)->formatDate(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
         }
         if ($has_custom) {
-            $display_duration['custom'] = l10n('Custom date');
+            $display_duration['custom'] = Lang::t('Custom date');
         }
         $tpl->assign('API_EXPIRATION', $display_duration);
         $tpl->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
@@ -223,11 +228,11 @@ final class ProfileService
 
         $userEmail = is_scalar($user['email'] ?? null) ? (string) $user['email'] : '';
         $email_notifications_infos = $userEmail
-            ? l10n('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $userEmail)
-            : l10n('You have no email address, so you will not be notified when your API key is about to expire.');
+            ? Lang::t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $userEmail)
+            : Lang::t('You have no email address, so you will not be notified when your API key is about to expire.');
         $tpl->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         EventDispatcher::notify('load_profile_in_template', $userdata);
-        $tpl->assign('PWG_TOKEN', get_pwg_token());
+        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
     }
 }

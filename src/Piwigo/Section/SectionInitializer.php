@@ -6,13 +6,20 @@ namespace Piwigo\Section;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Calendar\CalendarService;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
@@ -26,7 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * Replaces the former include/section_init.inc.php procedural script.
  * The $scriptContext parameter ('index' or 'picture') replaces the old
- * script_basename() calls that distinguished between the gallery and single-
+ * StringUtil::scriptBasename() calls that distinguished between the gallery and single-
  * image pages.
  *
  * All $GLOBALS['page'] mutations are preserved so that existing Smarty
@@ -70,7 +77,7 @@ final class SectionInitializer
             if (is_numeric($token)) {
                 $page['image_id'] = $token;
                 if ((int) $token === 0) {
-                    bad_request('invalid picture identifier');
+                    ServiceLocator::get(HtmlService::class)->badRequest('invalid picture identifier');
                 }
             } else {
                 preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
@@ -84,7 +91,7 @@ final class SectionInitializer
                     if (!empty($matches[2] ?? '')) {
                         $page['image_file'] = $matches[2];
                     } else {
-                        bad_request('picture identifier is missing');
+                        ServiceLocator::get(HtmlService::class)->badRequest('picture identifier is missing');
                     }
                 }
             }
@@ -107,7 +114,7 @@ final class SectionInitializer
                         }
                     }
                     if (!empty($randomOptions)) {
-                        redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
+                        Util::get()->redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
                     }
                 }
                 $page['is_homepage'] = true;
@@ -139,10 +146,10 @@ final class SectionInitializer
             Config::override('order_by', Config::orderByInsideCategory());
         }
 
-        if (pwg_get_session_var('image_order', 0) > 0) {
-            $imageOrderId    = pwg_get_session_var('image_order', 0);
-            $orders          = get_category_preferred_image_orders();
-            $imageOrderIdInt = (int) $imageOrderId;
+        $imageOrderRaw = ServiceLocator::get(SessionService::class)->getSessionVar('image_order', 0);
+        if (is_numeric($imageOrderRaw) && (int) $imageOrderRaw > 0) {
+            $orders          = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
+            $imageOrderIdInt = (int) $imageOrderRaw;
             $orderEntry      = is_array($orders[$imageOrderIdInt] ?? null) ? $orders[$imageOrderIdInt] : [];
             if ($orderEntry[2] ?? false) {
                 $orderCol = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
@@ -153,7 +160,7 @@ final class SectionInitializer
                 ));
                 $page['super_order_by'] = true;
             } else {
-                pwg_unset_session_var('image_order');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('image_order');
                 $page['super_order_by'] = false;
             }
         }
@@ -171,13 +178,13 @@ final class SectionInitializer
 
         if ($section === 'categories') {
             if (isset($page['combined_categories'])) {
-                $page['title'] = get_combined_categories_content_title();
+                $page['title'] = ServiceLocator::get(HtmlService::class)->getCombinedCategoriesContentTitle();
             } elseif ($category !== null) {
                 $catComment   = is_string($category['comment'] ?? null) ? $category['comment'] : '';
                 $upperNames   = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
                 $page = array_merge($page, [
                     'comment' => EventDispatcher::dispatch('render_category_description', $catComment, 'main_page_category_description'),
-                    'title'   => get_cat_display_name($upperNames, ''),
+                    'title'   => ServiceLocator::get(HtmlService::class)->getCatDisplayName($upperNames, ''),
                 ]);
             } else {
                 $page['title'] = '';
@@ -195,7 +202,7 @@ final class SectionInitializer
                         $catIds[] = (int) $combinedCat['id'];
                     }
                 }
-                $page['items'] = get_image_ids_for_categories($catIds);
+                $page['items'] = ServiceLocator::get(CategoryService::class)->getImageIdsForCategories($catIds);
             } elseif (
                 $startcat === 0
                 && !isset($page['chronology_field'])
@@ -272,17 +279,17 @@ SELECT DISTINCT(image_id)
             }
             $page['tag_ids'] = $tagIds;
 
-            $items = get_image_ids_for_tags($tagIds);
+            $items = ServiceLocator::get(TagService::class)->getImageIdsForTags($tagIds);
             if (count($items) === 0) {
                 LoggerRegistry::current()->info(
                     'attempt to see the name of the tag #' . implode(', #', $tagIds)
                     . ' from the address : '
                     . (is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '')
                 );
-                access_denied();
+                ServiceLocator::get(HtmlService::class)->accessDenied();
             }
             $page = array_merge($page, [
-                'title' => get_tags_content_title(),
+                'title' => ServiceLocator::get(HtmlService::class)->getTagsContentTitle(),
                 'items' => $items,
             ]);
         } elseif ($section === 'search') {
@@ -296,18 +303,18 @@ SELECT DISTINCT(image_id)
             }
             $page = array_merge($page, [
                 'items' => $searchResult['items'],
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Search results') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Search results') . '</a>',
             ]);
         } elseif ($section === 'favorites') {
             UserService::get()->checkUserFavorites();
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Favorites') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Favorites') . '</a>',
             ]);
             $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 ServiceLocator::get(UserRepository::class)->deleteAllFavoritesByUserId($userId);
-                redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
+                Util::get()->redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
@@ -346,12 +353,12 @@ SELECT DISTINCT(id)
   ' . $forbidden . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Recent photos') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'recent_cats') {
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Recent albums') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent albums') . '</a>',
             ]);
         } elseif ($section === 'most_visited') {
             $page['super_order_by'] = true;
@@ -367,7 +374,7 @@ SELECT DISTINCT(id)
 ;';
             $page = array_merge($page, [
                 'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
-                           . Config::topNumber() . ' ' . l10n('Most visited') . '</a>',
+                           . Config::topNumber() . ' ' . Lang::t('Most visited') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'best_rated') {
@@ -384,7 +391,7 @@ SELECT DISTINCT(id)
 ;';
             $page = array_merge($page, [
                 'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
-                           . Config::topNumber() . ' ' . l10n('Best rated') . '</a>',
+                           . Config::topNumber() . ' ' . Lang::t('Best rated') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'list') {
@@ -398,7 +405,7 @@ SELECT DISTINCT(id)
   ' . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Random photos') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Random photos') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         }
@@ -413,7 +420,7 @@ SELECT DISTINCT(id)
         // ── Title ─────────────────────────────────────────────────────────────
 
         if (isset($page['title'])) {
-            $page['section_title'] = '<a href="' . UrlService::get()->getGalleryHomeUrl() . '">' . l10n('Home') . '</a>';
+            $page['section_title'] = '<a href="' . UrlService::get()->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
             $pageTitle = is_string($page['title']) ? $page['title'] : '';
             if ($pageTitle !== '') {
                 $page['section_title'] .= Config::levelSeparator() . $pageTitle;
@@ -459,7 +466,7 @@ SELECT DISTINCT(id)
             $needRedirect   = false;
 
             if ($catPermalink === '') {
-                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== str2url($catName)) {
+                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== ServiceLocator::get(StringUtil::class)->str2url($catName)) {
                     $needRedirect = true;
                 }
             } elseif ($catPermalink !== $hitPermalink) {
@@ -468,13 +475,13 @@ SELECT DISTINCT(id)
 
             if ($needRedirect) {
                 $catId = is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
-                check_restrictions($catId);
+                ServiceLocator::get(CategoryService::class)->checkRestrictions($catId);
                 $redirectUrl = $scriptContext === 'picture' ? UrlService::get()->duplicatePictureUrl() : UrlService::get()->duplicateIndexUrl();
                 if (!headers_sent()) {
-                    set_status_header(301);
-                    redirect_http($redirectUrl);
+                    ServiceLocator::get(HtmlService::class)->setStatusHeader(301);
+                    Util::get()->redirectHttp($redirectUrl);
                 }
-                redirect($redirectUrl);
+                Util::get()->redirect($redirectUrl);
             }
             unset($page['hit_by']);
         }

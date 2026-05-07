@@ -10,9 +10,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
@@ -37,7 +41,7 @@ final readonly class MailService
 
     public function getMailSenderEmail(): string
     {
-        return empty(Config::mailSenderEmail()) ? get_webmaster_mail_address() : Config::mailSenderEmail();
+        return empty(Config::mailSenderEmail()) ? ServiceLocator::get(Util::class)->getWebmasterMailAddress() : Config::mailSenderEmail();
     }
 
     /** @return array<string,mixed> */
@@ -177,19 +181,19 @@ final readonly class MailService
             LanguageStack::setLang([]);
             LanguageStack::setInfo([]);
 
-            load_language('common.lang', '', ['language' => $language]);
-            load_language('admin.lang', '', ['language' => $language]);
+            LangService::get()->loadLanguage('common.lang', '', ['language' => $language]);
+            LangService::get()->loadLanguage('admin.lang', '', ['language' => $language]);
 
             $pluginFiles = LanguageStack::pluginFiles();
             foreach ($pluginFiles as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
-                    load_language($filename, $dirname, $options);
+                    LangService::get()->loadLanguage($filename, $dirname, $options);
                 }
             }
 
             EventDispatcher::notify('loading_lang');
-            load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
+            LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
             Translator::saveForLanguage($language);
@@ -223,10 +227,10 @@ final readonly class MailService
             $this->switchLangTo(UserService::get()->getDefaultLanguage());
 
             if (is_array($subject)) {
-                $subject = l10n_args($subject);
+                $subject = LangService::get()->l10nArgs($subject);
             }
             if (is_array($content)) {
-                $content = l10n_args($content);
+                $content = LangService::get()->l10nArgs($content);
             }
 
             $this->switchLangBack();
@@ -471,7 +475,7 @@ SELECT
 
         $Bcc = $this->getCleanRecipientsList($args['Bcc'] ?? '');
         if (Config::sendBccMailWebmaster()) {
-            $Bcc[] = ['email' => get_webmaster_mail_address(), 'name' => ''];
+            $Bcc[] = ['email' => ServiceLocator::get(Util::class)->getWebmasterMailAddress(), 'name' => ''];
         }
         if (!empty($Bcc)) {
             foreach ($Bcc as $recipient) {
@@ -535,7 +539,7 @@ SELECT
                     'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
-                    'CONTENT_ENCODING' => get_pwg_charset(),
+                    'CONTENT_ENCODING' => ServiceLocator::get(StringUtil::class)->getPwgCharset(),
                     'CONTACT_MAIL'     => $this->getMailSenderEmail(),
                 ]);
 
@@ -699,7 +703,7 @@ SELECT
         $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
 
         $dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
-        if (mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (Util::get()->mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes(CurrentUser::get()->username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
             if ($args['content_format'] == 'text/plain') {
                 $filename .= '.txt';
@@ -726,21 +730,21 @@ SELECT
         UrlService::get()->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
-        $message  = l10n('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . l10n('To reset your password, visit the following address:');
-        $message .= ' <a href="' . $passwordLink . '">' . l10n('Change my password') . '</a></p>';
+        $message  = Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::t('To reset your password, visit the following address:');
+        $message .= ' <a href="' . $passwordLink . '">' . Lang::t('Change my password') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         UrlService::get()->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
 
         return [
-            'subject'        => '[' . $galleryTitle . '] ' . l10n('Password Reset'),
+            'subject'        => '[' . $galleryTitle . '] ' . Lang::t('Password Reset'),
             'content'        => $message,
             'content_format' => 'text/html',
         ];
@@ -752,19 +756,19 @@ SELECT
         UrlService::get()->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
-        $message .= l10n('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . l10n('To set your password, visit the following address:');
-        $message .= ' <a href="' . $setPasswordLink . '">' . l10n('Activate') . '</a></p>';
+        $message .= Lang::t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::t('To set your password, visit the following address:');
+        $message .= ' <a href="' . $setPasswordLink . '">' . Lang::t('Activate') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         UrlService::get()->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
-        $subject = l10n('Welcome to %s', $galleryTitle);
+        $subject = Lang::t('Welcome to %s', $galleryTitle);
 
         return [
             'subject'        => $subject,
@@ -778,13 +782,13 @@ SELECT
     {
         UrlService::get()->setMakeFullUrl();
         $message  = '<p style="margin: 20px 0">';
-        $message .= l10n('Here is your verification code:') . ' <br />';
+        $message .= Lang::t('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
         UrlService::get()->unsetMakeFullUrl();
 
-        $subject = '[' . Config::galleryTitle() . '] ' . l10n('Your verification code');
+        $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('Your verification code');
         return [
             'subject'        => $subject,
             'content'        => $message,
@@ -798,20 +802,20 @@ SELECT
         UrlService::get()->setMakeFullUrl();
         $profileUrl = ServiceLocator::get(UrlGenerator::class)->profile();
 
-        $message  = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
-        $message .= '<p style="margin-bottom: 20px;">' . l10n('Your password was successfully reset') . '.</p>';
+        $message  = '<p style="margin-top: 20px;">' . Lang::t('Hello %s,', $username) . '</p>';
+        $message .= '<p style="margin-bottom: 20px;">' . Lang::t('Your password was successfully reset') . '.</p>';
         $message .= '<p>';
-        $message .= l10n('If this wasn\'t you, please change your password immediately or contact your webmaster.');
+        $message .= Lang::t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
         $message .= '</p>';
 
         if ($nbOfApikeys > 0) {
             $message .= '<p style="margin: 20px 0;">';
-            $message .= l10n('If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.', $nbOfApikeys, $profileUrl);
+            $message .= Lang::t('If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.', $nbOfApikeys, $profileUrl);
             $message .= '</p>';
         }
         UrlService::get()->unsetMakeFullUrl();
 
-        $subject = '[' . Config::galleryTitle() . '] ' . l10n('Your password has been reset');
+        $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('Your password has been reset');
         return [
             'subject'        => $subject,
             'content'        => $message,

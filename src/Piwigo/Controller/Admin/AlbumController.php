@@ -11,10 +11,15 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
@@ -22,11 +27,14 @@ use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
@@ -76,7 +84,7 @@ final class AlbumController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
 
         $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
         $this->adminAlbumBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
@@ -99,7 +107,7 @@ final class AlbumController
 
         $category_name = EventDispatcher::dispatch('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
         $tpl->assign([
-            'ADMIN_PAGE_TITLE'     => l10n('Edit album') . ' <strong>' . (is_scalar($category_name) ? (string) $category_name : '') . '</strong>',
+            'ADMIN_PAGE_TITLE'     => Lang::t('Edit album') . ' <strong>' . (is_scalar($category_name) ? (string) $category_name : '') . '</strong>',
             'ADMIN_PAGE_OBJECT_ID' => '#' . (is_scalar($this->albumCategory['id']) ? (string) $this->albumCategory['id'] : ''),
         ]);
 
@@ -125,7 +133,7 @@ final class AlbumController
         $user = $GLOBALS['user'];
         $albums_counter = ServiceLocator::get(CategoryRepository::class)->countAll();
 
-        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'list';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
@@ -144,14 +152,14 @@ final class AlbumController
             if (!in_array($_POST['order'], $sort_orders)) {
                 throw new ValidationException('Invalid sort order');
             }
-            check_input_parameter('id', $_POST, false, '/^-?\d+$/');
+            ServiceLocator::get(Util::class)->checkInputParameter('id', $_POST, false, '/^-?\d+$/');
 
             $post_id_str = is_scalar($_POST['id']) ? (string) $_POST['id'] : '';
             $query = 'SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (($post_id_str === '-1') ? 'IS NULL' : '= ' . $post_id_str) . ';';
             $category_ids = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
 
             if (isset($_POST['recursiveAutoOrder'])) {
-                $category_ids = get_subcat_ids($category_ids);
+                $category_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds($category_ids);
             }
 
             $categories = [];
@@ -175,7 +183,7 @@ final class AlbumController
                     $rowId  = is_scalar($row['id']) ? (string) $row['id'] : '';
                     $sort[] = $ref_dates[$rowId] ?? null;
                 } else {
-                    $sort[] = remove_accents(is_scalar($row['name']) ? (string) $row['name'] : '');
+                    $sort[] = ServiceLocator::get(StringUtil::class)->removeAccents(is_scalar($row['name']) ? (string) $row['name'] : '');
                 }
                 $categories[] = ['id' => $row['id'], 'id_uppercat' => $row['id_uppercat']];
             }
@@ -196,7 +204,7 @@ final class AlbumController
         $associatedTree = [];
         foreach ($allAlbum as $album) {
             $album['name'] = EventDispatcher::dispatch('render_category_name', $album['name'], 'admin_cat_list');
-            $album['lastmodified'] = time_since(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
+            $album['lastmodified'] = ServiceLocator::get(DateService::class)->timeSince(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
             $parents = explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : '');
             $the_place = &$associatedTree[strval($parents[0])];
             for ($i = 1; $i < count($parents); $i++) {
@@ -232,44 +240,44 @@ final class AlbumController
 
         $tpl->assign([
             'album_data'          => $album_tree,
-            'PWG_TOKEN'           => get_pwg_token(),
+            'PWG_TOKEN'           => ServiceLocator::get(Util::class)->getPwgToken(),
             'nb_albums'           => $nb_albums,
-            'ADMIN_PAGE_TITLE'    => l10n('Albums'),
+            'ADMIN_PAGE_TITLE'    => Lang::t('Albums'),
             'light_album_manager' => $light_album_manager,
             'page_data_json'      => json_encode([
                 'data'                          => $album_tree,
-                'pwg_token'                     => get_pwg_token(),
+                'pwg_token'                     => ServiceLocator::get(Util::class)->getPwgToken(),
                 'openCat'                       => (int) $open_cat,
                 'nb_albums'                     => $nb_albums,
                 'light_album_manager'           => (bool) $light_album_manager,
                 'delay_autoOpen'                => Config::albumMoveDelayBeforeAutoOpening(),
-                'x_nb_subcats'                  => l10n('%d sub-albums'),
-                'x_nb_images'                   => l10n('%d photos'),
-                'x_nb_sub_photos'               => l10n('%d pictures in sub-albums'),
-                'str_are_you_sure'              => l10n("The status of the album '%s' and its sub-albums will change to private. Are you sure?"),
-                'str_yes_change_parent'         => l10n('Yes change parent anyway'),
-                'str_no_change_parent'          => l10n("No, don't move this album here"),
-                'str_albs_drag_drop'            => l10n('Drag and drop to reorder albums'),
-                'delete_album_with_name'        => l10n('Delete album "%s".'),
-                'delete_album_with_subs'        => l10n('Delete album "%s" and its %d sub-albums.'),
-                'has_images_associated_outside' => l10n('delete album and all %d photos, even the %d associated to other albums'),
-                'has_images_becomming_orphans'  => l10n('delete album and the %d orphan photos'),
-                'rename_item'                   => l10n('Rename "%s"'),
-                'str_add_album'                 => l10n('Add Album'),
-                'str_edit_album'                => l10n('Edit album'),
-                'str_add_photo'                 => l10n('Add Photos'),
-                'str_visit_gallery'             => l10n('Visit Gallery'),
-                'str_sort_order'                => l10n('Automatic sort order'),
-                'str_delete_album'              => l10n('Delete album'),
-                'str_root_order'                => l10n('Apply to root albums'),
-                'str_sub_album_order'           => l10n('Apply to direct sub-albums'),
-                'str_album_name_empty'          => l10n('Album name must not be empty'),
-                'add_album_root_title'          => l10n('Create a new album at root'),
-                'add_sub_album_of'              => l10n('Create a sub-album of "%s"'),
-                'tiptip_locked_album'           => l10n('Locked album'),
-                'str_albums_found'              => l10n('<b>%d</b> albums found'),
-                'str_album_found'               => l10n('<b>1</b> album found'),
-                'str_result_limit'              => l10n('<b>%d+</b> albums found, try to refine the search'),
+                'x_nb_subcats'                  => Lang::t('%d sub-albums'),
+                'x_nb_images'                   => Lang::t('%d photos'),
+                'x_nb_sub_photos'               => Lang::t('%d pictures in sub-albums'),
+                'str_are_you_sure'              => Lang::t("The status of the album '%s' and its sub-albums will change to private. Are you sure?"),
+                'str_yes_change_parent'         => Lang::t('Yes change parent anyway'),
+                'str_no_change_parent'          => Lang::t("No, don't move this album here"),
+                'str_albs_drag_drop'            => Lang::t('Drag and drop to reorder albums'),
+                'delete_album_with_name'        => Lang::t('Delete album "%s".'),
+                'delete_album_with_subs'        => Lang::t('Delete album "%s" and its %d sub-albums.'),
+                'has_images_associated_outside' => Lang::t('delete album and all %d photos, even the %d associated to other albums'),
+                'has_images_becomming_orphans'  => Lang::t('delete album and the %d orphan photos'),
+                'rename_item'                   => Lang::t('Rename "%s"'),
+                'str_add_album'                 => Lang::t('Add Album'),
+                'str_edit_album'                => Lang::t('Edit album'),
+                'str_add_photo'                 => Lang::t('Add Photos'),
+                'str_visit_gallery'             => Lang::t('Visit Gallery'),
+                'str_sort_order'                => Lang::t('Automatic sort order'),
+                'str_delete_album'              => Lang::t('Delete album'),
+                'str_root_order'                => Lang::t('Apply to root albums'),
+                'str_sub_album_order'           => Lang::t('Apply to direct sub-albums'),
+                'str_album_name_empty'          => Lang::t('Album name must not be empty'),
+                'add_album_root_title'          => Lang::t('Create a new album at root'),
+                'add_sub_album_of'              => Lang::t('Create a sub-album of "%s"'),
+                'tiptip_locked_album'           => Lang::t('Locked album'),
+                'str_albums_found'              => Lang::t('<b>%d</b> albums found'),
+                'str_album_found'               => Lang::t('<b>1</b> album found'),
+                'str_result_limit'              => Lang::t('<b>%d+</b> albums found, try to refine the search'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
@@ -287,7 +295,7 @@ final class AlbumController
         $admin_album_base_url = $this->adminAlbumBaseUrl;
 
         if ($category === null) {
-            check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
             $admin_album_base_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
             $category = ServiceLocator::get(CategoryRepository::class)
@@ -301,7 +309,7 @@ final class AlbumController
         $page['cat'] = $category['id'];
 
         if (isset($_POST['submitEmail'])) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
             UrlService::get()->setMakeFullUrl();
 
             $img = [];
@@ -316,7 +324,7 @@ final class AlbumController
                 }
             }
 
-            $args = ['subject' => l10n('[%s] Visit album %s', Config::galleryTitle(), EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'))];
+            $args = ['subject' => Lang::t('[%s] Visit album %s', Config::galleryTitle(), EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'))];
             $mailTpl = [
                 'filename' => 'cat_group_info',
                 'assign'   => [
@@ -328,7 +336,7 @@ final class AlbumController
             ];
 
             if ('users' == $_POST['who'] && isset($_POST['users']) && is_array($_POST['users']) && count($_POST['users']) > 0) {
-                check_input_parameter('users', $_POST, true, ValidationPattern::ID);
+                ServiceLocator::get(Util::class)->checkInputParameter('users', $_POST, true, ValidationPattern::ID);
                 $query = 'SELECT ui.user_id, ui.status, ui.language, u.' . Config::userFields()['email'] . ' AS email, u.' . Config::userFields()['username'] . ' AS username FROM ' . Tables::userInfos() . ' AS ui JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id WHERE ui.user_id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])) . ');';
                 $users     = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 $usernames = [];
@@ -346,19 +354,19 @@ final class AlbumController
                     if (isset($authkey['auth_key'])) {
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
-                    switch_lang_to(is_scalar($u['language']) ? (string) $u['language'] : '');
-                    pwg_mail(is_scalar($u['email']) ? (string) $u['email'] : '', $user_args, $user_tpl);
-                    switch_lang_back();
+                    ServiceLocator::get(MailService::class)->switchLangTo(is_scalar($u['language']) ? (string) $u['language'] : '');
+                    ServiceLocator::get(MailService::class)->pwgMail(is_scalar($u['email']) ? (string) $u['email'] : '', $user_args, $user_tpl);
+                    ServiceLocator::get(MailService::class)->switchLangBack();
                 }
-                $message  = l10n_dec('%d mail was sent.', '%d mails were sent.', count($users));
+                $message  = Translator::get()->plural('%d mail was sent.', '%d mails were sent.', count($users));
                 $message .= ' (' . implode(', ', $usernames) . ')';
                 $tpl->assign(['save_success' => $message]);
             } elseif ('group' == $_POST['who'] && !empty($_POST['group'])) {
-                check_input_parameter('group', $_POST, false, ValidationPattern::ID);
-                pwg_mail_group(is_numeric($_POST['group']) ? (int) $_POST['group'] : 0, $args, $mailTpl);
+                ServiceLocator::get(Util::class)->checkInputParameter('group', $_POST, false, ValidationPattern::ID);
+                ServiceLocator::get(MailService::class)->pwgMailGroup(is_numeric($_POST['group']) ? (int) $_POST['group'] : 0, $args, $mailTpl);
                 $post_group_str = is_scalar($_POST['group']) ? (string) $_POST['group'] : '0';
                 $group_name     = ServiceLocator::get(GroupRepository::class)->findNameById((int) $post_group_str);
-                $tpl->assign(['save_success' => l10n('An information email was sent to group "%s"', $group_name)]);
+                $tpl->assign(['save_success' => Lang::t('An information email was sent to group "%s"', $group_name)]);
             }
 
             UrlService::get()->unsetMakeFullUrl();
@@ -367,13 +375,13 @@ final class AlbumController
         $catIdScalar = is_scalar($page['cat']) ? (string) $page['cat'] : '';
         $tpl->setFilename('album_notification', 'album_notification.tpl');
         $tpl->assign([
-            'CATEGORIES_NAV' => trim(get_cat_display_name_from_id($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
+            'CATEGORIES_NAV' => trim(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
             'F_ACTION'       => $admin_album_base_url . '-notification',
-            'PWG_TOKEN'      => get_pwg_token(),
+            'PWG_TOKEN'      => ServiceLocator::get(Util::class)->getPwgToken(),
         ]);
 
         if (Config::authKeyDuration() > 0) {
-            $tpl->assign('auth_key_duration', time_since(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
+            $tpl->assign('auth_key_duration', ServiceLocator::get(DateService::class)->timeSince(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
         }
 
         $all_group_ids = array_column(DbConnection::get()->executeQuery('SELECT id AS group_id FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'group_id');
@@ -426,22 +434,22 @@ final class AlbumController
         EventDispatcher::notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
         $sort_orders = [
-            'name ASC'            => l10n('Album name, A &rarr; Z'),
-            'name DESC'           => l10n('Album name, Z &rarr; A'),
-            'date_creation DESC'  => l10n('Date created, new &rarr; old') . ' ' . l10n('(determined from photos)'),
-            'date_creation ASC'   => l10n('Date created, old &rarr; new') . ' ' . l10n('(determined from photos)'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old') . ' ' . l10n('(determined from photos)'),
-            'date_available ASC'  => l10n('Date posted, old &rarr; new') . ' ' . l10n('(determined from photos)'),
+            'name ASC'            => Lang::t('Album name, A &rarr; Z'),
+            'name DESC'           => Lang::t('Album name, Z &rarr; A'),
+            'date_creation DESC'  => Lang::t('Date created, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
+            'date_creation ASC'   => Lang::t('Date created, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
+            'date_available ASC'  => Lang::t('Date posted, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
         ];
 
-        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);
 
         $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
-        $navigation = '<a href="' . $base_url . '">' . l10n('Home') . '</a>';
+        $navigation = '<a href="' . $base_url . '">' . Lang::t('Home') . '</a>';
 
         $page['tab'] = 'list';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
@@ -452,14 +460,14 @@ final class AlbumController
                 $photo_deletion_mode = $_GET['photo_deletion_mode'];
             }
             ServiceLocator::get(CategoryAdminService::class)->deleteCategories([(int) $_GET['delete']], is_scalar($photo_deletion_mode) ? (string) $photo_deletion_mode : 'no_delete');
-            $_SESSION['page_infos'] = [l10n('Virtual album deleted')];
+            $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
             ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
             $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
             if (isset($_GET['parent_id'])) {
                 $redirect_url .= '&parent_id=' . (is_scalar($_GET['parent_id']) ? (string) $_GET['parent_id'] : '');
             }
-            redirect($redirect_url);
+            Util::get()->redirect($redirect_url);
         } elseif (isset($_POST['submitAdd'])) {
             $output_create = ServiceLocator::get(CategoryAdminService::class)->createVirtualCategory(
                 is_scalar($_POST['virtual_name']) ? (string) $_POST['virtual_name'] : '',
@@ -470,14 +478,14 @@ final class AlbumController
                 PageState::current()->addError(is_scalar($output_create['error']) ? (string) $output_create['error'] : '');
             } else {
                 $edit_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . (is_scalar($output_create['id'] ?? '') ? (string) ($output_create['id'] ?? '') : ''));
-                PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . l10n('Edit album') . '</a>');
+                PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
             }
         }
 
         if (isset($_GET['parent_id'])) {
             $navigation .= Config::levelSeparator();
             $raw_parent_id = $_GET['parent_id'];
-            $navigation   .= get_cat_display_name_from_id(is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0, $base_url . '&amp;parent_id=');
+            $navigation   .= ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId(is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0, $base_url . '&amp;parent_id=');
         }
 
         $tpl->setFilename('categories', 'cat_list.tpl');
@@ -488,10 +496,10 @@ final class AlbumController
         $sort_orders_checked = array_keys($sort_orders);
 
         $tpl->assign([
-            'ADMIN_PAGE_TITLE'    => l10n('Album list management'),
+            'ADMIN_PAGE_TITLE'    => Lang::t('Album list management'),
             'CATEGORIES_NAV'      => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION'            => $form_action,
-            'PWG_TOKEN'           => get_pwg_token(),
+            'PWG_TOKEN'           => ServiceLocator::get(Util::class)->getPwgToken(),
             'sort_orders'         => $sort_orders,
             'sort_order_checked'  => array_shift($sort_orders_checked),
         ]);
@@ -561,7 +569,7 @@ final class AlbumController
 
             if (empty($category['dir'])) {
                 $tpl_cat['U_DELETE']  = $self_url . '&amp;delete=' . (is_scalar($category['id']) ? (string) $category['id'] : '');
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . get_pwg_token();
+                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
             } elseif (Config::enableSynchronization()) {
                 $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . (is_scalar($category['id']) ? (string) $category['id'] : '');
             }
@@ -618,17 +626,17 @@ final class AlbumController
 
         $category['is_virtual'] = empty($category['dir']);
         $category['has_images'] = ServiceLocator::get(CategoryRepository::class)->hasCategoryImages($catIntId);
-        $subcat_ids             = get_subcat_ids([$catId]);
+        $subcat_ids             = ServiceLocator::get(CategoryService::class)->getSubcatIds([$catId]);
         $category['nb_subcats'] = count($subcat_ids) - 1;
 
-        $navigation = get_cat_display_name_cache($catUppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+        $navigation = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($catUppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
 
         $uppercats_array = explode(',', $catUppercats);
         if (count($uppercats_array) > 1) {
             array_pop($uppercats_array);
-            $parent_navigation = get_cat_display_name_cache(implode(',', $uppercats_array), ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+            $parent_navigation = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(implode(',', $uppercats_array), ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
         } else {
-            $parent_navigation = l10n('Root');
+            $parent_navigation = Lang::t('Root');
         }
 
         $tpl->setFilename('album_properties', 'cat_modify.tpl');
@@ -639,7 +647,7 @@ final class AlbumController
             $self_url .= '&amp;parent_id=' . $catUppercat;
         }
 
-        PageState::current()->addWarning(l10n('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . l10n('Unlock it') . '</span>');
+        PageState::current()->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
 
         $tpl->assign([
             'CATEGORIES_NAV'        => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
@@ -670,28 +678,28 @@ final class AlbumController
             $min_date = (string) $min_date;
             $max_date = (string) $max_date;
             $info_title = ($min_date == $max_date)
-                ? l10n('This album contains %d photos, added on %s.', $image_count, format_date($min_date))
-                : l10n('This album contains %d photos, added between %s and %s.', $image_count, format_date($min_date), format_date($max_date));
+                ? Lang::t('This album contains %d photos, added on %s.', $image_count, ServiceLocator::get(DateService::class)->formatDate($min_date))
+                : Lang::t('This album contains %d photos, added between %s and %s.', $image_count, ServiceLocator::get(DateService::class)->formatDate($min_date), ServiceLocator::get(DateService::class)->formatDate($max_date));
         }
-        $tpl->assign(['INFO_PHOTO' => l10n('%d photos', $image_count), 'INFO_TITLE' => $info_title]);
+        $tpl->assign(['INFO_PHOTO' => Lang::t('%d photos', $image_count), 'INFO_TITLE' => $info_title]);
 
         $category['nb_images_recursive'] = count(array_column(DbConnection::get()->executeQuery('SELECT DISTINCT (image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcat_ids) . ');')->fetchAllAssociative(), 'image_id'));
 
         $result = DbConnection::get()->executeQuery('SELECT occured_on FROM `' . Tables::activity() . '` WHERE object_id = ' . $catIntId . ' AND object = "album" AND action = "add"')->fetchAllAssociative();
         if (count($result) > 0) {
             $occurred_on = is_scalar($result[0]['occured_on']) ? (string) $result[0]['occured_on'] : '';
-            $tpl->assign(['INFO_CREATION_SINCE' => time_since($occurred_on, 'day', null, true, true, true), 'INFO_CREATION' => format_date($occurred_on, ['day', 'month', 'year'])]);
+            $tpl->assign(['INFO_CREATION_SINCE' => ServiceLocator::get(DateService::class)->timeSince($occurred_on, 'day', null, true, true, true), 'INFO_CREATION' => ServiceLocator::get(DateService::class)->formatDate($occurred_on, ['day', 'month', 'year'])]);
         }
 
         $result = DbConnection::get()->executeQuery('SELECT COUNT(*) FROM `' . Tables::categories() . '` WHERE id_uppercat = ' . $catIntId)->fetchAllAssociative();
-        $tpl->assign(['INFO_DIRECT_SUB' => l10n('%d sub-albums', $result[0]['COUNT(*)'])]);
+        $tpl->assign(['INFO_DIRECT_SUB' => Lang::t('%d sub-albums', $result[0]['COUNT(*)'])]);
 
         $tpl->assign([
-            'INFO_ID'                  => l10n('Numeric identifier : %d', $catId),
-            'INFO_LAST_MODIFIED_SINCE' => time_since($catLastmod, 'minute', null, true, true, true),
-            'INFO_LAST_MODIFIED'       => format_date($catLastmod, ['day', 'month', 'year']),
-            'INFO_IMAGES_RECURSIVE'    => l10n('%d including sub-albums', $category['nb_images_recursive']),
-            'INFO_SUBCATS'             => l10n('%d in whole branch', $category['nb_subcats']),
+            'INFO_ID'                  => Lang::t('Numeric identifier : %d', $catId),
+            'INFO_LAST_MODIFIED_SINCE' => ServiceLocator::get(DateService::class)->timeSince($catLastmod, 'minute', null, true, true, true),
+            'INFO_LAST_MODIFIED'       => ServiceLocator::get(DateService::class)->formatDate($catLastmod, ['day', 'month', 'year']),
+            'INFO_IMAGES_RECURSIVE'    => Lang::t('%d including sub-albums', $category['nb_images_recursive']),
+            'INFO_SUBCATS'             => Lang::t('%d in whole branch', $category['nb_subcats']),
             'NB_SUBCATS'               => $category['nb_subcats'],
         ]);
 
@@ -724,8 +732,8 @@ final class AlbumController
             $tpl->assign('parent_category', $catUppercat === '' ? [] : [$catUppercat]);
         }
 
-        $tpl->assign('PWG_TOKEN', get_pwg_token());
-        $pwg_token     = get_pwg_token();
+        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
+        $pwg_token     = ServiceLocator::get(Util::class)->getPwgToken();
         $parent_cat_id = $catUppercat !== '' ? (int) $catUppercat : 0;
         $tpl->assign('page_data_json', json_encode([
             'album_id'                             => $catIntId,
@@ -737,16 +745,16 @@ final class AlbumController
             'related_categories_ids'               => [$catId, (string) $parent_cat_id],
             'u_delete'                             => $base_url . 'albums',
             'pwg_token'                            => $pwg_token,
-            'str_cancel'                           => l10n('No, I have changed my mind'),
-            'str_delete_album'                     => l10n('Delete album'),
-            'str_delete_album_and_his_x_subalbums' => l10n('Delete album "%s" and its %d sub-albums.'),
-            'str_just_now'                         => l10n('Just now'),
-            'str_dont_delete_photos'               => l10n('delete only album, not photos'),
-            'str_delete_orphans'                   => l10n('delete album and the %d orphan photos'),
-            'str_delete_all_photos'                => l10n('delete album and all %d photos, even the %d associated to other albums'),
-            'str_album_comment_allow'              => l10n('Comments allowed for sub-albums'),
-            'str_album_comment_disallow'           => l10n('Comments disallowed for sub-albums'),
-            'str_modal_ab'                         => l10n('New parent album'),
+            'str_cancel'                           => Lang::t('No, I have changed my mind'),
+            'str_delete_album'                     => Lang::t('Delete album'),
+            'str_delete_album_and_his_x_subalbums' => Lang::t('Delete album "%s" and its %d sub-albums.'),
+            'str_just_now'                         => Lang::t('Just now'),
+            'str_dont_delete_photos'               => Lang::t('delete only album, not photos'),
+            'str_delete_orphans'                   => Lang::t('delete album and the %d orphan photos'),
+            'str_delete_all_photos'                => Lang::t('delete album and all %d photos, even the %d associated to other albums'),
+            'str_album_comment_allow'              => Lang::t('Comments allowed for sub-albums'),
+            'str_album_comment_disallow'           => Lang::t('Comments disallowed for sub-albums'),
+            'str_modal_ab'                         => Lang::t('New parent album'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         EventDispatcher::notify('loc_end_cat_modify');
@@ -761,10 +769,10 @@ final class AlbumController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
-            check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
+            ServiceLocator::get(Util::class)->checkPwgToken();
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
         }
 
         if (isset($_POST['falsify']) && isset($_POST['cat_true']) && count(is_array($_POST['cat_true']) ? $_POST['cat_true'] : []) > 0) {
@@ -778,7 +786,7 @@ final class AlbumController
                 'representative' => ServiceLocator::get(CategoryRepository::class)->clearRepresentatives($cat_true),
                 default          => null,
             };
-            pwg_activity('album', $cat_true, 'edit', ['section' => $current_section, 'action' => 'falsify']);
+            ServiceLocator::get(Util::class)->pwgActivity('album', $cat_true, 'edit', ['section' => $current_section, 'action' => 'falsify']);
         } elseif (isset($_POST['trueify']) && isset($_POST['cat_false']) && count(is_array($_POST['cat_false']) ? $_POST['cat_false'] : []) > 0) {
             /** @var int[] $cat_false */
             $cat_false       = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
@@ -790,7 +798,7 @@ final class AlbumController
                 'representative' => ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant($cat_false),
                 default          => null,
             };
-            pwg_activity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
+            ServiceLocator::get(Util::class)->pwgActivity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
         }
 
         $tpl->setFilenames(['cat_options' => 'cat_options.tpl', 'double_select' => 'double_select.tpl']);
@@ -810,25 +818,25 @@ final class AlbumController
         if ($page['section'] === 'comments') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'true';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'false';";
-            $tpl->assign(['L_SECTION' => l10n('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'), 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden')]);
+            $tpl->assign(['L_SECTION' => Lang::t('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden')]);
         } elseif ($page['section'] === 'visible') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'true';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'false';";
-            $tpl->assign(['L_SECTION' => l10n('Lock albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Unlocked'), 'L_CAT_OPTIONS_FALSE' => l10n('Locked')]);
+            $tpl->assign(['L_SECTION' => Lang::t('Lock albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Unlocked'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Locked')]);
         } elseif ($page['section'] === 'status') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'public';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private';";
-            $tpl->assign(['L_SECTION' => l10n('Manage authorizations for selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Public'), 'L_CAT_OPTIONS_FALSE' => l10n('Private')]);
+            $tpl->assign(['L_SECTION' => Lang::t('Manage authorizations for selected albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Public'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Private')]);
         } elseif ($page['section'] === 'representative') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE representative_picture_id IS NOT NULL;';
             $query_false = 'SELECT DISTINCT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id WHERE representative_picture_id IS NULL;';
-            $tpl->assign(['L_SECTION' => l10n('Representative'), 'L_CAT_OPTIONS_TRUE' => l10n('singly represented'), 'L_CAT_OPTIONS_FALSE' => l10n('randomly represented')]);
+            $tpl->assign(['L_SECTION' => Lang::t('Representative'), 'L_CAT_OPTIONS_TRUE' => Lang::t('singly represented'), 'L_CAT_OPTIONS_FALSE' => Lang::t('randomly represented')]);
         }
 
-        display_select_cat_wrapper($query_true, [], 'category_option_true');
-        display_select_cat_wrapper($query_false, [], 'category_option_false');
-        $tpl->assign('PWG_TOKEN', get_pwg_token());
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Properties of abums'));
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Properties of abums'));
         $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'cat_options');
     }
@@ -838,13 +846,13 @@ final class AlbumController
     private function catPerm(): void
     {
         $tpl = TemplateRegistry::current();
-        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
         $cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
         if (empty($cat_id)) {
             throw new ValidationException('No category selected');
         }
 
-        $category = get_cat_info((int) $cat_id);
+        $category = ServiceLocator::get(CategoryService::class)->getCatInfo((int) $cat_id);
         if ($category === null) {
             throw new ValidationException('Invalid category');
         }
@@ -853,13 +861,13 @@ final class AlbumController
         $GLOBALS['admin_album_base_url'] = $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id);
 
         if (!empty($_POST)) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
 
             $post_status = is_scalar($_POST['status'] ?? null) ? (string) $_POST['status'] : '';
             if ($category['status'] != $post_status || ($category['status'] != 'public' && isset($_POST['apply_on_sub']))) {
                 $cat_ids = [$pageCat];
                 if (isset($_POST['apply_on_sub'])) {
-                    $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
+                    $cat_ids = array_merge($cat_ids, ServiceLocator::get(CategoryService::class)->getSubcatIds([$pageCat]));
                 }
                 ServiceLocator::get(CategoryAdminService::class)->setCatStatus($cat_ids, $post_status);
                 $category['status'] = $post_status;
@@ -877,14 +885,14 @@ final class AlbumController
 
                 $deny_groups = array_diff($groups_granted_int, $post_groups);
                 if (count($deny_groups) > 0) {
-                    ServiceLocator::get(PermissionRepository::class)->deleteGroupAccess(array_map(intval(...), $deny_groups), array_map(intval(...), get_subcat_ids([$pageCat])));
+                    ServiceLocator::get(PermissionRepository::class)->deleteGroupAccess(array_map(intval(...), $deny_groups), array_map(intval(...), ServiceLocator::get(CategoryService::class)->getSubcatIds([$pageCat])));
                 }
 
                 $grant_groups = $post_groups;
                 if (count($grant_groups) > 0) {
                     $cat_ids = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds([$pageCat]);
                     if (isset($_POST['apply_on_sub'])) {
-                        $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
+                        $cat_ids = array_merge($cat_ids, ServiceLocator::get(CategoryService::class)->getSubcatIds([$pageCat]));
                     }
                     $private_cats = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
                     $inserts = [];
@@ -907,19 +915,19 @@ final class AlbumController
 
                 $deny_users = array_diff($users_granted_int, $post_users);
                 if (count($deny_users) > 0) {
-                    ServiceLocator::get(PermissionRepository::class)->deleteUserAccess(array_map(intval(...), $deny_users), array_map(intval(...), get_subcat_ids([$pageCat])));
+                    ServiceLocator::get(PermissionRepository::class)->deleteUserAccess(array_map(intval(...), $deny_users), array_map(intval(...), ServiceLocator::get(CategoryService::class)->getSubcatIds([$pageCat])));
                 }
                 if (count($post_users) > 0) {
                     ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($pageCat, $post_users);
                 }
             }
 
-            $tpl->assign(['save_success' => l10n('Album updated successfully')]);
+            $tpl->assign(['save_success' => Lang::t('Album updated successfully')]);
         }
 
         $tpl->setFilename('cat_perm', 'cat_perm.tpl');
         $tpl->assign([
-            'CATEGORIES_NAV' => get_cat_display_name_from_id($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'),
+            'CATEGORIES_NAV' => ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'),
             'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_perm'),
             'F_ACTION'       => $admin_album_base_url . '-permissions',
             'private'        => ('private' == $category['status']),
@@ -966,10 +974,10 @@ final class AlbumController
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
-            'PWG_TOKEN'               => get_pwg_token(),
+            'PWG_TOKEN'               => ServiceLocator::get(Util::class)->getPwgToken(),
             'INHERIT'                 => Config::inheritanceByDefault(),
             'CACHE_KEYS'              => $cache_keys,
-            'cat_perm_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create'), 'has_indirect_perms' => count($user_granted_indirect_ids) > 0]),
+            'cat_perm_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'has_indirect_perms' => count($user_granted_indirect_ids) > 0]),
         ]);
 
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'cat_perm');
@@ -983,14 +991,14 @@ final class AlbumController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         $sort_fields = [
-            '' => '', 'file ASC' => l10n('File name, A &rarr; Z'), 'file DESC' => l10n('File name, Z &rarr; A'),
-            'name ASC' => l10n('Photo title, A &rarr; Z'), 'name DESC' => l10n('Photo title, Z &rarr; A'),
-            'date_creation DESC' => l10n('Date created, new &rarr; old'), 'date_creation ASC' => l10n('Date created, old &rarr; new'),
-            'date_available DESC' => l10n('Date posted, new &rarr; old'), 'date_available ASC' => l10n('Date posted, old &rarr; new'),
-            'rating_score DESC' => l10n('Rating score, high &rarr; low'), 'rating_score ASC' => l10n('Rating score, low &rarr; high'),
-            'hit DESC' => l10n('Visits, high &rarr; low'), 'hit ASC' => l10n('Visits, low &rarr; high'),
-            'id ASC' => l10n('Numeric identifier, 1 &rarr; 9'), 'id DESC' => l10n('Numeric identifier, 9 &rarr; 1'),
-            'rank ASC' => l10n('Manual sort order'),
+            '' => '', 'file ASC' => Lang::t('File name, A &rarr; Z'), 'file DESC' => Lang::t('File name, Z &rarr; A'),
+            'name ASC' => Lang::t('Photo title, A &rarr; Z'), 'name DESC' => Lang::t('Photo title, Z &rarr; A'),
+            'date_creation DESC' => Lang::t('Date created, new &rarr; old'), 'date_creation ASC' => Lang::t('Date created, old &rarr; new'),
+            'date_available DESC' => Lang::t('Date posted, new &rarr; old'), 'date_available ASC' => Lang::t('Date posted, old &rarr; new'),
+            'rating_score DESC' => Lang::t('Rating score, high &rarr; low'), 'rating_score ASC' => Lang::t('Rating score, low &rarr; high'),
+            'hit DESC' => Lang::t('Visits, high &rarr; low'), 'hit ASC' => Lang::t('Visits, low &rarr; high'),
+            'id ASC' => Lang::t('Numeric identifier, 1 &rarr; 9'), 'id DESC' => Lang::t('Numeric identifier, 9 &rarr; 1'),
+            'rank ASC' => Lang::t('Manual sort order'),
         ];
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
@@ -1012,7 +1020,7 @@ final class AlbumController
                 $image_order_choice = $_POST['image_order_choice'];
             }
 
-            $message     = l10n('Album updated successfully');
+            $message     = Lang::t('Album updated successfully');
             $image_order = null;
             if ($image_order_choice == 'user_define') {
                 $image_order_post = is_array($_POST['image_order'] ?? null) ? $_POST['image_order'] : [];
@@ -1024,7 +1032,7 @@ final class AlbumController
                 }
             } elseif ($image_order_choice == 'rank') {
                 $image_order = '`rank` ASC';
-                $message     = l10n('Images manual order was saved');
+                $message     = Lang::t('Images manual order was saved');
             }
 
             $category_id_int = (int) $page['category_id'];
@@ -1032,7 +1040,7 @@ final class AlbumController
             $catRepo->updateImageOrder($category_id_int, $image_order ?? null);
 
             if (isset($_POST['image_order_subcats'])) {
-                $cat_info = get_cat_info((string) $category_id_int);
+                $cat_info = ServiceLocator::get(CategoryService::class)->getCatInfo((string) $category_id_int);
                 $catRepo->updateImageOrderForSubcats(is_scalar($cat_info['uppercats'] ?? null) ? (string) $cat_info['uppercats'] : '', $image_order ?? null);
             }
 
@@ -1049,7 +1057,7 @@ final class AlbumController
             $image_order_choice = 'user_define';
         }
 
-        $navigation = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+        $navigation = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
         $tpl->assign(['CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         $imgRows = ServiceLocator::get(ImageRepository::class)->findByCategoryIdOrdered((int) $page['category_id']);
@@ -1058,7 +1066,7 @@ final class AlbumController
             $derivativeParams = ImageStdParams::getByType(DerivativeSize::Square->value);
             foreach ($imgRows as $row) {
                 $derivative     = new DerivativeImage($derivativeParams, new SrcImage($row));
-                $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', get_filename_wo_extension(is_scalar($row['file']) ? (string) $row['file'] : ''));
+                $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($row['file']) ? (string) $row['file'] : ''));
                 $current_rank++;
                 $tpl->append('thumbnails', ['ID' => $row['id'], 'NAME' => $thumbnail_name, 'TN_SRC' => $derivative->getUrl(), 'RANK' => $current_rank * 10, 'SIZE' => $derivative->getSize()]);
             }
@@ -1084,7 +1092,7 @@ final class AlbumController
         if (!is_array($ids)) {
             $ids = [$ids];
         }
-        $category_ids = get_subcat_ids($ids);
+        $category_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds($ids);
 
         $ref_dates = array_column(DbConnection::get()->executeQuery('SELECT category_id, ' . $minmax . '(' . $field . ') as ref_date FROM ' . Tables::imageCategory() . ' JOIN ' . Tables::images() . ' ON image_id = id WHERE category_id IN (' . implode(',', $category_ids) . ') GROUP BY category_id;')->fetchAllAssociative(), 'ref_date', 'category_id');
 

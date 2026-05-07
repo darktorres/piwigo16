@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\Translator;
+use Piwigo\Session\SessionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -39,7 +44,7 @@ final class FilterMiddleware implements MiddlewareInterface
         /** @var array<mixed> $header_notes */
         $header_notes = &$GLOBALS['header_notes'];
 
-        if (empty(Config::filterPages()) || !get_filter_page_value('used')) {
+        if (empty(Config::filterPages()) || !ServiceLocator::get(Util::class)->getFilterPageValue('used')) {
             $filter['enabled'] = false;
             return;
         }
@@ -48,7 +53,7 @@ final class FilterMiddleware implements MiddlewareInterface
 
         $recentPeriodFromUrl = null;
 
-        if (!get_filter_page_value('cancel')) {
+        if (!ServiceLocator::get(Util::class)->getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
                 $urlMatches    = [];
                 $filterEnabled = preg_match(
@@ -61,7 +66,7 @@ final class FilterMiddleware implements MiddlewareInterface
                     $recentPeriodFromUrl = (int) $urlMatches[1];
                 }
             } else {
-                $filter['enabled'] = pwg_get_session_var('filter_enabled', false);
+                $filter['enabled'] = ServiceLocator::get(SessionService::class)->getSessionVar('filter_enabled', false);
             }
         } else {
             $filter['enabled'] = false;
@@ -69,11 +74,11 @@ final class FilterMiddleware implements MiddlewareInterface
 
         if (!(bool) $filter['enabled']) {
             if (!empty($_SESSION['pwg_filter_enabled'])) {
-                pwg_unset_session_var('filter_enabled');
-                pwg_unset_session_var('filter_check_key');
-                pwg_unset_session_var('filter_categories');
-                pwg_unset_session_var('filter_visible_categories');
-                pwg_unset_session_var('filter_visible_images');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_enabled');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_check_key');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_categories');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_visible_categories');
+                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_visible_images');
             }
             return;
         }
@@ -81,7 +86,7 @@ final class FilterMiddleware implements MiddlewareInterface
         // ── Load or recompute filter data ─────────────────────────────────────
 
         /** @var array{user: int, recent_period: int, time: int, date: string} $filterKey */
-        $filterKey = pwg_get_session_var('filter_check_key', [
+        $filterKey = ServiceLocator::get(SessionService::class)->getSessionVar('filter_check_key', [
             'user' => 0, 'recent_period' => -1, 'time' => 0, 'date' => '',
         ]);
 
@@ -111,7 +116,7 @@ final class FilterMiddleware implements MiddlewareInterface
                 'date'          => date('Ymd'),
             ];
 
-            $computedCategories    = get_computed_categories($user, $recentPeriod);
+            $computedCategories    = ServiceLocator::get(CategoryService::class)->getComputedCategories($user, $recentPeriod);
             $filter['categories']  = $computedCategories;
 
             $visibleCatKeys        = array_map(static fn (int|string $k): string => (string) $k, array_keys($computedCategories));
@@ -133,19 +138,20 @@ WHERE ' . $catClause . '
             ));
             $filter['visible_images'] = $visibleImageStr !== '' ? $visibleImageStr : -1;
 
-            pwg_set_session_var('filter_enabled', $filter['enabled']);
-            pwg_set_session_var('filter_check_key', $filterKey);
-            pwg_set_session_var('filter_categories', serialize($computedCategories));
-            pwg_set_session_var('filter_visible_categories', $filter['visible_categories']);
-            pwg_set_session_var('filter_visible_images', $filter['visible_images']);
+            ServiceLocator::get(SessionService::class)->setSessionVar('filter_enabled', $filter['enabled']);
+            ServiceLocator::get(SessionService::class)->setSessionVar('filter_check_key', $filterKey);
+            ServiceLocator::get(SessionService::class)->setSessionVar('filter_categories', serialize($computedCategories));
+            ServiceLocator::get(SessionService::class)->setSessionVar('filter_visible_categories', $filter['visible_categories']);
+            ServiceLocator::get(SessionService::class)->setSessionVar('filter_visible_images', $filter['visible_images']);
         } else {
-            $filter['categories']         = unserialize(pwg_get_session_var('filter_categories', serialize([])));
-            $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
-            $filter['visible_images']     = pwg_get_session_var('filter_visible_images', '');
+            $rawCategories                = ServiceLocator::get(SessionService::class)->getSessionVar('filter_categories', serialize([]));
+            $filter['categories']         = unserialize(is_string($rawCategories) ? $rawCategories : serialize([]));
+            $filter['visible_categories'] = ServiceLocator::get(SessionService::class)->getSessionVar('filter_visible_categories', '');
+            $filter['visible_images']     = ServiceLocator::get(SessionService::class)->getSessionVar('filter_visible_images', '');
         }
 
-        if (get_filter_page_value('add_notes')) {
-            $header_notes[] = l10n_dec(
+        if (ServiceLocator::get(Util::class)->getFilterPageValue('add_notes')) {
+            $header_notes[] = Translator::get()->plural(
                 'Photos posted within the last %d day.',
                 'Photos posted within the last %d days.',
                 $recentPeriod

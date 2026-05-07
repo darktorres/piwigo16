@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
@@ -138,7 +142,7 @@ class Themes
 
                 // you can't deactivate the last theme
                 if (count($this->db_themes_by_id) <= 1) {
-                    $errors[] = l10n('Impossible to deactivate this theme, you need at least one theme.');
+                    $errors[] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
                     break;
                 }
 
@@ -153,7 +157,7 @@ class Themes
                 ServiceLocator::get(ThemeRepository::class)->deactivate($theme_id);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
-                    conf_update_param('mobile_theme', '');
+                    ServiceLocator::get(ConfigService::class)->confUpdateParam('mobile_theme', '');
                 }
                 break;
 
@@ -169,7 +173,7 @@ class Themes
 
                 $children = $this->getChildrenThemes($theme_id);
                 if (count($children) > 0) {
-                    $errors[] = l10n(
+                    $errors[] = Lang::t(
                         'Impossible to delete this theme. Other themes depends on it: %s',
                         implode(', ', $children)
                     );
@@ -187,7 +191,7 @@ class Themes
                 break;
         }
 
-        pwg_activity('system', ActivitySystem::Theme, $action, $activity_details);
+        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Theme, $action, $activity_details);
 
         return array_values($errors);
     }
@@ -355,7 +359,7 @@ class Themes
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_themes, name_compare(...));
+                uasort($this->fs_themes, ServiceLocator::get(HtmlService::class)->nameCompare(...));
                 break;
             case 'status':
                 $this->sortThemesByState();
@@ -389,7 +393,7 @@ class Themes
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
                 $version = is_scalar($pv0name) ? (string) $pv0name : $version;
             }
-            $branch = get_branch_from_version($version);
+            $branch = AppInfo::branchFromVersion($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
@@ -642,7 +646,7 @@ class Themes
         $nb = $b['author'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return name_compare($a, $b);
+            return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -663,7 +667,7 @@ class Themes
 
     public function sortThemesByState(): void
     {
-        uasort($this->fs_themes, name_compare(...));
+        uasort($this->fs_themes, ServiceLocator::get(HtmlService::class)->nameCompare(...));
 
         $active_themes = [];
         $inactive_themes = [];

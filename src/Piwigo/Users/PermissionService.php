@@ -10,6 +10,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 
 final readonly class PermissionService
 {
@@ -55,7 +56,7 @@ final readonly class PermissionService
     public function checkStatus(int $accessType, string $userStatus = ''): void
     {
         if (!$this->isAutorizeStatus($accessType, $userStatus)) {
-            access_denied();
+            ServiceLocator::get(HtmlService::class)->accessDenied();
         }
     }
 

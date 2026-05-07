@@ -8,8 +8,10 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 
 final readonly class ConfigService
@@ -33,7 +35,7 @@ final readonly class ConfigService
         $rows = $conn->executeQuery($sql)->fetchAllAssociative();
 
         if (count($rows) === 0 && !empty($condition) && $dieOnConditionWithNoResult) {
-            fatal_error('No configuration data');
+            HtmlService::fatalError('No configuration data');
         }
 
         foreach ($rows as $row) {
@@ -51,8 +53,8 @@ final readonly class ConfigService
 
     public function pwgIsDbconfWriteable(): bool
     {
-        [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
-        conf_update_param($param, $value);
+        [$param, $value] = ['pwg_is_dbconf_writeable_' . StringUtil::generateKey(12), date('c') . ' ' . StringUtil::generateKey(20)];
+        ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $value);
         $dbvalue = $this->conn->executeQuery(
             'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
             [$param]
@@ -60,7 +62,7 @@ final readonly class ConfigService
         if ($dbvalue !== $value) {
             return false;
         }
-        conf_delete_param($param);
+        ServiceLocator::get(ConfigService::class)->confDeleteParam($param);
         return true;
     }
 

@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use DateTime;
 use IntlDateFormatter;
+use Piwigo\Lang\Translator;
 use Piwigo\Users\CurrentUser;
 
 final class DateService
@@ -50,7 +51,7 @@ final class DateService
     {
         $date = ($original instanceof \DateTime) ? $original : $this->str2DateTime($original, $format);
         if (!$date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
         if ($show === null || $show === true) {
             $show = ['day_name', 'day', 'month', 'year'];
@@ -86,7 +87,7 @@ final class DateService
 
         $date = ($original instanceof \DateTime) ? $original : $this->str2DateTime($original, $format);
         if (!$date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
         if ($show === null || $show === true) {
             $show = ['day_name', 'day', 'month', 'year'];
@@ -96,7 +97,7 @@ final class DateService
             $dateType = in_array('day_name', $show) ? IntlDateFormatter::FULL : IntlDateFormatter::LONG;
             $fmt      = new IntlDateFormatter($userLanguage, $dateType, $timeType);
             $formatted = $fmt->format($date);
-            return $formatted !== false ? $formatted : l10n('N/A');
+            return $formatted !== false ? $formatted : Lang::t('N/A');
         }
         return $this->formatDateLegacy($original, $show, $format);
     }
@@ -106,7 +107,7 @@ final class DateService
         $from = ($from instanceof \DateTime) ? $from : $this->str2DateTime(is_scalar($from) ? $from : null);
         $to   = ($to instanceof \DateTime) ? $to : $this->str2DateTime(is_scalar($to) ? $to : null);
         if ($from === false || $to === false) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
         if ($from->format('Y-m-d') === $to->format('Y-m-d')) {
             return $this->formatDate($from);
@@ -118,14 +119,14 @@ final class DateService
         } else {
             $from_str = $this->formatDate($from, ['day_name', 'day']);
         }
-        return l10n('from %s to %s', $from_str, $this->formatDate($to));
+        return Lang::t('from %s to %s', $from_str, $this->formatDate($to));
     }
 
     public function timeSince(int|string|null $original, string $stop = 'minute', ?string $format = null, bool $withText = true, bool $withWeek = true, bool $onlyLastUnit = false): string
     {
         $date = $this->str2DateTime($original, $format);
         if (!$date) {
-            return l10n('N/A');
+            return Lang::t('N/A');
         }
         $now  = new DateTime();
         $diff = $this->dateDiff($now, $date);
@@ -149,7 +150,7 @@ final class DateService
         if (!$onlyLastUnit) {
             foreach ($chunks as $name => $value) {
                 if ($value != 0) {
-                    $print .= ' ' . l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print .= ' ' . Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if (!empty($print) && $i >= $j) {
                     break;
@@ -162,7 +163,7 @@ final class DateService
                 $name  = $keys[$i];
                 $value = $chunks[$name];
                 if ($value != 0) {
-                    $print = l10n_dec('%d ' . $name, '%d ' . $name . 's', $value);
+                    $print = Translator::get()->plural('%d ' . $name, '%d ' . $name . 's', $value);
                 }
                 if (!empty($print) && $i >= $j) {
                     break;
@@ -172,7 +173,7 @@ final class DateService
         }
         $print = trim($print);
         if ($withText) {
-            $print = $diff->invert ? l10n('%s ago', $print) : l10n('%s in the future', $print);
+            $print = $diff->invert ? Lang::t('%s ago', $print) : Lang::t('%s in the future', $print);
         }
         return $print;
     }

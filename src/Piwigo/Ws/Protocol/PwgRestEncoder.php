@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -32,7 +34,7 @@ class PwgRestEncoder extends PwgResponseEncoder
         $this->_writer = new PwgXmlWriter();
         $this->encode($response);
         $ret = $this->writer()->getOutput();
-        $ret = '<?xml version="1.0" encoding="'.get_pwg_charset().'" ?>
+        $ret = '<?xml version="1.0" encoding="'.ServiceLocator::get(StringUtil::class)->getPwgCharset().'" ?>
 <rsp stat="ok">
 '.$ret.'
 </rsp>';

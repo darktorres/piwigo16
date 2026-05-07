@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the photo-rating domain. */
@@ -204,7 +205,7 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return (element_id, rcount, rsum) for every element that has at least one rate.
-     * Used by the Bayesian average recalculation in update_rating_score().
+     * Used by the Bayesian average recalculation in ServiceLocator::get(RateService::class)->updateRatingScore().
      *
      * @return list<array<string, mixed>>
      */
@@ -220,7 +221,7 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return ids of images that have rating_score set but no rate rows.
-     * Used by update_rating_score() to clear stale scores after all rates are deleted.
+     * Used by ServiceLocator::get(RateService::class)->updateRatingScore() to clear stale scores after all rates are deleted.
      *
      * @return int[]
      */

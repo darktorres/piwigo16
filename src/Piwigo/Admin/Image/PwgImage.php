@@ -36,7 +36,7 @@ class PwgImage
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(get_extension($this->source_filepath));
+        $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($this->source_filepath));
 
         if (!in_array($extension, Config::pictureExtensions())) {
             die('[Image] unsupported file extension');
@@ -74,7 +74,7 @@ class PwgImage
     /** @return array<mixed> */
     public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
-        $starttime = get_moment();
+        $starttime = ServiceLocator::get(StringUtil::class)->getMoment();
 
         if ($this->image === null) {
             throw new \LogicException('Image library not initialized');

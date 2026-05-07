@@ -9,13 +9,18 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -51,7 +56,7 @@ final class GroupsController
         $tabsheet->assign();
 
         if (!empty($_POST) || isset($_GET['delete']) || isset($_GET['toggle_is_default'])) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
         $tpl->setFilenames(['group_list' => 'group_list.tpl']);
@@ -59,35 +64,35 @@ final class GroupsController
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
             'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
-            'PWG_TOKEN'                 => get_pwg_token(),
+            'PWG_TOKEN'                 => ServiceLocator::get(Util::class)->getPwgToken(),
             'CACHE_KEYS'                => $cache_keys,
             'ROOT_URL'                  => UrlService::getRootUrl(),
-            'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create')]),
+            'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),
             'page_data_json'            => json_encode([
-                'pwg_token'                    => get_pwg_token(),
+                'pwg_token'                    => ServiceLocator::get(Util::class)->getPwgToken(),
                 'rootUrl'                      => UrlService::getRootUrl(),
                 'serverId'                     => $cache_keys['_hash'],
                 'serverKey'                    => $cache_keys['users'],
-                'str_copy'                     => l10n(' (copy)'),
-                'str_delete'                   => l10n('Are you sure you want to delete group "%s"?'),
-                'str_group_created'            => l10n('Group added'),
-                'str_group_deleted'            => l10n('Group "%s" succesfully deleted'),
-                'str_groups_deleted'           => l10n('Groups {%s} succesfully deleted'),
-                'str_member_default'           => l10n('member'),
-                'str_members_default'          => l10n('members'),
-                'str_merged_into'              => l10n('Group(s) {%s1} succesfully merged into "%s2"'),
-                'str_name_not_empty'           => l10n('Name field must not be empty'),
-                'str_name_taken'               => l10n('Name is already taken'),
-                'str_no_delete_confirmation'   => l10n('No, I have changed my mind'),
-                'str_other_copy'               => l10n(' (copy %s)'),
-                'str_renaming_done'            => l10n('Group renamed'),
-                'str_set_default'              => l10n('Set as group for new users'),
-                'str_unset_default'            => l10n('Unset as group for new users'),
-                'str_user_associated'          => l10n('User associated'),
-                'str_user_dissociate'          => l10n('Dissociate user from this group'),
-                'str_user_dissociated'         => l10n('User "%s" dissociated from this group'),
-                'str_user_list'                => l10n('Manage the members'),
-                'str_yes_delete_confirmation'  => l10n('Yes, delete'),
+                'str_copy'                     => Lang::t(' (copy)'),
+                'str_delete'                   => Lang::t('Are you sure you want to delete group "%s"?'),
+                'str_group_created'            => Lang::t('Group added'),
+                'str_group_deleted'            => Lang::t('Group "%s" succesfully deleted'),
+                'str_groups_deleted'           => Lang::t('Groups {%s} succesfully deleted'),
+                'str_member_default'           => Lang::t('member'),
+                'str_members_default'          => Lang::t('members'),
+                'str_merged_into'              => Lang::t('Group(s) {%s1} succesfully merged into "%s2"'),
+                'str_name_not_empty'           => Lang::t('Name field must not be empty'),
+                'str_name_taken'               => Lang::t('Name is already taken'),
+                'str_no_delete_confirmation'   => Lang::t('No, I have changed my mind'),
+                'str_other_copy'               => Lang::t(' (copy %s)'),
+                'str_renaming_done'            => Lang::t('Group renamed'),
+                'str_set_default'              => Lang::t('Set as group for new users'),
+                'str_unset_default'            => Lang::t('Unset as group for new users'),
+                'str_user_associated'          => Lang::t('User associated'),
+                'str_user_dissociate'          => Lang::t('Dissociate user from this group'),
+                'str_user_dissociated'         => Lang::t('User "%s" dissociated from this group'),
+                'str_user_list'                => Lang::t('Manage the members'),
+                'str_yes_delete_confirmation'  => Lang::t('Yes, delete'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
@@ -107,19 +112,19 @@ final class GroupsController
             $tpl->append('groups', [
                 'NAME'      => $row['name'],
                 'ID'        => $row['id'],
-                'IS_DEFAULT' => (BoolUtil::fromMixed($row['is_default']) ? ' [' . l10n('default') . ']' : ''),
+                'IS_DEFAULT' => (BoolUtil::fromMixed($row['is_default']) ? ' [' . Lang::t('default') . ']' : ''),
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
-                'MEMBERS'    => l10n_dec('%d member', '%d members', count($members)),
-                'U_DELETE'   => $del_url . $row_id_str . '&amp;pwg_token=' . get_pwg_token(),
+                'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
+                'U_DELETE'   => $del_url . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
                 'U_PERM'     => $perm_url . $row_id_str,
                 'U_USERS'    => $users_url . $row_id_str,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&amp;pwg_token=' . get_pwg_token(),
+                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
             ]);
             $group_counter++;
         }
 
-        $tpl->assign('ADMIN_PAGE_TITLE', l10n('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
+        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
     }
 
@@ -131,16 +136,16 @@ final class GroupsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
-            check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
-            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkPwgToken();
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (!isset($_GET['group_id'])) {
-            fatal_error('group_id URL parameter is missing');
+            HtmlService::fatalError('group_id URL parameter is missing');
         }
 
-        check_input_parameter('group_id', $_GET, false, ValidationPattern::ID);
+        ServiceLocator::get(Util::class)->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
         $page['group'] = $_GET['group_id'];
         $group_id      = is_scalar($page['group']) ? (int) $page['group'] : 0;
 
@@ -149,7 +154,7 @@ final class GroupsController
 
         if (isset($_POST['falsify']) && count($post_cat_true) > 0) {
             $post_cat_true_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
-            $subcats = get_subcat_ids($post_cat_true_ids);
+            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($post_cat_true_ids);
             ServiceLocator::get(PermissionRepository::class)->deleteGroupAccessForGroup($group_id, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
             $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
@@ -172,14 +177,14 @@ final class GroupsController
 
         $tpl->setFilenames(['group_perm' => 'group_perm.tpl', 'double_select' => 'double_select.tpl']);
         $tpl->assign([
-            'TITLE'              => l10n('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
-            'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
-            'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
+            'TITLE'              => Lang::t('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
+            'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
+            'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
         ]);
 
         $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';
-        display_select_cat_wrapper($query_true, [], 'category_option_true');
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
         $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findAuthorizedPrivateCatIdsByGroup($group_id);
 
@@ -188,9 +193,9 @@ final class GroupsController
             $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
         }
         $query_false .= ';';
-        display_select_cat_wrapper($query_false, [], 'category_option_false');
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $tpl->assign('PWG_TOKEN', get_pwg_token());
+        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
         $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
     }

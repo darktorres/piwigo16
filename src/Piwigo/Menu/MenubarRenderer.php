@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -63,7 +68,7 @@ final class MenubarRenderer
         }
 
         $block = $menu->getBlock('mbCategories');
-        if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and get_filter_page_value('used')) {
+        if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and ServiceLocator::get(Util::class)->getFilterPageValue('used')) {
             if ($filter['enabled']) {
                 $template->assign('U_STOP_FILTER', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl([]), ['filter' => 'stop']));
             } else {
@@ -77,7 +82,7 @@ final class MenubarRenderer
         if ($block != null) {
             $block->data = [
                 'NB_PICTURE' => $user['nb_total_images'] ?? 0,
-                'MENU_CATEGORIES' => get_categories_menu(),
+                'MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getCategoriesMenu(),
                 'U_CATEGORIES' => UrlService::get()->makeIndexUrl(['section' => 'categories']),
             ];
             $block->template = 'menubar_categories.tpl';
@@ -101,16 +106,16 @@ final class MenubarRenderer
                 }
             }
 
-            $block->data = ['MENU_CATEGORIES' => get_related_categories_menu($items, $exclude_cat_ids)];
+            $block->data = ['MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $exclude_cat_ids)];
             if (!empty($block->data['MENU_CATEGORIES'])) {
                 $block->template = 'menubar_related_categories.tpl';
             }
         }
 
         $block = $menu->getBlock('mbTags');
-        if ($block != null and 'picture' != script_basename()) {
-            $tags = get_available_tags();
-            usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+        if ($block != null and 'picture' != StringUtil::scriptBasename()) {
+            $tags = ServiceLocator::get(TagService::class)->getAvailableTags();
+            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(TagService::class)->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
             $tags = array_slice($tags, 0, Config::menubarTagCloudItemsNumber());
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
@@ -125,41 +130,41 @@ final class MenubarRenderer
             if (!PermissionService::get()->isAGuest()) {
                 $block->data['favorites'] = [
                     'URL' => UrlService::get()->makeIndexUrl(['section' => 'favorites']),
-                    'TITLE' => l10n('display your favorites photos'),
-                    'NAME' => l10n('Your favorites'),
+                    'TITLE' => Lang::t('display your favorites photos'),
+                    'NAME' => Lang::t('Your favorites'),
                 ];
             }
 
             $block->data['most_visited'] = [
                 'URL' => UrlService::get()->makeIndexUrl(['section' => 'most_visited']),
-                'TITLE' => l10n('display most visited photos'),
-                'NAME' => l10n('Most visited'),
+                'TITLE' => Lang::t('display most visited photos'),
+                'NAME' => Lang::t('Most visited'),
             ];
 
             if (Config::rateEnabled()) {
                 $block->data['best_rated'] = [
                     'URL' => UrlService::get()->makeIndexUrl(['section' => 'best_rated']),
-                    'TITLE' => l10n('display best rated photos'),
-                    'NAME' => l10n('Best rated'),
+                    'TITLE' => Lang::t('display best rated photos'),
+                    'NAME' => Lang::t('Best rated'),
                 ];
             }
 
             $block->data['recent_pics'] = [
                 'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_pics']),
-                'TITLE' => l10n('display most recent photos'),
-                'NAME' => l10n('Recent photos'),
+                'TITLE' => Lang::t('display most recent photos'),
+                'NAME' => Lang::t('Recent photos'),
             ];
 
             $block->data['recent_cats'] = [
                 'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_cats']),
-                'TITLE' => l10n('display recently updated albums'),
-                'NAME' => l10n('Recent albums'),
+                'TITLE' => Lang::t('display recently updated albums'),
+                'NAME' => Lang::t('Recent albums'),
             ];
 
             $block->data['random'] = [
                 'URL' => ServiceLocator::get(UrlGenerator::class)->random(),
-                'TITLE' => l10n('display a set of random photos'),
-                'NAME' => l10n('Random photos'),
+                'TITLE' => Lang::t('display a set of random photos'),
+                'NAME' => Lang::t('Random photos'),
                 'REL' => 'rel="nofollow"',
             ];
 
@@ -169,8 +174,8 @@ final class MenubarRenderer
                     'chronology_style' => 'monthly',
                     'chronology_view' => 'calendar',
                 ]),
-                'TITLE' => l10n('display each day with photos, month per month'),
-                'NAME' => l10n('Calendar'),
+                'TITLE' => Lang::t('display each day with photos, month per month'),
+                'NAME' => Lang::t('Calendar'),
                 'REL' => 'rel="nofollow"',
             ];
             $block->template = 'menubar_specials.tpl';
@@ -180,37 +185,37 @@ final class MenubarRenderer
             $block->data['qsearch'] = true;
 
             $block->data['tags'] = [
-                'TITLE' => l10n('display available tags'),
-                'NAME' => l10n('Tags'),
+                'TITLE' => Lang::t('display available tags'),
+                'NAME' => Lang::t('Tags'),
                 'URL' => ServiceLocator::get(UrlGenerator::class)->tagsPage(),
-                'COUNTER' => get_nb_available_tags(),
+                'COUNTER' => ServiceLocator::get(TagService::class)->getNbAvailableTags(),
             ];
 
             $block->data['search'] = [
-                'TITLE' => l10n('search'),
-                'NAME' => l10n('Search'),
+                'TITLE' => Lang::t('search'),
+                'NAME' => Lang::t('Search'),
                 'URL' => ServiceLocator::get(UrlGenerator::class)->searchPage(),
                 'REL' => 'rel="search"',
             ];
 
             if (Config::activateComments()) {
                 $block->data['comments'] = [
-                    'TITLE' => l10n('display last user comments'),
-                    'NAME' => l10n('Comments'),
+                    'TITLE' => Lang::t('display last user comments'),
+                    'NAME' => Lang::t('Comments'),
                     'URL' => ServiceLocator::get(UrlGenerator::class)->comments(),
-                    'COUNTER' => get_nb_available_comments(),
+                    'COUNTER' => ServiceLocator::get(Util::class)->getNbAvailableComments(),
                 ];
             }
 
             $block->data['about'] = [
-                'TITLE' => l10n('About Piwigo'),
-                'NAME' => l10n('About'),
+                'TITLE' => Lang::t('About Piwigo'),
+                'NAME' => Lang::t('About'),
                 'URL' => ServiceLocator::get(UrlGenerator::class)->about(),
             ];
 
             $block->data['rss'] = [
-                'TITLE' => l10n('RSS feed'),
-                'NAME' => l10n('Notification'),
+                'TITLE' => Lang::t('RSS feed'),
+                'NAME' => Lang::t('Notification'),
                 'URL' => ServiceLocator::get(UrlGenerator::class)->notification(),
                 'REL' => 'rel="nofollow"',
             ];

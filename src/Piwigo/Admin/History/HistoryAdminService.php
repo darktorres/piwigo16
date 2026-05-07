@@ -7,8 +7,10 @@ namespace Piwigo\Admin\History;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
@@ -114,7 +116,7 @@ SELECT
             $clauses[] = 'IP LIKE ' . DbConnection::get()->quote(is_scalar($fields['ip']) ? (string) $fields['ip'] : '');
         }
 
-        $clauses = prepend_append_array_items($clauses, '(', ')');
+        $clauses = ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($clauses, '(', ')');
         $where_separator = implode("\n    AND ", $clauses);
 
         $query = '
@@ -385,6 +387,6 @@ SELECT
             $histRepo->dropSummarizedColumn();
         }
 
-        conf_update_param('history_summarized_dropped', true);
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('history_summarized_dropped', true);
     }
 }

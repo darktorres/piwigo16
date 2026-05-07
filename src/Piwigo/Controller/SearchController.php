@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Tag\TagService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Psr\Http\Message\ResponseInterface;
@@ -35,7 +40,7 @@ final class SearchController implements ControllerInterface
 
         $search = ['mode' => 'AND', 'fields' => []];
 
-        $filters_views_raw = conf_get_param('filters_views', Config::defaultFiltersViews());
+        $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views     = safe_unserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
 
         $filter_rename_for = [
@@ -86,7 +91,7 @@ final class SearchController implements ControllerInterface
         $cat_ids  = [];
         $cat_id   = input_int('cat_id', null, $_GET);
         if ($cat_id !== null) {
-            check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
 SELECT *
   FROM ' . Tables::userCacheCategories() . '
@@ -95,7 +100,7 @@ SELECT *
 ;';
             $found_categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             if (empty($found_categories)) {
-                page_not_found(l10n('Requested album does not exist'));
+                ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
             }
             $cat_ids = [$cat_id];
         }
@@ -104,11 +109,11 @@ SELECT *
             $search['fields']['cat'] = ['words' => $cat_ids, 'sub_inc' => true];
         }
 
-        if (count(get_available_tags()) > 0) {
+        if (count(ServiceLocator::get(TagService::class)->getAvailableTags()) > 0) {
             $tag_ids = [];
             $tag_id  = input_string('tag_id', null, $_GET);
             if ($tag_id !== null) {
-                check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+                ServiceLocator::get(Util::class)->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);
             }
             if (count($tag_ids) > 0 || in_array('tags', $fields)) {
@@ -151,7 +156,7 @@ SELECT id
         }
 
         [$search_uuid, $search_url] = ServiceLocator::get(SearchService::class)->saveSearch($search);
-        redirect(is_scalar($search_url) ? (string) $search_url : '');
+        Util::get()->redirect(is_scalar($search_url) ? (string) $search_url : '');
 
         return ResponseFactory::create(200); // unreachable after redirect
     }

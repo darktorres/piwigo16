@@ -10,15 +10,20 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ControllerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -66,8 +71,8 @@ final class AdminController implements ControllerInterface
 
         PermissionService::get()->checkStatus(AccessLevel::Administrator);
 
-        check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-        check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        ServiceLocator::get(Util::class)->checkInputParameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         // ── Filesystem quick-check ────────────────────────────────────────────
 
@@ -92,7 +97,7 @@ final class AdminController implements ControllerInterface
 
         $plugins_new_order = input_string('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
-            pwg_set_session_var('plugins_new_order', $plugins_new_order);
+            ServiceLocator::get(SessionService::class)->setSessionVar('plugins_new_order', $plugins_new_order);
             exit;
         }
 
@@ -117,7 +122,7 @@ final class AdminController implements ControllerInterface
                 $redirect_url .= '&' . implode('&', $url_params);
             }
 
-            redirect($redirect_url);
+            Util::get()->redirect($redirect_url);
         }
 
         // ── Sync user info ────────────────────────────────────────────────────
@@ -309,9 +314,9 @@ final class AdminController implements ControllerInterface
         // ── What's new ────────────────────────────────────────────────────────
 
         $show_whats_new          = false;
-        $whats_new_major_version = get_branch_from_version(AppInfo::VERSION);
+        $whats_new_major_version = AppInfo::branchFromVersion(AppInfo::VERSION);
 
-        if (PreferencesService::get()->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && pwg_is_dbconf_writeable()) {
+        if (PreferencesService::get()->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
             $registrationDate = is_scalar($user['registration_date'] ?? null) ? (string) $user['registration_date'] : '';
             $lastMajorUpdate  = Config::lastMajorUpdate() ?? '';
             if ($registrationDate > $lastMajorUpdate) {
@@ -353,20 +358,20 @@ final class AdminController implements ControllerInterface
         // ── Album selector JSON ───────────────────────────────────────────────
 
         $tpl->assign('album_selector_page_data_json', json_encode([
-            'str_album_modal_title'       => l10n('Select an album'),
-            'str_album_modal_placeholder' => l10n('Search'),
-            'str_no_search_in_progress'   => l10n('No search in progress'),
-            'str_root'                    => l10n('Root'),
-            'str_root_album_select'       => l10n('Root'),
-            'str_album_selected'          => l10n('Album already selected'),
-            'str_result_limit'            => l10n('<b>%d+</b> albums found, try to refine the search'),
-            'str_album_found'             => l10n('<b>1</b> album found'),
-            'str_albums_found'            => l10n('<b>%d</b> albums found'),
-            'str_plus_albums_found'       => l10n('Only the first %d albums are displayed, out of %d.'),
-            'str_create_and_select'       => l10n('Create and select'),
-            'str_add_subcat_of'           => l10n('Add a sub-album to "%s"'),
-            'str_complete_name_field'     => l10n('Name field must not be empty'),
-            'str_an_error_has_occured'    => l10n('An error has occured'),
+            'str_album_modal_title'       => Lang::t('Select an album'),
+            'str_album_modal_placeholder' => Lang::t('Search'),
+            'str_no_search_in_progress'   => Lang::t('No search in progress'),
+            'str_root'                    => Lang::t('Root'),
+            'str_root_album_select'       => Lang::t('Root'),
+            'str_album_selected'          => Lang::t('Album already selected'),
+            'str_result_limit'            => Lang::t('<b>%d+</b> albums found, try to refine the search'),
+            'str_album_found'             => Lang::t('<b>1</b> album found'),
+            'str_albums_found'            => Lang::t('<b>%d</b> albums found'),
+            'str_plus_albums_found'       => Lang::t('Only the first %d albums are displayed, out of %d.'),
+            'str_create_and_select'       => Lang::t('Create and select'),
+            'str_add_subcat_of'           => Lang::t('Add a sub-album to "%s"'),
+            'str_complete_name_field'     => Lang::t('Name field must not be empty'),
+            'str_an_error_has_occured'    => Lang::t('An error has occured'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         // ── Dispatch to admin sub-page ────────────────────────────────────────
@@ -384,7 +389,7 @@ final class AdminController implements ControllerInterface
 
         EventDispatcher::notify('loc_end_admin');
 
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
 
         $tpl->pparse('admin');
 

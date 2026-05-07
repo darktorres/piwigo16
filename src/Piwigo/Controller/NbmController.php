@@ -6,9 +6,12 @@ namespace Piwigo\Controller;
 
 use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Page\PageHeaderRenderer;
@@ -26,9 +29,9 @@ final class NbmController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         MailNotificationContext::init();
-        load_language('admin.lang');
+        LangService::get()->loadLanguage('admin.lang');
         EventDispatcher::notify('loading_lang');
-        load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         $subscribe   = is_string($_GET['subscribe'] ?? null) ? $_GET['subscribe'] : null;
         $unsubscribe = is_string($_GET['unsubscribe'] ?? null) ? $_GET['unsubscribe'] : null;
@@ -38,13 +41,13 @@ final class NbmController implements ControllerInterface
         } elseif ($unsubscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
             ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(false, [$unsubscribe]);
         } else {
-            PageState::current()->addError(l10n('Unknown identifier'));
+            PageState::current()->addError(Lang::t('Unknown identifier'));
         }
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $title           = l10n('Notification');
+        $title           = Lang::t('Notification');
         $page['body_id'] = 'theNBMPage';
 
         $tpl = TemplateRegistry::current();
@@ -58,7 +61,7 @@ final class NbmController implements ControllerInterface
         }
 
         PageHeaderRenderer::render($title);
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->parse('nbm');
         PageTailRenderer::render();
 

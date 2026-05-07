@@ -6,14 +6,18 @@ namespace Piwigo\Admin\Users;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -24,10 +28,10 @@ final class UserAdminService
         $uid   = is_numeric($userId) ? (int) $userId : 0;
         $uRepo = ServiceLocator::get(UserRepository::class);
         $uRepo->deleteAllRelatedData($uid);
-        delete_user_sessions($uid);
+        ServiceLocator::get(SessionService::class)->deleteUserSessions($uid);
         $uRepo->deleteByUserId($uid, Tables::users(), Config::userFields()['id']);
         EventDispatcher::notify('delete_user', $userId);
-        pwg_activity('user', is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0), 'delete');
+        ServiceLocator::get(Util::class)->pwgActivity('user', is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0), 'delete');
     }
 
     public function syncUsers(): void
@@ -75,7 +79,7 @@ final class UserAdminService
     {
         $options = [];
         for ($level = $minLevelAccess; $level <= $maxLevelAccess; $level++) {
-            $options[$level] = l10n(sprintf('ACCESS_%d', $level));
+            $options[$level] = Lang::t(sprintf('ACCESS_%d', $level));
         }
         return $options;
     }
@@ -115,7 +119,7 @@ final class UserAdminService
         if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId == $matches[1]) {
-                    conf_update_param('email_admin_on_new_user', 'all', true);
+                    ServiceLocator::get(ConfigService::class)->confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
         }
@@ -130,7 +134,7 @@ final class UserAdminService
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
         EventDispatcher::notify('delete_group', $groupids);
-        pwg_activity('group', $groupids, 'delete');
+        ServiceLocator::get(Util::class)->pwgActivity('group', $groupids, 'delete');
         return $groupList;
     }
 
@@ -160,7 +164,7 @@ final class UserAdminService
             $userRepo->markAllCachesForUpdate();
         }
         $persistentCache->purge(true);
-        conf_delete_param('count_orphans');
+        ServiceLocator::get(ConfigService::class)->confDeleteParam('count_orphans');
         EventDispatcher::notify('invalidate_user_cache', $full);
     }
 

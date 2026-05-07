@@ -10,19 +10,25 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\LangService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugin\PluginService;
 use Piwigo\Plugins\EventDispatcher;
@@ -56,8 +62,8 @@ final class CommonBootstrap
         // Determine the initial instant for generation time tracking.
         $GLOBALS['t2'] = microtime(true);
 
-        array_walk_recursive($_GET,    self::sanitizeMysqlKv(...));
-        array_walk_recursive($_POST,   self::sanitizeMysqlKv(...));
+        array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
+        array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
         array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
         if (!empty($_SERVER['PATH_INFO'])) {
             $path_info = $_SERVER['PATH_INFO'];
@@ -110,7 +116,7 @@ final class CommonBootstrap
 
         require PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
-        $GLOBALS['page']['execution_uuid'] = generate_key(10);
+        $GLOBALS['page']['execution_uuid'] = StringUtil::generateKey(10);
 
         $pool             = CacheFactory::create();
         $persistent_cache = new PersistentFileCache($pool);
@@ -119,14 +125,14 @@ final class CommonBootstrap
         try {
             DbConnection::get();
         } catch (\Exception $e) {
-            fatal_error(l10n($e->getMessage()));
+            HtmlService::fatalError(Lang::t($e->getMessage()));
         }
 
         if (!Config::has('webmaster_id')) {
             Config::override('webmaster_id', 1);
         }
 
-        load_conf_from_db();
+        ServiceLocator::get(ConfigService::class)->loadConfFromDb();
 
         $GLOBALS['logger'] = new Logger([
             'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
@@ -138,8 +144,8 @@ final class CommonBootstrap
         LoggerRegistry::set($GLOBALS['logger']);
 
         if (!Config::checkUpgradeFeed()) {
-            if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != get_branch_from_version(AppInfo::VERSION)) {
-                redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
+            if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != AppInfo::branchFromVersion(AppInfo::VERSION)) {
+                Util::get()->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
             }
         }
 
@@ -154,14 +160,14 @@ final class CommonBootstrap
         PluginService::get()->loadPlugins();
 
         if (!Config::has('piwigo_installed_version')) {
-            conf_update_param('piwigo_installed_version', AppInfo::VERSION);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
-            pwg_activity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
-            conf_update_param('piwigo_installed_version', AppInfo::VERSION);
+            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         if (!Config::has('last_major_update')) {
-            conf_update_param('last_major_update', new \DateTimeImmutable()->format('Y-m-d H:i:s'), true);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('last_major_update', new \DateTimeImmutable()->format('Y-m-d H:i:s'), true);
         }
 
         if (Config::has('order_by_custom')) {
@@ -171,7 +177,7 @@ final class CommonBootstrap
             Config::override('order_by_inside_category', Config::orderByInsideCategoryCustom());
         }
 
-        check_lounge();
+        ServiceLocator::get(Util::class)->checkLounge();
 
         $user_globals  = self::readGlobal('user');
         $user_language = is_array($user_globals) && is_scalar($user_globals['language'] ?? null)
@@ -196,22 +202,22 @@ final class CommonBootstrap
             define('PEM_URL', $pem_scheme . '://' . $pem_host . '/piwigo16-ext');
         }
 
-        load_language('common.lang');
+        LangService::get()->loadLanguage('common.lang');
         if (PermissionService::get()->isAdmin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
-            load_language('admin.lang');
-            load_language('whats_new_' . get_branch_from_version(AppInfo::VERSION) . '.lang');
+            LangService::get()->loadLanguage('admin.lang');
+            LangService::get()->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
         EventDispatcher::notify('loading_lang');
-        load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         if (PermissionService::get()->isAGuest()) {
-            $GLOBALS['user']['username'] = l10n('guest');
+            $GLOBALS['user']['username'] = Lang::t('guest');
         }
 
         if (PageState::current()->authKeyInvalid) {
             PageState::current()->addError(
-                l10n('Your authentication key is no longer valid.')
-                . sprintf(' <a href="%s">%s</a>', ServiceLocator::get(UrlGenerator::class)->identification(), l10n('Login'))
+                Lang::t('Your authentication key is no longer valid.')
+                . sprintf(' <a href="%s">%s</a>', ServiceLocator::get(UrlGenerator::class)->identification(), Lang::t('Login'))
             );
         }
 
@@ -250,7 +256,7 @@ final class CommonBootstrap
             $user_arr_theme = self::readGlobal('user');
             $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
             $theme     = is_scalar($theme_raw) ? (string) $theme_raw : '';
-            if (script_basename() != 'ws' and mobile_theme()) {
+            if (StringUtil::scriptBasename() != 'ws' and ServiceLocator::get(Util::class)->mobileTheme()) {
                 $theme = Config::mobilTheme();
             }
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
@@ -267,19 +273,19 @@ final class CommonBootstrap
         if (is_array($internal_status_gs)
             && isset($internal_status_gs['guest_must_be_guest'])
             && $internal_status_gs['guest_must_be_guest'] === true) {
-            $GLOBALS['header_msgs'][] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
+            $GLOBALS['header_msgs'][] = Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.');
         }
 
         if (Config::galleryLocked()) {
-            $GLOBALS['header_msgs'][] = l10n('The gallery is locked for maintenance. Please, come back later.');
+            $GLOBALS['header_msgs'][] = Lang::t('The gallery is locked for maintenance. Please, come back later.');
 
-            if (script_basename() != 'identification' and !PermissionService::get()->isAdmin()) {
-                set_status_header(503, 'Service Unavailable');
+            if (StringUtil::scriptBasename() != 'identification' and !PermissionService::get()->isAdmin()) {
+                ServiceLocator::get(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
                 if (!headers_sent()) {
                     header('Retry-After: 900');
                 }
-                header('Content-Type: text/html; charset=' . get_pwg_charset());
-                echo '<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . l10n('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
+                echo '<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512);
                 exit();
             }

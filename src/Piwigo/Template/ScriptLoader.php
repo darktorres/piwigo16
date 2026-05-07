@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
+use Piwigo\Html\HtmlService;
 
 /**
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
@@ -64,7 +65,7 @@ class ScriptLoader
         if (!empty($require)) {
             foreach ($require as $id) {
                 if (!isset($this->registered_scripts[$id])) {
-                    $this->loadKnownRequiredScript($id, 1) or fatal_error("inline script not found require $id");
+                    $this->loadKnownRequiredScript($id, 1) or HtmlService::fatalError("inline script not found require $id");
                 }
                 $s = $this->registered_scripts[$id];
                 if ($s->load_mode == 2) {
@@ -267,7 +268,7 @@ class ScriptLoader
             trigger_error("Undefined script $script_id is required by someone", E_USER_WARNING);
             return 0;
         }
-        $recursion_limiter < 5 or fatal_error('combined script circular dependency');
+        $recursion_limiter < 5 or HtmlService::fatalError('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];
         if (isset($script->extra['order'])) {
             return is_int($script->extra['order']) ? $script->extra['order'] : 0;

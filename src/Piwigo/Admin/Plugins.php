@@ -10,6 +10,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -360,7 +361,7 @@ class Plugins
                     $i++;
                     continue;
                 }
-                if (get_branch_from_version(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == get_branch_from_version($version)) {
+                if (AppInfo::branchFromVersion(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == AppInfo::branchFromVersion($version)) {
                     $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
                 }
                 $i++;
@@ -728,7 +729,7 @@ class Plugins
         $nb = $b['author'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return name_compare($a, $b);
+            return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -749,7 +750,7 @@ class Plugins
 
     public function sortPluginsByState(): void
     {
-        uasort($this->fs_plugins, name_compare(...));
+        uasort($this->fs_plugins, ServiceLocator::get(HtmlService::class)->nameCompare(...));
 
         $active_plugins = [];
         $inactive_plugins = [];

@@ -45,16 +45,6 @@ if (!defined('WS_PARAM_OPTIONAL')) {
     define('WS_TYPE_ID', WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL);
 }
 
-// Stub Piwigo global functions needed by unit-tested classes that normally
-// depend on the full HTTP/DB bootstrap not present in isolated unit tests.
-if (!function_exists('set_status_header')) {
-    function set_status_header(int $code, string $text = ''): void
-    {
-        // No-op in unit test environment — headers cannot be sent from CLI.
-    }
-}
-
-
 // Search-module constants from include/functions_search.inc.php.
 if (!defined('QST_QUOTED')) {
     define('QST_QUOTED', 0x01);
@@ -69,21 +59,4 @@ if (!defined('QST_QUOTED')) {
 // Web-service XML constant from include/ws_core.inc.php.
 if (!defined('WS_XML_ATTRIBUTES')) {
     define('WS_XML_ATTRIBUTES', 'attributes_xml_');
-}
-
-// File extension helper stub used by SrcImage and other image classes.
-if (!function_exists('get_extension')) {
-    function get_extension(string $filename): string
-    {
-        $ext = strrchr($filename, '.');
-        return $ext !== false ? strtolower(substr($ext, 1)) : '';
-    }
-}
-
-// Charset helper stub used by PwgRestEncoder.
-if (!function_exists('get_pwg_charset')) {
-    function get_pwg_charset(): string
-    {
-        return 'utf-8';
-    }
 }

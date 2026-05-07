@@ -8,11 +8,16 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -52,14 +57,14 @@ final class ImageAdminService
                 continue;
             }
             $files   = [];
-            $files[] = get_element_path($row);
+            $files[] = ServiceLocator::get(StringUtil::class)->getElementPath($row);
             if (!empty($row['representative_ext'])) {
-                $files[] = original_to_representative($files[0], is_scalar($row['representative_ext']) ? (string) $row['representative_ext'] : '');
+                $files[] = ServiceLocator::get(StringUtil::class)->originalToRepresentative($files[0], is_scalar($row['representative_ext']) ? (string) $row['representative_ext'] : '');
             }
             $rowIdInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($formatsOf[$rowIdInt])) {
                 foreach ($formatsOf[$rowIdInt] as $fmtExt) {
-                    $files[] = original_to_format($files[0], $fmtExt);
+                    $files[] = ServiceLocator::get(StringUtil::class)->originalToFormat($files[0], $fmtExt);
                 }
             }
             $ok = true;
@@ -113,7 +118,7 @@ final class ImageAdminService
             ServiceLocator::get(CategoryAdminService::class)->updateCategory($categoryIds);
         }
         EventDispatcher::notify('delete_elements', $ids);
-        pwg_activity('photo', $ids, 'delete');
+        ServiceLocator::get(Util::class)->pwgActivity('photo', $ids, 'delete');
         return count($ids);
     }
 
@@ -170,7 +175,7 @@ final class ImageAdminService
                         continue;
                     }
                     if (is_file($path . '/' . $node)) {
-                        $ext        = get_extension($node);
+                        $ext        = ServiceLocator::get(StringUtil::class)->getExtension($node);
                         $flipPicExt = Config::flipPictureExt();
                         $flipFileExt = Config::flipFileExt();
                         if (isset($flipPicExt[$ext])) {
@@ -207,7 +212,7 @@ final class ImageAdminService
     {
         $path = is_scalar($infos['path']) ? (string) $infos['path'] : '';
         if (!empty($infos['representative_ext'])) {
-            $path = original_to_representative($path, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
+            $path = ServiceLocator::get(StringUtil::class)->originalToRepresentative($path, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);
@@ -335,14 +340,14 @@ final class ImageAdminService
     public function getImageInfos(int|string $imageId, bool $dieOnMissing = false): ?array
     {
         if (!is_numeric($imageId)) {
-            fatal_error('[getImageInfos] invalid image identifier ' . htmlentities((string) $imageId));
+            HtmlService::fatalError('[getImageInfos] invalid image identifier ' . htmlentities((string) $imageId));
         }
         $images = DbConnection::get()->executeQuery(
             'SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId
         )->fetchAllAssociative();
         if (count($images) === 0) {
             if ($dieOnMissing) {
-                fatal_error('photo ' . $imageId . ' does not exist');
+                HtmlService::fatalError('photo ' . $imageId . ' does not exist');
             }
             return null;
         }
@@ -375,13 +380,13 @@ final class ImageAdminService
 
     public function countOrphans(): int
     {
-        if (is_null(conf_get_param('count_orphans'))) {
+        if (is_null(ServiceLocator::get(ConfigService::class)->confGetParam('count_orphans'))) {
             $allCount = ServiceLocator::get(ImageRepository::class)->countAll();
             $catCount = ServiceLocator::get(CategoryRepository::class)->countLinkedImages();
             $counter  = $allCount - $catCount;
-            conf_update_param('count_orphans', $counter, true);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('count_orphans', $counter, true);
         }
-        $count = conf_get_param('count_orphans');
+        $count = ServiceLocator::get(ConfigService::class)->confGetParam('count_orphans');
         return is_numeric($count) ? (int) $count : 0;
     }
 
@@ -410,7 +415,7 @@ final class ImageAdminService
             return;
         }
         $page['fs_quick_check_already_called'] = true;
-        conf_update_param('fs_quick_check_last_check', date('c'));
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $issue1827Ids = array_column(DbConnection::get()->executeQuery(
             'SELECT id FROM ' . Tables::images() . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
@@ -437,14 +442,14 @@ final class ImageAdminService
         $template = TemplateRegistry::current();
         foreach ($paths as $path) {
             if (!file_exists(is_scalar($path) ? (string) $path : '')) {
-                $template->assign('header_msgs', [l10n('Some photos are missing from your file system. Details provided by plugin Check Uploads')]);
+                $template->assign('header_msgs', [Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads')]);
                 return;
             }
         }
 
         $duplicatePaths = DbConnection::get()->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
         if (count($duplicatePaths) > 0) {
-            $template->assign('header_msgs', [l10n('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
+            $template->assign('header_msgs', [Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
         }
     }
 }

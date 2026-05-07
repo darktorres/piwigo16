@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Url;
 
 use Piwigo\Auth\CookieService;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -163,12 +168,12 @@ final class UrlService
             case 'id-file':
                 $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
                 if (isset($params['image_file'])) {
-                    $url .= '-' . str2url(get_filename_wo_extension(is_scalar($params['image_file']) ? (string) $params['image_file'] : ''));
+                    $url .= '-' . ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($params['image_file']) ? (string) $params['image_file'] : ''));
                 }
                 break;
             case 'file':
                 if (isset($params['image_file'])) {
-                    $fnameWoExt = get_filename_wo_extension(is_scalar($params['image_file']) ? (string) $params['image_file'] : '');
+                    $fnameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($params['image_file']) ? (string) $params['image_file'] : '');
                     if (ord($fnameWoExt[0]) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
                         $url .= $fnameWoExt;
                         break;
@@ -255,7 +260,7 @@ final class UrlService
                         if (empty($cat['permalink'])) {
                             $sectionString .= is_scalar($cat['id']) ? (string) $cat['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
-                                $sectionString .= '-' . str2url(is_scalar($cat['name']) ? (string) $cat['name'] : '');
+                                $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_scalar($cat['name']) ? (string) $cat['name'] : '');
                             }
                         } else {
                             $sectionString .= is_scalar($cat['permalink']) ? (string) $cat['permalink'] : '';
@@ -271,7 +276,7 @@ final class UrlService
                                 if (empty($category['permalink'])) {
                                     $sectionString .= is_scalar($category['id']) ? (string) $category['id'] : '';
                                     if (Config::categoryUrlStyle() == 'id-name') {
-                                        $sectionString .= '-' . str2url(is_scalar($category['name']) ? (string) $category['name'] : '');
+                                        $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_scalar($category['name']) ? (string) $category['name'] : '');
                                     }
                                 } else {
                                     $sectionString .= is_scalar($category['permalink']) ? (string) $category['permalink'] : '';
@@ -397,7 +402,7 @@ final class UrlService
 
                     if (count($maybePermalinks)) {
                         $permaIndex = 0;
-                        $catId      = get_cat_id_from_permalinks($maybePermalinks, $permaIndex);
+                        $catId      = ServiceLocator::get(CategoryService::class)->getCatIdFromPermalinks($maybePermalinks, $permaIndex);
                         if (isset($catId)) {
                             $nextToken += $permaIndex + 1;
 
@@ -411,16 +416,16 @@ final class UrlService
                                 $page['combined_categories'][] = $catId;
                             }
                         } else {
-                            page_not_found(l10n('Permalink for album not found'));
+                            ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Permalink for album not found'));
                         }
                     }
                 }
             }
 
             if (isset($page['category'])) {
-                $result = get_cat_info($page['category']);
+                $result = ServiceLocator::get(CategoryService::class)->getCatInfo($page['category']);
                 if (empty($result)) {
-                    page_not_found(l10n('Requested album does not exist'));
+                    ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -429,9 +434,9 @@ final class UrlService
                 $combinedCategories = [];
 
                 foreach ($page['combined_categories'] as $catId) {
-                    $result = get_cat_info($catId);
+                    $result = ServiceLocator::get(CategoryService::class)->getCatInfo($catId);
                     if (empty($result)) {
-                        page_not_found(l10n('Requested album does not exist'));
+                        ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
                     }
 
                     $combinedCategories[] = $result;
@@ -466,12 +471,12 @@ final class UrlService
             $nextToken = $i;
 
             if (empty($requestedTagIds) && empty($requestedTagUrlNames)) {
-                bad_request('at least one tag required');
+                ServiceLocator::get(HtmlService::class)->badRequest('at least one tag required');
             }
 
-            $page['tags'] = find_tags($requestedTagIds, $requestedTagUrlNames);
+            $page['tags'] = ServiceLocator::get(TagService::class)->findTags($requestedTagIds, $requestedTagUrlNames);
             if (empty($page['tags'])) {
-                page_not_found(l10n('Requested tag does not exist'), ServiceLocator::get(UrlGenerator::class)->tagsPage());
+                ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested tag does not exist'), ServiceLocator::get(UrlGenerator::class)->tagsPage());
             }
         } elseif ('favorites' == ($tokens[$nextToken] ?? null)) {
             $page['section'] = 'favorites';
@@ -496,7 +501,7 @@ final class UrlService
             if (!isset($matches[1])) {
                 preg_match('/(\d+)/', (string) ($tokens[$nextToken] ?? ''), $matches);
                 if (!isset($matches[1])) {
-                    bad_request('search identifier is missing');
+                    ServiceLocator::get(HtmlService::class)->badRequest('search identifier is missing');
                     return $page;
                 }
             }
@@ -512,7 +517,7 @@ final class UrlService
                 $page['list'][] = -1;
             } else {
                 if (!preg_match('/^\d+(,\d+)*$/', (string) $tokens[$nextToken])) {
-                    bad_request('wrong format on list GET parameter');
+                    ServiceLocator::get(HtmlService::class)->badRequest('wrong format on list GET parameter');
                 }
                 foreach (explode(',', (string) $tokens[$nextToken]) as $imageId) {
                     $page['list'][] = $imageId;
@@ -542,7 +547,7 @@ final class UrlService
                 $page['chronology_style'] = $chronologyTokens[0];
 
                 if (!in_array($page['chronology_style'], ['monthly', 'weekly'])) {
-                    fatal_error('bad chronology field (style)');
+                    HtmlService::fatalError('bad chronology field (style)');
                 }
 
                 array_shift($chronologyTokens);
@@ -556,7 +561,7 @@ final class UrlService
 
                     foreach ($page['chronology_date'] as $dateToken) {
                         if (!preg_match('/^(\d+|any)$/', $dateToken)) {
-                            fatal_error('bad chronology field (date)');
+                            HtmlService::fatalError('bad chronology field (date)');
                         }
                     }
                 }

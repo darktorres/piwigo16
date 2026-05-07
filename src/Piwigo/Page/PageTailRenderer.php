@@ -8,6 +8,9 @@ use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -29,7 +32,7 @@ final class PageTailRenderer
         ]);
 
         if (!PermissionService::get()->isAGuest()) {
-            $template->assign('CONTACT_MAIL', get_webmaster_mail_address());
+            $template->assign('CONTACT_MAIL', ServiceLocator::get(Util::class)->getWebmasterMailAddress());
         }
 
         if (Config::updateNotifyCheckPeriod() > 0) {
@@ -37,15 +40,15 @@ final class PageTailRenderer
                 || strtotime((string) Config::updateNotifyLastCheck()) < strtotime(Config::updateNotifyCheckPeriod() . ' seconds ago');
 
             if ($check_for_updates) {
-                $exec_id = pwg_unique_exec_begins('check_for_updates');
+                $exec_id = ServiceLocator::get(Util::class)->pwgUniqueExecBegins('check_for_updates');
                 if ($exec_id !== false) {
                     new Updates()->notifyPiwigoNewVersions();
-                    pwg_unique_exec_ends('check_for_updates');
+                    ServiceLocator::get(Util::class)->pwgUniqueExecEnds('check_for_updates');
                 }
             }
         }
 
-        send_piwigo_infos();
+        ServiceLocator::get(Util::class)->sendPiwigoInfos();
 
         $debug_vars = [];
 
@@ -58,7 +61,7 @@ final class PageTailRenderer
             $pageState  = PageState::current();
             $t2         = is_float($GLOBALS['t2'] ?? null) ? $GLOBALS['t2'] : microtime(true);
             $debug_vars += [
-                'TIME'       => get_elapsed_time($t2, get_moment()),
+                'TIME'       => get_elapsed_time($t2, ServiceLocator::get(StringUtil::class)->getMoment()),
                 'NB_QUERIES' => $pageState->countQueries,
                 'SQL_TIME'   => number_format($pageState->queriesTime, 3, '.', ' ') . ' s',
             ];
@@ -66,10 +69,10 @@ final class PageTailRenderer
 
         $template->assign('debug', $debug_vars);
 
-        if (!empty(Config::mobilTheme()) && (get_device() !== 'desktop' || mobile_theme())) {
+        if (!empty(Config::mobilTheme()) && (ServiceLocator::get(Util::class)->getDevice() !== 'desktop' || ServiceLocator::get(Util::class)->mobileTheme())) {
             $template->assign('TOGGLE_MOBILE_THEME_URL', UrlService::get()->addUrlParams(
                 htmlspecialchars(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : ''),
-                ['mobile' => mobile_theme() ? 'false' : 'true']
+                ['mobile' => ServiceLocator::get(Util::class)->mobileTheme() ? 'false' : 'true']
             ));
         }
 

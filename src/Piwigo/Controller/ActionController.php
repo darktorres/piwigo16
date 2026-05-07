@@ -8,9 +8,12 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -36,7 +39,7 @@ final class ActionController implements ControllerInterface
         $params = $request->getQueryParams();
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
-            check_input_parameter('format', $_GET, false, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
             $get_format = input_int('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $get_format . ';';
@@ -64,7 +67,7 @@ final class ActionController implements ControllerInterface
 
         $is_admin_download = false;
         $get_pwg_token     = input_string('pwg_token', null, $_GET);
-        if (PermissionService::get()->isAdmin() && $get_pwg_token !== null && get_pwg_token() == $get_pwg_token) {
+        if (PermissionService::get()->isAdmin() && $get_pwg_token !== null && ServiceLocator::get(Util::class)->getPwgToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (is_array($GLOBALS['user'] ?? null)) {
                 $GLOBALS['user']['enabled_high'] = true;
@@ -93,14 +96,16 @@ SELECT id FROM ' . Tables::categories() . '
                         $this->error(401, 'Access denied e');
                     }
                 }
-                $file = get_element_path($element_info);
+                $file = ServiceLocator::get(StringUtil::class)->getElementPath($element_info);
                 break;
             case 'r':
-                $file = original_to_representative(get_element_path($element_info), $element_info['representative_ext'] ?? '');
+                $reprExt = $element_info['representative_ext'] ?? null;
+                $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative(ServiceLocator::get(StringUtil::class)->getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
                 break;
             case 'f':
-                $file = original_to_format(get_element_path($element_info), $format['ext'] ?? '');
-                $element_info['file'] = get_filename_wo_extension(is_scalar($element_info['file']) ? (string) $element_info['file'] : '') . '.' . (is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '');
+                $formatExt = $format['ext'] ?? null;
+                $file = ServiceLocator::get(StringUtil::class)->originalToFormat(ServiceLocator::get(StringUtil::class)->getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
+                $element_info['file'] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($element_info['file']) ? (string) $element_info['file'] : '') . '.' . (is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '');
                 break;
         }
 
@@ -109,9 +114,9 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if ($get_part == 'e') {
-            pwg_log($get_id, 'high');
+            ServiceLocator::get(Util::class)->pwgLog($get_id, 'high');
         } elseif ($get_part == 'f') {
-            pwg_log($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
+            ServiceLocator::get(Util::class)->pwgLog($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
         EventDispatcher::notify('loc_action_before_http_headers');
@@ -131,7 +136,7 @@ SELECT id FROM ' . Tables::categories() . '
             $http_headers[] = 'Last-Modified: ' . $gmt_mtime;
 
             if ($get_part !== 'f' && isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-                set_status_header(304);
+                ServiceLocator::get(HtmlService::class)->setStatusHeader(304);
                 foreach ($http_headers as $header) {
                     header($header);
                 }
@@ -140,7 +145,7 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if (!isset($ctype)) {
-            $ctype = $this->guessMimeType(get_extension($file));
+            $ctype = $this->guessMimeType(ServiceLocator::get(StringUtil::class)->getExtension($file));
         }
 
         $http_headers[] = 'Content-Type: ' . $ctype;
@@ -191,7 +196,7 @@ SELECT id FROM ' . Tables::categories() . '
 
     private function error(int $code, string $msg): never
     {
-        set_status_header($code);
+        ServiceLocator::get(HtmlService::class)->setStatusHeader($code);
         echo $msg;
         exit();
     }

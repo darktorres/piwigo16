@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
@@ -121,7 +122,7 @@ final class InstallService
                 );
             }
         } catch (\Exception $e) {
-            $errors[] = l10n($e->getMessage());
+            $errors[] = Lang::t($e->getMessage());
         }
     }
 }

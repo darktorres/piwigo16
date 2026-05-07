@@ -6,8 +6,11 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -30,16 +33,16 @@ final class AboutController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $title           = l10n('About Piwigo');
+        $title           = Lang::t('About Piwigo');
         $page['body_id'] = 'theAboutPage';
 
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['about' => 'about.tpl']);
 
-        $tpl->assign('ABOUT_MESSAGE', load_language('about.html', '', ['return' => true]));
+        $tpl->assign('ABOUT_MESSAGE', LangService::get()->loadLanguage('about.html', '', ['return' => true]));
 
         $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
-        $themeAbout = load_language('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
+        $themeAbout = LangService::get()->loadLanguage('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
             $tpl->assign('THEME_ABOUT', $themeAbout);
         }
@@ -53,7 +56,7 @@ final class AboutController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_about');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->pparse('about');
         PageTailRenderer::render();
 

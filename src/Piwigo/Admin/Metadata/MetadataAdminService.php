@@ -8,6 +8,7 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -126,13 +127,13 @@ final class MetadataAdminService
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            if (is_readable($file) && ($image_size = pwg_safe_getimagesize($file))) {
+            if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file))) {
                 $type = $image_size[2];
                 if (IMAGETYPE_TIFF_MM == $type || IMAGETYPE_TIFF_II == $type) {
                     $is_tiff = true;
                 }
             }
-            $file = original_to_representative($file, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
+            $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative($file, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
         }
 
         if (function_exists('mime_content_type')) {
@@ -164,7 +165,7 @@ final class MetadataAdminService
                         $infos['height'] = round((float) explode(' ', $vb)[3]);
                     }
                 }
-                if (is_readable($file) && ($image_size = pwg_safe_getimagesize($file))) {
+                if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file))) {
                     $infos['width'] = $image_size[0];
                     $infos['height'] = $image_size[1];
                 }

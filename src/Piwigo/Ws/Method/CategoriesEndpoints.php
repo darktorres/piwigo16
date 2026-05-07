@@ -9,11 +9,14 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -212,7 +215,7 @@ final class CategoriesEndpoints
                 $row[$key] = is_numeric($row[$key]) ? (int) $row[$key] : 0;
             }
             if ($params['fullname']) {
-                $row['name'] = strip_tags(get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', null));
+                $row['name'] = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', null));
             } else {
                 $row['name_raw']  = $row['name'];
                 $renderedListName = EventDispatcher::dispatch('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getList');
@@ -226,7 +229,7 @@ final class CategoriesEndpoints
             } elseif (!empty($row['representative_picture_id'])) {
                 $imageId = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $imageId = get_random_image_in_category($row);
+                $imageId = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
                     $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ",%' AND representative_picture_id IS NOT NULL" . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . Dml::RANDOM_FUNCTION . '() LIMIT 1;';
@@ -250,7 +253,7 @@ final class CategoriesEndpoints
             }
             $cats[] = $row;
         }
-        usort($cats, global_rank_compare(...));
+        usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         $thumbnailSrcOf = [];
         if (count($categories) > 0) {
             $newImageIds  = [];
@@ -262,7 +265,7 @@ final class CategoriesEndpoints
                 } else {
                     foreach ($categories as &$category) {
                         if ($row['id'] == $category['representative_picture_id']) {
-                            $newImgId = get_random_image_in_category($category);
+                            $newImgId = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category);
                             if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
                             }
@@ -339,7 +342,7 @@ final class CategoriesEndpoints
         foreach ($searchRows as $row) {
             $id              = is_scalar($row['id']) ? (string) $row['id'] : '';
             $row['nb_images'] = $nbImagesOf[$id] ?? 0;
-            $catDisplayName  = get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+            $catDisplayName  = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
             $renderedAdminName = EventDispatcher::dispatch('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getAdminList');
             $row['name']     = strip_tags((string) $renderedAdminName);
@@ -366,7 +369,7 @@ final class CategoriesEndpoints
             }
         }
         $limitReached = ($counter > Config::linkedAlbumSearchLimit());
-        usort($cats, global_rank_compare(...));
+        usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         return ['categories' => new PwgNamedArray($cats, 'category', ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']), 'limit' => Config::linkedAlbumSearchLimit(), 'limit_reached' => $limitReached];
     }
 
@@ -376,7 +379,7 @@ final class CategoriesEndpoints
      */
     public function add(array $params, PwgServer &$service): PwgError|array
     {
-        if (isset($params['pwg_token']) && get_pwg_token() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['position']) && in_array($params['position'], ['first', 'last'])) {
@@ -449,7 +452,7 @@ final class CategoriesEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (isset($params['pwg_token']) && get_pwg_token() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
@@ -486,7 +489,7 @@ final class CategoriesEndpoints
             }
         }
         if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && $params['apply_commentable_to_subalbums']) {
-            $subcats = get_subcat_ids([$categoryId]);
+            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds([$categoryId]);
             if (count($subcats) > 0) {
                 $commentableVal = is_scalar($params['commentable']) ? (string) $params['commentable'] : 'false';
                 ServiceLocator::get(CategoryRepository::class)->setCommentable(array_map(intval(...), $subcats), $commentableVal === 'true');
@@ -495,7 +498,7 @@ final class CategoriesEndpoints
         if ($performUpdate) {
             Dml::singleUpdate(Tables::categories(), $update, ['id' => $update['id']]);
         }
-        pwg_activity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
+        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
         return null;
     }
 
@@ -514,7 +517,7 @@ final class CategoriesEndpoints
         }
         $catRepo->setRepresentativePicture([$categoryId], $imageId);
         ServiceLocator::get(UserRepository::class)->clearUserRepresentativeForCategory($categoryId);
-        pwg_activity('album', $categoryId, 'edit', ['image_id' => $imageId]);
+        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit', ['image_id' => $imageId]);
         return null;
     }
 
@@ -531,7 +534,7 @@ final class CategoriesEndpoints
             return new PwgError(401, 'not permitted');
         }
         $catRepo2->clearRepresentatives([$categoryId]);
-        pwg_activity('album', $categoryId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit');
         return null;
     }
 
@@ -550,7 +553,7 @@ final class CategoriesEndpoints
             return new PwgError(401, 'not permitted');
         }
         ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant([$categoryId]);
-        pwg_activity('album', $categoryId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit');
         $category = $catRepo3->findCategoryById($categoryId);
         $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
         return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
@@ -559,7 +562,7 @@ final class CategoriesEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $photoDeletionMode = is_scalar($params['photo_deletion_mode']) ? (string) $params['photo_deletion_mode'] : '';
@@ -591,7 +594,7 @@ final class CategoriesEndpoints
      */
     public function move(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['category_id'])) {
@@ -620,7 +623,7 @@ final class CategoriesEndpoints
             return new PwgError(403, sprintf('Category %u does not exist', (int) $unknownCategoryIds[0]));
         }
         if ($parentId !== 0) {
-            $subcatIds = get_subcat_ids([$parentId]);
+            $subcatIds = ServiceLocator::get(CategoryService::class)->getSubcatIds([$parentId]);
             if (count($subcatIds) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
@@ -629,14 +632,14 @@ final class CategoriesEndpoints
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         $catDisplayName = '';
         foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
-            $catDisplayName = get_cat_display_name_cache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+            $catDisplayName = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
         $nbPhotosIn = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
         $updateCats = [];
         foreach (array_unique($updateCatIds) as $updateCat) {
             $nbSubPhotos      = 0;
-            $subCatWithoutParent = array_diff(get_subcat_ids([$updateCat]), [$updateCat]);
+            $subCatWithoutParent = array_diff(ServiceLocator::get(CategoryService::class)->getSubcatIds([$updateCat]), [$updateCat]);
             foreach ($subCatWithoutParent as $idSubCat) {
                 $nbSubPhotos += is_numeric($nbPhotosIn[(string) $idSubCat] ?? null) ? (int) $nbPhotosIn[(string) $idSubCat] : 0;
             }
@@ -652,7 +655,7 @@ final class CategoriesEndpoints
         $categoryId    = is_numeric($paramCatId[0] ?? null) ? (int) $paramCatId[0] : 0;
         $category      = [];
         $category['has_images'] = ServiceLocator::get(CategoryRepository::class)->hasCategoryImages($categoryId);
-        $subcatIds     = get_subcat_ids([$categoryId]);
+        $subcatIds     = ServiceLocator::get(CategoryService::class)->getSubcatIds([$categoryId]);
         $category['nb_subcats'] = count($subcatIds) - 1;
         $imageIdsRecursive = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
         $category['nb_images_recursive'] = count($imageIdsRecursive);

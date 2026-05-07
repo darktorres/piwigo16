@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\Lang;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Lang\Translator;
 
 /**
  * This class contains basic functions that can be called directly from the
- * templates in the form $pwg->l10n('edit')
+ * templates in the form $pwg->Lang::t('edit')
  */
 class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
     public function l10n(?string $text): string
     {
-        return l10n($text);
+        return Lang::t($text ?? '');
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
     public function l10nDec(string $s, string $p, int|float|null $v): string
     {
-        return l10n_dec($s, $p, $v);
+        return Translator::get()->plural($s, $p, (int) $v);
     }
 
     #[\Deprecated(message: 'use "translate" or "sprintf" modifier')]

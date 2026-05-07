@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Exception\AuthException;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
@@ -28,7 +30,7 @@ final class PopuphelpController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $title               = l10n('Piwigo Help');
+        $title               = Lang::t('Piwigo Help');
         $page['body_id']     = 'thePopuphelpPage';
         $page['page_banner'] = '';
         $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
@@ -38,7 +40,7 @@ final class PopuphelpController implements ControllerInterface
             throw new AuthException('Hacking attempt!');
         }
 
-        $helpContent = load_language('help/' . $rawPage . '.html', '', ['return' => true]);
+        $helpContent = LangService::get()->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
         if ($helpContent === false) {
             $helpContent = '';
         }

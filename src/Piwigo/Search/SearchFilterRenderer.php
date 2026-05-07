@@ -7,10 +7,15 @@ namespace Piwigo\Search;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
+use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangService;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -31,7 +36,7 @@ final class SearchFilterRenderer
         $userCacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
         $persistent_cache = PersistentCacheRegistry::current();
 
-        $filters_views_raw = conf_get_param('filters_views', Config::defaultFiltersViews());
+        $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
         /** @var array<string, array<string,mixed>> $filters_views */
         $filters_views = safe_unserialize($filters_views_str);
@@ -83,10 +88,10 @@ final class SearchFilterRenderer
                 $filter_tags = [];
                 $other_filters_items = ServiceLocator::get(SearchService::class)->getItemsForFilter('tags');
                 if (false === $other_filters_items) {
-                    $filter_tags = get_available_tags();
-                    usort($filter_tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                    $filter_tags = ServiceLocator::get(TagService::class)->getAvailableTags();
+                    usort($filter_tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                 } else {
-                    $filter_tags = get_common_tags($other_filters_items, 0);
+                    $filter_tags = ServiceLocator::get(TagService::class)->getCommonTags($other_filters_items, 0);
 
                     $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
                     $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
@@ -96,7 +101,7 @@ final class SearchFilterRenderer
                     );
 
                     if (count($missing_tag_ids) > 0) {
-                        $filter_tags = array_merge(get_available_tags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                        $filter_tags = array_merge(ServiceLocator::get(TagService::class)->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
                     }
                 }
 
@@ -117,7 +122,7 @@ final class SearchFilterRenderer
                 if (!$display_filters['expert']['access']) {
                     unset($my_search['fields']['expert']);
                 } else {
-                    load_language('help_quick_search.lang');
+                    LangService::get()->loadLanguage('help_quick_search.lang');
                 }
             }
 
@@ -217,11 +222,11 @@ SELECT
                 }
 
                 $label_for_threshold = [
-                    '24h' => l10n('last 24 hours'),
-                    '7d' => l10n('last 7 days'),
-                    '30d' => l10n('last 30 days'),
-                    '3m' => l10n('last 3 months'),
-                    '6m' => l10n('last 6 months'),
+                    '24h' => Lang::t('last 24 hours'),
+                    '7d' => Lang::t('last 7 days'),
+                    '30d' => Lang::t('last 30 days'),
+                    '3m' => Lang::t('last 3 months'),
+                    '6m' => Lang::t('last 6 months'),
                 ];
 
                 $dp_pre = $date_posted['pre_counters'];
@@ -234,7 +239,7 @@ SELECT
 
                 foreach (array_keys($dp_list) as $y) {
                     $dp_list[$y] = is_array($dp_list[$y]) ? $dp_list[$y] : [];
-                    $dp_list[$y]['label'] = l10n('year %d', $y);
+                    $dp_list[$y]['label'] = Lang::t('year %d', $y);
                     $months = is_array($dp_list[$y]['months'] ?? null) ? $dp_list[$y]['months'] : [];
 
                     foreach (array_keys($months) as $ym) {
@@ -246,7 +251,7 @@ SELECT
                         if ($month_days !== null) {
                             foreach (array_keys($month_days) as $ymd) {
                                 $month_days[$ymd] = is_array($month_days[$ymd]) ? $month_days[$ymd] : [];
-                                $month_days[$ymd]['label'] = format_date($ymd);
+                                $month_days[$ymd]['label'] = ServiceLocator::get(DateService::class)->formatDate($ymd);
                             }
                             $months[$ym]['days'] = $month_days;
                         }
@@ -317,11 +322,11 @@ SELECT
                 }
 
                 $label_for_threshold = [
-                    '7d' => l10n('last 7 days'),
-                    '30d' => l10n('last 30 days'),
-                    '3m' => l10n('last 3 months'),
-                    '6m' => l10n('last 6 months'),
-                    '12m' => l10n('last 12 months'),
+                    '7d' => Lang::t('last 7 days'),
+                    '30d' => Lang::t('last 30 days'),
+                    '3m' => Lang::t('last 3 months'),
+                    '6m' => Lang::t('last 6 months'),
+                    '12m' => Lang::t('last 12 months'),
                 ];
 
                 $dc_pre = $date_created['pre_counters'];
@@ -334,7 +339,7 @@ SELECT
 
                 foreach (array_keys($dc_list) as $y) {
                     $dc_list[$y] = is_array($dc_list[$y]) ? $dc_list[$y] : [];
-                    $dc_list[$y]['label'] = l10n('year %d', $y);
+                    $dc_list[$y]['label'] = Lang::t('year %d', $y);
                     $months = is_array($dc_list[$y]['months'] ?? null) ? $dc_list[$y]['months'] : [];
 
                     foreach (array_keys($months) as $ym) {
@@ -346,7 +351,7 @@ SELECT
                         if ($month_days !== null) {
                             foreach (array_keys($month_days) as $ymd) {
                                 $month_days[$ymd] = is_array($month_days[$ymd]) ? $month_days[$ymd] : [];
-                                $month_days[$ymd]['label'] = format_date($ymd);
+                                $month_days[$ymd]['label'] = ServiceLocator::get(DateService::class)->formatDate($ymd);
                             }
                             $months[$ym]['days'] = $month_days;
                         }
@@ -436,7 +441,7 @@ SELECT
 ;';
                     foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
                         $uppercats_val = $row['uppercats'];
-                        $cat_display_name = get_cat_display_name_cache(
+                        $cat_display_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
                             is_scalar($uppercats_val) ? (string) $uppercats_val : '',
                             ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
                         );
@@ -735,21 +740,21 @@ SELECT
                 $sliders_data['filesizes'] = [
                     'values' => array_map(floatval(...), explode(',', (string) $filesize['list'])),
                     'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],
-                    'text' => l10n('between %s and %s MB'),
+                    'text' => Lang::t('between %s and %s MB'),
                 ];
             }
             if (isset($height)) {
                 $sliders_data['heights'] = [
                     'values' => array_map(intval(...), explode(',', (string) $height['list'])),
                     'selected' => ['min' => $height['selected']['min'], 'max' => $height['selected']['max']],
-                    'text' => l10n('between %d and %d pixels'),
+                    'text' => Lang::t('between %d and %d pixels'),
                 ];
             }
             if (isset($width)) {
                 $sliders_data['widths'] = [
                     'values' => array_map(intval(...), explode(',', (string) $width['list'])),
                     'selected' => ['min' => $width['selected']['min'], 'max' => $width['selected']['max']],
-                    'text' => l10n('between %d and %d pixels'),
+                    'text' => Lang::t('between %d and %d pixels'),
                 ];
             }
 
@@ -760,28 +765,28 @@ SELECT
                     'fullname_of_cat' => $fullname_of ?? [],
                     'show_filter_ratings' => Config::rateEnabled() ? true : false,
                     'sliders' => $sliders_data,
-                    'str_word_widget_label' => l10n('Search for words'),
-                    'str_tags_widget_label' => l10n('Tag'),
-                    'str_album_widget_label' => l10n('Album'),
-                    'str_author_widget_label' => l10n('Author'),
-                    'str_added_by_widget_label' => l10n('Added by'),
-                    'str_filetypes_widget_label' => l10n('File type'),
-                    'str_ratio_widget_label' => l10n('Ratio'),
-                    'str_rating_widget_label' => l10n('Rating'),
-                    'str_no_rating' => l10n('no rate'),
-                    'str_between_rating' => l10n('between %d and %d'),
-                    'str_filesize_widget_label' => l10n('Filesize'),
-                    'str_width_widget_label' => l10n('Width'),
-                    'str_height_widget_label' => l10n('Height'),
-                    'str_expert_widget_label' => l10n('Expert mode'),
-                    'str_empty_search_top_alt' => l10n('Fill in the filters to start a search'),
-                    'str_empty_search_bot_alt' => l10n('Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'),
-                    'str_search_in_ab' => l10n('Search in albums'),
+                    'str_word_widget_label' => Lang::t('Search for words'),
+                    'str_tags_widget_label' => Lang::t('Tag'),
+                    'str_album_widget_label' => Lang::t('Album'),
+                    'str_author_widget_label' => Lang::t('Author'),
+                    'str_added_by_widget_label' => Lang::t('Added by'),
+                    'str_filetypes_widget_label' => Lang::t('File type'),
+                    'str_ratio_widget_label' => Lang::t('Ratio'),
+                    'str_rating_widget_label' => Lang::t('Rating'),
+                    'str_no_rating' => Lang::t('no rate'),
+                    'str_between_rating' => Lang::t('between %d and %d'),
+                    'str_filesize_widget_label' => Lang::t('Filesize'),
+                    'str_width_widget_label' => Lang::t('Width'),
+                    'str_height_widget_label' => Lang::t('Height'),
+                    'str_expert_widget_label' => Lang::t('Expert mode'),
+                    'str_empty_search_top_alt' => Lang::t('Fill in the filters to start a search'),
+                    'str_empty_search_bot_alt' => Lang::t('Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.'),
+                    'str_search_in_ab' => Lang::t('Search in albums'),
                     'str_ratios_label' => [
-                        'Portrait' => l10n('Portrait'),
-                        'square' => l10n('square'),
-                        'Landscape' => l10n('Landscape'),
-                        'Panorama' => l10n('Panorama'),
+                        'Portrait' => Lang::t('Portrait'),
+                        'square' => Lang::t('square'),
+                        'Landscape' => Lang::t('Landscape'),
+                        'Panorama' => Lang::t('Panorama'),
                     ],
                 ],
                 JSON_HEX_TAG | JSON_UNESCAPED_UNICODE
@@ -800,11 +805,11 @@ SELECT
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
                         $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
-                        usort($cats, fn (array $a, array $b): int => name_compare($a, $b));
+                        usort($cats, fn (array $a, array $b): int => ServiceLocator::get(HtmlService::class)->nameCompare($a, $b));
                         $albums_found = [];
                         foreach ($cats as $cat) {
                             $single_link = false;
-                            $albums_found[] = get_cat_display_name_cache(
+                            $albums_found[] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
                                 is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '',
                                 '',
                                 $single_link
@@ -821,8 +826,8 @@ SELECT
                     $tag_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingTagIds);
 
                     if (count($tag_ids) > 0) {
-                        $tags = get_available_tags($tag_ids);
-                        usort($tags, fn (mixed $a, mixed $b): int => tag_alpha_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                        $tags = ServiceLocator::get(TagService::class)->getAvailableTags($tag_ids);
+                        usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                         $tags_found = [];
                         foreach ($tags as $tag) {
                             if (!is_array($tag)) {

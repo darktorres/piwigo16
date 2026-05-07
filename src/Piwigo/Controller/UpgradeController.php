@@ -8,11 +8,16 @@ use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\LangService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -90,10 +95,10 @@ final class UpgradeController implements ControllerInterface
         }
         define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
 
-        load_language('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        load_language('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        load_language('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        LangService::get()->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        LangService::get()->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        LangService::get()->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        LangService::get()->loadLanguage('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
 
         UpgradeService::upgradeDbConnect();
 
@@ -104,7 +109,7 @@ final class UpgradeController implements ControllerInterface
         $tpl->setFilenames(['upgrade' => 'upgrade.tpl']);
         $tpl->assign([
             'RELEASE'        => AppInfo::VERSION,
-            'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+            'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
         ]);
 
         $page = &$GLOBALS['page'];
@@ -150,8 +155,8 @@ final class UpgradeController implements ControllerInterface
             exit;
         }
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
-        header('Content-Type: text/html; charset=' . get_pwg_charset());
+        ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
+        header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();

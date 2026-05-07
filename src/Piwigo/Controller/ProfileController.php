@@ -6,10 +6,14 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -35,7 +39,7 @@ final class ProfileController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Classic);
 
         if (!empty($_POST)) {
-            check_pwg_token();
+            ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
         /** @var array<string, mixed> $user */
@@ -61,7 +65,7 @@ final class ProfileController implements ControllerInterface
         ServiceLocator::get(ProfileService::class)->saveProfileFromPost($userdata, $pgErrors);
         $page['errors'] = $pgErrors;
 
-        $title = l10n('Your Gallery Customization');
+        $title = Lang::t('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
         $tpl->setFilename('profile', 'profile.tpl');
         $tpl->setFilename('profile_content', 'profile_content.tpl');
@@ -94,17 +98,17 @@ final class ProfileController implements ControllerInterface
             ],
             'standardSaveSelector' => [],
             'selected_date'        => $tpl->getTemplateVars('API_SELECTED_EXPIRATION') ?? '',
-            'no_time_elapsed'      => l10n('right now'),
-            'str_handle_error'     => l10n('An error has occured'),
-            'str_copy_key_secret'  => l10n('Secret copied. Keep it in a safe place.'),
-            'str_copy_key_id'      => l10n('ID copied.'),
-            'str_api_edited'       => l10n('API Key has been successfully edited.'),
-            'str_api_revoked'      => l10n('API Key has been successfully revoked.'),
-            'str_api_added'        => l10n('The api key has been successfully created.'),
-            'str_revoke_key'       => l10n('Do you really want to revoke the "%s" API key?'),
-            'str_cant_copy'        => l10n('Impossible to copy automatically. Please copy manually.'),
-            'str_show_expired'     => l10n('Show expired keys'),
-            'str_hide_expired'     => l10n('Hide expired keys'),
+            'no_time_elapsed'      => Lang::t('right now'),
+            'str_handle_error'     => Lang::t('An error has occured'),
+            'str_copy_key_secret'  => Lang::t('Secret copied. Keep it in a safe place.'),
+            'str_copy_key_id'      => Lang::t('ID copied.'),
+            'str_api_edited'       => Lang::t('API Key has been successfully edited.'),
+            'str_api_revoked'      => Lang::t('API Key has been successfully revoked.'),
+            'str_api_added'        => Lang::t('The api key has been successfully created.'),
+            'str_revoke_key'       => Lang::t('Do you really want to revoke the "%s" API key?'),
+            'str_cant_copy'        => Lang::t('Impossible to copy automatically. Please copy manually.'),
+            'str_show_expired'     => Lang::t('Show expired keys'),
+            'str_hide_expired'     => Lang::t('Hide expired keys'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $tpl->assignVarFromHandle('PROFILE_CONTENT', 'profile_content');
@@ -122,16 +126,16 @@ final class ProfileController implements ControllerInterface
 
         $cookie_lang = input_string('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, get_languages())) {
-                fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
+            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+                HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
             Dml::singleUpdate(Tables::userInfos(), ['language' => $cookie_lang], ['user_id' => $user['id']]);
-            load_language('common.lang', '', ['language' => $cookie_lang]);
+            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (get_languages() as $language_code => $language_name) {
+        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
@@ -148,7 +152,7 @@ final class ProfileController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         EventDispatcher::notify('loc_end_profile');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->pparse('profile');
         PageTailRenderer::render();
 

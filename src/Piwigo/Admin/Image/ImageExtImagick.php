@@ -6,6 +6,8 @@ namespace Piwigo\Admin\Image;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 
 class ImageExtImagick implements ImageInterface
 {
@@ -30,7 +32,7 @@ class ImageExtImagick implements ImageInterface
             }
         }
 
-        if ('webp' == strtolower(get_extension($this->source_filepath))) {
+        if ('webp' == strtolower(ServiceLocator::get(StringUtil::class)->getExtension($this->source_filepath))) {
             $webp_info = PwgImage::webpInfo($this->source_filepath);
 
             if ($webp_info['has-animation']) {

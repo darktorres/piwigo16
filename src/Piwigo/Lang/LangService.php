@@ -9,11 +9,18 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Html\HtmlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 final class LangService
 {
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
     public function l10n(?string $key, mixed ...$args): string
     {
         return Lang::t($key ?? '', ...$args);
@@ -47,7 +54,7 @@ final class LangService
                 if ($key === 'key_args') {
                     $element = is_array($element) ? $element : [];
                     $shifted = array_shift($element);
-                    array_unshift($element, l10n(is_string($shifted) ? $shifted : ''));
+                    array_unshift($element, Lang::t(is_string($shifted) ? $shifted : ''));
                     $formatted = call_user_func_array(sprintf(...), $element);
                     $result   .= is_scalar($formatted) ? (string) $formatted : '';
                 } else {
@@ -56,7 +63,7 @@ final class LangService
                 }
             }
         } else {
-            fatal_error('l10n_args: Invalid arguments');
+            HtmlService::fatalError('l10n_args: Invalid arguments');
         }
         return $result;
     }

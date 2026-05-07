@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -28,11 +32,11 @@ final class TagsEndpoints
     public function getList(array $params, PwgServer &$service): array
     {
         /** @var array<int, array<string, mixed>> $tags */
-        $tags = get_available_tags();
+        $tags = ServiceLocator::get(TagService::class)->getAvailableTags();
         if ($params['sort_by_counter']) {
             usort($tags, fn (array $a, array $b): int => (is_numeric($b['counter'] ?? null) ? (int) $b['counter'] : 0) - (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0));
         } else {
-            usort($tags, tag_alpha_compare(...));
+            usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         }
         for ($i = 0; $i < count($tags); $i++) {
             $tags[$i]['id']      = is_numeric($tags[$i]['id'] ?? null) ? (int) $tags[$i]['id'] : 0;
@@ -48,7 +52,7 @@ final class TagsEndpoints
      */
     public function getAdminList(array $params, PwgServer &$service): array
     {
-        return ['tags' => new PwgNamedArray(get_all_tags(), 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
+        return ['tags' => new PwgNamedArray(ServiceLocator::get(TagService::class)->getAllTags(), 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
     }
 
     /**
@@ -61,7 +65,7 @@ final class TagsEndpoints
         $tagUrlNameArr = is_array($params['tag_url_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $params['tag_url_name']) : [];
         $tagNameArr   = is_array($params['tag_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $params['tag_name']) : [];
         /** @var array<int, array<string, mixed>> $tagsResult */
-        $tagsResult = find_tags($tagIdArr, $tagUrlNameArr, $tagNameArr);
+        $tagsResult = ServiceLocator::get(TagService::class)->findTags($tagIdArr, $tagUrlNameArr, $tagNameArr);
         $tagsById   = [];
         foreach ($tagsResult as $tag) {
             $tagIdVal             = is_numeric($tag['id'] ?? null) ? (int) $tag['id'] : 0;
@@ -75,7 +79,7 @@ final class TagsEndpoints
         if (!empty($orderBy)) {
             $orderBy = 'ORDER BY ' . $orderBy;
         }
-        $imageIds = get_image_ids_for_tags($tagIds, $params['tag_mode_and'] ? 'AND' : 'OR', $whereClauses, $orderBy);
+        $imageIds = ServiceLocator::get(TagService::class)->getImageIdsForTags($tagIds, $params['tag_mode_and'] ? 'AND' : 'OR', $whereClauses, $orderBy);
         $countSet = count($imageIds);
         $perPage  = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $page     = is_numeric($params['page']) ? (int) $params['page'] : 0;
@@ -122,7 +126,7 @@ final class TagsEndpoints
                 $image['tags'] = new PwgNamedArray($imageTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());
                 $images[] = $image;
             }
-            usort($images, rank_compare(...));
+            usort($images, ServiceLocator::get(CategoryService::class)->rankCompare(...));
         }
         return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $countSet]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
     }
@@ -138,7 +142,7 @@ final class TagsEndpoints
             return new PwgError(WS_ERR_INVALID_PARAM, is_scalar($creationOutput['error']) ? (string) $creationOutput['error'] : '');
         }
         $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : (is_scalar($creationOutput['id'] ?? null) ? (string) $creationOutput['id'] : 0);
-        pwg_activity('tag', $tagAddId, 'add');
+        ServiceLocator::get(Util::class)->pwgActivity('tag', $tagAddId, 'add');
         $newTagRow = ServiceLocator::get(TagRepository::class)->findById((int) $tagAddId);
         return ['info' => $creationOutput['info'], 'id' => $creationOutput['id'], 'name' => $newTagRow['name'] ?? '', 'url_name' => $newTagRow['url_name'] ?? ''];
     }
@@ -149,7 +153,7 @@ final class TagsEndpoints
      */
     public function delete(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $tagIdsRaw = is_array($params['tag_id']) ? $params['tag_id'] : [];
@@ -168,7 +172,7 @@ final class TagsEndpoints
     /** @param array<mixed> $params */
     public function rename(array $params, PwgServer &$service): mixed
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $tagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : (is_scalar($params['tag_id']) ? (string) $params['tag_id'] : 0);
@@ -184,7 +188,7 @@ final class TagsEndpoints
         } elseif (!empty($tagName)) {
             $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
         }
-        pwg_activity('tag', $tagId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('tag', $tagId, 'edit');
         Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
         $tag = $tagRepo->findById((int) $tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
@@ -199,7 +203,7 @@ final class TagsEndpoints
      */
     public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $dupTagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
@@ -213,12 +217,12 @@ final class TagsEndpoints
         }
         Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
         $destinationTagId = (int) DbConnection::get()->lastInsertId();
-        pwg_activity('tag', $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]);
+        ServiceLocator::get(Util::class)->pwgActivity('tag', $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]);
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
         $inserts = [];
         foreach ($destinationTagImageIds as $imageId) {
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
-            pwg_activity('photo', $imageId, 'edit', ['add-tag' => $destinationTagId]);
+            ServiceLocator::get(Util::class)->pwgActivity('photo', $imageId, 'edit', ['add-tag' => $destinationTagId]);
         }
         if (count($inserts) > 0) {
             Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
@@ -232,7 +236,7 @@ final class TagsEndpoints
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if (get_pwg_token() !== $params['pwg_token']) {
+        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $mergeDestId  = is_numeric($params['destination_tag_id']) ? (int) $params['destination_tag_id'] : 0;
@@ -251,9 +255,9 @@ final class TagsEndpoints
             $inserts[] = ['tag_id' => $mergeDestId, 'image_id' => $image];
         }
         Dml::massInserts(Tables::imageTag(), ['tag_id', 'image_id'], $inserts, ['ignore' => true]);
-        pwg_activity('tag', $mergeDestId, 'edit');
+        ServiceLocator::get(Util::class)->pwgActivity('tag', $mergeDestId, 'edit');
         foreach ($imageToAdd as $imageId) {
-            pwg_activity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);
+            ServiceLocator::get(Util::class)->pwgActivity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);
         }
         EventDispatcher::notify('merge_tags', $mergeDestId, $mergeTag);
         ServiceLocator::get(TagAdminService::class)->deleteTags($mergeTag);

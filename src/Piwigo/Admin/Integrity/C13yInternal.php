@@ -9,8 +9,10 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -50,10 +52,10 @@ class C13yInternal
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {
                 $c13y->addAnomaly(
-                    sprintf(l10n('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
+                    sprintf(Lang::t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,
                     null,
-                    l10n('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
+                    Lang::t('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
           .'<br>'.
           $c13y->getHtlmLinksMoreInfo()
                 );
@@ -71,10 +73,10 @@ class C13yInternal
         foreach (['show_exif', 'use_exif'] as $value) {
             if ((Config::raw($value)) and (!function_exists('exif_read_data'))) {
                 $c13y->addAnomaly(
-                    sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
+                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,
                     null,
-                    sprintf(l10n('Install the PHP exif extension, or set %s to false in the database config table'), '$' . 'conf[\''.$value.'\']')
+                    sprintf(Lang::t('Install the PHP exif extension, or set %s to false in the database config table'), '$' . 'conf[\''.$value.'\']')
           .'<br>'.
           $c13y->getHtlmLinksMoreInfo()
                 );
@@ -123,13 +125,13 @@ class C13yInternal
         foreach ($c13y_users as $id => $data) {
             if (!array_key_exists($id, $status)) {
                 $c13y->addAnomaly(
-                    l10n($data['l10n_non_existent']),
+                    Lang::t($data['l10n_non_existent']),
                     $this->c13yCorrectionUser(...),
                     ['id' => $id, 'action' => 'creation']
                 );
             } elseif (!empty($data['status']) and $status[$id] != $data['status']) {
                 $c13y->addAnomaly(
-                    l10n($data['l10n_bad_status']),
+                    Lang::t($data['l10n_bad_status']),
                     $this->c13yCorrectionUser(...),
                     ['id' => $id, 'action' => 'status']
                 );
@@ -160,7 +162,7 @@ class C13yInternal
                         $name = 'guest';
                     } elseif ($id == Config::webmasterId()) {
                         $name = 'webmaster';
-                        $password = generate_key(6);
+                        $password = StringUtil::generateKey(6);
                     }
 
                     if (isset($name)) {
@@ -168,7 +170,7 @@ class C13yInternal
                         while (!$name_ok) {
                             $name_ok = (UserService::get()->getUserid($name) === false);
                             if (!$name_ok) {
-                                $name .= generate_key(1);
+                                $name .= StringUtil::generateKey(1);
                             }
                         }
 
@@ -183,7 +185,7 @@ class C13yInternal
 
                         UserService::get()->createUserInfos($id);
 
-                        PageState::current()->addInfo(sprintf(l10n('User "%s" created with "%s" like password'), $name, $password));
+                        PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password));
 
                         $result = true;
                     }
@@ -210,7 +212,7 @@ class C13yInternal
                             $updates
                         );
 
-                        PageState::current()->addInfo(sprintf(l10n('Status of user "%s" updated'), ServiceLocator::get(UserAdminService::class)->getUsername($id)));
+                        PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), ServiceLocator::get(UserAdminService::class)->getUsername($id)));
 
                         $result = true;
                     }

@@ -9,6 +9,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
@@ -67,7 +69,7 @@ final readonly class PluginService
         $pluginVersion = is_scalar($plugin['version']) ? (string) $plugin['version'] : '';
         if ($fsVersion != null && (
             $fsVersion == 'auto' || $pluginVersion == 'auto' ||
-              safe_version_compare($pluginVersion, $fsVersion, '<')
+              ServiceLocator::get(StringUtil::class)->safeVersionCompare($pluginVersion, $fsVersion, '<')
         )
         ) {
             $oldVersion = $pluginVersion;
@@ -91,7 +93,7 @@ final readonly class PluginService
 
             if ($newVersion != $oldVersion) {
                 $this->repo->updateVersion($pluginId, $fsVersion);
-                pwg_activity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
+                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
             }
         }
     }

@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Http\PathExtractor;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
@@ -24,11 +28,11 @@ final class NoPhotoYetRenderer
 
         if (
             !(defined('IN_ADMIN') ? constant('IN_ADMIN') : false)
-            and script_basename() != 'identification'
-            and script_basename() != 'password'
-            and script_basename() != 'ws'
+            and StringUtil::scriptBasename() != 'identification'
+            and StringUtil::scriptBasename() != 'password'
+            and StringUtil::scriptBasename() != 'ws'
             and !str_starts_with($_no_photo_yet_route, '/ws')
-            and script_basename() != 'popuphelp'
+            and StringUtil::scriptBasename() != 'popuphelp'
             and (PermissionService::get()->isAGuest() or PermissionService::get()->isAdmin())
             and !isset($_SESSION['no_photo_yet'])
         ) {
@@ -41,18 +45,18 @@ final class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ('browse' == $_GET['no_photo_yet']) {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        redirect(UrlService::get()->makeIndexUrl());
+                        Util::get()->redirect(UrlService::get()->makeIndexUrl());
                         exit();
                     }
 
                     if ('deactivate' == $_GET['no_photo_yet']) {
-                        conf_update_param('no_photo_yet', 'false');
-                        redirect(UrlService::get()->makeIndexUrl());
+                        ServiceLocator::get(ConfigService::class)->confUpdateParam('no_photo_yet', 'false');
+                        Util::get()->redirect(UrlService::get()->makeIndexUrl());
                         exit();
                     }
                 }
 
-                header('Content-Type: text/html; charset=' . get_pwg_charset());
+                header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
                 $template->setFilenames(['no_photo_yet' => 'no_photo_yet.tpl']);
 
                 if (PermissionService::get()->isAdmin()) {
@@ -67,7 +71,7 @@ final class NoPhotoYetRenderer
 
                     $template->assign([
                         'step' => 2,
-                        'intro' => l10n('Hello %s, your Piwigo photo gallery is empty!', $user['username'] ?? ''),
+                        'intro' => Lang::t('Hello %s, your Piwigo photo gallery is empty!', $user['username'] ?? ''),
                         'next_step_url' => $url,
                         'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=deactivate',
                     ]);
@@ -83,7 +87,7 @@ final class NoPhotoYetRenderer
                 $template->pparse('no_photo_yet');
                 exit();
             } else {
-                conf_update_param('no_photo_yet', 'false');
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('no_photo_yet', 'false');
             }
         }
     }

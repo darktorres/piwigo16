@@ -6,15 +6,20 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
+use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
+use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -60,8 +65,8 @@ final readonly class SearchService
         $searches = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
         if (count($searches) > 0) {
-            if (script_basename() != 'ws' and 'id = %u' == $clausePattern and isset($searches[0]['search_uuid'])) {
-                fatal_error('this search is not reachable with its id, need the search_uuid instead');
+            if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($searches[0]['search_uuid'])) {
+                HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
             if (isset($page['section']) and 'search' == $page['section']) {
                 $page['search_id'] = $searches[0]['id'];
@@ -77,7 +82,7 @@ final readonly class SearchService
     {
         $search = $this->getSearchInfo(is_int($searchId) ? $searchId : (is_scalar($searchId) ? (string) $searchId : ''));
         if (empty($search)) {
-            bad_request('this search identifier does not exist');
+            ServiceLocator::get(HtmlService::class)->badRequest('this search identifier does not exist');
         }
         $rules  = $search['rules'] ?? '';
         $result = unserialize(is_string($rules) ? $rules : '');
@@ -252,7 +257,7 @@ final readonly class SearchService
         if (isset($searchFields['cat']) and !empty($catWords) and $albumFilter['access']) {
             $hasFilersFilled = true;
             $catSubInc = !empty($catFieldsData['sub_inc']);
-            $catIds    = $catSubInc ? get_subcat_ids($catWords) : $catWords;
+            $catIds    = $catSubInc ? ServiceLocator::get(CategoryService::class)->getSubcatIds($catWords) : $catWords;
             if (!empty($catIds)) {
                 $imageIdsForFilter['cat'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE category_id IN (' . implode(',', $catIds) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
             }
@@ -295,7 +300,7 @@ final readonly class SearchService
                         $datePostedSubclauses[] = 'date_available BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
-                $datePostedClause = '(' . implode(' OR ', prepend_append_array_items($datePostedSubclauses, '(', ')')) . ')';
+                $datePostedClause = '(' . implode(' OR ', ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($datePostedSubclauses, '(', ')')) . ')';
             }
             $imageIdsForFilter['date_posted'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $datePostedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
@@ -337,7 +342,7 @@ final readonly class SearchService
                         $dateCreatedSubclauses[] = 'date_creation BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
-                $dateCreatedClause = '(' . implode(' OR ', prepend_append_array_items($dateCreatedSubclauses, '(', ')')) . ')';
+                $dateCreatedClause = '(' . implode(' OR ', ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($dateCreatedSubclauses, '(', ')')) . ')';
             }
             $imageIdsForFilter['date_created'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $dateCreatedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
@@ -396,7 +401,7 @@ final readonly class SearchService
         $tagsMode   = is_scalar($tagsFields['mode'] ?? null) ? (string) $tagsFields['mode'] : 'AND';
         if (isset($searchFields['tags']) and !empty($tagsWords) and $tagsFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['tags'] = get_image_ids_for_tags($tagsWords, $tagsMode);
+            $imageIdsForFilter['tags'] = ServiceLocator::get(TagService::class)->getImageIdsForTags($tagsWords, $tagsMode);
         }
 
         if (!empty($imagesWhere)) {
@@ -468,7 +473,7 @@ final readonly class SearchService
         $cache    = is_array($details['getItemsForFilter'] ?? null) ? $details['getItemsForFilter'] : [];
 
         if (!isset($cache[$cacheKey])) {
-            $functionStart = get_moment();
+            $functionStart = ServiceLocator::get(StringUtil::class)->getMoment();
             $first         = $imageIdsForFilter[array_shift($otherFilters)] ?? [];
             $otherFiltersItems = is_array($first)
                 ? array_values(array_filter($first, fn ($v): bool => is_int($v) || is_string($v)))
@@ -481,7 +486,7 @@ final readonly class SearchService
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
             $debugMsg  = '[getItemsForFilter] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . get_elapsed_time($functionStart, get_moment());
+            $debugMsg .= ', time = ' . get_elapsed_time($functionStart, ServiceLocator::get(StringUtil::class)->getMoment());
             $this->logger->debug($debugMsg);
 
             if (empty($otherFiltersItems)) {
@@ -705,7 +710,7 @@ final readonly class SearchService
         }
 
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
-        usort($allTags, tag_alpha_compare(...));
+        usort($allTags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
             $tagName    = EventDispatcher::dispatch('render_tag_name', $tag['name'], $tag);
             $tag['name'] = is_string($tagName) ? $tagName : (is_scalar($tagName) ? (string) $tagName : '');
@@ -755,7 +760,7 @@ final readonly class SearchService
 
             if (!empty($catIds)) {
                 if (Config::quickSearchIncludeSubAlbums()) {
-                    $catIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId . ' WHERE id IN (' . implode(',', get_subcat_ids($catIds)) . ');')->fetchAllAssociative(), 'id'));
+                    $catIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId . ' WHERE id IN (' . implode(',', ServiceLocator::get(CategoryService::class)->getSubcatIds($catIds)) . ');')->fetchAllAssociative(), 'id'));
                 }
                 $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
@@ -775,7 +780,7 @@ final readonly class SearchService
         }
 
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
-        usort($allCats, tag_alpha_compare(...));
+        usort($allCats, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
             $catName    = EventDispatcher::dispatch('render_category_name', $cat['name'], $cat);
             $cat['name'] = is_string($catName) ? $catName : (is_scalar($catName) ? (string) $catName : '');
@@ -1016,7 +1021,7 @@ final readonly class SearchService
 
     public function getAvailableSearchUuid(): string
     {
-        $candidate = 'psk-' . date('Ymd') . '-' . generate_key(10);
+        $candidate = 'psk-' . date('Ymd') . '-' . StringUtil::generateKey(10);
         $counter   = $this->searchRepo->countByUuid($candidate);
         if (0 == $counter) {
             return $candidate;

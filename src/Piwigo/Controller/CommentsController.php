@@ -5,13 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\DateService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
@@ -36,7 +43,7 @@ final class CommentsController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         if (!Config::activateComments()) {
-            page_not_found(null);
+            ServiceLocator::get(HtmlService::class)->pageNotFound(null);
         }
 
         PermissionService::get()->checkStatus(AccessLevel::Guest);
@@ -45,8 +52,8 @@ final class CommentsController implements ControllerInterface
         $page = &$GLOBALS['page'];
 
         $url_self   = ServiceLocator::get(UrlGenerator::class)->comments() . UrlService::get()->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
-        $sort_order = ['DESC' => l10n('descending'), 'ASC' => l10n('ascending')];
-        $sort_by    = ['date' => l10n('comment date'), 'image_id' => l10n('photo')];
+        $sort_order = ['DESC' => Lang::t('descending'), 'ASC' => Lang::t('ascending')];
+        $sort_by    = ['date' => Lang::t('comment date'), 'image_id' => Lang::t('photo')];
         $items_number = [5, 10, 20, 50, 'all'];
 
         if (!in_array(Config::commentsPageNbComments(), $items_number)) {
@@ -63,10 +70,10 @@ final class CommentsController implements ControllerInterface
         }
 
         $since_options = [
-            1 => ['label' => l10n('today'),              'clause' => 'date > ' . SqlExpr::recentPeriodExpr(1)],
-            2 => ['label' => l10n('last %d days', 7),    'clause' => 'date > ' . SqlExpr::recentPeriodExpr(7)],
-            3 => ['label' => l10n('last %d days', 30),   'clause' => 'date > ' . SqlExpr::recentPeriodExpr(30)],
-            4 => ['label' => l10n('the beginning'),      'clause' => '1=1'],
+            1 => ['label' => Lang::t('today'),              'clause' => 'date > ' . SqlExpr::recentPeriodExpr(1)],
+            2 => ['label' => Lang::t('last %d days', 7),    'clause' => 'date > ' . SqlExpr::recentPeriodExpr(7)],
+            3 => ['label' => Lang::t('last %d days', 30),   'clause' => 'date > ' . SqlExpr::recentPeriodExpr(30)],
+            4 => ['label' => Lang::t('the beginning'),      'clause' => '1=1'],
         ];
 
         EventDispatcher::notify('loc_begin_comments');
@@ -99,8 +106,8 @@ final class CommentsController implements ControllerInterface
 
         $get_cat = input_int('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
-            check_input_parameter('cat', $_GET, false, ValidationPattern::ID);
-            $category_ids = get_subcat_ids([$get_cat]);
+            ServiceLocator::get(Util::class)->checkInputParameter('cat', $_GET, false, ValidationPattern::ID);
+            $category_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds([$get_cat]);
             if (empty($category_ids)) {
                 $category_ids = [-1];
             }
@@ -114,11 +121,11 @@ final class CommentsController implements ControllerInterface
 
         $get_comment_id_filter = input_int('comment_id', null, $_GET);
         if (!empty($get_comment_id_filter)) {
-            check_input_parameter('comment_id', $_GET, false, ValidationPattern::ID);
+            ServiceLocator::get(Util::class)->checkInputParameter('comment_id', $_GET, false, ValidationPattern::ID);
             if (!PermissionService::get()->isAdmin()) {
                 $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
                 $login_url  = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
-                redirect($login_url);
+                Util::get()->redirect($login_url);
             }
             $page['where_clauses'][] = 'com.id = ' . $get_comment_id_filter;
         }
@@ -153,31 +160,31 @@ final class CommentsController implements ControllerInterface
         foreach (['delete', 'validate', 'edit'] as $loop_action) {
             if (isset($_GET[$loop_action])) {
                 $action = $loop_action;
-                check_input_parameter($action, $_GET, false, ValidationPattern::ID);
+                ServiceLocator::get(Util::class)->checkInputParameter($action, $_GET, false, ValidationPattern::ID);
                 $comment_id = is_numeric($_GET[$action]) ? (int) $_GET[$action] : 0;
                 break;
             }
         }
 
         if (isset($action)) {
-            $comment_author_id = get_comment_author_id($comment_id);
+            $comment_author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_id);
             if (PermissionService::get()->canManageComment($action, (int) $comment_author_id)) {
                 $perform_redirect = false;
                 if ('delete' == $action) {
-                    check_pwg_token();
-                    delete_user_comment($comment_id);
+                    ServiceLocator::get(Util::class)->checkPwgToken();
+                    ServiceLocator::get(CommentService::class)->deleteUserComment($comment_id);
                     $perform_redirect = true;
                 }
                 if ('validate' == $action) {
-                    check_pwg_token();
-                    validate_user_comment($comment_id);
+                    ServiceLocator::get(Util::class)->checkPwgToken();
+                    ServiceLocator::get(CommentService::class)->validateUserComment($comment_id);
                     $perform_redirect = true;
                 }
                 if ('edit' == $action) {
                     $post_content = input_string('content', null, $_POST);
                     if (!empty($post_content)) {
-                        check_pwg_token();
-                        $comment_action = update_user_comment(
+                        ServiceLocator::get(Util::class)->checkPwgToken();
+                        $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
                             ['comment_id' => $comment_id, 'image_id' => input_int('image_id', null, $_POST), 'content' => $post_content, 'website_url' => input_string('website_url', null, $_POST)],
                             input_string('key', null, $_POST) ?? ''
                         );
@@ -186,20 +193,20 @@ final class CommentsController implements ControllerInterface
                                 if (!is_array($_SESSION['page_infos'] ?? null)) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
+                                $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
                                 // no break
                             case 'validate':
                                 if (!is_array($_SESSION['page_infos'] ?? null)) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = l10n('Your comment has been registered');
+                                $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
                                 if (!is_array($_SESSION['page_errors'] ?? null)) {
                                     $_SESSION['page_errors'] = [];
                                 }
-                                $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
+                                $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                                 break;
                             default:
                                 trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -208,12 +215,12 @@ final class CommentsController implements ControllerInterface
                     $edit_comment = $comment_id;
                 }
                 if ($perform_redirect) {
-                    redirect($url_self);
+                    Util::get()->redirect($url_self);
                 }
             }
         }
 
-        $title = l10n('User comments');
+        $title = Lang::t('User comments');
         $page['body_id'] = 'theCommentsPage';
 
         $tpl = TemplateRegistry::current();
@@ -230,7 +237,7 @@ SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
 ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE') . '
 ;';
-        display_select_cat_wrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true);
+        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true);
 
         $tpl_var = [];
         foreach ($since_options as $id => $option) {
@@ -245,7 +252,7 @@ SELECT id, name, uppercats, global_rank
 
         $tpl_var = [];
         foreach ($items_number as $option) {
-            $tpl_var[$option] = is_numeric($option) ? $option : l10n($option);
+            $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
         }
         $tpl->assign('item_number_options', $tpl_var);
         $tpl->assign('item_number_options_selected', $page['items_number']);
@@ -284,7 +291,7 @@ SELECT id, name, uppercats, global_rank
         }
 
         $url     = ServiceLocator::get(UrlGenerator::class)->comments() . UrlService::get()->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
-        $navbar  = create_navigation_bar(
+        $navbar  = ServiceLocator::get(Util::class)->createNavigationBar(
             $url,
             is_numeric($counter) ? (int) $counter : 0,
             $start ?? 0,
@@ -315,7 +322,7 @@ SELECT *
 
                 /** @var array<string, float|int|string|null> $element_row */
                 $element_row  = $elements[(string) $cImageId] ?? [];
-                $name         = !empty($element_row['name']) ? (string) $element_row['name'] : get_name_from_file((string) ($element_row['file'] ?? ''));
+                $name         = !empty($element_row['name']) ? (string) $element_row['name'] : ServiceLocator::get(StringUtil::class)->getNameFromFile((string) ($element_row['file'] ?? ''));
                 $src_image    = new SrcImage($element_row);
                 $url          = UrlService::get()->makePictureUrl([
                     'category'   => $categories[(string) $cCategoryId] ?? [],
@@ -338,7 +345,7 @@ SELECT *
                     'ALT'         => $name,
                     'AUTHOR'      => EventDispatcher::dispatch('render_comment_author', (string) ($comment['author'] ?? '')),
                     'WEBSITE_URL' => $comment['website_url'],
-                    'DATE'        => format_date($cDate, ['day_name', 'day', 'month', 'year', 'time']),
+                    'DATE'        => ServiceLocator::get(DateService::class)->formatDate($cDate, ['day_name', 'day', 'month', 'year', 'time']),
                     'CONTENT'     => EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? '')),
                 ];
 
@@ -346,22 +353,22 @@ SELECT *
                     $tpl_comment['EMAIL'] = $email;
                 }
                 if (PermissionService::get()->canManageComment('delete', $cAuthorId)) {
-                    $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => get_pwg_token()]);
+                    $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken()]);
                 }
                 if (PermissionService::get()->canManageComment('edit', $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = UrlService::get()->addUrlParams($url_self, ['edit' => $cId]);
                     if ($edit_comment !== null && $cId == $edit_comment) {
-                        $key = get_ephemeral_key(2, (string) $cImageId);
+                        $key = ServiceLocator::get(Util::class)->getEphemeralKey(2, (string) $cImageId);
                         $tpl_comment['IN_EDIT']   = true;
                         $tpl_comment['KEY']       = $key;
                         $tpl_comment['IMAGE_ID']  = $cImageId;
                         $tpl_comment['CONTENT']   = (string) ($comment['content'] ?? '');
-                        $tpl_comment['PWG_TOKEN'] = get_pwg_token();
+                        $tpl_comment['PWG_TOKEN'] = ServiceLocator::get(Util::class)->getPwgToken();
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
                 if (PermissionService::get()->canManageComment('validate', $cAuthorId) && 'true' != $comment['validated']) {
-                    $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => get_pwg_token()]);
+                    $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken()]);
                 }
                 $tpl->append('comments', $tpl_comment);
             }
@@ -379,7 +386,7 @@ SELECT *
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_comments');
-        flush_page_messages();
+        ServiceLocator::get(HtmlService::class)->flushPageMessages();
         if (count($comments) > 0) {
             $tpl->assignVarFromHandle('COMMENT_LIST', 'comment_list');
         }

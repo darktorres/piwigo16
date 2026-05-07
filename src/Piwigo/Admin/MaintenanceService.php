@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 
@@ -42,9 +43,9 @@ final class MaintenanceService
         }
 
         if ($success) {
-            PageState::current()->addInfo(l10n('All optimizations have been successfully completed.'));
+            PageState::current()->addInfo(Lang::t('All optimizations have been successfully completed.'));
         } else {
-            PageState::current()->addError(l10n('Optimizations have been completed with some errors.'));
+            PageState::current()->addError(Lang::t('Optimizations have been completed with some errors.'));
         }
     }
 }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Metadata;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Plugins\EventDispatcher;
 use Psr\Log\LoggerInterface;
@@ -27,7 +29,7 @@ final readonly class MetadataService
         $result = [];
 
         $imginfo = [];
-        if (false === pwg_safe_getimagesize($filename, $imginfo)) {
+        if (false === ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($filename, $imginfo)) {
             return $result;
         }
 
@@ -71,7 +73,7 @@ final readonly class MetadataService
 
         if (preg_match('/[\x80-\xff]/', $value)) {
             $value = (string) EventDispatcher::dispatch('clean_iptc_value', $value);
-            if (($qual = qualify_utf8($value)) != 0) {
+            if (($qual = ServiceLocator::get(StringUtil::class)->qualifyUtf8($value)) != 0) {
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';
                 } else {
@@ -81,7 +83,7 @@ final readonly class MetadataService
                     }
                 }
 
-                $value = convert_charset($value, $inputEncoding, get_pwg_charset());
+                $value = ServiceLocator::get(StringUtil::class)->convertCharset($value, $inputEncoding, ServiceLocator::get(StringUtil::class)->getPwgCharset());
             }
         }
         return $value;
@@ -101,7 +103,7 @@ final readonly class MetadataService
             throw new ConfigException('Exif extension not available, admin should disable exif use');
         }
 
-        $exif = pwg_safe_exif_read_data($filename) ?: null;
+        $exif = ServiceLocator::get(StringUtil::class)->pwgSafeExifReadData($filename) ?: null;
         $exif = EventDispatcher::dispatch('format_exif_data', $exif, $filename, $map);
         if (!empty($exif)) {
 

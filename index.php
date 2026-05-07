@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Controller\ImageDerivativeController;
@@ -82,7 +83,8 @@ if (str_starts_with($_qs, 'upgrade')) {
     exit;
 }
 
-require_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+CommonBootstrap::run();
 Kernel::boot();
 
 new ResponseEmitter()->emit(

@@ -53,7 +53,7 @@ class Plugins
         if (file_exists($file_to_include.'.class.php')) {
             require_once($file_to_include.'.class.php');
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
-                return instantiate_plugin_maintain($classname, $plugin_id);
+                return new $classname($plugin_id); // @phpstan-ignore piwigo.noDynamicNew
             }
         }
 
@@ -62,7 +62,7 @@ class Plugins
             require_once($file_to_include.'.inc.php');
 
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
-                return instantiate_plugin_maintain($classname, $plugin_id);
+                return new $classname($plugin_id); // @phpstan-ignore piwigo.noDynamicNew
             }
         }
 

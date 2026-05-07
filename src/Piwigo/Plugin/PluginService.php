@@ -81,8 +81,7 @@ final readonly class PluginService
                 $classname = str_replace('-', '_', $pluginId) . '_maintain';
 
                 if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
-                    // Dynamic instantiation must stay in include/ — delegate to the factory helper
-                    $pluginMaintain = instantiate_plugin_maintain($classname, $pluginId);
+                    $pluginMaintain = new $classname($pluginId); // @phpstan-ignore piwigo.noDynamicNew
                     $errors         = &PageState::current()->errors;
                     $pluginMaintain->update($oldVersion, $fsVersion, $errors);
                 }

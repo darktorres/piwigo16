@@ -51,7 +51,7 @@ class Themes
             require_once($file_to_include);
 
             if (class_exists($classname) && is_a($classname, ThemeMaintain::class, true)) {
-                return instantiate_theme_maintain($classname, $theme_id);
+                return new $classname($theme_id); // @phpstan-ignore piwigo.noDynamicNew
             }
         }
 

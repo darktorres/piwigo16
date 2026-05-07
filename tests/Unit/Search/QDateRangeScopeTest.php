@@ -26,7 +26,7 @@ final class QDateRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('2023-01-15');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('date_field', $token);
+        $sql = $this->scope->getSql('date_field', $token);
         self::assertStringContainsString('2023-01-15', $sql);
     }
 
@@ -34,7 +34,7 @@ final class QDateRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('2023');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('date_field', $token);
+        $sql = $this->scope->getSql('date_field', $token);
         self::assertStringContainsString('2023', $sql);
         self::assertStringContainsString('>=', $sql);
         self::assertStringContainsString('<=', $sql);
@@ -44,7 +44,7 @@ final class QDateRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('2023-06');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('date_field', $token);
+        $sql = $this->scope->getSql('date_field', $token);
         self::assertStringContainsString('2023-06', $sql);
     }
 
@@ -52,7 +52,7 @@ final class QDateRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('>2023-06');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('date_field', $token);
+        $sql = $this->scope->getSql('date_field', $token);
         self::assertStringContainsString('>=', $sql);
         self::assertStringContainsString('2023-06', $sql);
     }
@@ -61,7 +61,7 @@ final class QDateRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('2022..2023');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('date_field', $token);
+        $sql = $this->scope->getSql('date_field', $token);
         self::assertStringContainsString('2022', $sql);
         self::assertStringContainsString('2023', $sql);
         self::assertStringContainsString('AND', $sql);

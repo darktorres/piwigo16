@@ -73,7 +73,7 @@ final class GalleryController implements ControllerInterface
             $metaRobots             = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : [];
             $metaRobots['noindex']  = 1;
             $page['meta_robots']    = $metaRobots;
-            if (array_key_exists($display, ImageStdParams::get_defined_type_map())) {
+            if (array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
                 pwg_set_session_var('index_deriv', $display);
             }
         }
@@ -120,7 +120,7 @@ final class GalleryController implements ControllerInterface
         // Menubar
         ServiceLocator::get(MenubarRenderer::class)->render();
 
-        $tpl->set_filename('index', 'index.tpl');
+        $tpl->setFilename('index', 'index.tpl');
 
         if (empty($page['is_external'])) {
             $page['body_id'] = 'theCategoryPage';
@@ -288,7 +288,7 @@ final class GalleryController implements ControllerInterface
             }
 
             if ($countCats === 0) {
-                $tpl->clear_assign('U_MODE_FLAT');
+                $tpl->clearAssign('U_MODE_FLAT');
             }
 
             // Sub-category grid
@@ -306,10 +306,10 @@ final class GalleryController implements ControllerInterface
 
                 if (Config::indexSizesIcon()) {
                     $url        = add_url_params(duplicate_index_url(), ['display' => '']);
-                    $derivObj   = $tpl->get_template_vars('derivative_params');
+                    $derivObj   = $tpl->getTemplateVars('derivative_params');
                     $selType    = is_object($derivObj) ? (string) ($derivObj->type ?? '') : '';
-                    $tpl->clear_assign('derivative_params');
-                    $typeMap = ImageStdParams::get_defined_type_map();
+                    $tpl->clearAssign('derivative_params');
+                    $typeMap = ImageStdParams::getDefinedTypeMap();
                     unset($typeMap[IMG_XXLARGE], $typeMap[IMG_XLARGE]);
                     foreach ($typeMap as $params) {
                         $tpl->append('image_derivatives', [
@@ -352,7 +352,7 @@ final class GalleryController implements ControllerInterface
         require PHPWG_ROOT_PATH . 'include/page_header.php';
         trigger_notify('loc_end_index');
         flush_page_messages();
-        $tpl->parse_index_buttons();
+        $tpl->parseIndexButtons();
         $tpl->pparse('index');
 
         pwg_log();

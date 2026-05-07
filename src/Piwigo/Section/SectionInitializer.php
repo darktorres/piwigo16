@@ -226,7 +226,7 @@ SELECT id
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-                        $cacheKey  = PersistentCacheRegistry::current()->make_key(
+                        $cacheKey  = PersistentCacheRegistry::current()->makeKey(
                             'all_iids' . $userId . $cacheTime . Config::orderBy()
                         );
                         unset($page['is_homepage']);

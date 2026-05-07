@@ -29,7 +29,7 @@ final class AboutController implements ControllerInterface
         $page['body_id'] = 'theAboutPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['about' => 'about.tpl']);
+        $tpl->setFilenames(['about' => 'about.tpl']);
 
         $tpl->assign('ABOUT_MESSAGE', load_language('about.html', '', ['return' => true]));
 
@@ -39,7 +39,7 @@ final class AboutController implements ControllerInterface
             $tpl->assign('THEME_ABOUT', $themeAbout);
         }
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theAboutPage', $hideMenuOn, true)) {

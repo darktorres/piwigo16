@@ -92,7 +92,7 @@ final class ExtensionsController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('plugins');
+        $tabsheet->setId('plugins');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -115,7 +115,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $tpl->set_filenames(['plugins' => 'plugins_installed.tpl']);
+        $tpl->setFilenames(['plugins' => 'plugins_installed.tpl']);
 
         if (isset($_GET['show_details'])) {
             $show_details = (1 == $_GET['show_details']);
@@ -132,7 +132,7 @@ final class ExtensionsController
         $plugins = new Plugins();
 
         if (isset($_GET['incompatible_plugins'])) {
-            $incompatible_plugins_raw = $plugins->get_incompatible_plugins();
+            $incompatible_plugins_raw = $plugins->getIncompatiblePlugins();
             if (false === $incompatible_plugins_raw) {
                 echo json_encode([]);
                 exit;
@@ -162,8 +162,8 @@ final class ExtensionsController
             }
         }
 
-        $plugins->sort_fs_plugins('name');
-        $merged_extensions    = $plugins->get_merged_extensions();
+        $plugins->sortFsPlugins('name');
+        $merged_extensions    = $plugins->getMergedExtensions();
         $merged_plugins       = false;
         $tpl_plugins          = [];
         $count_types_plugins  = ['active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0];
@@ -265,7 +265,7 @@ final class ExtensionsController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
     }
 
     // ── plugins_new ───────────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ final class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $tpl->set_filenames(['plugins' => 'plugins_new.tpl']);
+        $tpl->setFilenames(['plugins' => 'plugins_new.tpl']);
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'plugins_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
@@ -293,7 +293,7 @@ final class ExtensionsController
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
-                $install_status = $plugins->extract_plugin_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
+                $install_status = $plugins->extractPluginFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
                 redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
             }
         }
@@ -324,13 +324,13 @@ final class ExtensionsController
 
         $beta_test = (isset($_GET['beta-test']) && $_GET['beta-test'] == 'true');
 
-        if ($plugins->get_server_plugins(true, $beta_test)) {
+        if ($plugins->getServerPlugins(true, $beta_test)) {
             if (pwg_get_session_var('plugins_new_order') != null) {
                 $order_selected = pwg_get_session_var('plugins_new_order');
-                $plugins->sort_server_plugins($order_selected);
+                $plugins->sortServerPlugins($order_selected);
                 $tpl->assign('order_selected', $order_selected);
             } else {
-                $plugins->sort_server_plugins('date');
+                $plugins->sortServerPlugins('date');
                 $tpl->assign('order_selected', 'date');
             }
 
@@ -403,7 +403,7 @@ final class ExtensionsController
             'str_from_begining' => l10n('since the beginning'),
             'strs_certification' => ['-1' => l10n('This plugin is incompatible with your version'), '0' => l10n('This plugin have no update since 3 years ! It may be outdated'), '1' => l10n('This plugin has no recent update'), '2' => l10n('This plugin was updated less than 6 months ago'), '3' => l10n('This plugin have been updated recently')],
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
     }
 
     // ── plugin ────────────────────────────────────────────────────────────────
@@ -463,7 +463,7 @@ final class ExtensionsController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('themes');
+        $tabsheet->setId('themes');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -499,18 +499,18 @@ final class ExtensionsController
         if (isset($_GET['action']) && isset($_GET['theme'])) {
             $get_action = is_string($_GET['action']) ? $_GET['action'] : '';
             $get_theme  = is_string($_GET['theme']) ? $_GET['theme'] : '';
-            $page['errors'] = $themes->perform_action($get_action, $get_theme);
+            $page['errors'] = $themes->performAction($get_action, $get_theme);
             if (empty($page['errors'])) {
                 if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') {
-                    $tpl->delete_compiled_templates();
+                    $tpl->deleteCompiledTemplates();
                 }
                 redirect($base_url);
             }
         }
 
-        $themes->sort_fs_themes();
+        $themes->sortFsThemes();
         $default_theme = UserService::get()->getDefaultTheme();
-        $db_themes     = $themes->get_db_themes();
+        $db_themes     = $themes->getDbThemes();
         $db_theme_ids  = [];
         foreach ($db_themes as $db_theme) {
             $db_theme_ids[] = $db_theme['id'];
@@ -543,12 +543,12 @@ final class ExtensionsController
                 } else {
                     $tpl_theme['ACTIVABLE'] = true;
                 }
-                $missing_parent = $themes->missing_parent_theme($theme_id);
+                $missing_parent = $themes->missingParentTheme($theme_id);
                 if (isset($missing_parent)) {
                     $tpl_theme['ACTIVABLE'] = false;
                     $tpl_theme['ACTIVABLE_TOOLTIP'] = l10n('Impossible to activate this theme, the parent theme is missing: %s', $missing_parent);
                 }
-                $children = $themes->get_children_themes($theme_id);
+                $children = $themes->getChildrenThemes($theme_id);
                 $tpl_theme['DELETABLE'] = true;
                 if (count($children) > 0) {
                     $tpl_theme['DELETABLE'] = false;
@@ -573,8 +573,8 @@ final class ExtensionsController
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_theme_confirm' => l10n('Are you sure you want to delete the theme "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->set_filenames(['themes' => 'themes_installed.tpl']);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $tpl->setFilenames(['themes' => 'themes_installed.tpl']);
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 
     // ── themes_new ────────────────────────────────────────────────────────────
@@ -589,7 +589,7 @@ final class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $tpl->set_filenames(['themes' => 'themes_new.tpl']);
+        $tpl->setFilenames(['themes' => 'themes_new.tpl']);
 
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'themes_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
@@ -606,7 +606,7 @@ final class ExtensionsController
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
-                $install_status = $themes->extract_theme_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
+                $install_status = $themes->extractThemeFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
                 redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
             }
         }
@@ -630,7 +630,7 @@ final class ExtensionsController
             }
         }
 
-        if ($themes->get_server_themes(true)) {
+        if ($themes->getServerThemes(true)) {
             foreach ($themes->server_themes as $theme) {
                 $theme_revision_id  = is_scalar($theme['revision_id'] ?? null) ? (string) $theme['revision_id'] : '';
                 $theme_extension_id = is_scalar($theme['extension_id'] ?? null) ? (string) $theme['extension_id'] : '';
@@ -644,7 +644,7 @@ final class ExtensionsController
         $adminTheme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
         $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 
     // ── themes_standard_pages ─────────────────────────────────────────────────
@@ -701,7 +701,7 @@ final class ExtensionsController
         }
 
         $themes = new Themes();
-        $themes->get_fs_themes();
+        $themes->getFsThemes();
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];
         foreach ($themes->fs_themes as $theme) {
@@ -723,9 +723,9 @@ final class ExtensionsController
             'PWG_TOKEN'                     => get_pwg_token(),
         ]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->set_filenames(['themes' => 'themes_standard_pages.tpl']);
+        $tpl->setFilenames(['themes' => 'themes_standard_pages.tpl']);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
 
     // ── theme ─────────────────────────────────────────────────────────────────
@@ -769,7 +769,7 @@ final class ExtensionsController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('languages');
+        $tabsheet->setId('languages');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -796,18 +796,18 @@ final class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        $tpl->set_filenames(['languages' => 'languages_installed.tpl']);
+        $tpl->setFilenames(['languages' => 'languages_installed.tpl']);
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
 
         $languages = new Languages();
-        $languages->get_db_languages();
+        $languages->getDbLanguages();
 
         check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
         check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
         if (isset($_GET['action']) && isset($_GET['language']) && PermissionService::get()->isWebmaster()) {
-            $page['errors'] = $languages->perform_action(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : '');
+            $page['errors'] = $languages->performAction(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : '');
             if (empty($page['errors'])) {
                 redirect($base_url);
             }
@@ -855,7 +855,7 @@ final class ExtensionsController
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_language_confirm' => l10n('Are you sure you want to delete the language "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'languages');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'languages');
     }
 
     // ── languages_new ─────────────────────────────────────────────────────────
@@ -870,13 +870,13 @@ final class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $tpl->set_filenames(['languages' => 'languages_new.tpl']);
+        $tpl->setFilenames(['languages' => 'languages_new.tpl']);
         $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
 
         $languages = new Languages();
-        $languages->get_db_languages();
+        $languages->getDbLanguages();
 
         $languages_dir = PHPWG_ROOT_PATH . 'language';
         if (!is_writable($languages_dir)) {
@@ -888,7 +888,7 @@ final class ExtensionsController
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
-                $install_status = $languages->extract_language_files('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
+                $install_status = $languages->extractLanguageFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
                 redirect($base_url . '&installstatus=' . $install_status);
             }
         }
@@ -903,7 +903,7 @@ final class ExtensionsController
             };
         }
 
-        if ($languages->get_server_languages(true)) {
+        if ($languages->getServerLanguages(true)) {
             foreach ($languages->server_languages as $language) {
                 $revDate  = is_scalar($language['revision_date'] ?? null) ? (string) $language['revision_date'] : '';
                 [$date,]  = explode(' ', $revDate);
@@ -919,7 +919,7 @@ final class ExtensionsController
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'languages');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'languages');
     }
 
     // ── updates ───────────────────────────────────────────────────────────────
@@ -942,7 +942,7 @@ final class ExtensionsController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('updates');
+        $tabsheet->setId('updates');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -977,7 +977,7 @@ final class ExtensionsController
         $autoupdate = new Updates($pageStr);
 
         $show_reset = false;
-        if (!$autoupdate->get_server_extensions()) {
+        if (!$autoupdate->getServerExtensions()) {
             PageState::current()->addError(l10n('Can\'t connect to server.'));
             return;
         }
@@ -1031,8 +1031,8 @@ final class ExtensionsController
         $tpl->assign('EXT_TYPE', $ext_type);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('page_data_json', json_encode(['pwg_token' => get_pwg_token(), 'ext_type' => $ext_type, 'str_error_head' => l10n('ERROR'), 'str_error_msg' => l10n('an error happened'), 'str_restore' => l10n('Reset ignored updates'), 'str_confirm_update_all' => l10n('Are you sure you want to update all extensions?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->set_filename('plugin_admin_content', 'updates_ext.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
+        $tpl->setFilename('plugin_admin_content', 'updates_ext.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
     }
 
@@ -1064,7 +1064,7 @@ final class ExtensionsController
         }
 
         $updates      = new Updates();
-        $new_versions = $updates->get_piwigo_new_versions();
+        $new_versions = $updates->getPiwigoNewVersions();
 
         if ($step == 0) {
             if (isset($new_versions['minor']) && isset($new_versions['major'])) {
@@ -1083,16 +1083,16 @@ final class ExtensionsController
 
         if ($step == 2 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
-                Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+                Updates::upgradeTo(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
             }
         }
 
         if ($step == 3 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
-                Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+                Updates::upgradeTo(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
             }
-            $updates->get_merged_extensions($upgrade_to);
-            $updates->get_server_extensions($upgrade_to);
+            $updates->getMergedExtensions($upgrade_to);
+            $updates->getServerExtensions($upgrade_to);
             $tpl->assign('missing', $updates->missing);
         }
 
@@ -1122,8 +1122,8 @@ final class ExtensionsController
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Updates'));
         $tpl->assign('page_data_json', json_encode(['str_are_you_sure' => l10n('Are you sure?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->set_filename('plugin_admin_content', 'updates_pwg.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
+        $tpl->setFilename('plugin_admin_content', 'updates_pwg.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
     }
 
     // ── extend_for_templates ──────────────────────────────────────────────────
@@ -1185,7 +1185,7 @@ final class ExtensionsController
             $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
         }
 
-        $tpl->set_filenames(['extend_for_templates' => 'extend_for_templates.tpl']);
+        $tpl->setFilenames(['extend_for_templates' => 'extend_for_templates.tpl']);
         $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('extend_for_templates')]);
 
         ksort($tpl_extension);
@@ -1200,7 +1200,7 @@ final class ExtensionsController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Extend for templates'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'extend_for_templates');
     }
 
     // ── private helpers ───────────────────────────────────────────────────────

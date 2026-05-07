@@ -263,7 +263,7 @@ final readonly class NotificationService
             ? (string) CurrentUser::get()->rawAttributes['cache_update_time']
             : '';
 
-        $cacheKey = $persistentCache->make_key('recent_posts' . $userId . $cacheUpdate . $maxDates . $maxElements . $maxCats);
+        $cacheKey = $persistentCache->makeKey('recent_posts' . $userId . $cacheUpdate . $maxDates . $maxElements . $maxCats);
         $cached   = null;
         if ($persistentCache->get($cacheKey, $cached)) {
             return is_array($cached) ? $cached : null;
@@ -350,7 +350,7 @@ SELECT
         $elements = is_array($dateDetail['elements'] ?? null) ? $dateDetail['elements'] : [];
         foreach ($elements as $element) {
             $element = is_array($element) ? $element : [];
-            $tnSrcRaw = DerivativeImage::thumb_url($element);
+            $tnSrcRaw = DerivativeImage::thumbUrl($element);
             $tnSrc    = is_string($tnSrcRaw) ? $tnSrcRaw : '';
             $description .= '<a href="'
               . add_url_params(make_picture_url(['image_id' => $element['id'], 'image_file' => $element['file']]), $addUrlParams)

@@ -7,5 +7,5 @@ namespace Piwigo\Search\Inflector;
 interface InflectorInterface
 {
     /** @return string[] */
-    public function get_variants(string $word): array;
+    public function getVariants(string $word): array;
 }

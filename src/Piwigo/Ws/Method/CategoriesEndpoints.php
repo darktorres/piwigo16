@@ -144,7 +144,7 @@ final class CategoriesEndpoints
     {
         $currentUser = CurrentUser::get();
         $user        = $currentUser->rawAttributes;
-        if (!in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()))) {
+        if (!in_array($params['thumbnail_size'], array_keys(ImageStdParams::getDefinedTypeMap()))) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid thumbnail_size');
         }
         if (!empty($params['limit']) && $params['recursive']) {

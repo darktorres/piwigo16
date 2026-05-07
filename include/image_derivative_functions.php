@@ -191,7 +191,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     $req   = substr($req, 0, $pos);
     $deriv = explode('_', $deriv);
 
-    foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+    foreach (ImageStdParams::getDefinedTypeMap() as $type => $params) {
         if (derivative_to_url($type) == $deriv[0]) {
             $ctx->derivativeType   = $type;
             $ctx->derivativeParams = $params;
@@ -210,7 +210,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
 
     if ($ctx->derivativeType == IMG_CUSTOM) {
         $params = $ctx->derivativeParams = parse_custom_params($deriv);
-        ImageStdParams::apply_global($params);
+        ImageStdParams::applyGlobal($params);
 
         if ($params->sizing->ideal_size[0] < 20 || $params->sizing->ideal_size[1] < 20) {
             ierror('Invalid size', 400);
@@ -219,7 +219,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
             ierror('Invalid crop', 400);
         }
         $key = [];
-        $params->add_url_tokens($key);
+        $params->addUrlTokens($key);
         $key = implode('_', $key);
         if (!isset(ImageStdParams::$custom[$key])) {
             ierror('Size not allowed', 403);
@@ -252,24 +252,24 @@ function try_switch_source(DerivativeParams $params, ?int $original_mtime, Image
     if ($ctx->rotationAngle == 90 || $ctx->rotationAngle == 270) {
         [$original_size[0], $original_size[1]] = [$original_size[1], $original_size[0]];
     }
-    $dsize         = $params->compute_final_size($original_size);
+    $dsize         = $params->computeFinalSize($original_size);
     $use_watermark = $params->use_watermark;
     if ($use_watermark) {
-        $use_watermark = $params->will_watermark($dsize);
+        $use_watermark = $params->willWatermark($dsize);
     }
     $candidates = [];
-    foreach (ImageStdParams::get_defined_type_map() as $candidate) {
+    foreach (ImageStdParams::getDefinedTypeMap() as $candidate) {
         if ($candidate->type == $params->type) {
             continue;
         }
         if ($candidate->use_watermark != $use_watermark) {
             continue;
         }
-        if ($candidate->max_width() < $params->max_width() || $candidate->max_height() < $params->max_height()) {
+        if ($candidate->maxWidth() < $params->maxWidth() || $candidate->maxHeight() < $params->maxHeight()) {
             continue;
         }
-        $candidate_size = $candidate->compute_final_size($original_size);
-        if ($dsize != $params->compute_final_size($candidate_size)) {
+        $candidate_size = $candidate->computeFinalSize($original_size);
+        if ($dsize != $params->computeFinalSize($candidate_size)) {
             continue;
         }
         if ($params->sizing->max_crop == 0) {

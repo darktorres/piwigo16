@@ -124,7 +124,7 @@ final class WsMethodRegistrar
                 ParamDefinition::optional(name: 'public', default: false, type: WS_TYPE_BOOL),
                 ParamDefinition::optional(name: 'tree_output', default: false, type: WS_TYPE_BOOL),
                 ParamDefinition::optional(name: 'fullname', default: false, type: WS_TYPE_BOOL),
-                ParamDefinition::optional(name: 'thumbnail_size', default: IMG_THUMB, info: implode(',', array_keys(ImageStdParams::get_defined_type_map()))),
+                ParamDefinition::optional(name: 'thumbnail_size', default: IMG_THUMB, info: implode(',', array_keys(ImageStdParams::getDefinedTypeMap()))),
                 ParamDefinition::optional('search'),
                 ParamDefinition::optional(name: 'limit', default: null, type: WS_TYPE_INT | WS_TYPE_POSITIVE, info: 'Parameter not compatible with recursive=true'),
             ],

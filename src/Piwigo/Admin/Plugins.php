@@ -27,7 +27,7 @@ class Plugins
      */
     public function __construct()
     {
-        $this->get_fs_plugins();
+        $this->getFsPlugins();
 
         foreach (ServiceLocator::get(PluginRepository::class)->findAll() as $db_plugin) {
             if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
@@ -40,7 +40,7 @@ class Plugins
      * Returns the maintain class of a plugin
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $plugin_id): PluginMaintain
+    private static function buildMaintainClass(string $plugin_id): PluginMaintain
     {
         $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
         $classname = $plugin_id.'_maintain';
@@ -76,7 +76,7 @@ class Plugins
     /**
      * @param array<mixed> $options
      */
-    public function perform_action(string $action, string $plugin_id, array $options = []): mixed
+    public function performAction(string $action, string $plugin_id, array $options = []): mixed
     {
         if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -89,7 +89,7 @@ class Plugins
         // For 'update', we build the maintain class only after file extraction (see case 'update' below).
         // Use a DummyPluginMaintain placeholder so $plugin_maintain is always typed.
         $plugin_maintain = $action !== 'update'
-            ? self::build_maintain_class($plugin_id)
+            ? self::buildMaintainClass($plugin_id)
             : new DummyPluginMaintain($plugin_id);
 
         $activity_details = ['plugin_id' => $plugin_id];
@@ -121,15 +121,15 @@ class Plugins
                 $activity_details['from_version'] = $previous_version;
                 $revisionRaw = $options['revision'] ?? '';
                 $revisionStr = is_string($revisionRaw) ? $revisionRaw : '';
-                $errors[0] = $this->extract_plugin_files('upgrade', $revisionStr, $plugin_id);
+                $errors[0] = $this->extractPluginFiles('upgrade', $revisionStr, $plugin_id);
 
                 if ($errors[0] === 'ok') {
-                    $this->get_fs_plugin($plugin_id); // refresh plugins list
+                    $this->getFsPlugin($plugin_id); // refresh plugins list
                     $newVersionRaw = $this->fs_plugins[$plugin_id]['version'] ?? '';
                     $new_version = is_string($newVersionRaw) ? $newVersionRaw : '';
                     $activity_details['to_version'] = $new_version;
 
-                    $plugin_maintain = self::build_maintain_class($plugin_id);
+                    $plugin_maintain = self::buildMaintainClass($plugin_id);
                     $plugin_maintain->update($previous_version, $new_version, $errors);
 
                     if ($new_version != 'auto') {
@@ -144,7 +144,7 @@ class Plugins
 
             case 'activate':
                 if (!isset($crt_db_plugin)) {
-                    $errors = $this->perform_action('install', $plugin_id);
+                    $errors = $this->performAction('install', $plugin_id);
                     [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
                     load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {
@@ -195,7 +195,7 @@ class Plugins
                 }
 
                 if ($crt_db_plugin['state'] == 'active') {
-                    $this->perform_action('deactivate', $plugin_id);
+                    $this->performAction('deactivate', $plugin_id);
                 }
 
                 ServiceLocator::get(PluginRepository::class)->delete($plugin_id);
@@ -204,9 +204,9 @@ class Plugins
                 break;
 
             case 'restore':
-                $this->perform_action('uninstall', $plugin_id);
+                $this->performAction('uninstall', $plugin_id);
                 unset($this->db_plugins_by_id[$plugin_id]);
-                $errors = $this->perform_action('activate', $plugin_id);
+                $errors = $this->performAction('activate', $plugin_id);
                 break;
 
             case 'delete':
@@ -215,7 +215,7 @@ class Plugins
                         $activity_details['db_version'] = $crt_db_plugin['version'];
                     }
 
-                    $this->perform_action('uninstall', $plugin_id);
+                    $this->performAction('uninstall', $plugin_id);
                 }
                 if (!isset($this->fs_plugins[$plugin_id])) {
                     break;
@@ -235,7 +235,7 @@ class Plugins
     /**
      * Get plugins defined in the plugin directory
      */
-    public function get_fs_plugins(): void
+    public function getFsPlugins(): void
     {
         $dir = opendir(PHPWG_PLUGINS_PATH);
         if ($dir === false) {
@@ -244,7 +244,7 @@ class Plugins
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
                 if (preg_match('/^[a-zA-Z0-9-_]+$/', $file)) {
-                    $this->get_fs_plugin($file);
+                    $this->getFsPlugin($file);
                 }
             }
         }
@@ -258,7 +258,7 @@ class Plugins
      * @return false|array
      */
     /** @return array<string,mixed>|false */
-    public function get_fs_plugin(string $plugin_id): array|false
+    public function getFsPlugin(string $plugin_id): array|false
     {
         $path = PHPWG_PLUGINS_PATH.$plugin_id;
 
@@ -327,17 +327,17 @@ class Plugins
     /**
      * Sort fs_plugins
      */
-    public function sort_fs_plugins(string $order = 'name'): void
+    public function sortFsPlugins(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
                 uasort($this->fs_plugins, name_compare(...));
                 break;
             case 'status':
-                $this->sort_plugins_by_state();
+                $this->sortPluginsByState();
                 break;
             case 'author':
-                uasort($this->fs_plugins, $this->plugin_author_compare(...));
+                uasort($this->fs_plugins, $this->pluginAuthorCompare(...));
                 break;
             case 'id':
                 uksort($this->fs_plugins, strcasecmp(...));
@@ -350,7 +350,7 @@ class Plugins
     /**
      * @return string[]
      */
-    public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
+    public function getVersionsToCheck(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
@@ -399,9 +399,9 @@ class Plugins
      * Retrieve PEM server datas to $server_plugins
      * $beta_test parameter add plugins compatible with the previous version
      */
-    public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
+    public function getServerPlugins(bool $new = false, bool $beta_test = false): bool
     {
-        $versions_to_check = $this->get_versions_to_check($beta_test);
+        $versions_to_check = $this->getVersionsToCheck($beta_test);
         if (empty($versions_to_check)) {
             return true;
         }
@@ -448,7 +448,7 @@ class Plugins
     }
 
     /** @return array<mixed>|false */
-    public function get_incompatible_plugins(bool $actualize = false): array|false
+    public function getIncompatiblePlugins(bool $actualize = false): array|false
     {
         if (isset($_SESSION['incompatible_plugins']) and !$actualize
           and is_array($_SESSION['incompatible_plugins'])
@@ -459,7 +459,7 @@ class Plugins
 
         $_SESSION['incompatible_plugins'] = ['~~expire~~' => time() + 300];
 
-        $versions_to_check = $this->get_versions_to_check();
+        $versions_to_check = $this->getVersionsToCheck();
         if (empty($versions_to_check)) {
             return false;
         }
@@ -521,23 +521,23 @@ class Plugins
     /**
      * Sort $server_plugins
      */
-    public function sort_server_plugins(string $order = 'date'): void
+    public function sortServerPlugins(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
                 krsort($this->server_plugins);
                 break;
             case 'revision':
-                usort($this->server_plugins, fn (array $a, array $b): int => $this->extension_revision_compare($a, $b));
+                usort($this->server_plugins, fn (array $a, array $b): int => $this->extensionRevisionCompare($a, $b));
                 break;
             case 'name':
-                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extension_name_compare($a, $b));
+                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extensionNameCompare($a, $b));
                 break;
             case 'author':
-                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extension_author_compare($a, $b));
+                uasort($this->server_plugins, fn (array $a, array $b): int => $this->extensionAuthorCompare($a, $b));
                 break;
             case 'downloads':
-                usort($this->server_plugins, fn (array $a, array $b): int => $this->extension_downloads_compare($a, $b));
+                usort($this->server_plugins, fn (array $a, array $b): int => $this->extensionDownloadsCompare($a, $b));
                 break;
         }
     }
@@ -548,7 +548,7 @@ class Plugins
      * @param string $revision remote revision identifier
      * @param string $dest plugin id or extension id
      */
-    public function extract_plugin_files(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
+    public function extractPluginFiles(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
     {
         $logger = LoggerRegistry::current();
 
@@ -663,7 +663,7 @@ class Plugins
      * @return string[]
      */
     /** @return array<mixed> */
-    public function get_merged_extensions(string $version = PHPWG_VERSION): array
+    public function getMergedExtensions(string $version = PHPWG_VERSION): array
     {
         $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
         $merged_extensions = [];
@@ -685,7 +685,7 @@ class Plugins
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_revision_compare(array $a, array $b): int
+    public function extensionRevisionCompare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
@@ -698,7 +698,7 @@ class Plugins
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_name_compare(array $a, array $b): int
+    public function extensionNameCompare(array $a, array $b): int
     {
         $na = $a['extension_name'] ?? null;
         $nb = $b['extension_name'] ?? null;
@@ -709,13 +709,13 @@ class Plugins
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_author_compare(array $a, array $b): int
+    public function extensionAuthorCompare(array $a, array $b): int
     {
         $na = $a['author_name'] ?? null;
         $nb = $b['author_name'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return $this->extension_name_compare($a, $b);
+            return $this->extensionNameCompare($a, $b);
         } else {
             return $r;
         }
@@ -725,7 +725,7 @@ class Plugins
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function plugin_author_compare(array $a, array $b): int
+    public function pluginAuthorCompare(array $a, array $b): int
     {
         $na = $a['author'] ?? null;
         $nb = $b['author'] ?? null;
@@ -741,7 +741,7 @@ class Plugins
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_downloads_compare(array $a, array $b): int
+    public function extensionDownloadsCompare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
@@ -750,7 +750,7 @@ class Plugins
         }
     }
 
-    public function sort_plugins_by_state(): void
+    public function sortPluginsByState(): void
     {
         uasort($this->fs_plugins, name_compare(...));
 

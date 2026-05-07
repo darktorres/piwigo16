@@ -101,7 +101,7 @@ final class UpgradeController implements ControllerInterface
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
-        $tpl->set_filenames(['upgrade' => 'upgrade.tpl']);
+        $tpl->setFilenames(['upgrade' => 'upgrade.tpl']);
         $tpl->assign([
             'RELEASE'        => PHPWG_VERSION,
             'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
@@ -117,7 +117,7 @@ final class UpgradeController implements ControllerInterface
 
         if ($has_remote_site) {
             $step = 3;
-            Updates::upgrade_to('2.3.4', $step, false);
+            Updates::upgradeTo('2.3.4', $step, false);
 
             $rawPage       = $GLOBALS['page'] ?? null;
             $upgradeErrors = is_array($rawPage) && is_array($rawPage['errors'] ?? null)

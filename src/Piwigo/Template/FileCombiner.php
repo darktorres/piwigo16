@@ -30,7 +30,7 @@ final class FileCombiner
     /**
      * Deletes all combined files from cache directory.
      */
-    public static function clear_combined_files(): void
+    public static function clearCombinedFiles(): void
     {
         $dir = opendir(PHPWG_ROOT_PATH.PWG_COMBINED_DIR);
         if ($dir === false) {
@@ -74,13 +74,13 @@ final class FileCombiner
 
         foreach ($this->combinables as $combinable) {
             $is_dist = !$this->is_css && str_starts_with($combinable->path, 'dist/');
-            if ($combinable->is_remote() || $is_dist) {
-                $this->flush_pending($result, $pending, $key, $force);
+            if ($combinable->isRemote() || $is_dist) {
+                $this->flushPending($result, $pending, $key, $force);
                 $key = $ini_key;
                 $result[] = $combinable;
                 continue;
             } elseif (!Config::templateCombineFiles()) {
-                $this->flush_pending($result, $pending, $key, $force);
+                $this->flushPending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
@@ -92,7 +92,7 @@ final class FileCombiner
             }
             $pending[] = $combinable;
         }
-        $this->flush_pending($result, $pending, $key, $force);
+        $this->flushPending($result, $pending, $key, $force);
         return $result;
     }
 
@@ -106,7 +106,7 @@ final class FileCombiner
      * @param Combinable[] $pending
      * @param string[] $key
      */
-    private function flush_pending(array &$result, array &$pending, array $key, bool $force): void
+    private function flushPending(array &$result, array &$pending, array $key, bool $force): void
     {
         if (count($pending) > 1) {
             $key = join('>', $key);
@@ -116,7 +116,7 @@ final class FileCombiner
                 $header = '';
                 foreach ($pending as $combinable) {
                     $output .= "/*BEGIN $combinable->path */\n";
-                    $output .= $this->process_combinable($combinable, true, $force, $header);
+                    $output .= $this->processCombinable($combinable, true, $force, $header);
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
@@ -127,7 +127,7 @@ final class FileCombiner
             $result[] = new Combinable('combi', $file, 0);
         } elseif (count($pending) == 1) {
             $header = '';
-            $this->process_combinable($pending[0], false, $force, $header);
+            $this->processCombinable($pending[0], false, $force, $header);
             $result[] = $pending[0];
         }
         $key = [];
@@ -143,7 +143,7 @@ final class FileCombiner
      *                       $return_content===true)
      * @return null|string
      */
-    private function process_combinable($combinable, bool $return_content, bool $force, string &$header)
+    private function processCombinable($combinable, bool $return_content, bool $force, string &$header)
     {
         if ($combinable->is_template) {
             if (!$return_content) {
@@ -162,14 +162,14 @@ final class FileCombiner
             $template = TemplateRegistry::current();
             $handle = $this->type. '.' .$combinable->id;
             $resolved = realpath(PHPWG_ROOT_PATH.$combinable->path);
-            $template->set_filename($handle, $resolved !== false ? $resolved : PHPWG_ROOT_PATH.$combinable->path);
+            $template->setFilename($handle, $resolved !== false ? $resolved : PHPWG_ROOT_PATH.$combinable->path);
             trigger_notify('combinable_preparse', $template, $combinable, $this); //allow themes and plugins to set their own vars to template ...
             $content = (string) $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = self::processCss($content, $combinable->path, $header);
             } else {
-                $content = self::process_js($content, $combinable->path);
+                $content = self::processJs($content, $combinable->path);
             }
 
             if ($return_content) {
@@ -185,9 +185,9 @@ final class FileCombiner
                 return null;
             }
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header);
+                $content = self::processCss($content, $combinable->path, $header);
             } else {
-                $content = self::process_js($content, $combinable->path);
+                $content = self::processJs($content, $combinable->path);
             }
             return $content;
         }
@@ -200,7 +200,7 @@ final class FileCombiner
      * @param string $js file content
      * @param string $file
      */
-    private static function process_js(string $js, $file): string
+    private static function processJs(string $js, $file): string
     {
         if (!str_contains($file, '.min') and !str_contains($file, '.packed')) {
             try {
@@ -223,9 +223,9 @@ final class FileCombiner
      *                       the minified file.
      * @return string
      */
-    private static function process_css(string $css, $file, string &$header)
+    private static function processCss(string $css, $file, string &$header)
     {
-        $css = self::process_css_rec($css, dirname($file), $header);
+        $css = self::processCssRec($css, dirname($file), $header);
         if (!str_contains($file, '.min')) {
             $minifier = new CSS($css);
             $css = $minifier->minify();
@@ -241,7 +241,7 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css_rec(string $css, string $dir, string &$header): string
+    private static function processCssRec(string $css, string $dir, string &$header): string
     {
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
@@ -279,7 +279,7 @@ final class FileCombiner
                 } else {
                     $sub_css = file_get_contents(PHPWG_ROOT_PATH . $dir . "/$match[1]");
                     if ($sub_css !== false) {
-                        $replace[] = self::process_css_rec($sub_css, dirname($dir . "/$match[1]"), $header);
+                        $replace[] = self::processCssRec($sub_css, dirname($dir . "/$match[1]"), $header);
                     } else {
                         $replace[] = '';
                     }

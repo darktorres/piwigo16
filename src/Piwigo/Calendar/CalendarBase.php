@@ -29,7 +29,7 @@ abstract class CalendarBase
      *
      * @return boolean false indicates that thumbnails where not included
      */
-    abstract public function generate_category_content();
+    abstract public function generateCategoryContent();
 
     /**
      * Returns a sql WHERE subquery for the date field.
@@ -37,7 +37,7 @@ abstract class CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      * @return string
      */
-    abstract public function get_date_where($max_levels = 3);
+    abstract public function getDateWhere($max_levels = 3);
 
     /**
      * Initialize the calendar.
@@ -60,7 +60,7 @@ abstract class CalendarBase
     /**
      * Returns the calendar title (with HTML).
      */
-    public function get_display_name(): string
+    public function getDisplayName(): string
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -79,12 +79,12 @@ abstract class CalendarBase
                 );
                 $res .=
                   '<a href="'.$url.'">'
-                  .$this->get_date_component_label($i, $componentTyped)
+                  .$this->getDateComponentLabel($i, $componentTyped)
                   .'</a>';
             } else {
                 $res .=
                   '<span class="calInHere">'
-                  .$this->get_date_component_label($i, $componentTyped)
+                  .$this->getDateComponentLabel($i, $componentTyped)
                   .'</span>';
             }
         }
@@ -94,7 +94,7 @@ abstract class CalendarBase
     /**
      * Returns a display name for a date component optionally using labels.
      */
-    protected function get_date_component_label(int $level, int|string $date_component): string
+    protected function getDateComponentLabel(int $level, int|string $date_component): string
     {
         $level_data = $this->calendar_levels[$level] ?? [];
         $labels = is_array($level_data) ? ($level_data['labels'] ?? null) : null;
@@ -113,13 +113,13 @@ abstract class CalendarBase
     /**
      * Gets a nice display name for a date to be shown in previous/next links
      */
-    protected function get_date_nice_name(string $date): string
+    protected function getDateNiceName(string $date): string
     {
         $date_components = explode('-', $date);
         $res = '';
         for ($i = count($date_components) - 1; $i >= 0; $i--) {
             if ('any' !== $date_components[$i]) {
-                $label = $this->get_date_component_label($i, $date_components[$i]);
+                $label = $this->getDateComponentLabel($i, $date_components[$i]);
                 if ($res != '') {
                     $res .= ' ';
                 }
@@ -145,7 +145,7 @@ abstract class CalendarBase
      * @param array<mixed>|null $labels
      * @return array<mixed>
      */
-    protected function get_nav_bar_from_items(
+    protected function getNavBarFromItems(
         array $date_components,
         array $items,
         bool $show_any,
@@ -210,7 +210,7 @@ abstract class CalendarBase
      * @param int $level - 0-year, 1-month/week, 2-day
      */
     /** @param array<mixed>|null $labels */
-    protected function build_nav_bar(int $level, ?array $labels = null): void
+    protected function buildNavBar(int $level, ?array $labels = null): void
     {
         $template = TemplateRegistry::current();
         $page = &$GLOBALS['page'];
@@ -223,7 +223,7 @@ abstract class CalendarBase
 SELECT DISTINCT('.$levelSql.') as period,
   COUNT(DISTINCT id) as nb_images'.
 $this->inner_sql.
-$this->get_date_where($level).'
+$this->getDateWhere($level).'
   GROUP BY period;';
 
         $level_items = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
@@ -254,7 +254,7 @@ $this->get_date_where($level).'
 
         $levelLabels = is_array($level_data) ? (is_array($level_data['labels'] ?? null) ? $level_data['labels'] : null) : null;
 
-        $nav_bar = $this->get_nav_bar_from_items(
+        $nav_bar = $this->getNavBarFromItems(
             $dates,
             $level_items,
             true,
@@ -274,7 +274,7 @@ $this->get_date_where($level).'
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev(): void
+    protected function buildNextPrev(): void
     {
         $template = TemplateRegistry::current();
         $page = &$GLOBALS['page'];
@@ -328,7 +328,7 @@ GROUP BY period';
             $chronology_date = explode('-', $prev);
             $tpl_var['previous'] =
               [
-                'LABEL' => $this->get_date_nice_name($prev),
+                'LABEL' => $this->getDateNiceName($prev),
                 'URL' => duplicate_index_url(
                     ['chronology_date' => $chronology_date],
                     ['start']
@@ -341,7 +341,7 @@ GROUP BY period';
             $chronology_date = explode('-', $next);
             $tpl_var['next'] =
               [
-                'LABEL' => $this->get_date_nice_name($next),
+                'LABEL' => $this->getDateNiceName($next),
                 'URL' => duplicate_index_url(
                     ['chronology_date' => $chronology_date],
                     ['start']

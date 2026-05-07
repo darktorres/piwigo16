@@ -62,22 +62,22 @@ class CalendarWeekly extends CalendarBase
      *
      * @return boolean false indicates that thumbnails where not included
      */
-    public function generate_category_content(): bool
+    public function generateCategoryContent(): bool
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
 
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
         if (count($chronologyDate) == 0) {
-            $this->build_nav_bar(CYEAR); // years
+            $this->buildNavBar(CYEAR); // years
         }
         if (count($chronologyDate) == 1) {
-            $this->build_nav_bar(CWEEK, []); // week nav bar 1-53
+            $this->buildNavBar(CWEEK, []); // week nav bar 1-53
         }
         if (count($chronologyDate) == 2) {
-            $this->build_nav_bar(CDAY); // days nav bar Mon-Sun
+            $this->buildNavBar(CDAY); // days nav bar Mon-Sun
         }
-        $this->build_next_prev();
+        $this->buildNextPrev();
         return false;
     }
 
@@ -86,7 +86,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
-    public function get_date_where($max_levels = 3): string
+    public function getDateWhere($max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
         $pageArr2 = is_array($page) ? $page : [];

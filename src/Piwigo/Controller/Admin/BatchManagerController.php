@@ -472,7 +472,7 @@ final class BatchManagerController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('batch_manager');
+        $tabsheet->setId('batch_manager');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -793,7 +793,7 @@ final class BatchManagerController
 
         // ── Template ──────────────────────────────────────────────────────────
 
-        $tpl->set_filenames(['batch_manager_global' => 'batch_manager_global.tpl']);
+        $tpl->setFilenames(['batch_manager_global' => 'batch_manager_global.tpl']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
@@ -811,11 +811,11 @@ final class BatchManagerController
         $tpl->assign(['level_options' => get_privacy_level_options(), 'level_options_selected' => 0]);
 
         $site_reader  = new LocalSiteReader('./');
-        $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
+        $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()));
         $tpl->assign(['used_metadata' => $used_metadata]);
 
         $del_deriv_map = [];
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             $del_deriv_map[$params->type] = l10n($params->type);
         }
         $gen_deriv_map  = $del_deriv_map;
@@ -857,7 +857,7 @@ final class BatchManagerController
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart . ';';
 
             $batchRows   = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
-            $thumb_params = ImageStdParams::get_by_type(IMG_SQUARE);
+            $thumb_params = ImageStdParams::getByType(IMG_SQUARE);
 
             foreach ($batchRows as $row) {
                 $nb_thumbs_page++;
@@ -904,7 +904,7 @@ final class BatchManagerController
         ]);
 
         trigger_notify('loc_end_element_set_global');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
     }
 
     // ── batch_manager_unit ────────────────────────────────────────────────────
@@ -973,7 +973,7 @@ final class BatchManagerController
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
         }
 
-        $tpl->set_filenames(['batch_manager_unit' => 'batch_manager_unit.tpl']);
+        $tpl->setFilenames(['batch_manager_unit' => 'batch_manager_unit.tpl']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         $tpl->assign([
@@ -1157,7 +1157,7 @@ final class BatchManagerController
         ]);
 
         trigger_notify('loc_end_element_set_unit');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_unit');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
     }
 
     // ── queue ─────────────────────────────────────────────────────────────────
@@ -1206,7 +1206,7 @@ final class BatchManagerController
             $tableExists = false;
         }
 
-        $tpl->set_filenames(['queue' => 'queue.tpl']);
+        $tpl->setFilenames(['queue' => 'queue.tpl']);
 
         $pwg_token     = get_pwg_token();
         $pendingAsync  = $stats['piwigo_async'] ?? 0;
@@ -1228,6 +1228,6 @@ final class BatchManagerController
             'worker_command' => 'bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M',
         ]);
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'queue');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'queue');
     }
 }

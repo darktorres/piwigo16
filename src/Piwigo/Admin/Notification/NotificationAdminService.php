@@ -98,7 +98,7 @@ final class NotificationAdminService
         switch_lang_to(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
         if ($isActionSend) {
             $ctx->mailTemplate = get_mail_template($ctx->emailFormat);
-            $ctx->mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
+            $ctx->mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.tpl');
         }
     }
 

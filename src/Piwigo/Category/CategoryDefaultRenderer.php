@@ -71,7 +71,7 @@ SELECT image_id, COUNT(*) AS nb_comments
             }
         }
 
-        $template->set_filenames(['index_thumbnails' => 'thumbnails.tpl']);
+        $template->setFilenames(['index_thumbnails' => 'thumbnails.tpl']);
 
         trigger_notify('loc_begin_index_thumbnails', $pictures);
         $tpl_thumbnails_var = [];
@@ -124,16 +124,16 @@ SELECT image_id, COUNT(*) AS nb_comments
         }
 
         $template->assign([
-            'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(pwg_get_session_var('index_deriv', IMG_THUMB))),
+            'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', IMG_THUMB))),
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);
         $tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
-        $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
+        $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tpl_thumbnails_var);
-        $template->clear_assign('thumbnails');
+        $template->clearAssign('thumbnails');
         pwg_debug('end CategoryDefaultRenderer');
     }
 }

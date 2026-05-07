@@ -34,7 +34,7 @@ final class SelectedTagsRenderer
         }
 
         $template->assign(['SELECT_RELATED_TAGS' => $selected_related_tags_info]);
-        $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
-        $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
+        $template->setFilename('selected_tags', 'include/selected_tags.inc.tpl');
+        $template->assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
     }
 }

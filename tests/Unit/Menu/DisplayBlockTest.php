@@ -18,28 +18,28 @@ final class DisplayBlockTest extends TestCase
     public function testGetBlockReturnsRegisteredBlock(): void
     {
         $block = $this->makeBlock();
-        $rb = $block->get_block();
-        self::assertSame('nav', $rb->get_id());
+        $rb = $block->getBlock();
+        self::assertSame('nav', $rb->getId());
     }
 
     public function testGetTitleFallsBackToBlockName(): void
     {
         $block = $this->makeBlock();
-        self::assertSame('Navigation', $block->get_title());
+        self::assertSame('Navigation', $block->getTitle());
     }
 
     public function testSetAndGetTitle(): void
     {
         $block = $this->makeBlock();
-        $block->set_title('My Title');
-        self::assertSame('My Title', $block->get_title());
+        $block->setTitle('My Title');
+        self::assertSame('My Title', $block->getTitle());
     }
 
     public function testSetAndGetPosition(): void
     {
         $block = $this->makeBlock();
-        $block->set_position(100);
-        self::assertSame(100, $block->get_position());
+        $block->setPosition(100);
+        self::assertSame(100, $block->getPosition());
     }
 
     public function testPublicProperties(): void

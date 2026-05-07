@@ -24,12 +24,12 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(string &$ch, string &$crt_token): bool
+    public function processChar(string &$ch, string &$crt_token): bool
     {
         return false;
     }
 
-    public function get_sql(string $field, QSingleToken $token): string
+    public function getSql(string $field, QSingleToken $token): string
     {
         return '';
     }

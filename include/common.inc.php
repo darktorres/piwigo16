@@ -168,7 +168,7 @@ if (!Kernel::isBooted()) :
     // from ServiceLocator. Entry-point Kernel::boot() calls remain idempotent.
     Kernel::boot();
 
-    ImageStdParams::load_from_db();
+    ImageStdParams::loadFromDb();
 
     session_start();
     UserBootstrap::bootstrap();

@@ -25,7 +25,7 @@ final class DirectPreparer
             'ADMIN_PAGE_TITLE' => l10n('Upload Photos'),
         ]);
 
-        if (PwgImage::get_library() == 'gd') {
+        if (PwgImage::getLibrary() == 'gd') {
             $fudge_factor = 1.7;
             $available_memory = (int) ServiceLocator::get(UploadService::class)->getIniSize('memory_limit') - memory_get_usage();
             $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));

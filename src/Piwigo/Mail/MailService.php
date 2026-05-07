@@ -518,8 +518,8 @@ SELECT
                 RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
                 trigger_notify('before_parse_mail_template', $cacheKey, $contentType);
 
-                $mailTpl->set_filename('mail_header', 'header.tpl');
-                $mailTpl->set_filename('mail_footer', 'footer.tpl');
+                $mailTpl->setFilename('mail_header', 'header.tpl');
+                $mailTpl->setFilename('mail_footer', 'footer.tpl');
 
                 $addUrlParams = [];
                 if (!empty($args['auth_key'])) {
@@ -537,14 +537,14 @@ SELECT
 
                 if ($contentType == 'text/html') {
                     if ($mailTpl->smarty->templateExists('global-mail-css.tpl')) {
-                        $mailTpl->set_filename('global-css', 'global-mail-css.tpl');
-                        $mailTpl->assign_var_from_handle('GLOBAL_MAIL_CSS', 'global-css');
+                        $mailTpl->setFilename('global-css', 'global-mail-css.tpl');
+                        $mailTpl->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 
                     $mailTheme = is_scalar($args['theme']) ? (string) $args['theme'] : '';
                     if ($mailTpl->smarty->templateExists('mail-css-' . $mailTheme . '.tpl')) {
-                        $mailTpl->set_filename('css', 'mail-css-' . $mailTheme . '.tpl');
-                        $mailTpl->assign_var_from_handle('MAIL_CSS', 'css');
+                        $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.tpl');
+                        $mailTpl->assignVarFromHandle('MAIL_CSS', 'css');
                     }
                 }
             }
@@ -575,11 +575,11 @@ SELECT
 
             if (isset($tpl['filename'])) {
                 if (isset($tpl['dirname'])) {
-                    $template->set_template_dir((is_scalar($tpl['dirname']) ? (string) $tpl['dirname'] : '') . '/' . $contentType);
+                    $template->setTemplateDir((is_scalar($tpl['dirname']) ? (string) $tpl['dirname'] : '') . '/' . $contentType);
                 }
                 $tplFilename = is_scalar($tpl['filename']) ? (string) $tpl['filename'] : '';
                 if ($template->smarty->templateExists($tplFilename . '.tpl')) {
-                    $template->set_filename($tplFilename, $tplFilename . '.tpl');
+                    $template->setFilename($tplFilename, $tplFilename . '.tpl');
                     if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
                         $safeAssign = [];
                         foreach ($tpl['assign'] as $k => $v) {

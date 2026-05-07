@@ -23,16 +23,16 @@ final class MenubarRenderer
         $menu = new BlockManager('menubar');
 
         if (Config::guestAccess() or !PermissionService::get()->isAGuest()) {
-            $menu->load_registered_blocks();
+            $menu->loadRegisteredBlocks();
         }
-        $menu->prepare_display();
+        $menu->prepareDisplay();
 
         if (($page['section'] ?? null) == 'search' && isset($page['qsearch_details']) && is_array($page['qsearch_details'])) {
             $qsearchQ = is_scalar($page['qsearch_details']['q'] ?? null) ? (string) $page['qsearch_details']['q'] : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearchQ));
         }
 
-        if (($block = $menu->get_block('mbLinks')) and !empty(Config::links())) {
+        if (($block = $menu->getBlock('mbLinks')) and !empty(Config::links())) {
             $block->data = [];
             foreach (Config::links() as $url => $url_data) {
                 if (!is_array($url_data)) {
@@ -60,7 +60,7 @@ final class MenubarRenderer
             }
         }
 
-        $block = $menu->get_block('mbCategories');
+        $block = $menu->getBlock('mbCategories');
         if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and get_filter_page_value('used')) {
             if ($filter['enabled']) {
                 $template->assign('U_STOP_FILTER', add_url_params(make_index_url([]), ['filter' => 'stop']));
@@ -81,7 +81,7 @@ final class MenubarRenderer
             $block->template = 'menubar_categories.tpl';
         }
 
-        $block = $menu->get_block('mbRelatedCategories');
+        $block = $menu->getBlock('mbRelatedCategories');
         $items = is_array($page['items'] ?? null) ? $page['items'] : [];
         if ($items !== [] and count($items) < Config::relatedAlbumsMaximumItemsToCompute() and $block != null) {
             /** @var list<int> $exclude_cat_ids */
@@ -105,7 +105,7 @@ final class MenubarRenderer
             }
         }
 
-        $block = $menu->get_block('mbTags');
+        $block = $menu->getBlock('mbTags');
         if ($block != null and 'picture' != script_basename()) {
             $tags = get_available_tags();
             usort($tags, fn (mixed $a, mixed $b): int => tags_counter_compare(is_array($a) ? $a : [], is_array($b) ? $b : []));
@@ -119,7 +119,7 @@ final class MenubarRenderer
             }
         }
 
-        if (($block = $menu->get_block('mbSpecials')) != null) {
+        if (($block = $menu->getBlock('mbSpecials')) != null) {
             if (!PermissionService::get()->isAGuest()) {
                 $block->data['favorites'] = [
                     'URL' => make_index_url(['section' => 'favorites']),
@@ -174,7 +174,7 @@ final class MenubarRenderer
             $block->template = 'menubar_specials.tpl';
         }
 
-        if (($block = $menu->get_block('mbMenu')) != null) {
+        if (($block = $menu->getBlock('mbMenu')) != null) {
             $block->data['qsearch'] = true;
 
             $block->data['tags'] = [
@@ -236,7 +236,7 @@ final class MenubarRenderer
                 $template->assign('U_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin());
             }
         }
-        if (($block = $menu->get_block('mbIdentification')) != null) {
+        if (($block = $menu->getBlock('mbIdentification')) != null) {
             $block->template = 'menubar_identification.tpl';
         }
         $menu->apply('MENUBAR', 'menubar.tpl');

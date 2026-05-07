@@ -18,7 +18,7 @@ final class AlbumsTabRenderer
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $GLOBALS['my_base_url'] = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('albums');
+        $tabsheet->setId('albums');
         $tabsheet->select(is_string($page['tab'] ?? null) ? $page['tab'] : '');
         $tabsheet->assign();
         $nbCats = ServiceLocator::get(CategoryRepository::class)->countAll();

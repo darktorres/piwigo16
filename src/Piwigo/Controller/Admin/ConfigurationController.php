@@ -233,7 +233,7 @@ final class ConfigurationController
         // ── Restore default derivatives ───────────────────────────────────────
 
         if ($section === 'sizes' && isset($_GET['action']) && 'restore_settings' == $_GET['action']) {
-            ImageStdParams::restore_default();
+            ImageStdParams::restoreDefault();
             ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
             load_conf_from_db();
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
@@ -242,10 +242,10 @@ final class ConfigurationController
 
         // ── Template init ─────────────────────────────────────────────────────
 
-        $tpl->set_filename('config', 'configuration_' . $section . '.tpl');
+        $tpl->setFilename('config', 'configuration_' . $section . '.tpl');
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('configuration');
+        $tabsheet->setId('configuration');
         $tabsheet->select($section);
         $tabsheet->assign();
 
@@ -349,7 +349,7 @@ final class ConfigurationController
 
             case 'sizes':
                 if (!isset($page['sizes_loaded_in_tpl'])) {
-                    $is_gd = (PwgImage::get_library() == 'gd');
+                    $is_gd = (PwgImage::getLibrary() == 'gd');
                     $tpl->assign('is_gd', $is_gd);
                     $tpl->assign('sizes', [
                         'original_resize_maxwidth'  => Config::originalResizeMaxwidth(),
@@ -360,12 +360,12 @@ final class ConfigurationController
                         $tpl->append('sizes', [$checkbox => Config::raw($checkbox)], true);
                     }
 
-                    $enabled      = ImageStdParams::get_defined_type_map();
-                    $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+                    $enabled      = ImageStdParams::getDefinedTypeMap();
+                    $disabled_raw = safe_unserialize(ImageStdParams::getDisabledTypeMap());
                     $disabled     = $disabled_raw;
 
                     $tpl_vars = [];
-                    foreach (ImageStdParams::get_all_types() as $type) {
+                    foreach (ImageStdParams::getAllTypes() as $type) {
                         $tpl_var = [];
                         $tpl_var['must_square']  = ($type == IMG_SQUARE);
                         $tpl_var['must_enable']  = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == Config::derivativeDefaultSize());
@@ -425,8 +425,8 @@ final class ConfigurationController
                 }
                 $tpl->assign('watermark_files', $watermark_filemap);
 
-                if ($tpl->get_template_vars('watermark') === null) {
-                    $wm = ImageStdParams::get_watermark();
+                if ($tpl->getTemplateVars('watermark') === null) {
+                    $wm = ImageStdParams::getWatermark();
                     $position = 'custom';
                     if ($wm->xpos == 0   && $wm->ypos == 0) {
                         $position = 'topleft';
@@ -475,7 +475,7 @@ final class ConfigurationController
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'config');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'config');
     }
 
     private function orderByIsLocal(): bool

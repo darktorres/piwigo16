@@ -50,10 +50,10 @@ final class NotificationController implements ControllerInterface
         $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['notification' => 'notification.tpl']);
+        $tpl->setFilenames(['notification' => 'notification.tpl']);
         $tpl->assign(['U_FEED' => $feed_url, 'U_FEED_IMAGE_ONLY' => $feed_image_only_url]);
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNotificationPage', $hideMenuOn)) {

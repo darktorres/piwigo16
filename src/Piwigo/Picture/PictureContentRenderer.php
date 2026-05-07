@@ -24,7 +24,7 @@ final class PictureContentRenderer
 
         $cookiePictureDeriv = input_string('picture_deriv', null, $_COOKIE);
         if ($cookiePictureDeriv !== null) {
-            if (array_key_exists($cookiePictureDeriv, ImageStdParams::get_defined_type_map())) {
+            if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
                 pwg_set_session_var('picture_deriv', $cookiePictureDeriv);
             }
             setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path() ?? '']);
@@ -42,13 +42,13 @@ final class PictureContentRenderer
             if ($type == IMG_SQUARE || $type == IMG_THUMB) {
                 continue;
             }
-            if (!array_key_exists((string) $type, ImageStdParams::get_defined_type_map())) {
+            if (!array_key_exists((string) $type, ImageStdParams::getDefinedTypeMap())) {
                 continue;
             }
             if (!($derivative instanceof DerivativeImage)) {
                 continue;
             }
-            $url = $derivative->get_url();
+            $url = $derivative->getUrl();
             if (!is_string($url)) {
                 continue;
             }
@@ -56,7 +56,7 @@ final class PictureContentRenderer
                 continue;
             }
             $added[$url]   = 1;
-            $showOriginal &= !($derivative->same_as_source());
+            $showOriginal &= !($derivative->sameAsSource());
 
             if (Config::pictureSizesIcon() || $type == $derivType) {
                 $uniqueDerivatives[$type] = $derivative;
@@ -68,7 +68,7 @@ final class PictureContentRenderer
             $tpl->assign('U_ORIGINAL', $elementInfo['element_url']);
         }
         $tpl->append('current', ['selected_derivative' => $selectedDerivative, 'unique_derivatives' => $uniqueDerivatives], true);
-        $tpl->set_filenames(['default_content' => 'picture_content.tpl']);
+        $tpl->setFilenames(['default_content' => 'picture_content.tpl']);
         $tpl->assign(['ALT_IMG' => $elementInfo['file'], 'COOKIE_PATH' => cookie_path()]);
 
         return (string) $tpl->parse('default_content', true);

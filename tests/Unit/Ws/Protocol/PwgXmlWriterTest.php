@@ -17,8 +17,8 @@ final class PwgXmlWriterTest extends TestCase
     public function testSelfClosingElement(): void
     {
         $w = $this->make();
-        $w->start_element('foo');
-        $w->end_element(null);
+        $w->startElement('foo');
+        $w->endElement(null);
         self::assertStringContainsString('<foo', $w->getOutput());
         self::assertStringContainsString('/>', $w->getOutput());
     }
@@ -26,9 +26,9 @@ final class PwgXmlWriterTest extends TestCase
     public function testElementWithContent(): void
     {
         $w = $this->make();
-        $w->start_element('name');
-        $w->write_content('Alice');
-        $w->end_element(null);
+        $w->startElement('name');
+        $w->writeContent('Alice');
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringContainsString('<name>', $out);
         self::assertStringContainsString('Alice', $out);
@@ -38,9 +38,9 @@ final class PwgXmlWriterTest extends TestCase
     public function testWriteAttribute(): void
     {
         $w = $this->make();
-        $w->start_element('item');
-        $w->write_attribute('id', '42');
-        $w->end_element(null);
+        $w->startElement('item');
+        $w->writeAttribute('id', '42');
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringContainsString('id="42"', $out);
     }
@@ -48,9 +48,9 @@ final class PwgXmlWriterTest extends TestCase
     public function testWriteCdata(): void
     {
         $w = $this->make();
-        $w->start_element('raw');
-        $w->write_cdata('<some>markup</some>');
-        $w->end_element(null);
+        $w->startElement('raw');
+        $w->writeCdata('<some>markup</some>');
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringContainsString('<![CDATA[', $out);
         self::assertStringContainsString('<some>markup</some>', $out);
@@ -60,9 +60,9 @@ final class PwgXmlWriterTest extends TestCase
     public function testWriteContentEscapesHtml(): void
     {
         $w = $this->make();
-        $w->start_element('t');
-        $w->write_content('<dangerous>&text</dangerous>');
-        $w->end_element(null);
+        $w->startElement('t');
+        $w->writeContent('<dangerous>&text</dangerous>');
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringNotContainsString('<dangerous>', $out);
         self::assertStringContainsString('&lt;', $out);
@@ -72,8 +72,8 @@ final class PwgXmlWriterTest extends TestCase
     public function testElementNameStartingWithDigitPrefixed(): void
     {
         $w = $this->make();
-        $w->start_element('3d');
-        $w->end_element(null);
+        $w->startElement('3d');
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringContainsString('<_3d', $out);
     }
@@ -81,11 +81,11 @@ final class PwgXmlWriterTest extends TestCase
     public function testNestedElements(): void
     {
         $w = $this->make();
-        $w->start_element('outer');
-        $w->start_element('inner');
-        $w->write_content('value');
-        $w->end_element(null);
-        $w->end_element(null);
+        $w->startElement('outer');
+        $w->startElement('inner');
+        $w->writeContent('value');
+        $w->endElement(null);
+        $w->endElement(null);
         $out = $w->getOutput();
         self::assertStringContainsString('<outer>', $out);
         self::assertStringContainsString('<inner>', $out);
@@ -97,7 +97,7 @@ final class PwgXmlWriterTest extends TestCase
     public function testEncodeAttribute(): void
     {
         $w = $this->make();
-        self::assertSame('&lt;b&gt;', $w->encode_attribute('<b>'));
-        self::assertSame('&amp;', $w->encode_attribute('&'));
+        self::assertSame('&lt;b&gt;', $w->encodeAttribute('<b>'));
+        self::assertSame('&amp;', $w->encodeAttribute('&'));
     }
 }

@@ -435,13 +435,13 @@ final readonly class AdminService
 
     public function getGraphicsLibrary(): string
     {
-        $library = PwgImage::get_library();
+        $library = PwgImage::getLibrary();
         if ($library === false) {
             return '';
         }
-        switch (PwgImage::get_library()) {
+        switch (PwgImage::getLibrary()) {
             case 'ext_imagick':
-                exec(Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
+                exec(Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' -version', $returnarray);
                 if (isset($returnarray[0]) && preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                     $library .= '/' . $match[1];
                 }

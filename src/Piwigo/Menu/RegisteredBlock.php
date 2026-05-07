@@ -21,7 +21,7 @@ class RegisteredBlock
     /**
      * @return string
      */
-    public function get_id()
+    public function getId()
     {
         return $this->id;
     }
@@ -29,7 +29,7 @@ class RegisteredBlock
     /**
      * @return string
      */
-    public function get_name()
+    public function getName()
     {
         return $this->name;
     }
@@ -37,7 +37,7 @@ class RegisteredBlock
     /**
      * @return string
      */
-    public function get_owner()
+    public function getOwner()
     {
         return $this->owner;
     }

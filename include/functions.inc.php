@@ -315,11 +315,11 @@ function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): vo
     $title    = 'redirection';
 
     $tpl = TemplateRegistry::current();
-    $tpl->set_filenames(['redirect' => 'redirect.tpl']);
+    $tpl->setFilenames(['redirect' => 'redirect.tpl']);
 
     require(PHPWG_ROOT_PATH . 'include/page_header.php');
 
-    $tpl->set_filenames(['redirect' => 'redirect.tpl']);
+    $tpl->setFilenames(['redirect' => 'redirect.tpl']);
     $tpl->assign('REDIRECT_MSG', $msg);
     $tpl->parse('redirect');
 
@@ -500,7 +500,7 @@ function conf_get_param(mixed $param, mixed $default_value = null): mixed
 // ── Safe decode helpers ───────────────────────────────────────────────────
 
 /**
- * Called from ImageStdParams::load_from_db() before Kernel::boot() — must
+ * Called from ImageStdParams::loadFromDb() before Kernel::boot() — must
  * have its own implementation. StringUtil::safeUnserialize() is canonical.
  *
  * @param array<mixed>|string $value
@@ -584,7 +584,7 @@ function array_from_query(string $query, string|false $fieldname = false): array
 
 function script_basename(): string
 {
-    // pre-boot standalone — called from Template::set_theme() in install.php / upgrade.php
+    // pre-boot standalone — called from Template::setTheme() in install.php / upgrade.php
     if (!ServiceLocator::has(StringUtil::class)) {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
             if (!empty($_SERVER[$value])) {

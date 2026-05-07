@@ -16,17 +16,17 @@ class ImageImagick implements ImageInterface
         $this->image = new \Imagick($source_filepath);
     }
 
-    public function get_width(): int
+    public function getWidth(): int
     {
         return $this->image->getImageWidth();
     }
 
-    public function get_height(): int
+    public function getHeight(): int
     {
         return $this->image->getImageHeight();
     }
 
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
@@ -56,10 +56,10 @@ class ImageImagick implements ImageInterface
         // even dimensions. A single 50% reduction before the final Lanczos resize
         // reduces aliasing artifacts and is faster than one large resizeImage call.
         // Even dimensions are required because Imagick handles odd intermediates poorly.
-        if ($this->get_width() % 2 == 0
-            && $this->get_height() % 2 == 0
-            && $this->get_width() > 3 * $width) {
-            $this->image->scaleImage($this->get_width() / 2, $this->get_height() / 2);
+        if ($this->getWidth() % 2 == 0
+            && $this->getHeight() % 2 == 0
+            && $this->getWidth() > 3 * $width) {
+            $this->image->scaleImage($this->getWidth() / 2, $this->getHeight() / 2);
         }
 
         return $this->image->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 0.9);
@@ -67,7 +67,7 @@ class ImageImagick implements ImageInterface
 
     public function sharpen(int $amount): bool
     {
-        $m = PwgImage::get_sharpen_matrix($amount);
+        $m = PwgImage::getSharpenMatrix($amount);
         return  $this->image->convolveImage($m);
     }
 

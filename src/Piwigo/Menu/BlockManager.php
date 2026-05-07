@@ -30,7 +30,7 @@ class BlockManager
     /**
      * Triggers a notice that allows plugins of menu blocks to register the blocks.
      */
-    public function load_registered_blocks(): void
+    public function loadRegisteredBlocks(): void
     {
         trigger_notify('blockmanager_register_blocks', [$this]);
     }
@@ -38,7 +38,7 @@ class BlockManager
     /**
      * @return string
      */
-    public function get_id()
+    public function getId()
     {
         return $this->id;
     }
@@ -46,7 +46,7 @@ class BlockManager
     /**
      * @return RegisteredBlock[]
      */
-    public function get_registered_blocks()
+    public function getRegisteredBlocks()
     {
         return $this->registered_blocks;
     }
@@ -56,12 +56,12 @@ class BlockManager
      *
      * @param RegisteredBlock $block
      */
-    public function register_block($block): bool
+    public function registerBlock($block): bool
     {
-        if (isset($this->registered_blocks[$block->get_id()])) {
+        if (isset($this->registered_blocks[$block->getId()])) {
             return false;
         }
-        $this->registered_blocks[$block->get_id()] = $block;
+        $this->registered_blocks[$block->getId()] = $block;
         return true;
     }
 
@@ -70,7 +70,7 @@ class BlockManager
      * Triggers 'blockmanager_prepare_display' event where plugins can
      * reposition or hide blocks
      */
-    public function prepare_display(): void
+    public function prepareDisplay(): void
     {
         $conf_id = 'blk_'.$this->id;
         $mb_conf_raw = Config::raw($conf_id);
@@ -88,13 +88,13 @@ class BlockManager
             $pos = is_int($stored) ? $stored : $idx * 50;
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
-                $this->display_blocks[$id]->set_position($pos);
+                $this->display_blocks[$id]->setPosition($pos);
             }
             $idx++;
         }
-        $this->sort_blocks();
+        $this->sortBlocks();
         trigger_notify('blockmanager_prepare_display', [$this]);
-        $this->sort_blocks();
+        $this->sortBlocks();
     }
 
     /**
@@ -102,7 +102,7 @@ class BlockManager
      *
      * @param string $block_id
      */
-    public function is_hidden($block_id): bool
+    public function isHidden($block_id): bool
     {
         return !isset($this->display_blocks[$block_id]);
     }
@@ -112,7 +112,7 @@ class BlockManager
      *
      * @param string $block_id
      */
-    public function hide_block($block_id): void
+    public function hideBlock($block_id): void
     {
         unset($this->display_blocks[$block_id]);
     }
@@ -123,7 +123,7 @@ class BlockManager
      * @param string $block_id
      * @return DisplayBlock|null
      */
-    public function get_block($block_id)
+    public function getBlock($block_id)
     {
         return $this->display_blocks[$block_id] ?? null;
     }
@@ -134,27 +134,27 @@ class BlockManager
      * @param string $block_id
      * @param int $position
      */
-    public function set_block_position($block_id, $position): void
+    public function setBlockPosition($block_id, $position): void
     {
         if (isset($this->display_blocks[$block_id])) {
-            $this->display_blocks[$block_id]->set_position($position);
+            $this->display_blocks[$block_id]->setPosition($position);
         }
     }
 
     /**
      * Sorts the blocks.
      */
-    protected function sort_blocks(): void
+    protected function sortBlocks(): void
     {
-        uasort($this->display_blocks, [self::class, 'cmp_by_position']);
+        uasort($this->display_blocks, [self::class, 'cmpByPosition']);
     }
 
     /**
      * Callback for blocks sorting.
      */
-    protected static function cmp_by_position(DisplayBlock $a, DisplayBlock $b): int
+    protected static function cmpByPosition(DisplayBlock $a, DisplayBlock $b): int
     {
-        return $a->get_position() - $b->get_position();
+        return $a->getPosition() - $b->getPosition();
     }
 
     /**
@@ -166,16 +166,16 @@ class BlockManager
     {
         $template = TemplateRegistry::current();
 
-        $template->set_filename('menubar', $file);
+        $template->setFilename('menubar', $file);
         trigger_notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
             if (empty($block->raw_content) and empty($block->template)) {
-                $this->hide_block($id);
+                $this->hideBlock($id);
             }
         }
-        $this->sort_blocks();
+        $this->sortBlocks();
         $template->assign('blocks', $this->display_blocks);
-        $template->assign_var_from_handle($var, 'menubar');
+        $template->assignVarFromHandle($var, 'menubar');
     }
 }

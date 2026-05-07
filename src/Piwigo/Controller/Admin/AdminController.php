@@ -202,7 +202,7 @@ final class AdminController implements ControllerInterface
         $page['body_id']     = 'theAdminPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['admin' => 'admin.tpl']);
+        $tpl->setFilenames(['admin' => 'admin.tpl']);
 
         $username = is_scalar($user['username'] ?? null) ? (string) $user['username'] : '';
         $tpl->assign([

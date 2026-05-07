@@ -117,7 +117,7 @@ final class ImageAdminService
         if ($row === null) {
             return [];
         }
-        $src = $size === null ? DerivativeImage::thumb_url($row) : DerivativeImage::url($size, $row);
+        $src = $size === null ? DerivativeImage::thumbUrl($row) : DerivativeImage::url($size, $row);
         return ['src' => $src, 'url' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId)];
     }
 
@@ -221,7 +221,7 @@ final class ImageAdminService
     public function clearDerivativeCache(mixed $types = 'all'): void
     {
         if ($types === 'all') {
-            $types   = ImageStdParams::get_all_types();
+            $types   = ImageStdParams::getAllTypes();
             $types[] = IMG_CUSTOM;
         } elseif (!is_array($types)) {
             $types = [$types];
@@ -231,7 +231,7 @@ final class ImageAdminService
             $typeStr = is_scalar($type) ? (string) $type : '';
             if ($type == IMG_CUSTOM) {
                 $stringTypes[] = derivative_to_url($typeStr) . '_[a-zA-Z0-9]+';
-            } elseif (in_array($type, ImageStdParams::get_all_types())) {
+            } elseif (in_array($type, ImageStdParams::getAllTypes())) {
                 $stringTypes[] = derivative_to_url($typeStr);
             } else {
                 $stringTypes[] = derivative_to_url(IMG_CUSTOM) . '_' . $typeStr;

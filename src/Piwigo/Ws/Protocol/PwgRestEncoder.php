@@ -46,15 +46,15 @@ class PwgRestEncoder extends PwgResponseEncoder
     }
 
     /** @param array<mixed> $xml_attributes */
-    public function encode_array(mixed $data, string $itemName, array $xml_attributes = []): void
+    public function encodeArray(mixed $data, string $itemName, array $xml_attributes = []): void
     {
         if (!is_array($data)) {
             return;
         }
         foreach ($data as $item) {
-            $this->writer()->start_element($itemName);
+            $this->writer()->startElement($itemName);
             $this->encode($item, $xml_attributes);
-            $this->writer()->end_element($itemName);
+            $this->writer()->endElement($itemName);
         }
     }
 
@@ -62,7 +62,7 @@ class PwgRestEncoder extends PwgResponseEncoder
  * @param array<mixed> $data
  * @param array<mixed> $xml_attributes
  */
-    public function encode_struct(array $data, bool $skip_underscore, array $xml_attributes = []): void
+    public function encodeStruct(array $data, bool $skip_underscore, array $xml_attributes = []): void
     {
         foreach ($data as $name => $value) {
             if (is_numeric($name)) {
@@ -77,12 +77,12 @@ class PwgRestEncoder extends PwgResponseEncoder
             if ($name == WS_XML_ATTRIBUTES) {
                 if (is_array($value)) {
                     foreach ($value as $attr_name => $attr_value) {
-                        $this->writer()->write_attribute((string) $attr_name, $attr_value);
+                        $this->writer()->writeAttribute((string) $attr_name, $attr_value);
                     }
                 }
                 unset($data[$name]);
             } elseif (isset($xml_attributes[$name])) {
-                $this->writer()->write_attribute($name, $value);
+                $this->writer()->writeAttribute($name, $value);
                 unset($data[$name]);
             }
         }
@@ -97,9 +97,9 @@ class PwgRestEncoder extends PwgResponseEncoder
             if (is_null($value)) {
                 continue;
             } // null means we dont put it
-            $this->writer()->start_element($name);
+            $this->writer()->startElement($name);
             $this->encode($value);
-            $this->writer()->end_element($name);
+            $this->writer()->endElement($name);
         }
     }
 
@@ -109,34 +109,34 @@ class PwgRestEncoder extends PwgResponseEncoder
         switch (gettype($data)) {
             case 'null':
             case 'NULL':
-                $this->writer()->write_content('');
+                $this->writer()->writeContent('');
                 break;
             case 'boolean':
-                $this->writer()->write_content($data ? '1' : '0');
+                $this->writer()->writeContent($data ? '1' : '0');
                 break;
             case 'integer':
             case 'double':
-                $this->writer()->write_content($data);
+                $this->writer()->writeContent($data);
                 break;
             case 'string':
-                $this->writer()->write_content($data);
+                $this->writer()->writeContent($data);
                 break;
             case 'array':
                 $is_array = range(0, count($data) - 1) === array_keys($data);
                 if ($is_array) {
-                    $this->encode_array($data, 'item');
+                    $this->encodeArray($data, 'item');
                 } else {
-                    $this->encode_struct($data, false, $xml_attributes);
+                    $this->encodeStruct($data, false, $xml_attributes);
                 }
                 break;
             case 'object':
                 if ($data instanceof PwgNamedArray) {
-                    $this->encode_array($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
+                    $this->encodeArray($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
                 } elseif ($data instanceof PwgNamedStruct) {
                     $content = $data->getContent();
-                    $this->encode_struct(is_array($content) ? $content : [], false, $data->getXmlAttributes());
+                    $this->encodeStruct(is_array($content) ? $content : [], false, $data->getXmlAttributes());
                 } else {
-                    $this->encode_struct(get_object_vars($data), true);
+                    $this->encodeStruct(get_object_vars($data), true);
                 }
                 break;
             default:

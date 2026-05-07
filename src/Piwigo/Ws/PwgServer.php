@@ -138,13 +138,13 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
     {
         $this->register(new MethodDefinition(
             name:        'reflection.getMethodList',
-            callback:    self::ws_getMethodList(...),
+            callback:    self::wsGetMethodList(...),
             description: 'Lists all available web service methods.',
             tags:        ['reflection'],
         ));
         $this->register(new MethodDefinition(
             name:        'reflection.getMethodDetails',
-            callback:    self::ws_getMethodDetails(...),
+            callback:    self::wsGetMethodDetails(...),
             description: 'Returns details about a specific method.',
             params:      [ParamDefinition::required('methodName')],
             tags:        ['reflection'],
@@ -377,7 +377,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
      * @param array<mixed> $params
      * @return array<mixed>
      */
-    public static function ws_getMethodList(array $params, self &$service): array
+    public static function wsGetMethodList(array $params, self &$service): array
     {
         $methods = array_filter(
             $service->_methods,
@@ -393,7 +393,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
      * @param array<string,mixed> $params
      * @return array<mixed>|PwgError
      */
-    public static function ws_getMethodDetails(array $params, self &$service): PwgError|array
+    public static function wsGetMethodDetails(array $params, self &$service): PwgError|array
     {
         $methodName = $params['methodName'];
         if (!is_string($methodName)) {

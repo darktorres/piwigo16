@@ -365,18 +365,18 @@ $btraceMsg
     public function registerDefaultMenubarBlocks(array $menuRefArr): void
     {
         $menu = &$menuRefArr[0];
-        if ($menu->get_id() != 'menubar') {
+        if ($menu->getId() != 'menubar') {
             return;
         }
-        $menu->register_block(new RegisteredBlock('mbLinks', 'Links', 'piwigo'));
-        $menu->register_block(new RegisteredBlock('mbCategories', 'Albums', 'piwigo'));
-        $menu->register_block(new RegisteredBlock('mbTags', 'Tags', 'piwigo'));
-        $menu->register_block(new RegisteredBlock('mbSpecials', 'Specials', 'piwigo'));
-        $menu->register_block(new RegisteredBlock('mbMenu', 'Menu', 'piwigo'));
-        $menu->register_block(new RegisteredBlock('mbRelatedCategories', 'Related albums', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbLinks', 'Links', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbCategories', 'Albums', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbTags', 'Tags', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbSpecials', 'Specials', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbMenu', 'Menu', 'piwigo'));
+        $menu->registerBlock(new RegisteredBlock('mbRelatedCategories', 'Related albums', 'piwigo'));
 
         if (script_basename() != 'identification') {
-            $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
+            $menu->registerBlock(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
         }
     }
 
@@ -432,7 +432,7 @@ $btraceMsg
 
     public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string
     {
-        return get_action_url($srcImage->id, $srcImage->is_original() ? 'e' : 'r', false);
+        return get_action_url($srcImage->id, $srcImage->isOriginal() ? 'e' : 'r', false);
     }
 
     /** @param array<string, mixed> $infos */
@@ -450,7 +450,7 @@ $btraceMsg
     public function flushPageMessages(): void
     {
         $template = TemplateRegistry::current();
-        if ($template->get_template_vars('page_refresh') !== null) {
+        if ($template->getTemplateVars('page_refresh') !== null) {
             return;
         }
         $page = PageState::current();

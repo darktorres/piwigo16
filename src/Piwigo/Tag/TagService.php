@@ -74,7 +74,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         if ($usePersistentCache) {
             $userId      = CurrentUser::get()->id;
             $cacheUpdate = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-            $cacheKey    = $persistentCache->make_key('get_available_tags' . $userId . $cacheUpdate);
+            $cacheKey    = $persistentCache->makeKey('get_available_tags' . $userId . $cacheUpdate);
             $tagCounters = [];
             if (!$persistentCache->get($cacheKey, $tagCounters)) {
                 $tagCounters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');

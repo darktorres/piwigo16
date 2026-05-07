@@ -48,7 +48,7 @@ final class InstallService
         $themes = new Themes();
         foreach ($themes->fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, ['modus'])) {
-                $themes->perform_action('activate', $theme_id);
+                $themes->performAction('activate', $theme_id);
             }
         }
     }
@@ -58,7 +58,7 @@ final class InstallService
         $plugins = new Plugins();
         foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
             if (in_array($plugin_id, [])) {
-                $plugins->perform_action('activate', $plugin_id);
+                $plugins->performAction('activate', $plugin_id);
             }
         }
     }

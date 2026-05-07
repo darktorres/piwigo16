@@ -33,7 +33,7 @@ class DisplayBlock
     /**
      * @return RegisteredBlock
      */
-    public function get_block()
+    public function getBlock()
     {
         return $this->_registeredBlock;
     }
@@ -41,7 +41,7 @@ class DisplayBlock
     /**
      * @return int
      */
-    public function get_position()
+    public function getPosition()
     {
         return $this->_position;
     }
@@ -49,7 +49,7 @@ class DisplayBlock
     /**
      * @param int $position
      */
-    public function set_position($position): void
+    public function setPosition($position): void
     {
         $this->_position = $position;
     }
@@ -57,19 +57,19 @@ class DisplayBlock
     /**
      * @return string
      */
-    public function get_title()
+    public function getTitle()
     {
         if (isset($this->_title)) {
             return $this->_title;
         } else {
-            return $this->_registeredBlock->get_name();
+            return $this->_registeredBlock->getName();
         }
     }
 
     /**
      * @param string $title
      */
-    public function set_title($title): void
+    public function setTitle($title): void
     {
         $this->_title = $title;
     }

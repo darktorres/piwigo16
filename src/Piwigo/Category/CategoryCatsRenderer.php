@@ -209,7 +209,7 @@ SELECT *
         if (count($categories) > 0) {
             ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($categories);
 
-            $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
+            $template->setFilename('index_category_thumbnails', 'mainpage_categories.tpl');
             trigger_notify('loc_begin_index_category_thumbnails', $categories);
             $tpl_thumbnails_var = [];
 
@@ -278,7 +278,7 @@ SELECT *
             }
 
             $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
-            $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
+            $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::getByType(IMG_THUMB));
             $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
             $template->assign([
                 'maxRequests' => Config::maxRequests(),
@@ -286,7 +286,7 @@ SELECT *
                 'derivative_params' => $derivative_params,
             ]);
 
-            $template->assign_var_from_handle('CATEGORIES', 'index_category_thumbnails');
+            $template->assignVarFromHandle('CATEGORIES', 'index_category_thumbnails');
 
             $page['cats_navigation_bar'] = [];
             if ($page['total_categories'] > Config::nbCategoriesPage()) {

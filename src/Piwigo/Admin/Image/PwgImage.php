@@ -10,15 +10,15 @@ use Piwigo\Core\StringUtil;
 
 /**
  * @method bool rotate(int $rotation)
- * @method int get_width()
- * @method int get_height()
+ * @method int getWidth()
+ * @method int getHeight()
  * @method bool crop(int $width, int $height, int $x, int $y)
  * @method bool resize(int $width, int $height)
  * @method bool sharpen(int $amount)
  * @method bool compose(self $overlay, int $x, int $y, int $opacity)
  * @method bool strip()
  * @method bool write(string $destination_filepath)
- * @method bool set_compression_quality(int $quality)
+ * @method bool setCompressionQuality(int $quality)
  */
 class PwgImage
 {
@@ -41,7 +41,7 @@ class PwgImage
             die('[Image] unsupported file extension');
         }
 
-        $lib = self::get_library($library, $extension);
+        $lib = self::getLibrary($library, $extension);
         if (!$lib) {
             die('No image library available on your server.');
         }
@@ -71,7 +71,7 @@ class PwgImage
      * @return mixed[]
      */
     /** @return array<mixed> */
-    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
+    public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
         $starttime = get_moment();
 
@@ -79,14 +79,14 @@ class PwgImage
             throw new \LogicException('Image library not initialized');
         }
         // width/height
-        $source_width  = $this->image->get_width();
-        $source_height = $this->image->get_height();
+        $source_width  = $this->image->getWidth();
+        $source_height = $this->image->getHeight();
 
         $rotation = null;
         if ($automatic_rotation) {
-            $rotation = self::get_rotation_angle($this->source_filepath);
+            $rotation = self::getRotationAngle($this->source_filepath);
         }
-        $resize_dimensions = self::get_resize_dimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
+        $resize_dimensions = self::getResizeDimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
@@ -98,10 +98,10 @@ class PwgImage
         if ($rd_width == $source_width and $rd_height == $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
-            return $this->get_resize_result($destination_filepath, $rd_width, $rd_height, $starttime);
+            return $this->getResizeResult($destination_filepath, $rd_width, $rd_height, $starttime);
         }
 
-        $this->image->set_compression_quality($quality);
+        $this->image->setCompressionQuality($quality);
 
         if ($strip_metadata) {
             // we save a few kilobytes. For example a thumbnail with metadata weights 25KB, without metadata 7KB.
@@ -131,11 +131,11 @@ class PwgImage
         $this->image->write($destination_filepath);
 
         // everything should be OK if we are here!
-        return $this->get_resize_result($destination_filepath, $rd_width, $rd_height, $starttime);
+        return $this->getResizeResult($destination_filepath, $rd_width, $rd_height, $starttime);
     }
 
     /** @return array<mixed> */
-    public static function get_resize_dimensions(int|float $width, int|float $height, int|float $max_width, int|float $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
+    public static function getResizeDimensions(int|float $width, int|float $height, int|float $max_width, int|float $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
     {
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
@@ -205,7 +205,7 @@ class PwgImage
     }
 
     /** @return array<string,mixed> */
-    public static function webp_info(string $source_filepath): array
+    public static function webpInfo(string $source_filepath): array
     {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
@@ -261,7 +261,7 @@ class PwgImage
         }
     }
 
-    public static function get_rotation_angle(string $source_filepath): ?int
+    public static function getRotationAngle(string $source_filepath): ?int
     {
         $imgsize = getimagesize($source_filepath);
         if ($imgsize === false) {
@@ -294,7 +294,7 @@ class PwgImage
         return $rotation;
     }
 
-    public static function get_rotation_code_from_angle(int $rotation_angle): int
+    public static function getRotationCodeFromAngle(int $rotation_angle): int
     {
         return match ($rotation_angle) {
             90  => 1,
@@ -304,7 +304,7 @@ class PwgImage
         };
     }
 
-    public static function get_rotation_angle_from_code(int $rotation_code): int
+    public static function getRotationAngleFromCode(int $rotation_code): int
     {
         return match ($rotation_code % 4) {
             1 => 90,
@@ -318,7 +318,7 @@ class PwgImage
      * Returns a normalized convolution kernel for sharpening.
      * @return array<int, array<int, float>>
      */
-    public static function get_sharpen_matrix(int $amount): array
+    public static function getSharpenMatrix(int $amount): array
     {
         // Amount should be in the range of 48-10
         $amount = round(abs(-48 + ($amount * 0.38)), 2);
@@ -341,7 +341,7 @@ class PwgImage
     }
 
     /** @return array<string,mixed> */
-    protected function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
+    protected function getResizeResult(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
     {
         return [
           'source'      => $this->source_filepath,
@@ -354,12 +354,12 @@ class PwgImage
         ];
     }
 
-    public static function is_imagick(): bool
+    public static function isImagick(): bool
     {
         return (extension_loaded('imagick') and class_exists('Imagick'));
     }
 
-    public static function get_ext_imagick_command(): string
+    public static function getExtImagickCommand(): string
     {
         $page = &$GLOBALS['page'];
         if (!is_array($page)) {
@@ -382,13 +382,13 @@ class PwgImage
         return is_string($page['ext_imagick_command']) ? $page['ext_imagick_command'] : 'convert';
     }
 
-    public static function is_ext_imagick(): bool
+    public static function isExtImagick(): bool
     {
         if (!function_exists('exec')) {
             return false;
         }
 
-        exec(Config::extImagickDir().self::get_ext_imagick_command().' -version', $returnarray);
+        exec(Config::extImagickDir().self::getExtImagickCommand().' -version', $returnarray);
         if (!empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
@@ -398,12 +398,12 @@ class PwgImage
         return false;
     }
 
-    public static function is_gd(): bool
+    public static function isGd(): bool
     {
         return function_exists('gd_info');
     }
 
-    public static function get_library(?string $library = null, ?string $extension = null): string|false
+    public static function getLibrary(?string $library = null, ?string $extension = null): string|false
     {
         if (is_null($library)) {
             $library = Config::graphicsLibrary();
@@ -413,24 +413,24 @@ class PwgImage
         switch (strtolower((string) $library)) {
             case 'auto':
             case 'ext_imagick':
-                if ($extension != 'gif' and self::is_ext_imagick()) {
+                if ($extension != 'gif' and self::isExtImagick()) {
                     return 'ext_imagick';
                 }
                 // no break
             case 'imagick':
-                if ($extension != 'gif' and self::is_imagick()) {
+                if ($extension != 'gif' and self::isImagick()) {
                     return 'imagick';
                 }
                 // no break
             case 'gd':
-                if (self::is_gd()) {
+                if (self::isGd()) {
                     return 'gd';
                 }
                 // no break
             default:
                 if ($library != 'auto') {
                     // Requested library not available. Try another library
-                    return self::get_library('auto', $extension);
+                    return self::getLibrary('auto', $extension);
                 }
         }
         return false;

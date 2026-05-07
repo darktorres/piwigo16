@@ -17,9 +17,9 @@ class C13yInternal
 {
     public function __construct()
     {
-        add_event_handler('list_check_integrity', $this->c13y_version(...));
-        add_event_handler('list_check_integrity', $this->c13y_exif(...));
-        add_event_handler('list_check_integrity', $this->c13y_user(...));
+        add_event_handler('list_check_integrity', $this->c13yVersion(...));
+        add_event_handler('list_check_integrity', $this->c13yExif(...));
+        add_event_handler('list_check_integrity', $this->c13yUser(...));
     }
 
     /**
@@ -27,7 +27,7 @@ class C13yInternal
      *
      *  object
      */
-    public function c13y_version(CheckIntegrity $c13y): void
+    public function c13yVersion(CheckIntegrity $c13y): void
     {
         $check_list = [];
 
@@ -45,13 +45,13 @@ class C13yInternal
 
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     sprintf(l10n('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,
                     null,
                     l10n('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
           .'<br>'.
-          $c13y->get_htlm_links_more_info()
+          $c13y->getHtlmLinksMoreInfo()
                 );
             }
         }
@@ -62,17 +62,17 @@ class C13yInternal
      *
      *  object
      */
-    public function c13y_exif(CheckIntegrity $c13y): void
+    public function c13yExif(CheckIntegrity $c13y): void
     {
         foreach (['show_exif', 'use_exif'] as $value) {
             if ((Config::raw($value)) and (!function_exists('exif_read_data'))) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     sprintf(l10n('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
                     null,
                     null,
                     sprintf(l10n('Install the PHP exif extension, or set %s to false in the database config table'), '$' . 'conf[\''.$value.'\']')
           .'<br>'.
-          $c13y->get_htlm_links_more_info()
+          $c13y->getHtlmLinksMoreInfo()
                 );
             }
         }
@@ -83,7 +83,7 @@ class C13yInternal
      *
      *  object
      */
-    public function c13y_user(CheckIntegrity $c13y): void
+    public function c13yUser(CheckIntegrity $c13y): void
     {
         $c13y_users = [];
         $c13y_users[Config::guestId()] = [
@@ -118,15 +118,15 @@ class C13yInternal
 
         foreach ($c13y_users as $id => $data) {
             if (!array_key_exists($id, $status)) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     l10n($data['l10n_non_existent']),
-                    $this->c13y_correction_user(...),
+                    $this->c13yCorrectionUser(...),
                     ['id' => $id, 'action' => 'creation']
                 );
             } elseif (!empty($data['status']) and $status[$id] != $data['status']) {
-                $c13y->add_anomaly(
+                $c13y->addAnomaly(
                     l10n($data['l10n_bad_status']),
-                    $this->c13y_correction_user(...),
+                    $this->c13yCorrectionUser(...),
                     ['id' => $id, 'action' => 'status']
                 );
             }
@@ -140,7 +140,7 @@ class C13yInternal
      *  string
      * @return boolean true if ok else false
      */
-    public function c13y_correction_user(int $id, string $action): bool
+    public function c13yCorrectionUser(int $id, string $action): bool
     {
         $page = &$GLOBALS['page'];
 

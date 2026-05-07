@@ -20,7 +20,7 @@ final class HistoryAdminService
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $currentPage = is_scalar($page['page'] ?? null) ? (string) $page['page'] : '';
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('history');
+        $tabsheet->setId('history');
         $tabsheet->select($currentPage);
         $tabsheet->assign();
     }

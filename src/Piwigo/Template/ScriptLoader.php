@@ -41,7 +41,7 @@ class ScriptLoader
         $this->did_head = $this->did_footer = false;
     }
 
-    public function did_head(): bool
+    public function didHead(): bool
     {
         return $this->did_head;
     }
@@ -49,7 +49,7 @@ class ScriptLoader
     /**
      * @return Script[]
      */
-    public function get_all(): array
+    public function getAll(): array
     {
         return $this->registered_scripts;
     }
@@ -58,13 +58,13 @@ class ScriptLoader
      * @param string[] $require
      */
     /** @param string[] $require */
-    public function add_inline(string $code, array $require): void
+    public function addInline(string $code, array $require): void
     {
         !$this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
         if (!empty($require)) {
             foreach ($require as $id) {
                 if (!isset($this->registered_scripts[$id])) {
-                    $this->load_known_required_script($id, 1) or fatal_error("inline script not found require $id");
+                    $this->loadKnownRequiredScript($id, 1) or fatal_error("inline script not found require $id");
                 }
                 $s = $this->registered_scripts[$id];
                 if ($s->load_mode == 2) {
@@ -101,13 +101,13 @@ class ScriptLoader
             }
             $script = new Script((int) $load_mode, $id, $path, $version, $require);
             $script->is_template = $is_template;
-            self::fill_well_known($id, $script);
+            self::fillWellKnown($id, $script);
             $this->registered_scripts[$id] = $script;
 
             // Try to load undefined required script
             foreach ($script->precedents as $script_id) {
                 if (! isset($this->registered_scripts[$script_id])) {
-                    $this->load_known_required_script($script_id, (int) $load_mode);
+                    $this->loadKnownRequiredScript($script_id, (int) $load_mode);
                 }
             }
         } else {
@@ -123,7 +123,7 @@ class ScriptLoader
             if (count($require)) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
-            $script->set_path($path);
+            $script->setPath($path);
             if ($version && version_compare((string) $script->version, (string) $version) < 0) {
                 $script->version = $version;
             }
@@ -138,14 +138,14 @@ class ScriptLoader
      *
      * @return Combinable[]
      */
-    public function get_head_scripts(): array
+    public function getHeadScripts(): array
     {
-        self::check_load_dep($this->registered_scripts);
+        self::checkLoadDep($this->registered_scripts);
         foreach (array_keys($this->registered_scripts) as $id) {
-            $this->compute_script_topological_order($id);
+            $this->computeScriptTopologicalOrder($id);
         }
 
-        uasort($this->registered_scripts, self::cmp_by_mode_and_order(...));
+        uasort($this->registered_scripts, self::cmpByModeAndOrder(...));
 
         foreach ($this->registered_scripts as $id => $script) {
             if ($script->load_mode > 0) {
@@ -158,7 +158,7 @@ class ScriptLoader
             }
         }
         $this->did_head = true;
-        return self::do_combine($this->head_done_scripts, 0);
+        return self::doCombine($this->head_done_scripts, 0);
     }
 
     /**
@@ -166,10 +166,10 @@ class ScriptLoader
      *
      * @return array{0: Combinable[], 1: Combinable[]}
      */
-    public function get_footer_scripts(): array
+    public function getFooterScripts(): array
     {
         if (!$this->did_head) {
-            self::check_load_dep($this->registered_scripts);
+            self::checkLoadDep($this->registered_scripts);
         }
         $this->did_footer = true;
         $todo = [];
@@ -180,23 +180,23 @@ class ScriptLoader
         }
 
         foreach (array_keys($todo) as $id) {
-            $this->compute_script_topological_order($id);
+            $this->computeScriptTopologicalOrder($id);
         }
 
-        uasort($todo, self::cmp_by_mode_and_order(...));
+        uasort($todo, self::cmpByModeAndOrder(...));
 
         $result = [ [], [] ];
         foreach ($todo as $id => $script) {
             $result[$script->load_mode - 1][$id] = $script;
         }
-        return [ self::do_combine($result[0], 1), self::do_combine($result[1], 2) ];
+        return [ self::doCombine($result[0], 1), self::doCombine($result[1], 2) ];
     }
 
     /**
      * @param Script[] $scripts
      * @return Combinable[]
      */
-    private static function do_combine(array $scripts, int $load_mode): array
+    private static function doCombine(array $scripts, int $load_mode): array
     {
         $combiner = new FileCombiner('js', $scripts);
         return $combiner->combine();
@@ -208,7 +208,7 @@ class ScriptLoader
      *
      * @param Script[] $scripts
      */
-    private static function check_load_dep(array $scripts): void
+    private static function checkLoadDep(array $scripts): void
     {
         do {
             $changed = false;
@@ -222,7 +222,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->is_remote() or !Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->isRemote() or !Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -236,7 +236,7 @@ class ScriptLoader
      *
      * @param string $id in FileCombiner::$known_paths
      */
-    private static function fill_well_known(string $id, Script $script): void
+    private static function fillWellKnown(string $id, Script $script): void
     {
         if (empty($script->path) && isset(self::$known_paths[$id])) {
             $script->path = self::$known_paths[$id];
@@ -248,7 +248,7 @@ class ScriptLoader
      *
      * @param string $id in FileCombiner::$known_paths
      */
-    private function load_known_required_script($id, int $load_mode): bool
+    private function loadKnownRequiredScript($id, int $load_mode): bool
     {
         if (isset(self::$known_paths[$id])) {
             $this->add($id, $load_mode, [], null);
@@ -261,7 +261,7 @@ class ScriptLoader
      * Compute script order depending on dependencies.
      * Assigned to $script->extra['order'].
      */
-    private function compute_script_topological_order(string $script_id, int $recursion_limiter = 0): int
+    private function computeScriptTopologicalOrder(string $script_id, int $recursion_limiter = 0): int
     {
         if (!isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script $script_id is required by someone", E_USER_WARNING);
@@ -278,7 +278,7 @@ class ScriptLoader
         }
         $max = 0;
         foreach ($script->precedents as $precedent) {
-            $max = max($max, $this->compute_script_topological_order($precedent, $recursion_limiter + 1));
+            $max = max($max, $this->computeScriptTopologicalOrder($precedent, $recursion_limiter + 1));
         }
         $max++;
         $script->extra['order'] = $max;
@@ -318,7 +318,7 @@ class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order(Script $s1, Script $s2): int
+    private static function cmpByModeAndOrder(Script $s1, Script $s2): int
     {
         $ret = $s1->load_mode - $s2->load_mode;
         if ($ret) {
@@ -332,8 +332,8 @@ class ScriptLoader
             return $ret;
         }
 
-        if ($order1 == 0 and ($s1->is_remote() xor $s2->is_remote())) {
-            return $s1->is_remote() ? -1 : 1;
+        if ($order1 == 0 and ($s1->isRemote() xor $s2->isRemote())) {
+            return $s1->isRemote() ? -1 : 1;
         }
         return strcmp((string) $s1->id, (string) $s2->id);
     }

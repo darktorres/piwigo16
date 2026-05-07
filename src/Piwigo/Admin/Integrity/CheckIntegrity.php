@@ -138,7 +138,7 @@ class CheckIntegrity
           );
 
         if ($ignore_list_changed) {
-            $this->update_conf($this->build_ignore_list);
+            $this->updateConf($this->build_ignore_list);
         }
     }
 
@@ -156,7 +156,7 @@ class CheckIntegrity
         $submit_ignore = false;
 
         if (count($this->retrieve_list) > 0) {
-            $template->set_filenames(['check_integrity' => 'check_integrity.tpl']);
+            $template->setFilenames(['check_integrity' => 'check_integrity.tpl']);
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 $can_select = false;
@@ -183,7 +183,7 @@ class CheckIntegrity
                             if ($c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
                             } else {
-                                $c13y_display['correction_error_fct'] = $this->get_htlm_links_more_info();
+                                $c13y_display['correction_error_fct'] = $this->getHtlmLinksMoreInfo();
                             }
                         } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
@@ -225,7 +225,7 @@ class CheckIntegrity
      *  array
      */
     /** @param array<mixed>|null $correction_fct_args */
-    public function add_anomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
+    public function addAnomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
         $id = md5($anomaly.(is_callable($correction_fct) ? serialize($correction_fct) : '').serialize($correction_fct_args).$correction_msg);
 
@@ -249,7 +249,7 @@ class CheckIntegrity
      *  string[]  array
      */
     /** @param array<mixed> $conf_ignore_list */
-    public function update_conf(array $conf_ignore_list = []): void
+    public function updateConf(array $conf_ignore_list = []): void
     {
         $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
@@ -264,7 +264,7 @@ class CheckIntegrity
      */
     public function maintenance(): void
     {
-        $this->update_conf();
+        $this->updateConf();
     }
 
     /**
@@ -273,7 +273,7 @@ class CheckIntegrity
 
      *  string
      */
-    public function get_htlm_links_more_info(): string
+    public function getHtlmLinksMoreInfo(): string
     {
         $pwg_links = ServiceLocator::get(AdminService::class)->pwgURL();
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';

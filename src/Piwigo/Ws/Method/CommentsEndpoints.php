@@ -74,8 +74,8 @@ final class CommentsEndpoints
         $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . COMMENTS_TABLE . ' AS c INNER JOIN ' . IMAGES_TABLE . ' AS i ON i.id = c.image_id LEFT JOIN ' . USERS_TABLE . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . USER_INFOS_TABLE . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
         $list = [];
         foreach ($conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $mediumDerivative = DerivativeImage::get_one(IMG_MEDIUM, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
-            $medium = $mediumDerivative !== null ? $mediumDerivative->get_url() : null;
+            $mediumDerivative = DerivativeImage::getOne(IMG_MEDIUM, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
+            $medium = $mediumDerivative !== null ? $mediumDerivative->getUrl() : null;
             if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
                 $authorName = $row['author'];
             } else {

@@ -78,7 +78,7 @@ class QNumericRangeScope extends QSearchScope
     }
 
     #[\Override]
-    public function get_sql(string $field, QSingleToken $token): string
+    public function getSql(string $field, QSingleToken $token): string
     {
         $clauses = [];
         /** @var array{range: array<int,mixed>, strict: array<int,mixed>} $sd */

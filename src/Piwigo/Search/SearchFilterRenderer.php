@@ -133,7 +133,7 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->make_key('filter_author_rows' . $userId . $userCacheTime);
+                    $cache_key = $persistent_cache->makeKey('filter_author_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
                         $filter_rows_raw = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
@@ -162,7 +162,7 @@ SELECT
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
                 $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_posted');
-                $cache_key = $persistent_cache->make_key('filter_date_posted' . $userId . $userCacheTime);
+                $cache_key = $persistent_cache->makeKey('filter_date_posted' . $userId . $userCacheTime);
                 $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_posted = false;
                 $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_posted = $persistent_cache->get($cache_key, $date_posted_raw));
@@ -260,7 +260,7 @@ SELECT
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
                 $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_created');
-                $cache_key = $persistent_cache->make_key('filter_date_created' . $userId . $userCacheTime);
+                $cache_key = $persistent_cache->makeKey('filter_date_created' . $userId . $userCacheTime);
                 $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_created = false;
                 $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_created = $persistent_cache->get($cache_key, $date_created_raw));
@@ -373,7 +373,7 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->make_key('filter_added_by_rows' . $userId . $userCacheTime);
+                    $cache_key = $persistent_cache->makeKey('filter_added_by_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
                         $filter_rows_raw = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
@@ -454,7 +454,7 @@ SELECT
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
                 $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('filetypes');
 
-                $cache_key = $persistent_cache->make_key('file_exts' . $userId . $userCacheTime);
+                $cache_key = $persistent_cache->makeKey('file_exts' . $userId . $userCacheTime);
                 $all_exts_raw = [];
                 if (!$persistent_cache->get($cache_key, $all_exts_raw)) {
                     $query = '
@@ -502,7 +502,7 @@ SELECT
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
                     $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratings');
-                    $cache_key = $persistent_cache->make_key('filter_ratings' . $userId . $userCacheTime);
+                    $cache_key = $persistent_cache->makeKey('filter_ratings' . $userId . $userCacheTime);
                     $ratings_raw = null;
                     $cache_hit_ratings = false;
                     $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratings = $persistent_cache->get($cache_key, $ratings_raw));
@@ -594,7 +594,7 @@ SELECT
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
                 $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratios');
-                $cache_key = $persistent_cache->make_key('filter_ratios' . $userId . $userCacheTime);
+                $cache_key = $persistent_cache->makeKey('filter_ratios' . $userId . $userCacheTime);
                 $ratios_raw = null;
                 $cache_hit_ratios = false;
                 $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratios = $persistent_cache->get($cache_key, $ratios_raw));
@@ -658,7 +658,7 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->make_key('filter_height_rows' . $userId . $userCacheTime);
+                    $cache_key = $persistent_cache->makeKey('filter_height_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
                         $filter_rows_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'height');
@@ -699,7 +699,7 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->make_key('filter_width_rows' . $userId . $userCacheTime);
+                    $cache_key = $persistent_cache->makeKey('filter_width_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
                         $filter_rows_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'width');

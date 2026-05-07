@@ -121,15 +121,15 @@ final class PersistentFileCacheTest extends TestCase
 
     public function test_make_key_is_consistent(): void
     {
-        $k1 = $this->cache->make_key('same');
-        $k2 = $this->cache->make_key('same');
+        $k1 = $this->cache->makeKey('same');
+        $k2 = $this->cache->makeKey('same');
         self::assertSame($k1, $k2);
     }
 
     public function test_make_key_differs_for_different_inputs(): void
     {
-        $k1 = $this->cache->make_key('foo');
-        $k2 = $this->cache->make_key('bar');
+        $k1 = $this->cache->makeKey('foo');
+        $k2 = $this->cache->makeKey('bar');
         self::assertNotSame($k1, $k2);
     }
 

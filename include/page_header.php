@@ -25,7 +25,7 @@ if (!is_array($page)) {
 //
 // Start output of page
 //
-$template->set_filenames(['header' => 'header.tpl']);
+$template->setFilenames(['header' => 'header.tpl']);
 
 trigger_notify('loc_begin_page_header');
 

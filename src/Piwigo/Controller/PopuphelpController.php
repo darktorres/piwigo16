@@ -42,7 +42,7 @@ final class PopuphelpController implements ControllerInterface
         $helpContent = is_string($filtered) ? $filtered : $helpContent;
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['popuphelp' => 'popuphelp.tpl']);
+        $tpl->setFilenames(['popuphelp' => 'popuphelp.tpl']);
         $tpl->assign(['HELP_CONTENT' => $helpContent]);
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';

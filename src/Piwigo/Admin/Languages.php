@@ -26,7 +26,7 @@ class Languages
     */
     public function __construct(?string $target_charset = null)
     {
-        $this->get_fs_languages($target_charset);
+        $this->getFsLanguages($target_charset);
     }
 
     /**
@@ -34,7 +34,7 @@ class Languages
      * @param string $action
      * @return list<('CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE' | 'CANNOT DELETE - LANGUAGE DOES NOT EXIST' | 'CANNOT DELETE - LANGUAGE IS ACTIVATED')>
      */
-    public function perform_action($action, string $language_id): array
+    public function performAction($action, string $language_id): array
     {
         if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -103,7 +103,7 @@ class Languages
     /**
     *  Get languages defined in the language directory
     */
-    public function get_fs_languages(?string $target_charset = null): void
+    public function getFsLanguages(?string $target_charset = null): void
     {
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
@@ -145,7 +145,7 @@ class Languages
         uasort($this->fs_languages, name_compare(...));
     }
 
-    public function get_db_languages(): void
+    public function getDbLanguages(): void
     {
         foreach (ServiceLocator::get(LanguageRepository::class)->findAllOrdered() as $row) {
             $id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
@@ -159,7 +159,7 @@ class Languages
     /**
      * Retrieve PEM server datas to $server_languages
      */
-    public function get_server_languages(bool $new = false): bool
+    public function getServerLanguages(bool $new = false): bool
     {
         $get_data = [
           'category_id' => Config::pemLanguagesCategory(),
@@ -234,7 +234,7 @@ class Languages
                     $this->server_languages[$langExtId] = $language;
                 }
             }
-            uasort($this->server_languages, fn (mixed $a, mixed $b): int => $this->extension_name_compare($a, $b));
+            uasort($this->server_languages, fn (mixed $a, mixed $b): int => $this->extensionNameCompare($a, $b));
             return true;
         }
         return false;
@@ -244,7 +244,7 @@ class Languages
      * Extract language files from archive
      *
      */
-    public function extract_language_files(string $action, string $revision, string $dest = ''): string
+    public function extractLanguageFiles(string $action, string $revision, string $dest = ''): string
     {
         $logger = LoggerRegistry::current();
 
@@ -300,9 +300,9 @@ class Languages
                                     }
                                 }
                                 if ($status == 'ok') {
-                                    $this->get_fs_languages();
+                                    $this->getFsLanguages();
                                     if ($action == 'install') {
-                                        $this->perform_action('activate', $dest);
+                                        $this->performAction('activate', $dest);
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
@@ -369,7 +369,7 @@ class Languages
  * @param array<mixed> $a
  * @param array<mixed> $b
  */
-    public function extension_name_compare(array $a, array $b): int
+    public function extensionNameCompare(array $a, array $b): int
     {
         $na = is_scalar($a['extension_name'] ?? null) ? (string) $a['extension_name'] : '';
         $nb = is_scalar($b['extension_name'] ?? null) ? (string) $b['extension_name'] : '';

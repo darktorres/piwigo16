@@ -114,7 +114,7 @@ final class UpgradeService
             if (in_array($default_theme, $theme_ids)) {
                 if (!$themeRepo->existsById(PHPWG_DEFAULT_TEMPLATE)) {
                     $themes = new Themes();
-                    $themes->perform_action('activate', PHPWG_DEFAULT_TEMPLATE);
+                    $themes->performAction('activate', PHPWG_DEFAULT_TEMPLATE);
                 }
                 $themeRepo->setThemeForUsers([Config::defaultUserId()], PHPWG_DEFAULT_TEMPLATE);
             }

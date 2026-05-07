@@ -29,9 +29,9 @@ class Themes
     */
     public function __construct()
     {
-        $this->get_fs_themes();
+        $this->getFsThemes();
 
-        foreach ($this->get_db_themes() as $db_theme) {
+        foreach ($this->getDbThemes() as $db_theme) {
             if (isset($db_theme['id'])) {
                 $this->db_themes_by_id[is_scalar($db_theme['id']) ? (string) $db_theme['id'] : ''] = $db_theme;
             }
@@ -42,7 +42,7 @@ class Themes
      * Returns the maintain class of a theme
      * or build a new class with the procedural methods
      */
-    private static function build_maintain_class(string $theme_id): ThemeMaintain
+    private static function buildMaintainClass(string $theme_id): ThemeMaintain
     {
         $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
@@ -62,7 +62,7 @@ class Themes
      * Perform requested actions
      * @return list<mixed>
      */
-    public function perform_action(string $action, string $theme_id): array
+    public function performAction(string $action, string $theme_id): array
     {
         if (!Config::enableExtensionsInstall() and 'delete' == $action) {
             die('Piwigo extensions install/update/delete system is disabled');
@@ -72,7 +72,7 @@ class Themes
             $crt_db_theme = $this->db_themes_by_id[$theme_id];
         }
 
-        $theme_maintain = self::build_maintain_class($theme_id);
+        $theme_maintain = self::buildMaintainClass($theme_id);
 
         /** @var list<mixed> $errors */
         $errors = [];
@@ -90,7 +90,7 @@ class Themes
                     break;
                 }
 
-                $missing_parent = $this->missing_parent_theme($theme_id);
+                $missing_parent = $this->missingParentTheme($theme_id);
                 if (isset($missing_parent)) {
                     $errors[] = l10n(
                         'Impossible to activate this theme, the parent theme is missing: %s',
@@ -142,7 +142,7 @@ class Themes
                 if ($theme_id == UserService::get()->getDefaultTheme()) {
                     $themeRepo = ServiceLocator::get(ThemeRepository::class);
                     $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? '_base';
-                    $this->set_default_theme($new_theme);
+                    $this->setDefaultTheme($new_theme);
                 }
 
                 $theme_maintain->deactivate();
@@ -164,7 +164,7 @@ class Themes
                     break;
                 }
 
-                $children = $this->get_children_themes($theme_id);
+                $children = $this->getChildrenThemes($theme_id);
                 if (count($children) > 0) {
                     $errors[] = l10n(
                         'Impossible to delete this theme. Other themes depends on it: %s',
@@ -180,7 +180,7 @@ class Themes
 
             case 'set_default':
                 // first we need to know which users are using the current default theme
-                $this->set_default_theme($theme_id);
+                $this->setDefaultTheme($theme_id);
                 break;
         }
 
@@ -189,7 +189,7 @@ class Themes
         return array_values($errors);
     }
 
-    public function missing_parent_theme(string $theme_id): ?string
+    public function missingParentTheme(string $theme_id): ?string
     {
         if (!isset($this->fs_themes[$theme_id]['parent'])) {
             return null;
@@ -206,13 +206,13 @@ class Themes
             return $parent;
         }
 
-        return $this->missing_parent_theme($parent);
+        return $this->missingParentTheme($parent);
     }
 
     /**
      * @return string[]
      */
-    public function get_children_themes(string $theme_id): array
+    public function getChildrenThemes(string $theme_id): array
     {
         $children = [];
 
@@ -226,7 +226,7 @@ class Themes
         return $children;
     }
 
-    public function set_default_theme(string $theme_id): void
+    public function setDefaultTheme(string $theme_id): void
     {
         // first we need to know which users are using the current default theme
         $default_theme = UserService::get()->getDefaultTheme();
@@ -246,7 +246,7 @@ class Themes
     /**
      * @return list<array<string, mixed>>
      */
-    public function get_db_themes(?string $id = ''): array
+    public function getDbThemes(?string $id = ''): array
     {
         return ServiceLocator::get(ThemeRepository::class)->findAll($id);
     }
@@ -254,7 +254,7 @@ class Themes
     /**
     *  Get themes defined in the theme directory
     */
-    public function get_fs_themes(): void
+    public function getFsThemes(): void
     {
         $dir = opendir(PHPWG_THEMES_PATH);
         if ($dir === false) {
@@ -348,17 +348,17 @@ class Themes
     /**
      * Sort fs_themes
      */
-    public function sort_fs_themes(string $order = 'name'): void
+    public function sortFsThemes(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
                 uasort($this->fs_themes, name_compare(...));
                 break;
             case 'status':
-                $this->sort_themes_by_state();
+                $this->sortThemesByState();
                 break;
             case 'author':
-                uasort($this->fs_themes, $this->theme_author_compare(...));
+                uasort($this->fs_themes, $this->themeAuthorCompare(...));
                 break;
             case 'id':
                 uksort($this->fs_themes, strcasecmp(...));
@@ -369,7 +369,7 @@ class Themes
     /**
      * Retrieve PEM server datas to $server_themes
      */
-    public function get_server_themes(bool $new = false): bool
+    public function getServerThemes(bool $new = false): bool
     {
         $get_data = [
           'category_id' => Config::pemThemesCategory(),
@@ -447,23 +447,23 @@ class Themes
     /**
      * Sort $server_themes
      */
-    public function sort_server_themes(string $order = 'date'): void
+    public function sortServerThemes(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
                 krsort($this->server_themes);
                 break;
             case 'revision':
-                usort($this->server_themes, fn (array $a, array $b): int => $this->extension_revision_compare($a, $b));
+                usort($this->server_themes, fn (array $a, array $b): int => $this->extensionRevisionCompare($a, $b));
                 break;
             case 'name':
-                uasort($this->server_themes, fn (array $a, array $b): int => $this->extension_name_compare($a, $b));
+                uasort($this->server_themes, fn (array $a, array $b): int => $this->extensionNameCompare($a, $b));
                 break;
             case 'author':
-                uasort($this->server_themes, fn (array $a, array $b): int => $this->extension_author_compare($a, $b));
+                uasort($this->server_themes, fn (array $a, array $b): int => $this->extensionAuthorCompare($a, $b));
                 break;
             case 'downloads':
-                usort($this->server_themes, fn (array $a, array $b): int => $this->extension_downloads_compare($a, $b));
+                usort($this->server_themes, fn (array $a, array $b): int => $this->extensionDownloadsCompare($a, $b));
                 break;
         }
     }
@@ -472,7 +472,7 @@ class Themes
      * Extract theme files from archive
      *
      */
-    public function extract_theme_files(string $action, string $revision, string $dest, ?string &$theme_id = null): string
+    public function extractThemeFiles(string $action, string $revision, string $dest, ?string &$theme_id = null): string
     {
         $logger = LoggerRegistry::current();
 
@@ -593,7 +593,7 @@ class Themes
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_revision_compare(array $a, array $b): int
+    public function extensionRevisionCompare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
@@ -606,7 +606,7 @@ class Themes
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_name_compare(array $a, array $b): int
+    public function extensionNameCompare(array $a, array $b): int
     {
         $na = $a['extension_name'] ?? null;
         $nb = $b['extension_name'] ?? null;
@@ -617,13 +617,13 @@ class Themes
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_author_compare(array $a, array $b): int
+    public function extensionAuthorCompare(array $a, array $b): int
     {
         $na = $a['author_name'] ?? null;
         $nb = $b['author_name'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return $this->extension_name_compare($a, $b);
+            return $this->extensionNameCompare($a, $b);
         } else {
             return $r;
         }
@@ -633,7 +633,7 @@ class Themes
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function theme_author_compare(array $a, array $b): int
+    public function themeAuthorCompare(array $a, array $b): int
     {
         $na = $a['author'] ?? null;
         $nb = $b['author'] ?? null;
@@ -649,7 +649,7 @@ class Themes
      * @param array<mixed> $a
      * @param array<mixed> $b
      */
-    public function extension_downloads_compare(array $a, array $b): int
+    public function extensionDownloadsCompare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
@@ -658,7 +658,7 @@ class Themes
         }
     }
 
-    public function sort_themes_by_state(): void
+    public function sortThemesByState(): void
     {
         uasort($this->fs_themes, name_compare(...));
 

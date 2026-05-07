@@ -107,7 +107,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the width
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h(int|float $pixels, $coi): void
+    public function cropH(int|float $pixels, $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -137,7 +137,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the height
      * @param string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v(int|float $pixels, $coi): void
+    public function cropV(int|float $pixels, $coi): void
     {
         if ($this->height() <= $pixels) {
             return;
@@ -209,7 +209,7 @@ final class SizingParams
      * @param array &$tokens
      */
     /** @param array<int|string> $tokens */
-    public function add_url_tokens(array &$tokens): void
+    public function addUrlTokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
             $tokens[] = 's'.size_to_url($this->ideal_size);
@@ -243,14 +243,14 @@ final class SizingParams
                     if ($this->min_size !== null && $h < $this->min_size[1]) {
                         $idealCropPx = $destCrop->width() - floor($destCrop->height() * $this->ideal_size[0] / $this->min_size[1]);
                         $maxCropPx = round($this->max_crop * $destCrop->width());
-                        $destCrop->crop_h(min($idealCropPx, $maxCropPx), $coi ?? '');
+                        $destCrop->cropH(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
                     if ($this->min_size !== null && $w < $this->min_size[0]) {
                         $idealCropPx = $destCrop->height() - floor($destCrop->width() * $this->ideal_size[1] / $this->min_size[0]);
                         $maxCropPx = round($this->max_crop * $destCrop->height());
-                        $destCrop->crop_v(min($idealCropPx, $maxCropPx), $coi ?? '');
+                        $destCrop->cropV(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 }
             }

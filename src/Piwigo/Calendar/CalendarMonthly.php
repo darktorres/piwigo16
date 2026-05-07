@@ -55,7 +55,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @return boolean false indicates that thumbnails where not included
      */
-    public function generate_category_content(): bool
+    public function generateCategoryContent(): bool
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -69,7 +69,7 @@ class CalendarMonthly extends CalendarBase
             $template = TemplateRegistry::current();
             $tpl_var = [];
             if (count($chronologyDate) == 0) {//case A: no year given - display all years+months
-                if ($this->build_global_calendar($tpl_var)) {
+                if ($this->buildGlobalCalendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                     return true;
                 }
@@ -79,9 +79,9 @@ class CalendarMonthly extends CalendarBase
             }
 
             if (count($chronologyDate) == 1) {//case B: year given - display all days in given year
-                if ($this->build_year_calendar($tpl_var)) {
+                if ($this->buildYearCalendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
-                    $this->build_nav_bar(CYEAR); // years
+                    $this->buildNavBar(CYEAR); // years
                     return true;
                 }
                 // Re-read after build_year_calendar may have modified it
@@ -90,10 +90,10 @@ class CalendarMonthly extends CalendarBase
             }
 
             if (count($chronologyDate) == 2) {//case C: year+month given - display a nice month calendar
-                if ($this->build_month_calendar($tpl_var)) {
+                if ($this->buildMonthCalendar($tpl_var)) {
                     $template->assign('chronology_calendar', $tpl_var);
                 }
-                $this->build_next_prev();
+                $this->buildNextPrev();
                 return true;
             }
         }
@@ -104,22 +104,22 @@ class CalendarMonthly extends CalendarBase
 
         if ($view_type == CAL_VIEW_LIST or count($chronologyDate) == 3) {
             if (count($chronologyDate) == 0) {
-                $this->build_nav_bar(CYEAR); // years
+                $this->buildNavBar(CYEAR); // years
             }
             if (count($chronologyDate) == 1) {
-                $this->build_nav_bar(CMONTH); // month
+                $this->buildNavBar(CMONTH); // month
             }
             if (count($chronologyDate) == 2) {
                 $cyear = $chronologyDate[CYEAR];
                 $cmonth = $chronologyDate[CMONTH];
                 $yearInt = is_int($cyear) ? $cyear : (is_numeric($cyear) ? (int) $cyear : 0);
                 $monthInt = is_int($cmonth) ? $cmonth : (is_numeric($cmonth) ? (int) $cmonth : 1);
-                $day_labels = range(1, $this->get_all_days_in_month($yearInt, $monthInt));
+                $day_labels = range(1, $this->getAllDaysInMonth($yearInt, $monthInt));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
-                $this->build_nav_bar(CDAY, $day_labels); // days
+                $this->buildNavBar(CDAY, $day_labels); // days
             }
-            $this->build_next_prev();
+            $this->buildNextPrev();
         }
         return false;
     }
@@ -129,7 +129,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
-    public function get_date_where($max_levels = 3): string
+    public function getDateWhere($max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -159,7 +159,7 @@ class CalendarMonthly extends CalendarBase
                 } else {
                     $yearInt = is_int($cyear) ? $cyear : (is_numeric($cyear) ? (int) $cyear : 0);
                     $b .= '01';
-                    $e .= $this->get_all_days_in_month($yearInt, $monthVal);
+                    $e .= $this->getAllDaysInMonth($yearInt, $monthVal);
                 }
             } else {
                 $b .= '01-01';
@@ -194,7 +194,7 @@ class CalendarMonthly extends CalendarBase
     /**
      * Returns an array with all the days in a given month.
      */
-    protected function get_all_days_in_month(int $year, int $month): int
+    protected function getAllDaysInMonth(int $year, int $month): int
     {
         $md = [1 => 31,28,31,30,31,30,31,31,30,31,30,31];
 
@@ -215,7 +215,7 @@ class CalendarMonthly extends CalendarBase
      * Build global calendar and assign the result in _$tpl_var_
      */
     /** @param array<mixed> $tpl_var */
-    protected function build_global_calendar(array &$tpl_var): bool
+    protected function buildGlobalCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -226,7 +226,7 @@ class CalendarMonthly extends CalendarBase
   SELECT '.SqlExpr::dateYYYYMM($this->date_field).' as period,
     COUNT(distinct id) as count';
         $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $query .= $this->getDateWhere();
         $query .= '
     GROUP BY period
     ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
@@ -264,7 +264,7 @@ class CalendarMonthly extends CalendarBase
             $chronology_date = [ $year ];
             $url = duplicate_index_url(['chronology_date' => $chronology_date]);
 
-            $nav_bar = $this->get_nav_bar_from_items(
+            $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
                 $year_data['children'],
                 false,
@@ -292,7 +292,7 @@ class CalendarMonthly extends CalendarBase
      * Build year calendar and assign the result in _$tpl_var_
      */
     /** @param array<mixed> $tpl_var */
-    protected function build_year_calendar(array &$tpl_var): bool
+    protected function buildYearCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -302,7 +302,7 @@ class CalendarMonthly extends CalendarBase
         $query = 'SELECT '.SqlExpr::dateMMDD($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $query .= $this->getDateWhere();
         $query .= '
     GROUP BY period
     ORDER BY period ASC';
@@ -338,7 +338,7 @@ class CalendarMonthly extends CalendarBase
             $chronology_date = [ $cyearRaw, $month ];
             $url = duplicate_index_url(['chronology_date' => $chronology_date]);
 
-            $nav_bar = $this->get_nav_bar_from_items(
+            $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
                 $month_data['children'],
                 false
@@ -366,7 +366,7 @@ class CalendarMonthly extends CalendarBase
      * Build month calendar and assign the result in _$tpl_var_
      */
     /** @param array<mixed> $tpl_var */
-    protected function build_month_calendar(array &$tpl_var): bool
+    protected function buildMonthCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];
@@ -376,7 +376,7 @@ class CalendarMonthly extends CalendarBase
         $query = 'SELECT '.SqlExpr::dayOfMonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $query .= $this->getDateWhere();
         $query .= '
     GROUP BY period
     ORDER BY period ASC';
@@ -398,7 +398,7 @@ class CalendarMonthly extends CalendarBase
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, '.SqlExpr::dayOfWeek($this->date_field).'-1 as dow';
             $query .= $this->inner_sql;
-            $query .= $this->get_date_where();
+            $query .= $this->getDateWhere();
             $query .= '
     ORDER BY '.DB_RANDOM_FUNCTION.'()
     LIMIT 1';
@@ -444,7 +444,7 @@ class CalendarMonthly extends CalendarBase
                 array_push($wday_labels, array_shift($wday_labels) ?? '');
             }
 
-            [$cell_width, $cell_height] = ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size;
 
             $tpl_weeks    = [];
             $tpl_crt_week = [];
@@ -464,7 +464,7 @@ class CalendarMonthly extends CalendarBase
             $cmonthInt = is_int($cmonthRaw) ? $cmonthRaw : (is_numeric($cmonthRaw) ? (int) $cmonthRaw : 1);
 
             for ($day = 1;
-                $day <= $this->get_all_days_in_month($cyearInt, $cmonthInt);
+                $day <= $this->getAllDaysInMonth($cyearInt, $cmonthInt);
                 $day++) {
                 $dow = ($first_day_dow + $day - 1) % 7;
                 if ($dow == 0 and $day != 1) {
@@ -494,7 +494,7 @@ class CalendarMonthly extends CalendarBase
                           'DAY'         => $day,
                           'DOW'         => $dow,
                           'NB_ELEMENTS' => $items[$day]['nb_images'],
-                          'IMAGE'       => $items[$day]['derivative']->get_url(),
+                          'IMAGE'       => $items[$day]['derivative']->getUrl(),
                           'U_IMG_LINK'  => $url,
                           'IMAGE_ALT'   => $items[$day]['file'],
                         ];

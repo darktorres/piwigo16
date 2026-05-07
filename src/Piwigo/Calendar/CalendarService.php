@@ -140,7 +140,7 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         $mustShowList = true;
         if (script_basename() != 'picture') {
-            if ($calendar->generate_category_content()) {
+            if ($calendar->generateCategoryContent()) {
                 $page['items']  = [];
                 $mustShowList   = false;
             }
@@ -181,7 +181,7 @@ WHERE id IN (' . implode(',', $items) . ')';
             }
             $url           = duplicate_index_url([], ['start', 'chronology_date']);
             $calendarTitle = '<a href="' . $url . '">' . $fields[$chronologyField]['label'] . '</a>';
-            $calendarTitle .= $calendar->get_display_name();
+            $calendarTitle .= $calendar->getDisplayName();
             $template->assign('chronology', ['TITLE' => $calendarTitle]);
         }
 
@@ -207,13 +207,13 @@ WHERE id IN (' . implode(',', $items) . ')';
                     or ($chronologyDateList[0] == 'any' && count($chronologyDateList) == 1))
             ) {
                 $cacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-                $cacheKey        = $persistentCache->make_key($currentUser->id . $cacheUpdateTime . $calendar->date_field . $orderBy);
+                $cacheKey        = $persistentCache->makeKey($currentUser->id . $cacheUpdateTime . $calendar->date_field . $orderBy);
             }
 
             if (!isset($cacheKey) || !$persistentCache->get($cacheKey, $page['items'])) {
                 $query = 'SELECT DISTINCT id '
                   . $calendar->inner_sql . '
-  ' . $calendar->get_date_where() . '
+  ' . $calendar->getDateWhere() . '
   ' . $orderBy;
                 $page['items'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (isset($cacheKey)) {

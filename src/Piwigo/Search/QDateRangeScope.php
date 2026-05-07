@@ -60,7 +60,7 @@ class QDateRangeScope extends QSearchScope
     }
 
     #[\Override]
-    public function get_sql(string $field, QSingleToken $token): string
+    public function getSql(string $field, QSingleToken $token): string
     {
         $clauses = [];
         $scopeArr = is_array($token->scope_data) ? $token->scope_data : ['', ''];

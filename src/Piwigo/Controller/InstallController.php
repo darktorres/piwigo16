@@ -121,7 +121,7 @@ final class InstallController implements ControllerInterface
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
-        $tpl->set_filenames(['install' => 'install.tpl']);
+        $tpl->setFilenames(['install' => 'install.tpl']);
         if (!isset($step)) {
             $step = 1;
         }
@@ -195,7 +195,7 @@ final class InstallController implements ControllerInterface
                 conf_update_param('gallery_title', l10n('Just another Piwigo gallery'));
                 conf_update_param('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . l10n('Welcome to my photo gallery') . '</p>');
 
-                $languages->perform_action('activate', $language);
+                $languages->performAction('activate', $language);
                 load_conf_from_db();
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();

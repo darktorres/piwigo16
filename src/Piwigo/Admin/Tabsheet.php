@@ -24,7 +24,7 @@ class Tabsheet
         $this->selected = '';
     }
 
-    public function set_id(string $id): void
+    public function setId(string $id): void
     {
         $this->uniqid = $id;
     }
@@ -78,7 +78,7 @@ class Tabsheet
     /*
       set $titlename value
     */
-    public function set_titlename(string $titlename): void
+    public function setTitlename(string $titlename): void
     {
         $this->titlename = $titlename;
     }
@@ -86,7 +86,7 @@ class Tabsheet
     /*
       returns $titlename value
     */
-    public function get_titlename(): string
+    public function getTitlename(): string
     {
         return $this->titlename;
     }
@@ -95,7 +95,7 @@ class Tabsheet
       returns properties of selected tab
     */
     /** @return array<string, bool|string>|null */
-    public function get_selected(): ?array
+    public function getSelected(): ?array
     {
         if ($this->selected !== '') {
             return $this->sheets[$this->selected];
@@ -114,11 +114,11 @@ class Tabsheet
     {
         $template = TemplateRegistry::current();
 
-        $template->set_filename('tabsheet', 'tabsheet.tpl');
+        $template->setFilename('tabsheet', 'tabsheet.tpl');
         $template->assign('tabsheet', $this->sheets);
         $template->assign('tabsheet_selected', $this->selected);
 
-        $selected_tab = $this->get_selected();
+        $selected_tab = $this->getSelected();
 
         if (isset($selected_tab)) {
             $caption = is_scalar($selected_tab['caption'] ?? null) ? (string) $selected_tab['caption'] : '';
@@ -127,7 +127,7 @@ class Tabsheet
             );
         }
 
-        $template->assign_var_from_handle($this->name, 'tabsheet');
-        $template->clear_assign('tabsheet');
+        $template->assignVarFromHandle($this->name, 'tabsheet');
+        $template->clearAssign('tabsheet');
     }
 }

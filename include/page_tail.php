@@ -24,7 +24,7 @@ if (!is_array($page)) {
     $page = [];
 }
 
-$template->set_filenames(['tail' => 'footer.tpl']);
+$template->setFilenames(['tail' => 'footer.tpl']);
 
 trigger_notify('loc_begin_page_tail');
 
@@ -59,7 +59,7 @@ if (Config::updateNotifyCheckPeriod() > 0) {
         $exec_id = pwg_unique_exec_begins('check_for_updates');
         if (false !== $exec_id) {
             $updates = new Updates();
-            $updates->notify_piwigo_new_versions();
+            $updates->notifyPiwigoNewVersions();
 
             pwg_unique_exec_ends('check_for_updates');
         }

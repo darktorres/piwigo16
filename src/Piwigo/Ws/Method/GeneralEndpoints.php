@@ -58,10 +58,10 @@ final class GeneralEndpoints
     public function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
         if (empty($params['types'])) {
-            $types = array_keys(ImageStdParams::get_defined_type_map());
+            $types = array_keys(ImageStdParams::getDefinedTypeMap());
         } else {
             $typesRaw = is_array($params['types']) ? $params['types'] : [];
-            $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $typesRaw));
+            $types = array_intersect(array_keys(ImageStdParams::getDefinedTypeMap()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $typesRaw));
             if (count($types) === 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
             }
@@ -94,16 +94,16 @@ final class GeneralEndpoints
             foreach ($rows as $row) {
                 $startId  = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $srcImage = new SrcImage($row);
-                if ($srcImage->is_mimetype()) {
+                if ($srcImage->isMimetype()) {
                     continue;
                 }
                 foreach ($types as $type) {
                     $derivative = new DerivativeImage($type, $srcImage);
-                    if ($type !== $derivative->get_type()) {
+                    if ($type !== $derivative->getType()) {
                         continue;
                     }
-                    if (Filesystem::tryFileMtime($derivative->get_path()) === false) {
-                        $url    = $derivative->get_url();
+                    if (Filesystem::tryFileMtime($derivative->getPath()) === false) {
+                        $url    = $derivative->getUrl();
                         $urls[] = (is_string($url) ? $url : '') . $uid;
                     }
                 }
@@ -174,7 +174,7 @@ final class GeneralEndpoints
         $infos['cache_size'] = $this->directorySizeBytes($pathCache);
         $pathMsizes = Config::dataLocation() . 'i';
         $msizes     = ServiceLocator::get(ImageAdminService::class)->getCacheSizeDerivatives($pathMsizes);
-        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
+        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::getDefinedTypeMap()), 0);
         $infos['msizes']['custom'] = 0;
         $all = 0;
         foreach (array_keys($infos['msizes']) as $sizeType) {
@@ -276,7 +276,7 @@ final class GeneralEndpoints
             unset($res['save_visits'], $res['connected_with']);
         }
         if ($httpUserAgent === '' || !str_starts_with($httpUserAgent, 'Apache-HttpClient/')) {
-            $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
+            $res['available_sizes'] = array_keys(ImageStdParams::getDefinedTypeMap());
         }
         if (PermissionService::get()->isAdmin()) {
             $res['upload_file_types'] = implode(',', array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions())));
@@ -672,7 +672,7 @@ final class GeneralEndpoints
                 $imageId = $lineImageId;
                 set_error_handler(static fn (): bool => true);
                 try {
-                    $imgUrl = DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element);
+                    $imgUrl = DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $element);
                 } finally {
                     restore_error_handler();
                 }

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * Validates that every .tpl filename referenced in set_filename() /
  * set_filenames() calls inside src/ actually exists on disk.
  *
- * Template search path mirrors Template::set_theme():
+ * Template search path mirrors Template::setTheme():
  *   admin pages  → themes/admin/_base/template/
  *   public pages → themes/_base/template/   (including subdirectories)
  *   mail         → themes/_base/template/mail/
@@ -68,8 +68,8 @@ final class TemplateFilesExistTest extends TestCase
 
             $content = file_get_contents($phpFile->getPathname()) ?: '';
 
-            // Match: ->set_filename('handle', 'foo.tpl')
-            //        ->set_filenames(['handle' => 'foo.tpl', ...])
+            // Match: ->setFilename('handle', 'foo.tpl')
+            //        ->setFilenames(['handle' => 'foo.tpl', ...])
             preg_match_all(
                 '/[\'"]([a-zA-Z0-9_.\/\-]+\.tpl)[\'"]/',
                 $content,

@@ -42,7 +42,7 @@ final class GroupsController
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('groups');
+        $tabsheet->setId('groups');
         $tabsheet->select('group_list');
         $tabsheet->assign();
 
@@ -50,7 +50,7 @@ final class GroupsController
             check_pwg_token();
         }
 
-        $tpl->set_filenames(['group_list' => 'group_list.tpl']);
+        $tpl->setFilenames(['group_list' => 'group_list.tpl']);
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
@@ -116,7 +116,7 @@ final class GroupsController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'group_list');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
     }
 
     // ── group_perm ────────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ final class GroupsController
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
-        $tpl->set_filenames(['group_perm' => 'group_perm.tpl', 'double_select' => 'double_select.tpl']);
+        $tpl->setFilenames(['group_perm' => 'group_perm.tpl', 'double_select' => 'double_select.tpl']);
         $tpl->assign([
             'TITLE'              => l10n('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
@@ -187,7 +187,7 @@ final class GroupsController
         display_select_cat_wrapper($query_false, [], 'category_option_false');
 
         $tpl->assign('PWG_TOKEN', get_pwg_token());
-        $tpl->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');
+        $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
     }
 }

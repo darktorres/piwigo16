@@ -21,7 +21,7 @@ class PwgTemplateAdapter
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec(string $s, string $p, int|float|null $v): string
+    public function l10nDec(string $s, string $p, int|float|null $v): string
     {
         return l10n_dec($s, $p, $v);
     }
@@ -49,7 +49,7 @@ class PwgTemplateAdapter
  * @param array<mixed> $img
  * @return string|array<mixed>
  */
-    public function derivative_url(string $type, array $img): string|array
+    public function derivativeUrl(string $type, array $img): string|array
     {
         return DerivativeImage::url($type, $img);
     }

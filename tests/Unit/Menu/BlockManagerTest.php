@@ -27,70 +27,70 @@ final class BlockManagerTest extends TestCase
 
     public function testGetId(): void
     {
-        self::assertSame('menubar', $this->mgr->get_id());
+        self::assertSame('menubar', $this->mgr->getId());
     }
 
     public function testRegisterBlockReturnsTrueOnFirstRegistration(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        self::assertTrue($this->mgr->register_block($block));
+        self::assertTrue($this->mgr->registerBlock($block));
     }
 
     public function testRegisterBlockReturnsFalseForDuplicate(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
-        self::assertFalse($this->mgr->register_block($block));
+        $this->mgr->registerBlock($block);
+        self::assertFalse($this->mgr->registerBlock($block));
     }
 
     public function testRegisteredBlocksAppearsInList(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
-        self::assertArrayHasKey('nav', $this->mgr->get_registered_blocks());
+        $this->mgr->registerBlock($block);
+        self::assertArrayHasKey('nav', $this->mgr->getRegisteredBlocks());
     }
 
     public function testIsHiddenReturnsTrueForUnknownBlock(): void
     {
         // A block not in display_blocks is considered hidden (not visible).
-        self::assertTrue($this->mgr->is_hidden('nonexistent'));
+        self::assertTrue($this->mgr->isHidden('nonexistent'));
     }
 
     public function testHideBlockMakesBlockHidden(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
+        $this->mgr->registerBlock($block);
         Config::loadArray(['blk_menubar' => []]);
-        $this->mgr->prepare_display();
+        $this->mgr->prepareDisplay();
 
-        self::assertFalse($this->mgr->is_hidden('nav'), 'should be visible after prepare_display');
-        $this->mgr->hide_block('nav');
-        self::assertTrue($this->mgr->is_hidden('nav'));
+        self::assertFalse($this->mgr->isHidden('nav'), 'should be visible after prepare_display');
+        $this->mgr->hideBlock('nav');
+        self::assertTrue($this->mgr->isHidden('nav'));
     }
 
     public function testGetBlockNullBeforePrepare(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
-        self::assertNull($this->mgr->get_block('nav'), 'display block not created until prepare_display');
+        $this->mgr->registerBlock($block);
+        self::assertNull($this->mgr->getBlock('nav'), 'display block not created until prepare_display');
     }
 
     public function testPrepareDisplayCreatesDisplayBlocks(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
+        $this->mgr->registerBlock($block);
         Config::loadArray(['blk_menubar' => []]);
-        $this->mgr->prepare_display();
-        self::assertInstanceOf(DisplayBlock::class, $this->mgr->get_block('nav'));
+        $this->mgr->prepareDisplay();
+        self::assertInstanceOf(DisplayBlock::class, $this->mgr->getBlock('nav'));
     }
 
     public function testSetBlockPosition(): void
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
-        $this->mgr->register_block($block);
+        $this->mgr->registerBlock($block);
         Config::loadArray(['blk_menubar' => []]);
-        $this->mgr->prepare_display();
-        $this->mgr->set_block_position('nav', 999);
-        self::assertSame(999, $this->mgr->get_block('nav')->get_position());
+        $this->mgr->prepareDisplay();
+        $this->mgr->setBlockPosition('nav', 999);
+        self::assertSame(999, $this->mgr->getBlock('nav')->getPosition());
     }
 }

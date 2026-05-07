@@ -18,14 +18,14 @@ final class DerivativeParamsTest extends TestCase
     public function testMaxWidthAndHeight(): void
     {
         $p = $this->makeParams(800, 600);
-        self::assertSame(800, $p->max_width());
-        self::assertSame(600, $p->max_height());
+        self::assertSame(800, $p->maxWidth());
+        self::assertSame(600, $p->maxHeight());
     }
 
     public function testComputeFinalSizeScalesDown(): void
     {
         $p = $this->makeParams(400, 300);
-        $size = $p->compute_final_size([800, 600]);
+        $size = $p->computeFinalSize([800, 600]);
         // floor() in SizingParams::compute returns floats; compare as integers.
         self::assertSame(400, (int) $size[0]);
         self::assertSame(300, (int) $size[1]);
@@ -34,29 +34,29 @@ final class DerivativeParamsTest extends TestCase
     public function testComputeFinalSizeIdentityWhenSmaller(): void
     {
         $p = $this->makeParams(400, 300);
-        $size = $p->compute_final_size([200, 150]);
+        $size = $p->computeFinalSize([200, 150]);
         self::assertSame([200, 150], $size, 'image smaller than ideal is returned as-is');
     }
 
     public function testIsIdentityTrueWhenFits(): void
     {
         $p = $this->makeParams(800, 600);
-        self::assertTrue($p->is_identity([400, 300]));
-        self::assertTrue($p->is_identity([800, 600]));
+        self::assertTrue($p->isIdentity([400, 300]));
+        self::assertTrue($p->isIdentity([800, 600]));
     }
 
     public function testIsIdentityFalseWhenExceedsIdeal(): void
     {
         $p = $this->makeParams(400, 300);
-        self::assertFalse($p->is_identity([800, 600]));
-        self::assertFalse($p->is_identity([400, 301]));
+        self::assertFalse($p->isIdentity([800, 600]));
+        self::assertFalse($p->isIdentity([400, 301]));
     }
 
     public function testWillWatermarkFalseWhenNotEnabled(): void
     {
         $p = $this->makeParams(800, 600);
         $p->use_watermark = false;
-        self::assertFalse($p->will_watermark([800, 600]));
+        self::assertFalse($p->willWatermark([800, 600]));
     }
 
     public function testDefaultProperties(): void

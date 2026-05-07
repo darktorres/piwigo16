@@ -175,16 +175,16 @@ final class UploadService
         $representativeExt = trigger_change('upload_file', '', $filePath);
         $logger->info('Handling ' . $filePath . ' got ' . $representativeExt);
 
-        if (PwgImage::get_library() !== 'gd' && Config::originalResize()) {
+        if (PwgImage::getLibrary() !== 'gd' && Config::originalResize()) {
             if ($this->needResize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight())) {
                 $img = new PwgImage($filePath);
-                $img->pwg_resize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight(), Config::originalResizeQuality(), Config::uploadFormAutomaticRotation(), false);
+                $img->pwgResize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight(), Config::originalResizeQuality(), Config::uploadFormAutomaticRotation(), false);
                 $img->destroy();
             }
         }
 
-        $rotationAngle = PwgImage::get_rotation_angle($filePath);
-        $rotation      = PwgImage::get_rotation_code_from_angle($rotationAngle ?? 0);
+        $rotationAngle = PwgImage::getRotationAngle($filePath);
+        $rotation      = PwgImage::getRotationCodeFromAngle($rotationAngle ?? 0);
         $fileInfos     = $this->pwgImageInfos($filePath);
 
         if (isset($imageId)) {
@@ -309,7 +309,7 @@ final class UploadService
         if (isset($representativeExt)) {
             return $representativeExt;
         }
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
         if (!in_array(strtolower(get_extension($filePath)), ['pdf'])) {
@@ -319,7 +319,7 @@ final class UploadService
         $jpgQuality = is_int(conf_get_param('pdf_jpg_quality', 90)) ? conf_get_param('pdf_jpg_quality', 90) : 90;
         $repFilePath = original_to_representative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"[0]';
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"[0]';
         if ($ext === 'jpg') {
             $exec .= ' -quality ' . $jpgQuality;
         }
@@ -338,7 +338,7 @@ final class UploadService
         if (isset($representativeExt)) {
             return $representativeExt;
         }
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
         if (!in_array(strtolower(get_extension($filePath)), ['heic'])) {
@@ -348,7 +348,7 @@ final class UploadService
         $repFilePath = original_to_representative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         [$w, $h] = $this->getOptimalDimensionsForRepresentative();
-        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"';
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"';
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
         $exec .= ' "' . $repFilePath . '" 2>&1';
         $logger->info('uploadFileHeic, exec=' . $exec);
@@ -366,7 +366,7 @@ final class UploadService
         if (isset($representativeExt)) {
             return $representativeExt;
         }
-        if (PwgImage::get_library() !== 'ext_imagick') {
+        if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
         if (!in_array(strtolower(get_extension($filePath)), ['tif', 'tiff'])) {
@@ -375,7 +375,7 @@ final class UploadService
         $representativeExt = Config::tiffRepresentativeExt();
         $repFilePath       = dirname($filePath) . '/pwg_representative/' . get_filename_wo_extension(basename($filePath)) . '.' . $representativeExt;
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '"';
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"';
         if ($representativeExt === 'jpg') {
             $exec .= ' -quality 98';
         }
@@ -421,14 +421,14 @@ final class UploadService
     public function uploadFilePsd(?string $representativeExt, string $filePath): ?string
     {
         $logger = LoggerRegistry::current();
-        if (isset($representativeExt) || PwgImage::get_library() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['psd'])) {
+        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['psd'])) {
             return $representativeExt;
         }
         $representativeExt = 'png';
         $repFilePath       = dirname($filePath) . '/pwg_representative/' . get_filename_wo_extension(basename($filePath)) . '.png';
         $this->prepareDirectory(dirname($repFilePath));
         $dest  = pathinfo($repFilePath);
-        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '" "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '" "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
         $logger->info('uploadFilePsd, exec=' . $exec);
         exec($exec, $returnarray);
         $repAbs = realpath($dest['dirname']) . '/' . $dest['basename'];
@@ -444,13 +444,13 @@ final class UploadService
     public function uploadFileEps(?string $representativeExt, string $filePath): ?string
     {
         $logger = LoggerRegistry::current();
-        if (isset($representativeExt) || PwgImage::get_library() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['eps'])) {
+        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower(get_extension($filePath)), ['eps'])) {
             return $representativeExt;
         }
         $ext         = 'png';
         $repFilePath = original_to_representative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' "' . realpath($filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
         $logger->info('uploadFileEps, exec=' . $exec);
         exec($exec, $returnarray);
         if (file_exists($repFilePath)) {
@@ -583,10 +583,10 @@ final class UploadService
     /** @return array<int, int|float> */
     public function getOptimalDimensionsForRepresentative(): array
     {
-        $enabled  = ImageStdParams::get_defined_type_map();
-        $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
+        $enabled  = ImageStdParams::getDefinedTypeMap();
+        $disabled = safe_unserialize(ImageStdParams::getDisabledTypeMap());
         $w = $h   = 2000;
-        foreach (ImageStdParams::get_all_types() as $type) {
+        foreach (ImageStdParams::getAllTypes() as $type) {
             $params = $enabled[$type] ?? ($disabled[$type] ?? null);
             if ($params instanceof DerivativeParams) {
                 [$w, $h] = $params->sizing->ideal_size;

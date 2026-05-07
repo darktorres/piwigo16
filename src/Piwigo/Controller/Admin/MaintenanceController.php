@@ -120,7 +120,7 @@ final class MaintenanceController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('maintenance');
+        $tabsheet->setId('maintenance');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -240,8 +240,8 @@ final class MaintenanceController
                 ServiceLocator::get(SearchRepository::class)->deleteAll();
                 break;
             case 'compiled-templates':
-                $tpl->delete_compiled_templates();
-                FileCombiner::clear_combined_files();
+                $tpl->deleteCompiledTemplates();
+                FileCombiner::clearCombinedFiles();
                 PersistentCacheRegistry::current()->purge(true);
                 PageState::current()->addInfo(sprintf('%s : %s', l10n('Purge compiled templates'), l10n('action successfully performed.')));
                 break;
@@ -290,7 +290,7 @@ final class MaintenanceController
             pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
         }
 
-        $tpl->set_filenames(['maintenance' => 'maintenance_actions.tpl']);
+        $tpl->setFilenames(['maintenance' => 'maintenance_actions.tpl']);
         $pwg_token    = get_pwg_token();
         $gallery_locked = Config::galleryLocked();
         $tpl->assign('page_data_json', json_encode([
@@ -313,7 +313,7 @@ final class MaintenanceController
         }
 
         $purge_urls = [l10n('All') => 'all'];
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             $purge_urls[l10n($params->type)] = $params->type;
         }
         $purge_urls[l10n(IMG_CUSTOM)] = IMG_CUSTOM;
@@ -361,10 +361,10 @@ final class MaintenanceController
             })(),
         ]);
 
-        switch (PwgImage::get_library()) {
+        switch (PwgImage::getLibrary()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
-                exec(Config::extImagickDir() . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
+                exec(Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' -version', $returnarray);
                 if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                     $library .= ' ' . $match[1];
                 }
@@ -399,7 +399,7 @@ final class MaintenanceController
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $advanced_features = trigger_change('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 
     // ── maintenance_env ───────────────────────────────────────────────────────
@@ -471,8 +471,8 @@ final class MaintenanceController
             case 'search':          ServiceLocator::get(SearchRepository::class)->deleteAll();
                 break;
             case 'compiled-templates':
-                $tpl->delete_compiled_templates();
-                FileCombiner::clear_combined_files();
+                $tpl->deleteCompiledTemplates();
+                FileCombiner::clearCombinedFiles();
                 PersistentCacheRegistry::current()->purge(true);
                 break;
             case 'derivatives':
@@ -508,14 +508,14 @@ final class MaintenanceController
                 break;
         }
 
-        $tpl->set_filenames(['maintenance' => 'maintenance_env.tpl']);
+        $tpl->setFilenames(['maintenance' => 'maintenance_env.tpl']);
         $tpl->assign('page_data_json', json_encode(['unit_MB' => l10n('%s MB'), 'no_time_elapsed' => l10n('right now'), 'no_active_plugin' => l10n('No plugin activated'), 'error_occured' => l10n('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . get_pwg_token();
 
         $purge_urls = [];
         $purge_urls[l10n('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             $purge_urls[l10n($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
         }
         $purge_urls[l10n(IMG_CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . IMG_CUSTOM;
@@ -584,7 +584,7 @@ final class MaintenanceController
 
         $advanced_features = trigger_change('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 
     // ── maintenance_sys ───────────────────────────────────────────────────────
@@ -800,8 +800,8 @@ final class MaintenanceController
         }
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->set_filenames(['maintenance' => 'maintenance_sys.tpl']);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
+        $tpl->setFilenames(['maintenance' => 'maintenance_sys.tpl']);
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 
     // ── history ───────────────────────────────────────────────────────────────
@@ -824,7 +824,7 @@ final class MaintenanceController
         check_input_parameter('filter_image_id', $_GET, false, '/^\d+$/');
         check_input_parameter('filter_user_id', $_GET, false, '/^\d+$/');
 
-        $tpl->set_filename('history', 'history.tpl');
+        $tpl->setFilename('history', 'history.tpl');
         ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
@@ -908,7 +908,7 @@ final class MaintenanceController
             'str_search_details'          => ['allwords' => l10n('Search for words'), 'date_posted' => l10n('Post date'), 'tags' => l10n('Tags'), 'cat' => l10n('Album'), 'author' => l10n('Author'), 'added_by' => l10n('Added by'), 'filetypes' => l10n('File type')],
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'history');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'history');
     }
 
     // ── stats ─────────────────────────────────────────────────────────────────
@@ -921,7 +921,7 @@ final class MaintenanceController
 
         ServiceLocator::get(HistoryAdminService::class)->historySummarize();
 
-        $tpl->set_filename('stats', 'stats.tpl');
+        $tpl->setFilename('stats', 'stats.tpl');
         ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
         $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('history'), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
 
@@ -965,7 +965,7 @@ final class MaintenanceController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'stats');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'stats');
     }
 
     // ── site_manager ──────────────────────────────────────────────────────────
@@ -984,12 +984,12 @@ final class MaintenanceController
             check_pwg_token();
         }
 
-        $tpl->set_filenames(['site_manager' => 'site_manager.tpl']);
+        $tpl->setFilenames(['site_manager' => 'site_manager.tpl']);
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('site_update');
+        $tabsheet->setId('site_update');
         $tabsheet->select('site_maager');
         $tabsheet->assign();
 
@@ -1067,7 +1067,7 @@ final class MaintenanceController
             $tpl->append('sites', $tpl_var);
         }
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'site_manager');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'site_manager');
     }
 
     // ── site_reader_local ─────────────────────────────────────────────────────
@@ -1125,7 +1125,7 @@ final class MaintenanceController
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('site_update');
+        $tabsheet->setId('site_update');
         $tabsheet->select('synchronization');
         $tabsheet->assign();
 
@@ -1201,7 +1201,7 @@ final class MaintenanceController
             $next_id_raw = get_dbal_connection()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . CATEGORIES_TABLE . '`')->fetchOne();
             $next_id     = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
 
-            $fs_fulldirs = $site_reader->get_full_directories($basedir);
+            $fs_fulldirs = $site_reader->getFullDirectories($basedir);
             if (isset($_POST['cat'])) {
                 $fs_fulldirs[] = $basedir;
             }
@@ -1340,7 +1340,7 @@ final class MaintenanceController
 
         if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
             $start_files = $start = get_moment();
-            $fs = $site_reader->get_elements($basedir);
+            $fs = $site_reader->getElements($basedir);
             $tpl->append('footer_elements', '<!-- get_elements: ' . get_elapsed_time($start, get_moment()) . ' -->');
 
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
@@ -1491,13 +1491,13 @@ final class MaintenanceController
                 $datas = [];
                 foreach ($files as $id => $file) {
                     $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
-                    $data      = $site_reader->get_element_update_attributes($file_path);
+                    $data      = $site_reader->getElementUpdateAttributes($file_path);
                     $data['id'] = $id;
                     $datas[]   = $data;
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
-                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_update_attributes())], $datas);
+                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . get_elapsed_time($start, get_moment()) . ' -->');
             }
@@ -1525,7 +1525,7 @@ final class MaintenanceController
             $datas = $tags_of = [];
             foreach ($files as $id => $element_infos) {
                 $element_infos_arr = is_array($element_infos) ? $element_infos : [];
-                $data = $site_reader->get_element_metadata($element_infos_arr);
+                $data = $site_reader->getElementMetadata($element_infos_arr);
                 if (is_array($data)) {
                     $data['date_metadata_update'] = CURRENT_DATE;
                     $data['id'] = $id;
@@ -1546,7 +1546,7 @@ final class MaintenanceController
             }
             if (!$simulate) {
                 if (count($datas) > 0) {
-                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : MASS_UPDATES_SKIP_EMPTY);
+                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : MASS_UPDATES_SKIP_EMPTY);
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
@@ -1556,9 +1556,9 @@ final class MaintenanceController
 
         // ── template ─────────────────────────────────────────────────────────
 
-        $tpl->set_filenames(['update' => 'site_update.tpl']);
+        $tpl->setFilenames(['update' => 'site_update.tpl']);
         $result_title  = $simulate ? '[' . l10n('Simulation') . '] ' : '';
-        $used_metadata = implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->get_metadata_attributes()));
+        $used_metadata = implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()));
 
         $tpl->assign([
             'SITE_URL'       => $site_url_str,
@@ -1612,7 +1612,7 @@ final class MaintenanceController
             }
         }
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'update');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'update');
     }
 
     // ── stats helper methods (from stats.php) ─────────────────────────────────

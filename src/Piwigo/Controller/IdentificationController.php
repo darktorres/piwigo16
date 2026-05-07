@@ -86,7 +86,7 @@ final class IdentificationController implements ControllerInterface
         $user = &$GLOBALS['user'];
         $tpl  = TemplateRegistry::current();
 
-        $tpl->set_filenames(['identification' => 'identification.tpl']);
+        $tpl->setFilenames(['identification' => 'identification.tpl']);
         $tpl->assign([
             'U_REDIRECT'           => $redirect_to,
             'F_LOGIN_ACTION'       => ServiceLocator::get(UrlGenerator::class)->identification(),
@@ -100,7 +100,7 @@ final class IdentificationController implements ControllerInterface
             $tpl->assign('U_LOST_PASSWORD', ServiceLocator::get(UrlGenerator::class)->password());
         }
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!Config::galleryLocked() && !in_array('theIdentificationPage', $hideMenuOn)) {

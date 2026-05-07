@@ -24,7 +24,7 @@ final class PictureMetadataRenderer
                 $exif_mapping[$field] = $field;
             }
 
-            $exif = get_exif_data($srcImage->get_path(), $exif_mapping);
+            $exif = get_exif_data($srcImage->getPath(), $exif_mapping);
 
             if (count($exif) > 0) {
                 $tpl_meta = ['TITLE' => l10n('EXIF Metadata'), 'lines' => []];
@@ -54,7 +54,7 @@ final class PictureMetadataRenderer
         }
 
         if (Config::showIptc() and $srcImage !== null) {
-            $iptc = get_iptc_data($srcImage->get_path(), Config::showIptcMapping(), ', ');
+            $iptc = get_iptc_data($srcImage->getPath(), Config::showIptcMapping(), ', ');
 
             if (count($iptc) > 0) {
                 $tpl_meta = ['TITLE' => l10n('IPTC Metadata'), 'lines' => []];

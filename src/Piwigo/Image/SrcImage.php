@@ -92,17 +92,17 @@ final class SrcImage
         }
     }
 
-    public function is_original(): int
+    public function isOriginal(): int
     {
         return $this->flags & self::IS_ORIGINAL;
     }
 
-    public function is_mimetype(): int
+    public function isMimetype(): int
     {
         return $this->flags & self::IS_MIMETYPE;
     }
 
-    public function get_path(): string
+    public function getPath(): string
     {
         return PHPWG_ROOT_PATH.$this->rel_path;
     }
@@ -111,7 +111,7 @@ final class SrcImage
      * @return string
      */
     /** @return string|array<mixed> */
-    public function get_url(): string|array
+    public function getUrl(): string|array
     {
         $url = get_root_url().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
@@ -121,7 +121,7 @@ final class SrcImage
         return embellish_url($url);
     }
 
-    public function has_size(): bool
+    public function hasSize(): bool
     {
         return $this->size != null;
     }
@@ -129,13 +129,13 @@ final class SrcImage
     /**
      * @return int[]|null 0=width, 1=height or null if fail to compute size
      */
-    public function get_size(): ?array
+    public function getSize(): ?array
     {
         if ($this->size == null) {
             // probably not metadata synced — try to read from disk before
             // giving up. Covers e.g. the dupe-image upload path where the
             // returning record only carries id, not width/height.
-            $path = $this->get_path();
+            $path = $this->getPath();
             if (is_readable($path) && ($size = pwg_safe_getimagesize($path)) !== false) {
                 $w = $size[0];
                 $h = $size[1];

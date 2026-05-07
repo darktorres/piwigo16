@@ -159,12 +159,12 @@ final class MiscController
                 break;
         }
 
-        $tpl->set_filenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
+        $tpl->setFilenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
         $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . get_query_string_diff([])]);
 
         if (PermissionService::get()->isAutorizeStatus(ACCESS_WEBMASTER)) {
             $tabsheet = new Tabsheet();
-            $tabsheet->set_id('nbm');
+            $tabsheet->setId('nbm');
             $tabsheet->select($page['mode']);
             $tabsheet->assign();
         }
@@ -207,7 +207,7 @@ final class MiscController
                     }
                 }
                 $tpl->assign(['category_option_true' => $opt_true, 'category_option_true_selected' => $opt_true_selected, 'category_option_false' => $opt_false, 'category_option_false_selected' => $opt_false_selected]);
-                $tpl->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
+                $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
                 break;
             case 'send':
                 $tpl_var    = ['users' => []];
@@ -233,7 +233,7 @@ final class MiscController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Send mail to users'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'notification_by_mail');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
     }
 
     // ── permalinks ────────────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ final class MiscController
             }
         }
 
-        $tpl->set_filename('permalinks', 'permalinks.tpl');
+        $tpl->setFilename('permalinks', 'permalinks.tpl');
         $page['tab'] = 'permalinks';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
@@ -305,7 +305,7 @@ final class MiscController
         }
 
         $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => l10n('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'permalinks');
     }
 
     // ── tags ──────────────────────────────────────────────────────────────────
@@ -316,7 +316,7 @@ final class MiscController
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
-        $tabsheet->set_id('tags');
+        $tabsheet->setId('tags');
         $tabsheet->select('');
         $tabsheet->assign();
 
@@ -327,7 +327,7 @@ final class MiscController
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
 
-        $tpl->set_filenames(['tags' => 'tags.tpl']);
+        $tpl->setFilenames(['tags' => 'tags.tpl']);
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => get_pwg_token(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
@@ -381,7 +381,7 @@ final class MiscController
             'pwg_token' => get_pwg_token(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
             'str_already_exist' => l10n('Tag "%s" already exists'), 'str_and_others_tags' => l10n('and %s others'), 'str_clear_selection' => l10n('Clear Selection'), 'str_copy' => l10n(' (copy)'), 'str_delete' => l10n('Delete tag "%s"?'), 'str_delete_orphan_tags' => l10n('Delete orphan tags ?'), 'str_delete_tags' => l10n('Delete tags {%s}?'), 'str_delete_them' => l10n('Delete them'), 'str_keep_them' => l10n('Keep them'), 'str_merged_into' => l10n('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => l10n('No, I have changed my mind'), 'str_no_photos' => l10n('no photo'), 'str_number_photos' => l10n('%d photos'), 'str_orphan_tags' => l10n('You have %s1 orphan : %s2'), 'str_other_copy' => l10n(' (copy %s)'), 'str_select_all_tag' => l10n('Select all %d tags'), 'str_selection_done' => l10n('The %d tags on this page are selected'), 'str_tag_created' => l10n('Tag "%s" created'), 'str_tag_deleted' => l10n('Tag "%s" succesfully deleted'), 'str_tag_found' => l10n('<b>%d</b> tag found'), 'str_tag_rename' => l10n('Rename "%s"'), 'str_tag_selected' => l10n('<b>%d</b> tag selected'), 'str_tags_deleted' => l10n('Tags {%s} succesfully deleted'), 'str_tags_found' => l10n('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => l10n('Yes, delete'), 'str_yes_rename_confirmation' => l10n('Yes, rename'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'tags');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'tags');
     }
 
     // ── help ──────────────────────────────────────────────────────────────────
@@ -395,13 +395,13 @@ final class MiscController
         $selected = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'add_photos';
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('help');
+        $tabsheet->setId('help');
         $tabsheet->select($selected);
         $tabsheet->assign();
 
         trigger_notify('loc_end_help');
 
-        $tpl->set_filenames(['help' => 'help.tpl']);
+        $tpl->setFilenames(['help' => 'help.tpl']);
         $tpl->assign([
             'HELP_CONTENT'       => load_language('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]),
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',
@@ -414,7 +414,7 @@ final class MiscController
             PageState::current()->addMessage(sprintf('Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !', 'https://doc-fr.piwigo.org/'));
         }
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'help');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'help');
     }
 
     // ── popuphelp ─────────────────────────────────────────────────────────────
@@ -447,7 +447,7 @@ final class MiscController
             throw new AuthException('Hacking attempt!');
         }
 
-        $tpl->set_filename('popuphelp', 'popuphelp.tpl');
+        $tpl->setFilename('popuphelp', 'popuphelp.tpl');
         $tpl->assign(['HELP_CONTENT' => $help_content]);
 
         if (isset($_GET['output']) && 'content_only' == $_GET['output']) {
@@ -478,7 +478,7 @@ final class MiscController
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
-        $tabsheet->set_id('admin_home');
+        $tabsheet->setId('admin_home');
         $tabsheet->select('');
         $tabsheet->assign();
 
@@ -510,7 +510,7 @@ final class MiscController
 
         ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
 
-        $tpl->set_filenames(['intro' => 'intro.tpl']);
+        $tpl->setFilenames(['intro' => 'intro.tpl']);
 
         $intro_newsletter_data = null;
         if (Config::showNewsletterSubscription() && PreferencesService::get()->userprefsGetParam('show_newsletter_subscription', true)) {
@@ -701,7 +701,7 @@ final class MiscController
         }
 
         $tpl->assign('page_data_json', json_encode(['storage_details' => $data_storage, 'str_gb' => l10n('%sGB'), 'str_mb' => l10n('%sMB'), 'translate_type' => $translate_type, 'translate_files' => l10n('%d files'), 'dashboard' => $intro_dashboard_extras], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'intro');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'intro');
 
         $c13y = new CheckIntegrity();
         new C13yInternal();
@@ -721,15 +721,15 @@ final class MiscController
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
-        $tabsheet->set_id('menus');
+        $tabsheet->setId('menus');
         $tabsheet->select('');
         $tabsheet->assign();
 
         $menu      = new BlockManager('menubar');
-        $menu->load_registered_blocks();
-        $reg_blocks = $menu->get_registered_blocks();
+        $menu->loadRegisteredBlocks();
+        $reg_blocks = $menu->getRegisteredBlocks();
 
-        $mb_conf = Config::raw('blk_' . $menu->get_id());
+        $mb_conf = Config::raw('blk_' . $menu->getId());
         if (is_string($mb_conf)) {
             $mb_conf = unserialize($mb_conf);
         }
@@ -763,7 +763,7 @@ final class MiscController
             }
             $this->makeConsecutive($mb_conf);
             $mb_conf_db = $mb_conf;
-            conf_update_param('blk_' . $menu->get_id(), serialize($mb_conf_db));
+            conf_update_param('blk_' . $menu->getId(), serialize($mb_conf_db));
             $tpl->assign(['save_success' => l10n('Order of menubar items has been updated successfully.')]);
         }
 
@@ -777,8 +777,8 @@ final class MiscController
         $tpl->assign(['F_ACTION' => $action]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
-        $tpl->set_filename('menubar_admin_content', 'menubar.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');
+        $tpl->setFilename('menubar_admin_content', 'menubar.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'menubar_admin_content');
     }
 
     // ── index ─────────────────────────────────────────────────────────────────
@@ -798,7 +798,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $tpl->set_filenames(['comments' => 'comments.tpl']);
+        $tpl->setFilenames(['comments' => 'comments.tpl']);
         $tpl->assign([
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
             'PWG_TOKEN'         => get_pwg_token(),
@@ -812,12 +812,12 @@ final class MiscController
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $tabsheet    = new Tabsheet();
-        $tabsheet->set_id('comments');
+        $tabsheet->setId('comments');
         $tabsheet->select('');
         $tabsheet->assign();
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('User comments'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'comments');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'comments');
     }
 
     // ── rating ────────────────────────────────────────────────────────────────
@@ -831,7 +831,7 @@ final class MiscController
         check_input_parameter('display', $_GET, false, PATTERN_ID);
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('rating');
+        $tabsheet->setId('rating');
         $tabsheet->select('rating');
         $tabsheet->assign();
 
@@ -871,7 +871,7 @@ final class MiscController
         $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
         $nb_elements   = ServiceLocator::get(ImageRepository::class)->countRatings();
 
-        $tpl->set_filename('rating', 'rating.tpl');
+        $tpl->setFilename('rating', 'rating.tpl');
         $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
 
@@ -897,7 +897,7 @@ final class MiscController
         $images = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
         $tpl->assign('images', []);
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumb_url($image);
+            $thumbnail_src = DerivativeImage::thumbUrl($image);
             $image_id_int  = is_numeric($image['id']) ? (int) $image['id'] : 0;
             $image_url     = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_int);
             $all_rates     = ServiceLocator::get(RateRepository::class)->findByElementId($image_id_int);
@@ -914,7 +914,7 @@ final class MiscController
             }
             $tpl->append('images', $tpl_image);
         }
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'rating');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
 
     // ── rating_user ───────────────────────────────────────────────────────────
@@ -924,7 +924,7 @@ final class MiscController
         $tpl = TemplateRegistry::current();
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('rating');
+        $tabsheet->setId('rating');
         $tabsheet->select('rating_user');
         $tabsheet->assign();
 
@@ -971,7 +971,7 @@ final class MiscController
 
         $image_urls = [];
         if (count($image_ids) > 0) {
-            $params = ImageStdParams::get_by_type(IMG_SQUARE);
+            $params = ImageStdParams::getByType(IMG_SQUARE);
             foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
                 $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']])];
@@ -1033,9 +1033,9 @@ final class MiscController
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::get_by_type(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => get_root_url(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
-        $tpl->set_filename('rating', 'rating_user.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'rating');
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => get_root_url(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->setFilename('rating', 'rating_user.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
 
     // ── profile ───────────────────────────────────────────────────────────────
@@ -1067,8 +1067,8 @@ final class MiscController
         $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['errors'] = array_merge($pageErrors, $errors);
 
-        $tpl->set_filename('profile', 'profile.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'profile');
+        $tpl->setFilename('profile', 'profile.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'profile');
     }
 
     // ── private helpers ───────────────────────────────────────────────────────

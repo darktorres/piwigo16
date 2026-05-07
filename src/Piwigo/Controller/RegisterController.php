@@ -85,7 +85,7 @@ final class RegisterController implements ControllerInterface
         $email = !empty($post_mail) ? htmlspecialchars(stripslashes($post_mail)) : '';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['register' => 'register.tpl']);
+        $tpl->setFilenames(['register' => 'register.tpl']);
         $tpl->assign([
             'U_HOME'                      => make_index_url(),
             'F_KEY'                       => $registration_post_key,
@@ -96,7 +96,7 @@ final class RegisterController implements ControllerInterface
             'U_IDENTIFICATION'             => ServiceLocator::get(UrlGenerator::class)->identification(),
         ]);
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theRegisterPage', $hideMenuOn)) {

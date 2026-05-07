@@ -26,7 +26,7 @@ abstract class PwgResponseEncoder
      * returns true if the parameter is a 'struct' (php array type whose keys are
      * NOT consecutive integers starting with 0)
      */
-    public static function is_struct(mixed &$data): bool
+    public static function isStruct(mixed &$data): bool
     {
         if (is_array($data)) {
             if (range(0, count($data) - 1) !== array_keys($data)) { # string keys, unordered, non-incremental keys, .. - whatever, make object
@@ -59,7 +59,7 @@ abstract class PwgResponseEncoder
 
         /** @var array<mixed> $arr */
         $arr = $value;
-        if (self::is_struct($value)) {
+        if (self::isStruct($value)) {
             if (isset($arr[WS_XML_ATTRIBUTES])) {
                 $xmlAttrs = $arr[WS_XML_ATTRIBUTES];
                 if (is_array($xmlAttrs)) {

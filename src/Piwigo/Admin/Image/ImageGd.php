@@ -30,12 +30,12 @@ class ImageGd implements ImageInterface
         $this->image = $img;
     }
 
-    public function get_width(): int
+    public function getWidth(): int
     {
         return imagesx($this->image);
     }
 
-    public function get_height(): int
+    public function getHeight(): int
     {
         return imagesy($this->image);
     }
@@ -70,7 +70,7 @@ class ImageGd implements ImageInterface
         return true;
     }
 
-    public function set_compression_quality(int $quality): bool
+    public function setCompressionQuality(int $quality): bool
     {
         $this->quality = $quality;
         return true;
@@ -86,14 +86,14 @@ class ImageGd implements ImageInterface
             imageantialias($dest, true);
         }
 
-        $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
+        $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->getWidth(), $this->getHeight());
         $this->image = $dest;
         return $result;
     }
 
     public function sharpen(int $amount): bool
     {
-        $m = PwgImage::get_sharpen_matrix($amount);
+        $m = PwgImage::getSharpenMatrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 

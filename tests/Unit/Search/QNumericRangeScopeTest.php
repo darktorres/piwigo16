@@ -27,7 +27,7 @@ final class QNumericRangeScopeTest extends TestCase
         // '>' prefix means strict greater-than (exclusive lower bound).
         $token = $this->makeToken('>100');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('size >100', $sql);
         self::assertStringNotContainsString('>=', $sql);
     }
@@ -37,7 +37,7 @@ final class QNumericRangeScopeTest extends TestCase
         // '<' prefix means strict less-than (exclusive upper bound).
         $token = $this->makeToken('<500');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('size <500', $sql);
         self::assertStringNotContainsString('<=', $sql);
     }
@@ -46,7 +46,7 @@ final class QNumericRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('100..500');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('size >=100', $sql);
         self::assertStringContainsString('size <=500', $sql);
         self::assertStringContainsString('AND', $sql);
@@ -56,7 +56,7 @@ final class QNumericRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('250');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('250', $sql);
     }
 
@@ -64,7 +64,7 @@ final class QNumericRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('>1K');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('1000', $sql);
     }
 
@@ -72,7 +72,7 @@ final class QNumericRangeScopeTest extends TestCase
     {
         $token = $this->makeToken('<2M');
         self::assertTrue($this->scope->parse($token));
-        $sql = $this->scope->get_sql('size', $token);
+        $sql = $this->scope->getSql('size', $token);
         self::assertStringContainsString('2000000', $sql);
     }
 

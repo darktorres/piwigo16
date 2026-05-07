@@ -30,7 +30,7 @@ class PwgXmlWriter
     }
 
 
-    public function start_element(string $name): void
+    public function startElement(string $name): void
     {
         $this->_end_prev(false);
         if (!empty($this->_elementStack)) {
@@ -47,7 +47,7 @@ class PwgXmlWriter
         $this->_elementStack[] = $name;
     }
 
-    public function end_element(mixed $x): void
+    public function endElement(mixed $x): void
     {
         $close_tag = $this->_end_prev(true);
         $name = array_pop($this->_elementStack);
@@ -59,14 +59,14 @@ class PwgXmlWriter
         }
     }
 
-    public function write_content(mixed $value): void
+    public function writeContent(mixed $value): void
     {
         $this->_end_prev(false);
         $str = is_scalar($value) || $value === null ? (string) $value : '';
         $this->_output(htmlspecialchars($str));
     }
 
-    public function write_cdata(mixed $value): void
+    public function writeCdata(mixed $value): void
     {
         $this->_end_prev(false);
         $str = is_scalar($value) || $value === null ? (string) $value : '';
@@ -77,12 +77,12 @@ class PwgXmlWriter
         );
     }
 
-    public function write_attribute(string $name, mixed $value): void
+    public function writeAttribute(string $name, mixed $value): void
     {
-        $this->_output(' '.$name.'="'.$this->encode_attribute($value).'"');
+        $this->_output(' '.$name.'="'.$this->encodeAttribute($value).'"');
     }
 
-    public function encode_attribute(mixed $value): string
+    public function encodeAttribute(mixed $value): string
     {
         $str = is_scalar($value) || $value === null ? (string) $value : '';
         return htmlspecialchars($str);

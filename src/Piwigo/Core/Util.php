@@ -121,11 +121,11 @@ final readonly class Util
         $title    = 'redirection';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['redirect' => 'redirect.tpl']);
+        $tpl->setFilenames(['redirect' => 'redirect.tpl']);
 
         include PHPWG_ROOT_PATH . 'include/page_header.php';
 
-        $tpl->set_filenames(['redirect' => 'redirect.tpl']);
+        $tpl->setFilenames(['redirect' => 'redirect.tpl']);
         $tpl->assign('REDIRECT_MSG', $msg);
         $tpl->parse('redirect');
 
@@ -176,7 +176,7 @@ final readonly class Util
     {
         /** @var Template $template */
         $template = $GLOBALS['template'];
-        return $template->get_themeconf($key);
+        return $template->getThemeconf($key);
     }
 
     public function getFilterPageValue(string $valueName): mixed
@@ -929,7 +929,7 @@ final readonly class Util
             }
         }
 
-        $watermark = ImageStdParams::get_watermark();
+        $watermark = ImageStdParams::getWatermark();
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
         $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . ACTIVITY_TABLE . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";

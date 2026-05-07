@@ -23,13 +23,13 @@ class QExpression extends QMultiToken
             }
         }
         $i = 0;
-        $this->parse_expression($q, $i, 0, $this);
+        $this->parseExpression($q, $i, 0, $this);
         //manipulate the tree so that 'a OR b c' is the same as 'b c OR a'
-        $this->check_operator_priority();
-        $this->build_single_tokens($this, 0);
+        $this->checkOperatorPriority();
+        $this->buildSingleTokens($this, 0);
     }
 
-    private function build_single_tokens(QMultiToken $expr, int $this_is_not): void
+    private function buildSingleTokens(QMultiToken $expr, int $this_is_not): void
     {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
@@ -47,7 +47,7 @@ class QExpression extends QMultiToken
                 }
                 $this->stoken_modifiers[] = $modifier;
             } elseif ($token instanceof QMultiToken) {
-                $this->build_single_tokens($token, $crt_is_not);
+                $this->buildSingleTokens($token, $crt_is_not);
             }
         }
     }

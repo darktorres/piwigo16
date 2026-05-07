@@ -40,7 +40,7 @@ final class ImageStdParams
     /**
      * @return string[]
      */
-    public static function get_all_types(): array
+    public static function getAllTypes(): array
     {
         return self::$all_types;
     }
@@ -48,7 +48,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public static function get_all_type_map()
+    public static function getAllTypeMap()
     {
         return self::$all_type_map;
     }
@@ -56,7 +56,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public static function get_defined_type_map()
+    public static function getDefinedTypeMap()
     {
         return self::$type_map;
     }
@@ -64,7 +64,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]|string
      */
-    public static function get_disabled_type_map(): array|string
+    public static function getDisabledTypeMap(): array|string
     {
         if (count(self::$disabled_type_map)) {
             return self::$disabled_type_map;
@@ -75,12 +75,12 @@ final class ImageStdParams
     /**
      * @return string[] maps undefined type names to defined type names
      */
-    public static function get_undefined_type_map()
+    public static function getUndefinedTypeMap()
     {
         return self::$undefined_type_map;
     }
 
-    public static function get_by_type(string $type): DerivativeParams
+    public static function getByType(string $type): DerivativeParams
     {
         return self::$all_type_map[$type];
     }
@@ -92,13 +92,13 @@ final class ImageStdParams
      * @param int $minw
      * @param int $minh
      */
-    public static function get_custom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
+    public static function getCustom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
         $params = new DerivativeParams(new SizingParams([$w,$h], $crop, ($minw !== null && $minh !== null) ? [$minw,$minh] : null));
-        self::apply_global($params);
+        self::applyGlobal($params);
 
         $key = [];
-        $params->add_url_tokens($key);
+        $params->addUrlTokens($key);
         $key = implode('_', $key);
         if ((self::$custom[$key] ?? 0) < time() - 24 * 3600) {
             self::$custom[$key] = time();
@@ -110,7 +110,7 @@ final class ImageStdParams
     /**
      * @return WatermarkParams
      */
-    public static function get_watermark()
+    public static function getWatermark()
     {
         return self::$watermark;
     }
@@ -118,7 +118,7 @@ final class ImageStdParams
     /**
      * Loads derivative configuration from database or initializes it.
      */
-    public static function load_from_db(): void
+    public static function loadFromDb(): void
     {
         $derivatives = Config::derivatives();
         $arr = \safe_unserialize(is_string($derivatives) ? $derivatives : '');
@@ -141,11 +141,11 @@ final class ImageStdParams
             }
         } else {
             self::$watermark = new WatermarkParams();
-            self::$type_map = self::get_enabled_default_sizes();
+            self::$type_map = self::getEnabledDefaultSizes();
             self::save(false);
         }
 
-        $rawDisabled = \safe_unserialize(self::get_disabled_type_map());
+        $rawDisabled = \safe_unserialize(self::getDisabledTypeMap());
         $filteredDisabled = [];
         foreach ($rawDisabled as $k => $v) {
             if ($v instanceof DerivativeParams) {
@@ -154,17 +154,17 @@ final class ImageStdParams
         }
         self::$disabled_type_map = $filteredDisabled;
         if (empty(self::$disabled_type_map)) {
-            self::$disabled_type_map = self::get_disabled_default_sizes();
-            self::save_disabled();
+            self::$disabled_type_map = self::getDisabledDefaultSizes();
+            self::saveDisabled();
         }
 
-        self::build_maps();
+        self::buildMaps();
     }
 
     /**
      * @param WatermarkParams $watermark
      */
-    public static function set_watermark($watermark): void
+    public static function setWatermark($watermark): void
     {
         self::$watermark = $watermark;
     }
@@ -174,11 +174,11 @@ final class ImageStdParams
      *
      * @param DerivativeParams[] $map
      */
-    public static function set_and_save($map): void
+    public static function setAndSave($map): void
     {
         self::$type_map = $map;
         self::save(false);
-        self::build_maps();
+        self::buildMaps();
     }
 
     /**
@@ -198,14 +198,14 @@ final class ImageStdParams
         ServiceLocator::get(ConfigService::class)->confUpdateParam('derivatives', $ser);
 
         if ($save_disabled) {
-            self::save_disabled();
+            self::saveDisabled();
         }
     }
 
     /**
      * Saves the disabled configuration in database.
      */
-    public static function save_disabled(): void
+    public static function saveDisabled(): void
     {
         if (!ServiceLocator::has(ConfigService::class)) {
             return;
@@ -221,24 +221,24 @@ final class ImageStdParams
     }
 
     /** @param DerivativeParams[] $map */
-    public static function set_and_save_disabled(array $map): void
+    public static function setAndSaveDisabled(array $map): void
     {
         self::$disabled_type_map = $map;
-        self::save_disabled();
+        self::saveDisabled();
     }
 
-    public static function restore_default(): void
+    public static function restoreDefault(): void
     {
-        self::$type_map = self::get_enabled_default_sizes();
-        self::$disabled_type_map = self::get_disabled_default_sizes();
+        self::$type_map = self::getEnabledDefaultSizes();
+        self::$disabled_type_map = self::getDisabledDefaultSizes();
         self::save();
-        self::build_maps();
+        self::buildMaps();
     }
 
     /**
      * @return DerivativeParams[]
      */
-    public static function get_default_sizes(): array
+    public static function getDefaultSizes(): array
     {
         $arr = [
           IMG_SQUARE => new DerivativeParams(SizingParams::square(120)),
@@ -263,9 +263,9 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public static function get_enabled_default_sizes(): array
+    public static function getEnabledDefaultSizes(): array
     {
-        $default_sizes = self::get_default_sizes();
+        $default_sizes = self::getDefaultSizes();
         foreach (self::$disabled_types_by_default as $type) {
             unset($default_sizes[$type]);
         }
@@ -275,9 +275,9 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public static function get_disabled_default_sizes(): array
+    public static function getDisabledDefaultSizes(): array
     {
-        $all = self::get_default_sizes();
+        $all = self::getDefaultSizes();
         $disabled_sizes = array_intersect_key($all, array_flip(self::$disabled_types_by_default));
         return $disabled_sizes;
     }
@@ -287,7 +287,7 @@ final class ImageStdParams
      *
      * @param DerivativeParams $params
      */
-    public static function apply_global($params): void
+    public static function applyGlobal($params): void
     {
         $params->use_watermark = !empty(self::$watermark->file) &&
             (self::$watermark->min_size[0] <= $params->sizing->ideal_size[0]
@@ -297,11 +297,11 @@ final class ImageStdParams
     /**
      * Build 'type_map', 'all_type_map' and 'undefined_type_map'.
      */
-    private static function build_maps(): void
+    private static function buildMaps(): void
     {
         foreach (self::$type_map as $type => $params) {
             $params->type = $type;
-            self::apply_global($params);
+            self::applyGlobal($params);
         }
         self::$all_type_map = self::$type_map;
 

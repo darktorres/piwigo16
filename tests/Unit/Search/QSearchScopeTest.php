@@ -45,13 +45,13 @@ final class QSearchScopeTest extends TestCase
         $scope = new QSearchScope('tag', []);
         $ch = 'x';
         $crt = '';
-        self::assertFalse($scope->process_char($ch, $crt));
+        self::assertFalse($scope->processChar($ch, $crt));
     }
 
     public function testGetSqlReturnsEmptyString(): void
     {
         $scope = new QSearchScope('tag', []);
         $token = new QSingleToken('nature', 0, $scope);
-        self::assertSame('', $scope->get_sql('field', $token));
+        self::assertSame('', $scope->getSql('field', $token));
     }
 }

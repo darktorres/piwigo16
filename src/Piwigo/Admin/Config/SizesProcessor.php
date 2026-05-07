@@ -77,7 +77,7 @@ final class SizesProcessor
 
         // step 2 — check validity
         $prev_w = $prev_h = 0;
-        foreach (ImageStdParams::get_all_types() as $type) {
+        foreach (ImageStdParams::getAllTypes() as $type) {
             /** @var array<string, mixed> $pderivative */
             $pderivative = $pderivatives[$type] ?? [];
             if (!$pderivative['enabled']) {
@@ -129,12 +129,12 @@ final class SizesProcessor
             $quality_changed = ImageStdParams::$quality != $resize_quality;
             ImageStdParams::$quality = $resize_quality;
 
-            $enabled = ImageStdParams::get_defined_type_map();
+            $enabled = ImageStdParams::getDefinedTypeMap();
             /** @var array<string, DerivativeParams> $disabled */
-            $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
+            $disabled = safe_unserialize(ImageStdParams::getDisabledTypeMap());
             $changed_types = [];
 
-            foreach (ImageStdParams::get_all_types() as $type) {
+            foreach (ImageStdParams::getAllTypes() as $type) {
                 /** @var array<string, mixed> $pderivative */
                 $pderivative = $pderivatives[$type] ?? [];
 
@@ -154,7 +154,7 @@ final class SizesProcessor
                     );
                     $new_params->sharpen = $pd_sharpen;
 
-                    ImageStdParams::apply_global($new_params);
+                    ImageStdParams::applyGlobal($new_params);
 
                     if (isset($enabled[$type])) {
                         $old_params = $enabled[$type];
@@ -192,7 +192,7 @@ final class SizesProcessor
             }
 
             $enabled_by = [];
-            foreach (ImageStdParams::get_all_types() as $type) {
+            foreach (ImageStdParams::getAllTypes() as $type) {
                 if (isset($enabled[$type])) {
                     $enabled_by[$type] = $enabled[$type];
                 }
@@ -205,8 +205,8 @@ final class SizesProcessor
                 }
             }
 
-            ImageStdParams::set_and_save($enabled_by);
-            ImageStdParams::set_and_save_disabled($disabled);
+            ImageStdParams::setAndSave($enabled_by);
+            ImageStdParams::setAndSaveDisabled($disabled);
 
             if (count($changed_types)) {
                 ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);

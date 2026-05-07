@@ -83,7 +83,7 @@ final class UsersController
             'ACTIVATE_COMMENTS'  => Config::activateComments(),
             'Double_Password'    => Config::doublePasswordTypeInAdmin(),
         ]);
-        $tpl->set_filenames(['user_list' => 'user_list.tpl']);
+        $tpl->setFilenames(['user_list' => 'user_list.tpl']);
 
         $default_user = UserService::get()->getDefaultUserInfo(true);
         $userId       = is_numeric($user['id']) ? (int) $user['id'] : 0;
@@ -239,7 +239,7 @@ final class UsersController
             'validLinkWithoutMail'     => l10n('Copy the link below and send it to the user so the password can be set.'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_list');
     }
 
     // ── user_perm ─────────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ final class UsersController
             ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
-        $tpl->set_filenames(['user_perm' => 'user_perm.tpl', 'double_select' => 'double_select.tpl']);
+        $tpl->setFilenames(['user_perm' => 'user_perm.tpl', 'double_select' => 'double_select.tpl']);
         $tpl->assign([
             'TITLE'              => l10n('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
@@ -317,8 +317,8 @@ final class UsersController
         display_select_cat_wrapper($query_false, [], 'category_option_false');
 
         $tpl->assign('PWG_TOKEN', get_pwg_token());
-        $tpl->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');
+        $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_perm');
     }
 
     // ── user_activity ─────────────────────────────────────────────────────────
@@ -363,7 +363,7 @@ final class UsersController
             exit();
         }
 
-        $tpl->set_filename('user_activity', 'user_activity.tpl');
+        $tpl->setFilename('user_activity', 'user_activity.tpl');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Users'));
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['users']);
@@ -493,7 +493,7 @@ final class UsersController
             'actionInfos_tags_moved'        => l10n('%d tags moved'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_activity');
     }
 
     private function webmasterIdIsLocal(): bool

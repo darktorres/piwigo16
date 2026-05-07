@@ -122,7 +122,7 @@ final class WatermarkProcessor
                 is_numeric($pwatermark['minh'] ?? null) ? (int) $pwatermark['minh'] : 0,
             ];
 
-            $old_watermark = ImageStdParams::get_watermark();
+            $old_watermark = ImageStdParams::getWatermark();
             $watermark_changed =
                 $watermark->file != $old_watermark->file
                 || $watermark->xpos != $old_watermark->xpos
@@ -131,20 +131,20 @@ final class WatermarkProcessor
                 || $watermark->yrepeat != $old_watermark->yrepeat
                 || $watermark->opacity != $old_watermark->opacity;
 
-            ImageStdParams::set_watermark($watermark);
+            ImageStdParams::setWatermark($watermark);
 
             $changed_types = [];
-            foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+            foreach (ImageStdParams::getDefinedTypeMap() as $type => $params) {
                 $old_use_watermark = $params->use_watermark;
-                ImageStdParams::apply_global($params);
+                ImageStdParams::applyGlobal($params);
 
                 $changed = $params->use_watermark != $old_use_watermark;
                 if (!$changed && $params->use_watermark) {
                     $changed = $watermark_changed;
                 }
                 if (!$changed && $params->use_watermark) {
-                    $changed |= $watermark->min_size[0] != $old_watermark->min_size[0] && ($watermark->min_size[0] < $params->max_width() || $old_watermark->min_size[0] < $params->max_width());
-                    $changed |= $watermark->min_size[1] != $old_watermark->min_size[1] && ($watermark->min_size[1] < $params->max_height() || $old_watermark->min_size[1] < $params->max_height());
+                    $changed |= $watermark->min_size[0] != $old_watermark->min_size[0] && ($watermark->min_size[0] < $params->maxWidth() || $old_watermark->min_size[0] < $params->maxWidth());
+                    $changed |= $watermark->min_size[1] != $old_watermark->min_size[1] && ($watermark->min_size[1] < $params->maxHeight() || $old_watermark->min_size[1] < $params->maxHeight());
                 }
 
                 if ($changed) {

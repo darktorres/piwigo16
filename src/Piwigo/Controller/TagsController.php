@@ -33,7 +33,7 @@ final class TagsController implements ControllerInterface
         $page['body_id'] = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['tags' => 'tags.tpl']);
+        $tpl->setFilenames(['tags' => 'tags.tpl']);
 
         $page['display_mode'] = Config::tagsDefaultDisplayMode();
         $display_mode         = input_string('display_mode', null, $_GET);
@@ -105,7 +105,7 @@ final class TagsController implements ControllerInterface
             }
         }
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theTagsPage', $hideMenuOn)) {

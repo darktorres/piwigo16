@@ -305,15 +305,15 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $src_file = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
 
             $row['src_image']  = new SrcImage($row);
-            $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
+            $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
             $row['path_ext']   = strtolower(get_extension($src_path));
             $row['file_ext']   = strtolower(get_extension($src_file));
 
             if ($i == 'current') {
                 $row['element_path'] = get_element_path($row);
-                if ($row['src_image']->is_original()) {
+                if ($row['src_image']->isOriginal()) {
                     if ($user['enabled_high'] == 'true') {
-                        $row['element_url']  = $row['src_image']->get_url();
+                        $row['element_url']  = $row['src_image']->getUrl();
                         $row['download_url'] = get_action_url($src_id, 'e', true);
                     }
                 } else {
@@ -366,9 +366,9 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         }
 
         if ($page['slideshow'] && Config::lightSlideshow()) {
-            $tpl->set_filenames(['slideshow' => 'slideshow.tpl']);
+            $tpl->setFilenames(['slideshow' => 'slideshow.tpl']);
         } else {
-            $tpl->set_filenames(['picture' => 'picture.tpl']);
+            $tpl->setFilenames(['picture' => 'picture.tpl']);
         }
 
         $title    = (string) $picture['current']['TITLE'];
@@ -379,7 +379,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $curSrcImg = $picture['current']['src_image'];
         $metadata_showable = trigger_change(
             'get_element_metadata_available',
-            (Config::showExif() || Config::showIptc()) && !$curSrcImg->is_mimetype(),
+            (Config::showExif() || Config::showIptc()) && !$curSrcImg->isMimetype(),
             $picture['current']
         );
 
@@ -509,7 +509,7 @@ SELECT *
         $url = make_index_url(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
         $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
-        if ($currentSrcImage !== null && $currentSrcImage->is_original() && isset($currentPic['width'])) {
+        if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
             $infos['INFO_DIMENSIONS'] = (is_scalar($currentPic['width']) ? (string) $currentPic['width'] : '') . '*' . (is_scalar($currentPic['height'] ?? null) ? (string) $currentPic['height'] : '');
         }
         if (!empty($currentPic['filesize'] ?? null)) {
@@ -558,14 +558,14 @@ SELECT *
 
         $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
         $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;
-        if ($nextSrcImage !== null && $nextSrcImage->is_original() && $tpl->get_template_vars('U_PREFETCH') == null
+        if ($nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
             && !str_contains(is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '', 'Chrome/')
         ) {
             $derivType  = pwg_get_session_var('picture_deriv', Config::derivativeDefaultSize());
             $nextDerivs = is_array($nextPic['derivatives'] ?? null) ? $nextPic['derivatives'] : [];
             $nextDeriv  = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
             if ($nextDeriv !== null) {
-                $tpl->assign('U_PREFETCH', $nextDeriv->get_url());
+                $tpl->assign('U_PREFETCH', $nextDeriv->getUrl());
             }
         }
 
@@ -579,7 +579,7 @@ SELECT *
             ServiceLocator::get(PictureMetadataRenderer::class)->render();
         }
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (Config::pictureMenu() && !in_array('thePicturePage', $hideMenuOn)) {
@@ -595,7 +595,7 @@ SELECT *
         if ($page['slideshow'] && Config::lightSlideshow()) {
             $tpl->pparse('slideshow');
         } else {
-            $tpl->parse_picture_buttons();
+            $tpl->parsePictureButtons();
             $tpl->pparse('picture');
         }
 

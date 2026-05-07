@@ -44,9 +44,9 @@ final class NbmController implements ControllerInterface
         $page['body_id'] = 'theNBMPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['nbm' => 'nbm.tpl']);
+        $tpl->setFilenames(['nbm' => 'nbm.tpl']);
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNBMPage', $hideMenuOn, true)) {

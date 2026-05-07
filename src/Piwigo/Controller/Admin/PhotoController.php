@@ -96,7 +96,7 @@ final class PhotoController
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('photo');
+        $tabsheet->setId('photo');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
@@ -248,7 +248,7 @@ SELECT id
 
         $image_file = $row['file'];
 
-        $tpl->set_filenames(['picture_modify' => 'picture_modify.tpl']);
+        $tpl->setFilenames(['picture_modify' => 'picture_modify.tpl']);
 
         $admin_url_start = $admin_photo_base_url . '-properties';
         $src_image       = new SrcImage($row);
@@ -388,7 +388,7 @@ SELECT id
         ]);
 
         trigger_notify('loc_end_picture_modify');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_modify');
     }
 
     // ── picture_coi ───────────────────────────────────────────────────────────
@@ -424,7 +424,7 @@ SELECT id
         $row = $image_infos;
 
         if (isset($_POST['submit'])) {
-            foreach (ImageStdParams::get_defined_type_map() as $params) {
+            foreach (ImageStdParams::getDefinedTypeMap() as $params) {
                 if ($params->sizing->max_crop != 0) {
                     ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, $params->type);
                 }
@@ -454,19 +454,19 @@ SELECT id
             ];
         }
 
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             if ($params->sizing->max_crop != 0) {
                 $derivative = new DerivativeImage($params, new SrcImage($row));
                 $tpl->append('cropped_derivatives', [
-                    'U_IMG'    => (is_string($u = $derivative->get_url()) ? $u : '') . $uid,
-                    'HTM_SIZE' => $derivative->get_size_htm(),
+                    'U_IMG'    => (is_string($u = $derivative->getUrl()) ? $u : '') . $uid,
+                    'HTM_SIZE' => $derivative->getSizeHtm(),
                 ]);
             }
         }
 
         $tpl->assign($tpl_var);
-        $tpl->set_filename('picture_coi', 'picture_coi.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'picture_coi');
+        $tpl->setFilename('picture_coi', 'picture_coi.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_coi');
     }
 
     // ── picture_formats ───────────────────────────────────────────────────────
@@ -498,7 +498,7 @@ SELECT id
 
         $tpl->assign([
             'ADD_FORMATS_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add') . '&formats=' . $picFmtId,
-            'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
+            'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $image),
             'FORMATS'         => $formats,
             'PWG_TOKEN'       => get_pwg_token(),
             'page_data_json'  => json_encode([
@@ -510,8 +510,8 @@ SELECT id
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->set_filename('picture_formats', 'picture_formats.tpl');
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'picture_formats');
+        $tpl->setFilename('picture_formats', 'picture_formats.tpl');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_formats');
     }
 
     // ── photos_add ────────────────────────────────────────────────────────────
@@ -537,11 +537,11 @@ SELECT id
         }
 
         $tabsheet = new Tabsheet();
-        $tabsheet->set_id('photos_add');
+        $tabsheet->setId('photos_add');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tpl->set_filenames(['photos_add' => 'photos_add_' . $page['tab'] . '.tpl']);
+        $tpl->setFilenames(['photos_add' => 'photos_add_' . $page['tab'] . '.tpl']);
 
         $tab = (string) $page['tab'];
         if ($tab === 'direct') {
@@ -667,7 +667,7 @@ SELECT id
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }
 
     // ── photos_add_ftp ────────────────────────────────────────────────────────
@@ -680,7 +680,7 @@ SELECT id
 
         $tpl->assign('FTP_HELP_CONTENT', load_language('help/photos_add_ftp.html', '', ['return' => true]));
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Upload Photos'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }
 
     // ── photos_add_applications ───────────────────────────────────────────────
@@ -692,6 +692,6 @@ SELECT id
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Upload Photos'));
-        $tpl->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }
 }

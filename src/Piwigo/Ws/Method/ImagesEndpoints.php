@@ -822,7 +822,7 @@ final class ImagesEndpoints
                 $image      = $images[0];
                 $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
                 $addStatus  = ServiceLocator::get(UploadService::class)->addFormat($filePath, $formatExt ?? '', $imageIdStr);
-                return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumb_url($image), 'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
+                return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumbUrl($image), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
             }
             $name          = stripslashes(is_scalar($params['name']) ? (string) $params['name'] : '');
             $idImage       = null;
@@ -846,7 +846,7 @@ final class ImagesEndpoints
             if ($imageInfos === null) {
                 return null;
             }
-            return ['image_id' => $imageId, 'src' => DerivativeImage::thumb_url($imageInfos), 'square_src' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $imageInfos), 'name' => $imageInfos['name'], 'category' => ['id' => $pCategoryFirst, 'nb_photos' => (int) $categoryInfos['nb_photos'] + (is_numeric($nbPhotosLounge) ? (int) $nbPhotosLounge : 0), 'label' => $categoryName], 'add_status' => $addStatus];
+            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($imageInfos), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $imageInfos), 'name' => $imageInfos['name'], 'category' => ['id' => $pCategoryFirst, 'nb_photos' => (int) $categoryInfos['nb_photos'] + (is_numeric($nbPhotosLounge) ? (int) $nbPhotosLounge : 0), 'label' => $categoryName], 'add_status' => $addStatus];
         }
         return null;
     }

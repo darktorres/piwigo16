@@ -120,7 +120,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $page['body_id'] = 'thePasswordPage';
-        $tpl->set_filenames(['password' => 'password.tpl']);
+        $tpl->setFilenames(['password' => 'password.tpl']);
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'          => $title,
@@ -132,7 +132,7 @@ final class PasswordController implements ControllerInterface
             'U_REGISTER'     => ServiceLocator::get(UrlGenerator::class)->register(),
         ]);
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('thePasswordPage', $hideMenuOn)) {

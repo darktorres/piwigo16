@@ -54,7 +54,7 @@ class Updates
         }
     }
 
-    public static function check_piwigo_upgrade(): void
+    public static function checkPiwigoUpgrade(): void
     {
         $_SESSION['need_update'.PHPWG_VERSION] = null;
 
@@ -78,7 +78,7 @@ class Updates
      * )
      */
     /** @return array<mixed> */
-    public function get_piwigo_new_versions(): array
+    public function getPiwigoNewVersions(): array
     {
         $new_versions = [
           'piwigo.org-checked' => false,
@@ -106,7 +106,7 @@ class Updates
                 $last_version = trim($all_versions[0]);
                 if ('Official' === $env) {
                     // Check if build_version is lower than the latest version
-                    if ($this->container_version_compare($build_version, $last_version) == '-1') {
+                    if ($this->containerVersionCompare($build_version, $last_version) == '-1') {
                         $last_branch = get_branch_from_version(substr($last_version, 0, -1));
                         if ($last_branch == $actual_branch) {
                             $new_versions['minor'] = $last_version;
@@ -115,7 +115,7 @@ class Updates
                             foreach ($all_versions as $version) {
                                 $branch = get_branch_from_version(substr($version, 0, -1));
                                 if ($branch == $actual_branch) {
-                                    if ($this->container_version_compare($build_version, $version) == '-1') {
+                                    if ($this->containerVersionCompare($build_version, $version) == '-1') {
                                         $new_versions['minor'] = $version;
                                     }
                                     break;
@@ -167,13 +167,13 @@ class Updates
      *
      * @since 2.9
      */
-    public function notify_piwigo_new_versions(): void
+    public function notifyPiwigoNewVersions(): void
     {
         if (!pwg_is_dbconf_writeable()) {
             return;
         }
 
-        $new_versions = $this->get_piwigo_new_versions();
+        $new_versions = $this->getPiwigoNewVersions();
         conf_update_param('update_notify_last_check', date('c'));
 
         if ($new_versions['is_dev']) {
@@ -254,7 +254,7 @@ class Updates
         }
     }
 
-    public function get_server_extensions(string $version = PHPWG_VERSION): bool
+    public function getServerExtensions(string $version = PHPWG_VERSION): bool
     {
         $get_data = [
           'format' => 'php',
@@ -348,7 +348,7 @@ class Updates
                 $this->$server_type->$server_string = $extension_list;
             }
 
-            $this->check_missing_extensions($ext_to_check);
+            $this->checkMissingExtensions($ext_to_check);
             return true;
         }
         return false;
@@ -356,11 +356,11 @@ class Updates
 
     // Check all extensions upgrades
     /** @return array<mixed>|false */
-    public function check_extensions(): array|false
+    public function checkExtensions(): array|false
     {
         $_SESSION['extensions_need_update'] = [];
 
-        if (!$this->get_server_extensions()) {
+        if (!$this->getServerExtensions()) {
             return false;
         }
 
@@ -402,7 +402,7 @@ class Updates
     }
 
     // Check if extension have been upgraded since last check
-    public function check_updated_extensions(): void
+    public function checkUpdatedExtensions(): void
     {
         $extensionsNeedUpdate = is_array($_SESSION['extensions_need_update'] ?? null) ? $_SESSION['extensions_need_update'] : [];
         foreach ($this->types as $type) {
@@ -416,7 +416,7 @@ class Updates
                     if (isset($typeUpdates[$ext_id])
                       and safe_version_compare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
                         // Extension have been upgraded
-                        $this->check_extensions();
+                        $this->checkExtensions();
                         break;
                     }
                 }
@@ -425,7 +425,7 @@ class Updates
     }
 
     /** @param array<mixed> $missing */
-    public function check_missing_extensions(array $missing): void
+    public function checkMissingExtensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
             if (!is_string($type)) {
@@ -445,7 +445,7 @@ class Updates
         }
     }
 
-    public function get_merged_extensions(string $version): void
+    public function getMergedExtensions(string $version): void
     {
         if (ServiceLocator::get(AdminService::class)->fetchRemote($this->merged_extension_url, $result)) {
             $rows = explode("\n", $result);
@@ -460,7 +460,7 @@ class Updates
         }
     }
 
-    public static function process_obsolete_list(string $file): void
+    public static function processObsoleteList(string $file): void
     {
         if (file_exists(PHPWG_ROOT_PATH.$file)
           and $old_files = file(PHPWG_ROOT_PATH.$file, FILE_IGNORE_NEW_LINES)) {
@@ -476,7 +476,7 @@ class Updates
         }
     }
 
-    public static function upgrade_to(string $upgrade_to, int &$step, bool $check_current_version = true): void
+    public static function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): void
     {
         $page = &$GLOBALS['page'];
         if (!is_array($page)) {
@@ -577,7 +577,7 @@ class Updates
 
                     if (empty($error)) {
                         if (!empty($obsolete_list)) {
-                            self::process_obsolete_list($obsolete_list);
+                            self::processObsoleteList($obsolete_list);
                         }
 
                         ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
@@ -590,7 +590,7 @@ class Updates
                             // a major update might even encounter fatal error if Smarty
                             // changes. Anyway, a compiled template purge will be performed
                             // by upgrade.php
-                            $template->delete_compiled_templates();
+                            $template->deleteCompiledTemplates();
                             conf_delete_param('fs_quick_check_last_check');
 
                             PageState::current()->addInfo(l10n('Update Complete'));
@@ -620,7 +620,7 @@ class Updates
 
     // Compare version number with a letter suffix
     // Similar to version_compare with "<" sign
-    public function container_version_compare(string $v1, string $v2): bool|int|null
+    public function containerVersionCompare(string $v1, string $v2): bool|int|null
     {
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
         $v1_semantic_ver = substr((string) $v1, 0, -1);

@@ -80,9 +80,9 @@ SELECT id FROM ' . CATEGORIES_TABLE . '
         switch ($get_part) {
             case 'e':
                 $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-                if ($src_image->is_original() && !($user['enabled_high'] ?? false)) {
+                if ($src_image->isOriginal() && !($user['enabled_high'] ?? false)) {
                     $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
-                    if (!$deriv->same_as_source()) {
+                    if (!$deriv->sameAsSource()) {
                         $this->error(401, 'Access denied e');
                     }
                 }

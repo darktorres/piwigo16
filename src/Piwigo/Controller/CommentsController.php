@@ -208,7 +208,7 @@ final class CommentsController implements ControllerInterface
         $page['body_id'] = 'theCommentsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->set_filenames(['comments' => 'comments.tpl', 'comment_list' => 'comment_list.tpl']);
+        $tpl->setFilenames(['comments' => 'comments.tpl', 'comment_list' => 'comment_list.tpl']);
         $tpl->assign([
             'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
             'F_KEYWORD' => !empty($get_keyword) ? htmlspecialchars(stripslashes($get_keyword)) : '',
@@ -358,10 +358,10 @@ SELECT *
             }
         }
 
-        $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::get_by_type(IMG_THUMB));
+        $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::getByType(IMG_THUMB));
         $tpl->assign('comment_derivative_params', $derivative_params);
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theCommentsPage', $hideMenuOn)) {
@@ -372,7 +372,7 @@ SELECT *
         trigger_notify('loc_end_comments');
         flush_page_messages();
         if (count($comments) > 0) {
-            $tpl->assign_var_from_handle('COMMENT_LIST', 'comment_list');
+            $tpl->assignVarFromHandle('COMMENT_LIST', 'comment_list');
         }
         $tpl->pparse('comments');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

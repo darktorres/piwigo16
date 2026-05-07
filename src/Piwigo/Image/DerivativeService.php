@@ -25,21 +25,21 @@ final class DerivativeService
             return;
         }
 
-        ImageStdParams::load_from_db();
+        ImageStdParams::loadFromDb();
 
-        $defined = ImageStdParams::get_defined_type_map();
+        $defined = ImageStdParams::getDefinedTypeMap();
         if (!isset($defined[$type])) {
             return;
         }
 
         $params     = $defined[$type];
         $derivImage = new DerivativeImage($params, $srcImage);
-        if ($derivImage->same_as_source()) {
+        if ($derivImage->sameAsSource()) {
             return;
         }
 
         $srcPath   = PHPWG_ROOT_PATH . $srcImage->rel_path;
-        $derivPath = $derivImage->get_path();
+        $derivPath = $derivImage->getPath();
 
         $srcMtime = Filesystem::tryFileMtime($srcPath);
         if ($srcMtime === false) {
@@ -59,7 +59,7 @@ final class DerivativeService
         }
 
         $rotationCode  = is_numeric($imageRow['rotation'] ?? null) ? (int) $imageRow['rotation'] : 0;
-        $rotationAngle = PwgImage::get_rotation_angle_from_code($rotationCode);
+        $rotationAngle = PwgImage::getRotationAngleFromCode($rotationCode);
         $coi           = is_string($imageRow['coi'] ?? null) ? $imageRow['coi'] : null;
 
         $image = new PwgImage($srcPath);
@@ -69,7 +69,7 @@ final class DerivativeService
         }
 
         /** @var int[] $o_size */
-        $o_size = [$image->get_width(), $image->get_height()];
+        $o_size = [$image->getWidth(), $image->getHeight()];
         /** @var array<int, int|float> $d_size */
         $d_size     = $o_size;
         $crop_rect  = null;
@@ -89,11 +89,11 @@ final class DerivativeService
             $image->sharpen((int) $params->sharpen);
         }
 
-        if ($params->will_watermark($d_size)) {
-            $wm       = ImageStdParams::get_watermark();
+        if ($params->willWatermark($d_size)) {
+            $wm       = ImageStdParams::getWatermark();
             $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
             /** @var array<int, int> $wm_size */
-            $wm_size  = [$wm_image->get_width(), $wm_image->get_height()];
+            $wm_size  = [$wm_image->getWidth(), $wm_image->getHeight()];
 
             if ($d_size[0] < $wm_size[0] || $d_size[1] < $wm_size[1]) {
                 $wm_scaling = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);
@@ -124,7 +124,7 @@ final class DerivativeService
     /** @return string[] All currently-enabled derivative type names */
     public function getDefinedTypes(): array
     {
-        ImageStdParams::load_from_db();
-        return array_keys(ImageStdParams::get_defined_type_map());
+        ImageStdParams::loadFromDb();
+        return array_keys(ImageStdParams::getDefinedTypeMap());
     }
 }

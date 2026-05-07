@@ -589,47 +589,47 @@ final readonly class SearchService
                 case 'width':
                 case 'height':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql($scopeId, $token);
+                        $clauses[] = $tokenScope->getSql($scopeId, $token);
                     }
                     break;
                 case 'ratio':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('width/height', $token);
+                        $clauses[] = $tokenScope->getSql('width/height', $token);
                     }
                     break;
                 case 'size':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('width*height', $token);
+                        $clauses[] = $tokenScope->getSql('width*height', $token);
                     }
                     break;
                 case 'hits':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('hit', $token);
+                        $clauses[] = $tokenScope->getSql('hit', $token);
                     }
                     break;
                 case 'score':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('rating_score', $token);
+                        $clauses[] = $tokenScope->getSql('rating_score', $token);
                     }
                     break;
                 case 'filesize':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('1024*filesize', $token);
+                        $clauses[] = $tokenScope->getSql('1024*filesize', $token);
                     }
                     break;
                 case 'created':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('date_creation', $token);
+                        $clauses[] = $tokenScope->getSql('date_creation', $token);
                     }
                     break;
                 case 'posted':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql('date_available', $token);
+                        $clauses[] = $tokenScope->getSql('date_available', $token);
                     }
                     break;
                 case 'id':
                     if ($tokenScope !== null) {
-                        $clauses[] = $tokenScope->get_sql($scopeId, $token);
+                        $clauses[] = $tokenScope->getSql($scopeId, $token);
                     }
                     break;
                 default:
@@ -839,7 +839,7 @@ final readonly class SearchService
             ? (string) $currentUser->rawAttributes['cache_update_time']
             : '';
 
-        $cacheKey = $persistentCache->make_key([
+        $cacheKey = $persistentCache->makeKey([
             strtolower($q),
             Config::orderBy(),
             $currentUser->id, $cacheUpdate,
@@ -912,7 +912,7 @@ final readonly class SearchService
                 if (strlen((string) $token->term) > 2
                   && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0
                   && strcspn((string) $token->term, '\'0123456789') == strlen((string) $token->term)) {
-                    $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
+                    $token->variants = array_unique(array_diff($inflector->getVariants($token->term), [$token->term]));
                 }
             }
         }

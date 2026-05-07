@@ -46,7 +46,7 @@ class LocalSiteReader
     }
 
     /** @return string[] */
-    public function get_full_directories(string $basedir): array
+    public function getFullDirectories(string $basedir): array
     {
         return ServiceLocator::get(ImageAdminService::class)->getFsDirectories($basedir);
     }
@@ -54,7 +54,7 @@ class LocalSiteReader
     /**
      * @return array<mixed>
      */
-    public function get_elements(string $path): array
+    public function getElements(string $path): array
     {
         $subdirs = [];
         $fs = [];
@@ -71,13 +71,13 @@ class LocalSiteReader
                     if (isset(Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
                         if (! isset(Config::flipPictureExt()[$extension])) {
-                            $representative_ext = $this->get_representative_ext($path, $filename_wo_ext);
+                            $representative_ext = $this->getRepresentativeExt($path, $filename_wo_ext);
                         }
 
                         $fs[ $path.'/'.$node ] = ['representative_ext' => $representative_ext];
 
                         if (Config::isFormatsEnabled()) {
-                            $fs[ $path.'/'.$node ]['formats'] = $this->get_formats($path, $filename_wo_ext);
+                            $fs[ $path.'/'.$node ]['formats'] = $this->getFormats($path, $filename_wo_ext);
                         }
                     }
                 } elseif (is_dir($path.'/'.$node)
@@ -91,7 +91,7 @@ class LocalSiteReader
             closedir($contents);
 
             foreach ($subdirs as $subdir) {
-                $tmp_fs = $this->get_elements($path.'/'.$subdir);
+                $tmp_fs = $this->getElements($path.'/'.$subdir);
                 $fs = array_merge($fs, $tmp_fs);
             }
             ksort($fs);
@@ -100,7 +100,7 @@ class LocalSiteReader
     }
 
     /** @return array<mixed> */
-    public function get_update_attributes(): array
+    public function getUpdateAttributes(): array
     {
         return ['representative_ext'];
     }
@@ -109,7 +109,7 @@ class LocalSiteReader
      * @param array<mixed>|string $file
      * @return array<mixed>
      */
-    public function get_element_update_attributes(mixed $file): array
+    public function getElementUpdateAttributes(mixed $file): array
     {
         $data = [];
         if (!is_string($file)) {
@@ -123,7 +123,7 @@ class LocalSiteReader
         if (! isset(Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
             $filename_wo_ext = get_filename_wo_extension($filename);
-            $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
+            $representative_ext = $this->getRepresentativeExt($dirname, $filename_wo_ext);
         }
 
         $data['representative_ext'] = $representative_ext;
@@ -131,7 +131,7 @@ class LocalSiteReader
     }
 
     /** @return array<mixed> */
-    public function get_metadata_attributes(): array
+    public function getMetadataAttributes(): array
     {
         return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadataAttributes();
     }
@@ -140,12 +140,12 @@ class LocalSiteReader
      * @param array<mixed> $infos
      * @return array<mixed>|false
      */
-    public function get_element_metadata(array $infos): array|false
+    public function getElementMetadata(array $infos): array|false
     {
         return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadata($infos);
     }
 
-    public function get_representative_ext(string $path, string $filename_wo_ext): ?string
+    public function getRepresentativeExt(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path.'/pwg_representative/'.$filename_wo_ext.'.';
         foreach (Config::pictureExtensions() as $ext) {
@@ -158,7 +158,7 @@ class LocalSiteReader
     }
 
     /** @return float[] */
-    public function get_formats(string $path, string $filename_wo_ext): array
+    public function getFormats(string $path, string $filename_wo_ext): array
     {
         $formats = [];
         $base_test = $path.'/pwg_format/'.$filename_wo_ext.'.';

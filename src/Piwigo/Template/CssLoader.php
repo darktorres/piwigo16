@@ -28,9 +28,9 @@ class CssLoader
     /**
      * @return Combinable[] array of combined CSS.
      */
-    public function get_css(): array
+    public function getCss(): array
     {
-        uasort($this->registered_css, self::cmp_by_order(...));
+        uasort($this->registered_css, self::cmpByOrder(...));
         $combiner = new FileCombiner('css', $this->registered_css);
         return $combiner->combine();
     }
@@ -38,7 +38,7 @@ class CssLoader
     /**
      * Callback for CSS files sorting.
      */
-    private static function cmp_by_order(Css $a, Css $b): int
+    private static function cmpByOrder(Css $a, Css $b): int
     {
         return $a->order - $b->order;
     }

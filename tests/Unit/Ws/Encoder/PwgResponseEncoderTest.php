@@ -13,13 +13,13 @@ final class PwgResponseEncoderTest extends TestCase
     public function testIsStructReturnsTrueForAssociativeArray(): void
     {
         $data = ['a' => 1, 'b' => 2];
-        self::assertTrue(PwgResponseEncoder::is_struct($data));
+        self::assertTrue(PwgResponseEncoder::isStruct($data));
     }
 
     public function testIsStructReturnsFalseForIndexedArray(): void
     {
         $data = [1, 2, 3];
-        self::assertFalse(PwgResponseEncoder::is_struct($data));
+        self::assertFalse(PwgResponseEncoder::isStruct($data));
     }
 
     public function testIsStructReturnsTrueForEmptyArray(): void
@@ -27,13 +27,13 @@ final class PwgResponseEncoderTest extends TestCase
         // range(0, -1) = [0, -1] in PHP, which does not equal array_keys([]) = [],
         // so an empty array is treated as a struct by this implementation.
         $data = [];
-        self::assertTrue(PwgResponseEncoder::is_struct($data));
+        self::assertTrue(PwgResponseEncoder::isStruct($data));
     }
 
     public function testIsStructReturnsFalseForNonArray(): void
     {
         $data = 'string';
-        self::assertFalse(PwgResponseEncoder::is_struct($data));
+        self::assertFalse(PwgResponseEncoder::isStruct($data));
     }
 
     public function testFlattenResponseUnwrapsNamedArray(): void

@@ -56,8 +56,8 @@ final class ProfileController implements ControllerInterface
 
         $title = l10n('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
-        $tpl->set_filename('profile', 'profile.tpl');
-        $tpl->set_filename('profile_content', 'profile_content.tpl');
+        $tpl->setFilename('profile', 'profile.tpl');
+        $tpl->setFilename('profile_content', 'profile_content.tpl');
 
         ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), make_index_url(), $userdata);
 
@@ -86,7 +86,7 @@ final class ProfileController implements ControllerInterface
                 'opt_hits'      => !empty($default_user['show_nb_hits'] ?? null),
             ],
             'standardSaveSelector' => [],
-            'selected_date'        => $tpl->get_template_vars('API_SELECTED_EXPIRATION') ?? '',
+            'selected_date'        => $tpl->getTemplateVars('API_SELECTED_EXPIRATION') ?? '',
             'no_time_elapsed'      => l10n('right now'),
             'str_handle_error'     => l10n('An error has occured'),
             'str_copy_key_secret'  => l10n('Secret copied. Keep it in a safe place.'),
@@ -100,9 +100,9 @@ final class ProfileController implements ControllerInterface
             'str_hide_expired'     => l10n('Hide expired keys'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assign_var_from_handle('PROFILE_CONTENT', 'profile_content');
+        $tpl->assignVarFromHandle('PROFILE_CONTENT', 'profile_content');
 
-        $themeconf    = $tpl->get_template_vars('themeconf');
+        $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theProfilePage', $hideMenuOn)) {

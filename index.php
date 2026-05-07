@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Controller\InstallController;
 use Piwigo\Controller\UpgradeController;
+use Piwigo\Controller\UpgradeFeedController;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
@@ -27,16 +31,16 @@ if (str_starts_with($_qs, 'i/')) {
     defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
     require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
-    defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Config\Config::dataLocation() . 'i/');
+    defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', Config::dataLocation() . 'i/');
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
-    $GLOBALS['prefixeTable'] = \Piwigo\Config\Config::dbPrefix();
-    $logger = new \Piwigo\Core\Logger([
-        'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
-        'severity'  => \Piwigo\Config\Config::logLevel(),
-        'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+    $GLOBALS['prefixeTable'] = Config::dbPrefix();
+    $logger = new Logger([
+        'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+        'severity'  => Config::logLevel(),
+        'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
     ]);
-    \Piwigo\Core\LoggerRegistry::set($logger);
+    LoggerRegistry::set($logger);
     defined('MKGETDIR_NONE')             or define('MKGETDIR_NONE', 0);
     defined('MKGETDIR_RECURSIVE')        or define('MKGETDIR_RECURSIVE', 1);
     defined('MKGETDIR_DIE_ON_ERROR')     or define('MKGETDIR_DIE_ON_ERROR', 2);
@@ -55,6 +59,21 @@ if (str_starts_with($_qs, 'install')) {
     require PHPWG_ROOT_PATH . 'include/functions.inc.php';
     ConfigLoader::applyDefaults();
     (new InstallController())(RequestFactory::fromGlobals());
+    exit;
+}
+
+if (str_starts_with($_qs, 'upgrade_feed')) {
+    // Upgrade feed — DB schema may be mid-migration; bypass the full boot pipeline.
+    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
+    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+    ConfigLoader::applyDefaults();
+    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::applyEnvOverrides();
+    $GLOBALS['prefixeTable'] = Config::dbPrefix();
+    require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
+    require_once(PHPWG_ROOT_PATH . 'include/functions.inc.php');
+    require_once(PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php');
+    (new UpgradeFeedController())(RequestFactory::fromGlobals());
     exit;
 }
 

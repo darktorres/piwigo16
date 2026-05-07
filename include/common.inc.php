@@ -319,7 +319,7 @@ if (Config::checkUpgradeFeed()) {
     require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
     if (check_upgrade_feed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
-          .'<a href="'.get_absolute_root_url(false).'upgrade_feed.php">upgrade now</a>';
+          .'<a href="'.get_absolute_root_url(false).'index.php?/upgrade_feed">upgrade now</a>';
     }
 }
 

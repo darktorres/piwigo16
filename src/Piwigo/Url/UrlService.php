@@ -583,7 +583,7 @@ final class UrlService
             $params['download'] = null;
         }
 
-        return $this->addUrlParams($this->getRootUrl() . 'action.php', $params);
+        return $this->addUrlParams($this->getRootUrl() . 'index.php?/action', $params);
     }
 
     /** @param array<string,mixed> $elementInfo */

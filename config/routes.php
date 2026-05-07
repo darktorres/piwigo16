@@ -210,6 +210,24 @@ $routes->add('admin', new Route(
     methods:      $gp,
 ));
 
+$routes->add('qsearch', new Route(
+    path:     '/qsearch',
+    defaults: ['_controller' => 'Piwigo\Controller\QSearchController'],
+    methods:  $gp,
+));
+
+$routes->add('action', new Route(
+    path:     '/action',
+    defaults: ['_controller' => 'Piwigo\Controller\ActionController'],
+    methods:  $gp,
+));
+
+$routes->add('upgrade_feed', new Route(
+    path:     '/upgrade_feed',
+    defaults: ['_controller' => 'Piwigo\Controller\UpgradeFeedController'],
+    methods:  $gp,
+));
+
 $routes->add('install', new Route(
     path:     '/install',
     defaults: ['_controller' => 'Piwigo\Controller\InstallController'],

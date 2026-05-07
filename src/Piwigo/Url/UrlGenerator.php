@@ -222,15 +222,15 @@ final readonly class UrlGenerator
         return $this->admin('popuphelp') . '&help=' . urlencode($helpPage);
     }
 
-    /** URL for downloading original/representative image (action.php permanent shim). */
+    /** URL for downloading original/representative image. */
     public function actionDownload(int $id, string $part, string $pwgToken): string
     {
-        return get_root_url() . 'action.php?id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
+        return get_root_url() . 'index.php?/action&amp;id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
     }
-    /** URL for downloading a specific image format (action.php permanent shim). */
+    /** URL for downloading a specific image format. */
     public function actionFormat(int $formatId): string
     {
-        return get_root_url() . 'action.php?format=' . $formatId . '&amp;download';
+        return get_root_url() . 'index.php?/action&amp;format=' . $formatId . '&amp;download';
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

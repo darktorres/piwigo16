@@ -14,6 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * Verifies the pwg_token body parameter on every POST request except:
  *   /ws*          — web service API (manages its own auth)
+ *   /admin*       — admin pages: already auth-gated and manage their own token checks
  *   /install      — installer (no session yet)
  *   /upgrade      — upgrader (no session yet)
  *   /identification — login form (no token in the standard form)
@@ -26,6 +27,7 @@ final class CsrfMiddleware implements MiddlewareInterface
 {
     private const array EXEMPT_PREFIXES = [
         '/ws',
+        '/admin',
         '/install',
         '/upgrade',
         '/identification',

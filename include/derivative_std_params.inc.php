@@ -8,6 +8,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\SizingParams;
+use Piwigo\Db\Tables;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -256,7 +257,7 @@ final class ImageStdParams
             conf_update_param('disabled_derivatives', $disabled);
         } else {
             ServiceLocator::get(Connection::class)->executeStatement(
-                'DELETE FROM ' . CONFIG_TABLE . " WHERE param = 'disabled_derivatives'"
+                'DELETE FROM ' . Tables::config() . " WHERE param = 'disabled_derivatives'"
             );
         }
     }

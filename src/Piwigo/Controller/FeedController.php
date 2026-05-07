@@ -14,6 +14,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Generates the RSS 2.0 feed and sends it directly as XML output.
@@ -48,7 +49,7 @@ final class FeedController implements ControllerInterface
             }
         }
 
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         set_make_full_url();

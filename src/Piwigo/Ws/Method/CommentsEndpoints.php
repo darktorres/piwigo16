@@ -13,6 +13,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Db\Tables;
 
 final class CommentsEndpoints
 {
@@ -57,7 +58,7 @@ final class CommentsEndpoints
             $whereClauses[] = 'content LIKE ' . DbConnection::get()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
         }
         $conn = ServiceLocator::get(Connection::class);
-        $querySum = 'SELECT count(*) as all_comments, sum(validated = \'true\') as validated, sum(validated = \'false\') as pending FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
+        $querySum = 'SELECT count(*) as all_comments, sum(validated = \'true\') as validated, sum(validated = \'false\') as pending FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $summary  = $conn->executeQuery($querySum)->fetchAssociative() ?: [];
         $totalComments = $summary['all_comments'] ?? null;
         switch ($params['status']) {
@@ -73,7 +74,7 @@ final class CommentsEndpoints
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 10;
         $pageNum = is_numeric($params['page']) ? (int) $params['page'] : 0;
         $userFields = Config::userFields();
-        $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . COMMENTS_TABLE . ' AS c INNER JOIN ' . IMAGES_TABLE . ' AS i ON i.id = c.image_id LEFT JOIN ' . USERS_TABLE . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . USER_INFOS_TABLE . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
+        $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . Tables::comments() . ' AS c INNER JOIN ' . Tables::images() . ' AS i ON i.id = c.image_id LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . Tables::userInfos() . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
         $list = [];
         foreach ($conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $mediumDerivative = DerivativeImage::getOne(IMG_MEDIUM, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
@@ -86,10 +87,10 @@ final class CommentsEndpoints
             }
             $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => format_date(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
-        $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
+        $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];
         unset($whereClauses['author_id']);
-        $authorsQuery = 'SELECT author, author_id, count(*) as nb_authors FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY author_id;';
+        $authorsQuery = 'SELECT author, author_id, count(*) as nb_authors FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY author_id;';
         $nbAuthorsIn  = DbConnection::get()->executeQuery($authorsQuery)->fetchAllAssociative();
         $totalCount   = is_numeric($totalComments) ? (int) $totalComments : 0;
         return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'] ?? null, 'ended_at' => $dates['ended_at'] ?? null], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, ceil($totalCount / max(1, $perPage)) - 1)]];

@@ -14,6 +14,8 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 
 final class UserAdminService
 {
@@ -23,7 +25,7 @@ final class UserAdminService
         $uRepo = ServiceLocator::get(UserRepository::class);
         $uRepo->deleteAllRelatedData($uid);
         delete_user_sessions($uid);
-        $uRepo->deleteByUserId($uid, USERS_TABLE, Config::userFields()['id']);
+        $uRepo->deleteByUserId($uid, Tables::users(), Config::userFields()['id']);
         EventDispatcher::notify('delete_user', $userId);
         pwg_activity('user', is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0), 'delete');
     }
@@ -33,14 +35,14 @@ final class UserAdminService
         $baseUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column(DbConnection::get()->executeQuery(
-                'SELECT ' . Config::userFields()['id'] . ' AS id FROM ' . USERS_TABLE
+                'SELECT ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users()
             )->fetchAllAssociative(), 'id')
         );
 
         $infosUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column(DbConnection::get()->executeQuery(
-                'SELECT user_id FROM ' . USER_INFOS_TABLE
+                'SELECT user_id FROM ' . Tables::userInfos()
             )->fetchAllAssociative(), 'user_id')
         );
 
@@ -50,8 +52,8 @@ final class UserAdminService
         }
 
         $tables = [
-            USER_MAIL_NOTIFICATION_TABLE, USER_FEED_TABLE, USER_INFOS_TABLE,
-            USER_ACCESS_TABLE, USER_CACHE_TABLE, USER_CACHE_CATEGORIES_TABLE, USER_GROUP_TABLE,
+            Tables::userMailNotification(), Tables::userFeed(), Tables::userInfos(),
+            Tables::userAccess(), Tables::userCache(), Tables::userCacheCategories(), Tables::userGroup(),
         ];
 
         foreach ($tables as $table) {
@@ -69,7 +71,7 @@ final class UserAdminService
     }
 
     /** @return array<int,string> */
-    public function getUserAccessLevelHtmlOptions(int $minLevelAccess = ACCESS_FREE, int $maxLevelAccess = ACCESS_CLOSED): array
+    public function getUserAccessLevelHtmlOptions(int $minLevelAccess = AccessLevel::Free, int $maxLevelAccess = AccessLevel::Closed): array
     {
         $options = [];
         for ($level = $minLevelAccess; $level <= $maxLevelAccess; $level++) {
@@ -86,7 +88,7 @@ final class UserAdminService
             $statusList[] = 'webmaster';
         }
         $raw = array_column(DbConnection::get()->executeQuery(
-            'SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('" . implode("','", $statusList) . "')"
+            'SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('" . implode("','", $statusList) . "')"
         )->fetchAllAssociative(), 'user_id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
     }
@@ -123,7 +125,7 @@ final class UserAdminService
         $permRepo->deleteGroupAccessByGroups($groupIds);
         $groupRepo->deleteUserGroupByGroupIds($groupIds);
         $groupList = array_column(DbConnection::get()->executeQuery(
-            'SELECT id, name FROM `' . GROUPS_TABLE . '` WHERE id IN (' . $groupIdString . ')'
+            'SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . $groupIdString . ')'
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
@@ -138,7 +140,7 @@ final class UserAdminService
         $username   = ServiceLocator::get(UserRepository::class)->findUsernameById(
             $userFields['id'],
             $userFields['username'],
-            USERS_TABLE,
+            Tables::users(),
             is_numeric($userId) ? (int) $userId : 0
         );
         return $username !== null ? stripslashes((string) $username) : false;

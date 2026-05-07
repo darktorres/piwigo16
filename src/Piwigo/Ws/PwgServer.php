@@ -470,7 +470,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             define('WS_XML_ATTRIBUTES', 'attributes_xml_');
         }
 
-        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EVENT_HANDLER_PRIORITY_NEUTRAL);
+        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EventDispatcher::NEUTRAL_PRIORITY);
 
         $requestFormat = 'rest';
         $responseFormat = null;

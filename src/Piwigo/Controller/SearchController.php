@@ -14,6 +14,9 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 /**
  * Builds a search query from GET params, saves it and redirects to results.
@@ -23,7 +26,7 @@ final class SearchController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_search');
 
@@ -83,10 +86,10 @@ final class SearchController implements ControllerInterface
         $cat_ids  = [];
         $cat_id   = input_int('cat_id', null, $_GET);
         if ($cat_id !== null) {
-            check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+            check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
 SELECT *
-  FROM ' . USER_CACHE_CATEGORIES_TABLE . '
+  FROM ' . Tables::userCacheCategories() . '
   WHERE cat_id = ' . $cat_id . '
     AND user_id = ' . (is_scalar($user['id']) ? (int) $user['id'] : 0) . '
 ;';
@@ -116,8 +119,8 @@ SELECT *
         if (in_array('author', $fields)) {
             $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   ' . PermissionService::get()->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 ' WHERE '

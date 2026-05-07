@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Piwigo\Db\Tables;
 
 /**
  * Resolves the "recent photos" filter state and populates $GLOBALS['filter'].
@@ -122,7 +123,7 @@ final class FilterMiddleware implements MiddlewareInterface
                 : '';
             $query = '
 SELECT distinct image_id
-FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::images() . ' ON image_id = id
 WHERE ' . $catClause . '
     date_available >= ' . SqlExpr::recentPeriodExpr($recentPeriod);
 

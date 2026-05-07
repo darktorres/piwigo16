@@ -1195,6 +1195,17 @@ final class Config
     }
     // <<<CONFIG-ACCESSORS-END>>>
 
+    // ---- Path helpers (formerly PHP define()s in include/constants.php) ----
+
+    public static function pluginsPath(): string { return PHPWG_ROOT_PATH . 'plugins/'; }
+    public static function themesPath(): string
+    {
+        $dir = self::src()['themes_dir'] ?? null;
+        return (is_string($dir) && $dir !== '' ? $dir : PHPWG_ROOT_PATH . 'themes') . '/';
+    }
+    public static function combinedDir(): string  { return self::dataLocation() . 'combined/'; }
+    public static function derivativeDir(): string { return self::dataLocation() . 'i/'; }
+
     // ---- Custom accessors (hand-written) --------------------------------
 
     /** @return list<string> */

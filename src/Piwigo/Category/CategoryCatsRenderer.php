@@ -17,6 +17,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class CategoryCatsRenderer
 {
@@ -41,8 +42,8 @@ SELECT SQL_CALC_FOUND_ROWS
     count_images,
     nb_categories,
     count_categories
-  FROM ' . CATEGORIES_TABLE . ' c
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ucc
+  FROM ' . Tables::categories() . ' c
+    INNER JOIN ' . Tables::userCacheCategories() . ' ucc
     ON id = cat_id
     AND user_id = ' . $currentUser->id . '
   WHERE count_images > 0
@@ -95,7 +96,7 @@ SELECT SQL_CALC_FOUND_ROWS
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                 $subquery = '
 SELECT representative_picture_id
-  FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id . '
   WHERE uppercats LIKE \'' . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
@@ -133,8 +134,8 @@ SELECT
     category_id,
     MIN(date_creation) AS `from`,
     MAX(date_creation) AS `to`
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')
 ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
@@ -153,7 +154,7 @@ SELECT
 
             $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)) . ')
 ;';
             foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -179,7 +180,7 @@ SELECT *
             if (count($new_image_ids) > 0) {
                 $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $new_image_ids) . ')
 ;';
                 foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -203,7 +204,7 @@ SELECT *
                 ];
             }
             Dml::massUpdates(
-                USER_CACHE_CATEGORIES_TABLE,
+                Tables::userCacheCategories(),
                 ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']],
                 $updates
             );

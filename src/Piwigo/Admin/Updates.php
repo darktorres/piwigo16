@@ -13,6 +13,8 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 
 class Updates
 {
@@ -56,13 +58,13 @@ class Updates
 
     public static function checkPiwigoUpgrade(): void
     {
-        $_SESSION['need_update'.PHPWG_VERSION] = null;
+        $_SESSION['need_update'.AppInfo::VERSION] = null;
 
-        if (preg_match('/(\d+\.\d+)\.(\d+)/', PHPWG_VERSION, $matches)
+        if (preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
           and ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
-            $_SESSION['need_update'.PHPWG_VERSION] = version_compare(PHPWG_VERSION, $new_version, '<');
+            $_SESSION['need_update'.AppInfo::VERSION] = version_compare(AppInfo::VERSION, $new_version, '<');
         }
     }
 
@@ -87,12 +89,12 @@ class Updates
 
         [$env, $build_version] = get_container_info();
         $build_version = is_scalar($build_version) ? (string) $build_version : '';
-        if (preg_match('/^(\d+\.\d+)\.(\d+)$/', PHPWG_VERSION)) {
+        if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = get_branch_from_version(
                 ('Official' === $env)
         ? substr($build_version, 0, -1)
-        : PHPWG_VERSION
+        : AppInfo::VERSION
             );
 
             $url = PHPWG_URL.'/download/all_versions.php';
@@ -128,7 +130,7 @@ class Updates
                     $last_version_number = $parts0[0];
                     $last_version_php = $parts0[1] ?? '';
 
-                    if (version_compare(PHPWG_VERSION, $last_version_number, '<')) {
+                    if (version_compare(AppInfo::VERSION, $last_version_number, '<')) {
                         $last_branch = get_branch_from_version($last_version_number);
 
                         if ($last_branch == $actual_branch) {
@@ -146,7 +148,7 @@ class Updates
                                 $branch = get_branch_from_version($version_number);
 
                                 if ($branch == $actual_branch) {
-                                    if (version_compare(PHPWG_VERSION, $version_number, '<')) {
+                                    if (version_compare(AppInfo::VERSION, $version_number, '<')) {
                                         $new_versions['minor'] = $version_number;
                                         $new_versions['minor_php'] = $version_php;
                                     }
@@ -254,7 +256,7 @@ class Updates
         }
     }
 
-    public function getServerExtensions(string $version = PHPWG_VERSION): bool
+    public function getServerExtensions(string $version = AppInfo::VERSION): bool
     {
         $get_data = [
           'format' => 'php',
@@ -484,14 +486,14 @@ class Updates
         }
         $template = TemplateRegistry::current();
 
-        if ($check_current_version and !version_compare($upgrade_to, PHPWG_VERSION, '>')) {
+        if ($check_current_version and !version_compare($upgrade_to, AppInfo::VERSION, '>')) {
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('updates'));
         }
 
         $obsolete_list = null;
 
         if ($step == 2) {
-            $code = get_branch_from_version(PHPWG_VERSION).'.x_to_'.$upgrade_to;
+            $code = get_branch_from_version(AppInfo::VERSION).'.x_to_'.$upgrade_to;
             $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
             // no longer try to delete files on a minor upgrade
@@ -583,7 +585,7 @@ class Updates
                         ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
                         ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
                         conf_update_param('piwigo_installed_version', $upgrade_to);
-                        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', ['from_version' => PHPWG_VERSION, 'to_version' => $upgrade_to]);
+                        pwg_activity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
 
                         if ($step == 2) {
                             // only delete compiled templates on minor update. Doing this on

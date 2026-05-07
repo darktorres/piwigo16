@@ -11,6 +11,8 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 
 final readonly class RateService
 {
@@ -33,7 +35,7 @@ final readonly class RateService
             return false;
         }
 
-        $userAnonymous = PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC) ? false : true;
+        $userAnonymous = PermissionService::get()->isAutorizeStatus(AccessLevel::Classic) ? false : true;
 
         if ($userAnonymous and !Config::rateAnonymous()) {
             return false;
@@ -113,7 +115,7 @@ final readonly class RateService
             $updates[] = ['id' => $id, 'rating_score' => $score];
         }
         Dml::massUpdates(
-            IMAGES_TABLE,
+            Tables::images(),
             [
                 'primary' => ['id'],
                 'update'  => ['rating_score'],

@@ -16,6 +16,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final readonly class CategoryService
 {
@@ -66,7 +67,7 @@ final readonly class CategoryService
 SELECT
   id, name, permalink, nb_images, global_rank,
   date_last, max_date_last, count_images, count_categories
-FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
+FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id;
 
         if (!$userExpand and !$filter['enabled']) {
@@ -148,7 +149,7 @@ WHERE ' . $where . '
         } else {
             $query = '
   SELECT id, name, permalink
-    FROM ' . CATEGORIES_TABLE . '
+    FROM ' . Tables::categories() . '
     WHERE id IN (' . (is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') . ')
   ;';
             $names = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
@@ -223,7 +224,7 @@ WHERE ' . $where . '
         }
         $query = '
 SELECT DISTINCT(id)
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE ';
         foreach ($ids as $num => $categoryId) {
             is_numeric($categoryId) or trigger_error('get_subcat_ids expecting numeric, not ' . gettype($categoryId), E_USER_WARNING);
@@ -252,11 +253,11 @@ SELECT DISTINCT(id)
         }
         $query = '
 SELECT cat_id AS id, permalink, 1 AS is_old
-  FROM ' . OLD_PERMALINKS_TABLE . '
+  FROM ' . Tables::oldPermalinks() . '
   WHERE permalink IN (' . $in . ')
 UNION
 SELECT id, permalink, 0 AS is_old
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE permalink IN (' . $in . ')
 ;';
         $permaHash = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
@@ -309,8 +310,8 @@ SELECT id, permalink, 0 AS is_old
         if ($category['count_images'] > 0) {
             $query = '
 SELECT image_id
-  FROM ' . CATEGORIES_TABLE . ' AS c
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.category_id = c.id
+  FROM ' . Tables::categories() . ' AS c
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON ic.category_id = c.id
   WHERE ';
             if ($recursive) {
                 $query .= '
@@ -343,9 +344,9 @@ SELECT image_id
         $query .= ', global_rank';
         $query .= ',
   MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
-FROM ' . CATEGORIES_TABLE . ' as c
-  LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.category_id = c.id
-  LEFT JOIN ' . IMAGES_TABLE . ' AS i
+FROM ' . Tables::categories() . ' as c
+  LEFT JOIN ' . Tables::imageCategory() . ' AS ic ON ic.category_id = c.id
+  LEFT JOIN ' . Tables::images() . ' AS i
     ON ic.image_id = i.id
       AND i.level<=' . (is_numeric($userdata['level']) ? (int) $userdata['level'] : 0);
 
@@ -463,8 +464,8 @@ FROM ' . CATEGORIES_TABLE . ' as c
 
         $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ic ON id=ic.image_id
+  FROM ' . Tables::images() . ' i
+    INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id
   WHERE category_id IN (' . implode(',', $catIds) . ')';
 
         if ($usePermissions) {
@@ -499,8 +500,8 @@ SELECT
     c.id,
     c.uppercats,
     count(*) AS counter
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . CATEGORIES_TABLE . ' c ON category_id = id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::categories() . ' c ON category_id = id
   WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)) . ')';
 
         if ($usePermissions) {
@@ -559,7 +560,7 @@ SELECT
     id_uppercat,
     uppercats,
     global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', array_keys($catIds)) . ')
 ;';
         $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();

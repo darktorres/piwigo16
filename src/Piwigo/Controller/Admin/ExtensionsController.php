@@ -27,6 +27,9 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 final class ExtensionsController
 {
@@ -308,7 +311,7 @@ final class ExtensionsController
                     PageState::current()->addInfo('<a href="' . $activate_url . '">' . l10n('Activate it now') . '</a>');
                     $getPluginId = is_string($_GET['plugin_id'] ?? null) ? $_GET['plugin_id'] : '';
                     if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
-                        pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]);
+                        pwg_activity('system', ActivitySystem::Plugin, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]);
                     }
                     break;
                 case 'temp_path_error':   PageState::current()->addError(l10n('Can\'t create temporary file.'));
@@ -353,7 +356,7 @@ final class ExtensionsController
                 if ($beta_test) {
                     $compatVersions = is_array($plugin['compatible_with_versions'] ?? null) ? $plugin['compatible_with_versions'] : [];
                     foreach ($compatVersions as $vers) {
-                        if (get_branch_from_version(is_string($vers) ? $vers : '') == get_branch_from_version(PHPWG_VERSION)) {
+                        if (get_branch_from_version(is_string($vers) ? $vers : '') == get_branch_from_version(AppInfo::VERSION)) {
                             $has_compatible_version = true;
                         }
                     }
@@ -394,7 +397,7 @@ final class ExtensionsController
             PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
-        if (!$beta_test && preg_match('/(beta|RC)/', PHPWG_VERSION)) {
+        if (!$beta_test && preg_match('/(beta|RC)/', AppInfo::VERSION)) {
             $tpl->assign('BETA_URL', $base_url . '&amp;beta-test=true');
         }
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Plugins'));
@@ -439,7 +442,7 @@ final class ExtensionsController
             throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 
-        $filename = PHPWG_PLUGINS_PATH . implode('/', $sections);
+        $filename = Config::pluginsPath() . implode('/', $sections);
         if (is_file($filename)) {
             require_once $filename;
         } else {
@@ -619,7 +622,7 @@ final class ExtensionsController
                     PageState::current()->addInfo(l10n('Theme has been successfully installed'));
                     $theme_id_str = is_string($_GET['theme_id'] ?? null) ? $_GET['theme_id'] : '';
                     if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
-                        pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]);
+                        pwg_activity('system', ActivitySystem::Theme, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]);
                     }
                     break;
                 case 'temp_path_error':  PageState::current()->addError(l10n('Can\'t create temporary file.'));
@@ -744,7 +747,7 @@ final class ExtensionsController
         }
 
         $theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
-        $filename   = PHPWG_THEMES_PATH . $theme_name . '/admin/admin.inc.php';
+        $filename   = Config::themesPath() . $theme_name . '/admin/admin.inc.php';
         if (is_file($filename)) {
             require_once $filename;
         } else {
@@ -1109,7 +1112,7 @@ final class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        $pageUpdatedVersion = is_scalar($page['updated_version'] ?? null) ? (string) $page['updated_version'] : PHPWG_VERSION;
+        $pageUpdatedVersion = is_scalar($page['updated_version'] ?? null) ? (string) $page['updated_version'] : AppInfo::VERSION;
         $tpl->assign(['STEP' => $step, 'PIWIGO_CURRENT_VERSION' => $pageUpdatedVersion, 'UPGRADE_TO' => $upgrade_to]);
 
         if (isset($new_versions['minor'])) {
@@ -1137,7 +1140,7 @@ final class ExtensionsController
         $new_extensions = ServiceLocator::get(AdminService::class)->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];
-        $permalinks = array_column(DbConnection::get()->executeQuery('SELECT permalink FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
+        $permalinks = array_column(DbConnection::get()->executeQuery('SELECT permalink FROM ' . Tables::categories() . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         $eligible_templates = ['----------' => 'N/A', 'about.tpl' => 'about', 'comments.tpl' => 'comments', 'comment_list.tpl' => 'comment_list', 'footer.tpl' => 'tail', 'header.tpl' => 'header', 'identification.tpl' => 'identification', 'index.tpl' => 'index', 'mainpage_categories.tpl' => 'index_category_thumbnails', 'menubar.tpl' => 'menubar', 'menubar_categories.tpl' => 'mbCategories', 'menubar_identification.tpl' => 'mbIdentification', 'menubar_links.tpl' => 'mbLinks', 'menubar_menu.tpl' => 'mbMenu', 'menubar_specials.tpl' => 'mbSpecials', 'menubar_tags.tpl' => 'mbTags', 'month_calendar.tpl' => 'month_calendar', 'navigation_bar.tpl' => 'navbar', 'nbm.tpl' => 'nbm', 'notification.tpl' => 'notification', 'password.tpl' => 'password', 'picture.tpl' => 'picture', 'picture_content.tpl' => 'default_content', 'picture_nav_buttons.tpl' => 'picture_nav_buttons', 'popuphelp.tpl' => 'popuphelp', 'profile.tpl' => 'profile', 'profile_content.tpl' => 'profile_content', 'redirect.tpl' => 'redirect', 'register.tpl' => 'register', 'search.tpl' => 'search', 'slideshow.tpl' => 'slideshow', 'tags.tpl' => 'tags', 'thumbnails.tpl' => 'index_thumbnails'];

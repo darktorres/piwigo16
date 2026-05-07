@@ -33,6 +33,8 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class PhotoController
 {
@@ -79,8 +81,8 @@ final class PhotoController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
-        check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
+        check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
         $image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '';
         $this->adminPhotoBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_str);
@@ -126,7 +128,7 @@ final class PhotoController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-        check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
         check_input_parameter('level', $_POST, false, '/^\d+$/');
         check_input_parameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
@@ -144,7 +146,7 @@ final class PhotoController
 
         $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE representative_picture_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . '
 ;';
         $represented_albums = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
@@ -180,7 +182,7 @@ SELECT id
             $data['date_creation'] = !empty($_POST['date_creation']) ? $_POST['date_creation'] : null;
             $data = EventDispatcher::dispatch('picture_modify_before_update', $data);
 
-            Dml::singleUpdate(IMAGES_TABLE, $data, ['id' => $data['id']]);
+            Dml::singleUpdate(Tables::images(), $data, ['id' => $data['id']]);
 
             $tag_ids = [];
             if (!empty($_POST['tags'])) {
@@ -196,7 +198,7 @@ SELECT id
             if (!isset($_POST['associate'])) {
                 $_POST['associate'] = [];
             }
-            check_input_parameter('associate', $_POST, true, PATTERN_ID);
+            check_input_parameter('associate', $_POST, true, ValidationPattern::ID);
             ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories(
                 [is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0],
                 is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
@@ -207,7 +209,7 @@ SELECT id
             if (!isset($_POST['represent'])) {
                 $_POST['represent'] = [];
             }
-            check_input_parameter('represent', $_POST, true, PATTERN_ID);
+            check_input_parameter('represent', $_POST, true, ValidationPattern::ID);
 
             $represented_albums_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $represented_albums);
             $represent_post_int     = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
@@ -287,7 +289,7 @@ SELECT id
         $foundUsername = ServiceLocator::get(UserRepository::class)->findUsernameById(
             $userFields['id'],
             $userFields['username'],
-            USERS_TABLE,
+            Tables::users(),
             is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : 0
         );
         if ($foundUsername !== null) {
@@ -313,7 +315,7 @@ SELECT id
             $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), (int) $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
@@ -351,12 +353,12 @@ SELECT id
             $tpl->assign('U_JUMPTO', make_picture_url(['image_id' => is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
             $authorizeds = array_diff(
-                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
                 explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
             );
             if (count($authorizeds) > 0) {
                 $category = $authorizeds[array_rand($authorizeds)];
-                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $tpl->assign('U_JUMPTO', make_picture_url([
                     'image_id'   => $_GET['image_id'],
                     'image_file' => $image_file,
@@ -365,7 +367,7 @@ SELECT id
             }
         }
 
-        $associated_albums = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
+        $associated_albums = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
@@ -400,7 +402,7 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
 
         $imageIdCoi = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
         $imgRepo    = ServiceLocator::get(ImageRepository::class);
@@ -478,12 +480,12 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        check_input_parameter('image_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('image_id', $_GET, false, ValidationPattern::ID);
         $picFmtId = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
 
-        $images  = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
+        $images  = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
         $image   = $images[0];
-        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
 
         /** @var array<string, mixed> $lang */
         $lang = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
@@ -575,7 +577,7 @@ SELECT id
             foreach (array_unique(explode(',', is_scalar($_GET['batch']) ? (string) $_GET['batch'] : '')) as $image_id) {
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
-            Dml::massInserts(CADDIE_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(Tables::caddie(), array_keys($inserts[0]), $inserts);
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
@@ -597,14 +599,14 @@ SELECT id
         $formats_ext_info      = null;
 
         if ($display_formats && $_GET['formats']) {
-            check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
+            check_input_parameter('formats', $_GET, false, ValidationPattern::ID, false);
             $formatsId             = is_scalar($_GET['formats']) ? (string) $_GET['formats'] : '';
             $formats_original_info = ServiceLocator::get(ImageAdminService::class)->getImageInfos($formatsId);
             if ($formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
                 $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
                 $fmtId  = is_scalar($formats_original_info['id'] ?? null) ? (string) $formats_original_info['id'] : '0';
-                $fmtRow = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
+                $fmtRow = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
                 if (!empty($fmtRow)) {
                     $format_strings = [];
                     $formats_exts   = [];

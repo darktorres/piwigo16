@@ -30,6 +30,9 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -117,7 +120,6 @@ if (!Kernel::isBooted()) :
         ini_set('session.gc_probability', (string) min((int) Config::sessionGcProbability(), 100));
     }
 
-    require(PHPWG_ROOT_PATH . 'include/constants.php');
     require(PHPWG_ROOT_PATH . 'include/functions.inc.php');
 
     $page['execution_uuid'] = generate_key(10);
@@ -156,7 +158,7 @@ if (!Kernel::isBooted()) :
     LoggerRegistry::set($logger);
 
     if (!Config::checkUpgradeFeed()) {
-        if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {
+        if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != get_branch_from_version(AppInfo::VERSION)) {
             redirect(get_root_url().'index.php?/upgrade');
         }
     }
@@ -175,11 +177,11 @@ if (!Kernel::isBooted()) :
     PluginService::get()->loadPlugins();
 
     if (!Config::has('piwigo_installed_version')) {
-        conf_update_param('piwigo_installed_version', PHPWG_VERSION);
-    } elseif (Config::piwigoInstalledVersion() != PHPWG_VERSION) {
+        conf_update_param('piwigo_installed_version', AppInfo::VERSION);
+    } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
         // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
-        pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => PHPWG_VERSION]);
-        conf_update_param('piwigo_installed_version', PHPWG_VERSION);
+        pwg_activity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
+        conf_update_param('piwigo_installed_version', AppInfo::VERSION);
     }
 
 //Check if last major update conf is set if not set it
@@ -229,7 +231,7 @@ load_language('common.lang');
 if (PermissionService::get()->isAdmin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
-    load_language('whats_new_'.get_branch_from_version(PHPWG_VERSION).'.lang');
+    load_language('whats_new_'.get_branch_from_version(AppInfo::VERSION).'.lang');
 }
 EventDispatcher::notify('loading_lang');
 load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
@@ -266,7 +268,7 @@ if (is_array($notify_exp)) {
     if ($is_mail_send) {
         $notify_user_id_raw = is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0;
         Dml::singleUpdate(
-            USER_AUTH_KEYS_TABLE,
+            Tables::userAuthKeys(),
             ['last_notified_on' => $notify_exp['dbnow']],
             [
             'user_id' => is_numeric($notify_user_id_raw) ? (int) $notify_user_id_raw : 0,
@@ -348,7 +350,7 @@ if (!Config::allowHtmlDescriptions()) {
 EventDispatcher::addListener('render_comment_content', 'render_comment_content');
 EventDispatcher::addListener('render_comment_author', 'strip_tags');
 EventDispatcher::addListener('render_tag_url', 'str2url');
-EventDispatcher::addListener('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
+EventDispatcher::addListener('blockmanager_register_blocks', 'register_default_menubar_blocks', EventDispatcher::NEUTRAL_PRIORITY - 1);
 if (!empty(Config::originalUrlProtection())) {
     EventDispatcher::addListener('get_element_url', 'get_element_url_protection_handler');
     EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');

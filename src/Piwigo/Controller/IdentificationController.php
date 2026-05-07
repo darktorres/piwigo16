@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the login page (/identification).
@@ -27,7 +28,7 @@ final class IdentificationController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_FREE);
+        PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!PermissionService::get()->isAGuest()) {
             redirect(get_gallery_home_url());

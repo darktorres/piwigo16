@@ -22,6 +22,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,
@@ -36,7 +37,7 @@ final class GalleryController implements ControllerInterface
     {
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'index');
 
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];

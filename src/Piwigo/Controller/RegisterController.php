@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the user registration page (/register).
@@ -27,7 +28,7 @@ final class RegisterController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_FREE);
+        PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!Config::allowUserRegistration()) {
             page_forbidden('User registration closed');

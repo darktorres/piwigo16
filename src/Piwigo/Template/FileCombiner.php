@@ -33,13 +33,13 @@ final class FileCombiner
      */
     public static function clearCombinedFiles(): void
     {
-        $dir = opendir(PHPWG_ROOT_PATH.PWG_COMBINED_DIR);
+        $dir = opendir(PHPWG_ROOT_PATH.Config::combinedDir());
         if ($dir === false) {
             return;
         }
         while ($file = readdir($dir)) {
             if (get_extension($file) == 'js' || get_extension($file) == 'css') {
-                unlink(PHPWG_ROOT_PATH.PWG_COMBINED_DIR.$file);
+                unlink(PHPWG_ROOT_PATH.Config::combinedDir().$file);
             }
         }
         closedir($dir);
@@ -111,7 +111,7 @@ final class FileCombiner
     {
         if (count($pending) > 1) {
             $key = join('>', $key);
-            $file = PWG_COMBINED_DIR . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
+            $file = Config::combinedDir() . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
             if ($force || !file_exists(PHPWG_ROOT_PATH.$file)) {
                 $output = '';
                 $header = '';
@@ -152,7 +152,7 @@ final class FileCombiner
                 if (Config::templateCompileCheck()) {
                     $key[] = filemtime(PHPWG_ROOT_PATH . $combinable->path);
                 }
-                $file = PWG_COMBINED_DIR . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
+                $file = Config::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
                 if (!$force && file_exists(PHPWG_ROOT_PATH.$file)) {
                     $combinable->path = $file;
                     $combinable->version = 0;

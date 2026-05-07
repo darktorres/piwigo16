@@ -21,6 +21,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Db\Tables;
 
 final class ConfigurationController
 {
@@ -214,7 +216,7 @@ final class ConfigurationController
 
             $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
             if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && PermissionService::get()->isWebmaster()) {
-                foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param FROM ' . CONFIG_TABLE)->fetchFirstColumn() as $row_param) {
+                foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
                         $value = is_scalar($_POST[$row_param]) ? (string) $_POST[$row_param] : '';
@@ -225,7 +227,7 @@ final class ConfigurationController
                     }
                 }
                 $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-                pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => $section]);
+                pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
             }
 
             load_conf_from_db();
@@ -238,7 +240,7 @@ final class ConfigurationController
             ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
             load_conf_from_db();
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
+            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
         }
 
         // ── Template init ─────────────────────────────────────────────────────
@@ -298,7 +300,7 @@ final class ConfigurationController
 
                 $groups = array_map(
                     fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . GROUPS_TABLE . '`;')->fetchAllAssociative(), 'name', 'id')
+                    array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'name', 'id')
                 );
                 natcasesort($groups);
                 $tpl->assign(['group_options' => $groups]);

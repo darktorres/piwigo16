@@ -11,6 +11,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Db\Tables;
 
 final class ProfileService
 {
@@ -70,7 +71,7 @@ final class ProfileService
                 $current_password = ServiceLocator::get(UserRepository::class)->findPasswordById(
                     Config::userFields()['password'],
                     Config::userFields()['id'],
-                    USERS_TABLE,
+                    Tables::users(),
                     is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0
                 );
                 if (!password_verify(is_scalar($_POST['password']) ? (string) $_POST['password'] : '', is_string($current_password) ? $current_password : '')) {
@@ -116,7 +117,7 @@ final class ProfileService
                     }
                 }
 
-                Dml::massUpdates(USERS_TABLE, ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
+                Dml::massUpdates(Tables::users(), ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
 
                 if ($_POST['mail_address'] != $userdata['email']) {
                     ServiceLocator::get(AuthService::class)->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
@@ -136,7 +137,7 @@ final class ProfileService
                         $data[$field] = $_POST[$field];
                     }
                 }
-                Dml::massUpdates(USER_INFOS_TABLE, ['primary' => ['user_id'], 'update' => $fields], [$data]);
+                Dml::massUpdates(Tables::userInfos(), ['primary' => ['user_id'], 'update' => $fields], [$data]);
                 $activity_details_tables[] = 'user_infos';
             }
 

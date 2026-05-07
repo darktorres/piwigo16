@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles all requests routed to /ws (web services API).
@@ -33,7 +34,7 @@ final class WsController implements ControllerInterface
             define('IN_WS', true);
         }
 
-        PermissionService::get()->checkStatus(ACCESS_FREE);
+        PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!Config::allowWebServices()) {
             page_forbidden('Web services are disabled');

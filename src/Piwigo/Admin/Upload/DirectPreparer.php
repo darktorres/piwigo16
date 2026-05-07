@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Core\ValidationPattern;
 
 final class DirectPreparer
 {
@@ -71,7 +72,7 @@ final class DirectPreparer
         $selected_category = [];
 
         if (isset($_GET['album'])) {
-            check_input_parameter('album', $_GET, false, PATTERN_ID);
+            check_input_parameter('album', $_GET, false, ValidationPattern::ID);
             $album_id_int = is_scalar($_GET['album']) ? (int) $_GET['album'] : 0;
             $cat = ServiceLocator::get(CategoryRepository::class)->findCategoryById($album_id_int);
             if ($cat !== null) {

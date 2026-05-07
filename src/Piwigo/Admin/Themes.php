@@ -15,6 +15,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 
 class Themes
 {
@@ -45,7 +47,7 @@ class Themes
      */
     private static function buildMaintainClass(string $theme_id): ThemeMaintain
     {
-        $file_to_include = PHPWG_THEMES_PATH.'/'.$theme_id.'/admin/maintain.inc.php';
+        $file_to_include = Config::themesPath().'/'.$theme_id.'/admin/maintain.inc.php';
         $classname = $theme_id.'_maintain';
 
         if (file_exists($file_to_include)) {
@@ -176,7 +178,7 @@ class Themes
 
                 $theme_maintain->delete();
 
-                ServiceLocator::get(AdminService::class)->deltree(PHPWG_THEMES_PATH.$theme_id, PHPWG_THEMES_PATH . 'trash');
+                ServiceLocator::get(AdminService::class)->deltree(Config::themesPath().$theme_id, Config::themesPath() . 'trash');
                 break;
 
             case 'set_default':
@@ -185,7 +187,7 @@ class Themes
                 break;
         }
 
-        pwg_activity('system', ACTIVITY_SYSTEM_THEME, $action, $activity_details);
+        pwg_activity('system', ActivitySystem::Theme, $action, $activity_details);
 
         return array_values($errors);
     }
@@ -257,14 +259,14 @@ class Themes
     */
     public function getFsThemes(): void
     {
-        $dir = opendir(PHPWG_THEMES_PATH);
+        $dir = opendir(Config::themesPath());
         if ($dir === false) {
             return;
         }
 
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
-                $path = PHPWG_THEMES_PATH.$file;
+                $path = Config::themesPath().$file;
                 if (is_dir($path)
                     and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path.'/themeconf.inc.php')
@@ -378,7 +380,7 @@ class Themes
         ];
 
         // Retrieve PEM versions
-        $version = PHPWG_VERSION;
+        $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
@@ -477,7 +479,7 @@ class Themes
     {
         $logger = LoggerRegistry::current();
 
-        if ($archive = tempnam(PHPWG_THEMES_PATH, 'zip')) {
+        if ($archive = tempnam(Config::themesPath(), 'zip')) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -511,7 +513,7 @@ class Themes
                             } else {
                                 $theme_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                             }
-                            $extract_path = PHPWG_THEMES_PATH . $theme_id;
+                            $extract_path = Config::themesPath() . $theme_id;
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
                             if (
@@ -558,7 +560,7 @@ class Themes
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_THEMES_PATH . 'trash');
+                                            ServiceLocator::get(AdminService::class)->deltree($path, Config::themesPath() . 'trash');
                                         }
                                     }
                                 }

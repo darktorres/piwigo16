@@ -10,6 +10,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\AccessLevel;
 
 final class PictureRateRenderer
 {
@@ -37,11 +38,11 @@ final class PictureRateRenderer
         }
         $template->assign('rate_summary', $rate_summary);
 
-        if (Config::rateAnonymous() or PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC)) {
+        if (Config::rateAnonymous() or PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
                 $anonId = null;
-                if (!PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC)) {
+                if (!PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
                     $ip_components = explode('.', is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '');
                     if (count($ip_components) > 3) {
                         array_pop($ip_components);

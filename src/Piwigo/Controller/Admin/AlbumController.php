@@ -29,6 +29,8 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class AlbumController
 {
@@ -72,7 +74,7 @@ final class AlbumController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
 
         $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
         $this->adminAlbumBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
@@ -121,7 +123,7 @@ final class AlbumController
         $user = $GLOBALS['user'];
         $albums_counter = ServiceLocator::get(CategoryRepository::class)->countAll();
 
-        check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'list';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
@@ -143,7 +145,7 @@ final class AlbumController
             check_input_parameter('id', $_POST, false, '/^-?\d+$/');
 
             $post_id_str = is_scalar($_POST['id']) ? (string) $_POST['id'] : '';
-            $query = 'SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat ' . (($post_id_str === '-1') ? 'IS NULL' : '= ' . $post_id_str) . ';';
+            $query = 'SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (($post_id_str === '-1') ? 'IS NULL' : '= ' . $post_id_str) . ';';
             $category_ids = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
 
             if (isset($_POST['recursiveAutoOrder'])) {
@@ -187,7 +189,7 @@ final class AlbumController
         $tpl->assign('delay_before_autoOpen', Config::albumMoveDelayBeforeAutoOpening());
         $tpl->assign('POS_PREF', Config::newcatDefaultPosition());
 
-        $allAlbum = DbConnection::get()->executeQuery('SELECT id,name,`rank`,status, visible, uppercats, lastmodified FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative();
+        $allAlbum = DbConnection::get()->executeQuery('SELECT id,name,`rank`,status, visible, uppercats, lastmodified FROM ' . Tables::categories() . ';')->fetchAllAssociative();
 
         $associatedTree = [];
         foreach ($allAlbum as $album) {
@@ -203,9 +205,9 @@ final class AlbumController
 
         $is_forbidden = array_fill_keys(explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : ''), 1);
 
-        $nb_photos_in = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+        $nb_photos_in = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
 
-        $all_categories = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), 'uppercats', 'id');
+        $all_categories = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ';')->fetchAllAssociative(), 'uppercats', 'id');
         $subcats_of = [];
         foreach ($all_categories as $id => $uppercats) {
             foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercat_id) {
@@ -283,7 +285,7 @@ final class AlbumController
         $admin_album_base_url = $this->adminAlbumBaseUrl;
 
         if ($category === null) {
-            check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+            check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
             $cat_id_str = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
             $admin_album_base_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . $cat_id_str);
             $category = ServiceLocator::get(CategoryRepository::class)
@@ -324,8 +326,8 @@ final class AlbumController
             ];
 
             if ('users' == $_POST['who'] && isset($_POST['users']) && is_array($_POST['users']) && count($_POST['users']) > 0) {
-                check_input_parameter('users', $_POST, true, PATTERN_ID);
-                $query = 'SELECT ui.user_id, ui.status, ui.language, u.' . Config::userFields()['email'] . ' AS email, u.' . Config::userFields()['username'] . ' AS username FROM ' . USER_INFOS_TABLE . ' AS ui JOIN ' . USERS_TABLE . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id WHERE ui.user_id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])) . ');';
+                check_input_parameter('users', $_POST, true, ValidationPattern::ID);
+                $query = 'SELECT ui.user_id, ui.status, ui.language, u.' . Config::userFields()['email'] . ' AS email, u.' . Config::userFields()['username'] . ' AS username FROM ' . Tables::userInfos() . ' AS ui JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id WHERE ui.user_id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', (array) $_POST['users'])) . ');';
                 $users     = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 $usernames = [];
                 foreach ($users as $u) {
@@ -350,7 +352,7 @@ final class AlbumController
                 $message .= ' (' . implode(', ', $usernames) . ')';
                 $tpl->assign(['save_success' => $message]);
             } elseif ('group' == $_POST['who'] && !empty($_POST['group'])) {
-                check_input_parameter('group', $_POST, false, PATTERN_ID);
+                check_input_parameter('group', $_POST, false, ValidationPattern::ID);
                 pwg_mail_group(is_numeric($_POST['group']) ? (int) $_POST['group'] : 0, $args, $mailTpl);
                 $post_group_str = is_scalar($_POST['group']) ? (string) $_POST['group'] : '0';
                 $group_name     = ServiceLocator::get(GroupRepository::class)->findNameById((int) $post_group_str);
@@ -372,7 +374,7 @@ final class AlbumController
             $tpl->assign('auth_key_duration', time_since(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
         }
 
-        $all_group_ids = array_column(DbConnection::get()->executeQuery('SELECT id AS group_id FROM `' . GROUPS_TABLE . '`;')->fetchAllAssociative(), 'group_id');
+        $all_group_ids = array_column(DbConnection::get()->executeQuery('SELECT id AS group_id FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'group_id');
 
         $group_ids = [];
         if (count($all_group_ids) == 0) {
@@ -381,24 +383,24 @@ final class AlbumController
             if ('private' == $category['status']) {
                 $tpl->assign('permission_url', $admin_album_base_url . '-permissions');
                 $catIdInt  = is_numeric($category['id']) ? (int) $category['id'] : 0;
-                $group_ids = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $catIdInt . ';')->fetchAllAssociative(), 'group_id');
+                $group_ids = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $catIdInt . ';')->fetchAllAssociative(), 'group_id');
             } else {
                 $group_ids = $all_group_ids;
             }
             if (count($group_ids) > 0) {
-                $tpl->assign('group_mail_options', array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . GROUPS_TABLE . '` WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ') ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id'));
+                $tpl->assign('group_mail_options', array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ') ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id'));
             }
         }
 
-        $all_user_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status != 'guest';")->fetchAllAssociative(), 'user_id');
+        $all_user_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status != 'guest';")->fetchAllAssociative(), 'user_id');
 
         if ('private' == $category['status']) {
             $catIdInt2 = is_numeric($category['id']) ? (int) $category['id'] : 0;
             $user_ids_access_indirect = [];
             if (count($group_ids) > 0) {
-                $user_ids_access_indirect = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_GROUP_TABLE . ' WHERE group_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ');')->fetchAllAssociative(), 'user_id');
+                $user_ids_access_indirect = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userGroup() . ' WHERE group_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ');')->fetchAllAssociative(), 'user_id');
             }
-            $user_ids_access_direct = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $catIdInt2 . ';')->fetchAllAssociative(), 'user_id');
+            $user_ids_access_direct = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $catIdInt2 . ';')->fetchAllAssociative(), 'user_id');
             $user_ids_access = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_merge($user_ids_access_direct, $user_ids_access_indirect)));
             $user_ids        = array_intersect($user_ids_access, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids));
         } else {
@@ -406,7 +408,7 @@ final class AlbumController
         }
 
         if (count($user_ids) > 0) {
-            $tpl->assign('user_options', array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE id IN (' . implode(',', $user_ids) . ');')->fetchAllAssociative(), 'username', 'id'));
+            $tpl->assign('user_options', array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE id IN (' . implode(',', $user_ids) . ');')->fetchAllAssociative(), 'username', 'id'));
         }
 
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'album_notification');
@@ -434,7 +436,7 @@ final class AlbumController
             'date_available ASC'  => l10n('Date posted, old &rarr; new') . ' ' . l10n('(determined from photos)'),
         ];
 
-        check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('parent_id', $_GET, false, ValidationPattern::ID);
 
         $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
         $navigation = '<a href="' . $base_url . '">' . l10n('Home') . '</a>';
@@ -492,7 +494,7 @@ final class AlbumController
             'sort_order_checked'  => array_shift($sort_orders_checked),
         ]);
 
-        $query = 'SELECT id, name, permalink, dir, `rank`, status FROM ' . CATEGORIES_TABLE;
+        $query = 'SELECT id, name, permalink, dir, `rank`, status FROM ' . Tables::categories();
         if (!isset($_GET['parent_id'])) {
             $query .= ' WHERE id_uppercat IS NULL';
         } else {
@@ -506,8 +508,8 @@ final class AlbumController
         $subcats_of    = [];
 
         if (count($categories)) {
-            $nb_photos_in    = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
-            $all_categories  = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), 'uppercats', 'id');
+            $nb_photos_in    = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+            $all_categories  = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ';')->fetchAllAssociative(), 'uppercats', 'id');
 
             foreach ($all_categories as $id => $uppercats) {
                 foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercat_id) {
@@ -671,15 +673,15 @@ final class AlbumController
         }
         $tpl->assign(['INFO_PHOTO' => l10n('%d photos', $image_count), 'INFO_TITLE' => $info_title]);
 
-        $category['nb_images_recursive'] = count(array_column(DbConnection::get()->executeQuery('SELECT DISTINCT (image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $subcat_ids) . ');')->fetchAllAssociative(), 'image_id'));
+        $category['nb_images_recursive'] = count(array_column(DbConnection::get()->executeQuery('SELECT DISTINCT (image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcat_ids) . ');')->fetchAllAssociative(), 'image_id'));
 
-        $result = DbConnection::get()->executeQuery('SELECT occured_on FROM `' . ACTIVITY_TABLE . '` WHERE object_id = ' . $catIntId . ' AND object = "album" AND action = "add"')->fetchAllAssociative();
+        $result = DbConnection::get()->executeQuery('SELECT occured_on FROM `' . Tables::activity() . '` WHERE object_id = ' . $catIntId . ' AND object = "album" AND action = "add"')->fetchAllAssociative();
         if (count($result) > 0) {
             $occurred_on = is_scalar($result[0]['occured_on']) ? (string) $result[0]['occured_on'] : '';
             $tpl->assign(['INFO_CREATION_SINCE' => time_since($occurred_on, 'day', null, true, true, true), 'INFO_CREATION' => format_date($occurred_on, ['day', 'month', 'year'])]);
         }
 
-        $result = DbConnection::get()->executeQuery('SELECT COUNT(*) FROM `' . CATEGORIES_TABLE . '` WHERE id_uppercat = ' . $catIntId)->fetchAllAssociative();
+        $result = DbConnection::get()->executeQuery('SELECT COUNT(*) FROM `' . Tables::categories() . '` WHERE id_uppercat = ' . $catIntId)->fetchAllAssociative();
         $tpl->assign(['INFO_DIRECT_SUB' => l10n('%d sub-albums', $result[0]['COUNT(*)'])]);
 
         $tpl->assign([
@@ -758,8 +760,8 @@ final class AlbumController
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-            check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
             check_input_parameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
         }
 
@@ -804,20 +806,20 @@ final class AlbumController
 
         $query_true = $query_false = '';
         if ($page['section'] === 'comments') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE commentable = 'true';";
-            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE commentable = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'true';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'false';";
             $tpl->assign(['L_SECTION' => l10n('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Authorized'), 'L_CAT_OPTIONS_FALSE' => l10n('Forbidden')]);
         } elseif ($page['section'] === 'visible') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE visible = 'true';";
-            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE visible = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'true';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'false';";
             $tpl->assign(['L_SECTION' => l10n('Lock albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Unlocked'), 'L_CAT_OPTIONS_FALSE' => l10n('Locked')]);
         } elseif ($page['section'] === 'status') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'public';";
-            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'public';";
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private';";
             $tpl->assign(['L_SECTION' => l10n('Manage authorizations for selected albums'), 'L_CAT_OPTIONS_TRUE' => l10n('Public'), 'L_CAT_OPTIONS_FALSE' => l10n('Private')]);
         } elseif ($page['section'] === 'representative') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' WHERE representative_picture_id IS NOT NULL;';
-            $query_false = 'SELECT DISTINCT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=category_id WHERE representative_picture_id IS NULL;';
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE representative_picture_id IS NOT NULL;';
+            $query_false = 'SELECT DISTINCT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id WHERE representative_picture_id IS NULL;';
             $tpl->assign(['L_SECTION' => l10n('Representative'), 'L_CAT_OPTIONS_TRUE' => l10n('singly represented'), 'L_CAT_OPTIONS_FALSE' => l10n('randomly represented')]);
         }
 
@@ -834,7 +836,7 @@ final class AlbumController
     private function catPerm(): void
     {
         $tpl = TemplateRegistry::current();
-        check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
         $cat_id = is_scalar($_GET['cat_id'] ?? null) ? (string) $_GET['cat_id'] : '';
         if (empty($cat_id)) {
             throw new ValidationException('No category selected');
@@ -862,7 +864,7 @@ final class AlbumController
             }
 
             if ('private' == $post_status) {
-                $groups_granted     = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
+                $groups_granted     = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
                 if (!isset($_POST['groups'])) {
                     $_POST['groups'] = [];
                 }
@@ -882,17 +884,17 @@ final class AlbumController
                     if (isset($_POST['apply_on_sub'])) {
                         $cat_ids = array_merge($cat_ids, get_subcat_ids([$pageCat]));
                     }
-                    $private_cats = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
+                    $private_cats = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
                     $inserts = [];
                     foreach ($private_cats as $cid) {
                         foreach ($grant_groups as $gid) {
                             $inserts[] = ['group_id' => $gid, 'cat_id' => $cid];
                         }
                     }
-                    Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
+                    Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
                 }
 
-                $users_granted     = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
+                $users_granted     = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
                 if (!isset($_POST['users'])) {
                     $_POST['users'] = [];
                 }
@@ -921,10 +923,10 @@ final class AlbumController
             'private'        => ('private' == $category['status']),
         ]);
 
-        $groups          = array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . GROUPS_TABLE . '` ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id');
-        $group_granted_ids = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
-        $users           = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ';')->fetchAllAssociative(), 'username', 'id');
-        $user_granted_direct_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
+        $groups          = array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . Tables::groups() . '` ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id');
+        $group_granted_ids = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
+        $users           = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ';')->fetchAllAssociative(), 'username', 'id');
+        $user_granted_direct_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
 
         $tpl->assign('groups', $groups);
         $tpl->assign('groups_selected', $group_granted_ids);
@@ -1082,9 +1084,9 @@ final class AlbumController
         }
         $category_ids = get_subcat_ids($ids);
 
-        $ref_dates = array_column(DbConnection::get()->executeQuery('SELECT category_id, ' . $minmax . '(' . $field . ') as ref_date FROM ' . IMAGE_CATEGORY_TABLE . ' JOIN ' . IMAGES_TABLE . ' ON image_id = id WHERE category_id IN (' . implode(',', $category_ids) . ') GROUP BY category_id;')->fetchAllAssociative(), 'ref_date', 'category_id');
+        $ref_dates = array_column(DbConnection::get()->executeQuery('SELECT category_id, ' . $minmax . '(' . $field . ') as ref_date FROM ' . Tables::imageCategory() . ' JOIN ' . Tables::images() . ' ON image_id = id WHERE category_id IN (' . implode(',', $category_ids) . ') GROUP BY category_id;')->fetchAllAssociative(), 'ref_date', 'category_id');
 
-        $uppercats_of = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $category_ids) . ');')->fetchAllAssociative(), 'uppercats', 'id');
+        $uppercats_of = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $category_ids) . ');')->fetchAllAssociative(), 'uppercats', 'id');
 
         foreach (array_keys($uppercats_of) as $cat_id) {
             $subcat_ids = [];

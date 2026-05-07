@@ -12,6 +12,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Db\Tables;
 
 final class PermissionsEndpoints
 {
@@ -90,7 +91,7 @@ final class PermissionsEndpoints
                 $catIds = array_merge($catIds, get_subcat_ids($catIdParamInt));
             }
             $catIdsStr = array_map(fn (mixed $v): string => (string) $v, $catIds);
-            $query     = 'SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
+            $query     = 'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
             $privateCats = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
             $inserts     = [];
             $groupIdParam = is_array($params['group_id']) ? $params['group_id'] : [];
@@ -99,7 +100,7 @@ final class PermissionsEndpoints
                     $inserts[] = ['group_id' => $groupId, 'cat_id' => $catId];
                 }
             }
-            Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
+            Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
         }
         if (!empty($params['user_id'])) {
             if ($params['recursive']) {

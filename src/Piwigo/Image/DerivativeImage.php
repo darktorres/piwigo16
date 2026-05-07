@@ -189,7 +189,7 @@ final class DerivativeImage
             $loc = substr_replace($loc, '-'.implode('_', $tokens), $dot_pos, 0);
         }
 
-        $rel_path = PWG_DERIVATIVE_DIR.$loc;
+        $rel_path = Config::derivativeDir().$loc;
 
         $url_style = Config::derivativeUrlStyle();
         if (!$url_style) {

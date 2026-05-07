@@ -8,6 +8,8 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 
 final readonly class PermissionService
 {
@@ -36,12 +38,12 @@ final readonly class PermissionService
     public function getAccessTypeStatus(string $userStatus = ''): int
     {
         return match ($this->getUserStatus($userStatus)) {
-            'guest'     => Config::guestAccess() ? ACCESS_GUEST : ACCESS_FREE,
-            'generic'   => ACCESS_GUEST,
-            'normal'    => ACCESS_CLASSIC,
-            'admin'     => ACCESS_ADMINISTRATOR,
-            'webmaster' => ACCESS_WEBMASTER,
-            default     => ACCESS_FREE,
+            'guest'     => Config::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
+            'generic'   => AccessLevel::Guest,
+            'normal'    => AccessLevel::Classic,
+            'admin'     => AccessLevel::Administrator,
+            'webmaster' => AccessLevel::Webmaster,
+            default     => AccessLevel::Free,
         };
     }
 
@@ -69,17 +71,17 @@ final readonly class PermissionService
 
     public function isClassicUser(string $userStatus = ''): bool
     {
-        return $this->isAutorizeStatus(ACCESS_CLASSIC, $userStatus);
+        return $this->isAutorizeStatus(AccessLevel::Classic, $userStatus);
     }
 
     public function isAdmin(string $userStatus = ''): bool
     {
-        return $this->isAutorizeStatus(ACCESS_ADMINISTRATOR, $userStatus);
+        return $this->isAutorizeStatus(AccessLevel::Administrator, $userStatus);
     }
 
     public function isWebmaster(string $userStatus = ''): bool
     {
-        return $this->isAutorizeStatus(ACCESS_WEBMASTER, $userStatus);
+        return $this->isAutorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
 
     public function canManageComment(string $action, mixed $commentAuthorId): bool
@@ -115,20 +117,20 @@ final readonly class PermissionService
 
     public function calculatePermissions(int $userId, string $userStatus): string
     {
-        $privateArray = array_column($this->conn->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE status = \'private\';')->fetchAllAssociative(), 'id');
+        $privateArray = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE status = \'private\';')->fetchAllAssociative(), 'id');
 
-        $authorizedArray = array_column($this->conn->executeQuery('SELECT cat_id FROM ' . USER_ACCESS_TABLE . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id');
+        $authorizedArray = array_column($this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userAccess() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id');
 
         $authorizedArray = array_merge(
             $authorizedArray,
-            array_column($this->conn->executeQuery('SELECT cat_id FROM ' . USER_GROUP_TABLE . ' AS ug INNER JOIN ' . GROUP_ACCESS_TABLE . ' AS ga ON ug.group_id = ga.group_id WHERE ug.user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id')
+            array_column($this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga ON ug.group_id = ga.group_id WHERE ug.user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id')
         );
 
         $authorizedArray = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizedArray));
         $forbiddenArray  = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $privateArray), $authorizedArray);
 
         if (!$this->isAdmin($userStatus)) {
-            $forbiddenArray = array_merge($forbiddenArray, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE visible = \'false\';')->fetchAllAssociative(), 'id')));
+            $forbiddenArray = array_merge($forbiddenArray, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE visible = \'false\';')->fetchAllAssociative(), 'id')));
             $forbiddenArray = array_unique($forbiddenArray);
         }
 

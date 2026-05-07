@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the three-stage password-reset flow (/password).
@@ -29,7 +30,7 @@ final class PasswordController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        PermissionService::get()->checkStatus(ACCESS_FREE);
+        PermissionService::get()->checkStatus(AccessLevel::Free);
 
         EventDispatcher::notify('loc_begin_password');
 

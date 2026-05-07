@@ -14,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Db\Tables;
 
 final readonly class AuthService
 {
@@ -45,7 +46,7 @@ final readonly class AuthService
             $count = $this->userRepo->countByEmail(
                 $userFields['email'],
                 $userFields['id'],
-                USERS_TABLE,
+                Tables::users(),
                 $mailAddress,
                 is_numeric($userId) ? (int) $userId : null
             );
@@ -61,7 +62,7 @@ final readonly class AuthService
         if (InstallSentinel::isInstalled()) {
             $count = $this->userRepo->countByUsernameInsensitive(
                 Config::userFields()['username'],
-                USERS_TABLE,
+                Tables::users(),
                 is_scalar($login) ? (string) $login : ''
             );
             if ($count > 0) {
@@ -75,7 +76,7 @@ final readonly class AuthService
     {
         $usernameStr = is_scalar($username) ? (string) $username : '';
         $usernameLo  = strtolower($usernameStr);
-        $allUsernames = $this->userRepo->findAllUsernames(Config::userFields()['username'], USERS_TABLE);
+        $allUsernames = $this->userRepo->findAllUsernames(Config::userFields()['username'], Tables::users());
         $scuUsers = [];
         foreach ($allUsernames as $u) {
             $scuUsers[$u] = strtolower($u);
@@ -94,7 +95,7 @@ final readonly class AuthService
             $userFields['username'],
             $userFields['password'],
             $userFields['id'],
-            USERS_TABLE,
+            Tables::users(),
             is_numeric($userId) ? (int) $userId : 0
         );
         if ($row !== null) {
@@ -114,7 +115,7 @@ final readonly class AuthService
             if (!array_key_exists($cookieLang, get_languages())) {
                 fatal_error('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
-            Dml::singleUpdate(USER_INFOS_TABLE, ['language' => $cookieLang], ['user_id' => $userId]);
+            Dml::singleUpdate(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
             setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
         }
 
@@ -227,7 +228,7 @@ final readonly class AuthService
             $userFields['email'],
             $userFields['id'],
             $userFields['password'],
-            USERS_TABLE,
+            Tables::users(),
             $usernameOrEmail
         );
 
@@ -303,9 +304,9 @@ SELECT
     NOW() AS dbnow,
     DATEDIFF(uak.expired_on, NOW()) AS days_left,
     SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
-  FROM ' . USER_AUTH_KEYS_TABLE . ' AS uak
-    JOIN ' . USER_INFOS_TABLE . ' AS ui ON uak.user_id = ui.user_id
-    JOIN ' . USERS_TABLE . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id
+  FROM ' . Tables::userAuthKeys() . ' AS uak
+    JOIN ' . Tables::userInfos() . ' AS ui ON uak.user_id = ui.user_id
+    JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id
   WHERE auth_key = ' . $this->conn->quote($authKey) . '
 ;';
         $keys = $this->conn->executeQuery($query)->fetchAllAssociative();
@@ -348,7 +349,7 @@ SELECT
         $user['id'] = $key['user_id'];
         CurrentUser::setRawAttributes($user);
 
-        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
+        Dml::singleUpdate(Tables::userAuthKeys(), ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
 
         $_SESSION['connected_with'] = $validKey;
 
@@ -371,7 +372,7 @@ SELECT
         }
 
         if (!isset($userStatus)) {
-            $userInfos = $this->conn->executeQuery('SELECT status FROM ' . USER_INFOS_TABLE . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative();
+            $userInfos = $this->conn->executeQuery('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative();
             if (count($userInfos) == 0) {
                 return false;
             }
@@ -395,7 +396,7 @@ SELECT
                 'expired_on' => $expiry,
                 'key_type'   => 'auth_key',
             ];
-            Dml::singleInsert(USER_AUTH_KEYS_TABLE, $key);
+            Dml::singleInsert(Tables::userAuthKeys(), $key);
             $lastId = DbConnection::get()->lastInsertId();
             $key['auth_key_id'] = is_numeric($lastId) ? (int) $lastId : 0;
             return $key;
@@ -411,7 +412,7 @@ SELECT
 
     public function deactivatePasswordResetKey(mixed $userId): void
     {
-        Dml::singleUpdate(USER_INFOS_TABLE, ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
+        Dml::singleUpdate(Tables::userInfos(), ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
     }
 
     /** @return array<string,mixed> */
@@ -421,7 +422,7 @@ SELECT
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
         $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
-        Dml::singleUpdate(USER_INFOS_TABLE, [
+        Dml::singleUpdate(Tables::userInfos(), [
             'activation_key'        => password_hash($activationKey, PASSWORD_BCRYPT),
             'activation_key_expire' => $expire,
         ], ['user_id' => $userId]);

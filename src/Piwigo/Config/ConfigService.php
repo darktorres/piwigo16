@@ -10,6 +10,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Db\Tables;
 
 final readonly class ConfigService
 {
@@ -20,7 +21,7 @@ final readonly class ConfigService
 
     public function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {
-        $sql  = 'SELECT param, value FROM ' . CONFIG_TABLE .
+        $sql  = 'SELECT param, value FROM ' . Tables::config() .
             (!empty($condition) ? ' WHERE ' . $condition : '');
 
         if (ServiceLocator::has(Connection::class)) {
@@ -53,7 +54,7 @@ final readonly class ConfigService
         [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
         conf_update_param($param, $value);
         $dbvalue = $this->conn->executeQuery(
-            'SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = ?',
+            'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
             [$param]
         )->fetchOne();
         if ($dbvalue !== $value) {
@@ -77,12 +78,12 @@ final readonly class ConfigService
 
         if (ServiceLocator::has(Connection::class)) {
             ServiceLocator::get(Connection::class)->executeStatement(
-                'INSERT INTO ' . CONFIG_TABLE . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+                'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
                 [$param, $dbValue, $dbValue]
             );
         } else {
             DbConnection::build()->executeStatement(
-                'INSERT INTO ' . CONFIG_TABLE . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+                'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
                 [$param, $dbValue, $dbValue]
             );
         }
@@ -107,7 +108,7 @@ final readonly class ConfigService
         } else {
             $conn = DbConnection::build();
         }
-        $qb = $conn->createQueryBuilder()->delete(CONFIG_TABLE);
+        $qb = $conn->createQueryBuilder()->delete(Tables::config());
         $qb->where($qb->expr()->in('param', ':params'))
            ->setParameter('params', $params, ArrayParameterType::STRING);
         $qb->executeStatement();

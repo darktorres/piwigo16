@@ -16,6 +16,7 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Users\UserRepository;
+use Piwigo\Db\Tables;
 
 final readonly class AdminService
 {
@@ -137,11 +138,11 @@ final readonly class AdminService
     public function getAdminClientCacheKeys(array $requested = []): array
     {
         $tables = [
-            'categories' => CATEGORIES_TABLE,
-            'groups'     => GROUPS_TABLE,
-            'images'     => IMAGES_TABLE,
-            'tags'       => TAGS_TABLE,
-            'users'      => USER_INFOS_TABLE,
+            'categories' => Tables::categories(),
+            'groups'     => Tables::groups(),
+            'images'     => Tables::images(),
+            'tags'       => Tables::tags(),
+            'users'      => Tables::userInfos(),
         ];
         if (empty($requested)) {
             $requested = array_keys($tables);
@@ -485,7 +486,7 @@ final readonly class AdminService
         $stats['nb_categories'] = $catRepo->countAll();
         $stats['nb_tags']       = $tagRepo->countAll();
         $stats['nb_image_tag']  = $tagRepo->countImageTags();
-        $stats['nb_users']      = $userRepo->countAll(USERS_TABLE);
+        $stats['nb_users']      = $userRepo->countAll(Tables::users());
         $stats['nb_admins']     = $userRepo->countByStatus(['webmaster', 'admin']);
         $stats['nb_groups']     = $userRepo->countGroups();
         $stats['nb_rates']      = $imgRepo->countRatings();
@@ -502,14 +503,14 @@ final readonly class AdminService
         $piwigoOrigins = '2001-09-01 00:00:00';
         $candidate     = null;
         $users = DbConnection::get()->executeQuery(
-            'SELECT registration_date FROM ' . USER_INFOS_TABLE . ' WHERE user_id = 2'
+            'SELECT registration_date FROM ' . Tables::userInfos() . ' WHERE user_id = 2'
         )->fetchAllAssociative();
         if (count($users) > 0) {
             $candidate = $users[0]['registration_date'];
         }
         if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
             $users = DbConnection::get()->executeQuery(
-                'SELECT MIN(registration_date) AS min_registration_date FROM ' . USER_INFOS_TABLE . " WHERE registration_date > '$piwigoOrigins'"
+                'SELECT MIN(registration_date) AS min_registration_date FROM ' . Tables::userInfos() . " WHERE registration_date > '$piwigoOrigins'"
             )->fetchAllAssociative();
             if (count($users) > 0) {
                 $candidate = $users[0]['min_registration_date'];
@@ -517,7 +518,7 @@ final readonly class AdminService
         }
         if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
             $images = DbConnection::get()->executeQuery(
-                'SELECT date_available FROM ' . IMAGES_TABLE . ' ORDER BY id ASC LIMIT 1'
+                'SELECT date_available FROM ' . Tables::images() . ' ORDER BY id ASC LIMIT 1'
             )->fetchAllAssociative();
             if (count($images) > 0) {
                 $candidate = $images[0]['date_available'];

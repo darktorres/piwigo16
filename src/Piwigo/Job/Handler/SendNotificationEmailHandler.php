@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Piwigo\Db\Tables;
 
 #[AsMessageHandler]
 final class SendNotificationEmailHandler
@@ -25,7 +26,7 @@ final class SendNotificationEmailHandler
 
             $row = ServiceLocator::get(Connection::class)
                 ->executeQuery(
-                    'SELECT ' . $emailField . ' AS email FROM ' . USERS_TABLE . ' WHERE ' . $idField . ' = ?',
+                    'SELECT ' . $emailField . ' AS email FROM ' . Tables::users() . ' WHERE ' . $idField . ' = ?',
                     [$job->userId]
                 )
                 ->fetchAssociative();

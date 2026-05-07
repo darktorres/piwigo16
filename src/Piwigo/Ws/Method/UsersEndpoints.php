@@ -28,6 +28,8 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class UsersEndpoints
 {
@@ -38,7 +40,7 @@ final class UsersEndpoints
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $orderStr = is_scalar($params['order']) ? (string) $params['order'] : '';
-        if (!preg_match(PATTERN_ORDER, $orderStr)) {
+        if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
         }
         if (isset($params['order']) && str_contains($orderStr, 'username')) {
@@ -85,7 +87,7 @@ final class UsersEndpoints
         if (!empty($params['status'])) {
             $statusArr  = is_array($params['status']) ? $params['status'] : [];
             $statusArr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $statusArr);
-            $statusArr  = array_intersect($statusArr, SchemaHelper::getEnums(USER_INFOS_TABLE, 'status'));
+            $statusArr  = array_intersect($statusArr, SchemaHelper::getEnums(Tables::userInfos(), 'status'));
             if (count($statusArr) > 0) {
                 $whereClauses[] = 'ui.status IN("' . implode('","', $statusArr) . '")';
             }
@@ -159,7 +161,7 @@ final class UsersEndpoints
         if (isset($display['ui.last_visit'])) {
             $query .= ', ui.last_visit_from_history AS last_visit_from_history';
         }
-        $query  .= ' FROM ' . USERS_TABLE . ' AS u INNER JOIN ' . USER_INFOS_TABLE . ' AS ui ON u.' . Config::userFields()['id'] . ' = ui.user_id LEFT JOIN ' . USER_GROUP_TABLE . ' AS ug ON u.' . Config::userFields()['id'] . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
+        $query  .= ' FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui ON u.' . Config::userFields()['id'] . ' = ui.user_id LEFT JOIN ' . Tables::userGroup() . ' AS ug ON u.' . Config::userFields()['id'] . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $page    = is_numeric($params['page']) ? (int) $params['page'] : 0;
         if ($perPage !== 0 || !empty($params['display'])) {
@@ -183,7 +185,7 @@ final class UsersEndpoints
         if (count($users) > 0) {
             if (array_key_exists('groups', $params['display'])) {
                 $conn = ServiceLocator::get(Connection::class);
-                $qb   = $conn->createQueryBuilder()->select('user_id', 'group_id')->from(USER_GROUP_TABLE);
+                $qb   = $conn->createQueryBuilder()->select('user_id', 'group_id')->from(Tables::userGroup());
                 $qb->where($qb->expr()->in('user_id', ':ids'))->setParameter('ids', array_keys($users), ArrayParameterType::INTEGER);
                 foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
                     $grpUid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
@@ -279,7 +281,7 @@ final class UsersEndpoints
         $currentUser = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
         if ($currentUser->status === 'admin') {
-            $protectedUsers = array_merge($protectedUsers, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
+            $protectedUsers = array_merge($protectedUsers, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
         }
         $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
         $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));
@@ -331,7 +333,7 @@ final class UsersEndpoints
                 return new PwgError(403, l10n('The passwords do not match'));
             }
             $userFields      = Config::userFields();
-            $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], USERS_TABLE, (int) $currentUser->id);
+            $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), (int) $currentUser->id);
             if (!password_verify(is_scalar($params['password']) ? (string) $params['password'] : '', is_string($currentPassword) ? $currentPassword : '')) {
                 return new PwgError(403, l10n('Current password is wrong'));
             }
@@ -373,7 +375,7 @@ final class UsersEndpoints
         if (!ServiceLocator::get(ImageRepository::class)->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        Dml::singleInsert(FAVORITES_TABLE, ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
+        Dml::singleInsert(Tables::favorites(), ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
         return true;
     }
 
@@ -405,7 +407,7 @@ final class UsersEndpoints
         UserService::get()->checkUserFavorites();
         $orderBy = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-        $query   = 'SELECT i.* FROM ' . FAVORITES_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
+        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
         $images  = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $image = [];

@@ -25,6 +25,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AppInfo;
 
 /**
  * Handles all admin pages (/admin{rest}).
@@ -61,7 +63,7 @@ final class AdminController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_admin');
 
-        PermissionService::get()->checkStatus(ACCESS_ADMINISTRATOR);
+        PermissionService::get()->checkStatus(AccessLevel::Administrator);
 
         check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
         check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
@@ -306,7 +308,7 @@ final class AdminController implements ControllerInterface
         // ── What's new ────────────────────────────────────────────────────────
 
         $show_whats_new          = false;
-        $whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
+        $whats_new_major_version = get_branch_from_version(AppInfo::VERSION);
 
         if (PreferencesService::get()->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && pwg_is_dbconf_writeable()) {
             $registrationDate = is_scalar($user['registration_date'] ?? null) ? (string) $user['registration_date'] : '';

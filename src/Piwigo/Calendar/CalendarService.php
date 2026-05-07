@@ -10,6 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class CalendarService
 {
@@ -25,12 +26,12 @@ final class CalendarService
             $page = [];
         }
 
-        $innerSql = ' FROM ' . IMAGES_TABLE;
+        $innerSql = ' FROM ' . Tables::images();
 
         if (($page['section'] ?? null) == 'categories') {
             $page['items'] = [];
             $innerSql .= '
-INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
+INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
             if (isset($page['category']) && is_array($page['category'])) {
                 $subIds = array_diff(

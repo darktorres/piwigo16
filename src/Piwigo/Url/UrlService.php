@@ -11,6 +11,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class UrlService
 {
@@ -707,7 +708,7 @@ final class UrlService
 SELECT
     image_id,
     1 as fake_value
-  FROM ' . FAVORITES_TABLE . '
+  FROM ' . Tables::favorites() . '
   WHERE user_id = ' . CurrentUser::get()->id . '
 ';
 

@@ -6,6 +6,8 @@ namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Plugins;
@@ -28,6 +30,10 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final readonly class Util
 {
@@ -126,13 +132,13 @@ final readonly class Util
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['redirect' => 'redirect.tpl']);
 
-        include PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
 
         $tpl->setFilenames(['redirect' => 'redirect.tpl']);
         $tpl->assign('REDIRECT_MSG', $msg);
         $tpl->parse('redirect');
 
-        include PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
         exit();
     }
 
@@ -152,7 +158,7 @@ final readonly class Util
         if (ServiceLocator::has(ThemeRepository::class)) {
             $rows = ServiceLocator::get(ThemeRepository::class)->findAll();
         } else {
-            $rows = $this->conn->executeQuery('SELECT id, name FROM ' . THEMES_TABLE . ' ORDER BY name ASC;')->fetchAllAssociative();
+            $rows = $this->conn->executeQuery('SELECT id, name FROM ' . Tables::themes() . ' ORDER BY name ASC;')->fetchAllAssociative();
         }
         foreach ($rows as $row) {
             if ($row['id'] === Config::mobilTheme()) {
@@ -197,7 +203,7 @@ final readonly class Util
             ->getWebmasterEmail(
                 $userFields['email'],
                 $userFields['id'],
-                USERS_TABLE,
+                Tables::users(),
                 Config::webmasterId()
             );
         $email = EventDispatcher::dispatch('get_webmaster_mail_address', $email);
@@ -208,7 +214,7 @@ final readonly class Util
     public function fillCaddie(array $elementsId): void
     {
         $userId = CurrentUser::get()->id;
-        $query  = 'SELECT element_id FROM ' . CADDIE_TABLE . ' WHERE user_id = ' . $userId . ';';
+        $query  = 'SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ' . $userId . ';';
         $inCaddie = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'element_id');
         $caddiables = array_diff($elementsId, array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $inCaddie));
         $datas = [];
@@ -216,7 +222,7 @@ final readonly class Util
             $datas[] = ['element_id' => $caddiable, 'user_id' => $userId];
         }
         if (count($caddiables) > 0) {
-            Dml::massInserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
+            Dml::massInserts(Tables::caddie(), ['element_id', 'user_id'], $datas);
         }
     }
 
@@ -232,12 +238,12 @@ final readonly class Util
                 '',
                 true
             );
-            $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic'
-                . ' INNER JOIN ' . COMMENTS_TABLE . ' AS com ON ic.image_id = com.image_id'
+            $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . Tables::imageCategory() . ' AS ic'
+                . ' INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id'
                 . ' WHERE ' . implode(' AND ', $where);
             $count = $this->conn->executeQuery($query)->fetchOne();
             $nb    = is_numeric($count) ? (int) $count : 0;
-            Dml::singleUpdate(USER_CACHE_TABLE, ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
+            Dml::singleUpdate(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
             return $nb;
         });
         return is_int($cached) ? $cached : 0;
@@ -277,7 +283,7 @@ final readonly class Util
                 fatal_error('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
             }
             foreach ($paramValue as $key => $itemToCheck) {
-                if (!preg_match(PATTERN_ID, (string) $key) || !preg_match($pattern ?? '', is_scalar($itemToCheck) ? (string) $itemToCheck : '')) {
+                if (!preg_match(ValidationPattern::ID, (string) $key) || !preg_match($pattern ?? '', is_scalar($itemToCheck) ? (string) $itemToCheck : '')) {
                     fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
@@ -495,7 +501,7 @@ final readonly class Util
 
         if ($pageSection !== '') {
             if (!Config::has('history_sections_cache')) {
-                conf_update_param('history_sections_cache', SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
+                conf_update_param('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
             }
             $historySectionsCache = safe_unserialize(Config::historySectionsCache() ?? '');
             Config::override('history_sections_cache', $historySectionsCache);
@@ -505,13 +511,13 @@ final readonly class Util
             ) {
                 $section = $pageSection;
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections = SchemaHelper::getEnums(HISTORY_TABLE, 'section');
+                $historySections = SchemaHelper::getEnums(Tables::history(), 'section');
                 $historySections[] = $pageSection;
                 $this->conn->executeStatement(
-                    'ALTER TABLE ' . HISTORY_TABLE . " CHANGE section section enum('" .
+                    'ALTER TABLE ' . Tables::history() . " CHANGE section section enum('" .
                     implode("','", array_unique($historySections)) . "') DEFAULT NULL"
                 );
-                conf_update_param('history_sections_cache', SchemaHelper::getEnums(HISTORY_TABLE, 'section'), true);
+                conf_update_param('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
                 $section = $pageSection;
             }
         }
@@ -624,7 +630,7 @@ final readonly class Util
                 'user_agent'  => $userAgent ?? '',
             ];
         }
-        Dml::massInserts(ACTIVITY_TABLE, array_keys($inserts[0]), $inserts);
+        Dml::massInserts(Tables::activity(), array_keys($inserts[0]), $inserts);
     }
 
     public function checkLounge(): void
@@ -635,7 +641,7 @@ final readonly class Util
         if (isset($_REQUEST['method']) && in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])) {
             return;
         }
-        $query   = 'SELECT image_id, date_available, NOW() AS dbnow FROM ' . LOUNGE_TABLE . ' JOIN ' . IMAGES_TABLE . ' ON image_id = id ORDER BY image_id ASC LIMIT 1;';
+        $query   = 'SELECT image_id, date_available, NOW() AS dbnow FROM ' . Tables::lounge() . ' JOIN ' . Tables::images() . ' ON image_id = id ORDER BY image_id ASC LIMIT 1;';
         $voyagers = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         if (count($voyagers)) {
             $voyager = $voyagers[0];
@@ -660,8 +666,8 @@ final readonly class Util
             }
         }
 
-        $this->conn->executeStatement('INSERT IGNORE INTO ' . CONFIG_TABLE . ' SET param=?, value=?', [$tokenName . '_running', $execId . '-' . time()]);
-        $runningExec = $this->conn->executeQuery('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
+        $this->conn->executeStatement('INSERT IGNORE INTO ' . Tables::config() . ' SET param=?, value=?', [$tokenName . '_running', $execId . '-' . time()]);
+        $runningExec = $this->conn->executeQuery('SELECT value FROM ' . Tables::config() . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
         [$runningExecId] = explode('-', is_scalar($runningExec) ? (string) $runningExec : '');
 
         if ($runningExecId !== $execId) {
@@ -674,7 +680,7 @@ final readonly class Util
 
     public function pwgUniqueExecIsRunning(string $tokenName): bool
     {
-        $counter = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . CONFIG_TABLE . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
+        $counter = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::config() . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
         return is_numeric($counter) ? (int) $counter > 0 : false;
     }
 
@@ -741,7 +747,7 @@ final readonly class Util
             'origin_hash' => Config::sendPiwigoInfosOriginHash(),
             'technical'   => [
                 'php_version'       => PHP_VERSION,
-                'piwigo_version'    => PHPWG_VERSION,
+                'piwigo_version'    => AppInfo::VERSION,
                 'os_version'        => PHP_OS,
                 'container_type'    => $containerType,
                 'container_version' => $containerVersion,
@@ -761,9 +767,9 @@ final readonly class Util
         $piwigoInfos['general_stats']['last_photo']        = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
-            $query = 'SELECT COUNT(*) AS counter FROM `' . IMAGES_TABLE . '` WHERE storage_category_id IS NOT NULL;';
+            $query = 'SELECT COUNT(*) AS counter FROM `' . Tables::images() . '` WHERE storage_category_id IS NOT NULL;';
             if (array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
-                $query = 'SELECT IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method, MAX(date_available) AS last_added_on, COUNT(*) AS nb_files FROM `' . IMAGES_TABLE . '` GROUP BY add_method;';
+                $query = 'SELECT IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method, MAX(date_available) AS last_added_on, COUNT(*) AS nb_files FROM `' . Tables::images() . '` GROUP BY add_method;';
                 $filesByMethod = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
                 $piwigoInfos['general_stats']['nb_photos_synced']  = $filesByMethod['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesByMethod['sync']['last_added_on'];
@@ -773,14 +779,14 @@ final readonly class Util
                 }
                 $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'];
             } else {
-                $query  = 'SELECT date_available FROM `' . IMAGES_TABLE . '` ORDER BY id DESC LIMIT 1;';
+                $query  = 'SELECT date_available FROM `' . Tables::images() . '` ORDER BY id DESC LIMIT 1;';
                 $images = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
             }
 
-            $query = 'SELECT SUBSTRING_INDEX(path,".",-1) AS ext, COUNT(*) AS counter, SUM(filesize) AS filesize FROM `' . IMAGES_TABLE . '` GROUP BY ext;';
+            $query = 'SELECT SUBSTRING_INDEX(path,".",-1) AS ext, COUNT(*) AS counter, SUM(filesize) AS filesize FROM `' . Tables::images() . '` GROUP BY ext;';
             $piwigoInfos['file_extensions'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
         }
 
@@ -874,7 +880,7 @@ final readonly class Util
         $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
 
         $piwigoInfos['themes_usage'] = [];
-        $query      = 'SELECT theme, COUNT(*) AS theme_counter FROM ' . USER_INFOS_TABLE . ' GROUP BY theme ORDER BY theme;';
+        $query      = 'SELECT theme, COUNT(*) AS theme_counter FROM ' . Tables::userInfos() . ' GROUP BY theme ORDER BY theme;';
         $themesUsed = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
         foreach ($themesUsed as $themeUsed => $counter) {
             if (isset($privateThemes[$themeUsed])) {
@@ -885,13 +891,13 @@ final readonly class Util
 
         $piwigoInfos['general_stats']['default_language'] = UserService::get()->getDefaultLanguage();
 
-        $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . USER_INFOS_TABLE . ' GROUP BY language ORDER BY language;';
+        $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . Tables::userInfos() . ' GROUP BY language ORDER BY language;';
         $piwigoInfos['languages_usage'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
 
         $piwigoInfos['activities']                      = [];
         $piwigoInfos['general_stats']['nb_activities']  = 0;
 
-        $query      = 'SELECT object, action, COUNT(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY object, action;";
+        $query      = 'SELECT object, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY object, action;";
         $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($activities as $activity) {
             $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
@@ -904,7 +910,7 @@ final readonly class Util
         }
 
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
-        $query      = 'SELECT object, object_id, action, COUNT(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object = 'system' GROUP BY object, object_id, action;";
+        $query      = 'SELECT object, object_id, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object = 'system' GROUP BY object, object_id, action;";
         $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         $systemActivities = [];
         foreach ($activities as $activity) {
@@ -918,7 +924,7 @@ final readonly class Util
         }
         $piwigoInfos['activities']['system'] = $systemActivities;
 
-        $query   = 'SELECT action, occured_on, details FROM ' . ACTIVITY_TABLE . " WHERE object = 'system' AND object_id = " . ACTIVITY_SYSTEM_CORE . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
+        $query   = 'SELECT action, occured_on, details FROM ' . Tables::activity() . " WHERE object = 'system' AND object_id = " . ActivitySystem::Core . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
         $updates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($updates as $update) {
             $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
@@ -935,7 +941,7 @@ final readonly class Util
         $watermark = ImageStdParams::getWatermark();
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
-        $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . ACTIVITY_TABLE . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
+        $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . Tables::activity() . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
         $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         $apps       = [];
         $appsPattern = [

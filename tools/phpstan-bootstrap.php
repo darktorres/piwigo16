@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 define('PHPWG_ROOT_PATH', __DIR__ . '/../');
-define('PHPWG_VERSION', '16.3.0');
+// PHPWG_VERSION migrated to AppInfo::VERSION — no PHP define needed.
 define('PWG_LOCAL_DIR', 'local/');
 define('IN_ADMIN', false);
 

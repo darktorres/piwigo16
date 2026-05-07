@@ -19,6 +19,8 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 final readonly class MailService
 {
@@ -273,13 +275,13 @@ SELECT
     i.user_id,
     u.' . Config::userFields()['username'] . ' AS name,
     u.' . Config::userFields()['email'] . ' AS email
-  FROM ' . USERS_TABLE . ' AS u
-    JOIN ' . USER_INFOS_TABLE . ' AS i
+  FROM ' . Tables::users() . ' AS u
+    JOIN ' . Tables::userInfos() . ' AS i
     ON i.user_id =  u.' . Config::userFields()['id'];
 
         if (!is_null($groupId)) {
             $query .= '
-    JOIN ' . USER_GROUP_TABLE . ' AS ug
+    JOIN ' . Tables::userGroup() . ' AS ug
       ON ug.user_id = i.user_id';
         }
 
@@ -327,10 +329,10 @@ SELECT
 
         $query = '
 SELECT DISTINCT language
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::users() . ' AS u
     ON ' . Config::userFields()['id'] . ' = ug.user_id
-    INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = ' . $groupId . '
     AND ' . Config::userFields()['email'] . ' <> ""';
@@ -354,10 +356,10 @@ SELECT
     ui.status,
     u.' . Config::userFields()['username'] . ' AS name,
     u.' . Config::userFields()['email'] . ' AS email
-  FROM ' . USER_GROUP_TABLE . ' AS ug
-    INNER JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::users() . ' AS u
     ON ' . Config::userFields()['id'] . ' = ug.user_id
-    INNER JOIN ' . USER_INFOS_TABLE . ' AS ui
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
     ON ui.user_id = ug.user_id
   WHERE group_id = ' . $groupId . '
     AND ' . Config::userFields()['email'] . ' <> ""
@@ -530,7 +532,7 @@ SELECT
                 $mailTpl->assign([
                     'GALLERY_URL'      => add_url_params(get_gallery_home_url(), $addUrlParams),
                     'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
-                    'VERSION'          => Config::showVersion() ? PHPWG_VERSION : '',
+                    'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
                     'CONTENT_ENCODING' => get_pwg_charset(),
                     'CONTACT_MAIL'     => $this->getMailSenderEmail(),

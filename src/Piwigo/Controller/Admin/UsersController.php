@@ -23,6 +23,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class UsersController
 {
@@ -53,8 +55,8 @@ final class UsersController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-        check_input_parameter('group', $_GET, false, PATTERN_ID);
-        check_input_parameter('user_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('group', $_GET, false, ValidationPattern::ID);
+        check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_list';
         ServiceLocator::get(UserTabRenderer::class)->render();
@@ -94,13 +96,13 @@ final class UsersController
         $password_protected_users = [(string) Config::guestId()];
 
         if ($userStatus === 'admin') {
-            $admin_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
+            $admin_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
             $admin_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids);
             $protected_users = array_merge($protected_users, $admin_ids_str);
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids_str, [(string) $userId]));
         }
 
-        $owner_username = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
+        $owner_username = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
 
         $tpl->assign([
             'U_HISTORY'                 => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
@@ -129,7 +131,7 @@ final class UsersController
 
         // Status options
         $label_of_status = [];
-        foreach (SchemaHelper::getEnums(USER_INFOS_TABLE, 'status') as $status) {
+        foreach (SchemaHelper::getEnums(Tables::userInfos(), 'status') as $status) {
             $label_of_status[$status] = l10n('user_status_' . $status);
         }
 
@@ -252,8 +254,8 @@ final class UsersController
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-            check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
@@ -298,7 +300,7 @@ final class UsersController
             }
         }
 
-        $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND user_id = " . $pageUser;
+        $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . " ON cat_id = id WHERE status = 'private' AND user_id = " . $pageUser;
         if (count($group_authorized) > 0) {
             $query_true .= ' AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
         }
@@ -307,7 +309,7 @@ final class UsersController
 
         $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findDirectUserCatIds($pageUser, $group_authorized);
 
-        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private'";
+        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private'";
         if (count($authorized_ids) > 0) {
             $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
         }
@@ -327,9 +329,9 @@ final class UsersController
     private function userActivity(): void
     {
         $tpl = TemplateRegistry::current();
-        check_input_parameter('photo', $_GET, false, PATTERN_ID);
-        check_input_parameter('album', $_GET, false, PATTERN_ID);
-        check_input_parameter('group', $_GET, false, PATTERN_ID);
+        check_input_parameter('photo', $_GET, false, ValidationPattern::ID);
+        check_input_parameter('album', $_GET, false, ValidationPattern::ID);
+        check_input_parameter('group', $_GET, false, ValidationPattern::ID);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -340,7 +342,7 @@ final class UsersController
             $usernameField = Config::userFields()['username'];
             $idField       = Config::userFields()['id'];
             $activityRows  = ServiceLocator::get(Connection::class)
-                ->executeQuery("SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details, $usernameField AS username FROM " . ACTIVITY_TABLE . ' JOIN ' . USERS_TABLE . " AS u ON performed_by = u.$idField WHERE object = 'user' ORDER BY activity_id DESC")
+                ->executeQuery("SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details, $usernameField AS username FROM " . Tables::activity() . ' JOIN ' . Tables::users() . " AS u ON performed_by = u.$idField WHERE object = 'user' ORDER BY activity_id DESC")
                 ->fetchAllAssociative();
 
             $output_lines = [['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']];
@@ -375,11 +377,11 @@ final class UsersController
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create')]),
         ]);
 
-        $nb_lines_for_user = array_column(DbConnection::get()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
+        $nb_lines_for_user = array_column(DbConnection::get()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
 
-        $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
+        $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
         if (count($nb_lines_for_user) > 0) {
-            $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
+            $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
         }
 
         $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
@@ -390,7 +392,7 @@ final class UsersController
         }
         $tpl->assign('ulist', $filterable_users);
 
-        $nb_users = ServiceLocator::get(UserRepository::class)->countAll(USERS_TABLE);
+        $nb_users = ServiceLocator::get(UserRepository::class)->countAll(Tables::users());
         $tpl->assign('nb_users', $nb_users);
 
         $actRepo  = ServiceLocator::get(ActivityRepository::class);
@@ -403,7 +405,7 @@ final class UsersController
         $additional_filt_name  = null;
         $additional_filt_value = null;
 
-        foreach (['photo' => IMAGES_TABLE, 'album' => CATEGORIES_TABLE, 'group' => GROUPS_TABLE] as $filter_key => $filter_table) {
+        foreach (['photo' => Tables::images(), 'album' => Tables::categories(), 'group' => Tables::groups()] as $filter_key => $filter_table) {
             if (isset($_GET[$filter_key])) {
                 $filterId = is_scalar($_GET[$filter_key]) ? (string) $_GET[$filter_key] : '0';
                 $rows = DbConnection::get()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
@@ -419,7 +421,7 @@ final class UsersController
 
         $tpl->assign('ADDITIONAL_FILT', ['type' => $additional_filt_type, 'name' => $additional_filt_name, 'value' => $additional_filt_value]);
 
-        $query = 'SELECT object, action, count(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system'";
+        $query = 'SELECT object, action, count(*) AS counter FROM ' . Tables::activity() . " WHERE object != 'system'";
         if ($additional_filt_type) {
             $query .= ' AND object = "' . $additional_filt_type . '"';
         }

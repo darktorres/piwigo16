@@ -16,6 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the tags cloud/alphabetic page (/tags/{rest}).
@@ -25,7 +26,7 @@ final class TagsController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_tags');
 

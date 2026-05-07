@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Gettext\Loader\PoLoader;
 use Piwigo\Auth\CookieService;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -198,7 +202,7 @@ function get_languages(): array
     }
     $languages = [];
     foreach (DbConnection::build()
-        ->executeQuery('SELECT id, name FROM ' . LANGUAGES_TABLE . ' ORDER BY name ASC')
+        ->executeQuery('SELECT id, name FROM ' . Tables::languages() . ' ORDER BY name ASC')
         ->fetchAllAssociative() as $row) {
         $langId   = is_scalar($row['id']) ? (string) $row['id'] : '';
         $langName = is_scalar($row['name']) ? (string) $row['name'] : '';
@@ -316,13 +320,13 @@ function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): vo
     $tpl = TemplateRegistry::current();
     $tpl->setFilenames(['redirect' => 'redirect.tpl']);
 
-    require(PHPWG_ROOT_PATH . 'include/page_header.php');
+    PageHeaderRenderer::render($title, $refresh, $url_link);
 
     $tpl->setFilenames(['redirect' => 'redirect.tpl']);
     $tpl->assign('REDIRECT_MSG', $msg);
     $tpl->parse('redirect');
 
-    require(PHPWG_ROOT_PATH . 'include/page_tail.php');
+    PageTailRenderer::render();
     exit();
 }
 
@@ -446,7 +450,7 @@ function get_webmaster_mail_address(): string
 
 function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_no_result = true): void
 {
-    $sql = 'SELECT param, value FROM ' . CONFIG_TABLE .
+    $sql = 'SELECT param, value FROM ' . Tables::config() .
         (!empty($condition) ? ' WHERE ' . $condition : '');
 
     if (ServiceLocator::has(Connection::class)) {
@@ -648,7 +652,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
 
     $default_language = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
         ? UserService::get()->getDefaultLanguage()
-        : PHPWG_DEFAULT_LANGUAGE;
+        : AppInfo::DEFAULT_LANGUAGE;
 
     $languages = [];
     if (!empty($options['language'])) {

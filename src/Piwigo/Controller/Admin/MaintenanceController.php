@@ -46,6 +46,10 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class MaintenanceController
 {
@@ -163,13 +167,13 @@ final class MaintenanceController
                 exit();
             case 'lock_gallery':
                 conf_update_param('gallery_locked', 'true');
-                pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
+                pwg_activity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
                 redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
                 break;
             case 'unlock_gallery':
                 conf_update_param('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [l10n('Gallery unlocked')];
-                pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
+                pwg_activity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
                 redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
                 break;
             case 'categories':
@@ -209,7 +213,7 @@ final class MaintenanceController
                 $userRepo    = ServiceLocator::get(UserRepository::class);
                 $sessionRepo = ServiceLocator::get(SessionRepository::class);
                 $sessions     = $userRepo->findAllSessions();
-                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], USERS_TABLE);
+                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
                     if (preg_match('/pwg_uid\|i:(\d+);/', is_scalar($session['data']) ? (string) $session['data'] : '', $matches)) {
@@ -261,7 +265,7 @@ final class MaintenanceController
                 if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
                     PageState::current()->addError(l10n('Unable to check for upgrade.'));
                 } else {
-                    $versions = ['current' => PHPWG_VERSION];
+                    $versions = ['current' => AppInfo::VERSION];
                     $lines    = explode("\r\n", $result);
                     if (preg_match('/^BSF/', $versions['current'])) {
                         $versions['latest'] = trim($lines[0]);
@@ -290,7 +294,7 @@ final class MaintenanceController
         }
 
         if ($register_activity) {
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'maintenance', ['maintenance_action' => $action]);
+            pwg_activity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
         }
 
         $tpl->setFilenames(['maintenance' => 'maintenance_actions.tpl']);
@@ -343,7 +347,7 @@ final class MaintenanceController
             'purge_derivatives'           => $purge_urls,
             'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
-            'PWG_VERSION'                 => PHPWG_VERSION,
+            'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
             'OS'                          => PHP_OS,
             'PHP_VERSION'                 => phpversion(),
@@ -451,7 +455,7 @@ final class MaintenanceController
                 $userRepo    = ServiceLocator::get(UserRepository::class);
                 $sessionRepo = ServiceLocator::get(SessionRepository::class);
                 $sessions     = $userRepo->findAllSessions();
-                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], USERS_TABLE);
+                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
                     if (preg_match('/pwg_uid\|i:(\d+);/', is_scalar($session['data']) ? (string) $session['data'] : '', $matches)) {
@@ -486,7 +490,7 @@ final class MaintenanceController
                 if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
                     PageState::current()->addError(l10n('Unable to check for upgrade.'));
                 } else {
-                    $versions = ['current' => PHPWG_VERSION];
+                    $versions = ['current' => AppInfo::VERSION];
                     $lines    = explode("\r\n", $result);
                     if (preg_match('/^BSF/', $versions['current'])) {
                         $versions['latest'] = trim($lines[0]);
@@ -548,7 +552,7 @@ final class MaintenanceController
             'purge_derivatives'           => $purge_urls,
             'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
-            'PWG_VERSION'                 => PHPWG_VERSION,
+            'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
             'OS'                          => PHP_OS,
             'CONTAINER_INFO'              => $container_name . (!empty($container_version) ? ' ' . $container_version : ''),
@@ -610,7 +614,7 @@ final class MaintenanceController
                 $usernameField = Config::userFields()['username'];
                 $idField       = Config::userFields()['id'];
                 $activityRows  = ServiceLocator::get(Connection::class)
-                    ->executeQuery("SELECT activity_id, object, object_id, action, performed_by, occured_on, details, IF(performed_by = 0, 'System', $usernameField) AS username FROM " . ACTIVITY_TABLE . ' LEFT JOIN ' . USERS_TABLE . " ON performed_by = $idField WHERE object = 'system' ORDER BY activity_id DESC")
+                    ->executeQuery("SELECT activity_id, object, object_id, action, performed_by, occured_on, details, IF(performed_by = 0, 'System', $usernameField) AS username FROM " . Tables::activity() . ' LEFT JOIN ' . Tables::users() . " ON performed_by = $idField WHERE object = 'system' ORDER BY activity_id DESC")
                     ->fetchAllAssociative();
 
                 foreach ($activityRows as $rows) {
@@ -623,7 +627,7 @@ final class MaintenanceController
                     $detail     = ['type' => 'empty'];
 
                     switch ($rows['object_id']) {
-                        case ACTIVITY_SYSTEM_CORE:
+                        case ActivitySystem::Core:
                             $object_icon = 'icon-piwigo';
                             $object = l10n('Core');
                             switch ($rows['action']) {
@@ -690,7 +694,7 @@ final class MaintenanceController
                             }
                             break;
 
-                        case ACTIVITY_SYSTEM_PLUGIN:
+                        case ActivitySystem::Plugin:
                             $object_icon = 'icon-puzzle';
                             $object = 'plugin';
                             if (isset($details['plugin_id'])) {
@@ -744,7 +748,7 @@ final class MaintenanceController
                             }
                             break;
 
-                        case ACTIVITY_SYSTEM_THEME:
+                        case ActivitySystem::Theme:
                             $object_icon = 'icon-brush';
                             $object = 'theme';
                             if (isset($details['theme_id'])) {
@@ -815,7 +819,7 @@ final class MaintenanceController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $types = array_merge(['none'], SchemaHelper::getEnums(HISTORY_TABLE, 'image_type'));
+        $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
             'no_display_thumbnail'    => l10n('No display'),
@@ -863,7 +867,7 @@ final class MaintenanceController
 
         if ($form_param['user_id'] != '-1') {
             $userFields = Config::userFields();
-            $foundUsername = ServiceLocator::get(UserRepository::class)->findUsernameById($userFields['id'], $userFields['username'], USERS_TABLE, (int) $form_param['user_id']);
+            $foundUsername = ServiceLocator::get(UserRepository::class)->findUsernameById($userFields['id'], $userFields['username'], Tables::users(), (int) $form_param['user_id']);
             if ($foundUsername !== null) {
                 $form_param['user_name'] = $foundUsername;
             } else {
@@ -1046,7 +1050,7 @@ final class MaintenanceController
             'page_data_json' => json_encode(['str_delete_site_confirm' => l10n('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . CATEGORIES_TABLE . ' AS c LEFT JOIN ' . IMAGES_TABLE . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
+        $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
 
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
             $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -1167,7 +1171,7 @@ final class MaintenanceController
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
             $start = get_moment();
-            $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
+            $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
                     $query .= ' AND uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $_POST['cat'] . "(,|$)'";
@@ -1187,13 +1191,13 @@ final class MaintenanceController
             $db_fulldirs = array_flip($db_fulldirs);
             $next_rank   = ['NULL' => 1];
             $conn        = ServiceLocator::get(Connection::class);
-            foreach ($conn->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE)->fetchAllAssociative() as $row) {
+            foreach ($conn->executeQuery('SELECT id FROM ' . Tables::categories())->fetchAllAssociative() as $row) {
                 $rowIdKey = is_scalar($row['id']) ? (string) $row['id'] : '';
                 if ($rowIdKey !== '') {
                     $next_rank[$rowIdKey] = 1;
                 }
             }
-            foreach ($conn->executeQuery('SELECT id_uppercat, MAX(`rank`)+1 AS next_rank FROM ' . CATEGORIES_TABLE . ' GROUP BY id_uppercat')->fetchAllAssociative() as $row) {
+            foreach ($conn->executeQuery('SELECT id_uppercat, MAX(`rank`)+1 AS next_rank FROM ' . Tables::categories() . ' GROUP BY id_uppercat')->fetchAllAssociative() as $row) {
                 if (!isset($row['id_uppercat']) || $row['id_uppercat'] == '') {
                     $row['id_uppercat'] = 'NULL';
                 }
@@ -1201,7 +1205,7 @@ final class MaintenanceController
                 $next_rank[$ruk] = $row['next_rank'];
             }
 
-            $next_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . CATEGORIES_TABLE . '`')->fetchOne();
+            $next_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::categories() . '`')->fetchOne();
             $next_id     = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
 
             $fs_fulldirs = $site_reader->getFullDirectories($basedir);
@@ -1251,7 +1255,7 @@ final class MaintenanceController
             }
 
             if (count($inserts) > 0 && !$simulate) {
-                Dml::massInserts(CATEGORIES_TABLE, ['id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable', 'visible', 'status', 'rank', 'global_rank'], $inserts);
+                Dml::massInserts(Tables::categories(), ['id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable', 'visible', 'status', 'rank', 'global_rank'], $inserts);
                 $category_ids = $category_up = [];
                 foreach ($inserts as $category) {
                     $category_ids[] = $category['id'];
@@ -1307,8 +1311,8 @@ final class MaintenanceController
                             }
                         }
                     }
-                    Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
-                    Dml::massInserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
+                    Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
+                    Dml::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
                 } else {
                     ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($category_ids, ServiceLocator::get(UserAdminService::class)->getAdmins());
                 }
@@ -1323,7 +1327,7 @@ final class MaintenanceController
                 if (substr_compare((string) $fulldir, '../', 0, 3) == 0) {
                     $fulldir = substr((string) $fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
+                $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . Config::derivativeDir() . $fulldir;
             }
             if (count($to_delete) > 0) {
                 if (!$simulate) {
@@ -1349,11 +1353,11 @@ final class MaintenanceController
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
             $db_elements = [];
             if (count($cat_ids) > 0) {
-                $query       = 'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE storage_category_id IN (' . wordwrap(implode(', ', $cat_ids), 160, "\n") . ')';
+                $query       = 'SELECT id, path FROM ' . Tables::images() . ' WHERE storage_category_id IN (' . wordwrap(implode(', ', $cat_ids), 160, "\n") . ')';
                 $db_elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
             }
 
-            $next_element_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . IMAGES_TABLE . '`')->fetchOne();
+            $next_element_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
             $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
             $start             = get_moment();
@@ -1434,15 +1438,15 @@ final class MaintenanceController
 
             if (!$simulate) {
                 if (count($inserts) > 0) {
-                    Dml::massInserts(IMAGES_TABLE, array_keys($inserts[0]), $inserts);
-                    Dml::massInserts(IMAGE_CATEGORY_TABLE, array_keys($insert_links[0]), $insert_links);
+                    Dml::massInserts(Tables::images(), array_keys($inserts[0]), $inserts);
+                    Dml::massInserts(Tables::imageCategory(), array_keys($insert_links[0]), $insert_links);
                     pwg_activity('photo', $caddiables, 'add', ['sync' => true]);
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         fill_caddie($caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {
-                    Dml::massInserts(IMAGE_FORMAT_TABLE, array_keys($insert_formats[0]), $insert_formats);
+                    Dml::massInserts(Tables::imageFormat(), array_keys($insert_formats[0]), $insert_formats);
                 }
                 if (count($formats_to_delete) > 0) {
                     ServiceLocator::get(ImageRepository::class)->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
@@ -1500,7 +1504,7 @@ final class MaintenanceController
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
-                    Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
+                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . get_elapsed_time($start, get_moment()) . ' -->');
             }
@@ -1549,7 +1553,7 @@ final class MaintenanceController
             }
             if (!$simulate) {
                 if (count($datas) > 0) {
-                    Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
+                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
@@ -1589,7 +1593,7 @@ final class MaintenanceController
             $tpl_introduction = ['sync' => 'dirs', 'sync_meta' => true, 'display_info' => false, 'add_to_caddie' => false, 'subcats_included' => true, 'privacy_level_selected' => 0, 'meta_all' => false, 'meta_empty_overrides' => false];
             $cat_selected = [];
             if (isset($_GET['cat_id'])) {
-                check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
+                check_input_parameter('cat_id', $_GET, false, ValidationPattern::ID);
                 $cat_selected = [is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0];
                 $tpl_introduction['sync'] = 'files';
             }
@@ -1598,7 +1602,7 @@ final class MaintenanceController
         $tpl_introduction['privacy_level_options'] = get_privacy_level_options();
         $tpl->assign('introduction', $tpl_introduction);
 
-        display_select_cat_wrapper('SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);
+        display_select_cat_wrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);
 
         if (count($errors) > 0) {
             foreach ($errors as $error) {
@@ -1629,7 +1633,7 @@ final class MaintenanceController
     /** @return array<mixed> */
     private function getMonthOfLastYears(string|int $last = 'all'): array
     {
-        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . HISTORY_SUMMARY_TABLE . ' WHERE month IS NOT NULL AND day IS NULL ORDER BY year DESC, month DESC';
+        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . Tables::historySummary() . ' WHERE month IS NOT NULL AND day IS NULL ORDER BY year DESC, month DESC';
         if ($last !== 'all') {
             $date  = new \DateTime();
             $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
@@ -1656,7 +1660,7 @@ final class MaintenanceController
         $date_last_month->sub(new \DateInterval('P1M'));
         $date_last_year->sub(new \DateInterval('P1Y'));
 
-        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . HISTORY_SUMMARY_TABLE .
+        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . Tables::historySummary() .
             ' WHERE ((year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ') OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ') OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')) AND day IS NOT NULL AND hour IS NULL ORDER BY year DESC, month DESC;';
 
         $months = [];

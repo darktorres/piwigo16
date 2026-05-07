@@ -10,6 +10,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Core\AppInfo;
 
 final class LangService
 {
@@ -95,7 +96,7 @@ final class LangService
 
         $defaultLanguage = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
             ? UserService::get()->getDefaultLanguage()
-            : PHPWG_DEFAULT_LANGUAGE;
+            : AppInfo::DEFAULT_LANGUAGE;
 
         $languages = [];
         if (!empty($options['language'])) {

@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Core\AppInfo;
 
 class Languages
 {
@@ -167,7 +168,7 @@ class Languages
         ];
 
         // Retrieve PEM versions
-        $version = PHPWG_VERSION;
+        $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {

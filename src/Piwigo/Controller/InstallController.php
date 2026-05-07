@@ -25,6 +25,9 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 /**
  * Handles the Piwigo installation wizard (/install).
@@ -63,8 +66,6 @@ final class InstallController implements ControllerInterface
             die('Piwigo is already installed');
         }
 
-        require PHPWG_ROOT_PATH . 'include/constants.php';
-
         Kernel::boot();
 
         $languages = new Languages('utf-8');
@@ -72,7 +73,7 @@ final class InstallController implements ControllerInterface
         if (isset($_GET['language'])) {
             $language = strip_tags(is_scalar($_GET['language']) ? (string) $_GET['language'] : '');
             if (!in_array($language, array_keys($languages->fs_languages))) {
-                $language = PHPWG_DEFAULT_LANGUAGE;
+                $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
             $language = 'en_UK';
@@ -117,16 +118,14 @@ final class InstallController implements ControllerInterface
 
         header('Content-Type: text/html; charset=UTF-8');
 
-        if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-            $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
+        if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
+            $errors[] = l10n('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
         $tpl->setFilenames(['install' => 'install.tpl']);
-        if (!isset($step)) {
-            $step = 1;
-        }
+        $step = 1;
 
         if (isset($_POST['install'])) {
             InstallService::installDbConnect($infos, $errors);
@@ -191,7 +190,7 @@ final class InstallController implements ControllerInterface
                     'comment' => 'a secret key specific to the gallery for internal use',
                 ]);
 
-                conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+                conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
                 conf_update_param('gallery_title', l10n('Just another Piwigo gallery'));
                 conf_update_param('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . l10n('Welcome to my photo gallery') . '</p>');
 
@@ -200,13 +199,13 @@ final class InstallController implements ControllerInterface
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 
-                Dml::massInserts(SITES_TABLE, ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
+                Dml::massInserts(Tables::sites(), ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
 
                 $inserts = [
                     ['id' => 1, 'username' => $admin_name, 'password' => password_hash((string) $admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
                     ['id' => 2, 'username' => 'guest'],
                 ];
-                Dml::massInserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+                Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
                 UserService::get()->createUserInfos([1, 2], ['language' => $language]);
 
                 define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
@@ -215,7 +214,7 @@ final class InstallController implements ControllerInterface
                     $datas[] = ['id' => $upgrade_id, 'applied' => CURRENT_DATE, 'description' => 'upgrade included in installation'];
                 }
                 if (!empty($datas)) {
-                    Dml::massInserts(UPGRADE_TABLE, array_keys($datas[0]), $datas);
+                    Dml::massInserts(Tables::upgrade(), array_keys($datas[0]), $datas);
                 }
                 InstallSentinel::markInstalled();
             }
@@ -232,7 +231,7 @@ final class InstallController implements ControllerInterface
         $tpl->assign('language_options', $languages_options);
         $tpl->assign([
             'T_CONTENT_ENCODING'     => 'utf-8',
-            'RELEASE'                => PHPWG_VERSION,
+            'RELEASE'                => AppInfo::VERSION,
             'F_ACTION'               => 'index.php?/install&language=' . $language,
             'F_DB_HOST'              => $dbhost,
             'F_DB_USER'              => $dbuser,
@@ -250,12 +249,10 @@ final class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'install', ['version' => PHPWG_VERSION]);
+            pwg_activity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
             $infos[] = l10n('Congratulations, Piwigo installation is completed');
 
-            if (isset($error_copy)) {
-                $errors[] = $error_copy;
-            } else {
+            {
                 session_set_save_handler(new PwgSession());
                 if (function_exists('ini_set')) {
                     ini_set('session.use_cookies', Config::sessionUseCookies());
@@ -275,7 +272,7 @@ final class InstallController implements ControllerInterface
                 if (!is_array($user['preferences'] ?? null)) {
                     $user['preferences'] = [];
                 }
-                $user['preferences']['show_whats_new_' . get_branch_from_version(PHPWG_VERSION)] = false;
+                $user['preferences']['show_whats_new_' . get_branch_from_version(AppInfo::VERSION)] = false;
 
                 if ($is_newsletter_subscribe) {
                     ServiceLocator::get(AdminService::class)->fetchRemote(

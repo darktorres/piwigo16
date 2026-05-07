@@ -14,12 +14,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 
 final class AboutController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_about');
 
@@ -37,7 +39,7 @@ final class AboutController implements ControllerInterface
         $tpl->assign('ABOUT_MESSAGE', load_language('about.html', '', ['return' => true]));
 
         $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
-        $themeAbout = load_language('about.html', PHPWG_THEMES_PATH . $theme . '/', ['return' => true]);
+        $themeAbout = load_language('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
             $tpl->assign('THEME_ABOUT', $themeAbout);
         }

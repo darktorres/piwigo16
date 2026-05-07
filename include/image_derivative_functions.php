@@ -162,7 +162,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
         preg_match(Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);
     }
 
-    $ctx->derivativePath = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $req;
+    $ctx->derivativePath = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
 
     $pos = strrpos($req, '.');
     $pos !== false || ierror('Missing .', 400);

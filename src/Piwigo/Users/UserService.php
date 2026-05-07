@@ -21,6 +21,8 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 final readonly class UserService
 {
@@ -78,7 +80,7 @@ final readonly class UserService
                 Config::userFields()['email']    => $mailAddress,
             ];
 
-            Dml::singleInsert(USERS_TABLE, $insert);
+            Dml::singleInsert(Tables::users(), $insert);
             $userId = (int) DbConnection::get()->lastInsertId();
 
             $inserts = [];
@@ -86,7 +88,7 @@ final readonly class UserService
                 $inserts[] = ['user_id' => $userId, 'group_id' => $groupId];
             }
             if (count($inserts) != 0) {
-                Dml::massInserts(USER_GROUP_TABLE, ['user_id', 'group_id'], $inserts);
+                Dml::massInserts(Tables::userGroup(), ['user_id', 'group_id'], $inserts);
             }
 
             $override = [];
@@ -184,16 +186,16 @@ final readonly class UserService
             $query .= $dbfield . ' AS ' . $pwgfield;
         }
         $query .= '
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . Config::userFields()['id'] . ' = \'' . $userId . '\'';
 
         $row = $this->conn->executeQuery($query)->fetchAssociative() ?: null;
 
         if (Config::externalAuthentification()) {
             $counter = $this->conn->executeQuery(
-                'SELECT COUNT(1) AS counter FROM ' . USER_INFOS_TABLE . ' AS ui
-                 LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
-                 LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+                'SELECT COUNT(1) AS counter FROM ' . Tables::userInfos() . ' AS ui
+                 LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
+                 LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
                  WHERE ui.user_id = ? GROUP BY ui.user_id',
                 [$userId]
             )->fetchOne();
@@ -204,9 +206,9 @@ final readonly class UserService
 
         $userInfosRow = $this->conn->executeQuery(
             'SELECT ui.*, uc.*, t.name AS theme_name
-             FROM ' . USER_INFOS_TABLE . ' AS ui
-             LEFT JOIN ' . USER_CACHE_TABLE . ' AS uc ON ui.user_id = uc.user_id
-             LEFT JOIN ' . THEMES_TABLE . ' AS t ON t.id = ui.theme
+             FROM ' . Tables::userInfos() . ' AS ui
+             LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
+             LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
              WHERE ui.user_id = ?',
             [$userId]
         )->fetchAssociative() ?: null;
@@ -240,7 +242,7 @@ final readonly class UserService
                     $waitStart = get_moment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
-                        $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . USER_CACHE_TABLE . ' WHERE user_id=' . $udId . ';')->fetchOne();
+                        $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::userCache() . ' WHERE user_id=' . $udId . ';')->fetchOne();
                         $waitingTime  = get_elapsed_time($waitStart, get_moment());
 
                         if ($nbCacheLines > 0) {
@@ -277,7 +279,7 @@ final readonly class UserService
                 $udForbiddenCats     = PermissionService::get()->calculatePermissions($udId, $udStatus);
                 $userdata['forbidden_categories'] = $udForbiddenCats;
 
-                $query = 'SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
+                $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
                 $forbiddenIds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (empty($forbiddenIds)) {
                     $forbiddenIds[] = 0;
@@ -285,7 +287,7 @@ final readonly class UserService
                 $userdata['image_access_type'] = 'NOT IN';
                 $userdata['image_access_list'] = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbiddenIds));
 
-                $query = 'SELECT COUNT(DISTINCT(image_id)) as total FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id NOT IN (' . $udForbiddenCats . ') AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
+                $query = 'SELECT COUNT(DISTINCT(image_id)) as total FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . $udForbiddenCats . ') AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
                 $userdata['nb_total_images'] = $this->conn->executeQuery($query)->fetchOne();
 
                 $userCacheCats = get_computed_categories($userdata, null);
@@ -304,10 +306,10 @@ final readonly class UserService
                     }
                 }
 
-                $this->conn->executeStatement('DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . ' WHERE user_id = ?', [$udId]);
-                Dml::massInserts(USER_CACHE_CATEGORIES_TABLE, ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userCacheCategories() . ' WHERE user_id = ?', [$udId]);
+                Dml::massInserts(Tables::userCacheCategories(), ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
 
-                $this->conn->executeStatement('DELETE FROM ' . USER_CACHE_TABLE . ' WHERE user_id = ?', [$udId]);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
                 $udNeedUpdate        = ($userdata['need_update'] ?? '') === 'true';
                 $udCacheUpdateTime   = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
                 $udForbiddenCatsStr2 = is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '';
@@ -321,7 +323,7 @@ final readonly class UserService
                     array_splice($cacheParams, 5, 0, [$udLastPhotoDate]);
                 }
                 $this->conn->executeStatement(
-                    'INSERT IGNORE INTO ' . USER_CACHE_TABLE .
+                    'INSERT IGNORE INTO ' . Tables::userCache() .
                     ' (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,' .
                     '  last_photo_date, image_access_type, image_access_list)' .
                     ' VALUES (?, ?, ?, ?, ?, ' . $lastPhotoPlaceholder . ', ?, ?)',
@@ -347,13 +349,13 @@ final readonly class UserService
 
         $query = '
 SELECT DISTINCT f.image_id
-  FROM ' . FAVORITES_TABLE . ' AS f INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic
+  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $currentUser->id . '
   ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
 ;';
         $authorizeds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id');
-        $favorites   = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
+        $favorites   = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
 
         $toDeletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
         if (count($toDeletes) > 0) {
@@ -364,13 +366,13 @@ SELECT DISTINCT f.image_id
     public function getUserid(string $username): int|false
     {
         $userFields = Config::userFields();
-        return $this->userRepo->findIdByUsername($userFields['username'], $userFields['id'], USERS_TABLE, $username);
+        return $this->userRepo->findIdByUsername($userFields['username'], $userFields['id'], Tables::users(), $username);
     }
 
     public function getUseridByEmail(string $email): int|false
     {
         $userFields = Config::userFields();
-        return $this->userRepo->findIdByEmail($userFields['email'], $userFields['id'], USERS_TABLE, $email);
+        return $this->userRepo->findIdByEmail($userFields['email'], $userFields['id'], Tables::users(), $email);
     }
 
     /** @return array<mixed,mixed>|null */
@@ -418,8 +420,8 @@ SELECT DISTINCT f.image_id
 
     public function getDefaultTheme(): string
     {
-        $themeRaw = $this->getDefaultUserValue('theme', PHPWG_DEFAULT_TEMPLATE);
-        $theme    = is_scalar($themeRaw) ? (string) $themeRaw : PHPWG_DEFAULT_TEMPLATE;
+        $themeRaw = $this->getDefaultUserValue('theme', AppInfo::DEFAULT_TEMPLATE);
+        $theme    = is_scalar($themeRaw) ? (string) $themeRaw : AppInfo::DEFAULT_TEMPLATE;
         if (check_theme_installed($theme)) {
             return $theme;
         }
@@ -429,8 +431,8 @@ SELECT DISTINCT f.image_id
 
     public function getDefaultLanguage(): string
     {
-        $langRaw = $this->getDefaultUserValue('language', PHPWG_DEFAULT_LANGUAGE);
-        return is_scalar($langRaw) ? (string) $langRaw : PHPWG_DEFAULT_LANGUAGE;
+        $langRaw = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
+        return is_scalar($langRaw) ? (string) $langRaw : AppInfo::DEFAULT_LANGUAGE;
     }
 
     /**
@@ -466,7 +468,7 @@ SELECT DISTINCT f.image_id
                 $inserts[] = $insert;
             }
 
-            Dml::massInserts(USER_INFOS_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(Tables::userInfos(), array_keys($inserts[0]), $inserts);
         }
     }
 
@@ -531,7 +533,7 @@ SELECT DISTINCT f.image_id
             if (!empty($params['password'])) {
                 if (!PermissionService::get()->isWebmaster()) {
                     $passwordProtectedUsers = [Config::guestId()];
-                    $adminIds = array_column($this->conn->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id');
+                    $adminIds = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id');
                     $passwordProtectedUsers = array_merge($passwordProtectedUsers, array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $adminIds), [(string) $currentUser->id]));
                     if (in_array($paramUserId[0], $passwordProtectedUsers)) {
                         return ['error' => ['code' => 403, 'message' => 'Only webmasters can change password of other "webmaster/admin" users']];
@@ -551,7 +553,7 @@ SELECT DISTINCT f.image_id
 
             $protectedUsers = [$currentUser->id, Config::guestId(), Config::webmasterId()];
             if ('admin' == $currentUser->status) {
-                $protectedUsers = array_merge($protectedUsers, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id')));
+                $protectedUsers = array_merge($protectedUsers, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id')));
             }
             $params['user_id_for_status'] = array_values(array_diff(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), $protectedUsers));
             $updateStatus = $params['status'];
@@ -583,7 +585,7 @@ SELECT DISTINCT f.image_id
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        Dml::singleUpdate(USERS_TABLE, $updates, [Config::userFields()['id'] => $paramUid0]);
+        Dml::singleUpdate(Tables::users(), $updates, [Config::userFields()['id'] => $paramUid0]);
 
         if (isset($updates[Config::userFields()['password']])) {
             AuthService::get()->deactivateUserAuthKeys($paramUid0);
@@ -604,7 +606,7 @@ SELECT DISTINCT f.image_id
         }
 
         if (count($updatesInfos) > 0) {
-            $query  = 'UPDATE ' . USER_INFOS_TABLE . ' SET ';
+            $query  = 'UPDATE ' . Tables::userInfos() . ' SET ';
             $first  = true;
             foreach ($updatesInfos as $field => $value) {
                 if (!$first) {
@@ -620,7 +622,7 @@ SELECT DISTINCT f.image_id
 
         if (!empty($paramGroupId)) {
             $this->groupRepo->deleteUserGroupByUserIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId));
-            $groupIds = array_column($this->conn->executeQuery('SELECT id FROM `' . GROUPS_TABLE . '` WHERE id IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paramGroupId)) . ');')->fetchAllAssociative(), 'id');
+            $groupIds = array_column($this->conn->executeQuery('SELECT id FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paramGroupId)) . ');')->fetchAllAssociative(), 'id');
             if (count($groupIds) > 0) {
                 $inserts = [];
                 foreach ($groupIds as $gid) {
@@ -628,7 +630,7 @@ SELECT DISTINCT f.image_id
                         $inserts[] = ['user_id' => $uid, 'group_id' => $gid];
                     }
                 }
-                Dml::massInserts(USER_GROUP_TABLE, array_keys($inserts[0]), $inserts);
+                Dml::massInserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
             }
         }
 
@@ -661,7 +663,7 @@ SELECT DISTINCT f.image_id
         }
         $key['expired_on'] = $expiration;
 
-        Dml::singleInsert(USER_AUTH_KEYS_TABLE, $key);
+        Dml::singleInsert(Tables::userAuthKeys(), $key);
         $key['apikey_secret'] = $keySecret;
         return $key;
     }
@@ -672,7 +674,7 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
             return l10n('API Key not found');
         }
-        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
+        Dml::singleUpdate(Tables::userAuthKeys(), ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
         return true;
     }
 
@@ -681,14 +683,14 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
             return l10n('API Key not found');
         }
-        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
+        Dml::singleUpdate(Tables::userAuthKeys(), ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
         return true;
     }
 
     /** @return list<array<mixed>>|false */
     public function getApiKey(string $userId): false|array
     {
-        $apiKeys = DbConnection::get()->executeQuery('SELECT * FROM `' . USER_AUTH_KEYS_TABLE . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
+        $apiKeys = DbConnection::get()->executeQuery('SELECT * FROM `' . Tables::userAuthKeys() . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
         if (!$apiKeys) {
             return false;
         }

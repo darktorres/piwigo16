@@ -17,6 +17,8 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class GroupsController
 {
@@ -100,7 +102,7 @@ final class GroupsController
 
         foreach ($groupRepo->findAllOrdered() as $row) {
             $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $members    = $groupRepo->findMemberUsernamesByGroupId($userFields['username'], $userFields['id'], USERS_TABLE, is_numeric($row['id']) ? (int) $row['id'] : 0);
+            $members    = $groupRepo->findMemberUsernamesByGroupId($userFields['username'], $userFields['id'], Tables::users(), is_numeric($row['id']) ? (int) $row['id'] : 0);
             $tpl->append('groups', [
                 'NAME'      => $row['name'],
                 'ID'        => $row['id'],
@@ -129,15 +131,15 @@ final class GroupsController
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             check_pwg_token();
-            check_input_parameter('cat_true', $_POST, true, PATTERN_ID);
-            check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
+            check_input_parameter('cat_true', $_POST, true, ValidationPattern::ID);
+            check_input_parameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (!isset($_GET['group_id'])) {
             fatal_error('group_id URL parameter is missing');
         }
 
-        check_input_parameter('group_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('group_id', $_GET, false, ValidationPattern::ID);
         $page['group'] = $_GET['group_id'];
         $group_id      = is_scalar($page['group']) ? (int) $page['group'] : 0;
 
@@ -163,7 +165,7 @@ final class GroupsController
             foreach (array_diff($private_uppercats, $authorized_ids) as $to_autorize_id) {
                 $inserts[] = ['group_id' => $group_id, 'cat_id' => $to_autorize_id];
             }
-            Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
+            Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
@@ -175,12 +177,12 @@ final class GroupsController
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
         ]);
 
-        $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . GROUP_ACCESS_TABLE . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';
+        $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';
         display_select_cat_wrapper($query_true, [], 'category_option_true');
 
         $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findAuthorizedPrivateCatIdsByGroup($group_id);
 
-        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . CATEGORIES_TABLE . " WHERE status = 'private'";
+        $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private'";
         if (count($authorized_ids) > 0) {
             $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
         }

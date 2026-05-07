@@ -14,6 +14,8 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserService;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 class C13yInternal
 {
@@ -36,7 +38,7 @@ class C13yInternal
         $check_list[] = [
             'type' => 'PHP',
             'current' => phpversion(),
-            'required' => REQUIRED_PHP_VERSION,
+            'required' => AppInfo::REQUIRED_PHP_VERSION,
             ];
 
         $check_list[] = [
@@ -108,8 +110,8 @@ class C13yInternal
         $conn = ServiceLocator::get(Connection::class);
         $qb = $conn->createQueryBuilder()
             ->select("u.$idField AS id", 'ui.status')
-            ->from(USERS_TABLE, 'u')
-            ->leftJoin('u', USER_INFOS_TABLE, 'ui', "u.$idField = ui.user_id");
+            ->from(Tables::users(), 'u')
+            ->leftJoin('u', Tables::userInfos(), 'ui', "u.$idField = ui.user_id");
         $qb->where($qb->expr()->in("u.$idField", ':ids'))
            ->setParameter('ids', array_keys($c13y_users), ArrayParameterType::INTEGER);
 
@@ -177,7 +179,7 @@ class C13yInternal
                             'password' => $password,
                             ],
                           ];
-                        Dml::massInserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+                        Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
                         UserService::get()->createUserInfos($id);
 
@@ -203,7 +205,7 @@ class C13yInternal
                             ],
                           ];
                         Dml::massUpdates(
-                            USER_INFOS_TABLE,
+                            Tables::userInfos(),
                             ['primary' => ['user_id'],'update' => ['status']],
                             $updates
                         );

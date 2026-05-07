@@ -16,6 +16,7 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Db\Tables;
 
 final class TagsEndpoints
 {
@@ -183,7 +184,7 @@ final class TagsEndpoints
             $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
         }
         pwg_activity('tag', $tagId, 'edit');
-        Dml::singleUpdate(TAGS_TABLE, $update, ['id' => $tagId]);
+        Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
         $tag = $tagRepo->findById((int) $tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
         $tag['name']     = EventDispatcher::dispatch('render_tag_name', $tag['raw_name'], $tag);
@@ -209,7 +210,7 @@ final class TagsEndpoints
         if ($dupTagRepo->countByExactName($dupCopyName) !== 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
         }
-        Dml::singleInsert(TAGS_TABLE, ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
+        Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
         $destinationTagId = (int) DbConnection::get()->lastInsertId();
         pwg_activity('tag', $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]);
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
@@ -219,7 +220,7 @@ final class TagsEndpoints
             pwg_activity('photo', $imageId, 'edit', ['add-tag' => $destinationTagId]);
         }
         if (count($inserts) > 0) {
-            Dml::massInserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
         }
         return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName), 'count' => count($inserts)];
     }
@@ -248,7 +249,7 @@ final class TagsEndpoints
         foreach ($imageToAdd as $image) {
             $inserts[] = ['tag_id' => $mergeDestId, 'image_id' => $image];
         }
-        Dml::massInserts(IMAGE_TAG_TABLE, ['tag_id', 'image_id'], $inserts, ['ignore' => true]);
+        Dml::massInserts(Tables::imageTag(), ['tag_id', 'image_id'], $inserts, ['ignore' => true]);
         pwg_activity('tag', $mergeDestId, 'edit');
         foreach ($imageToAdd as $imageId) {
             pwg_activity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);

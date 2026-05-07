@@ -9,6 +9,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\AccessLevel;
 
 final class WsHelper
 {
@@ -19,7 +20,7 @@ final class WsHelper
             return $res;
         }
 
-        if (!PermissionService::get()->isAutorizeStatus(ACCESS_GUEST) &&
+        if (!PermissionService::get()->isAutorizeStatus(AccessLevel::Guest) &&
             !str_starts_with($methodName, 'pwg.session.')) {
             return new PwgError(401, 'Access denied');
         }

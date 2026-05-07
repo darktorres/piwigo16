@@ -13,6 +13,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Db\Tables;
 
 final class CategoryDefaultRenderer
 {
@@ -64,7 +65,7 @@ final class CategoryDefaultRenderer
             if (Config::activateComments() and $user['show_nb_comments']) {
                 $query = '
 SELECT image_id, COUNT(*) AS nb_comments
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE validated = \'true\'
     AND image_id IN (' . implode(',', array_map(strval(...), $selection)) . ')
   GROUP BY image_id

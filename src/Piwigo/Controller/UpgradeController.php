@@ -15,6 +15,8 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 /**
  * Handles the Piwigo database upgrade (/upgrade).
@@ -34,8 +36,6 @@ final class UpgradeController implements ControllerInterface
             die('Piwigo is not installed yet — navigate to index.php?/install first.');
         }
 
-        define('USERS_TABLE', $prefixeTable . 'users');
-        require_once PHPWG_ROOT_PATH . 'include/constants.php';
         define('PREFIX_TABLE', $prefixeTable);
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
@@ -49,7 +49,7 @@ final class UpgradeController implements ControllerInterface
         if ($get_language !== null) {
             $language = strip_tags($get_language);
             if (!in_array($language, array_keys($languages->fs_languages))) {
-                $language = PHPWG_DEFAULT_LANGUAGE;
+                $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
             $language = 'en_UK';
@@ -102,13 +102,13 @@ final class UpgradeController implements ControllerInterface
         TemplateRegistry::set($tpl);
         $tpl->setFilenames(['upgrade' => 'upgrade.tpl']);
         $tpl->assign([
-            'RELEASE'        => PHPWG_VERSION,
+            'RELEASE'        => AppInfo::VERSION,
             'L_UPGRADE_HELP' => l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
         ]);
 
         $page = &$GLOBALS['page'];
         $has_remote_site = false;
-        foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative() as $row) {
+        foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
             if (url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
                 $has_remote_site = true;
             }
@@ -149,7 +149,7 @@ final class UpgradeController implements ControllerInterface
             exit;
         }
 
-        conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
+        conf_update_param('piwigo_db_version', get_branch_from_version(AppInfo::VERSION));
         header('Content-Type: text/html; charset=' . get_pwg_charset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';

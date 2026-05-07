@@ -20,6 +20,7 @@ use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
+use Piwigo\Db\Tables;
 
 final class ImageAdminService
 {
@@ -214,7 +215,7 @@ final class ImageAdminService
         }
         $pattern = $type === 'all' ? '-*' : '-' . derivative_to_url((string) $type) . '*';
         $path    = substr_replace($path, $pattern, $dot, 0);
-        if (($glob = glob(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $path)) !== false) {
+        if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $path)) !== false) {
             foreach ($glob as $file) {
                 Filesystem::tryUnlink($file);
             }
@@ -243,11 +244,11 @@ final class ImageAdminService
         $pattern = '#.*-';
         $pattern .= count($stringTypes) > 1 ? '(' . implode('|', $stringTypes) . ')' : ($stringTypes[0] ?? '');
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
-        $derivDir = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR;
+        $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir();
         if (is_dir($derivDir) && ($contents = opendir($derivDir)) !== false) {
             while (($node = readdir($contents)) !== false) {
-                if ($node !== '.' && $node !== '..' && is_dir(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node)) {
-                    $this->clearDerivativeCacheRec(PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $node, $pattern);
+                if ($node !== '.' && $node !== '..' && is_dir(PHPWG_ROOT_PATH . Config::derivativeDir() . $node)) {
+                    $this->clearDerivativeCacheRec(PHPWG_ROOT_PATH . Config::derivativeDir() . $node, $pattern);
                 }
             }
             closedir($contents);
@@ -334,7 +335,7 @@ final class ImageAdminService
             fatal_error('[getImageInfos] invalid image identifier ' . htmlentities((string) $imageId));
         }
         $images = DbConnection::get()->executeQuery(
-            'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $imageId
+            'SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId
         )->fetchAllAssociative();
         if (count($images) === 0) {
             if ($dieOnMissing) {
@@ -349,7 +350,7 @@ final class ImageAdminService
     public function getPhotosNoMd5sum(): array
     {
         $raw = array_column(DbConnection::get()->executeQuery(
-            'SELECT id FROM ' . IMAGES_TABLE . ' WHERE md5sum is null'
+            'SELECT id FROM ' . Tables::images() . ' WHERE md5sum is null'
         )->fetchAllAssociative(), 'id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
     }
@@ -359,13 +360,13 @@ final class ImageAdminService
     {
         $idsArray  = is_array($ids) ? $ids : explode(',', $ids);
         $pathForId = array_column(DbConnection::get()->executeQuery(
-            'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(', ', $idsArray) . ')'
+            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $idsArray) . ')'
         )->fetchAllAssociative(), 'path', 'id');
         $updates = [];
         foreach ($pathForId as $id => $path) {
             $updates[] = ['id' => $id, 'md5sum' => md5_file(PHPWG_ROOT_PATH . (is_scalar($path) ? (string) $path : ''))];
         }
-        Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['md5sum']], $updates);
+        Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['md5sum']], $updates);
         return count($pathForId);
     }
 
@@ -384,8 +385,8 @@ final class ImageAdminService
     /** @return int[] */
     public function getOrphans(): array
     {
-        $loungedIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . LOUNGE_TABLE)->fetchAllAssociative(), 'image_id');
-        $query = 'SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id WHERE category_id IS NULL';
+        $loungedIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::lounge())->fetchAllAssociative(), 'image_id');
+        $query = 'SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IS NULL';
         if (count($loungedIds) > 0) {
             $query .= ' AND id NOT IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $loungedIds)) . ')';
         }
@@ -409,14 +410,14 @@ final class ImageAdminService
         conf_update_param('fs_quick_check_last_check', date('c'));
 
         $issue1827Ids = array_column(DbConnection::get()->executeQuery(
-            'SELECT id FROM ' . IMAGES_TABLE . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
+            'SELECT id FROM ' . Tables::images() . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
         )->fetchAllAssociative(), 'id');
         shuffle($issue1827Ids);
         $issue1827Ids = array_slice($issue1827Ids, 0, 50);
 
         $randomImageIds = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-            array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LIMIT 5000')->fetchAllAssociative(), 'id')
+            array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' LIMIT 5000')->fetchAllAssociative(), 'id')
         );
         shuffle($randomImageIds);
         $randomImageIds = array_slice($randomImageIds, 0, 50);
@@ -427,7 +428,7 @@ final class ImageAdminService
         }
 
         $paths = array_column(DbConnection::get()->executeQuery(
-            'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(',', $checkIds) . ')'
+            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', $checkIds) . ')'
         )->fetchAllAssociative(), 'path', 'id');
 
         $template = TemplateRegistry::current();
@@ -438,7 +439,7 @@ final class ImageAdminService
             }
         }
 
-        $duplicatePaths = DbConnection::get()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
+        $duplicatePaths = DbConnection::get()->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
         if (count($duplicatePaths) > 0) {
             $template->assign('header_msgs', [l10n('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
         }

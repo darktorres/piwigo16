@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
@@ -525,7 +526,7 @@ class Template
             if (!is_string($href)) {
                 $href = get_root_url().$combi->path;
             }
-            $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
+            $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
             // trigger the event for eventual use of a cdn
             $href = EventDispatcher::dispatch('combined_css', $href, $combi);
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
@@ -920,7 +921,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $ret = $script->path;
         } else {
             $ret = get_root_url().$script->path;
-            $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
+            $ret .= '?v'. ($script->version ?: AppInfo::VERSION);
         }
         // trigger the event for eventual use of a cdn
         $ret = EventDispatcher::dispatch('combined_script', $ret, $script);

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Core\AppInfo;
 
 class Plugins
 {
@@ -43,7 +45,7 @@ class Plugins
      */
     private static function buildMaintainClass(string $plugin_id): PluginMaintain
     {
-        $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
+        $file_to_include = Config::pluginsPath() . $plugin_id . '/maintain';
         $classname = $plugin_id.'_maintain';
 
         // piwigo-videojs and piwigo-openstreetmap unfortunately have a "-" in their folder
@@ -218,11 +220,11 @@ class Plugins
                     $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
 
-                ServiceLocator::get(AdminService::class)->deltree(PHPWG_PLUGINS_PATH . $plugin_id, PHPWG_PLUGINS_PATH . 'trash');
+                ServiceLocator::get(AdminService::class)->deltree(Config::pluginsPath() . $plugin_id, Config::pluginsPath() . 'trash');
                 break;
         }
 
-        pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, $action, $activity_details);
+        pwg_activity('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }
@@ -232,7 +234,7 @@ class Plugins
      */
     public function getFsPlugins(): void
     {
-        $dir = opendir(PHPWG_PLUGINS_PATH);
+        $dir = opendir(Config::pluginsPath());
         if ($dir === false) {
             return;
         }
@@ -255,7 +257,7 @@ class Plugins
     /** @return array<string,mixed>|false */
     public function getFsPlugin(string $plugin_id): array|false
     {
-        $path = PHPWG_PLUGINS_PATH.$plugin_id;
+        $path = Config::pluginsPath().$plugin_id;
 
         if (is_dir($path) and !is_link($path)
             and file_exists($path.'/main.inc.php')
@@ -345,7 +347,7 @@ class Plugins
     /**
      * @return string[]
      */
-    public function getVersionsToCheck(bool $beta_test = false, string $version = PHPWG_VERSION): array
+    public function getVersionsToCheck(bool $beta_test = false, string $version = AppInfo::VERSION): array
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
@@ -547,7 +549,7 @@ class Plugins
     {
         $logger = LoggerRegistry::current();
 
-        if ($archive = tempnam(PHPWG_PLUGINS_PATH, 'zip')) {
+        if ($archive = tempnam(Config::pluginsPath(), 'zip')) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -581,7 +583,7 @@ class Plugins
                             } else {
                                 $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
                             }
-                            $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
+                            $extract_path = Config::pluginsPath() . $plugin_id;
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
                             if ($result = $zip->extract(
@@ -625,7 +627,7 @@ class Plugins
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_PLUGINS_PATH . 'trash');
+                                            ServiceLocator::get(AdminService::class)->deltree($path, Config::pluginsPath() . 'trash');
                                         }
                                     }
                                 }
@@ -658,7 +660,7 @@ class Plugins
      * @return string[]
      */
     /** @return array<mixed> */
-    public function getMergedExtensions(string $version = PHPWG_VERSION): array
+    public function getMergedExtensions(string $version = AppInfo::VERSION): array
     {
         $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
         $merged_extensions = [];

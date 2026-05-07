@@ -11,6 +11,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final readonly class TagService
 {
@@ -28,7 +29,7 @@ final readonly class TagService
         if (!isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
             Dml::singleUpdate(
-                USER_CACHE_TABLE,
+                Tables::userCache(),
                 ['nb_available_tags' => $user['nb_available_tags']],
                 ['user_id' => CurrentUser::get()->id]
             );
@@ -50,8 +51,8 @@ final readonly class TagService
 
         $query = '
 SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-  FROM ' . IMAGE_CATEGORY_TABLE . ' ic
-    INNER JOIN ' . IMAGE_TAG_TABLE . ' it
+  FROM ' . Tables::imageCategory() . ' ic
+    INNER JOIN ' . Tables::imageTag() . ' it
     ON ic.image_id=it.image_id
   WHERE 1=1
   ' . PermissionService::get()->getSqlConditionFandF(
@@ -176,15 +177,15 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 
         $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' i ';
+  FROM ' . Tables::images() . ' i ';
 
         if ($usePermissions) {
             $query .= '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ic ON id=ic.image_id';
+    INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id';
         }
 
         $query .= '
-    INNER JOIN ' . IMAGE_TAG_TABLE . ' it ON id=it.image_id
+    INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id
     WHERE tag_id IN (' . implode(',', $tagIds) . ')';
 
         if ($usePermissions) {

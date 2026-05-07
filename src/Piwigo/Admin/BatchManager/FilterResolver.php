@@ -10,6 +10,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Db\Tables;
 
 final class FilterResolver
 {
@@ -85,7 +86,7 @@ final class FilterResolver
 SELECT
     id,
     name
-  FROM ' . TAGS_TABLE . '
+  FROM ' . Tables::tags() . '
   WHERE id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
 ;';
             $filter_tags = ServiceLocator::get(TagAdminService::class)->getTaglist($query);
@@ -107,8 +108,8 @@ SELECT
             $query = '
 SELECT
     DISTINCT(category_id) AS id
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    JOIN ' . IMAGES_TABLE . ' AS i ON i.id = ic.image_id
+  FROM ' . Tables::imageCategory() . ' AS ic
+    JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
   WHERE ic.image_id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')
     AND (
       ic.category_id != i.storage_category_id

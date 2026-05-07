@@ -32,6 +32,9 @@ use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 /**
  * Handles the single-image page (/picture/{rest}).
@@ -45,7 +48,7 @@ final class PictureController implements ControllerInterface
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'picture');
 
         UserService::get()->saveEditContext();
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -99,7 +102,7 @@ final class PictureController implements ControllerInterface
                 } else {
                     $query = '
 SELECT id
-  FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
+  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $imageId
                         . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . '
   LIMIT 1';
@@ -199,7 +202,7 @@ SELECT id
                     redirect($url_self);
                     break;
                 case 'edit_comment':
-                    check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
+                    check_input_parameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     $comment_to_edit = input_int('comment_to_edit', null, $_GET);
                     $author_id       = get_comment_author_id($comment_to_edit ?? 0);
                     if (PermissionService::get()->canManageComment('edit', (int) $author_id)) {
@@ -235,7 +238,7 @@ SELECT id
                     break;
                 case 'delete_comment':
                     check_pwg_token();
-                    check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
+                    check_input_parameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     $author_id = get_comment_author_id(input_int('comment_to_delete', null, $_GET) ?? 0);
                     if (PermissionService::get()->canManageComment('delete', (int) $author_id)) {
                         delete_user_comment(input_int('comment_to_delete', null, $_GET) ?? 0);
@@ -244,7 +247,7 @@ SELECT id
                     break;
                 case 'validate_comment':
                     check_pwg_token();
-                    check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
+                    check_input_parameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     $author_id = get_comment_author_id(input_int('comment_to_validate', null, $_GET) ?? 0);
                     if (PermissionService::get()->canManageComment('validate', (int) $author_id)) {
                         validate_user_comment(input_int('comment_to_validate', null, $_GET) ?? 0);
@@ -271,8 +274,8 @@ SELECT id
         // Related categories
         $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $imageId . '
 ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
 ;';
@@ -411,7 +414,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             if (Config::isFormatsEnabled()) {
                 $query = '
 SELECT *
-  FROM ' . IMAGE_FORMAT_TABLE . '
+  FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . (is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0) . '
 ;';
                 $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
@@ -542,7 +545,7 @@ SELECT *
                 $ids = array_merge($ids, explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : ''));
             }
             $ids    = array_unique($ids);
-            $query  = 'SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $ids) . ')';
+            $query  = 'SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')';
             $catMap = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             foreach ($related_categories as $category) {
                 $cats = [];

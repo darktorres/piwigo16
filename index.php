@@ -31,7 +31,6 @@ if (str_starts_with($_qs, 'i/')) {
     defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
     require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
-    defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', Config::dataLocation() . 'i/');
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
     $GLOBALS['prefixeTable'] = Config::dbPrefix();

@@ -44,6 +44,9 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class MiscController
 {
@@ -126,7 +129,7 @@ final class MiscController
                     check_input_parameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
                     check_input_parameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
-                    foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param, value FROM ' . CONFIG_TABLE . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
+                    foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
                         $param = is_scalar($nbm_user['param']) ? (string) $nbm_user['param'] : '';
                         if (isset($_POST[$param])) {
                             conf_update_param($param, $_POST[$param], true);
@@ -167,7 +170,7 @@ final class MiscController
         $tpl->setFilenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
         $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . get_query_string_diff([])]);
 
-        if (PermissionService::get()->isAutorizeStatus(ACCESS_WEBMASTER)) {
+        if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
             $tabsheet->setId('nbm');
             $tabsheet->select($page['mode']);
@@ -249,7 +252,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
+        check_input_parameter('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         if (isset($_POST['set_permalink']) && $_POST['cat_id'] > 0) {
@@ -274,14 +277,14 @@ final class MiscController
         $page['tab'] = 'permalinks';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
-        $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . CATEGORIES_TABLE;
+        $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . Tables::categories();
         display_select_cat_wrapper($query, $selected_cat, 'categories', false);
 
         $pwg_token = get_pwg_token();
 
         $sort_by = $this->parseSortVariables(['id', 'name', 'permalink'], 'name', 'psf', ['delete_permanent'], 'SORT_');
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
-        $permalinkQuery = 'SELECT id, permalink, uppercats, global_rank FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL';
+        $permalinkQuery = 'SELECT id, permalink, uppercats, global_rank FROM ' . Tables::categories() . ' WHERE permalink IS NOT NULL';
         if ($sortBy0 === 'id' || $sortBy0 === 'permalink') {
             $permalinkQuery .= ' ORDER BY ' . $sortBy0;
         }
@@ -298,7 +301,7 @@ final class MiscController
         $sort_by = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
         $url_del_base    = ServiceLocator::get(UrlGenerator::class)->admin('permalinks');
         $sortByOld0      = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
-        $oldPermalinkQuery = 'SELECT * FROM ' . OLD_PERMALINKS_TABLE;
+        $oldPermalinkQuery = 'SELECT * FROM ' . Tables::oldPermalinks();
         if (count($sort_by) && $sortByOld0 !== '') {
             $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0;
         }
@@ -574,7 +577,7 @@ final class MiscController
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
             $start_time = get_moment();
-            $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . ACTIVITY_TABLE . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
+            $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
                 $day_date = new \DateTime((is_scalar($action['activity_day']) ? (string) $action['activity_day'] : '') . ' 12:00:00');
@@ -667,13 +670,13 @@ final class MiscController
 
         $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
         $data_storage = [];
-        foreach (array_column(DbConnection::get()->executeQuery("SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path,'.',-1) AS ext, SUM(filesize) AS filesize FROM `" . IMAGES_TABLE . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
+        foreach (array_column(DbConnection::get()->executeQuery("SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path,'.',-1) AS ext, SUM(filesize) AS filesize FROM `" . Tables::images() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
             $type = in_array(strtolower((string) $ext), Config::pictureExtensions()) ? 'Photos' : (in_array(strtolower((string) $ext), $video_format) ? 'Videos' : 'Other');
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
             $data_storage[$type]['details'][strtoupper((string) $ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
         }
-        foreach (array_column(DbConnection::get()->executeQuery('SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize FROM `' . IMAGE_FORMAT_TABLE . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
+        foreach (array_column(DbConnection::get()->executeQuery('SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize FROM `' . Tables::imageFormat() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
             $type = 'Formats';
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
@@ -833,7 +836,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('display', $_GET, false, PATTERN_ID);
+        check_input_parameter('display', $_GET, false, ValidationPattern::ID);
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
@@ -863,13 +866,13 @@ final class MiscController
 
         $userFields = Config::userFields();
         $users      = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findAllUserIdNameMap($userFields['id'], $userFields['username'], USERS_TABLE) as $id => $username) {
+        foreach (ServiceLocator::get(UserRepository::class)->findAllUserIdNameMap($userFields['id'], $userFields['username'], Tables::users()) as $id => $username) {
             $users[$id] = stripslashes($username);
         }
 
-        $query = 'SELECT COUNT(DISTINCT(r.element_id)) FROM ' . RATE_TABLE . ' AS r';
+        $query = 'SELECT COUNT(DISTINCT(r.element_id)) FROM ' . Tables::rate() . ' AS r';
         if (!empty($page['cat_filter'])) {
-            $query .= ' JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
+            $query .= ' JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
         }
         $query .= ' WHERE 1=1' . $page['user_filter'];
         $nb_images_raw = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne();
@@ -893,9 +896,9 @@ final class MiscController
         $tpl->assign('user_options_selected', [$_GET['users'] ?? null]);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Rating'));
 
-        $query = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM ' . RATE_TABLE . ' AS r LEFT JOIN ' . IMAGES_TABLE . ' AS i ON r.element_id = i.id';
+        $query = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM ' . Tables::rate() . ' AS r LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
         if (!empty($page['cat_filter'])) {
-            $query .= ' JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id';
+            $query .= ' JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
         }
         $query .= ' WHERE 1 = 1 ' . $page['user_filter'] . $page['cat_filter'] . ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id ORDER BY ' . $available_order_by[$order_by_index][1] . ' LIMIT ' . $elements_per_page . ' OFFSET ' . $start . ';';
 
@@ -941,8 +944,8 @@ final class MiscController
 
         $userFields  = Config::userFields();
         $users_by_id = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findAllWithStatus($userFields['id'], $userFields['username'], USERS_TABLE) as $row) {
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_scalar($row['username']) ? (string) $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC, is_scalar($row['status']) ? (string) $row['status'] : '')];
+        foreach (ServiceLocator::get(UserRepository::class)->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
+            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_scalar($row['username']) ? (string) $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(AccessLevel::Classic, is_scalar($row['status']) ? (string) $row['status'] : '')];
         }
 
         $by_user_rating_model = ['rates' => []];
@@ -988,7 +991,7 @@ final class MiscController
             $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
         }
 
-        $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
+        $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
 
         foreach ($by_user_ratings as $id => &$rating) {
             $c = $s = $ss = $consensus_dev = $consensus_dev_top = $consensus_dev_top_count = 0;
@@ -1051,7 +1054,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        check_input_parameter('user_id', $_GET, false, PATTERN_ID);
+        check_input_parameter('user_id', $_GET, false, ValidationPattern::ID);
 
         $editUserId = is_numeric($_GET['user_id'] ?? null) ? (int) $_GET['user_id'] : 0;
         $edit_user  = UserService::get()->buildUser($editUserId, false);
@@ -1100,9 +1103,9 @@ final class MiscController
     private function getTabStatus(string $mode): int
     {
         return match ($mode) {
-            'param', 'subscribe' => ACCESS_WEBMASTER,
-            'send' => ACCESS_ADMINISTRATOR,
-            default => ACCESS_WEBMASTER,
+            'param', 'subscribe' => AccessLevel::Webmaster,
+            'send' => AccessLevel::Administrator,
+            default => AccessLevel::Webmaster,
         };
     }
 
@@ -1112,8 +1115,8 @@ final class MiscController
         $notifRepo = ServiceLocator::get(NotificationRepository::class);
         $userFields = Config::userFields();
 
-        $notifRepo->clearEmptyEmails($userFields['email'], USERS_TABLE);
-        $users_without_notif = $notifRepo->findUsersWithoutNotification($userFields['id'], $userFields['username'], $userFields['email'], USERS_TABLE);
+        $notifRepo->clearEmptyEmails($userFields['email'], Tables::users());
+        $users_without_notif = $notifRepo->findUsersWithoutNotification($userFields['id'], $userFields['username'], $userFields['email'], Tables::users());
 
         if (count($users_without_notif) > 0) {
             $inserts        = [];
@@ -1124,7 +1127,7 @@ final class MiscController
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
                 PageState::current()->addInfo(l10n('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), $nbm_user['mail_address']));
             }
-            Dml::massInserts(USER_MAIL_NOTIFICATION_TABLE, ['user_id', 'check_key', 'enabled'], $inserts);
+            Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
 
             if ($ctx->isSendmailTimeout) {
@@ -1257,7 +1260,7 @@ final class MiscController
                     ServiceLocator::get(NotificationAdminService::class)->endUsersEnvNbm();
 
                     if ($is_action_send) {
-                        Dml::massUpdates(USER_MAIL_NOTIFICATION_TABLE, ['primary' => ['user_id'], 'update' => ['last_send']], $datas);
+                        Dml::massUpdates(Tables::userMailNotification(), ['primary' => ['user_id'], 'update' => ['last_send']], $datas);
                         ServiceLocator::get(NotificationAdminService::class)->displayCounterInfo();
                     }
                 } else {

@@ -10,6 +10,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\AccessLevel;
 
 final class MenubarRenderer
 {
@@ -226,7 +227,7 @@ final class MenubarRenderer
             }
         } else {
             $template->assign('USERNAME', stripslashes(CurrentUser::get()->username));
-            if (PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC)) {
+            if (PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', ServiceLocator::get(UrlGenerator::class)->profile());
             }
             if (!Config::apacheAuthentication()) {

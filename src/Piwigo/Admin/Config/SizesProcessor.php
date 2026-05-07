@@ -13,6 +13,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\ActivitySystem;
 
 final class SizesProcessor
 {
@@ -213,7 +214,7 @@ final class SizesProcessor
             }
 
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => 'sizes']);
+            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => 'sizes']);
         } else {
             foreach ($original_fields as $field) {
                 if (isset($_POST[$field])) {

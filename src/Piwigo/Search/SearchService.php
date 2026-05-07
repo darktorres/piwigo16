@@ -20,6 +20,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
+use Piwigo\Db\Tables;
 
 final readonly class SearchService
 {
@@ -54,7 +55,7 @@ final readonly class SearchService
             throw new ValidationException('Invalid search identifier');
         }
 
-        $query   = 'SELECT * FROM ' . SEARCH_TABLE . ' WHERE ' . sprintf($clausePattern, $candidate) . ';';
+        $query   = 'SELECT * FROM ' . Tables::search() . ' WHERE ' . sprintf($clausePattern, $candidate) . ';';
         $searches = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
         if (count($searches) > 0) {
@@ -167,20 +168,20 @@ final readonly class SearchService
                         $catFieldClauses[] = $catFieldsDictionary[$catField] . " LIKE '%" . $word . "%'";
                     }
                     $catWordClauses[] = implode(' OR ', $catFieldClauses);
-                    $catIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE ' . implode(' OR ', $catWordClauses) . ';')->fetchAllAssociative(), 'id'));
+                    $catIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE ' . implode(' OR ', $catWordClauses) . ';')->fetchAllAssociative(), 'id'));
                     $catIdsByWord[$word] = $catIds;
                     if (count($catIds) > 0) {
-                        $catImageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'image_id');
+                        $catImageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'image_id');
                         if (count($catImageIds) > 0) {
                             $fieldClauses[] = 'id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catImageIds)) . ')';
                         }
                     }
                 }
                 if (in_array('tags', $allwordsFieldList)) {
-                    $tagIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . TAGS_TABLE . ' WHERE name LIKE \'%' . $word . '%\';')->fetchAllAssociative(), 'id'));
+                    $tagIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::tags() . ' WHERE name LIKE \'%' . $word . '%\';')->fetchAllAssociative(), 'id'));
                     $tagIdsByWord[$word] = $tagIds;
                     if (count($tagIds) > 0) {
-                        $tagImageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_TAG_TABLE . ' WHERE tag_id IN (' . implode(',', $tagIds) . ');')->fetchAllAssociative(), 'image_id');
+                        $tagImageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageTag() . ' WHERE tag_id IN (' . implode(',', $tagIds) . ');')->fetchAllAssociative(), 'image_id');
                         if (count($tagImageIds) > 0) {
                             $fieldClauses[] = 'id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tagImageIds)) . ')';
                         }
@@ -200,7 +201,7 @@ final readonly class SearchService
                 $allwordsMode = 'AND';
             }
             $filterClause = "\n         " . implode("\n         " . $allwordsMode . "\n         ", $wordClauses);
-            $imageIdsForFilter['allwords'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE ' . $filterClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['allwords'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $filterClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
 
             if (count($catIdsByWord) > 0) {
                 $matchingCatIds = null;
@@ -226,7 +227,7 @@ final readonly class SearchService
             foreach ($authorWords as $word) {
                 $authorClauses[] = "author = '" . (is_scalar($word) ? (string) $word : '') . "'";
             }
-            $imageIdsForFilter['author'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $authorClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['author'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $authorClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         $filetypesList = is_array($searchFields['filetypes'] ?? null) ? $searchFields['filetypes'] : [];
@@ -236,13 +237,13 @@ final readonly class SearchService
             foreach ($filetypesList as $ext) {
                 $filetypesClauses[] = 'path LIKE \'%.' . (is_scalar($ext) ? (string) $ext : '') . '\'';
             }
-            $imageIdsForFilter['filetypes'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filetypesClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['filetypes'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filetypesClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         $addedByList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : []);
         if (!empty($searchFields['added_by']) and $addedByFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['added_by'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE added_by IN (' . implode(',', $addedByList) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['added_by'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE added_by IN (' . implode(',', $addedByList) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         $catFieldsData = is_array($searchFields['cat'] ?? null) ? $searchFields['cat'] : [];
@@ -252,7 +253,7 @@ final readonly class SearchService
             $catSubInc = !empty($catFieldsData['sub_inc']);
             $catIds    = $catSubInc ? get_subcat_ids($catWords) : $catWords;
             if (!empty($catIds)) {
-                $imageIdsForFilter['cat'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE category_id IN (' . implode(',', $catIds) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+                $imageIdsForFilter['cat'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE category_id IN (' . implode(',', $catIds) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
             }
         }
 
@@ -295,7 +296,7 @@ final readonly class SearchService
                 }
                 $datePostedClause = '(' . implode(' OR ', prepend_append_array_items($datePostedSubclauses, '(', ')')) . ')';
             }
-            $imageIdsForFilter['date_posted'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE ' . $datePostedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['date_posted'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $datePostedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // date_created
@@ -337,7 +338,7 @@ final readonly class SearchService
                 }
                 $dateCreatedClause = '(' . implode(' OR ', prepend_append_array_items($dateCreatedSubclauses, '(', ')')) . ')';
             }
-            $imageIdsForFilter['date_created'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE ' . $dateCreatedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['date_created'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $dateCreatedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // ratios
@@ -349,7 +350,7 @@ final readonly class SearchService
             foreach ($ratiosList as $r) {
                 $ratiosClauses[] = $clauseForRatio[is_scalar($r) ? (string) $r : ''] ?? '1=1';
             }
-            $imageIdsForFilter['ratios'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $ratiosClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['ratios'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $ratiosClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // ratings
@@ -361,7 +362,7 @@ final readonly class SearchService
                 $r = is_scalar($r) ? (int) $r : 0;
                 $filterClauses[] = 0 == $r ? 'rating_score IS NULL' : '(rating_score >= ' . ($r - 1) . ' AND rating_score < ' . $r . ')';
             }
-            $imageIdsForFilter['ratings'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filterClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['ratings'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filterClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // filesize
@@ -369,7 +370,7 @@ final readonly class SearchService
         $filesizeMax = is_numeric($searchFields['filesize_max'] ?? null) ? (int) $searchFields['filesize_max'] : 0;
         if (!empty($searchFields['filesize_min']) and !empty($searchFields['filesize_max']) and $fileSizeFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['filesize'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE filesize BETWEEN ' . ($filesizeMin - 100) . ' AND ' . ($filesizeMax + 100) . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['filesize'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE filesize BETWEEN ' . ($filesizeMin - 100) . ' AND ' . ($filesizeMax + 100) . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // height
@@ -377,7 +378,7 @@ final readonly class SearchService
         $heightMax = is_numeric($searchFields['height_max'] ?? null) ? (int) $searchFields['height_max'] : 0;
         if (!empty($searchFields['height_min']) and !empty($searchFields['height_max']) and $heightFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['height'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE height BETWEEN ' . $heightMin . ' AND ' . $heightMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['height'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE height BETWEEN ' . $heightMin . ' AND ' . $heightMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // width
@@ -385,7 +386,7 @@ final readonly class SearchService
         $widthMax = is_numeric($searchFields['width_max'] ?? null) ? (int) $searchFields['width_max'] : 0;
         if (!empty($searchFields['width_min']) and !empty($searchFields['width_max']) and $widthFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['width'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE width BETWEEN ' . $widthMin . ' AND ' . $widthMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['width'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE width BETWEEN ' . $widthMin . ' AND ' . $widthMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         // tags
@@ -398,7 +399,7 @@ final readonly class SearchService
         }
 
         if (!empty($imagesWhere)) {
-            $imageIdsForFilter['custom'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id WHERE ' . $imagesWhere . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['custom'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $imagesWhere . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         $items = [];
@@ -419,7 +420,7 @@ final readonly class SearchService
         $this->logger->debug('getRegularSearchResults ' . count($items) . ' items in $unsorted_items');
 
         if (count($items) > 1) {
-            $items = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' i WHERE id IN (' . implode(',', $items) . ') ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            $items = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' i WHERE id IN (' . implode(',', $items) . ') ' . Config::orderBy())->fetchAllAssociative(), 'id');
         }
 
         return [
@@ -562,7 +563,7 @@ final readonly class SearchService
     public function qsearchGetImages(QExpression $expr, QResults $qsr): void
     {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
-        $queryBase        = 'SELECT id from ' . IMAGES_TABLE . ' i WHERE' . "\n";
+        $queryBase        = 'SELECT id from ' . Tables::images() . ' i WHERE' . "\n";
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token      = $expr->stokens[$i];
             $scopeId    = isset($token->scope) ? $token->scope->id : 'photo';
@@ -660,7 +661,7 @@ final readonly class SearchService
                 continue;
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name']);
-            $query   = 'SELECT * FROM ' . TAGS_TABLE . ' WHERE (' . implode("\n OR ", $clauses) . ')';
+            $query   = 'SELECT * FROM ' . Tables::tags() . ' WHERE (' . implode("\n OR ", $clauses) . ')';
             foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $tag) {
                 $tagId               = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
                 $tokenTagIds[$i][]   = $tagId;
@@ -685,7 +686,7 @@ final readonly class SearchService
             $token  = $expr->stokens[$i];
 
             if (!empty($tagIds)) {
-                $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_TAG_TABLE . ' WHERE tag_id IN (' . implode(',', $tagIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
+                $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageTag() . ' WHERE tag_id IN (' . implode(',', $tagIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $tagIds);
                 } else {
@@ -695,9 +696,9 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && 'tag' == $token->scope->id && strlen($token->term) == 0) {
                 if ($token->modifier & QST_WILDCARD) {
-                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE)->fetchAllAssociative(), 'image_id'));
+                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT image_id FROM ' . Tables::imageTag())->fetchAllAssociative(), 'image_id'));
                 } else {
-                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
                 }
             }
         }
@@ -727,7 +728,7 @@ final readonly class SearchService
                 continue;
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
-            $query   = 'SELECT * FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $userId . ' WHERE (' . implode("\n OR ", $clauses) . ')';
+            $query   = 'SELECT * FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . ' WHERE (' . implode("\n OR ", $clauses) . ')';
             foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $cat) {
                 $catId             = is_numeric($cat['id']) ? (int) $cat['id'] : 0;
                 $tokenCatIds[$i][] = $catId;
@@ -753,9 +754,9 @@ final readonly class SearchService
 
             if (!empty($catIds)) {
                 if (Config::quickSearchIncludeSubAlbums()) {
-                    $catIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $userId . ' WHERE id IN (' . implode(',', get_subcat_ids($catIds)) . ');')->fetchAllAssociative(), 'id'));
+                    $catIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId . ' WHERE id IN (' . implode(',', get_subcat_ids($catIds)) . ');')->fetchAllAssociative(), 'id'));
                 }
-                $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
+                $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $catIds);
                 } else {
@@ -765,9 +766,9 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && 'category' == $token->scope->id && strlen($token->term) == 0) {
                 if ($token->modifier & QST_WILDCARD) {
-                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE)->fetchAllAssociative(), 'image_id'));
+                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT image_id FROM ' . Tables::imageCategory())->fetchAllAssociative(), 'image_id'));
                 } else {
-                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
                 }
             }
         }
@@ -972,9 +973,9 @@ final readonly class SearchService
             $whereClauses[] = PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
         }
 
-        $query = 'SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
+        $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' i';
         if ($permissions) {
-            $query .= ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id';
+            $query .= ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id';
         }
         $query .= ' WHERE ' . implode("\n AND ", $whereClauses) . "\n" . Config::orderBy();
         $ids   = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
@@ -1033,7 +1034,7 @@ final readonly class SearchService
         $dbnow      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
-        Dml::singleInsert(SEARCH_TABLE, [
+        Dml::singleInsert(Tables::search(), [
             'rules'       => serialize($rules),
             'created_on'  => $dbnow,
             'created_by'  => $createdBy,

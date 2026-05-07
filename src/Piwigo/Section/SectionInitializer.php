@@ -18,6 +18,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Db\Tables;
 
 /**
  * Resolves the gallery section from the request URL and populates $GLOBALS['page']
@@ -213,7 +214,7 @@ final class SectionInitializer
                         $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
                         $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $catUppercats . ',%\' '
                             . PermissionService::get()->getSqlConditionFandF(
@@ -243,8 +244,8 @@ SELECT id
                 if (!$cacheHit) {
                     $query = '
 SELECT DISTINCT(image_id)
-  FROM ' . IMAGE_CATEGORY_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' ON id = image_id
+  FROM ' . Tables::imageCategory() . '
+    INNER JOIN ' . Tables::images() . ' ON id = image_id
   WHERE
     ' . $whereSql . '
 ' . $forbidden . '
@@ -311,8 +312,8 @@ SELECT DISTINCT(image_id)
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
 SELECT image_id
-  FROM ' . FAVORITES_TABLE . '
-    INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
+  FROM ' . Tables::favorites() . '
+    INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $userId . '
 ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . '
   ' . Config::orderBy() . '
@@ -339,8 +340,8 @@ SELECT image_id
             }
             $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE ' . PermissionService::get()->getRecentPhotosSql('date_available') . '
   ' . $forbidden . Config::orderBy() . '
 ;';
@@ -357,8 +358,8 @@ SELECT DISTINCT(id)
             Config::override('order_by', ' ORDER BY hit DESC, id DESC');
             $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE hit > 0
     ' . $forbidden . '
     ' . Config::orderBy() . '
@@ -374,8 +375,8 @@ SELECT DISTINCT(id)
             Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
             $query = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE rating_score IS NOT NULL
     ' . $forbidden . '
     ' . Config::orderBy() . '
@@ -390,8 +391,8 @@ SELECT DISTINCT(id)
             $listIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $pageList);
             $query   = '
 SELECT DISTINCT(id)
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
   WHERE image_id IN (' . implode(',', $listIds) . ')
     ' . $forbidden . '
   ' . Config::orderBy() . '

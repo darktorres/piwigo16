@@ -19,6 +19,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Db\Tables;
 
 /**
  * Handles the user profile / preferences page (/profile).
@@ -29,7 +31,7 @@ final class ProfileController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        PermissionService::get()->checkStatus(ACCESS_CLASSIC);
+        PermissionService::get()->checkStatus(AccessLevel::Classic);
 
         if (!empty($_POST)) {
             check_pwg_token();
@@ -123,7 +125,7 @@ final class ProfileController implements ControllerInterface
                 fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            Dml::singleUpdate(USER_INFOS_TABLE, ['language' => $cookie_lang], ['user_id' => $user['id']]);
+            Dml::singleUpdate(Tables::userInfos(), ['language' => $cookie_lang], ['user_id' => $user['id']]);
             load_language('common.lang', '', ['language' => $cookie_lang]);
         }
 

@@ -24,10 +24,7 @@ if (!is_file($envTestPath)) {
 }
 \Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
 
-// Core Piwigo constants required by classes that reference them at parse time.
-if (!defined('PHPWG_VERSION')) {
-    define('PHPWG_VERSION', '16.0.0-test');
-}
+// PHPWG_VERSION migrated to AppInfo::VERSION — no PHP define needed.
 
 // Root path constant required by classes that build file paths.
 // Points to the repository root; safe for unit tests that use tmp dirs.

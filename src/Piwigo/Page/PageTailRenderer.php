@@ -10,6 +10,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\AppInfo;
 
 final class PageTailRenderer
 {
@@ -22,7 +23,7 @@ final class PageTailRenderer
         EventDispatcher::notify('loc_begin_page_tail');
 
         $template->assign([
-            'VERSION'    => Config::showVersion() ? PHPWG_VERSION : '',
+            'VERSION'    => Config::showVersion() ? AppInfo::VERSION : '',
             'PHPWG_URL'  => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
         ]);
 

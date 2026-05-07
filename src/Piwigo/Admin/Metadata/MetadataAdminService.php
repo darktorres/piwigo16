@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Db\Tables;
 
 final class MetadataAdminService
 {
@@ -235,7 +236,7 @@ final class MetadataAdminService
             $update_fields = array_diff($update_fields, ['tags', 'keywords']);
 
             Dml::massUpdates(
-                IMAGES_TABLE,
+                Tables::images(),
                 ['primary' => ['id'], 'update' => $update_fields],
                 $datas,
                 Dml::SKIP_EMPTY
@@ -256,7 +257,7 @@ final class MetadataAdminService
 
         $query = '
 SELECT id
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE site_id = ' . $site_id . '
     AND dir IS NOT NULL';
         if (is_numeric($category_id)) {
@@ -280,7 +281,7 @@ SELECT id
 
         $query = '
 SELECT id, path, representative_ext
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE storage_category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)) . ')';
         if ($only_new) {
             $query .= '

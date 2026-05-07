@@ -11,6 +11,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
+use Piwigo\Core\AppInfo;
+use Piwigo\Db\Tables;
 
 final class UpgradeService
 {
@@ -113,11 +115,11 @@ final class UpgradeService
             $default_theme = is_scalar($defaultUserInfo['theme'] ?? null) ? (string) $defaultUserInfo['theme'] : '';
 
             if (in_array($default_theme, $theme_ids)) {
-                if (!$themeRepo->existsById(PHPWG_DEFAULT_TEMPLATE)) {
+                if (!$themeRepo->existsById(AppInfo::DEFAULT_TEMPLATE)) {
                     $themes = new Themes();
-                    $themes->performAction('activate', PHPWG_DEFAULT_TEMPLATE);
+                    $themes->performAction('activate', AppInfo::DEFAULT_TEMPLATE);
                 }
-                $themeRepo->setThemeForUsers([Config::defaultUserId()], PHPWG_DEFAULT_TEMPLATE);
+                $themeRepo->setThemeForUsers([Config::defaultUserId()], AppInfo::DEFAULT_TEMPLATE);
             }
         }
     }
@@ -156,10 +158,10 @@ final class UpgradeService
         }
 
         if (version_compare($current_release, '1.5', '<')) {
-            $query = 'SELECT password, status FROM '.USERS_TABLE.' WHERE username = ?';
+            $query = 'SELECT password, status FROM '.Tables::users().' WHERE username = ?';
         } else {
-            $query = 'SELECT u.password, ui.status FROM '.USERS_TABLE.' AS u'
-                .' INNER JOIN '.USER_INFOS_TABLE.' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
+            $query = 'SELECT u.password, ui.status FROM '.Tables::users().' AS u'
+                .' INNER JOIN '.Tables::userInfos().' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
                 .' WHERE '.Config::userFields()['username'].' = ?';
         }
         $row = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative() ?: null;
@@ -195,7 +197,7 @@ final class UpgradeService
 
     public static function checkUpgradeFeed(): bool
     {
-        $query   = 'SELECT id FROM '.UPGRADE_TABLE.';';
+        $query   = 'SELECT id FROM '.Tables::upgrade().';';
         $applied = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id')

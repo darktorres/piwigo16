@@ -16,6 +16,9 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 /**
  * File download / inline-serve handler for original photos, representatives,
@@ -26,15 +29,15 @@ final class ActionController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         $params = $request->getQueryParams();
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
-            check_input_parameter('format', $_GET, false, PATTERN_ID);
+            check_input_parameter('format', $_GET, false, ValidationPattern::ID);
             $get_format = input_int('format', null, $_GET);
 
-            $query = 'SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE format_id = ' . $get_format . ';';
+            $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $get_format . ';';
             $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
             if (count($formats) == 0) {
@@ -69,8 +72,8 @@ final class ActionController implements ControllerInterface
         $src_image = new SrcImage($element_info);
 
         $query = '
-SELECT id FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON category_id = id
+SELECT id FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $get_id . '
 ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
   LIMIT 1;';

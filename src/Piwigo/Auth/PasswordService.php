@@ -16,6 +16,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Db\Tables;
 
 final class PasswordService
 {
@@ -213,7 +214,7 @@ final class PasswordService
         }
 
         Dml::singleUpdate(
-            USERS_TABLE,
+            Tables::users(),
             [Config::userFields()['password'] => password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT)],
             [Config::userFields()['id'] => $user_id]
         );

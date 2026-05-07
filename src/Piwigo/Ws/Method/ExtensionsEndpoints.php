@@ -15,6 +15,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 
 final class ExtensionsEndpoints
 {
@@ -130,7 +132,7 @@ final class ExtensionsEndpoints
             } else {
                 $activityDetails['result'] = 'error';
             }
-            pwg_activity('system', ACTIVITY_SYSTEM_THEME, 'update', $activityDetails);
+            pwg_activity('system', ActivitySystem::Theme, 'update', $activityDetails);
         } elseif ($type === 'languages') {
             $extension     = new Languages();
             $upgradeStatus = $extension->extractLanguageFiles('upgrade', $revision, $extensionId);
@@ -198,10 +200,10 @@ final class ExtensionsEndpoints
     {
         $update  = new Updates();
         $result  = [];
-        if (!isset($_SESSION['need_update' . PHPWG_VERSION])) {
+        if (!isset($_SESSION['need_update' . AppInfo::VERSION])) {
             $update->checkPiwigoUpgrade();
         }
-        $result['piwigo_need_update'] = $_SESSION['need_update' . PHPWG_VERSION];
+        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
         $cuUpdatesIgnoredRaw = Config::raw('updates_ignored');
         $cuUpdatesIgnored    = is_string($cuUpdatesIgnoredRaw) ? unserialize($cuUpdatesIgnoredRaw) : false;
         Config::override('updates_ignored', is_array($cuUpdatesIgnored) ? $cuUpdatesIgnored : []);

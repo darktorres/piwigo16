@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Tables;
 
 /**
  * Container for standard derivatives parameters.
@@ -215,7 +216,7 @@ final class ImageStdParams
             ServiceLocator::get(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
         } else {
             ServiceLocator::get(Connection::class)->executeStatement(
-                'DELETE FROM ' . CONFIG_TABLE . ' WHERE param = \'disabled_derivatives\''
+                'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\''
             );
         }
     }

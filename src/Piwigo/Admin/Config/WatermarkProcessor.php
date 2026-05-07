@@ -12,6 +12,7 @@ use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
+use Piwigo\Core\ActivitySystem;
 
 final class WatermarkProcessor
 {
@@ -160,7 +161,7 @@ final class WatermarkProcessor
             }
 
             $tpl->assign(['save_success' => l10n('Your configuration settings are saved')]);
-            pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'config', ['config_section' => 'watermark']);
+            pwg_activity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
         } else {
             $tpl->assign('watermark', $pwatermark);
             $tpl->assign('ferrors', $errors);

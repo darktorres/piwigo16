@@ -13,6 +13,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final readonly class NotificationService
 {
@@ -40,8 +41,8 @@ final readonly class NotificationService
         switch ($type) {
             case 'new_comments':
                 $query = '
-  FROM ' . COMMENTS_TABLE . ' AS c
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON c.image_id = ic.image_id
+  FROM ' . Tables::comments() . ' AS c
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id
   WHERE 1=1';
                 if (!empty($start)) {
                     $query .= '
@@ -56,7 +57,7 @@ final readonly class NotificationService
 
             case 'unvalidated_comments':
                 $query = '
-  FROM ' . COMMENTS_TABLE . '
+  FROM ' . Tables::comments() . '
   WHERE 1=1';
                 if (!empty($start)) {
                     $query .= '
@@ -72,8 +73,8 @@ final readonly class NotificationService
 
             case 'new_elements':
                 $query = '
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
                 if (!empty($start)) {
                     $query .= '
@@ -88,8 +89,8 @@ final readonly class NotificationService
 
             case 'updated_categories':
                 $query = '
-  FROM ' . IMAGES_TABLE . '
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON image_id = id
+  FROM ' . Tables::images() . '
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
                 if (!empty($start)) {
                     $query .= '
@@ -104,7 +105,7 @@ final readonly class NotificationService
 
             case 'new_users':
                 $query = '
-  FROM ' . USER_INFOS_TABLE . '
+  FROM ' . Tables::userInfos() . '
   WHERE 1=1';
                 if (!empty($start)) {
                     $query .= '
@@ -277,7 +278,7 @@ SELECT
     date_available,
     COUNT(DISTINCT id) AS nb_elements,
     COUNT(DISTINCT category_id) AS nb_cats
-  FROM ' . IMAGES_TABLE . ' i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+  FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
   ' . $whereSql . '
   GROUP BY date_available
   ORDER BY date_available DESC
@@ -290,8 +291,8 @@ SELECT
             if ($maxElements > 0) {
                 $query = '
 SELECT DISTINCT i.*
-  FROM ' . IMAGES_TABLE . ' i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
+  FROM ' . Tables::images() . ' i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
   ' . $whereSql . '
     AND date_available=\'' . $dateAvailable . '\'
   ORDER BY ' . Dml::RANDOM_FUNCTION . '()
@@ -305,9 +306,9 @@ SELECT DISTINCT i.*
 SELECT
     DISTINCT c.uppercats,
     COUNT(DISTINCT i.id) AS img_count
-  FROM ' . IMAGES_TABLE . ' i
-    INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON i.id=image_id
-    INNER JOIN ' . CATEGORIES_TABLE . ' c ON c.id=category_id
+  FROM ' . Tables::images() . ' i
+    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id=image_id
+    INNER JOIN ' . Tables::categories() . ' c ON c.id=category_id
   ' . $whereSql . '
     AND date_available=\'' . $dateAvailable . '\'
   GROUP BY category_id, c.uppercats

@@ -13,6 +13,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class PictureCommentRenderer
 {
@@ -85,7 +86,7 @@ final class PictureCommentRenderer
             $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
             $row = ServiceLocator::get(Connection::class)
                 ->executeQuery(
-                    'SELECT COUNT(*) AS nb_comments FROM ' . COMMENTS_TABLE .
+                    'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
                     ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
                     [$imageId]
                 )
@@ -135,8 +136,8 @@ SELECT
     com.email,
     com.content,
     com.validated
-  FROM ' . COMMENTS_TABLE . ' AS com
-  LEFT JOIN ' . USERS_TABLE . ' AS u
+  FROM ' . Tables::comments() . ' AS com
+  LEFT JOIN ' . Tables::users() . ' AS u
     ON u.' . Config::userFields()['id'] . ' = author_id
   WHERE com.image_id = ' . $imageId . '
     ' . $validated_clause . '

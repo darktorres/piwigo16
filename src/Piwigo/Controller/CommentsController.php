@@ -21,6 +21,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 /**
  * Handles the paginated comments list page (/comments).
@@ -34,7 +37,7 @@ final class CommentsController implements ControllerInterface
             page_not_found(null);
         }
 
-        PermissionService::get()->checkStatus(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -94,7 +97,7 @@ final class CommentsController implements ControllerInterface
 
         $get_cat = input_int('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
-            check_input_parameter('cat', $_GET, false, PATTERN_ID);
+            check_input_parameter('cat', $_GET, false, ValidationPattern::ID);
             $category_ids = get_subcat_ids([$get_cat]);
             if (empty($category_ids)) {
                 $category_ids = [-1];
@@ -109,7 +112,7 @@ final class CommentsController implements ControllerInterface
 
         $get_comment_id_filter = input_int('comment_id', null, $_GET);
         if (!empty($get_comment_id_filter)) {
-            check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
+            check_input_parameter('comment_id', $_GET, false, ValidationPattern::ID);
             if (!PermissionService::get()->isAdmin()) {
                 $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
                 $login_url  = add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
@@ -148,7 +151,7 @@ final class CommentsController implements ControllerInterface
         foreach (['delete', 'validate', 'edit'] as $loop_action) {
             if (isset($_GET[$loop_action])) {
                 $action = $loop_action;
-                check_input_parameter($action, $_GET, false, PATTERN_ID);
+                check_input_parameter($action, $_GET, false, ValidationPattern::ID);
                 $comment_id = is_numeric($_GET[$action]) ? (int) $_GET[$action] : 0;
                 break;
             }
@@ -222,7 +225,7 @@ final class CommentsController implements ControllerInterface
         $blockname = 'categories';
         $query = '
 SELECT id, name, uppercats, global_rank
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE') . '
 ;';
         display_select_cat_wrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true);
@@ -253,9 +256,9 @@ SELECT id, name, uppercats, global_rank
         $userEmailField = Config::userFields()['email'];
         $userIdField    = Config::userFields()['id'];
         $joinBase = '
-  FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
-    INNER JOIN ' . COMMENTS_TABLE . ' AS com ON ic.image_id = com.image_id
-    LEFT JOIN ' . USERS_TABLE . ' AS u ON u.' . $userIdField . ' = com.author_id
+  FROM ' . Tables::imageCategory() . ' AS ic
+    INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id
+    LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userIdField . ' = com.author_id
   WHERE ' . implode("\n    AND ", $page['where_clauses']);
 
         $conn    = ServiceLocator::get(Connection::class);
@@ -291,13 +294,13 @@ SELECT id, name, uppercats, global_rank
         if (count($comments) > 0) {
             $query = '
 SELECT *
-  FROM ' . IMAGES_TABLE . '
+  FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $element_ids)) . ')
 ;';
             $elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             $query = 'SELECT id, name, permalink, uppercats
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')';
             $categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 

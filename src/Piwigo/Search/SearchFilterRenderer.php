@@ -14,6 +14,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class SearchFilterRenderer
 {
@@ -126,8 +127,8 @@ final class SearchFilterRenderer
 SELECT
     author,
     COUNT(DISTINCT(id)) AS counter
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
     AND author IS NOT NULL
   GROUP BY author
@@ -184,8 +185,8 @@ SELECT
 SELECT
     DISTINCT id,
     date_available as date
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
 ;';
 
@@ -282,8 +283,8 @@ SELECT
 SELECT
     DISTINCT id,
     date_creation as date
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
 ;';
 
@@ -366,8 +367,8 @@ SELECT
 SELECT
     COUNT(DISTINCT(id)) AS counter,
     added_by AS added_by_id
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
   GROUP BY added_by_id
   ORDER BY counter DESC
@@ -397,7 +398,7 @@ SELECT
 SELECT
     ' . Config::userFields()['id'] . ' AS id,
     ' . Config::userFields()['username'] . ' AS username
-  FROM ' . USERS_TABLE . '
+  FROM ' . Tables::users() . '
   WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $user_ids) . ')
 ;';
                     $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
@@ -428,8 +429,8 @@ SELECT
 SELECT
     id,
     uppercats
-  FROM ' . CATEGORIES_TABLE . '
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $userId . '
+  FROM ' . Tables::categories() . '
+    INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_words)) . ')
 ;';
                     foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -462,8 +463,8 @@ SELECT
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
     COUNT(DISTINCT(id)) AS counter
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE 1=1' . $search_details['forbidden'] . '
   GROUP BY ext
   ORDER BY counter DESC
@@ -478,8 +479,8 @@ SELECT
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
     COUNT(DISTINCT(id)) AS counter
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
   GROUP BY ext
   ORDER BY counter DESC
@@ -514,8 +515,8 @@ SELECT
 SELECT
     DISTINCT id,
     rating_score
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause;
 
                         $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
@@ -560,8 +561,8 @@ SELECT
 SELECT
     DISTINCT id,
     filesize
-  FROM ' . IMAGES_TABLE . ' AS i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' AS i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
 ;';
                 foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -607,8 +608,8 @@ SELECT
     DISTINCT id,
     width,
     height
-  FROM ' . IMAGES_TABLE . ' as i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' as i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
     AND width IS NOT NULL
     AND height IS NOT NULL
@@ -650,8 +651,8 @@ SELECT
                 $query = '
 SELECT
     height
-  FROM ' . IMAGES_TABLE . ' as i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' as i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
     AND height IS NOT NULL
   GROUP BY height
@@ -691,8 +692,8 @@ SELECT
                 $query = '
 SELECT
     width
-  FROM ' . IMAGES_TABLE . ' as i
-    JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
+  FROM ' . Tables::images() . ' as i
+    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
     AND width IS NOT NULL
   GROUP BY width
@@ -793,8 +794,8 @@ SELECT
                         $query = '
 SELECT
     c.*
-  FROM ' . CATEGORIES_TABLE . ' AS c
-    INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON c.id = cat_id and user_id = ' . $userId . '
+  FROM ' . Tables::categories() . ' AS c
+    INNER JOIN ' . Tables::userCacheCategories() . ' ON c.id = cat_id and user_id = ' . $userId . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
                         $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();

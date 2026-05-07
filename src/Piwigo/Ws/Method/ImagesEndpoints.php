@@ -32,6 +32,8 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Core\ValidationPattern;
+use Piwigo\Db\Tables;
 
 final class ImagesEndpoints
 {
@@ -71,12 +73,12 @@ final class ImagesEndpoints
             }
             return true;
         }
-        $dbCatIds    = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
+        $dbCatIds    = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
         $unknownCatIds = array_diff($catIds, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $dbCatIds));
         if (count($unknownCatIds) !== 0) {
             return new PwgError(500, '[addImageCategoryRelations] the following categories are unknown: ' . implode(', ', $unknownCatIds));
         }
-        $existingCatIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . (is_scalar($imageId) ? (string) $imageId : '0') . ';')->fetchAllAssociative(), 'category_id'));
+        $existingCatIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . (is_scalar($imageId) ? (string) $imageId : '0') . ';')->fetchAllAssociative(), 'category_id'));
         if ($replaceMode) {
             $toRemoveCatIds = array_diff($existingCatIds, $catIds);
             if (count($toRemoveCatIds) > 0) {
@@ -89,7 +91,7 @@ final class ImagesEndpoints
             return true;
         }
         if ($searchCurrentRanks) {
-            $currentRankOf = array_column(DbConnection::get()->executeQuery('SELECT category_id, MAX(`rank`) AS max_rank FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $newCatIds) . ') GROUP BY category_id;')->fetchAllAssociative(), 'max_rank', 'category_id');
+            $currentRankOf = array_column(DbConnection::get()->executeQuery('SELECT category_id, MAX(`rank`) AS max_rank FROM ' . Tables::imageCategory() . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $newCatIds) . ') GROUP BY category_id;')->fetchAllAssociative(), 'max_rank', 'category_id');
             foreach ($newCatIds as $catId) {
                 if (!isset($currentRankOf[$catId])) {
                     $currentRankOf[$catId] = 0;
@@ -103,7 +105,7 @@ final class ImagesEndpoints
         foreach ($newCatIds as $catId) {
             $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, 'rank' => $rankOnCategory[$catId]];
         }
-        Dml::massInserts(IMAGE_CATEGORY_TABLE, array_keys($inserts[0]), $inserts);
+        Dml::massInserts(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
         ServiceLocator::get(CategoryAdminService::class)->updateCategory($newCatIds);
         return true;
     }
@@ -170,7 +172,7 @@ final class ImagesEndpoints
             return new PwgError(403, 'Comments are disabled');
         }
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
+        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
         if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
         }
@@ -196,7 +198,7 @@ final class ImagesEndpoints
     public function getInfo(array $params, PwgServer $service): PwgError|array
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
+        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
         $imageRow = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative();
         if ($imageRow === false) {
             return new PwgError(404, 'image_id not found');
@@ -212,7 +214,7 @@ final class ImagesEndpoints
         $imageRow['comment']     = EventDispatcher::dispatch('render_element_description', $imageRow['comment'], __FUNCTION__);
         $isCommentable    = false;
         $relatedCategories = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id WHERE image_id = ' . $imageRowId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
+        foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
             if ($row['commentable'] === 'true') {
                 $isCommentable = true;
             }
@@ -247,12 +249,12 @@ final class ImagesEndpoints
         if (!PermissionService::get()->isAdmin()) {
             $whereComments .= ' AND validated="true"';
         }
-        [$nbComments] = array_column(DbConnection::get()->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . COMMENTS_TABLE . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
+        [$nbComments] = array_column(DbConnection::get()->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
         $nbComments          = is_numeric($nbComments) ? (int) $nbComments : 0;
         $pCommentsPerPage    = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
         $pCommentsPage       = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
         if ($nbComments > 0 && $pCommentsPerPage > 0) {
-            foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, date, author, content FROM ' . COMMENTS_TABLE . ' WHERE ' . $whereComments . ' ORDER BY date LIMIT ' . $pCommentsPerPage . ' OFFSET ' . ($pCommentsPerPage * $pCommentsPage) . ';')->fetchAllAssociative() as $row) {
+            foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, date, author, content FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ' ORDER BY date LIMIT ' . $pCommentsPerPage . ' OFFSET ' . ($pCommentsPerPage * $pCommentsPage) . ';')->fetchAllAssociative() as $row) {
                 $row['id']         = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $relatedComments[] = $row;
             }
@@ -288,7 +290,7 @@ final class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
-        $query    = 'SELECT DISTINCT id FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
+        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
         if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
@@ -532,7 +534,7 @@ final class ImagesEndpoints
         $pCategoryId   = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         if (count($pImageIdArr) > 1) {
             ServiceLocator::get(CategoryAdminService::class)->saveImagesOrder($pCategoryId, $pImageIdArr);
-            $imageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
+            $imageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
             return ['image_id' => $imageIds, 'category_id' => $pCategoryId];
         }
         $pImageId = $pImageIdArr[0] ?? 0;
@@ -641,7 +643,7 @@ final class ImagesEndpoints
             if (Config::uniquenessMode() === 'filename') {
                 $whereClause = "file = '" . (is_scalar($params['original_filename']) ? (string) $params['original_filename'] : '') . "'";
             }
-            $counter = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ' WHERE ' . $whereClause)->fetchOne();
+            $counter = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE ' . $whereClause)->fetchOne();
             if ((is_numeric($counter) ? (int) $counter : 0) !== 0) {
                 return new PwgError(500, 'file already exists');
             }
@@ -664,7 +666,7 @@ final class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            Dml::singleUpdate(IMAGES_TABLE, $update, ['id' => $imageId]);
+            Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         }
         $urlParams = ['image_id' => $imageId];
         if (isset($params['categories'])) {
@@ -723,7 +725,7 @@ final class ImagesEndpoints
                 $update[$key] = $params[$key];
             }
         }
-        Dml::singleUpdate(IMAGES_TABLE, $update, ['id' => $imageId]);
+        Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         if (isset($params['tags']) && !empty($params['tags'])) {
             $tagIds = [];
             if (is_array($params['tags'])) {
@@ -818,7 +820,7 @@ final class ImagesEndpoints
             rename("{$filePath}.part", $filePath);
             if (isset($params['format_of'])) {
                 $formatOfId = is_numeric($params['format_of']) ? (int) $params['format_of'] : 0;
-                $images     = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $formatOfId . ';')->fetchAllAssociative();
+                $images     = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $formatOfId . ';')->fetchAllAssociative();
                 if (count($images) === 0) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
@@ -833,7 +835,7 @@ final class ImagesEndpoints
             $pCategoryInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $pCategory);
             $pCategoryFirst = $pCategoryInt[0] ?? 0;
             if ($params['update_mode']) {
-                $images = DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' AS i INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' as ic ON ic.image_id = i.id WHERE i.file = ' . DbConnection::get()->quote($name) . ' AND ic.category_id = ' . $pCategoryFirst . ';')->fetchAllAssociative();
+                $images = DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id WHERE i.file = ' . DbConnection::get()->quote($name) . ' AND ic.category_id = ' . $pCategoryFirst . ';')->fetchAllAssociative();
                 if ($images != null) {
                     $img0      = $images[0];
                     $idImage   = isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
@@ -844,7 +846,7 @@ final class ImagesEndpoints
             $catRepo2   = ServiceLocator::get(CategoryRepository::class);
             $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
             $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
-            $nbPhotosLounge = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . LOUNGE_TABLE . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ')', [$pCategoryFirst])->fetchOne();
+            $nbPhotosLounge = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')', [$pCategoryFirst])->fetchOne();
             $categoryName   = get_cat_display_name_from_id($pCategoryFirst, null);
             if ($imageInfos === null) {
                 return null;
@@ -970,7 +972,7 @@ final class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            Dml::singleUpdate(IMAGES_TABLE, $update, ['id' => $imageId]);
+            Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         }
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         $userRef = &$GLOBALS['user'];
@@ -1001,13 +1003,13 @@ final class ImagesEndpoints
         $result       = [];
         if (Config::uniquenessMode() === 'md5sum') {
             $md5sums  = preg_split($splitPattern, is_scalar($params['md5sum_list']) ? (string) $params['md5sum_list'] : '', -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            $idOfMd5  = array_column(DbConnection::get()->executeQuery('SELECT id, md5sum FROM ' . IMAGES_TABLE . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
+            $idOfMd5  = array_column(DbConnection::get()->executeQuery('SELECT id, md5sum FROM ' . Tables::images() . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $idOfMd5[$md5sum] ?? null;
             }
         } elseif (Config::uniquenessMode() === 'filename') {
             $filenames = preg_split($splitPattern, is_scalar($params['filename_list']) ? (string) $params['filename_list'] : '', -1, PREG_SPLIT_NO_EMPTY) ?: [];
-            $idOfFile  = array_column(DbConnection::get()->executeQuery('SELECT id, file FROM ' . IMAGES_TABLE . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
+            $idOfFile  = array_column(DbConnection::get()->executeQuery('SELECT id, file FROM ' . Tables::images() . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
             foreach ($filenames as $filename) {
                 $result[$filename] = $idOfFile[$filename] ?? null;
             }
@@ -1192,7 +1194,7 @@ final class ImagesEndpoints
         }
         if (count($update) > 0) {
             $update['id'] = $setImageId;
-            Dml::singleUpdate(IMAGES_TABLE, $update, ['id' => $update['id']]);
+            Dml::singleUpdate(Tables::images(), $update, ['id' => $update['id']]);
             pwg_activity('photo', $setImageId, 'edit');
         }
         if (isset($params['categories'])) {
@@ -1202,7 +1204,7 @@ final class ImagesEndpoints
             $tagIds = [];
             foreach (explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : '') as $candidate) {
                 $candidate = trim($candidate);
-                if (preg_match(PATTERN_ID, $candidate)) {
+                if (preg_match(ValidationPattern::ID, $candidate)) {
                     $tagIds[] = $candidate;
                 }
             }
@@ -1321,7 +1323,7 @@ final class ImagesEndpoints
         $imageIds = [];
         foreach ($syncImageIdsRaw as $imageId) {
             $imageId = trim(is_scalar($imageId) ? (string) $imageId : '');
-            if (!preg_match(PATTERN_ID, $imageId)) {
+            if (!preg_match(ValidationPattern::ID, $imageId)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "' . $imageId . '"');
             }
             $imageIds[] = $imageId;
@@ -1329,7 +1331,7 @@ final class ImagesEndpoints
         if (empty($imageIds)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
-        $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
+        $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
         if (empty($imageIds)) {
             return new PwgError(403, 'No image found');
         }
@@ -1360,7 +1362,7 @@ final class ImagesEndpoints
         }
         $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $scImageIds   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $categories   = DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $scCategoryId . ';')->fetchAllAssociative();
+        $categories   = DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id = ' . $scCategoryId . ';')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }

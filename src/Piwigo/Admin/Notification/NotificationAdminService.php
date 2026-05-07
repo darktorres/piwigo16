@@ -14,6 +14,7 @@ use Piwigo\Notification\NotificationRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Piwigo\Db\Tables;
 
 final class NotificationAdminService
 {
@@ -219,7 +220,7 @@ final class NotificationAdminService
 
             $this->endUsersEnvNbm();
             $this->displayCounterInfo();
-            Dml::massUpdates(USER_MAIL_NOTIFICATION_TABLE, ['primary' => ['check_key'], 'update' => ['enabled']], $updates);
+            Dml::massUpdates(Tables::userMailNotification(), ['primary' => ['check_key'], 'update' => ['enabled']], $updates);
         }
 
         PageState::current()->addInfo(l10n_dec('%d user was updated.', '%d users were updated.', $updatedDataCount));

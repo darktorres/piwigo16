@@ -17,6 +17,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Db\Tables;
 
 final class HtmlService
 {
@@ -72,7 +73,7 @@ final class HtmlService
         $catNamesRaw = RequestCache::remember('cat_names', 'all', static function (): array {
             $query = '
 SELECT id, name, permalink
-  FROM ' . CATEGORIES_TABLE . '
+  FROM ' . Tables::categories() . '
 ;';
             return array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
         });

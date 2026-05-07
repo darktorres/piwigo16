@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Cache;
 
 use Psr\Cache\CacheItemPoolInterface;
+use Piwigo\Core\AppInfo;
 
 /**
  * Legacy persistent-cache API. Concrete subclasses wrap a PSR-6 pool
@@ -13,7 +14,7 @@ use Psr\Cache\CacheItemPoolInterface;
 abstract class PersistentCache
 {
     public int $default_lifetime = 86400;
-    protected string $instance_key = PHPWG_VERSION;
+    protected string $instance_key = AppInfo::VERSION;
 
     abstract public function getPool(): CacheItemPoolInterface;
 

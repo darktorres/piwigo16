@@ -10,6 +10,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Core\AppInfo;
 
 class CheckIntegrity
 {
@@ -39,7 +40,7 @@ class CheckIntegrity
         if (
             is_array($conf_c13y_ignore) and
             isset($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] == PHPWG_VERSION) and
+            ($conf_c13y_ignore['version'] == AppInfo::VERSION) and
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
@@ -253,7 +254,7 @@ class CheckIntegrity
     public function updateConf(array $conf_ignore_list = []): void
     {
         $conf_c13y_ignore =  [];
-        $conf_c13y_ignore['version'] = PHPWG_VERSION;
+        $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
         conf_update_param('c13y_ignore', serialize($conf_c13y_ignore));
     }

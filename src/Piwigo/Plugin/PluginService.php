@@ -10,6 +10,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
+use Piwigo\Core\ActivitySystem;
 
 final readonly class PluginService
 {
@@ -33,7 +34,7 @@ final readonly class PluginService
     public function loadPlugin(array $plugin): void
     {
         $pluginId  = is_scalar($plugin['id']) ? (string) $plugin['id'] : '';
-        $fileName  = PHPWG_PLUGINS_PATH . $pluginId . '/main.inc.php';
+        $fileName  = Config::pluginsPath() . $pluginId . '/main.inc.php';
         if (file_exists($fileName)) {
             $this->autoupdatePlugin($plugin);
             LoadedPluginRegistry::register($pluginId, $plugin);
@@ -45,7 +46,7 @@ final readonly class PluginService
     public function autoupdatePlugin(array &$plugin): void
     {
         $pluginId  = is_scalar($plugin['id']) ? (string) $plugin['id'] : '';
-        $fh        = fopen(PHPWG_PLUGINS_PATH . $pluginId . '/main.inc.php', 'r');
+        $fh        = fopen(Config::pluginsPath() . $pluginId . '/main.inc.php', 'r');
         $fsVersion = null;
         $i         = -1;
 
@@ -74,7 +75,7 @@ final readonly class PluginService
 
             $plugin['version'] = $fsVersion;
 
-            $maintainFile = PHPWG_PLUGINS_PATH . $pluginId . '/maintain.class.php';
+            $maintainFile = Config::pluginsPath() . $pluginId . '/maintain.class.php';
 
             if (file_exists($maintainFile)) {
                 require_once($maintainFile);
@@ -90,7 +91,7 @@ final readonly class PluginService
 
             if ($newVersion != $oldVersion) {
                 $this->repo->updateVersion($pluginId, $fsVersion);
-                pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
+                pwg_activity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
             }
         }
     }

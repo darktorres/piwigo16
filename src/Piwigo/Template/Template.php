@@ -137,8 +137,8 @@ class Template
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', PermissionService::get()->isAdmin(...));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', PermissionService::get()->isClassicUser(...));
+        $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $s = ''): bool => PermissionService::get()->isAdmin($s));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $s = ''): bool => PermissionService::get()->isClassicUser($s));
         $this->smarty->registerPlugin('modifier', 'get_device', 'get_device');
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');

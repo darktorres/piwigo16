@@ -57,7 +57,7 @@ class Plugins
             }
         }
 
-        // before 2.7 pattern (OO or procedural)
+        // before 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.inc.php')) {
             require_once($file_to_include.'.inc.php');
 
@@ -66,7 +66,7 @@ class Plugins
             }
         }
 
-        return new DummyPluginMaintain($plugin_id);
+        throw new \RuntimeException("Plugin $plugin_id has no PluginMaintain class");
     }
 
     /**
@@ -86,12 +86,6 @@ class Plugins
             $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
         }
 
-        // For 'update', we build the maintain class only after file extraction (see case 'update' below).
-        // Use a DummyPluginMaintain placeholder so $plugin_maintain is always typed.
-        $plugin_maintain = $action !== 'update'
-            ? self::buildMaintainClass($plugin_id)
-            : new DummyPluginMaintain($plugin_id);
-
         $activity_details = ['plugin_id' => $plugin_id];
 
         $errors = [];
@@ -104,7 +98,7 @@ class Plugins
 
                 $installVersion = $this->fs_plugins[$plugin_id]['version'];
                 $installVersionStr = is_string($installVersion) ? $installVersion : '';
-                $plugin_maintain->install($installVersionStr, $errors);
+                self::buildMaintainClass($plugin_id)->install($installVersionStr, $errors);
                 $activity_details['version'] = $installVersionStr;
                 $errors = trigger_change('plugin_install_errors', $errors);
 
@@ -155,7 +149,7 @@ class Plugins
                     $vRaw = $crt_db_plugin['version'] ?? null;
                     $version = is_scalar($vRaw) ? (string) $vRaw : '';
                     $errorsArr = is_array($errors) ? $errors : [];
-                    $plugin_maintain->activate($version, $errorsArr);
+                    self::buildMaintainClass($plugin_id)->activate($version, $errorsArr);
                     $errors = $errorsArr;
                     $activity_details['version'] = $version;
                 }
@@ -175,7 +169,7 @@ class Plugins
 
                 ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'inactive');
 
-                $plugin_maintain->deactivate();
+                self::buildMaintainClass($plugin_id)->deactivate();
 
                 if (isset($crt_db_plugin['version'])) {
                     $activity_details['version'] = $crt_db_plugin['version'];
@@ -200,7 +194,7 @@ class Plugins
 
                 ServiceLocator::get(PluginRepository::class)->delete($plugin_id);
 
-                $plugin_maintain->uninstall();
+                self::buildMaintainClass($plugin_id)->uninstall();
                 break;
 
             case 'restore':

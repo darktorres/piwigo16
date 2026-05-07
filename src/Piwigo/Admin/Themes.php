@@ -55,7 +55,7 @@ class Themes
             }
         }
 
-        return new DummyThemeMaintain($theme_id);
+        throw new \RuntimeException("Theme $theme_id has no ThemeMaintain class");
     }
 
     /**

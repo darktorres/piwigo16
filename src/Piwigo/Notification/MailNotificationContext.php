@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Template\Template;
 

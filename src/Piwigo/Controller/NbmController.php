@@ -13,12 +13,13 @@ use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 final class NbmController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_FREE);
+        PermissionService::get()->checkStatus(ACCESS_FREE);
 
         MailNotificationContext::init();
         load_language('admin.lang');

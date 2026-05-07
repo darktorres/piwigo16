@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Users\PermissionService;
 
 global $persistent_cache, $title, $debug, $t2;
 
@@ -36,7 +37,7 @@ $template->assign(
 
 //--------------------------------------------------------------------- contact
 
-if (!is_a_guest()) {
+if (!PermissionService::get()->isAGuest()) {
     $template->assign(
         'CONTACT_MAIL',
         get_webmaster_mail_address()

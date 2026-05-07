@@ -9,6 +9,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final readonly class CommentService
 {
@@ -30,7 +31,7 @@ final readonly class CommentService
             return $action;
         }
 
-        if (!is_a_guest()) {
+        if (!PermissionService::get()->isAGuest()) {
             return $action;
         }
 
@@ -69,13 +70,13 @@ final readonly class CommentService
         ]);
 
         $infos = [];
-        if (!Config::commentsValidation() or is_admin()) {
+        if (!Config::commentsValidation() or PermissionService::get()->isAdmin()) {
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
         }
 
-        if (!is_classic_user()) {
+        if (!PermissionService::get()->isClassicUser()) {
             if (empty($comm['author'])) {
                 if (Config::commentsAuthorMandatory()) {
                     $infos[]       = l10n('Username is mandatory');
@@ -149,11 +150,11 @@ final readonly class CommentService
         }
         $anonymousId = implode('.', $ipComponents);
 
-        if ($commentAction != 'reject' and Config::antiFloodTime() > 0 and !is_admin()) {
+        if ($commentAction != 'reject' and Config::antiFloodTime() > 0 and !PermissionService::get()->isAdmin()) {
             $counter = $this->repo->countRecentByAuthor(
                 (int) $comm['author_id'],
                 Config::antiFloodTime(),
-                is_classic_user() ? '' : $anonymousId
+                PermissionService::get()->isClassicUser() ? '' : $anonymousId
             );
             if ($counter > 0) {
                 $infos[]       = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -217,7 +218,7 @@ final readonly class CommentService
     public function deleteUserComment(int|array $commentId): bool
     {
         $globalUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-        $authorId   = is_admin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : 0);
+        $authorId   = PermissionService::get()->isAdmin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : 0);
         $affected   = $this->repo->delete($commentId, $authorId);
 
         if ($affected > 0) {
@@ -247,7 +248,7 @@ final readonly class CommentService
 
         if (!verify_ephemeral_key($postKey, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
             $commentAction = 'reject';
-        } elseif (!Config::commentsValidation() or is_admin()) {
+        } elseif (!Config::commentsValidation() or PermissionService::get()->isAdmin()) {
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -273,7 +274,7 @@ final readonly class CommentService
         }
 
         if ($commentAction != 'reject') {
-            $updateAuthorId = is_admin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : null);
+            $updateAuthorId = PermissionService::get()->isAdmin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : null);
             $result = $this->repo->update(
                 (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
                 [

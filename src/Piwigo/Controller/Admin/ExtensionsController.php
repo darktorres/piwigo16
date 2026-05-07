@@ -22,6 +22,9 @@ use Piwigo\Plugin\PluginRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\PermissionService;
 
 final class ExtensionsController
 {
@@ -232,13 +235,13 @@ final class ExtensionsController
             'base_url'             => $base_url,
             'show_details'         => $show_details,
             'max_inactive_before_hide' => isset($_GET['show_inactive']) ? 999 : 8,
-            'isWebmaster'          => is_webmaster() ? 1 : 0,
+            'isWebmaster'          => PermissionService::get()->isWebmaster() ? 1 : 0,
             'ADMIN_PAGE_TITLE'     => l10n('Plugins'),
-            'view_selector'        => userprefs_get_param('plugin-manager-view', 'classic'),
+            'view_selector'        => PreferencesService::get()->userprefsGetParam('plugin-manager-view', 'classic'),
             'CONF_ENABLE_EXTENSIONS_INSTALL' => Config::enableExtensionsInstall(),
             'page_data_json'       => json_encode([
                 'pwg_token'          => $pwg_token,
-                'isWebmaster'        => is_webmaster() ? 1 : 0,
+                'isWebmaster'        => PermissionService::get()->isWebmaster() ? 1 : 0,
                 'show_details'       => $show_details,
                 'nb_plugin'          => ['all' => $count_types_plugins['active'] + $count_types_plugins['inactive'] + $count_types_plugins['missing'] + $count_types_plugins['merged'], 'active' => $count_types_plugins['active'], 'inactive' => $count_types_plugins['inactive'], 'other' => $count_types_plugins['missing'] + $count_types_plugins['merged']],
                 'activate_msg'       => l10n('Do you want to activate anyway?'),
@@ -286,7 +289,7 @@ final class ExtensionsController
         $plugins = new Plugins();
 
         if (isset($_GET['revision']) && isset($_GET['extension'])) {
-            if (!is_webmaster()) {
+            if (!PermissionService::get()->isWebmaster()) {
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
@@ -485,7 +488,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -506,7 +509,7 @@ final class ExtensionsController
         }
 
         $themes->sort_fs_themes();
-        $default_theme = get_default_theme();
+        $default_theme = UserService::get()->getDefaultTheme();
         $db_themes     = $themes->get_db_themes();
         $db_theme_ids  = [];
         foreach ($db_themes as $db_theme) {
@@ -566,7 +569,7 @@ final class ExtensionsController
         ]);
 
         trigger_notify('loc_end_themes_installed');
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_theme_confirm' => l10n('Are you sure you want to delete the theme "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
@@ -599,7 +602,7 @@ final class ExtensionsController
         }
 
         if (isset($_GET['revision']) && isset($_GET['extension'])) {
-            if (!is_webmaster()) {
+            if (!PermissionService::get()->isWebmaster()) {
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
@@ -638,7 +641,7 @@ final class ExtensionsController
             PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
-        $adminTheme = userprefs_get_param('admin_theme', 'dark');
+        $adminTheme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
         $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
@@ -650,14 +653,14 @@ final class ExtensionsController
     {
         $tpl = TemplateRegistry::current();
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
         $std_pgs_logo_options = ['piwigo_logo', 'custom_logo', 'gallery_title', 'none'];
         $std_pgs_skin_options = ['default', 'cadmium', 'cobalt', 'fuchsia', 'green', 'lime', 'purple', 'red', 'sienna', 'silver', 'teal'];
 
-        if (isset($_POST['submit']) && is_webmaster()) {
+        if (isset($_POST['submit']) && PermissionService::get()->isWebmaster()) {
             check_pwg_token();
             conf_update_param('use_standard_pages', !empty($_POST['use_standard_pages']), true);
             if (isset($_POST['std_pgs_display_logo']) && in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options)) {
@@ -719,7 +722,7 @@ final class ExtensionsController
             'std_pgs_selected_logo_path'    => conf_get_param('standard_pages_selected_logo_path', null),
             'PWG_TOKEN'                     => get_pwg_token(),
         ]);
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->set_filenames(['themes' => 'themes_standard_pages.tpl']);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
@@ -789,7 +792,7 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -803,14 +806,14 @@ final class ExtensionsController
         check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
         check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
-        if (isset($_GET['action']) && isset($_GET['language']) && is_webmaster()) {
+        if (isset($_GET['action']) && isset($_GET['language']) && PermissionService::get()->isWebmaster()) {
             $page['errors'] = $languages->perform_action(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : '');
             if (empty($page['errors'])) {
                 redirect($base_url);
             }
         }
 
-        $default_language = get_default_language();
+        $default_language = UserService::get()->getDefaultLanguage();
         $tpl_languages    = [];
         foreach ($languages->fs_languages as $language_id => $language) {
             $language['u_action'] = add_url_params($base_url, ['language' => $language_id]);
@@ -844,11 +847,11 @@ final class ExtensionsController
         $missing_language_ids = array_diff(array_keys($languages->db_languages), array_keys($languages->fs_languages));
         $langRepo = ServiceLocator::get(LanguageRepository::class);
         foreach ($missing_language_ids as $language_id) {
-            $langRepo->reassignUsers((string) $language_id, get_default_language());
+            $langRepo->reassignUsers((string) $language_id, UserService::get()->getDefaultLanguage());
             $langRepo->deactivate((string) $language_id);
         }
 
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_language_confirm' => l10n('Are you sure you want to delete the language "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
@@ -881,7 +884,7 @@ final class ExtensionsController
         }
 
         if (isset($_GET['revision'])) {
-            if (!is_webmaster()) {
+            if (!PermissionService::get()->isWebmaster()) {
                 PageState::current()->addError(l10n('Webmaster status is required.'));
             } else {
                 check_pwg_token();
@@ -915,7 +918,7 @@ final class ExtensionsController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Languages'));
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }
 
@@ -963,7 +966,7 @@ final class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -1026,7 +1029,7 @@ final class ExtensionsController
         $tpl->assign('SHOW_RESET', $show_reset);
         $tpl->assign('PWG_TOKEN', get_pwg_token());
         $tpl->assign('EXT_TYPE', $ext_type);
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('page_data_json', json_encode(['pwg_token' => get_pwg_token(), 'ext_type' => $ext_type, 'str_error_head' => l10n('ERROR'), 'str_error_msg' => l10n('an error happened'), 'str_restore' => l10n('Reset ignored updates'), 'str_confirm_update_all' => l10n('Are you sure you want to update all extensions?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
@@ -1078,13 +1081,13 @@ final class ExtensionsController
             $tpl->assign('DEV_VERSION', $new_versions['is_dev']);
         }
 
-        if ($step == 2 && is_webmaster()) {
+        if ($step == 2 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
             }
         }
 
-        if ($step == 3 && is_webmaster()) {
+        if ($step == 3 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 Updates::upgrade_to(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
             }
@@ -1100,7 +1103,7 @@ final class ExtensionsController
             $tpl->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
         }
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 

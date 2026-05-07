@@ -9,6 +9,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Quick-search redirect: ?q=term → /search page.
@@ -18,7 +19,7 @@ final class QSearchController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
         $q = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : '';
         redirect(add_url_params(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['q' => $q]));
         return ResponseFactory::create(302);

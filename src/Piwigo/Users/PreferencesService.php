@@ -8,6 +8,11 @@ use Piwigo\Core\ServiceLocator;
 
 final class PreferencesService
 {
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
     public function getBrowserLanguage(): false|int|string
     {
         $languageHeaderRaw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;

@@ -21,8 +21,13 @@ use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Plugin\PluginService;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
+use Piwigo\Users\UserService;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -168,7 +173,8 @@ if (!Kernel::isBooted()) :
     session_start();
     UserBootstrap::bootstrap();
     EventDispatcher::init();
-    load_plugins();
+    add_event_handler('try_log_user', AuthService::get()->pwgLogin(...));
+    PluginService::get()->loadPlugins();
 
     if (!Config::has('piwigo_installed_version')) {
         conf_update_param('piwigo_installed_version', PHPWG_VERSION);
@@ -222,7 +228,7 @@ if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {
 
 // language files
 load_language('common.lang');
-if (is_admin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
+if (PermissionService::get()->isAdmin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
     load_language('admin.lang');
     // Add language for temporary strings for new popup, from piwigo 15
     load_language('whats_new_'.get_branch_from_version(PHPWG_VERSION).'.lang');
@@ -232,7 +238,7 @@ load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'lo
 
 // only now we can set the localized username of the guest user (and not in
 // include/user.inc.php)
-if (is_a_guest()) {
+if (PermissionService::get()->isAGuest()) {
     $user['username'] = l10n('guest');
 }
 
@@ -253,7 +259,7 @@ if (is_array($notify_exp)) {
     $notify_username_raw = is_array($user_arr) ? ($user_arr['username'] ?? '') : '';
     $notify_email_raw = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
     $notify_days_left = $notify_exp['days_left'];
-    $is_mail_send = notification_api_key_expiration(
+    $is_mail_send = UserService::get()->notificationApiKeyExpiration(
         is_scalar($notify_username_raw) ? (string) $notify_username_raw : '',
         is_scalar($notify_email_raw) ? (string) $notify_email_raw : '',
         is_numeric($notify_days_left) ? (int) $notify_days_left : 0
@@ -276,7 +282,7 @@ if (is_array($notify_exp)) {
 
 // template instance
 if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
-    $admin_theme_raw = userprefs_get_param('admin_theme', 'dark');
+    $admin_theme_raw = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
     $template = new Template(PHPWG_ROOT_PATH.'themes/admin', is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark');
 } else { // Classic template
     $user_arr_theme = $GLOBALS['user'];
@@ -304,7 +310,7 @@ if (is_array($internal_status_gs)
 if (Config::galleryLocked()) {
     $header_msgs[] = l10n('The gallery is locked for maintenance. Please, come back later.');
 
-    if (script_basename() != 'identification' and !is_admin()) {
+    if (script_basename() != 'identification' and !PermissionService::get()->isAdmin()) {
         set_status_header(503, 'Service Unavailable');
         if (!headers_sent()) {
             header('Retry-After: 900');

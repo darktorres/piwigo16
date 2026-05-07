@@ -13,6 +13,8 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 /**
  * Handles the three-stage password-reset flow (/password).
@@ -24,7 +26,7 @@ final class PasswordController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        check_status(ACCESS_FREE);
+        PermissionService::get()->checkStatus(ACCESS_FREE);
 
         trigger_notify('loc_begin_password');
 
@@ -59,7 +61,7 @@ final class PasswordController implements ControllerInterface
             }
         }
 
-        if (input_string('key', null, $_GET) !== null && !is_a_guest()) {
+        if (input_string('key', null, $_GET) !== null && !PermissionService::get()->isAGuest()) {
             unset($_GET['key']);
         }
 
@@ -68,10 +70,10 @@ final class PasswordController implements ControllerInterface
         if ($get_key !== null && input_string('submit', null, $_POST) === null) {
             $user_id = ServiceLocator::get(PasswordService::class)->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
-                $userdata = getuserdata($user_id, false);
+                $userdata = UserService::get()->getuserdata($user_id, false);
                 $page['username'] = $userdata !== false ? $userdata['username'] : '';
                 TemplateRegistry::current()->assign('key', $get_key);
-                $first_login = has_already_logged_in($user_id);
+                $first_login = UserService::get()->hasAlreadyLoggedIn($user_id);
                 if (!isset($page['action'])) {
                     $page['action'] = 'reset';
                 }
@@ -89,11 +91,11 @@ final class PasswordController implements ControllerInterface
         }
 
         if ('reset' == $page['action']) {
-            if (($get_key === null && (is_a_guest() || is_generic())) && !isset($_SESSION['valid_reset_password_code'])) {
+            if (($get_key === null && (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
                 redirect(get_gallery_home_url());
             }
         }
-        if ('lost' == $page['action'] && !is_a_guest()) {
+        if ('lost' == $page['action'] && !PermissionService::get()->isAGuest()) {
             redirect(get_gallery_home_url());
         }
         if ('lost_code' == $page['action'] && !isset($_SESSION['reset_password_code'])) {

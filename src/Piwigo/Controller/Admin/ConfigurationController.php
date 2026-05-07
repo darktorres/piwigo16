@@ -18,6 +18,8 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\ProfileService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 final class ConfigurationController
 {
@@ -39,7 +41,7 @@ final class ConfigurationController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -210,7 +212,7 @@ final class ConfigurationController
             }
 
             $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && is_webmaster()) {
+            if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && PermissionService::get()->isWebmaster()) {
                 foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param FROM ' . CONFIG_TABLE)->fetchFirstColumn() as $row_param) {
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
@@ -322,10 +324,10 @@ final class ConfigurationController
                 break;
 
             case 'default':
-                $edit_user = build_user(Config::guestId(), false);
+                $edit_user = UserService::get()->buildUser(Config::guestId(), false);
                 $errors = [];
                 if (ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors)) {
-                    $edit_user = build_user(Config::guestId(), false);
+                    $edit_user = UserService::get()->buildUser(Config::guestId(), false);
                     PageState::current()->addInfo(l10n('Information data registered in database'));
                 }
                 $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
@@ -471,7 +473,7 @@ final class ConfigurationController
                 break;
         }
 
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Configuration'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'config');
     }

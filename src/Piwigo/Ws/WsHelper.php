@@ -7,6 +7,7 @@ namespace Piwigo\Ws;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class WsHelper
 {
@@ -17,7 +18,7 @@ final class WsHelper
             return $res;
         }
 
-        if (!is_autorize_status(ACCESS_GUEST) &&
+        if (!PermissionService::get()->isAutorizeStatus(ACCESS_GUEST) &&
             !str_starts_with($methodName, 'pwg.session.')) {
             return new PwgError(401, 'Access denied');
         }

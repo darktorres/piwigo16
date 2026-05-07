@@ -14,6 +14,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Handles the user profile / preferences page (/profile).
@@ -24,7 +25,7 @@ final class ProfileController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        check_status(ACCESS_CLASSIC);
+        PermissionService::get()->checkStatus(ACCESS_CLASSIC);
 
         if (!empty($_POST)) {
             check_pwg_token();

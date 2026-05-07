@@ -12,6 +12,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Handles the tags cloud/alphabetic page (/tags/{rest}).
@@ -21,7 +22,7 @@ final class TagsController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         trigger_notify('loc_begin_tags');
 

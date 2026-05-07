@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\CookieService;
-use Piwigo\Core\ServiceLocator;
-
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -55,14 +52,4 @@ function cookie_path(): ?string
         }
     }
     return $scr;
-}
-
-function pwg_set_cookie_var(string $var, mixed $value, ?int $expire = null): bool
-{
-    return ServiceLocator::get(CookieService::class)->setCookieVar($var, $value, $expire);
-}
-
-function pwg_get_cookie_var(string $var, mixed $default = null): mixed
-{
-    return ServiceLocator::get(CookieService::class)->getCookieVar($var, $default);
 }

@@ -6,6 +6,8 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 
 /** Persistence layer for the user domain. */
 final class UserRepository extends AbstractRepository
@@ -279,7 +281,7 @@ final class UserRepository extends AbstractRepository
 
     /**
      * Update status to $status for the given user ids.
-     * Called by check_and_save_user_infos() when changing user status.
+     * Called by UserService::get()->checkAndSaveUserInfos() when changing user status.
      *
      * @param int[] $userIds
      */
@@ -321,7 +323,7 @@ final class UserRepository extends AbstractRepository
 
     /**
      * Persist serialized user preferences to user_infos.
-     * Called by userprefs_save() after updating the in-memory preferences array.
+     * Called by PreferencesService::get()->userprefsSave() after updating the in-memory preferences array.
      */
     public function updatePreferences(int $userId, string $serializedPreferences): void
     {

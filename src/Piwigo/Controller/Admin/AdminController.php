@@ -20,6 +20,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 
 /**
  * Handles all admin pages (/admin{rest}).
@@ -41,7 +43,7 @@ final class AdminController implements ControllerInterface
 
         // common.inc.php creates the frontend template (IN_ADMIN not yet set).
         // Replace it with the admin-theme template now that IN_ADMIN is defined.
-        $admin_theme_raw = userprefs_get_param('admin_theme', 'dark');
+        $admin_theme_raw = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
         $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
@@ -56,7 +58,7 @@ final class AdminController implements ControllerInterface
 
         trigger_notify('loc_begin_admin');
 
-        check_status(ACCESS_ADMINISTRATOR);
+        PermissionService::get()->checkStatus(ACCESS_ADMINISTRATOR);
 
         check_input_parameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
         check_input_parameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
@@ -90,12 +92,12 @@ final class AdminController implements ControllerInterface
 
         if (input_string('change_theme', null, $_GET) !== null) {
             $admin_themes = ['dark', 'light'];
-            $rawTheme         = userprefs_get_param('admin_theme', 'dark');
+            $rawTheme         = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
             $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];
             $result           = array_diff($admin_themes, $admin_theme_array);
             $new_admin_theme  = array_pop($result);
 
-            userprefs_update_param('admin_theme', $new_admin_theme);
+            PreferencesService::get()->userprefsUpdateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
             foreach (['page', 'tab', 'section'] as $url_param) {
@@ -303,11 +305,11 @@ final class AdminController implements ControllerInterface
         $show_whats_new          = false;
         $whats_new_major_version = get_branch_from_version(PHPWG_VERSION);
 
-        if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) && pwg_is_dbconf_writeable()) {
+        if (PreferencesService::get()->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && pwg_is_dbconf_writeable()) {
             $registrationDate = is_scalar($user['registration_date'] ?? null) ? (string) $user['registration_date'] : '';
             $lastMajorUpdate  = Config::lastMajorUpdate() ?? '';
             if ($registrationDate > $lastMajorUpdate) {
-                userprefs_update_param('show_whats_new_' . $whats_new_major_version, false);
+                PreferencesService::get()->userprefsUpdateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 $userPreferences            = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
                 $userprefs_params_to_delete = [];
@@ -317,7 +319,7 @@ final class AdminController implements ControllerInterface
                     }
                 }
                 if (count($userprefs_params_to_delete) > 0) {
-                    userprefs_delete_param($userprefs_params_to_delete);
+                    PreferencesService::get()->userprefsDeleteParam($userprefs_params_to_delete);
                 }
                 $show_whats_new = true;
             }

@@ -10,6 +10,10 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\PermissionService;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.
@@ -40,7 +44,7 @@ final class UserBootstrap
 
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_scalar($_GET['act']) && (string) $_GET['act'] === 'logout') {
-                logout_user();
+                AuthService::get()->logoutUser();
                 redirect(get_gallery_home_url());
             } elseif (!empty($_SESSION['pwg_uid'])) {
                 $user['id'] = $_SESSION['pwg_uid'];
@@ -49,7 +53,7 @@ final class UserBootstrap
 
         // Auto-login via remember-me cookie
         if ($user['id'] == Config::guestId()) {
-            auto_login();
+            AuthService::get()->autoLogin();
         }
 
         // Apache authentication overrides session
@@ -63,9 +67,9 @@ final class UserBootstrap
             }
             if (isset($remoteUser)) {
                 $remoteUserStr = is_scalar($remoteUser) ? (string) $remoteUser : '';
-                $userId = get_userid($remoteUserStr);
+                $userId = UserService::get()->getUserid($remoteUserStr);
                 if (!$userId) {
-                    $userId = register_user($remoteUserStr, '', '', false);
+                    $userId = UserService::get()->registerUser($remoteUserStr, '', '', false);
                 }
                 $user['id'] = $userId;
             }
@@ -73,7 +77,7 @@ final class UserBootstrap
 
         // Auth-key login (e.g. email confirmation links)
         if (isset($_GET['auth'])) {
-            auth_key_login(is_scalar($_GET['auth']) ? (string) $_GET['auth'] : '');
+            AuthService::get()->authKeyLogin(is_scalar($_GET['auth']) ? (string) $_GET['auth'] : '');
         }
 
         // HTTP API key (only relevant when IN_WS is defined by WsController)
@@ -84,7 +88,7 @@ final class UserBootstrap
         ) {
             $authHeader = is_scalar($_SERVER['HTTP_X_PIWIGO_API']) ? (string) $_SERVER['HTTP_X_PIWIGO_API'] : '';
             if ($authHeader) {
-                $authenticated = auth_key_login($authHeader, true);
+                $authenticated = AuthService::get()->authKeyLogin($authHeader, true);
                 if (!$authenticated) {
                     PwgServer::boot();
                     $serviceRaw = $GLOBALS['service'] ?? null;
@@ -143,11 +147,11 @@ final class UserBootstrap
 
         // Build full user array from DB
         $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
-        $user   = build_user($userId, (bool) $page['user_use_cache']);
+        $user   = UserService::get()->buildUser($userId, (bool) $page['user_use_cache']);
 
         // Browser-language override for guests
-        if (Config::browserLanguage() && (is_a_guest() || is_generic())) {
-            $language = get_browser_language();
+        if (Config::browserLanguage() && (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric())) {
+            $language = PreferencesService::get()->getBrowserLanguage();
             if ($language) {
                 $user['language'] = $language;
             }
@@ -155,7 +159,7 @@ final class UserBootstrap
 
         trigger_notify('user_init', $user);
 
-        // Re-attach CurrentUser after build_user() populated $GLOBALS['user']
+        // Re-attach CurrentUser after UserService::get()->buildUser() populated $GLOBALS['user']
         CurrentUser::attachGlobals();
     }
 

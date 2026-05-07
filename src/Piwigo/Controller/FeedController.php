@@ -12,6 +12,8 @@ use Piwigo\Feed\PiwigoFeedCreator;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 /**
  * Generates the RSS 2.0 feed and sends it directly as XML output.
@@ -37,16 +39,16 @@ final class FeedController implements ControllerInterface
                 page_not_found(l10n('Unknown feed identifier'));
             }
             if ($feed_row !== null && $feed_row['user_id'] != $user['id']) {
-                $user = build_user(is_numeric($feed_row['user_id']) ? (int) $feed_row['user_id'] : 0, true);
+                $user = UserService::get()->buildUser(is_numeric($feed_row['user_id']) ? (int) $feed_row['user_id'] : 0, true);
             }
         } else {
             $image_only = true;
-            if (!is_a_guest()) {
-                $user = build_user(Config::guestId(), true);
+            if (!PermissionService::get()->isAGuest()) {
+                $user = UserService::get()->buildUser(Config::guestId(), true);
             }
         }
 
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         set_make_full_url();

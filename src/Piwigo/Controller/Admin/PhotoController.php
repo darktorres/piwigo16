@@ -27,6 +27,9 @@ use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 
 final class PhotoController
 {
@@ -148,7 +151,7 @@ SELECT id
             ServiceLocator::get(ImageAdminService::class)->deleteElements([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0], true);
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
 
-            if ($custom_context = get_edit_context(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
+            if ($custom_context = UserService::get()->getEditContext(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
                 redirect(str_replace('list/1,2', $custom_context, make_index_url(['list' => [1, 2]])));
             }
             redirect(make_index_url());
@@ -341,12 +344,12 @@ SELECT id
 
         $userLevel  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
         $imageLevel = is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0;
-        if ($custom_context = get_edit_context(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
+        if ($custom_context = UserService::get()->getEditContext(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
             $tpl->assign('U_JUMPTO', make_picture_url(['image_id' => is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
             $authorizeds = array_diff(
                 array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
-                explode(',', calculate_permissions($user['id'], is_string($user['status']) ? $user['status'] : ''))
+                explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
             );
             if (count($authorizeds) > 0) {
                 $category = $authorizeds[array_rand($authorizeds)];
@@ -573,7 +576,7 @@ SELECT id
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
-        if (userprefs_get_param('promote-mobile-apps', true)) {
+        if (PreferencesService::get()->userprefsGetParam('promote-mobile-apps', true)) {
             $register_date = ServiceLocator::get(UserRepository::class)->findEarliestRegistrationDate();
             $nb_cats       = ServiceLocator::get(CategoryRepository::class)->countAll();
             $nb_images     = ServiceLocator::get(ImageRepository::class)->countAll();

@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class CalendarService
 {
@@ -42,10 +43,10 @@ INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
                 $innerSql .= '
 WHERE category_id IN (' . implode(',', $subIds) . ')';
                 $innerSql .= '
-    ' . get_sql_condition_FandF(['visible_images' => 'id'], 'AND', false);
+    ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
             } else {
                 $innerSql .= '
-    ' . get_sql_condition_FandF(
+    ' . PermissionService::get()->getSqlConditionFandF(
                     ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                     'WHERE',
                     true

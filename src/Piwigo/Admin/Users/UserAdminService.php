@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 final class UserAdminService
 {
@@ -43,7 +44,7 @@ final class UserAdminService
 
         $toCreate = array_diff($baseUsers, $infosUsers);
         if (count($toCreate) > 0) {
-            create_user_infos($toCreate);
+            UserService::get()->createUserInfos($toCreate);
         }
 
         $tables = [

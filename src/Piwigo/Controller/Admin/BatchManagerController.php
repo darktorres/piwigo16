@@ -27,6 +27,7 @@ use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 
 final class BatchManagerController
 {
@@ -1079,7 +1080,7 @@ final class BatchManagerController
                 $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '0';
                 $authorizeds = array_diff(
                     array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
-                    explode(',', calculate_permissions($user['id'], is_string($user['status']) ? $user['status'] : ''))
+                    explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
                 );
 
                 $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);

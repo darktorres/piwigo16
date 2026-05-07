@@ -28,6 +28,7 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Users\PermissionService;
 
 final class ImagesEndpoints
 {
@@ -166,7 +167,7 @@ final class ImagesEndpoints
             return new PwgError(403, 'Comments are disabled');
         }
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . get_sql_condition_FandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
+        $query    = 'SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
         if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
         }
@@ -192,7 +193,7 @@ final class ImagesEndpoints
     public function getInfo(array $params, PwgServer $service): PwgError|array
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $pImageId . get_sql_condition_FandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
+        $query    = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
         $imageRow = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative();
         if ($imageRow === false) {
             return new PwgError(404, 'image_id not found');
@@ -208,7 +209,7 @@ final class ImagesEndpoints
         $imageRow['comment']     = trigger_change('render_element_description', $imageRow['comment'], __FUNCTION__);
         $isCommentable    = false;
         $relatedCategories = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id WHERE image_id = ' . $imageRowId . get_sql_condition_FandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
+        foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id WHERE image_id = ' . $imageRowId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
             if ($row['commentable'] === 'true') {
                 $isCommentable = true;
             }
@@ -221,7 +222,7 @@ final class ImagesEndpoints
             $relatedCategories[] = $row;
         }
         usort($relatedCategories, global_rank_compare(...));
-        if (empty($relatedCategories) && !is_admin()) {
+        if (empty($relatedCategories) && !PermissionService::get()->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
         /** @var list<array<string, mixed>> $relatedTags */
@@ -240,7 +241,7 @@ final class ImagesEndpoints
         }
         $relatedComments = [];
         $whereComments   = 'image_id = ' . $imageRowId;
-        if (!is_admin()) {
+        if (!PermissionService::get()->isAdmin()) {
             $whereComments .= ' AND validated="true"';
         }
         [$nbComments] = array_column(get_dbal_connection()->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . COMMENTS_TABLE . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
@@ -254,7 +255,7 @@ final class ImagesEndpoints
             }
         }
         $commentPostData = null;
-        if (Config::activateComments() && $isCommentable && (!is_a_guest() || Config::commentsForall())) {
+        if (Config::activateComments() && $isCommentable && (!PermissionService::get()->isAGuest() || Config::commentsForall())) {
             $commentPostData['author'] = stripslashes(CurrentUser::get()->username);
             $commentPostData['key']    = get_ephemeral_key(2, (string) $pImageId);
         }
@@ -284,7 +285,7 @@ final class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
-        $query    = 'SELECT DISTINCT id FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE id=' . $pImageId . get_sql_condition_FandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
+        $query    = 'SELECT DISTINCT id FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
         if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }

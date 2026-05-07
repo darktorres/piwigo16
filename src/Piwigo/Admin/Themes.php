@@ -12,6 +12,8 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
 
 class Themes
 {
@@ -137,7 +139,7 @@ class Themes
                     break;
                 }
 
-                if ($theme_id == get_default_theme()) {
+                if ($theme_id == UserService::get()->getDefaultTheme()) {
                     $themeRepo = ServiceLocator::get(ThemeRepository::class);
                     $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? '_base';
                     $this->set_default_theme($new_theme);
@@ -227,7 +229,7 @@ class Themes
     public function set_default_theme(string $theme_id): void
     {
         // first we need to know which users are using the current default theme
-        $default_theme = get_default_theme();
+        $default_theme = UserService::get()->getDefaultTheme();
 
         $themeRepo = ServiceLocator::get(ThemeRepository::class);
         $user_ids = array_unique(
@@ -320,7 +322,7 @@ class Themes
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        $admin_theme = userprefs_get_param('admin_theme', 'dark');
+                        $admin_theme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
                         $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'themes/admin/'

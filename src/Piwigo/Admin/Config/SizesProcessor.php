@@ -12,12 +12,13 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\PermissionService;
 
 final class SizesProcessor
 {
     public function process(): void
     {
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return;
         }
 

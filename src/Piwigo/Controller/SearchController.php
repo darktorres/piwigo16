@@ -10,6 +10,8 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Search\SearchService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 
 /**
  * Builds a search query from GET params, saves it and redirects to results.
@@ -19,7 +21,7 @@ final class SearchController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         trigger_notify('loc_begin_search');
 
@@ -55,10 +57,10 @@ final class SearchController implements ControllerInterface
             }
         }
 
-        if (is_a_guest() || is_generic() || $filters_conf['last_filters_conf'] == false) {
+        if (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric() || $filters_conf['last_filters_conf'] == false) {
             $fields = $default_fields;
         } else {
-            $fields_raw = userprefs_get_param('gallery_search_filters', $default_fields);
+            $fields_raw = PreferencesService::get()->userprefsGetParam('gallery_search_filters', $default_fields);
             $fields     = is_array($fields_raw) ? $fields_raw : $default_fields;
         }
 
@@ -114,7 +116,7 @@ SELECT *
 SELECT id
   FROM ' . IMAGES_TABLE . ' AS i
     JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
-  ' . get_sql_condition_FandF(
+  ' . PermissionService::get()->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 ' WHERE '
             ) . '

@@ -14,6 +14,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Users\PermissionService;
 
 final class ExtensionsEndpoints
 {
@@ -40,7 +41,7 @@ final class ExtensionsEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return new PwgError(403, l10n('Webmaster status is required.'));
         }
         if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
@@ -90,7 +91,7 @@ final class ExtensionsEndpoints
         if (!Config::enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return new PwgError(401, l10n('Webmaster status is required.'));
         }
         if (get_pwg_token() !== $params['pwg_token']) {
@@ -149,7 +150,7 @@ final class ExtensionsEndpoints
     public function ignoreUpdate(array $params, PwgServer $service): PwgError|true
     {
         define('IN_ADMIN', true);
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }
         if (get_pwg_token() !== $params['pwg_token']) {

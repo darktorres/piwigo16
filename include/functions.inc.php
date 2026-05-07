@@ -34,6 +34,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -43,7 +44,6 @@ use Piwigo\Users\CurrentUser;
 // +-----------------------------------------------------------------------+
 
 require_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_user.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
@@ -295,14 +295,14 @@ function redirect_http(mixed $url): void
 function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): void
 {
     if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
-        CurrentUser::setRawAttributes(build_user(Config::guestId(), true));
+        CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
         load_language('common.lang');
         trigger_notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
         TemplateRegistry::set($tpl);
     } elseif (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
-        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
         TemplateRegistry::set($tpl);
     }
 
@@ -648,7 +648,7 @@ function load_language(string $filename, string $dirname = '', array $options = 
     $langDir = $dirname . 'language/';
 
     $default_language = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
-        ? get_default_language()
+        ? UserService::get()->getDefaultLanguage()
         : PHPWG_DEFAULT_LANGUAGE;
 
     $languages = [];

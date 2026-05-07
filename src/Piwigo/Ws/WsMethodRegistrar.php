@@ -16,6 +16,7 @@ use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\PermissionsEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
+use Piwigo\Users\PermissionService;
 
 final class WsMethodRegistrar
 {
@@ -151,7 +152,7 @@ final class WsMethodRegistrar
             description: 'Adds a comment to an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
-                ParamDefinition::optional(name: 'author', default: is_a_guest() ? 'guest' : $user['username']),
+                ParamDefinition::optional(name: 'author', default: PermissionService::get()->isAGuest() ? 'guest' : $user['username']),
                 ParamDefinition::required('content'),
                 ParamDefinition::required('key'),
             ],

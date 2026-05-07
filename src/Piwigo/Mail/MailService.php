@@ -15,6 +15,9 @@ use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\AuthService;
 
 final readonly class MailService
 {
@@ -213,7 +216,7 @@ final readonly class MailService
         }
 
         if (is_array($subject) or is_array($content)) {
-            $this->switchLangTo(get_default_language());
+            $this->switchLangTo(UserService::get()->getDefaultLanguage());
 
             if (is_array($subject)) {
                 $subject = l10n_args($subject);
@@ -302,7 +305,7 @@ SELECT
             return true;
         }
 
-        $this->switchLangTo(get_default_language());
+        $this->switchLangTo(UserService::get()->getDefaultLanguage());
         $return = $this->pwgMail($admins, $args, $tpl);
         $this->switchLangBack();
 
@@ -369,7 +372,7 @@ SELECT
 
             foreach ($users as $u) {
                 $userId  = is_numeric($u['user_id'] ?? null) ? (int) $u['user_id'] : 0;
-                $authkey = create_user_auth_key($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
+                $authkey = AuthService::get()->createUserAuthKey($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
 
                 $userTpl = $tpl;
 
@@ -649,7 +652,7 @@ SELECT
 
         if ($preResult) {
             $ret = $mail->send();
-            if (!$ret and (!ini_get('display_errors') or is_admin())) {
+            if (!$ret and (!ini_get('display_errors') or PermissionService::get()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }
             if (Config::debugMail()) {
@@ -662,7 +665,7 @@ SELECT
 
     public function pwgSendMail(mixed $result, string $to, string $subject, string $content, string $headers): bool|int
     {
-        if (is_admin()) {
+        if (PermissionService::get()->isAdmin()) {
             trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
         }
 

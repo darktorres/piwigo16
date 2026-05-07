@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Users\UserService;
 
 /** Persistence layer for the activity-log domain. */
 final class ActivityRepository extends AbstractRepository
 {
     /**
      * Return true if the given user has at least one 'login' activity entry.
-     * Used by has_already_logged_in() to check first-time login for onboarding.
+     * Used by UserService::get()->hasAlreadyLoggedIn() to check first-time login for onboarding.
      */
     public function hasLoggedIn(int $userId): bool
     {

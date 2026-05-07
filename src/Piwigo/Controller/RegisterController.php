@@ -12,6 +12,9 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\UserService;
 
 /**
  * Handles the user registration page (/register).
@@ -21,7 +24,7 @@ final class RegisterController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_FREE);
+        PermissionService::get()->checkStatus(ACCESS_FREE);
 
         if (!Config::allowUserRegistration()) {
             page_forbidden('User registration closed');
@@ -57,7 +60,7 @@ final class RegisterController implements ControllerInterface
             }
 
             $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
-            register_user($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
+            UserService::get()->registerUser($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
             $page['errors'] = $pgErrors;
 
             if (count($pgErrors) == 0) {
@@ -67,9 +70,9 @@ final class RegisterController implements ControllerInterface
                     }
                     $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
                 }
-                $user_id = get_userid($post_login ?? '');
+                $user_id = UserService::get()->getUserid($post_login ?? '');
                 if ($user_id !== false) {
-                    log_user((int) $user_id, false);
+                    AuthService::get()->logUser((int) $user_id, false);
                 }
                 redirect(make_index_url());
             }

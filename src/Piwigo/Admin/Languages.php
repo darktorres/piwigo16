@@ -10,6 +10,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 class Languages
 {
@@ -65,7 +66,7 @@ class Languages
                     break;
                 }
 
-                if ($language_id == get_default_language()) {
+                if ($language_id == UserService::get()->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -84,7 +85,7 @@ class Languages
                 }
 
                 // Set default language to users who are using this language
-                ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, get_default_language());
+                ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, UserService::get()->getDefaultLanguage());
 
                 ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
                 break;

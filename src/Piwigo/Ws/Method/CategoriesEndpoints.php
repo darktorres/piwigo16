@@ -22,6 +22,7 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Users\PermissionService;
 
 final class CategoriesEndpoints
 {
@@ -55,7 +56,7 @@ final class CategoriesEndpoints
         if (!empty($whereClauses)) {
             $whereClauses = ['(' . implode("\n    OR ", $whereClauses) . ')'];
         }
-        $whereClauses[] = get_sql_condition_FandF(['forbidden_categories' => 'id'], null, true);
+        $whereClauses[] = PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
         $catConn = ServiceLocator::get(Connection::class);
         $cats    = [];
         foreach ($catConn->executeQuery('SELECT id, image_order FROM ' . CATEGORIES_TABLE . ' WHERE ' . implode("\n    AND ", $whereClauses) . ';')->fetchAllAssociative() as $row) {
@@ -66,7 +67,7 @@ final class CategoriesEndpoints
             /** @var string[] $whereClauses2 */
             $whereClauses2   = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $whereClauses2[] = get_sql_condition_FandF(['visible_images' => 'i.id'], null, true);
+            $whereClauses2[] = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
             $orderBy         = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
             if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
@@ -102,7 +103,7 @@ final class CategoriesEndpoints
             if (count($imageIds) > 0) {
                 $categoryIds = [];
                 $categoriesOfImage = [];
-                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $imageIds)) . ') AND ' . get_sql_condition_FandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
+                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $imageIds)) . ') AND ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
                     $categoryIds[] = $row['category_id'];
                     $rowImgId = is_scalar($row['image_id']) ? (string) $row['image_id'] : '';
                     if ($rowImgId !== '') {
@@ -167,8 +168,8 @@ final class CategoriesEndpoints
             $where[]  = 'status = "public"';
             $where[]  = 'visible = "true"';
             $joinUser = Config::guestId();
-        } elseif (is_admin()) {
-            $forbiddenCategories = calculate_permissions($currentUser->id, $currentUser->status);
+        } elseif (PermissionService::get()->isAdmin()) {
+            $forbiddenCategories = PermissionService::get()->calculatePermissions($currentUser->id, $currentUser->status);
             $where[]  = 'id NOT IN (' . $forbiddenCategories . ')';
             $joinType = 'LEFT';
         }
@@ -222,7 +223,7 @@ final class CategoriesEndpoints
                 $imageId = get_random_image_in_category($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    $subQuery = 'SELECT representative_picture_id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ",%' AND representative_picture_id IS NOT NULL" . get_sql_condition_FandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . DB_RANDOM_FUNCTION . '() LIMIT 1;';
+                    $subQuery = 'SELECT representative_picture_id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ",%' AND representative_picture_id IS NOT NULL" . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . DB_RANDOM_FUNCTION . '() LIMIT 1;';
                     $subval = ServiceLocator::get(Connection::class)->executeQuery($subQuery)->fetchOne();
                     if ($subval !== false) {
                         $imageId = is_numeric($subval) ? (int) $subval : null;

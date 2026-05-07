@@ -21,6 +21,10 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\AuthService;
 
 final class UsersEndpoints
 {
@@ -201,7 +205,7 @@ final class UsersEndpoints
                     $lastVisit = $curUser['last_visit'] ?? null;
                     $users[$curUid]['last_visit'] = $lastVisit;
                     if (!BoolUtil::fromMixed($curUser['last_visit_from_history'] ?? null) && empty($lastVisit)) {
-                        $lastVisit                    = get_user_last_visit_from_history($curUid, true);
+                        $lastVisit                    = UserService::get()->getUserLastVisitFromHistory($curUid, true);
                         $users[$curUid]['last_visit'] = $lastVisit;
                     }
                     if (isset($params['display']['last_visit_string'])) {
@@ -243,7 +247,7 @@ final class UsersEndpoints
             $params['password'] = generate_key(random_int(15, 20));
         }
         $errors = [];
-        $userId = register_user(is_string($params['username']) ? $params['username'] : '', is_string($params['password']) ? $params['password'] : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
+        $userId = UserService::get()->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($params['password']) ? $params['password'] : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
         if (!$userId) {
             return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
         }
@@ -256,7 +260,7 @@ final class UsersEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $authkey = create_user_auth_key(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
+        $authkey = AuthService::get()->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
         if ($authkey === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
         }
@@ -290,7 +294,7 @@ final class UsersEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $updatedUsers = check_and_save_user_infos($params);
+        $updatedUsers = UserService::get()->checkAndSaveUserInfos($params);
         if (isset($updatedUsers['error'])) {
             $err = is_array($updatedUsers['error']) ? $updatedUsers['error'] : [];
             return new PwgError(is_int($err['code'] ?? null) ? $err['code'] : null, is_string($err['message'] ?? null) ? $err['message'] : '');
@@ -305,7 +309,7 @@ final class UsersEndpoints
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             return new PwgError(401, 'Access Denied');
         }
         $currentUser = CurrentUser::get();
@@ -332,7 +336,7 @@ final class UsersEndpoints
         }
         unset($params['new_password'], $params['conf_new_password'], $params['username'], $params['status'], $params['level'], $params['group_id'], $params['enabled_high']);
         $params['user_id'] = [$currentUser->id];
-        $updatedUsers2 = check_and_save_user_infos($params);
+        $updatedUsers2 = UserService::get()->checkAndSaveUserInfos($params);
         if (isset($updatedUsers2['error'])) {
             $err2 = is_array($updatedUsers2['error']) ? $updatedUsers2['error'] : [];
             return new PwgError(is_int($err2['code'] ?? null) ? $err2['code'] : null, is_string($err2['message'] ?? null) ? $err2['message'] : '');
@@ -351,14 +355,14 @@ final class UsersEndpoints
         if ($params['is_json']) {
             $value = json_decode($value, true);
         }
-        userprefs_update_param($prefParam, $value);
+        PreferencesService::get()->userprefsUpdateParam($prefParam, $value);
         return CurrentUser::get()->rawAttributes['preferences'] ?? null;
     }
 
     /** @param array<mixed> $params */
     public function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
         $userId      = CurrentUser::get()->id;
@@ -373,7 +377,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
         $userId     = CurrentUser::get()->id;
@@ -391,14 +395,14 @@ final class UsersEndpoints
      */
     public function favoritesGetList(array $params, PwgServer &$service): false|array
     {
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             return false;
         }
         $userId = CurrentUser::get()->id;
-        check_user_favorites();
+        UserService::get()->checkUserFavorites();
         $orderBy = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-        $query   = 'SELECT i.* FROM ' . FAVORITES_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . get_sql_condition_FandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
+        $query   = 'SELECT i.* FROM ' . FAVORITES_TABLE . ' INNER JOIN ' . IMAGES_TABLE . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
         $images  = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $image = [];
@@ -432,23 +436,23 @@ final class UsersEndpoints
         if (ServiceLocator::get(UserAdminService::class)->getUsername($targetUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
-        $userLost = getuserdata($targetUserId);
+        $userLost = UserService::get()->getuserdata($targetUserId);
         if ($userLost === false) {
             return new PwgError(404, 'User not found');
         }
         $userLostStatus = is_string($userLost['status'] ?? null) ? $userLost['status'] : '';
-        if (is_a_guest($userLostStatus) || is_generic($userLostStatus)) {
+        if (PermissionService::get()->isAGuest($userLostStatus) || PermissionService::get()->isGeneric($userLostStatus)) {
             return new PwgError(403, 'Password reset is not allowed for this user');
         }
         if (CurrentUser::get()->status === 'admin' && $userLostStatus === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
-        $firstLogin     = has_already_logged_in($targetUserId);
+        $firstLogin     = UserService::get()->hasAlreadyLoggedIn($targetUserId);
         $sendByMailResp = null;
         $userLostLanguage = is_string($userLost['language'] ?? null) ? $userLost['language'] : '';
-        $langToUse      = $firstLogin ? get_default_language() : $userLostLanguage;
+        $langToUse      = $firstLogin ? UserService::get()->getDefaultLanguage() : $userLostLanguage;
         switch_lang_to($langToUse);
-        $generateLink = generate_password_link($targetUserId, $firstLogin);
+        $generateLink = AuthService::get()->generatePasswordLink($targetUserId, $firstLogin);
         $userLostEmail    = is_string($userLost['email'] ?? null) ? $userLost['email'] : '';
         $userLostUsername = is_string($userLost['username'] ?? null) ? $userLost['username'] : '';
         $genPasswordLink  = is_string($generateLink['password_link'] ?? null) ? $generateLink['password_link'] : '';
@@ -464,7 +468,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function setMainUser(array $params, PwgServer &$service): PwgError|string
     {
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
         if (get_pwg_token() !== $params['pwg_token']) {
@@ -474,7 +478,7 @@ final class UsersEndpoints
         if (ServiceLocator::get(UserAdminService::class)->getUsername($mainUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
-        $newMainUser = getuserdata($mainUserId);
+        $newMainUser = UserService::get()->getuserdata($mainUserId);
         if ($newMainUser === false) {
             return new PwgError(404, 'User not found');
         }
@@ -493,7 +497,7 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (is_a_guest() || !connected_with_pwg_ui()) {
+        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
         if (get_pwg_token() !== $params['pwg_token']) {
@@ -507,7 +511,7 @@ final class UsersEndpoints
             return new PwgError(400, 'Key name is too long');
         }
         $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
-        $secret   = create_api_key($userId, $duration, $apiKeyNameRaw);
+        $secret   = UserService::get()->createApiKey($userId, $duration, $apiKeyNameRaw);
         $logger->info('[api_key][user_id=' . $userId . '][action=create][key_name=' . $apiKeyNameRaw . ']');
         return $secret;
     }
@@ -517,7 +521,7 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (is_a_guest() || !connected_with_pwg_ui()) {
+        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
         if (get_pwg_token() !== $params['pwg_token']) {
@@ -527,7 +531,7 @@ final class UsersEndpoints
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revokePkid)) {
             return new PwgError(403, l10n('Invalid pkid format'));
         }
-        $revokedKey = revoke_api_key($userId, $revokePkid);
+        $revokedKey = UserService::get()->revokeApiKey($userId, $revokePkid);
         if (true !== $revokedKey) {
             return new PwgError(403, is_string($revokedKey) ? $revokedKey : '');
         }
@@ -540,7 +544,7 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (is_a_guest() || !connected_with_pwg_ui()) {
+        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
         if (get_pwg_token() !== $params['pwg_token']) {
@@ -551,7 +555,7 @@ final class UsersEndpoints
             return new PwgError(403, l10n('Invalid pkid format'));
         }
         $keyName  = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
-        $editedKey = edit_api_key($userId, $editPkid, $keyName);
+        $editedKey = UserService::get()->editApiKey($userId, $editPkid, $keyName);
         if (true !== $editedKey) {
             return new PwgError(403, $editedKey);
         }
@@ -565,13 +569,13 @@ final class UsersEndpoints
      */
     public function getApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        if (is_a_guest() || !connected_with_pwg_ui()) {
+        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
         if (get_pwg_token() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $apiKeys = get_api_key((string) CurrentUser::get()->id);
+        $apiKeys = UserService::get()->getApiKey((string) CurrentUser::get()->id);
         return $apiKeys ?: new PwgError(404, l10n('No API key found'));
     }
 }

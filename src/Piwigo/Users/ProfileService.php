@@ -8,6 +8,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\UserService;
 
 final class ProfileService
 {
@@ -26,8 +28,8 @@ final class ProfileService
         $special_user = in_array($userdata['id'], [Config::guestId(), Config::defaultUserId()]);
         if ($special_user) {
             unset($_POST['username'], $_POST['mail_address'], $_POST['password'], $_POST['use_new_pwd'], $_POST['passwordConf'], $_POST['theme'], $_POST['language']);
-            $_POST['theme']    = get_default_theme();
-            $_POST['language'] = get_default_language();
+            $_POST['theme']    = UserService::get()->getDefaultTheme();
+            $_POST['language'] = UserService::get()->getDefaultLanguage();
         }
 
         if (!defined('IN_ADMIN')) {
@@ -53,7 +55,7 @@ final class ProfileService
         }
 
         if (isset($_POST['mail_address'])) {
-            $mail_error = validate_mail_address(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address']) ? $_POST['mail_address'] : null);
+            $mail_error = AuthService::get()->validateMailAddress(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address']) ? $_POST['mail_address'] : null);
             if (!empty($mail_error)) {
                 $errors[] = $mail_error;
             }
@@ -92,7 +94,7 @@ final class ProfileService
                 }
 
                 if (!empty($_POST['username'])) {
-                    if ($_POST['username'] != $userdata['username'] and get_userid(is_string($_POST['username']) ? $_POST['username'] : '')) {
+                    if ($_POST['username'] != $userdata['username'] and UserService::get()->getUserid(is_string($_POST['username']) ? $_POST['username'] : '')) {
                         PageState::current()->addError(l10n('this login is already used'));
                         unset($_POST['redirect']);
                     } else {

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Plugin\PluginService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
@@ -66,29 +64,6 @@ function set_plugin_data(string $plugin_id, mixed &$data): bool
 function &get_plugin_data(string $plugin_id): mixed
 {
     return LoadedPluginRegistry::getData($plugin_id);
-}
-
-/** @return array<array<string,mixed>> */
-function get_db_plugins(?string $state = '', ?string $id = ''): array
-{
-    return ServiceLocator::get(PluginService::class)->getDbPlugins($state, $id);
-}
-
-/** @param array<string,mixed> $plugin */
-function load_plugin(array $plugin): void
-{
-    ServiceLocator::get(PluginService::class)->loadPlugin($plugin);
-}
-
-/** @param array<string,mixed> $plugin */
-function autoupdate_plugin(array &$plugin): void
-{
-    ServiceLocator::get(PluginService::class)->autoupdatePlugin($plugin);
-}
-
-function load_plugins(): void
-{
-    ServiceLocator::get(PluginService::class)->loadPlugins();
 }
 
 /**

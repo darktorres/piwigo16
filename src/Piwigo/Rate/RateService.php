@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final readonly class RateService
 {
@@ -30,7 +31,7 @@ final readonly class RateService
             return false;
         }
 
-        $userAnonymous = is_autorize_status(ACCESS_CLASSIC) ? false : true;
+        $userAnonymous = PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC) ? false : true;
 
         if ($userAnonymous and !Config::rateAnonymous()) {
             return false;

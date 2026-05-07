@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class PictureCommentRenderer
 {
@@ -36,7 +37,7 @@ final class PictureCommentRenderer
         $comment_action = null;
 
         if ($page['show_comments'] and isset($_POST['content'])) {
-            if (is_a_guest() and !Config::commentsForall()) {
+            if (PermissionService::get()->isAGuest() and !Config::commentsForall()) {
                 throw new AuthException('Session expired');
             }
 
@@ -74,7 +75,7 @@ final class PictureCommentRenderer
         }
 
         if ($page['show_comments']) {
-            if (!is_admin()) {
+            if (!PermissionService::get()->isAdmin()) {
                 $validated_clause = '  AND validated = \'true\'';
             } else {
                 $validated_clause = '';
@@ -165,14 +166,14 @@ SELECT
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 
-                    if (can_manage_comment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                    if (PermissionService::get()->canManageComment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
                         $tpl_comment['U_DELETE'] = add_url_params($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
                             'pwg_token' => get_pwg_token(),
                         ]);
                     }
-                    if (can_manage_comment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                    if (PermissionService::get()->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
                         $tpl_comment['U_EDIT'] = add_url_params($url_self, [
                             'action' => 'edit_comment',
                             'comment_to_edit' => $row['id'],
@@ -186,7 +187,7 @@ SELECT
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
                     }
-                    if (is_admin()) {
+                    if (PermissionService::get()->isAdmin()) {
                         $tpl_comment['EMAIL'] = $email;
 
                         if ($row['validated'] != 'true') {
@@ -205,7 +206,7 @@ SELECT
             if ($editComment !== null) {
                 $show_add_comment_form = false;
             }
-            if (is_a_guest() and !Config::commentsForall()) {
+            if (PermissionService::get()->isAGuest() and !Config::commentsForall()) {
                 $show_add_comment_form = false;
             }
 
@@ -216,11 +217,11 @@ SELECT
                     'F_ACTION' => $url_self,
                     'KEY' => $key,
                     'CONTENT' => '',
-                    'SHOW_AUTHOR' => !is_classic_user(),
+                    'SHOW_AUTHOR' => !PermissionService::get()->isClassicUser(),
                     'AUTHOR_MANDATORY' => Config::commentsAuthorMandatory(),
                     'AUTHOR' => '',
                     'WEBSITE_URL' => '',
-                    'SHOW_EMAIL' => !is_classic_user() or empty(CurrentUser::get()->email),
+                    'SHOW_EMAIL' => !PermissionService::get()->isClassicUser() or empty(CurrentUser::get()->email),
                     'EMAIL_MANDATORY' => Config::commentsEmailMandatory(),
                     'EMAIL' => '',
                     'SHOW_WEBSITE' => Config::commentsEnableWebsite(),

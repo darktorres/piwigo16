@@ -13,6 +13,7 @@ use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Users\PermissionService;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
@@ -296,7 +297,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and !is_admin()) {
+        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and !PermissionService::get()->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
 

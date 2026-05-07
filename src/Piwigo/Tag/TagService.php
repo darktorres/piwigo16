@@ -7,6 +7,7 @@ namespace Piwigo\Tag;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final readonly class TagService
 {
@@ -50,7 +51,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
     INNER JOIN ' . IMAGE_TAG_TABLE . ' it
     ON ic.image_id=it.image_id
   WHERE 1=1
-  ' . get_sql_condition_FandF(
+  ' . PermissionService::get()->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -184,7 +185,7 @@ SELECT id
     WHERE tag_id IN (' . implode(',', $tagIds) . ')';
 
         if ($usePermissions) {
-            $query .= get_sql_condition_FandF(
+            $query .= PermissionService::get()->getSqlConditionFandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories'   => 'category_id',

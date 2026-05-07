@@ -12,6 +12,7 @@ use Piwigo\Url\UrlGenerator;
 use Smarty\Debug;
 use Smarty\Smarty;
 use Smarty\TemplateBase;
+use Piwigo\Users\PermissionService;
 
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);
@@ -136,8 +137,8 @@ class Template
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', is_admin(...));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', is_classic_user(...));
+        $this->smarty->registerPlugin('modifier', 'is_admin', PermissionService::get()->isAdmin(...));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', PermissionService::get()->isClassicUser(...));
         $this->smarty->registerPlugin('modifier', 'get_device', 'get_device');
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');

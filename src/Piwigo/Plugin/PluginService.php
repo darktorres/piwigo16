@@ -7,6 +7,7 @@ namespace Piwigo\Plugin;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
 final readonly class PluginService
@@ -14,6 +15,11 @@ final readonly class PluginService
     public function __construct(
         private PluginRepository $repo,
     ) {
+    }
+
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
     }
 
     /** @return array<array<string,mixed>> */

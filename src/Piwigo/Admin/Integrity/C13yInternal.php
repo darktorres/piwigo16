@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbInfo;
+use Piwigo\Users\UserService;
 
 class C13yInternal
 {
@@ -161,7 +162,7 @@ class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (!$name_ok) {
-                            $name_ok = (get_userid($name) === false);
+                            $name_ok = (UserService::get()->getUserid($name) === false);
                             if (!$name_ok) {
                                 $name .= generate_key(1);
                             }
@@ -176,7 +177,7 @@ class C13yInternal
                           ];
                         mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
-                        create_user_infos($id);
+                        UserService::get()->createUserInfos($id);
 
                         PageState::current()->addInfo(sprintf(l10n('User "%s" created with "%s" like password'), $name, $password));
 

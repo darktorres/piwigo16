@@ -13,6 +13,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * File download / inline-serve handler for original photos, representatives,
@@ -23,7 +24,7 @@ final class ActionController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         $params = $request->getQueryParams();
 
@@ -56,7 +57,7 @@ final class ActionController implements ControllerInterface
 
         $is_admin_download = false;
         $get_pwg_token     = input_string('pwg_token', null, $_GET);
-        if (is_admin() && $get_pwg_token !== null && get_pwg_token() == $get_pwg_token) {
+        if (PermissionService::get()->isAdmin() && $get_pwg_token !== null && get_pwg_token() == $get_pwg_token) {
             $is_admin_download = true;
             if (is_array($GLOBALS['user'] ?? null)) {
                 $GLOBALS['user']['enabled_high'] = true;
@@ -69,7 +70,7 @@ final class ActionController implements ControllerInterface
 SELECT id FROM ' . CATEGORIES_TABLE . '
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON category_id = id
   WHERE image_id = ' . $get_id . '
-' . get_sql_condition_FandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
+' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
   LIMIT 1;';
         if (!$is_admin_download && ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
             $this->error(401, 'Access denied');

@@ -14,6 +14,7 @@ use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class HtmlService
 {
@@ -186,7 +187,7 @@ SELECT id, name, permalink
 
     public function accessDenied(): void
     {
-        if (CurrentUser::isInitialized() and !is_a_guest()) {
+        if (CurrentUser::isInitialized() and !PermissionService::get()->isAGuest()) {
             $this->setStatusHeader(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">

@@ -12,6 +12,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Handles the notification/RSS subscription page (/notification).
@@ -21,7 +22,7 @@ final class NotificationController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         trigger_notify('loc_begin_notification');
 
@@ -36,7 +37,7 @@ final class NotificationController implements ControllerInterface
             ->insert((string) $page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $feed_url = ServiceLocator::get(UrlGenerator::class)->feed();
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             $feed_image_only_url = $feed_url;
             $feed_url .= '?feed=' . $page['feed'];
         } else {

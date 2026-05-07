@@ -13,6 +13,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class CategoryCatsRenderer
 {
@@ -46,14 +47,14 @@ SELECT SQL_CALC_FOUND_ROWS
 
         if ('recent_cats' == $page['section']) {
             $query .= '
-  AND ' . get_recent_photos_sql('date_last');
+  AND ' . PermissionService::get()->getRecentPhotosSql('date_last');
         } else {
             $query .= '
   AND id_uppercat ' . (!isset($page['category']) || !is_array($page['category']) ? 'is NULL' : '= ' . (is_scalar($page['category']['id'] ?? null) ? (string) $page['category']['id'] : ''));
         }
 
         $query .= '
-      ' . get_sql_condition_FandF(['visible_categories' => 'id'], 'AND');
+      ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
         $query .= '
 -- after conditions
 ';
@@ -95,7 +96,7 @@ SELECT representative_picture_id
   ON id = cat_id and user_id = ' . $currentUser->id . '
   WHERE uppercats LIKE \'' . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
-                    . get_sql_condition_FandF(['visible_categories' => 'id'], "\n  AND") . '
+                    . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
@@ -132,7 +133,7 @@ SELECT
   FROM ' . IMAGE_CATEGORY_TABLE . '
     INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
   WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')
-' . get_sql_condition_FandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
+' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
 ;';
                 $dates_of_category = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'category_id');

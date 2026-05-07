@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
 
 final readonly class PermissionService
@@ -13,6 +14,11 @@ final readonly class PermissionService
     public function __construct(
         private Connection $conn,
     ) {
+    }
+
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
     }
 
     public function getUserStatus(string $userStatus = ''): string

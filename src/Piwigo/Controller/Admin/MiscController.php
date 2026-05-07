@@ -35,6 +35,10 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\UserService;
 
 final class MiscController
 {
@@ -96,7 +100,7 @@ final class MiscController
             $page['mode'] = $_GET['mode'];
         }
 
-        check_status($this->getTabStatus($page['mode']));
+        PermissionService::get()->checkStatus($this->getTabStatus($page['mode']));
 
         add_event_handler('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
         trigger_notify('nbm_event_handler_added');
@@ -158,7 +162,7 @@ final class MiscController
         $tpl->set_filenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
         $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . get_query_string_diff([])]);
 
-        if (is_autorize_status(ACCESS_WEBMASTER)) {
+        if (PermissionService::get()->isAutorizeStatus(ACCESS_WEBMASTER)) {
             $tabsheet = new Tabsheet();
             $tabsheet->set_id('nbm');
             $tabsheet->select($page['mode']);
@@ -468,7 +472,7 @@ final class MiscController
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) {
-            userprefs_update_param('show_newsletter_subscription', 'false');
+            PreferencesService::get()->userprefsUpdateParam('show_newsletter_subscription', 'false');
             exit();
         }
 
@@ -509,7 +513,7 @@ final class MiscController
         $tpl->set_filenames(['intro' => 'intro.tpl']);
 
         $intro_newsletter_data = null;
-        if (Config::showNewsletterSubscription() && userprefs_get_param('show_newsletter_subscription', true)) {
+        if (Config::showNewsletterSubscription() && PreferencesService::get()->userprefsGetParam('show_newsletter_subscription', true)) {
             $register_date = ServiceLocator::get(UserRepository::class)->findEarliestRegistrationDate();
             $nb_cats       = ServiceLocator::get(CategoryRepository::class)->countAll();
             $nb_images     = ServiceLocator::get(ImageRepository::class)->countAll();
@@ -711,7 +715,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -746,7 +750,7 @@ final class MiscController
             $idx++;
         }
 
-        if (isset($_POST['submit']) && is_webmaster()) {
+        if (isset($_POST['submit']) && PermissionService::get()->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide     = isset($_POST['hide_' . $id]);
                 $int_pos  = is_numeric($pos) ? (int) $pos : 0;
@@ -771,7 +775,7 @@ final class MiscController
 
         $action = ServiceLocator::get(UrlGenerator::class)->admin('menubar');
         $tpl->assign(['F_ACTION' => $action]);
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Menu Management'));
         $tpl->set_filename('menubar_admin_content', 'menubar.tpl');
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');
@@ -933,7 +937,7 @@ final class MiscController
         $userFields  = Config::userFields();
         $users_by_id = [];
         foreach (ServiceLocator::get(UserRepository::class)->findAllWithStatus($userFields['id'], $userFields['username'], USERS_TABLE) as $row) {
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_scalar($row['username']) ? (string) $row['username'] : '', 'anon' => !is_autorize_status(ACCESS_CLASSIC, is_scalar($row['status']) ? (string) $row['status'] : '')];
+            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_scalar($row['username']) ? (string) $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC, is_scalar($row['status']) ? (string) $row['status'] : '')];
         }
 
         $by_user_rating_model = ['rates' => []];
@@ -1045,7 +1049,7 @@ final class MiscController
         check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
         $editUserId = is_numeric($_GET['user_id'] ?? null) ? (int) $_GET['user_id'] : 0;
-        $edit_user  = build_user($editUserId, false);
+        $edit_user  = UserService::get()->buildUser($editUserId, false);
 
         if (!empty($_POST)) {
             check_pwg_token();
@@ -1180,7 +1184,7 @@ final class MiscController
                         if ($is_action_send) {
                             $auth = null;
                             $add_url_params = [];
-                            $auth_key = create_user_auth_key(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
+                            $auth_key = AuthService::get()->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
                             if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
                                 $auth = $auth_key['auth_key'];
                                 $add_url_params['auth'] = $auth;

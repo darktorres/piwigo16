@@ -12,6 +12,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class SearchFilterRenderer
 {
@@ -41,7 +42,7 @@ final class SearchFilterRenderer
 
             foreach ($filters_views as $filt_name => $filt_conf) {
                 if (isset($filt_conf['access'])) {
-                    if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and is_admin()) or ($filt_conf['access'] == 'registered-users' and is_classic_user())) {
+                    if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and PermissionService::get()->isAdmin()) or ($filt_conf['access'] == 'registered-users' and PermissionService::get()->isClassicUser())) {
                         $display_filters[$filt_name]['access'] = true;
                     } else {
                         $display_filters[$filt_name]['access'] = false;
@@ -55,7 +56,7 @@ final class SearchFilterRenderer
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
 
-            $search_details['forbidden'] = get_sql_condition_FandF(
+            $search_details['forbidden'] = PermissionService::get()->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 "\n  AND"
             );

@@ -20,6 +20,8 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
 
 final class UsersController
 {
@@ -83,7 +85,7 @@ final class UsersController
         ]);
         $tpl->set_filenames(['user_list' => 'user_list.tpl']);
 
-        $default_user = get_default_user_info(true);
+        $default_user = UserService::get()->getDefaultUserInfo(true);
         $userId       = is_numeric($user['id']) ? (int) $user['id'] : 0;
         $userStatus   = is_string($user['status']) ? $user['status'] : '';
 
@@ -105,9 +107,9 @@ final class UsersController
             'NB_IMAGE_PAGE'             => $default_user['nb_image_page'] ?? null,
             'RECENT_PERIOD'             => $default_user['recent_period'] ?? null,
             'theme_options'             => get_pwg_themes(),
-            'theme_selected'            => get_default_theme(),
+            'theme_selected'            => UserService::get()->getDefaultTheme(),
             'language_options'          => get_languages(),
-            'language_selected'         => get_default_language(),
+            'language_selected'         => UserService::get()->getDefaultLanguage(),
             'association_options'       => $groups,
             'protected_users'           => implode(',', array_unique($protected_users)),
             'password_protected_users'  => implode(',', array_unique($password_protected_users)),
@@ -168,10 +170,10 @@ final class UsersController
         $tpl->assign('groups_arr_id', implode(',', $groups_arr_id));
         $tpl->assign('groups_arr_name', implode(',', $groups_arr_name));
         $tpl->assign('guest_id', Config::guestId());
-        $tpl->assign('view_selector', userprefs_get_param('user-manager-view', 'line'));
+        $tpl->assign('view_selector', PreferencesService::get()->userprefsGetParam('user-manager-view', 'line'));
 
-        $viewSel = userprefs_get_param('user-manager-view', 'line');
-        $tpl->assign('pagination', $viewSel === 'line' ? userprefs_get_param('user-manager-pagination', 5) : userprefs_get_param('user-manager-pagination', 10));
+        $viewSel = PreferencesService::get()->userprefsGetParam('user-manager-view', 'line');
+        $tpl->assign('pagination', $viewSel === 'line' ? PreferencesService::get()->userprefsGetParam('user-manager-pagination', 5) : PreferencesService::get()->userprefsGetParam('user-manager-pagination', 10));
 
         if ($this->webmasterIdIsLocal()) {
             PageState::current()->addWarning(l10n('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
@@ -182,7 +184,7 @@ final class UsersController
             $groups_arr_json[] = [$id, $name];
         }
 
-        $rawPagination = userprefs_get_param('user-manager-pagination', $viewSel === 'line' ? 5 : 10);
+        $rawPagination = PreferencesService::get()->userprefsGetParam('user-manager-pagination', $viewSel === 'line' ? 5 : 10);
         $tpl->assign('page_data_json', json_encode([
             'pwg_token'                => get_pwg_token(),
             'connected_user'           => $userId,

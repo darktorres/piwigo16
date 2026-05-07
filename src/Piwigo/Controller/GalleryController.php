@@ -18,6 +18,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,
@@ -32,7 +33,7 @@ final class GalleryController implements ControllerInterface
     {
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'index');
 
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -203,11 +204,11 @@ final class GalleryController implements ControllerInterface
                 ]);
             }
 
-            if ($category !== null && is_admin() && Config::indexEditIcon()) {
+            if ($category !== null && PermissionService::get()->isAdmin() && Config::indexEditIcon()) {
                 $tpl->assign('U_EDIT', ServiceLocator::get(UrlGenerator::class)->admin('album-' . $catId));
             }
 
-            if (is_admin() && !empty($items) && Config::indexCaddieIcon()) {
+            if (PermissionService::get()->isAdmin() && !empty($items) && Config::indexCaddieIcon()) {
                 $tpl->assign('U_CADDIE', add_url_params(duplicate_index_url(), ['caddie' => 1]));
             }
 

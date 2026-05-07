@@ -26,6 +26,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 /**
  * Handles the single-image page (/picture/{rest}).
@@ -38,8 +40,8 @@ final class PictureController implements ControllerInterface
 
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'picture');
 
-        save_edit_context();
-        check_status(ACCESS_GUEST);
+        UserService::get()->saveEditContext();
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -95,7 +97,7 @@ final class PictureController implements ControllerInterface
 SELECT id
   FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
   WHERE id=' . $imageId
-                        . get_sql_condition_FandF(['forbidden_categories' => 'category_id'], ' AND') . '
+                        . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . '
   LIMIT 1';
                     if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
                         access_denied();
@@ -177,7 +179,7 @@ SELECT id
                     redirect('favorites' == $page['section'] ? $url_up : $url_self);
                     break;
                 case 'set_as_representative':
-                    if (is_admin() && $category !== null) {
+                    if (PermissionService::get()->isAdmin() && $category !== null) {
                         ServiceLocator::get(CategoryRepository::class)->setRepresentativePicture([$catId], $imageId);
                         pwg_activity('album', $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]);
                         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
@@ -196,7 +198,7 @@ SELECT id
                     check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
                     $comment_to_edit = input_int('comment_to_edit', null, $_GET);
                     $author_id       = get_comment_author_id($comment_to_edit ?? 0);
-                    if (can_manage_comment('edit', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('edit', (int) $author_id)) {
                         $post_content = input_string('content', null, $_POST);
                         if (!empty($post_content)) {
                             check_pwg_token();
@@ -231,7 +233,7 @@ SELECT id
                     check_pwg_token();
                     check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
                     $author_id = get_comment_author_id(input_int('comment_to_delete', null, $_GET) ?? 0);
-                    if (can_manage_comment('delete', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('delete', (int) $author_id)) {
                         delete_user_comment(input_int('comment_to_delete', null, $_GET) ?? 0);
                     }
                     redirect($url_self);
@@ -240,7 +242,7 @@ SELECT id
                     check_pwg_token();
                     check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
                     $author_id = get_comment_author_id(input_int('comment_to_validate', null, $_GET) ?? 0);
-                    if (can_manage_comment('validate', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('validate', (int) $author_id)) {
                         validate_user_comment(input_int('comment_to_validate', null, $_GET) ?? 0);
                     }
                     redirect($url_self);
@@ -268,7 +270,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . IMAGE_CATEGORY_TABLE . '
     INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
   WHERE image_id = ' . $imageId . '
-' . get_sql_condition_FandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
+' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
 ;';
         $related_categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
         usort($related_categories, global_rank_compare(...));
@@ -468,7 +470,7 @@ SELECT *
             $tpl->assign('U_METADATA', $url_metadata);
         }
 
-        if (is_admin()) {
+        if (PermissionService::get()->isAdmin()) {
             if (isset($page['category']) && Config::pictureRepresentativeIcon()) {
                 $tpl->assign(['U_SET_AS_REPRESENTATIVE' => add_url_params($url_self, ['action' => 'set_as_representative'])]);
             }
@@ -480,7 +482,7 @@ SELECT *
             }
         }
 
-        if (!is_a_guest() && Config::pictureFavoriteIcon()) {
+        if (!PermissionService::get()->isAGuest() && Config::pictureFavoriteIcon()) {
             $is_favorite = ServiceLocator::get(UserRepository::class)->isFavorite(
                 is_numeric($user['id']) ? (int) $user['id'] : 0,
                 $imageId

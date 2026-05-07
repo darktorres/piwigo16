@@ -12,6 +12,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 class Updates
 {
@@ -216,7 +217,7 @@ class Updates
         if ($notify) {
             // send email
 
-            switch_lang_to(get_default_language());
+            switch_lang_to(UserService::get()->getDefaultLanguage());
 
             $content = l10n('Hello,');
             $content .= "\n\n".l10n(

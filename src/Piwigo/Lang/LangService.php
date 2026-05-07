@@ -9,6 +9,7 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 final class LangService
 {
@@ -93,7 +94,7 @@ final class LangService
         $langDir = $dirname . 'language/';
 
         $defaultLanguage = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
-            ? get_default_language()
+            ? UserService::get()->getDefaultLanguage()
             : PHPWG_DEFAULT_LANGUAGE;
 
         $languages = [];

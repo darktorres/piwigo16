@@ -25,6 +25,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\AuthService;
 
 final class AlbumController
 {
@@ -326,7 +327,7 @@ final class AlbumController
                 $usernames = [];
                 foreach ($users as $u) {
                     $usernames[] = is_scalar($u['username']) ? (string) $u['username'] : '';
-                    $authkey     = create_user_auth_key(is_numeric($u['user_id']) ? (int) $u['user_id'] : 0, is_string($u['status']) ? $u['status'] : null);
+                    $authkey     = AuthService::get()->createUserAuthKey(is_numeric($u['user_id']) ? (int) $u['user_id'] : 0, is_string($u['status']) ? $u['status'] : null);
                     $user_tpl    = $mailTpl;
                     if ($authkey !== false) {
                         $user_tpl['assign']['LINK'] = add_url_params($mailTpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);

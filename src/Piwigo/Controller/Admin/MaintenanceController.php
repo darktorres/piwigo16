@@ -41,6 +41,8 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Auth\CookieService;
 
 final class MaintenanceController
 {
@@ -306,7 +308,7 @@ final class MaintenanceController
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . get_pwg_token();
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
@@ -394,7 +396,7 @@ final class MaintenanceController
             $tpl->assign(['U_EMPTY_LOUNGE' => sprintf($url_format, 'empty_lounge'), 'LOUNGE_COUNTER' => $nb_lounge]);
         }
 
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $advanced_features = trigger_change('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
@@ -598,7 +600,7 @@ final class MaintenanceController
         }
         $maint_actions = $this->maintActions;
 
-        if (is_webmaster()) {
+        if (PermissionService::get()->isWebmaster()) {
             if (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
                 $response = [];
                 $data     = [];
@@ -797,7 +799,7 @@ final class MaintenanceController
             PageState::current()->addWarning(str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.')));
         }
 
-        $tpl->assign('isWebmaster', is_webmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->set_filenames(['maintenance' => 'maintenance_sys.tpl']);
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'maintenance');
     }
@@ -844,7 +846,7 @@ final class MaintenanceController
         } else {
             $form['start'] = $form['end'] = date('Y-m-d');
             $form['types'] = $types;
-            $form['display_thumbnail'] = pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail');
+            $form['display_thumbnail'] = ServiceLocator::get(CookieService::class)->getCookieVar('display_thumbnail', 'no_display_thumbnail');
         }
 
         $form_param = [];

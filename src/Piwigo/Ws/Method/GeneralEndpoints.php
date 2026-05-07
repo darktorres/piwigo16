@@ -27,6 +27,9 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Auth\CookieService;
 
 final class GeneralEndpoints
 {
@@ -233,11 +236,11 @@ final class GeneralEndpoints
         $username = is_scalar($params['username']) ? (string) $params['username'] : '';
         $password = is_scalar($params['password']) ? (string) $params['password'] : '';
         if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
-            if (auth_key_login($username . ':' . $password)) {
+            if (AuthService::get()->authKeyLogin($username . ':' . $password)) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif (try_log_user($username, $password, false)) {
+        } elseif (AuthService::get()->tryLogUser($username, $password, false)) {
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
@@ -249,8 +252,8 @@ final class GeneralEndpoints
         if (defined('PWG_API_KEY_REQUEST')) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
-        if (!is_a_guest()) {
-            logout_user();
+        if (!PermissionService::get()->isAGuest()) {
+            AuthService::get()->logoutUser();
         }
         return true;
     }
@@ -258,7 +261,7 @@ final class GeneralEndpoints
     public function sessionGetStatus(mixed $params, PwgServer &$service): mixed
     {
         $currentUser = CurrentUser::get();
-        $res['username'] = is_a_guest() ? 'guest' : stripslashes($currentUser->username);
+        $res['username'] = PermissionService::get()->isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
@@ -275,7 +278,7 @@ final class GeneralEndpoints
         if ($httpUserAgent === '' || !str_starts_with($httpUserAgent, 'Apache-HttpClient/')) {
             $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
         }
-        if (is_admin()) {
+        if (PermissionService::get()->isAdmin()) {
             $res['upload_file_types'] = implode(',', array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions())));
             $res['upload_form_chunk_size'] = Config::uploadFormChunkSize();
         }
@@ -498,7 +501,7 @@ final class GeneralEndpoints
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         $displayThumbnailStr = is_scalar($param['display_thumbnail']) ? (string) $param['display_thumbnail'] : '';
         $cookieVal           = ($displayThumbnailStr !== '' && isset($displayThumbnails[$displayThumbnailStr])) ? $displayThumbnailStr : null;
-        pwg_set_cookie_var('display_thumbnail', $cookieVal, strtotime('+1 month'));
+        ServiceLocator::get(CookieService::class)->setCookieVar('display_thumbnail', $cookieVal, strtotime('+1 month'));
         $searchRepo = ServiceLocator::get(SearchRepository::class);
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);

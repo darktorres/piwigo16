@@ -16,6 +16,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 /**
  * Handles the paginated comments list page (/comments).
@@ -29,7 +30,7 @@ final class CommentsController implements ControllerInterface
             page_not_found(null);
         }
 
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -105,7 +106,7 @@ final class CommentsController implements ControllerInterface
         $get_comment_id_filter = input_int('comment_id', null, $_GET);
         if (!empty($get_comment_id_filter)) {
             check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
-            if (!is_admin()) {
+            if (!PermissionService::get()->isAdmin()) {
                 $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
                 $login_url  = add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
                 redirect($login_url);
@@ -125,11 +126,11 @@ final class CommentsController implements ControllerInterface
         $pageSince    = in_array($pageSinceRaw, [1, 2, 3, 4]) ? (int) $pageSinceRaw : 4;
         $page['where_clauses'][] = $since_options[$pageSince]['clause'];
 
-        if (!is_admin()) {
+        if (!PermissionService::get()->isAdmin()) {
             $page['where_clauses'][] = 'validated=\'true\'';
         }
 
-        $page['where_clauses'][] = get_sql_condition_FandF(
+        $page['where_clauses'][] = PermissionService::get()->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'ic.image_id'],
             '',
             true
@@ -151,7 +152,7 @@ final class CommentsController implements ControllerInterface
 
         if (isset($action)) {
             $comment_author_id = get_comment_author_id($comment_id);
-            if (can_manage_comment($action, (int) $comment_author_id)) {
+            if (PermissionService::get()->canManageComment($action, (int) $comment_author_id)) {
                 $perform_redirect = false;
                 if ('delete' == $action) {
                     check_pwg_token();
@@ -218,7 +219,7 @@ final class CommentsController implements ControllerInterface
         $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . CATEGORIES_TABLE . '
-' . get_sql_condition_FandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE') . '
+' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE') . '
 ;';
         display_select_cat_wrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true);
 
@@ -332,13 +333,13 @@ SELECT *
                     'CONTENT'     => trigger_change('render_comment_content', (string) ($comment['content'] ?? '')),
                 ];
 
-                if (is_admin()) {
+                if (PermissionService::get()->isAdmin()) {
                     $tpl_comment['EMAIL'] = $email;
                 }
-                if (can_manage_comment('delete', $cAuthorId)) {
+                if (PermissionService::get()->canManageComment('delete', $cAuthorId)) {
                     $tpl_comment['U_DELETE'] = add_url_params($url_self, ['delete' => $cId, 'pwg_token' => get_pwg_token()]);
                 }
-                if (can_manage_comment('edit', $cAuthorId)) {
+                if (PermissionService::get()->canManageComment('edit', $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = add_url_params($url_self, ['edit' => $cId]);
                     if ($edit_comment !== null && $cId == $edit_comment) {
                         $key = get_ephemeral_key(2, (string) $cImageId);
@@ -350,7 +351,7 @@ SELECT *
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
-                if (can_manage_comment('validate', $cAuthorId) && 'true' != $comment['validated']) {
+                if (PermissionService::get()->canManageComment('validate', $cAuthorId) && 'true' != $comment['validated']) {
                     $tpl_comment['U_VALIDATE'] = add_url_params($url_self, ['validate' => $cId, 'pwg_token' => get_pwg_token()]);
                 }
                 $tpl->append('comments', $tpl_comment);

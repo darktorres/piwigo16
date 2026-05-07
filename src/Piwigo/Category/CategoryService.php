@@ -12,6 +12,7 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Filter\FilterService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final readonly class CategoryService
 {
@@ -76,7 +77,7 @@ FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
             $where .= ')';
         } else {
             $where = '
-  ' . get_sql_condition_FandF(['visible_categories' => 'id'], null, true);
+  ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
         }
 
         $where = trigger_change('get_categories_menu_sql_where', $where, $userExpand, $filter['enabled']);
@@ -173,7 +174,7 @@ WHERE ' . $where . '
             [l10n('Rating score, low &rarr; high'),  'rating_score ASC',     Config::rateEnabled()],
             [l10n('Visits, high &rarr; low'),        'hit DESC',             true],
             [l10n('Visits, low &rarr; high'),        'hit ASC',              true],
-            [l10n('Permissions'),                    'level DESC',           is_admin()],
+            [l10n('Permissions'),                    'level DESC',           PermissionService::get()->isAdmin()],
         ]);
         return $result;
     }
@@ -316,7 +317,7 @@ SELECT image_id
     c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0);
             }
             $query .= '
-    ' . get_sql_condition_FandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
+    ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
@@ -464,7 +465,7 @@ SELECT id
   WHERE category_id IN (' . implode(',', $catIds) . ')';
 
         if ($usePermissions) {
-            $query .= get_sql_condition_FandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
+            $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
         }
 
         $query .= (empty($extraImagesWhereSql) ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
@@ -500,7 +501,7 @@ SELECT
   WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)) . ')';
 
         if ($usePermissions) {
-            $query .= get_sql_condition_FandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
+            $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
         }
 
         if (!empty($excludedCatIds)) {

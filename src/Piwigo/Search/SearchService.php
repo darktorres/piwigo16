@@ -14,6 +14,9 @@ use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Log\LoggerInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
 
 final readonly class SearchService
 {
@@ -86,7 +89,7 @@ final readonly class SearchService
 
         $hasFilersFilled = false;
 
-        $forbidden = get_sql_condition_FandF(
+        $forbidden = PermissionService::get()->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
             "\n  AND"
         );
@@ -101,7 +104,7 @@ final readonly class SearchService
                 $access      = is_scalar($filtConf['access']) ? (string) $filtConf['access'] : '';
                 $filtNameStr = (string) $filtName;
                 $filtEntry   = is_array($displayFilters[$filtNameStr] ?? null) ? (array) $displayFilters[$filtNameStr] : [];
-                if ($access == 'everybody' or ($access == 'admins-only' and is_admin()) or ($access == 'registered-users' and is_classic_user())) {
+                if ($access == 'everybody' or ($access == 'admins-only' and PermissionService::get()->isAdmin()) or ($access == 'registered-users' and PermissionService::get()->isClassicUser())) {
                     $filtEntry['access'] = true;
                 } else {
                     $filtEntry['access'] = false;
@@ -895,7 +898,7 @@ final readonly class SearchService
         $scopes     = trigger_change('qsearch_get_scopes', $scopes);
         $expression = new QExpression($q, $scopes);
 
-        $langCode = substr(get_default_language(), 0, 2);
+        $langCode = substr(UserService::get()->getDefaultLanguage(), 0, 2);
         $inflector = match ($langCode) {
             'en'    => new InflectorEn(),
             'fr'    => new InflectorFr(),
@@ -963,7 +966,7 @@ final readonly class SearchService
             $whereClauses[] = '(' . (is_scalar($options['images_where']) ? (string) $options['images_where'] : '') . ')';
         }
         if ($permissions) {
-            $whereClauses[] = get_sql_condition_FandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
+            $whereClauses[] = PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
         }
 
         $query = 'SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
@@ -1035,9 +1038,9 @@ final readonly class SearchService
             'forked_from' => $forkedFrom,
         ]);
 
-        if (!is_a_guest() and !is_generic()) {
+        if (!PermissionService::get()->isAGuest() and !PermissionService::get()->isGeneric()) {
             $rulesFields = is_array($rules['fields'] ?? null) ? $rules['fields'] : [];
-            userprefs_update_param('gallery_search_filters', array_keys($rulesFields));
+            PreferencesService::get()->userprefsUpdateParam('gallery_search_filters', array_keys($rulesFields));
         }
 
         $url = make_index_url(['section' => 'search', 'search' => $searchUuid]);

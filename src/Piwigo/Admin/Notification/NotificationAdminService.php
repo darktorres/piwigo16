@@ -12,6 +12,7 @@ use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserService;
 
 final class NotificationAdminService
 {
@@ -92,7 +93,7 @@ final class NotificationAdminService
     public function setUserOnEnvNbm(array &$nbmUser, bool $isActionSend): void
     {
         $ctx     = MailNotificationContext::current();
-        $newUser = build_user(is_numeric($nbmUser['user_id']) ? (int) $nbmUser['user_id'] : 0, true);
+        $newUser = UserService::get()->buildUser(is_numeric($nbmUser['user_id']) ? (int) $nbmUser['user_id'] : 0, true);
         CurrentUser::setRawAttributes($newUser);
         switch_lang_to(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
         if ($isActionSend) {

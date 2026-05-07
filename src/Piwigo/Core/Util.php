@@ -23,6 +23,8 @@ use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Psr\Log\LoggerInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 final readonly class Util
 {
@@ -99,14 +101,14 @@ final readonly class Util
     public function redirectHtml(string $url, string $msg = '', int $refreshTime = 0): void
     {
         if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
-            CurrentUser::setRawAttributes(build_user(Config::guestId(), true));
+            CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
             load_language('common.lang');
             trigger_notify('loading_lang');
             load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
         } elseif (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', get_default_theme());
+            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
         }
 
@@ -219,10 +221,10 @@ final readonly class Util
     {
         $cached = RequestCache::remember('user', 'nb_available_comments', function (): int {
             $where = [];
-            if (!is_admin()) {
+            if (!PermissionService::get()->isAdmin()) {
                 $where[] = "validated='true'";
             }
-            $where[] = get_sql_condition_FandF(
+            $where[] = PermissionService::get()->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],
                 '',
                 true
@@ -437,10 +439,10 @@ final readonly class Util
     public function doLog(mixed $imageId = null, mixed $imageType = null): bool
     {
         $doLog = Config::logConf();
-        if (is_admin()) {
+        if (PermissionService::get()->isAdmin()) {
             $doLog = Config::historyAdmin();
         }
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             $doLog = Config::historyGuest();
         }
         return (bool) trigger_change('pwg_log_allowed', $doLog, $imageId, $imageType);
@@ -862,7 +864,7 @@ final readonly class Util
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes']         = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = get_default_theme();
+        $defaultTheme = UserService::get()->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
         }
@@ -878,7 +880,7 @@ final readonly class Util
             $piwigoInfos['themes_usage'][$themeUsed] = ($piwigoInfos['themes_usage'][$themeUsed] ?? 0) + (is_numeric($counter) ? (int) $counter : 0);
         }
 
-        $piwigoInfos['general_stats']['default_language'] = get_default_language();
+        $piwigoInfos['general_stats']['default_language'] = UserService::get()->getDefaultLanguage();
 
         $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . USER_INFOS_TABLE . ' GROUP BY language ORDER BY language;';
         $piwigoInfos['languages_usage'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');

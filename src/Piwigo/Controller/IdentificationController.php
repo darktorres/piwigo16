@@ -12,6 +12,8 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\AuthService;
 
 /**
  * Handles the login page (/identification).
@@ -21,9 +23,9 @@ final class IdentificationController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_FREE);
+        PermissionService::get()->checkStatus(ACCESS_FREE);
 
-        if (!is_a_guest()) {
+        if (!PermissionService::get()->isAGuest()) {
             redirect(get_gallery_home_url());
         }
 
@@ -59,12 +61,12 @@ final class IdentificationController implements ControllerInterface
             } else {
                 $username = input_string('username', null, $_POST) ?? '';
                 if (Config::insensitiveCaseLogon() == true) {
-                    $username = search_case_username($username);
+                    $username = AuthService::get()->searchCaseUsername($username);
                 }
                 $redirect_to  = $post_redirect !== null ? urldecode($post_redirect) : '';
                 $remember_me  = input_string('remember_me', null, $_POST) !== null && input_string('remember_me', null, $_POST) == 1;
                 $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
-                if (try_log_user($username, $post_password, $remember_me)) {
+                if (AuthService::get()->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = get_absolute_root_url();
                     $_SESSION['connected_with'] = 'pwg_ui';
                     redirect(

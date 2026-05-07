@@ -9,6 +9,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class MenubarRenderer
 {
@@ -21,7 +22,7 @@ final class MenubarRenderer
 
         $menu = new BlockManager('menubar');
 
-        if (Config::guestAccess() or !is_a_guest()) {
+        if (Config::guestAccess() or !PermissionService::get()->isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -119,7 +120,7 @@ final class MenubarRenderer
         }
 
         if (($block = $menu->get_block('mbSpecials')) != null) {
-            if (!is_a_guest()) {
+            if (!PermissionService::get()->isAGuest()) {
                 $block->data['favorites'] = [
                     'URL' => make_index_url(['section' => 'favorites']),
                     'TITLE' => l10n('display your favorites photos'),
@@ -214,7 +215,7 @@ final class MenubarRenderer
             $block->template = 'menubar_menu.tpl';
         }
 
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             $template->assign([
                 'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
                 'U_LOST_PASSWORD' => ServiceLocator::get(UrlGenerator::class)->password(),
@@ -225,13 +226,13 @@ final class MenubarRenderer
             }
         } else {
             $template->assign('USERNAME', stripslashes(CurrentUser::get()->username));
-            if (is_autorize_status(ACCESS_CLASSIC)) {
+            if (PermissionService::get()->isAutorizeStatus(ACCESS_CLASSIC)) {
                 $template->assign('U_PROFILE', ServiceLocator::get(UrlGenerator::class)->profile());
             }
             if (!Config::apacheAuthentication()) {
                 $template->assign('U_LOGOUT', get_root_url() . '?act=logout');
             }
-            if (is_admin()) {
+            if (PermissionService::get()->isAdmin()) {
                 $template->assign('U_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin());
             }
         }

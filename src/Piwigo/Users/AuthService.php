@@ -20,6 +20,11 @@ final readonly class AuthService
     ) {
     }
 
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null
     {
         if (empty($mailAddress) and

@@ -14,6 +14,8 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 /**
  * Resolves the gallery section from the request URL and populates $GLOBALS['page']
@@ -153,7 +155,7 @@ final class SectionInitializer
             }
         }
 
-        $forbidden = get_sql_condition_FandF(
+        $forbidden = PermissionService::get()->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -212,7 +214,7 @@ SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE
     uppercats LIKE \'' . $catUppercats . ',%\' '
-                            . get_sql_condition_FandF(
+                            . PermissionService::get()->getSqlConditionFandF(
                                 ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
                                 "\n  AND"
                             );
@@ -220,7 +222,7 @@ SELECT id
                         $subcatIds[] = $catId;
                         $subcatIdsStr = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $subcatIds);
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
-                        $forbidden   = get_sql_condition_FandF(['visible_images' => 'id'], 'AND');
+                        $forbidden   = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
@@ -294,7 +296,7 @@ SELECT DISTINCT(image_id)
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Search results') . '</a>',
             ]);
         } elseif ($section === 'favorites') {
-            check_user_favorites();
+            UserService::get()->checkUserFavorites();
             $page = array_merge($page, [
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Favorites') . '</a>',
             ]);
@@ -310,7 +312,7 @@ SELECT image_id
   FROM ' . FAVORITES_TABLE . '
     INNER JOIN ' . IMAGES_TABLE . ' ON image_id = id
   WHERE user_id = ' . $userId . '
-' . get_sql_condition_FandF(['visible_images' => 'id'], 'AND') . '
+' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . '
   ' . Config::orderBy() . '
 ;';
                 $page = array_merge($page, [
@@ -337,7 +339,7 @@ SELECT image_id
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . '
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE ' . get_recent_photos_sql('date_available') . '
+  WHERE ' . PermissionService::get()->getRecentPhotosSql('date_available') . '
   ' . $forbidden . Config::orderBy() . '
 ;';
             $page = array_merge($page, [

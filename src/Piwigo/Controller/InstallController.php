@@ -20,6 +20,9 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\UserService;
+use Piwigo\Users\PreferencesService;
 
 /**
  * Handles the Piwigo installation wizard (/install).
@@ -152,7 +155,7 @@ final class InstallController implements ControllerInterface
             if (empty($_POST['admin_mail'] ?? '')) {
                 $errors[] = l10n('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             } else {
-                $error_mail_address = validate_mail_address(null, $admin_mail);
+                $error_mail_address = AuthService::get()->validateMailAddress(null, $admin_mail);
                 if (!empty($error_mail_address)) {
                     $errors[] = $error_mail_address;
                 }
@@ -204,7 +207,7 @@ final class InstallController implements ControllerInterface
                     ['id' => 2, 'username' => 'guest'],
                 ];
                 mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
-                create_user_infos([1, 2], ['language' => $language]);
+                UserService::get()->createUserInfos([1, 2], ['language' => $language]);
 
                 define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
                 $datas = [];
@@ -264,9 +267,9 @@ final class InstallController implements ControllerInterface
                 session_set_cookie_params(0, cookie_path());
                 register_shutdown_function(session_write_close(...));
 
-                $user = build_user(1, false);
+                $user = UserService::get()->buildUser(1, false);
                 $GLOBALS['user'] = $user;
-                log_user(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
+                AuthService::get()->logUser(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
                 $_SESSION['connected_with'] = 'pwg_ui';
 
                 if (!is_array($user['preferences'] ?? null)) {
@@ -284,7 +287,7 @@ final class InstallController implements ControllerInterface
                     $user['preferences']['show_newsletter_subscription'] = false;
                 }
 
-                userprefs_save();
+                PreferencesService::get()->userprefsSave();
 
                 if (isset($_POST['send_credentials_by_mail'])) {
                     $keyargs_content = [

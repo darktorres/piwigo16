@@ -18,6 +18,9 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Url\UrlGenerator;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PreferencesService;
 
 final readonly class UserService
 {
@@ -29,6 +32,11 @@ final readonly class UserService
         private GroupRepository $groupRepo,
         private AuthKeyRepository $authKeyRepo,
     ) {
+    }
+
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
     }
 
     /** @param string[] $errors */
@@ -43,19 +51,19 @@ final readonly class UserService
         if (preg_match('/^ .*$/', $login)) {
             $errors[] = l10n('login mustn\'t start with a space character');
         }
-        if (get_userid($login)) {
+        if ($this->getUserid($login)) {
             $errors[] = l10n('this login is already used');
         }
         if ($login != strip_tags($login)) {
             $errors[] = l10n('html tags are not allowed in login');
         }
-        $mailError = validate_mail_address(null, $mailAddress);
+        $mailError = AuthService::get()->validateMailAddress(null, $mailAddress);
         if ('' != $mailError) {
             $errors[] = $mailError;
         }
 
         if (Config::insensitiveCaseLogon() == true) {
-            $loginError = validate_login_case($login);
+            $loginError = AuthService::get()->validateLoginCase($login);
             if ($loginError != '') {
                 $errors[] = $loginError;
             }
@@ -82,11 +90,11 @@ final readonly class UserService
             }
 
             $override = [];
-            if (Config::browserLanguage() and $language = get_browser_language()) {
+            if (Config::browserLanguage() and $language = PreferencesService::get()->getBrowserLanguage()) {
                 $override['language'] = $language;
             }
 
-            create_user_infos((int) $userId, $override);
+            $this->createUserInfos((int) $userId, $override);
 
             if ($notifyAdmin and 'none' != Config::emailAdminOnNewUser()) {
                 $adminUrl     = ServiceLocator::get(UrlGenerator::class)->admin('user_list') . '&user_id=' . $userId;
@@ -152,7 +160,7 @@ final readonly class UserService
         }
 
         if (!isset($user['theme_name']) or !check_theme_installed(is_scalar($user['theme']) ? (string) $user['theme'] : '')) {
-            $user['theme']      = get_default_theme();
+            $user['theme']      = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
 
@@ -190,7 +198,7 @@ final readonly class UserService
                 [$userId]
             )->fetchOne();
             if ((is_numeric($counter) ? (int) $counter : 0) !== 1) {
-                create_user_infos($userId);
+                $this->createUserInfos($userId);
             }
         }
 
@@ -266,7 +274,7 @@ final readonly class UserService
 
                 $udStatus            = is_scalar($userdata['status']) ? (string) $userdata['status'] : '';
                 $udLevel             = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
-                $udForbiddenCats     = calculate_permissions($udId, $udStatus);
+                $udForbiddenCats     = PermissionService::get()->calculatePermissions($udId, $udStatus);
                 $userdata['forbidden_categories'] = $udForbiddenCats;
 
                 $query = 'SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
@@ -281,7 +289,7 @@ final readonly class UserService
                 $userdata['nb_total_images'] = $this->conn->executeQuery($query)->fetchOne();
 
                 $userCacheCats = get_computed_categories($userdata, null);
-                if (!is_admin($udStatus)) {
+                if (!PermissionService::get()->isAdmin($udStatus)) {
                     $forbiddenIds = [];
                     foreach ($userCacheCats as $cat) {
                         if ($cat['count_images'] == 0) {
@@ -342,7 +350,7 @@ SELECT DISTINCT f.image_id
   FROM ' . FAVORITES_TABLE . ' AS f INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $currentUser->id . '
-  ' . get_sql_condition_FandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
+  ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
 ;';
         $authorizeds = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
         $favorites   = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
@@ -502,7 +510,7 @@ SELECT DISTINCT f.image_id
             }
 
             if (!empty($params['username'])) {
-                $userId = get_userid(is_scalar($params['username']) ? (string) $params['username'] : '');
+                $userId = $this->getUserid(is_scalar($params['username']) ? (string) $params['username'] : '');
                 if ($userId and $userId != $paramUserId[0]) {
                     return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => l10n('this login is already used')]];
                 }
@@ -514,14 +522,14 @@ SELECT DISTINCT f.image_id
             }
 
             if (!empty($params['email'])) {
-                if (($error = validate_mail_address(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
+                if (($error = AuthService::get()->validateMailAddress(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
                     return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => $error]];
                 }
                 $updates[Config::userFields()['email']] = $params['email'];
             }
 
             if (!empty($params['password'])) {
-                if (!is_webmaster()) {
+                if (!PermissionService::get()->isWebmaster()) {
                     $passwordProtectedUsers = [Config::guestId()];
                     $adminIds = array_column($this->conn->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id');
                     $passwordProtectedUsers = array_merge($passwordProtectedUsers, array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $adminIds), [(string) $currentUser->id]));
@@ -534,7 +542,7 @@ SELECT DISTINCT f.image_id
         }
 
         if (!empty($params['status'])) {
-            if (in_array($params['status'], ['webmaster', 'admin']) and !is_webmaster()) {
+            if (in_array($params['status'], ['webmaster', 'admin']) and !PermissionService::get()->isWebmaster()) {
                 return ['error' => ['code ' => 403, 'message' => 'Only webmasters can grant "webmaster/admin" status']];
             }
             if (!in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
@@ -578,10 +586,10 @@ SELECT DISTINCT f.image_id
         single_update(USERS_TABLE, $updates, [Config::userFields()['id'] => $paramUid0]);
 
         if (isset($updates[Config::userFields()['password']])) {
-            deactivate_user_auth_keys($paramUid0);
+            AuthService::get()->deactivateUserAuthKeys($paramUid0);
         }
         if (isset($updates[Config::userFields()['email']])) {
-            deactivate_password_reset_key($paramUid0);
+            AuthService::get()->deactivatePasswordResetKey($paramUid0);
         }
 
         $paramUserIdForStatus = is_array($params['user_id_for_status'] ?? null) ? $params['user_id_for_status'] : [];
@@ -764,7 +772,7 @@ SELECT DISTINCT f.image_id
     public function saveEditContext(): void
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        if (!is_admin() or !isset($page['section_url']) or !isset($page['image_id'])) {
+        if (!PermissionService::get()->isAdmin() or !isset($page['section_url']) or !isset($page['image_id'])) {
             return;
         }
         $_SESSION['edit_context'] ??= [];

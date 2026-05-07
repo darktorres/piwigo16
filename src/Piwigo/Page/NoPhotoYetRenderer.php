@@ -11,6 +11,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 
 final class NoPhotoYetRenderer
 {
@@ -26,7 +27,7 @@ final class NoPhotoYetRenderer
             and script_basename() != 'ws'
             and !str_starts_with($_no_photo_yet_route, '/ws')
             and script_basename() != 'popuphelp'
-            and (is_a_guest() or is_admin())
+            and (PermissionService::get()->isAGuest() or PermissionService::get()->isAdmin())
             and !isset($_SESSION['no_photo_yet'])
         ) {
             $nb_photos = ServiceLocator::get(ImageRepository::class)->countAll();
@@ -52,7 +53,7 @@ final class NoPhotoYetRenderer
                 header('Content-Type: text/html; charset=' . get_pwg_charset());
                 $template->set_filenames(['no_photo_yet' => 'no_photo_yet.tpl']);
 
-                if (is_admin()) {
+                if (PermissionService::get()->isAdmin()) {
                     $url = Config::noPhotoYetUrl();
                     if (str_starts_with((string) $url, 'http')) {
                         // absolute URL set by admin — use as-is

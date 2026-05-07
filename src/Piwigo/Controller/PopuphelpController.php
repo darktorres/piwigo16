@@ -9,12 +9,13 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Users\PermissionService;
 
 final class PopuphelpController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        check_status(ACCESS_GUEST);
+        PermissionService::get()->checkStatus(ACCESS_GUEST);
 
         if (!defined('PWG_HELP')) {
             define('PWG_HELP', true);

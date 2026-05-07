@@ -11,12 +11,13 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\PermissionService;
 
 final class WatermarkProcessor
 {
     public function process(): void
     {
-        if (!is_webmaster()) {
+        if (!PermissionService::get()->isWebmaster()) {
             return;
         }
 

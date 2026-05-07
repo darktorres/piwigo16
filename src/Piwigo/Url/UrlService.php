@@ -7,6 +7,7 @@ namespace Piwigo\Url;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final class UrlService
 {
@@ -695,7 +696,7 @@ final class UrlService
     /** @return array<int,true> */
     public function getUserFavorites(): array
     {
-        if (is_a_guest()) {
+        if (PermissionService::get()->isAGuest()) {
             return [];
         }
 

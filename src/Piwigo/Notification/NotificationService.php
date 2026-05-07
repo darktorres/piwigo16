@@ -10,6 +10,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 
 final readonly class NotificationService
 {
@@ -20,7 +21,7 @@ final readonly class NotificationService
 
     public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): string
     {
-        return get_sql_condition_FandF(
+        return PermissionService::get()->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'ic.category_id',
                 'visible_categories'   => 'ic.category_id',
@@ -203,8 +204,8 @@ final readonly class NotificationService
             ($this->nbNewComments($start, $end) > 0) or
             ($this->nbNewElements($start, $end) > 0) or
             ($this->nbUpdatedCategories($start, $end) > 0) or
-            ((is_admin()) and ($this->nbUnvalidatedComments($start, $end) > 0)) or
-            ((is_admin()) and ($this->nbNewUsers($start, $end) > 0)));
+            ((PermissionService::get()->isAdmin()) and ($this->nbUnvalidatedComments($start, $end) > 0)) or
+            ((PermissionService::get()->isAdmin()) and ($this->nbNewUsers($start, $end) > 0)));
     }
 
     /**
@@ -241,7 +242,7 @@ final readonly class NotificationService
         $nbComments = $this->nbNewComments($start, $end);
         $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', add_url_params(ServiceLocator::get(UrlGenerator::class)->comments(), $addUrlParams), $addUrl);
 
-        if (is_admin()) {
+        if (PermissionService::get()->isAdmin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
             $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', ServiceLocator::get(UrlGenerator::class)->admin('comments'), $addUrl);
 

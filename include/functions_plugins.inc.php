@@ -14,20 +14,9 @@ use Piwigo\Plugins\LoadedPluginRegistry;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-/**
- * @package functions\plugins
- */
-
-/** base directory of plugins */
-define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH.'plugins/');
-/** default priority for plugins handlers */
-define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
-
-
-// The 6 functions below call EventDispatcher/LoadedPluginRegistry directly —
-// they are invoked from file-level code before Kernel::boot() and must never
-// go through ServiceLocator. The PluginService wraps them for callers that
-// prefer DI, but the free-function delegates bypass the container.
+// These six functions call EventDispatcher/LoadedPluginRegistry directly —
+// they are invoked from file-level plugin code before Kernel::boot() and
+// must never go through ServiceLocator. They are permanent public API.
 
 function add_event_handler(
     mixed $event,
@@ -78,8 +67,6 @@ function instantiate_plugin_maintain(string $classname, string $plugin_id): Plug
 }
 
 /**
- * Factory helper for ThemeMaintain dispatch.
- *
  * @param class-string<ThemeMaintain> $classname
  */
 function instantiate_theme_maintain(string $classname, string $theme_id): ThemeMaintain

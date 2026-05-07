@@ -13,6 +13,8 @@ global $prefixeTable;
 
 // Default settings
 define('PHPWG_VERSION', '16.3.0');
+define('PHPWG_PLUGINS_PATH', PHPWG_ROOT_PATH . 'plugins/');
+define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 define('PHPWG_DEFAULT_LANGUAGE', 'en_UK');
 
 // this constant is only used in the upgrade process, the true default theme

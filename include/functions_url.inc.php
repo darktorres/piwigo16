@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlService;
@@ -72,7 +73,7 @@ function get_absolute_root_url(bool $with_scheme = true): string
             }
         }
     }
-    $url .= cookie_path();
+    $url .= CookieService::cookiePath();
     return $url;
 }
 

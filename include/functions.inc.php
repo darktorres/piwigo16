@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Auth\CookieService;
 use Gettext\Loader\PoLoader;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
@@ -44,7 +45,6 @@ use Piwigo\Users\UserService;
 // +-----------------------------------------------------------------------+
 
 require_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
@@ -891,7 +891,7 @@ if (class_exists(Config::class, false)
     session_name(Config::sessionName());
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => cookie_path(),
+        'path' => CookieService::cookiePath(),
         'samesite' => 'Strict',
         'httponly' => true,
         'secure' => isset($_SERVER['HTTPS']) && is_string($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on',

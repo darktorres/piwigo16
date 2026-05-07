@@ -16,9 +16,9 @@
     </testsuites>
     <php>
         <!--
-            Integration tests read DB credentials from local/config/database.inc.php
-            (same config the running Apache instance uses). Tests fail if that file
-            does not exist or credentials are wrong — no fallbacks.
+            Integration tests read DB credentials from .env.test at the repo root
+            (loaded by tests/bootstrap.php via ConfigLoader::loadEnv). Tests fail
+            if that file does not exist or credentials are wrong — no fallbacks.
 
             PIWIGO_DB_BASE  — name of the throw-away test database (never production).
             PIWIGO_BASE_URL — base URL of the running Piwigo web server.

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Generates docs/config-reference.md from Config::SCHEMA. Lists every
+ * Generates docs/CONFIG-REFERENCE.md from Config::SCHEMA. Lists every
  * supported config key with its type, default, accessor method, and any
  * SCHEMA flags (nullable, custom).
  *
@@ -14,7 +14,7 @@ declare(strict_types=1);
  *   php tools/build-config-reference.php
  *
  * Usage:
- *   php tools/build-config-reference.php          # rewrite docs/config-reference.md
+ *   php tools/build-config-reference.php          # rewrite docs/CONFIG-REFERENCE.md
  *   php tools/build-config-reference.php --check  # exit 1 if file would change
  */
 
@@ -23,7 +23,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use Piwigo\Config\Config;
 
 $check = in_array('--check', $argv, true);
-$path  = __DIR__ . '/../docs/config-reference.md';
+$path  = __DIR__ . '/../docs/CONFIG-REFERENCE.md';
 
 $lines = [
     '# Piwigo configuration reference',
@@ -73,18 +73,27 @@ $lines[] = '';
 $lines[] = '## Environment variable overrides';
 $lines[] = '';
 $lines[] = 'A small curated subset of keys can be overridden at runtime via env vars,';
-$lines[] = 'loaded by `Piwigo\\Config\\ConfigLoader` from `.env` and `.env.local`:';
+$lines[] = 'loaded by `Piwigo\\Config\\ConfigLoader::loadEnv()` from `.env` (or `.env.test`';
+$lines[] = 'when `TestMode` is active). Real environment variables (set by Apache';
+$lines[] = '`SetEnv`, systemd `EnvironmentFile=`, Docker `-e`, or a parent shell)';
+$lines[] = 'win over the file values — standard 12-factor precedence.';
 $lines[] = '';
 $lines[] = '| Env var | Schema key |';
 $lines[] = '| --- | --- |';
-$lines[] = '| `PIWIGO_DB_HOST` | `db_host` |';
-$lines[] = '| `PIWIGO_DB_USER` | `db_user` |';
-$lines[] = '| `PIWIGO_DB_PASSWORD` | `db_password` |';
-$lines[] = '| `PIWIGO_DB_BASE` | `db_base` |';
+
+$envReflection = new ReflectionClass(\Piwigo\Config\ConfigLoader::class);
+$envMapping    = $envReflection->getConstant('ENV_MAPPING');
+if (!is_array($envMapping)) {
+    fwrite(STDERR, "Could not read ConfigLoader::ENV_MAPPING\n");
+    exit(1);
+}
+foreach ($envMapping as $envKey => $confKey) {
+    $lines[] = sprintf('| `%s` | `%s` |', $envKey, $confKey);
+}
 $lines[] = '';
-$lines[] = 'Env values win over `local/config/database.inc.php` (12-factor precedence).';
-$lines[] = 'Existing installs that rely solely on `database.inc.php` keep working';
-$lines[] = 'unchanged when no `.env` is present.';
+$lines[] = 'Fresh installs write `PIWIGO_DB_*` to a `.env` file at the repo root';
+$lines[] = '(`local/config/database.inc.php` and `include/config_default.inc.php` were';
+$lines[] = 'retired in the 16.x rewrite — there is no PHP-include fallback path).';
 $lines[] = '';
 
 $content = implode("\n", $lines);
@@ -92,18 +101,18 @@ $content = implode("\n", $lines);
 $existing = is_file($path) ? file_get_contents($path) : '';
 if ($existing === $content) {
     if ($check) {
-        echo "docs/config-reference.md is in sync with SCHEMA\n";
+        echo "docs/CONFIG-REFERENCE.md is in sync with SCHEMA\n";
     }
     exit(0);
 }
 
 if ($check) {
-    fwrite(STDERR, "docs/config-reference.md is OUT OF SYNC with SCHEMA — re-run tools/build-config-reference.php\n");
+    fwrite(STDERR, "docs/CONFIG-REFERENCE.md is OUT OF SYNC with SCHEMA — re-run tools/build-config-reference.php\n");
     exit(1);
 }
 
 file_put_contents($path, $content);
-echo 'wrote ' . strlen($content) . " bytes to docs/config-reference.md\n";
+echo 'wrote ' . strlen($content) . " bytes to docs/CONFIG-REFERENCE.md\n";
 
 function renderDefaultForDocs(mixed $value): string
 {

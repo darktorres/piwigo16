@@ -2,7 +2,7 @@
 
 TypeScript / frontend-glue modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for architecture context and completed phase summaries; see [ROADMAP-PHP.md](ROADMAP-PHP.md) and [ROADMAP-CSS.md](ROADMAP-CSS.md) for the other tracks.
 
-**Status snapshot (2026-05-02):** #1 ESLint + Prettier ✅ Done · #2 `any` reduction Not started (479 patterns) · #3 `window.*` data-bridge globals ✅ Done · #4 Vitest Not started · #5 Bundle size budgets Not started · #6 Vendored libs — Tier 2 ✅ Done, Tiers 1/3/4/5 Not started.
+**Status snapshot (2026-05-07):** #1 ESLint + Prettier ✅ Done · #2 `any` reduction Not started (478 patterns) · #3 `window.*` data-bridge globals ✅ Done · #4 Vitest Not started · #5 Bundle size budgets Not started · #6 Vendored libs — Tier 2 ✅ Done, Tiers 1/3/4/5 Not started.
 
 ---
 
@@ -27,8 +27,8 @@ npm run format:check   # Prettier check
 
 ### Caveats / follow-ups
 
-- `no-explicit-any: error` is currently undermined by the existing **479** `any` patterns (see #2). `npm run lint` does not yet exit clean on the tree; the rule is enforced for new code via review, not gate.
-- No `.github/workflows/` directory exists (this is a personal fork — no CI). Lint is a local pre-commit / manual step, not a merge gate. The original CONTRIBUTING.md doc step is moot for the same reason.
+- `no-explicit-any: error` is currently undermined by the existing **478** `any` patterns (see #2). `npm run lint` does not yet exit clean on the tree; the rule is enforced for new code via review, not gate.
+- `.github/workflows/ci.yml` runs `style`, `phpstan`, and `audit` jobs (set up by ROADMAP-PHP #1). A TS-side `lint`/`typecheck` job is not yet wired in; it can be added once the `any`-reduction work in #2 lets `npm run lint` exit clean.
 
 ---
 
@@ -38,11 +38,11 @@ npm run format:check   # Prettier check
 
 ### Goal
 
-Reduce `any` escapes in authored TypeScript from the current **479** to **≤250**, focusing on `(window as any)` calls and untyped function parameters. Do not touch vendored `node_modules/` or generated `dist/`.
+Reduce `any` escapes in authored TypeScript from the current **478** to **≤250**, focusing on `(window as any)` calls and untyped function parameters. Do not touch vendored `node_modules/` or generated `dist/`.
 
 ### Current state
 
-- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `themes/admin/_base/js/` (24 files) + 39 in `themes/_base/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
+- **478** `: any` / `as any` / `(window as any)` patterns: ~439 in `themes/admin/_base/js/` (24 files) + 39 in `themes/_base/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
 - ESLint `@typescript-eslint/no-explicit-any` is set to `error` in `eslint.config.ts`, so each occurrence is a lint error today. Only one file has an `eslint-disable` for this rule (`group_list.ts`); the rest cause `npm run lint` to fail. Closing this item is what unlocks a clean lint baseline.
 - Largest concentrations: `tags.ts` (80), `user_list.ts` (58), `albums.ts` (52), `group_list.ts` (45), `album_selector.ts` (35), `batchManagerUnit.ts` (31), `batchManagerGlobal.ts` (27).
 - No `themes/_base/js/types/` or `themes/admin/_base/js/types/` declaration directory exists yet — Tier 1 hasn't started.
@@ -88,7 +88,7 @@ const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
 
 ```bash
 grep -rn ": any\b\|as any\b\|(window as any)" themes/admin/_base/js/ themes/_base/js/ --include="*.ts" | wc -l
-# current: 479 — target: ≤ 250
+# current: 478 — target: ≤ 250
 npm run typecheck   # still zero errors
 npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
 ```
@@ -141,7 +141,7 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
 
 ### Current state
 
-- `package.json` contains Playwright 1.48 only — 15 E2E specs in `tests/e2e/`.
+- `package.json` contains Playwright 1.48 only — 16 E2E specs in `tests/e2e/`.
 - No Vitest, Jest, or other unit-test runner.
 - Pure-logic candidates with no test coverage today: number/date formatters in `common.ts`, URL builders, batch-manager state transitions in `batchManagerGlobal.ts`, validators in `user_list.ts`, the `getPageData` helper.
 
@@ -216,7 +216,7 @@ Per-entrypoint bundle size budgets gate every PR. Regressions block merge. Bundl
 
 ### Current state
 
-- `vite.config.ts` defines 39 TypeScript entrypoints across admin and frontend.
+- `vite.config.ts` defines 68 TypeScript entrypoints across admin and frontend.
 - No size tracking. No alerts on bloat. No way to detect a careless `import` of a 200 kB lib.
 - Manifest output is in `dist/` after `npm run build` — already structured for size-checking.
 

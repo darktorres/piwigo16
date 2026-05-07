@@ -71,8 +71,8 @@ When triaging an advisory:
 ## Config schema
 
 `Piwigo\Config\Config::SCHEMA` is the source-of-truth registry for every config
-key Piwigo recognises (285 entries; full list in
-[`docs/config-reference.md`](docs/config-reference.md)). The typed accessors
+key Piwigo recognises (287 entries; full list in
+[`docs/CONFIG-REFERENCE.md`](docs/CONFIG-REFERENCE.md)). The typed accessors
 below the `<<<CONFIG-ACCESSORS-BEGIN>>>` sentinel are **generated** by
 `tools/build-config-accessors.php` — never hand-edit anything between the
 BEGIN/END sentinels.

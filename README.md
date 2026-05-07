@@ -9,35 +9,19 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
 ## Requirements
 
 - A webserver (Apache or nginx recommended)
-- PHP 7.4+. Piwigo can run with PHP 7.0+ but these end-of-life versions are no longer maintained and may expose your site to security vulnerabilities.
-- MySQL 5 or greater or MariaDB equivalent
+- PHP 8.5+
+- MariaDB 10.3+ or MySQL 8.0+
 - ImageMagick (recommended) or PHP GD
 
-## Quick start install
+## Install
 
-### NetInstall
-
-- Download the [NetInstall script](https://piwigo.org/download/dlcounter.php?code=netinstall)
-- Transfer the script to your web space with any FTP client
-- Open the script in you web browser (for example <http://example.com/piwigo-netindex.php?/install>) and follow the steps
-
-[More information](https://piwigo.org/guides/install/netinstall)
-
-### Manual
-
-- Download the [latest stable version](https://piwigo.org/download/dlcounter.php?code=latest) and unzip it
-- Transfer everything to your web space with any FTP client
-- Open your website (for example <http://example.com/piwigo>) and follow the steps
-
-[More information](https://piwigo.org/guides/install/manual)
-
-If you do not have your own server, consider the [piwigo.com](https://piwigo.com/) hosting solution.
+See [INSTALL.md](INSTALL.md) for tarball, dev-clone, and release-build instructions.
 
 ## Configuration
 
 Configuration values live in the `conf` database table and are read through typed
 accessors on `Piwigo\Config\Config`. The full key list is in
-[`docs/config-reference.md`](docs/config-reference.md) (285 keys, generated from
+[`docs/CONFIG-REFERENCE.md`](docs/CONFIG-REFERENCE.md) (287 keys, generated from
 `Config::SCHEMA`).
 
 ### Database credentials via .env
@@ -66,8 +50,8 @@ credentials, since the test suite drops and recreates `PIWIGO_DB_BASE`.
 
 ## Contributing
 
-Piwigo is widely driven by its community; if you want to improve the code, fork this repo and submit your changes to the `master` branch. See our [Contribution guide](https://github.com/Piwigo/Piwigo/blob/master/docs/CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, dependency, and config-schema guidelines.
 
 ## License
 
-Piwigo is released under the GPL v2 license. See our [Copying details](https://github.com/Piwigo/Piwigo/blob/master/COPYING.txt).
+Piwigo is released under the GPL v2 license. See [COPYING.txt](COPYING.txt) and [LICENSE.txt](LICENSE.txt).

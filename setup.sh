@@ -21,10 +21,17 @@ if [[ "$PHP_MAJOR" -lt 8 || ( "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ) ]]; the
 fi
 ok "PHP $PHP_VERSION"
 
-for ext in mysqli mbstring gd exif; do
+for ext in mysqli mbstring gd; do
     php -m | grep -qi "^${ext}$" || fail "PHP extension '$ext' is missing. Enable it in php.ini."
     ok "ext-$ext"
 done
+
+# ext-exif is optional — runtime call sites guard with function_exists().
+if php -m | grep -qi '^exif$'; then
+    ok "ext-exif"
+else
+    warn "ext-exif not loaded — EXIF-dependent features will be unavailable."
+fi
 
 # ── Composer ─────────────────────────────────────────────────────────────────
 if command -v composer >/dev/null 2>&1; then

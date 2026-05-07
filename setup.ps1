@@ -23,12 +23,19 @@ if ($phpMajor -lt 8 -or ($phpMajor -eq 8 -and $phpMinor -lt 5)) {
 }
 ok "PHP $phpVersion"
 
-foreach ($ext in @('mysqli', 'mbstring', 'gd', 'exif')) {
+foreach ($ext in @('mysqli', 'mbstring', 'gd')) {
     $loaded = php -m | Where-Object { $_ -ieq $ext }
     if (-not $loaded) {
         fail "PHP extension '$ext' is missing. Enable it in php.ini."
     }
     ok "ext-$ext"
+}
+
+# ext-exif is optional — runtime call sites guard with function_exists().
+if (php -m | Where-Object { $_ -ieq 'exif' }) {
+    ok "ext-exif"
+} else {
+    warn "ext-exif not loaded — EXIF-dependent features will be unavailable."
 }
 
 # ── Composer ─────────────────────────────────────────────────────────────────

@@ -13,19 +13,19 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 - Stylelint passing for all first-party CSS with zero errors and no `!important` outside JS-toggled visibility rules.
 - CSS custom properties for all repeated colors, spacing values, and breakpoints.
 - Monster files split into per-concern files: `themes/admin/_base/theme.css` (9,635 lines) and `themes/_base/theme.css` (1,305 lines) become thin `@import` lists.
-- Admin child themes (`clear`, `roma`) reduced to `:root {}` variable override blocks.
+- Admin child themes (`light`, `dark`) reduced to `:root {}` variable override blocks.
 - `themes/standard_pages/skins/*.css` refactored from hundreds of element overrides to single `:root {}` blocks.
 
 ### Current state
 
-- `themes/admin/_base/theme.css`: **9,635 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
-- `themes/admin/dark/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
-- `themes/admin/light/theme.css`: **1,234 lines** — same problem.
-- `themes/_base/theme.css`: **1,305 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
-- `themes/_base/fix-khtml.css`: **16 lines**, orphan — zero references anywhere in the repo.
+- `themes/admin/_base/theme.css`: **9,561 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
+- `themes/admin/dark/theme.css`: **2,805 lines** — duplicates parent section headers and carries far more than color overrides.
+- `themes/admin/light/theme.css`: **1,226 lines** — same problem.
+- `themes/_base/theme.css`: **1,241 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
+- `themes/_base/fix-khtml.css`: **15 lines**, orphan — zero references anywhere in the repo.
 - `themes/_base/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/_base/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
 - `themes/admin/_base/template/install.tpl:17` and `upgrade.tpl:18` reference a non-existent `themes/admin/_base/fix-ie7.css` (broken link, also IE-only).
-- `themes/_base/css/clear-search.css` + `dark-search.css`: **346 + 333 lines** — color-only variants duplicating `search.css` structure.
+- `themes/_base/css/clear-search.css` + `dark-search.css`: **344 + 333 lines** — color-only variants duplicating `search.css` structure.
 - `themes/standard_pages/skins/*.css`: **11 skin files** (cadmium, cobalt, default, fuchsia, green, lime, purple, red, sienna, silver, teal), each ~337 lines, each with **20 `!important` instances** — fight specificity with the parent theme; same anti-pattern modus had.
 - **~689 `!important` declarations** across first-party CSS:
   - `themes/admin/dark/theme.css`: 162
@@ -35,7 +35,7 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
   - `themes/standard_pages/`: ~235 (theme + 11 skins)
   - `themes/_base/theme.css`: 10, `print.css`: 1
   - Roughly half justified (child-theme load order, JS-toggled visibility); the rest disappear when the token system lands.
-- Stylelint coverage and rules are correctly configured (commit `ba17576e8`). Current state: **298 errors, 0 warnings** — mostly newly-flagged `color-named` (`white`), `no-duplicate-selectors`, and tightened-rule violations introduced by the latest config.
+- Stylelint coverage and rules are correctly configured (commit `ba17576e8`). Current state: **0 errors, 0 warnings** — the 328-error backlog from the tightened config (`color-named`, `no-duplicate-selectors`, unit/zero-length, single-line declarations) was cleared in `81ddf3d63`.
 - `declaration-no-important` was tried as a warning then dropped (commit `9a482db86`) — too noisy until the token system reduces the genuine count.
 - Zero CSS custom properties anywhere in project CSS (one-off `var(--col-w)` style hooks for inline-extracted dynamic blocks aside).
 - No canonical breakpoints — `576px`, `640px`, `800px`, `1100px` used inconsistently.
@@ -199,10 +199,10 @@ themes/_base/theme.css   ← thin entry: @import the above
 Execute in this order (risk-free first):
 
 **Step 1 — Extend Stylelint coverage.** ✅ Done (`72264635d`, `ac3fddf57`, `e7967a8e6`, `c9ac86326`, `ba17576e8`).
-`.stylelintrc.json` now scopes `ignoreFiles` to vendor/font directories and `plugins/**`; the rule set has `custom-property-pattern`, `color-no-invalid-hex`, `color-hex-length: short`, `color-named: never`, `shorthand-property-no-redundant-values`, `declaration-block-no-redundant-longhand-properties`, `length-zero-no-unit`, `unit-allowed-list`, `selector-no-vendor-prefix` (warning), `no-duplicate-selectors`, `alpha-value-notation: number`. `declaration-no-important` was tried as a warning then dropped (`9a482db86`) — too noisy until token migration cuts the genuine count. Current baseline: 298 errors, 0 warnings.
+`.stylelintrc.json` now scopes `ignoreFiles` to vendor/font directories and `plugins/**`; the rule set has `custom-property-pattern`, `color-no-invalid-hex`, `color-hex-length: short`, `color-named: never`, `shorthand-property-no-redundant-values`, `declaration-block-no-redundant-longhand-properties`, `length-zero-no-unit`, `unit-allowed-list`, `selector-no-vendor-prefix` (warning), `no-duplicate-selectors`, `alpha-value-notation: number`. `declaration-no-important` was tried as a warning then dropped (`9a482db86`) — too noisy until token migration cuts the genuine count. Current baseline: 0 errors, 0 warnings.
 
-**Step 2 — Mechanical auto-fix.** ✅ Done (`2914b89cf`, `afbe58226`, `148afd4fc`, `fc8b343be`).
-Multiple `stylelint --fix` passes have eliminated auto-fixable formatting errors. Remaining 298 errors are mostly newly-flagged `color-named` ("white" → `#fff`), `no-duplicate-selectors`, and tightened-rule violations introduced by the latest config tightening (`ba17576e8`); each requires hand fixing.
+**Step 2 — Mechanical auto-fix.** ✅ Done (`2914b89cf`, `afbe58226`, `148afd4fc`, `fc8b343be`, `81ddf3d63`).
+Multiple `stylelint --fix` passes eliminated auto-fixable formatting errors. The 328-error residual from the tightened config (`color-named`, `no-duplicate-selectors`, disallowed units, zero-length suffixes, single-line declarations) was cleared by hand in `81ddf3d63`: named colors → hex equivalents, `ch`/`pt`/`svh`/`turn` → allowed units, duplicate selectors merged into their latest occurrence (preserving cascade winner semantics).
 
 **Step 3 — Delete orphans.**
 
@@ -293,12 +293,12 @@ Create `themes/admin/_base/css/base.css.tpl` (Smarty-templated):
 }
 ```
 
-Each `themeconf.inc.php` for `clear` and `roma` defines its `$admin_skin` array. `themes/admin/_base/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS. Removes the current `{combine_css path="themes/admin/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}` workaround in `header.tpl:24`.
+Each `themeconf.inc.php` for `light` and `dark` defines its `$admin_skin` array. `themes/admin/_base/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS. Removes the current `{combine_css path="themes/admin/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}` workaround in `header.tpl:24`.
 
 **Step 11 — Split `themes/admin/_base/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `themes/admin/_base/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
 
 **Step 12 — Slim admin child themes.**
-With `var(--admin-*)` in place, `themes/admin/light/theme.css` (1,234 lines) and `themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/{clear,roma}/css/components/general.css` — content moves into the parent.
+With `var(--admin-*)` in place, `themes/admin/light/theme.css` (1,234 lines) and `themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/dark/css/components/general.css` — content moves into the parent. (`themes/admin/light/` has no `css/` subdirectory; only its `theme.css` needs slimming.)
 
 **Step 13 — (deleted; plugin CSS quick-wins; the named plugins — GDThumb, AdminTools, language_switch — are no longer in the tree).**
 

@@ -19,7 +19,8 @@ A fully installed Piwigo 16.x database with representative data:
 
 Automated via Playwright. Drives a full install + content seed against a
 scratch database (`piwigo_fixture_build`), then dumps it. Credentials come
-from `.env.local`; see `.env.example` for the variable list.
+from `.env.test` (loaded by `tests/e2e/global-setup.ts`); see `.env.example`
+for the variable list.
 
 ```bash
 REGENERATE_FIXTURE=1 npx playwright test tests/e2e/regenerate-fixture.spec.ts
@@ -27,8 +28,8 @@ REGENERATE_FIXTURE=1 npx playwright test tests/e2e/regenerate-fixture.spec.ts
 
 The spec is skipped by default — it writes a real local database and
 overwrites the committed fixture file, so it only runs when explicitly
-opted in. Cleanup (drop scratch DB, remove `local/config/database.inc.php`)
-runs in `afterAll` regardless of pass/fail.
+opted in. Cleanup (drop scratch DB) runs in `afterAll` regardless of
+pass/fail.
 
 After the run completes:
 

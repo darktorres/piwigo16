@@ -24,7 +24,6 @@ const SCRATCH_DB = 'piwigo_fixture_build';
 const ADMIN_USER = 'fixture_admin';
 const ADMIN_PASS = 'fixture_admin';
 const FIXTURE_PATH = path.resolve(__dirname, '../../dev/fixtures/piwigo-16.x.sql');
-const DB_CONFIG_PATH = path.resolve(__dirname, '../../local/config/database.inc.php');
 
 const DB_HOST = process.env.PIWIGO_DB_HOST ?? '127.0.0.1';
 const DB_PORT = process.env.PIWIGO_DB_PORT ?? '3306';
@@ -38,22 +37,6 @@ function shellQuote(s: string): string {
 function mysqlExec(sql: string): void {
     const cmd = `mysql -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASS} -e ${shellQuote(sql)}`;
     execSync(cmd, { stdio: 'pipe' });
-}
-
-function writeDbConfig(): void {
-    const dir = path.dirname(DB_CONFIG_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
-        DB_CONFIG_PATH,
-        `<?php
-$conf['dblayer'] = 'mysqli';
-$conf['db_host'] = '${DB_HOST}:${DB_PORT}';
-$conf['db_user'] = '${DB_USER}';
-$conf['db_password'] = '${DB_PASS}';
-$conf['db_base'] = '${SCRATCH_DB}';
-$prefixeTable = 'piwigo_';
-`
-    );
 }
 
 async function callWs(
@@ -76,21 +59,19 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
     );
 
     test.beforeAll(() => {
-        // Reset scratch DB and point Apache at it.
+        // Reset scratch DB. The install flow fills credentials via the
+        // installer form (see the install test below) and writes them to
+        // .env itself — no preflight config file needed.
         mysqlExec(`DROP DATABASE IF EXISTS ${SCRATCH_DB};`);
         mysqlExec(
             `CREATE DATABASE ${SCRATCH_DB} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
         );
-        if (fs.existsSync(DB_CONFIG_PATH)) fs.unlinkSync(DB_CONFIG_PATH);
-        writeDbConfig();
-        // Clear the install sentinel so install.php shows the installation form.
+        // Clear the install sentinel so the installer shows the form.
         const installedStamp = path.resolve(__dirname, '../../local/.installed.test');
         if (fs.existsSync(installedStamp)) fs.unlinkSync(installedStamp);
     });
 
     test.afterAll(() => {
-        // Leave no trace: scratch DB and the dev-only database.inc.php both go.
-        if (fs.existsSync(DB_CONFIG_PATH)) fs.unlinkSync(DB_CONFIG_PATH);
         try {
             mysqlExec(`DROP DATABASE IF EXISTS ${SCRATCH_DB};`);
         } catch {

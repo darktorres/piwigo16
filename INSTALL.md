@@ -43,6 +43,7 @@ tar -tzf piwigo-release.tar.gz | grep -E '^vendor/(phpstan|rector|phpunit|larave
 ## Requirements
 
 - PHP 8.5+
-- Extensions: `mysqli`, `mbstring`, `gd`, `exif`
+- Required extensions: `mysqli`, `mbstring`, `gd`
+- Optional extension: `exif` (EXIF-dependent features no-op gracefully when absent)
 - MariaDB 10.3+ or MySQL 8.0+
 - A writable `_data/` directory at the gallery root (created automatically on first run)

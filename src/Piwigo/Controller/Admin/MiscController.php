@@ -42,6 +42,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Page\PageHeaderRenderer;
 
 final class MiscController
 {
@@ -436,7 +437,7 @@ final class MiscController
             $page['page_banner'] = '<h1>' . $title . '</h1>';
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
             $tpl->assign(['U_RETURN' => '', 'USERNAME' => '', 'U_FAQ' => '', 'U_CHANGE_THEME' => '', 'U_LOGOUT' => '']);
-            require PHPWG_ROOT_PATH . 'include/page_header.php';
+            PageHeaderRenderer::render($title);
         }
 
         $helpPage = is_scalar($_GET['help'] ?? null) ? (string) $_GET['help'] : '';

@@ -19,6 +19,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the paginated comments list page (/comments).
@@ -370,7 +371,7 @@ SELECT *
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_comments');
         flush_page_messages();
         if (count($comments) > 0) {

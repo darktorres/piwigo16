@@ -23,6 +23,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles all admin pages (/admin{rest}).
@@ -375,7 +376,7 @@ final class AdminController implements ControllerInterface
 
         $tpl->assign('pwgmenu', ServiceLocator::get(AdminService::class)->pwgURL());
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
 
         EventDispatcher::notify('loc_end_admin');
 

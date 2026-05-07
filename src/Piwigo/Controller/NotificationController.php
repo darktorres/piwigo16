@@ -14,6 +14,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the notification/RSS subscription page (/notification).
@@ -61,7 +62,7 @@ final class NotificationController implements ControllerInterface
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_notification');
         flush_page_messages();
         $tpl->pparse('notification');

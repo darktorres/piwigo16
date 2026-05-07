@@ -16,6 +16,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the login page (/identification).
@@ -135,7 +136,7 @@ final class IdentificationController implements ControllerInterface
             : 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';
         $tpl->assign('HELP_LINK', $help_link);
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_identification');
         flush_page_messages();
         $tpl->pparse('identification');

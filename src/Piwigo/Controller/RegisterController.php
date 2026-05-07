@@ -16,6 +16,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the user registration page (/register).
@@ -130,7 +131,7 @@ final class RegisterController implements ControllerInterface
             : 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';
         $tpl->assign('HELP_LINK', $help_link);
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_register');
         flush_page_messages();
         $tpl->parse('register');

@@ -13,6 +13,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
@@ -591,7 +592,7 @@ SELECT *
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title, isset($refresh) && is_int($refresh) ? $refresh : null, $url_link ?? null);
         EventDispatcher::notify('loc_end_picture');
         flush_page_messages();
         if ($page['slideshow'] && Config::lightSlideshow()) {

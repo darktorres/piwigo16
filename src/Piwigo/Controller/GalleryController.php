@@ -20,6 +20,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,
@@ -350,7 +351,7 @@ final class GalleryController implements ControllerInterface
         }
 
         // Render page (outputs directly — legacy Smarty model)
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_index');
         flush_page_messages();
         $tpl->parseIndexButtons();

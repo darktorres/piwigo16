@@ -17,6 +17,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 /**
  * Handles the user profile / preferences page (/profile).
@@ -113,7 +114,7 @@ final class ProfileController implements ControllerInterface
             }
         }
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
 
         $cookie_lang = input_string('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {

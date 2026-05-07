@@ -11,6 +11,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageHeaderRenderer;
 
 final class PopuphelpController implements ControllerInterface
 {
@@ -46,7 +47,7 @@ final class PopuphelpController implements ControllerInterface
         $tpl->setFilenames(['popuphelp' => 'popuphelp.tpl']);
         $tpl->assign(['HELP_CONTENT' => $helpContent]);
 
-        require PHPWG_ROOT_PATH . 'include/page_header.php';
+        PageHeaderRenderer::render($title);
         $tpl->pparse('popuphelp');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';
 

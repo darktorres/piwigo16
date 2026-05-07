@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 
 /**
@@ -122,7 +123,7 @@ final class ImageStdParams
     public static function loadFromDb(): void
     {
         $derivatives = Config::derivatives();
-        $arr = \safe_unserialize(is_string($derivatives) ? $derivatives : '');
+        $arr = StringUtil::safeUnserialize(is_string($derivatives) ? $derivatives : '');
         if ($arr !== []) {
             $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
             $typeMap = [];
@@ -146,7 +147,7 @@ final class ImageStdParams
             self::save(false);
         }
 
-        $rawDisabled = \safe_unserialize(self::getDisabledTypeMap());
+        $rawDisabled = StringUtil::safeUnserialize(self::getDisabledTypeMap());
         $filteredDisabled = [];
         foreach ($rawDisabled as $k => $v) {
             if ($v instanceof DerivativeParams) {

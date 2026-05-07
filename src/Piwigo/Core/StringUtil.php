@@ -280,7 +280,7 @@ final class StringUtil
      * @param array<mixed>|string $value
      * @return array<mixed>
      */
-    public function safeUnserialize(array|string $value): array
+    public static function safeUnserialize(array|string $value): array
     {
         if (is_string($value)) {
             set_error_handler(static fn (): bool => true);

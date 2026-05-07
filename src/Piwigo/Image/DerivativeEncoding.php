@@ -13,6 +13,19 @@ final class DerivativeEncoding
     }
 
     /**
+     * Parses a size URL token (e.g. "120" or "432x324") into a [w, h] array.
+     * @return int[]
+     */
+    public static function urlToSize(string $s): array
+    {
+        $pos = strpos($s, 'x');
+        if ($pos === false) {
+            return [(int) $s, (int) $s];
+        }
+        return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
+    }
+
+    /**
      * Formats a size array into a URL token.
      * @param array<int|float> $s
      */

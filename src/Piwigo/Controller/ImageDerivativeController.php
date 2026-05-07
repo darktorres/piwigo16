@@ -11,6 +11,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
@@ -33,8 +34,6 @@ final class ImageDerivativeController implements ControllerInterface
 {
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        require_once PHPWG_ROOT_PATH . 'include/image_derivative_functions.php';
-
         $logger = LoggerRegistry::current();
 
         $ctx   = new ImageDerivativeContext();
@@ -56,12 +55,12 @@ final class ImageDerivativeController implements ControllerInterface
         }
         ImageStdParams::loadFromDb();
 
-        $dpRaw  = parse_request($ctx);
+        $dpRaw  = DerivativePipeline::parseRequest($ctx);
         $params = EventDispatcher::dispatch('derivative_params_get', $dpRaw);
 
         $src_mtime = Filesystem::tryFileMtime($ctx->srcPath);
         if ($src_mtime === false) {
-            ierror('Source not found', 404);
+            DerivativePipeline::ierror('Source not found', 404);
         }
 
         $need_generate   = false;
@@ -92,7 +91,7 @@ final class ImageDerivativeController implements ControllerInterface
                 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
                 exit;
             }
-            send_derivative($expires, $ctx);
+            DerivativePipeline::sendDerivative($expires, $ctx);
             exit;
         }
 
@@ -130,7 +129,7 @@ SELECT *
                     }
                 }
                 if (!$row) {
-                    ierror('Db file path not found', 404);
+                    DerivativePipeline::ierror('Db file path not found', 404);
                 }
             } catch (\Exception $e) {
                 $logger->error($e->getMessage());
@@ -140,7 +139,7 @@ SELECT *
         }
         $conn->close();
 
-        if (!try_switch_source($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
+        if (!DerivativePipeline::trySwitchSource($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
             $sharpen = 0;
             foreach (ImageStdParams::getDefinedTypeMap() as $std_params) {
                 $sharpen += $std_params->sharpen;
@@ -148,8 +147,8 @@ SELECT *
             $params->sharpen = round($sharpen / count(ImageStdParams::getDefinedTypeMap()));
         }
 
-        if (!mkgetdir(dirname($ctx->derivativePath))) {
-            ierror('dir create error', 500);
+        if (!is_dir(dirname($ctx->derivativePath)) && !mkdir(dirname($ctx->derivativePath), 0755, true)) {
+            DerivativePipeline::ierror('dir create error', 500);
         }
 
         ignore_user_abort(true);
@@ -158,14 +157,14 @@ SELECT *
         }
 
         $image = new PwgImage($ctx->srcPath);
-        $timing['load'] = time_step($step);
+        $timing['load'] = DerivativePipeline::timeStep($step);
 
         $changes = 0;
 
         if (0 != $ctx->rotationAngle) {
             $image->rotate((int) $ctx->rotationAngle);
             $changes++;
-            $timing['rotate'] = time_step($step);
+            $timing['rotate'] = DerivativePipeline::timeStep($step);
         }
 
         $o_size    = $d_size = [$image->getWidth(), $image->getHeight()];
@@ -175,19 +174,19 @@ SELECT *
         if ($crop_rect) {
             $changes++;
             $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
-            $timing['crop'] = time_step($step);
+            $timing['crop'] = DerivativePipeline::timeStep($step);
         }
 
         if ($scaled_size) {
             $changes++;
             $image->resize((int) $scaled_size[0], (int) $scaled_size[1]);
             $d_size         = $scaled_size;
-            $timing['scale'] = time_step($step);
+            $timing['scale'] = DerivativePipeline::timeStep($step);
         }
 
         if ($params->sharpen) {
             $changes += $image->sharpen((int) $params->sharpen);
-            $timing['sharpen'] = time_step($step);
+            $timing['sharpen'] = DerivativePipeline::timeStep($step);
         }
 
         if ($params->willWatermark($d_size)) {
@@ -227,12 +226,12 @@ SELECT *
                 }
             }
             $wm_image->destroy();
-            $timing['watermark'] = time_step($step);
+            $timing['watermark'] = DerivativePipeline::timeStep($step);
         }
 
         if (!$changes) {
             header('X-i: No change');
-            ierror($ctx->srcUrl, 301);
+            DerivativePipeline::ierror($ctx->srcUrl, 301);
         }
 
         if ($d_size[0] * $d_size[1] < Config::derivativesStripMetadataThreshold()) {
@@ -247,12 +246,12 @@ SELECT *
         $image->write($ctx->derivativePath);
         $image->destroy();
         Filesystem::tryChmod($ctx->derivativePath, 0644);
-        $timing['save'] = time_step($step);
+        $timing['save'] = DerivativePipeline::timeStep($step);
 
-        send_derivative($expires, $ctx);
-        $timing['send'] = time_step($step);
+        DerivativePipeline::sendDerivative($expires, $ctx);
+        $timing['send'] = DerivativePipeline::timeStep($step);
 
-        $timing['total'] = time_step($begin);
+        $timing['total'] = DerivativePipeline::timeStep($begin);
 
         if ($logger instanceof Logger && $logger->severity() >= Logger::DEBUG) {
             $logger->debug('image timing', [

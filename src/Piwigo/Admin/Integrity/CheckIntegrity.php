@@ -8,6 +8,7 @@ use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 class CheckIntegrity
@@ -52,7 +53,7 @@ class CheckIntegrity
         $this->retrieve_list = [];
         $this->build_ignore_list = [];
 
-        trigger_notify('list_check_integrity', $this);
+        EventDispatcher::notify('list_check_integrity', $this);
 
         // Information
         if (count($this->retrieve_list) > 0) {

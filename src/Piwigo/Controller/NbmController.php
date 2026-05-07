@@ -10,6 +10,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Notification\MailNotificationContext;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
@@ -23,7 +24,7 @@ final class NbmController implements ControllerInterface
 
         MailNotificationContext::init();
         load_language('admin.lang');
-        trigger_notify('loading_lang');
+        EventDispatcher::notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         $subscribe   = is_string($_GET['subscribe'] ?? null) ? $_GET['subscribe'] : null;

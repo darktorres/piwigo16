@@ -7,6 +7,7 @@ namespace Piwigo\Comment;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -166,7 +167,7 @@ final readonly class CommentService
             }
         }
 
-        $commentAction = (string) trigger_change('user_comment_check', $commentAction, $comm);
+        $commentAction = (string) EventDispatcher::dispatch('user_comment_check', $commentAction, $comm);
 
         if ($commentAction != 'reject') {
             $comm['id'] = $this->repo->insert([
@@ -228,7 +229,7 @@ final readonly class CommentService
                 'author'     => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '',
                 'comment_id' => $commentId,
             ]);
-            trigger_notify('user_comment_deletion', $commentId);
+            EventDispatcher::notify('user_comment_deletion', $commentId);
 
             return true;
         }
@@ -255,7 +256,7 @@ final readonly class CommentService
         }
 
         $globalUser    = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-        $commentAction = (string) trigger_change(
+        $commentAction = (string) EventDispatcher::dispatch(
             'user_comment_check',
             $commentAction,
             array_merge($comment, ['author' => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : ''])
@@ -360,7 +361,7 @@ final readonly class CommentService
     {
         $this->repo->setValidated($commentId);
         $this->invalidateUserCacheNbComments();
-        trigger_notify('user_comment_validation', $commentId);
+        EventDispatcher::notify('user_comment_validation', $commentId);
     }
 
     public function invalidateUserCacheNbComments(): void

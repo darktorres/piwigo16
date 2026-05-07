@@ -171,7 +171,7 @@ if (!Kernel::isBooted()) :
     session_start();
     UserBootstrap::bootstrap();
     EventDispatcher::init();
-    add_event_handler('try_log_user', AuthService::get()->pwgLogin(...));
+    EventDispatcher::addListener('try_log_user', AuthService::get()->pwgLogin(...));
     PluginService::get()->loadPlugins();
 
     if (!Config::has('piwigo_installed_version')) {
@@ -231,7 +231,7 @@ if (PermissionService::get()->isAdmin() || (defined('IN_ADMIN') ? constant('IN_A
     // Add language for temporary strings for new popup, from piwigo 15
     load_language('whats_new_'.get_branch_from_version(PHPWG_VERSION).'.lang');
 }
-trigger_notify('loading_lang');
+EventDispatcher::notify('loading_lang');
 load_language('lang', PHPWG_ROOT_PATH.PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
 // only now we can set the localized username of the guest user (and not in
@@ -341,18 +341,18 @@ if (Config::has('header_notes')) {
 }
 
 // default event handlers
-add_event_handler('render_category_literal_description', 'render_category_literal_description');
+EventDispatcher::addListener('render_category_literal_description', 'render_category_literal_description');
 if (!Config::allowHtmlDescriptions()) {
-    add_event_handler('render_category_description', 'pwg_nl2br');
+    EventDispatcher::addListener('render_category_description', 'pwg_nl2br');
 }
-add_event_handler('render_comment_content', 'render_comment_content');
-add_event_handler('render_comment_author', 'strip_tags');
-add_event_handler('render_tag_url', 'str2url');
-add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
+EventDispatcher::addListener('render_comment_content', 'render_comment_content');
+EventDispatcher::addListener('render_comment_author', 'strip_tags');
+EventDispatcher::addListener('render_tag_url', 'str2url');
+EventDispatcher::addListener('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
 if (!empty(Config::originalUrlProtection())) {
-    add_event_handler('get_element_url', 'get_element_url_protection_handler');
-    add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');
+    EventDispatcher::addListener('get_element_url', 'get_element_url_protection_handler');
+    EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');
 }
-trigger_notify('init');
+EventDispatcher::notify('init');
 
 endif; // !Kernel::isBooted()

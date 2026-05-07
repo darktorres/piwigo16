@@ -9,6 +9,7 @@ use MatthiasMullie\Minify\CSS;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\PermissionService;
 
 /**
@@ -163,7 +164,7 @@ final class FileCombiner
             $handle = $this->type. '.' .$combinable->id;
             $resolved = realpath(PHPWG_ROOT_PATH.$combinable->path);
             $template->setFilename($handle, $resolved !== false ? $resolved : PHPWG_ROOT_PATH.$combinable->path);
-            trigger_notify('combinable_preparse', $template, $combinable, $this); //allow themes and plugins to set their own vars to template ...
+            EventDispatcher::notify('combinable_preparse', $template, $combinable, $this); //allow themes and plugins to set their own vars to template ...
             $content = (string) $template->parse($handle, true);
 
             if ($this->is_css) {
@@ -230,7 +231,7 @@ final class FileCombiner
             $minifier = new CSS($css);
             $css = $minifier->minify();
         }
-        $css = trigger_change('combined_css_postfilter', $css);
+        $css = EventDispatcher::dispatch('combined_css_postfilter', $css);
         return $css;
     }
 

@@ -9,6 +9,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
@@ -110,7 +111,7 @@ class Themes
                 $vRaw = $this->fs_themes[$theme_id]['version'] ?? null;
                 $version = is_scalar($vRaw) ? (string) $vRaw : '';
                 $theme_maintain->activate($version, $errors);
-                $errors = trigger_change('theme_activate_errors', $errors);
+                $errors = EventDispatcher::dispatch('theme_activate_errors', $errors);
 
                 if (empty($errors)) {
                     $tvRaw = $this->fs_themes[$theme_id]['version'] ?? null;

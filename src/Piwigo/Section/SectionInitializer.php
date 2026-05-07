@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -174,7 +175,7 @@ final class SectionInitializer
                 $catComment   = is_string($category['comment'] ?? null) ? $category['comment'] : '';
                 $upperNames   = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
                 $page = array_merge($page, [
-                    'comment' => trigger_change('render_category_description', $catComment, 'main_page_category_description'),
+                    'comment' => EventDispatcher::dispatch('render_category_description', $catComment, 'main_page_category_description'),
                     'title'   => get_cat_display_name($upperNames, ''),
                 ]);
             } else {
@@ -529,6 +530,6 @@ SELECT DISTINCT(id)
         $page['body_classes'] = $bodyClasses;
         $page['body_data']    = $bodyData;
 
-        trigger_notify('loc_end_section_init');
+        EventDispatcher::notify('loc_end_section_init');
     }
 }

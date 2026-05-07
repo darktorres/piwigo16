@@ -7,6 +7,7 @@ namespace Piwigo\Ws;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
@@ -151,7 +152,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         ));
 
         WsMethodRegistrar::register($this);
-        trigger_notify('ws_add_methods', [&$this]);
+        EventDispatcher::notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
     }
 
@@ -170,7 +171,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             header('Content-Type: '.$contentType.'; charset='.get_pwg_charset());
         }
         print_r($encodedResponse);
-        trigger_notify('sendResponse', $encodedResponse);
+        EventDispatcher::notify('sendResponse', $encodedResponse);
     }
 
     public function hasMethod(string $methodName): bool
@@ -357,7 +358,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(WS_ERR_MISSING_PARAM, 'Missing parameters: '.implode(',', $missing_params));
         }
 
-        $result = trigger_change('ws_invoke_allowed', true, $methodName, $params);
+        $result = EventDispatcher::dispatch('ws_invoke_allowed', true, $methodName, $params);
         // A handler may return PwgError to block invocation; true means allowed
         if ($result !== true) {
             return new PwgError(WS_ERR_INVALID_METHOD, 'Method invocation not allowed');
@@ -469,7 +470,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             define('WS_XML_ATTRIBUTES', 'attributes_xml_');
         }
 
-        add_event_handler('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EVENT_HANDLER_PRIORITY_NEUTRAL);
+        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EVENT_HANDLER_PRIORITY_NEUTRAL);
 
         $requestFormat = 'rest';
         $responseFormat = null;

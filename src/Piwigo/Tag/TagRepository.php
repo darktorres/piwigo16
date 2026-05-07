@@ -6,6 +6,7 @@ namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Plugins\EventDispatcher;
 
 /**
  * Persistence layer for the tag domain.
@@ -14,7 +15,7 @@ use Piwigo\Db\AbstractRepository;
  * no raw string interpolation of user-controlled values.
  *
  * Callers remain responsible for permission filtering (get_sql_condition_FandF)
- * and for applying plugin hooks such as trigger_change('render_tag_name', …).
+ * and for applying plugin hooks such as EventDispatcher::dispatch('render_tag_name', …).
  */
 final class TagRepository extends AbstractRepository
 {

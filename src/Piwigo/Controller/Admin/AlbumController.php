@@ -25,6 +25,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
@@ -92,7 +93,7 @@ final class AlbumController
         $tabsheet->select((string) $page['tab']);
         $tabsheet->assign();
 
-        $category_name = trigger_change('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
+        $category_name = EventDispatcher::dispatch('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
         $tpl->assign([
             'ADMIN_PAGE_TITLE'     => l10n('Edit album') . ' <strong>' . (is_scalar($category_name) ? (string) $category_name : '') . '</strong>',
             'ADMIN_PAGE_OBJECT_ID' => '#' . (is_scalar($this->albumCategory['id']) ? (string) $this->albumCategory['id'] : ''),
@@ -165,7 +166,7 @@ final class AlbumController
             }
 
             foreach (ServiceLocator::get(CategoryRepository::class)->findByIds(array_map(intval(...), $category_ids)) as $row) {
-                $row['name'] = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
+                $row['name'] = EventDispatcher::dispatch('render_category_name', $row['name'], 'admin_cat_list');
                 if ($order_by_date) {
                     $rowId  = is_scalar($row['id']) ? (string) $row['id'] : '';
                     $sort[] = $ref_dates[$rowId] ?? null;
@@ -190,7 +191,7 @@ final class AlbumController
 
         $associatedTree = [];
         foreach ($allAlbum as $album) {
-            $album['name'] = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
+            $album['name'] = EventDispatcher::dispatch('render_category_name', $album['name'], 'admin_cat_list');
             $album['lastmodified'] = time_since(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
             $parents = explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : '');
             $the_place = &$associatedTree[strval($parents[0])];
@@ -311,13 +312,13 @@ final class AlbumController
                 }
             }
 
-            $args = ['subject' => l10n('[%s] Visit album %s', Config::galleryTitle(), trigger_change('render_category_name', $category['name'], 'admin_cat_list'))];
+            $args = ['subject' => l10n('[%s] Visit album %s', Config::galleryTitle(), EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'))];
             $mailTpl = [
                 'filename' => 'cat_group_info',
                 'assign'   => [
                     'IMG'         => $img,
-                    'CAT_NAME'    => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
-                    'LINK'        => make_index_url(['category' => ['id' => $category['id'], 'name' => trigger_change('render_category_name', $category['name'], 'admin_cat_list'), 'permalink' => $category['permalink']]]),
+                    'CAT_NAME'    => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'),
+                    'LINK'        => make_index_url(['category' => ['id' => $category['id'], 'name' => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'), 'permalink' => $category['permalink']]]),
                     'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes(is_scalar($_POST['mail_content']) ? (string) $_POST['mail_content'] : ''),
                 ],
             ];
@@ -418,7 +419,7 @@ final class AlbumController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
-        trigger_notify('loc_begin_cat_list');
+        EventDispatcher::notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
             check_pwg_token();
@@ -539,7 +540,7 @@ final class AlbumController
 
             $catIdStr = (string) (is_numeric($category['id']) ? (int) $category['id'] : 0);
             $tpl_cat  = [
-                'NAME'             => trigger_change('render_category_name', $category['name'], 'admin_cat_list'),
+                'NAME'             => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'),
                 'NB_PHOTOS'        => $nb_photos_in[$catIdStr] ?? 0,
                 'NB_SUB_PHOTOS'    => $nb_sub_photos[$catIdStr] ?? 0,
                 'NB_SUB_ALBUMS'    => isset($subcats_of[$catIdStr]) ? count($subcats_of[$catIdStr]) : 0,
@@ -564,7 +565,7 @@ final class AlbumController
             $tpl->append('categories', $tpl_cat);
         }
 
-        trigger_notify('loc_end_cat_list');
+        EventDispatcher::notify('loc_end_cat_list');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'categories');
     }
 
@@ -573,7 +574,7 @@ final class AlbumController
     private function catModify(): void
     {
         $tpl = TemplateRegistry::current();
-        trigger_notify('loc_begin_cat_modify');
+        EventDispatcher::notify('loc_begin_cat_modify');
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
             trigger_error('missing cat_id param', E_USER_ERROR);
@@ -744,7 +745,7 @@ final class AlbumController
             'str_modal_ab'                         => l10n('New parent album'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        trigger_notify('loc_end_cat_modify');
+        EventDispatcher::notify('loc_end_cat_modify');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'album_properties');
     }
 

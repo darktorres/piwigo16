@@ -35,6 +35,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Site\LocalSiteReader;
@@ -399,7 +400,7 @@ final class MaintenanceController
         }
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $advanced_features = trigger_change('get_admin_advanced_features_links', []);
+        $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
@@ -584,7 +585,7 @@ final class MaintenanceController
             $tpl->assign(['INSTALLED_ON' => format_date($installed_on, ['day', 'month', 'year']), 'INSTALLED_SINCE' => time_since($installed_on, 'day')]);
         }
 
-        $advanced_features = trigger_change('get_admin_advanced_features_links', []);
+        $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
@@ -1065,7 +1066,7 @@ final class MaintenanceController
             if ($row['id'] != 1) {
                 $tpl_var['U_DELETE'] = $base_url . 'delete';
             }
-            $tpl_var['plugin_links'] = trigger_change('get_admins_site_links', [], $row['id'], $is_remote);
+            $tpl_var['plugin_links'] = EventDispatcher::dispatch('get_admins_site_links', [], $row['id'], $is_remote);
             $tpl->append('sites', $tpl_var);
         }
 

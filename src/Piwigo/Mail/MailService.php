@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
@@ -184,7 +185,7 @@ final readonly class MailService
                 }
             }
 
-            trigger_notify('loading_lang');
+            EventDispatcher::notify('loading_lang');
             load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
@@ -516,7 +517,7 @@ SELECT
             if (!RequestCache::has('mail_tpl', $cacheKey)) {
                 $mailTpl = $this->getMailTemplate($contentType);
                 RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
-                trigger_notify('before_parse_mail_template', $cacheKey, $contentType);
+                EventDispatcher::notify('before_parse_mail_template', $cacheKey, $contentType);
 
                 $mailTpl->setFilename('mail_header', 'header.tpl');
                 $mailTpl->setFilename('mail_footer', 'footer.tpl');
@@ -648,7 +649,7 @@ SELECT
         }
 
         $ret        = true;
-        $preResult  = trigger_change('before_send_mail', true, $to, $args, $mail);
+        $preResult  = EventDispatcher::dispatch('before_send_mail', true, $to, $args, $mail);
 
         if ($preResult) {
             $ret = $mail->send();
@@ -733,7 +734,7 @@ SELECT
 
         unset_make_full_url();
 
-        $message = trigger_change('render_lost_password_mail_content', $message);
+        $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
 
         return [
             'subject'        => '[' . $galleryTitle . '] ' . l10n('Password Reset'),
@@ -759,7 +760,7 @@ SELECT
 
         unset_make_full_url();
 
-        $message = trigger_change('render_lost_password_mail_content', $message);
+        $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
         $subject = l10n('Welcome to %s', $galleryTitle);
 
         return [

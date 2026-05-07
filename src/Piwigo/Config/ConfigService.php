@@ -9,6 +9,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Plugins\EventDispatcher;
 
 final readonly class ConfigService
 {
@@ -44,7 +45,7 @@ final readonly class ConfigService
             Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
         }
 
-        trigger_notify('load_conf', $condition);
+        EventDispatcher::notify('load_conf', $condition);
     }
 
     public function pwgIsDbconfWriteable(): bool

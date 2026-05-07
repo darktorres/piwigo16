@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
@@ -30,7 +31,7 @@ final class IdentificationController implements ControllerInterface
             redirect(get_gallery_home_url());
         }
 
-        trigger_notify('loc_begin_identification');
+        EventDispatcher::notify('loc_begin_identification');
 
         unset($_SESSION['reset_password_code']);
 
@@ -135,7 +136,7 @@ final class IdentificationController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_identification');
+        EventDispatcher::notify('loc_end_identification');
         flush_page_messages();
         $tpl->pparse('identification');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

@@ -9,6 +9,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -39,7 +40,7 @@ final class ProfileController implements ControllerInterface
 
         $userdata = $user;
 
-        trigger_notify('loc_begin_profile');
+        EventDispatcher::notify('loc_begin_profile');
 
         $default_user = ServiceLocator::get(UserRepository::class)
             ->getDefaultUserInfo(Config::defaultUserId());
@@ -141,7 +142,7 @@ final class ProfileController implements ControllerInterface
             : 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';
         $tpl->assign('HELP_LINK', $help_link);
 
-        trigger_notify('loc_end_profile');
+        EventDispatcher::notify('loc_end_profile');
         flush_page_messages();
         $tpl->pparse('profile');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

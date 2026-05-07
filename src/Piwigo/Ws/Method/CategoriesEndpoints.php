@@ -16,6 +16,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -94,9 +95,9 @@ final class CategoriesEndpoints
                     $image[$k] = $row[$k];
                 }
                 $imageName   = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderedName = trigger_change('render_element_name', $imageName, __FUNCTION__);
+                $renderedName = EventDispatcher::dispatch('render_element_name', $imageName, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
-                $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $images[] = $image;
             }
@@ -211,11 +212,11 @@ final class CategoriesEndpoints
                 $row['name'] = strip_tags(get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', null));
             } else {
                 $row['name_raw']  = $row['name'];
-                $renderedListName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getList');
+                $renderedListName = EventDispatcher::dispatch('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getList');
                 $row['name']      = strip_tags((string) $renderedListName);
             }
             $row['comment_raw'] = $row['comment'];
-            $row['comment']     = trigger_change('render_category_description', is_scalar($row['comment']) ? (string) $row['comment'] : '', 'ws_categories_getList');
+            $row['comment']     = EventDispatcher::dispatch('render_category_description', is_scalar($row['comment']) ? (string) $row['comment'] : '', 'ws_categories_getList');
             $imageId            = null;
             if (!empty($row['user_representative_picture_id'])) {
                 $imageId = $row['user_representative_picture_id'];
@@ -337,11 +338,11 @@ final class CategoriesEndpoints
             $row['nb_images'] = $nbImagesOf[$id] ?? 0;
             $catDisplayName  = get_cat_display_name_cache(is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
-            $renderedAdminName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getAdminList');
+            $renderedAdminName = EventDispatcher::dispatch('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_getAdminList');
             $row['name']     = strip_tags((string) $renderedAdminName);
             $row['fullname'] = strip_tags($catDisplayName);
             $row['comment_raw'] = $row['comment'];
-            $row['comment']  = trigger_change('render_category_description', $row['comment'] ?? '', 'ws_categories_getAdminList');
+            $row['comment']  = EventDispatcher::dispatch('render_category_description', $row['comment'] ?? '', 'ws_categories_getAdminList');
             if (empty($row['image_order'])) {
                 $row['image_order'] = str_replace('ORDER BY ', '', Config::orderBy());
             }
@@ -606,7 +607,7 @@ final class CategoriesEndpoints
             $categoriesInDb[$rowId] = $row;
             $updateCatIds = array_merge($updateCatIds, array_slice(explode(',', is_scalar($row['uppercats']) ? (string) $row['uppercats'] : ''), 0, -1));
             if (!empty($row['dir'])) {
-                $renderedMoveName = trigger_change('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_move');
+                $renderedMoveName = EventDispatcher::dispatch('render_category_name', is_scalar($row['name']) ? (string) $row['name'] : '', 'ws_categories_move');
                 $row['name'] = strip_tags((string) $renderedMoveName);
                 return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $row['name'], is_numeric($row['id']) ? (int) $row['id'] : 0));
             }

@@ -24,6 +24,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -177,7 +178,7 @@ SELECT id
             }
 
             $data['date_creation'] = !empty($_POST['date_creation']) ? $_POST['date_creation'] : null;
-            $data = trigger_change('picture_modify_before_update', $data);
+            $data = EventDispatcher::dispatch('picture_modify_before_update', $data);
 
             Dml::singleUpdate(IMAGES_TABLE, $data, ['id' => $data['id']]);
 
@@ -389,7 +390,7 @@ SELECT id
             'PWG_TOKEN' => get_pwg_token(),
         ]);
 
-        trigger_notify('loc_end_picture_modify');
+        EventDispatcher::notify('loc_end_picture_modify');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_modify');
     }
 
@@ -627,7 +628,7 @@ SELECT id
         $selected_category = [];
         ServiceLocator::get(DirectPreparer::class)->prepare(PHOTOS_ADD_BASE_URL);
 
-        trigger_notify('loc_end_photo_add_direct');
+        EventDispatcher::notify('loc_end_photo_add_direct');
 
         $unique_exts_for_json = array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions()));
 

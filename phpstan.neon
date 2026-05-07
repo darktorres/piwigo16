@@ -22,7 +22,7 @@ rules:
 services:
     -
         class: Piwigo\Tools\PhpStan\TriggerChangeDynamicReturnType
-        tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]
+        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
         class: Piwigo\Tools\PhpStan\PwgGetSessionVarDynamicReturnType
         tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]

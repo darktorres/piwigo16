@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Filter\FilterService;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -82,7 +83,7 @@ FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . '
   ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
         }
 
-        $where = trigger_change('get_categories_menu_sql_where', $where, $userExpand, $filter['enabled']);
+        $where = EventDispatcher::dispatch('get_categories_menu_sql_where', $where, $userExpand, $filter['enabled']);
 
         $query .= '
 WHERE ' . $where . '
@@ -93,7 +94,7 @@ WHERE ' . $where . '
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
             $row           = array_merge($row, [
-                'NAME'        => trigger_change('render_category_name', $row['name'], 'get_categories_menu'),
+                'NAME'        => EventDispatcher::dispatch('render_category_name', $row['name'], 'get_categories_menu'),
                 'TITLE'       => $this->getDisplayImagesCount(
                     is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
                     is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
@@ -164,7 +165,7 @@ WHERE ' . $where . '
     public function getCategoryPreferredImageOrders(): array
     {
         $page   = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        $result = trigger_change('get_category_preferred_image_orders', [
+        $result = EventDispatcher::dispatch('get_category_preferred_image_orders', [
             [l10n('Default'),                        '',                     true],
             [l10n('Photo title, A &rarr; Z'),        'name ASC',             true],
             [l10n('Photo title, Z &rarr; A'),        'name DESC',            true],
@@ -195,7 +196,7 @@ WHERE ' . $where . '
             } else {
                 $option  = str_repeat('&nbsp;', (3 * substr_count(is_scalar($category['global_rank']) ? (string) $category['global_rank'] : '', '.')));
                 $option .= '- ';
-                $option .= strip_tags((string) trigger_change('render_category_name', is_scalar($category['name']) ? (string) $category['name'] : '', 'display_select_categories'));
+                $option .= strip_tags((string) EventDispatcher::dispatch('render_category_name', is_scalar($category['name']) ? (string) $category['name'] : '', 'display_select_categories'));
             }
             $tplCats[is_scalar($category['id']) ? (string) $category['id'] : ''] = $option;
         }
@@ -570,7 +571,7 @@ SELECT
             $catIdKey             = is_scalar($cat['id']) ? (string) $cat['id'] : '';
             $indexOfCat[$catIdKey] = $idx;
             $cats[$idx]['LEVEL']  = substr_count(is_scalar($cat['global_rank']) ? (string) $cat['global_rank'] : '', '.') + 1;
-            $cats[$idx]['name']   = trigger_change('render_category_name', is_scalar($cat['name']) ? (string) $cat['name'] : '', $cat);
+            $cats[$idx]['name']   = EventDispatcher::dispatch('render_category_name', is_scalar($cat['name']) ? (string) $cat['name'] : '', $cat);
 
             if (isset($commonCats[$catIdKey])) {
                 $cats[$idx]['count_images'] = $commonCats[$catIdKey]['counter'];

@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +19,7 @@ final class AboutController implements ControllerInterface
     {
         PermissionService::get()->checkStatus(ACCESS_GUEST);
 
-        trigger_notify('loc_begin_about');
+        EventDispatcher::notify('loc_begin_about');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -47,7 +48,7 @@ final class AboutController implements ControllerInterface
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_about');
+        EventDispatcher::notify('loc_end_about');
         flush_page_messages();
         $tpl->pparse('about');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

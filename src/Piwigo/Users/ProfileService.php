@@ -9,6 +9,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 final class ProfileService
@@ -140,7 +141,7 @@ final class ProfileService
             }
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
-            trigger_notify('save_profile_from_post', $userId);
+            EventDispatcher::notify('save_profile_from_post', $userId);
             pwg_activity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
 
             if (!empty($_POST['redirect'])) {
@@ -224,7 +225,7 @@ final class ProfileService
             : l10n('You have no email address, so you will not be notified when your API key is about to expire.');
         $tpl->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
-        trigger_notify('load_profile_in_template', $userdata);
+        EventDispatcher::notify('load_profile_in_template', $userdata);
         $tpl->assign('PWG_TOKEN', get_pwg_token());
     }
 }

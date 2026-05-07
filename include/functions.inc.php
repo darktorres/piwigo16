@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Auth\CookieService;
 use Gettext\Loader\PoLoader;
+use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -28,6 +28,7 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Picture\PictureService;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionService;
@@ -44,7 +45,6 @@ use Piwigo\Users\UserService;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-require_once(PHPWG_ROOT_PATH . 'include/functions_plugins.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
@@ -296,7 +296,7 @@ function redirect_html(mixed $url, mixed $msg = '', mixed $refresh_time = 0): vo
     if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
         CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
         load_language('common.lang');
-        trigger_notify('loading_lang');
+        EventDispatcher::notify('loading_lang');
         load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
         TemplateRegistry::set($tpl);
@@ -471,7 +471,7 @@ function load_conf_from_db(?string $condition = '', bool $die_on_condition_with_
         Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
     }
 
-    trigger_notify('load_conf', $condition);
+    EventDispatcher::notify('load_conf', $condition);
 }
 
 function pwg_is_dbconf_writeable(): bool
@@ -1446,7 +1446,7 @@ function parse_exif_gps_data(array $raw, string $ref): float
 
 // ── Comment delegates (inlined from functions_comment.inc.php) ────────────
 
-add_event_handler('user_comment_check', 'user_comment_check');
+EventDispatcher::addListener('user_comment_check', 'user_comment_check');
 
 /** @param array<string,mixed> $comment */
 function user_comment_check(string $action, array $comment): string
@@ -1755,4 +1755,4 @@ function pwg_generate_success_reset_password_mail(string $username, int $nb_of_a
     return ServiceLocator::get(MailService::class)->pwgGenerateSuccessResetPasswordMail($username, $nb_of_apikeys);
 }
 
-trigger_notify('functions_mail_included');
+EventDispatcher::notify('functions_mail_included');

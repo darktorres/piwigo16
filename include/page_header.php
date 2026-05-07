@@ -7,6 +7,7 @@ use Piwigo\Config\Config;
 global $persistent_cache, $title, $debug, $t2;
 
 use Piwigo\Core\PageState;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 // +-----------------------------------------------------------------------+
@@ -27,7 +28,7 @@ if (!is_array($page)) {
 //
 $template->setFilenames(['header' => 'header.tpl']);
 
-trigger_notify('loc_begin_page_header');
+EventDispatcher::notify('loc_begin_page_header');
 
 $show_mobile_app_banner = conf_get_param('show_mobile_app_banner_in_gallery', false);
 if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
@@ -41,7 +42,7 @@ $template->assign(
       $page['gallery_title'] ?? Config::galleryTitle(),
 
     'PAGE_BANNER' =>
-      trigger_change(
+      EventDispatcher::dispatch(
           'render_page_banner',
           str_replace(
               '%gallery_title%',
@@ -109,9 +110,9 @@ if (isset($refresh) and intval($refresh) >= 0
     );
 }
 
-trigger_notify('loc_end_page_header');
+EventDispatcher::notify('loc_end_page_header');
 
 header('Content-Type: text/html; charset='.get_pwg_charset());
 $template->parse('header');
 
-trigger_notify('loc_after_page_header');
+EventDispatcher::notify('loc_after_page_header');

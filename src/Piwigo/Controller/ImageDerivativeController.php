@@ -14,6 +14,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
+use Piwigo\Plugins\EventDispatcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,7 +58,7 @@ final class ImageDerivativeController implements ControllerInterface
         ImageStdParams::loadFromDb();
 
         $dpRaw  = parse_request($ctx);
-        $params = trigger_change('derivative_params_get', $dpRaw);
+        $params = EventDispatcher::dispatch('derivative_params_get', $dpRaw);
 
         $src_mtime = Filesystem::tryFileMtime($ctx->srcPath);
         if ($src_mtime === false) {

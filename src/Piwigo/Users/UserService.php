@@ -18,6 +18,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Job\SendNotificationEmailJob;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -68,7 +69,7 @@ final readonly class UserService
             }
         }
 
-        $errors = trigger_change('register_user_check', $errors, ['username' => $login, 'password' => $password, 'email' => $mailAddress]);
+        $errors = EventDispatcher::dispatch('register_user_check', $errors, ['username' => $login, 'password' => $password, 'email' => $mailAddress]);
 
         if (empty($errors)) {
             $insert = [
@@ -135,7 +136,7 @@ final readonly class UserService
                 );
             }
 
-            trigger_notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
+            EventDispatcher::notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
             pwg_activity('user', $userId, 'add');
 
             return (int) $userId;

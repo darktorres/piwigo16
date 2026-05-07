@@ -16,6 +16,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 
@@ -70,7 +71,7 @@ final readonly class CategoryAdminService
         $catRepo2->deletePermalinksByCategoryIds($ids);
         $userRepo2->deleteUserCacheByCategoryIds($ids);
 
-        trigger_notify('delete_categories', $ids);
+        EventDispatcher::notify('delete_categories', $ids);
         pwg_activity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
     }
 
@@ -473,7 +474,7 @@ SELECT DISTINCT id
             $userId = CurrentUser::get()->id;
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge(ServiceLocator::get(UserAdminService::class)->getAdmins(), [$userId])));
         }
-        trigger_notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
+        EventDispatcher::notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
         pwg_activity('album', $insertedId, 'add');
         return ['info' => l10n('Album added'), 'id' => $insertedId];
     }
@@ -676,7 +677,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         }
         conf_delete_param('empty_lounge_running');
         $logger->debug('empty_lounge, exec=' . $execId . ', ends');
-        trigger_notify('empty_lounge', $rows);
+        EventDispatcher::notify('empty_lounge', $rows);
         return $rows;
     }
 }

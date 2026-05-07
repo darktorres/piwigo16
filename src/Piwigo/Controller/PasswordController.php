@@ -9,6 +9,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -28,7 +29,7 @@ final class PasswordController implements ControllerInterface
 
         PermissionService::get()->checkStatus(ACCESS_FREE);
 
-        trigger_notify('loc_begin_password');
+        EventDispatcher::notify('loc_begin_password');
 
         check_input_parameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
@@ -165,7 +166,7 @@ final class PasswordController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_password');
+        EventDispatcher::notify('loc_end_password');
         flush_page_messages();
         $tpl->pparse('password');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

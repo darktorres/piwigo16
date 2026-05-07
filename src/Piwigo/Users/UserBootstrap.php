@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -153,7 +154,7 @@ final class UserBootstrap
             }
         }
 
-        trigger_notify('user_init', $user);
+        EventDispatcher::notify('user_init', $user);
 
         // Re-attach CurrentUser after UserService::get()->buildUser() populated $GLOBALS['user']
         CurrentUser::attachGlobals();

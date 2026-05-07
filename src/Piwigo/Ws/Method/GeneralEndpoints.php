@@ -21,6 +21,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
@@ -601,7 +602,7 @@ final class GeneralEndpoints
             foreach (ServiceLocator::get(TagRepository::class)->findAll() as $row) {
                 $tagIdKey = is_scalar($row['id']) ? (string) $row['id'] : '';
                 if ($tagIdKey !== '') {
-                    $nameOfTag[$tagIdKey] = trigger_change('render_tag_name', $row['name'], $row);
+                    $nameOfTag[$tagIdKey] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
                 }
             }
         }
@@ -665,7 +666,7 @@ final class GeneralEndpoints
                 }
                 $imageTitle = '';
                 if (isset($imageInfos[$lineImageIdStr]['label'])) {
-                    $tcResult    = trigger_change('render_element_description', $imageInfos[$lineImageIdStr]['label']);
+                    $tcResult    = EventDispatcher::dispatch('render_element_description', $imageInfos[$lineImageIdStr]['label']);
                     $imageTitle .= ' ' . (is_scalar($tcResult) ? (string) $tcResult : '');
                 } else {
                     $imageEditString = '';

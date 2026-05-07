@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -23,7 +24,7 @@ final class UserAdminService
         $uRepo->deleteAllRelatedData($uid);
         delete_user_sessions($uid);
         $uRepo->deleteByUserId($uid, USERS_TABLE, Config::userFields()['id']);
-        trigger_notify('delete_user', $userId);
+        EventDispatcher::notify('delete_user', $userId);
         pwg_activity('user', is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0), 'delete');
     }
 
@@ -126,7 +127,7 @@ final class UserAdminService
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
-        trigger_notify('delete_group', $groupids);
+        EventDispatcher::notify('delete_group', $groupids);
         pwg_activity('group', $groupids, 'delete');
         return $groupList;
     }
@@ -158,7 +159,7 @@ final class UserAdminService
         }
         $persistentCache->purge(true);
         conf_delete_param('count_orphans');
-        trigger_notify('invalidate_user_cache', $full);
+        EventDispatcher::notify('invalidate_user_cache', $full);
     }
 
     public function invalidateUserCacheNbTags(): void

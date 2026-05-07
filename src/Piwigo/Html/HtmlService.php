@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
@@ -31,7 +32,7 @@ final class HtmlService
                 continue;
             }
 
-            $cat['name'] = trigger_change(
+            $cat['name'] = EventDispatcher::dispatch(
                 'render_category_name',
                 is_scalar($cat['name']) ? (string) $cat['name'] : '',
                 'get_cat_display_name'
@@ -95,7 +96,7 @@ SELECT id, name, permalink
                 continue;
             }
 
-            $cat['name'] = trigger_change(
+            $cat['name'] = EventDispatcher::dispatch(
                 'render_category_name',
                 is_scalar($cat['name']) ? (string) $cat['name'] : '',
                 'get_cat_display_name_cache'
@@ -354,7 +355,7 @@ $btraceMsg
         }
 
         header("$protocol $code $text", true, $code);
-        trigger_notify('set_status_header', $code, $text);
+        EventDispatcher::notify('set_status_header', $code, $text);
     }
 
     public function renderCategoryLiteralDescription(?string $desc): string
@@ -385,7 +386,7 @@ $btraceMsg
     public function renderElementName(array $info): string
     {
         if (!empty($info['name'])) {
-            return (string) trigger_change('render_element_name', is_scalar($info['name']) ? (string) $info['name'] : '', $info);
+            return (string) EventDispatcher::dispatch('render_element_name', is_scalar($info['name']) ? (string) $info['name'] : '', $info);
         }
         return get_name_from_file(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
@@ -394,7 +395,7 @@ $btraceMsg
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (!empty($info['comment'])) {
-            return (string) trigger_change('render_element_description', is_scalar($info['comment']) ? (string) $info['comment'] : '', $param);
+            return (string) EventDispatcher::dispatch('render_element_description', is_scalar($info['comment']) ? (string) $info['comment'] : '', $param);
         }
         return '';
     }
@@ -426,7 +427,7 @@ $btraceMsg
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $title = trigger_change('get_thumbnail_title', $title, $info);
+        $title = EventDispatcher::dispatch('get_thumbnail_title', $title, $info);
 
         return $title;
     }

@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\AuthException;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -68,7 +69,7 @@ final class PictureCommentRenderer
                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
             }
 
-            trigger_notify('user_comment_insertion', array_merge($comm, ['action' => $comment_action]));
+            EventDispatcher::notify('user_comment_insertion', array_merge($comm, ['action' => $comment_action]));
         } elseif (isset($_POST['content'])) {
             set_status_header(403);
             throw new AuthException('ugly spammer');
@@ -160,9 +161,9 @@ SELECT
 
                     $tpl_comment = [
                         'ID' => $row['id'],
-                        'AUTHOR' => trigger_change('render_comment_author', $row['author']),
+                        'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
                         'DATE' => format_date(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => trigger_change('render_comment_content', $row['content']),
+                        'CONTENT' => EventDispatcher::dispatch('render_comment_content', $row['content']),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 

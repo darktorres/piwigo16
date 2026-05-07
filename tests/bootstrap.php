@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 require __DIR__ . '/../vendor/autoload.php';
 
 // Mark this PHP process as a test-mode runtime BEFORE the loader reads
@@ -111,18 +112,5 @@ if (!function_exists('get_pwg_charset')) {
     function get_pwg_charset(): string
     {
         return 'utf-8';
-    }
-}
-
-// Plugin event stubs — no plugins are loaded in unit tests.
-if (!function_exists('trigger_notify')) {
-    function trigger_notify(string $event, mixed ...$args): void
-    {
-    }
-}
-if (!function_exists('trigger_change')) {
-    function trigger_change(string $event, mixed $data = null): mixed
-    {
-        return $data;
     }
 }

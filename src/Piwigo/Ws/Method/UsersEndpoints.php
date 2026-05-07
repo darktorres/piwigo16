@@ -16,6 +16,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -221,7 +222,7 @@ final class UsersEndpoints
                 }
             }
         }
-        $users = trigger_change('ws_users_getList', $users);
+        $users = EventDispatcher::dispatch('ws_users_getList', $users);
         if ($perPage === 0 && empty($params['display'])) {
             $methodResult = array_column(array_values($users), 'id');
         } else {

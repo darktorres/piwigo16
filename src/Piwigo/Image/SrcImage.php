@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -49,7 +50,7 @@ final class SrcImage
             $this->rel_path = original_to_representative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
             $mimeIconDir = get_themeconf('mime_icon_dir');
-            $triggerResult = trigger_change('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
+            $triggerResult = EventDispatcher::dispatch('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
             $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = pwg_safe_getimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
@@ -115,7 +116,7 @@ final class SrcImage
     {
         $url = get_root_url().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
-            $changed = trigger_change('get_src_image_url', $url, $this);
+            $changed = EventDispatcher::dispatch('get_src_image_url', $url, $this);
             $url = $changed;
         }
         return embellish_url($url);

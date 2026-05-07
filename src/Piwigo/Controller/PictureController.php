@@ -21,6 +21,7 @@ use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureContentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -125,10 +126,10 @@ SELECT id
             }
         }
 
-        add_event_handler('render_element_content', PictureContentRenderer::defaultContent(...));
-        add_event_handler('render_element_description', 'pwg_nl2br');
+        EventDispatcher::addListener('render_element_content', PictureContentRenderer::defaultContent(...));
+        EventDispatcher::addListener('render_element_description', 'pwg_nl2br');
 
-        trigger_notify('loc_begin_picture');
+        EventDispatcher::notify('loc_begin_picture');
 
         $tpl = TemplateRegistry::current();
 
@@ -261,7 +262,7 @@ SELECT id
             }
             pwg_set_session_var('referer_image_id', $imageId);
         }
-        if (trigger_change('allow_increment_element_hit_count', $inc_hit_count, $imageId)) {
+        if (EventDispatcher::dispatch('allow_increment_element_hit_count', $inc_hit_count, $imageId)) {
             increase_image_visit_counter($imageId);
         }
 
@@ -378,7 +379,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $url_metadata     = duplicate_picture_url();
         $url_metadata     = add_url_params($url_metadata, ['metadata' => null]);
         $curSrcImg = $picture['current']['src_image'];
-        $metadata_showable = trigger_change(
+        $metadata_showable = EventDispatcher::dispatch(
             'get_element_metadata_available',
             (Config::showExif() || Config::showIptc()) && !$curSrcImg->isMimetype(),
             $picture['current']
@@ -391,7 +392,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $page['body_id'] = 'thePicturePage';
 
         /** @var array<string, array<string, mixed>> $picture */
-        $picture    = trigger_change('picture_pictures_data', $picture);
+        $picture    = EventDispatcher::dispatch('picture_pictures_data', $picture);
         $currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
         $currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
 
@@ -494,7 +495,7 @@ SELECT *
         // Picture info
         $infos = [];
         if (isset($picture['current']['comment']) && !empty($picture['current']['comment'])) {
-            $tpl->assign('COMMENT_IMG', trigger_change('render_element_description', $picture['current']['comment'], 'picture_page_element_description'));
+            $tpl->assign('COMMENT_IMG', EventDispatcher::dispatch('render_element_description', $picture['current']['comment'], 'picture_page_element_description'));
         }
         if (!empty($currentPic['author'] ?? null)) {
             $infos['INFO_AUTHOR'] = $currentPic['author'];
@@ -554,7 +555,7 @@ SELECT *
             $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => count_pdf_pages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
         }
 
-        $element_content = trigger_change('render_element_content', '', $picture['current']);
+        $element_content = EventDispatcher::dispatch('render_element_content', '', $picture['current']);
         $tpl->assign('ELEMENT_CONTENT', $element_content);
 
         $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
@@ -591,7 +592,7 @@ SELECT *
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_picture');
+        EventDispatcher::notify('loc_end_picture');
         flush_page_messages();
         if ($page['slideshow'] && Config::lightSlideshow()) {
             $tpl->pparse('slideshow');

@@ -20,6 +20,7 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -149,7 +150,7 @@ final class ExtensionsController
             exit;
         }
 
-        $plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
+        $plugin_menu_links_deprec = EventDispatcher::dispatch('get_admin_plugin_menu_links', []);
         $settings_url_for_plugin_deprec = [];
         foreach ($plugin_menu_links_deprec as $value) {
             if (!is_array($value)) {
@@ -569,7 +570,7 @@ final class ExtensionsController
             'tpl_themes'         => $tpl_themes,
         ]);
 
-        trigger_notify('loc_end_themes_installed');
+        EventDispatcher::notify('loc_end_themes_installed');
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());

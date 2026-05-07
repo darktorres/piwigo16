@@ -8,6 +8,7 @@ use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
 final readonly class PluginService
@@ -101,7 +102,7 @@ final readonly class PluginService
             foreach ($this->getDbPlugins('active') as $plugin) {
                 $this->loadPlugin($plugin);
             }
-            trigger_notify('plugins_loaded');
+            EventDispatcher::notify('plugins_loaded');
         }
     }
 }

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Plugins;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Plugins\EventDispatcher;
 
 /**
  * Validates event hook symmetry in core code.
  *
- * Rule: every event name passed to add_event_handler() anywhere in
+ * Rule: every event name passed to EventDispatcher::addListener() anywhere in
  * src/ or include/ must appear at least once as the first argument of
- * trigger_change() or trigger_notify() somewhere in the full codebase
+ * EventDispatcher::dispatch() or EventDispatcher::notify() somewhere in the full codebase
  * (src/, include/, plugins/).
  *
  * This catches handlers registered for events that no longer exist
@@ -76,7 +77,7 @@ final class EventSymmetryTest extends TestCase
 
         self::assertEmpty(
             $orphans,
-            "add_event_handler() calls with no matching trigger anywhere in codebase:\n  "
+            "EventDispatcher::addListener() calls with no matching trigger anywhere in codebase:\n  "
             . implode("\n  ", $report)
         );
     }

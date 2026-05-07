@@ -23,6 +23,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
@@ -174,7 +175,7 @@ final class UploadService
         }
         Filesystem::tryChmod($filePath, 0644);
 
-        $representativeExt = trigger_change('upload_file', '', $filePath);
+        $representativeExt = EventDispatcher::dispatch('upload_file', '', $filePath);
         $logger->info('Handling ' . $filePath . ' got ' . $representativeExt);
 
         if (PwgImage::getLibrary() !== 'gd' && Config::originalResize()) {
@@ -224,7 +225,7 @@ final class UploadService
         ServiceLocator::get(DerivativeService::class)->generate($imageInfos, IMG_MEDIUM);
         $logger->info('[addUploadedFile] medium derivative generated', ['id' => $imageId]);
 
-        trigger_notify('loc_end_add_uploaded_file', $imageInfos);
+        EventDispatcher::notify('loc_end_add_uploaded_file', $imageInfos);
         return $imageId;
     }
 
@@ -300,7 +301,7 @@ final class UploadService
         }
         pwg_activity('photo', $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]);
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);
-        trigger_notify('loc_end_add_format', $formatInfos);
+        EventDispatcher::notify('loc_end_add_format', $formatInfos);
         return $addStatus;
     }
 

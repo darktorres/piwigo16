@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\PathExtractor;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -77,7 +78,7 @@ final class NoPhotoYetRenderer
                     ]);
                 }
 
-                trigger_notify('loc_end_no_photo_yet');
+                EventDispatcher::notify('loc_end_no_photo_yet');
                 $template->pparse('no_photo_yet');
                 exit();
             } else {

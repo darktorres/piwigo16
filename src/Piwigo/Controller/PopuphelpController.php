@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Exception\AuthException;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
@@ -38,7 +39,7 @@ final class PopuphelpController implements ControllerInterface
         if ($helpContent === false) {
             $helpContent = '';
         }
-        $filtered = trigger_change('get_popup_help_content', $helpContent, $rawPage);
+        $filtered = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
         $helpContent = is_string($filtered) ? $filtered : $helpContent;
 
         $tpl = TemplateRegistry::current();

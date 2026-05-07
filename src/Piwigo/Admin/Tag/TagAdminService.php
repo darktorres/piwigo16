@@ -11,6 +11,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 
 final readonly class TagAdminService
@@ -80,7 +81,7 @@ final readonly class TagAdminService
         $imageIds = $tagRepo->findDistinctImageIdsByTagIds($tagIds);
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
-        trigger_notify('delete_tags', $tagIds);
+        EventDispatcher::notify('delete_tags', $tagIds);
         pwg_activity('tag', $tagIds, 'delete');
         ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($imageIds);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
@@ -102,11 +103,11 @@ final readonly class TagAdminService
         $foundId = $tagRepo->findIdByExactName($tagName);
         $existing = $foundId !== null ? [$foundId] : [];
         if (count($existing) === 0) {
-            $urlName  = (string) trigger_change('render_tag_url', $tagName);
+            $urlName  = (string) EventDispatcher::dispatch('render_tag_url', $tagName);
             $foundUrlId = $tagRepo->findIdByUrlName($urlName);
             $existing = $foundUrlId !== null ? [$foundUrlId] : [];
             if (count($existing) === 0) {
-                $extraClauses = trigger_change('get_tag_name_like_where', [], $tagName);
+                $extraClauses = EventDispatcher::dispatch('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
                     $existing = array_column(DbConnection::get()->executeQuery(
                         'SELECT id FROM ' . TAGS_TABLE . ' WHERE ' . implode(' OR ', array_map(strval(...), $extraClauses))
@@ -218,10 +219,10 @@ final readonly class TagAdminService
         $altlist = [];
         foreach ($rows as $row) {
             $rawName = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
-            $name    = trigger_change('render_tag_name', $rawName, $row);
+            $name    = EventDispatcher::dispatch('render_tag_name', $rawName, $row);
             $taglist[] = ['name' => $name, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
             if (!$onlyUserLanguage) {
-                $altNames = trigger_change('get_tag_alt_names', [], $rawName);
+                $altNames = EventDispatcher::dispatch('get_tag_alt_names', [], $rawName);
                 foreach (array_diff(array_unique($altNames), [$name]) as $alt) {
                     $altlist[] = ['name' => $alt, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
                 }
@@ -258,7 +259,7 @@ final readonly class TagAdminService
         $tagName    = strip_tags($tagName);
         $existingId = ServiceLocator::get(TagRepository::class)->findIdByExactName($tagName);
         if ($existingId === null) {
-            Dml::singleInsert(TAGS_TABLE, ['name' => $tagName, 'url_name' => trigger_change('render_tag_url', $tagName)]);
+            Dml::singleInsert(TAGS_TABLE, ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)]);
             return ['info' => l10n('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) DbConnection::get()->lastInsertId()];
         }
         return ['error' => l10n('Tag "%s" already exists', stripslashes($tagName))];

@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -584,7 +585,7 @@ final class UrlService
             $url = $this->embellishUrl($this->getRootUrl() . $url);
             $url = is_string($url) ? $url : '';
         }
-        return (string) trigger_change('get_element_url', $url, $elementInfo);
+        return (string) EventDispatcher::dispatch('get_element_url', $url, $elementInfo);
     }
 
     public function setMakeFullUrl(): void

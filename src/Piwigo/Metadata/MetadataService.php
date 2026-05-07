@@ -6,6 +6,7 @@ namespace Piwigo\Metadata;
 
 use Piwigo\Config\Config;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Plugins\EventDispatcher;
 use Psr\Log\LoggerInterface;
 
 final readonly class MetadataService
@@ -69,7 +70,7 @@ final readonly class MetadataService
         $value = str_replace(chr(0x00), ' ', $value);
 
         if (preg_match('/[\x80-\xff]/', $value)) {
-            $value = (string) trigger_change('clean_iptc_value', $value);
+            $value = (string) EventDispatcher::dispatch('clean_iptc_value', $value);
             if (($qual = qualify_utf8($value)) != 0) {
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';
@@ -101,7 +102,7 @@ final readonly class MetadataService
         }
 
         $exif = pwg_safe_exif_read_data($filename) ?: null;
-        $exif = trigger_change('format_exif_data', $exif, $filename, $map);
+        $exif = EventDispatcher::dispatch('format_exif_data', $exif, $filename, $map);
         if (!empty($exif)) {
 
             foreach ($map as $key => $field) {

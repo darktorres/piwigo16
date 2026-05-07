@@ -9,6 +9,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -104,9 +105,9 @@ final class TagsEndpoints
                     $image[$k] = $row[$k];
                 }
                 $imgNameStr    = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderedName  = trigger_change('render_element_name', $imgNameStr, __FUNCTION__);
+                $renderedName  = EventDispatcher::dispatch('render_element_name', $imgNameStr, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
-                $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $imgIdKey   = is_numeric($image['id']) ? (int) $image['id'] : 0;
                 $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgIdKey] ?? []);
@@ -179,14 +180,14 @@ final class TagsEndpoints
         if (in_array($tagName, $existingNames)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
         } elseif (!empty($tagName)) {
-            $update = ['name' => $tagName, 'url_name' => trigger_change('render_tag_url', $tagName)];
+            $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
         }
         pwg_activity('tag', $tagId, 'edit');
         Dml::singleUpdate(TAGS_TABLE, $update, ['id' => $tagId]);
         $tag = $tagRepo->findById((int) $tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
-        $tag['name']     = trigger_change('render_tag_name', $tag['raw_name'], $tag);
-        $tag['alt_names'] = trigger_change('get_tag_alt_names', [], $tag['raw_name']);
+        $tag['name']     = EventDispatcher::dispatch('render_tag_name', $tag['raw_name'], $tag);
+        $tag['alt_names'] = EventDispatcher::dispatch('get_tag_alt_names', [], $tag['raw_name']);
         return $tag;
     }
 
@@ -208,7 +209,7 @@ final class TagsEndpoints
         if ($dupTagRepo->countByExactName($dupCopyName) !== 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
         }
-        Dml::singleInsert(TAGS_TABLE, ['name' => $dupCopyName, 'url_name' => trigger_change('render_tag_url', $dupCopyName)]);
+        Dml::singleInsert(TAGS_TABLE, ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
         $destinationTagId = (int) DbConnection::get()->lastInsertId();
         pwg_activity('tag', $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]);
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
@@ -220,7 +221,7 @@ final class TagsEndpoints
         if (count($inserts) > 0) {
             Dml::massInserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
         }
-        return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => trigger_change('render_tag_url', $dupCopyName), 'count' => count($inserts)];
+        return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName), 'count' => count($inserts)];
     }
 
     /**
@@ -252,7 +253,7 @@ final class TagsEndpoints
         foreach ($imageToAdd as $imageId) {
             pwg_activity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);
         }
-        trigger_notify('merge_tags', $mergeDestId, $mergeTag);
+        EventDispatcher::notify('merge_tags', $mergeDestId, $mergeTag);
         ServiceLocator::get(TagAdminService::class)->deleteTags($mergeTag);
         return ['destination_tag' => $mergeDestId, 'deleted_tag' => $mergeTagIds, 'images_in_merged_tag' => array_merge($imageInDest, $imageToAdd)];
     }

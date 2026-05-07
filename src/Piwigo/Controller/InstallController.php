@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Piwigo\Auth\CookieService;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\UpgradeService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;

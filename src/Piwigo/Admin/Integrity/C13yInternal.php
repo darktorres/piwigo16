@@ -12,15 +12,16 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserService;
 
 class C13yInternal
 {
     public function __construct()
     {
-        add_event_handler('list_check_integrity', $this->c13yVersion(...));
-        add_event_handler('list_check_integrity', $this->c13yExif(...));
-        add_event_handler('list_check_integrity', $this->c13yUser(...));
+        EventDispatcher::addListener('list_check_integrity', $this->c13yVersion(...));
+        EventDispatcher::addListener('list_check_integrity', $this->c13yExif(...));
+        EventDispatcher::addListener('list_check_integrity', $this->c13yUser(...));
     }
 
     /**

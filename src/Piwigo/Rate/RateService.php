@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -75,7 +76,7 @@ final readonly class RateService
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $_ = trigger_change('update_rating_score', false, $elementId);
+        $_ = EventDispatcher::dispatch('update_rating_score', false, $elementId);
 
         $allRatesCount    = 0;
         $allRatesAvg      = 0.0;

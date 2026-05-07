@@ -13,6 +13,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -61,7 +62,7 @@ final class CommentsController implements ControllerInterface
             4 => ['label' => l10n('the beginning'),      'clause' => '1=1'],
         ];
 
-        trigger_notify('loc_begin_comments');
+        EventDispatcher::notify('loc_begin_comments');
 
         $get_since = input_int('since', null, $_GET);
         $page['since'] = !empty($get_since) ? $get_since : 4;
@@ -328,10 +329,10 @@ SELECT *
                     'U_PICTURE'   => $url,
                     'src_image'   => $src_image,
                     'ALT'         => $name,
-                    'AUTHOR'      => trigger_change('render_comment_author', (string) ($comment['author'] ?? '')),
+                    'AUTHOR'      => EventDispatcher::dispatch('render_comment_author', (string) ($comment['author'] ?? '')),
                     'WEBSITE_URL' => $comment['website_url'],
                     'DATE'        => format_date($cDate, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT'     => trigger_change('render_comment_content', (string) ($comment['content'] ?? '')),
+                    'CONTENT'     => EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? '')),
                 ];
 
                 if (PermissionService::get()->isAdmin()) {
@@ -359,7 +360,7 @@ SELECT *
             }
         }
 
-        $derivative_params = trigger_change('get_comments_derivative_params', ImageStdParams::getByType(IMG_THUMB));
+        $derivative_params = EventDispatcher::dispatch('get_comments_derivative_params', ImageStdParams::getByType(IMG_THUMB));
         $tpl->assign('comment_derivative_params', $derivative_params);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
@@ -370,7 +371,7 @@ SELECT *
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_comments');
+        EventDispatcher::notify('loc_end_comments');
         flush_page_messages();
         if (count($comments) > 0) {
             $tpl->assignVarFromHandle('COMMENT_LIST', 'comment_list');

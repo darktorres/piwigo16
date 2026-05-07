@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -100,7 +101,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             if (isset($tagCounters[$rowId])) {
                 $row['counter']  = is_scalar($tagCounters[$rowId]) ? intval($tagCounters[$rowId]) : 0;
                 $row['name_raw'] = $row['name'];
-                $row['name']     = trigger_change('render_tag_name', $row['name'], $row);
+                $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
                 $tags[]          = $row;
             }
         }
@@ -113,7 +114,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         $tags = [];
         foreach ($this->repo->findAll() as $row) {
             $row['name_raw'] = $row['name'];
-            $row['name']     = trigger_change('render_tag_name', $row['name'], $row);
+            $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]          = $row;
         }
         usort($tags, tag_alpha_compare(...));
@@ -223,7 +224,7 @@ SELECT id
         $rows     = $this->repo->findCommonTags($imageIds, $maxTags, $excludedTagIds);
         $tags     = [];
         foreach ($rows as $row) {
-            $row['name'] = trigger_change('render_tag_name', $row['name'], $row);
+            $row['name'] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]      = $row;
         }
         usort($tags, tag_alpha_compare(...));

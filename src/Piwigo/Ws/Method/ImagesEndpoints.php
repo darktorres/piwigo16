@@ -21,6 +21,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
@@ -205,10 +206,10 @@ final class ImagesEndpoints
         $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
         $imageRowFile  = is_scalar($imageRow['file']) ? (string) $imageRow['file'] : '';
         $imageRow['name_raw']    = $imageRow['name'];
-        $renderName              = trigger_change('render_element_name', $imageRow['name'], __FUNCTION__);
+        $renderName              = EventDispatcher::dispatch('render_element_name', $imageRow['name'], __FUNCTION__);
         $imageRow['name']        = strip_tags(is_scalar($renderName) ? (string) $renderName : '');
         $imageRow['comment_raw'] = $imageRow['comment'];
-        $imageRow['comment']     = trigger_change('render_element_description', $imageRow['comment'], __FUNCTION__);
+        $imageRow['comment']     = EventDispatcher::dispatch('render_element_description', $imageRow['comment'], __FUNCTION__);
         $isCommentable    = false;
         $relatedCategories = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . IMAGE_CATEGORY_TABLE . ' INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id WHERE image_id = ' . $imageRowId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
@@ -219,7 +220,7 @@ final class ImagesEndpoints
             $row['url']      = make_index_url(['category' => $row]);
             $row['page_url'] = make_picture_url(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $catNameRaw      = trigger_change('render_category_name', $row['name'], __FUNCTION__);
+            $catNameRaw      = EventDispatcher::dispatch('render_category_name', $row['name'], __FUNCTION__);
             $row['name']     = strip_tags(is_scalar($catNameRaw) ? (string) $catNameRaw : '');
             $relatedCategories[] = $row;
         }
@@ -335,9 +336,9 @@ final class ImagesEndpoints
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                     $image[$k] = $row[$k];
                 }
-                $nameRaw     = trigger_change('render_element_name', $image['name'] ?? '', __FUNCTION__);
+                $nameRaw     = EventDispatcher::dispatch('render_element_name', $image['name'] ?? '', __FUNCTION__);
                 $image['name']    = strip_tags(is_string($nameRaw) ? $nameRaw : (is_scalar($nameRaw) ? (string) $nameRaw : ''));
-                $image['comment'] = trigger_change('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
                 $imgIdInt = is_numeric($image['id']) ? (int) $image['id'] : 0;
                 if (isset($imageIdsFlip[$imgIdInt])) {
@@ -1282,7 +1283,7 @@ final class ImagesEndpoints
         $movedFromLounge  = ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
         $categoryInfos    = ['nb_photos' => ServiceLocator::get(CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
         $categoryName     = get_cat_display_name_from_id($ucCategoryId, null);
-        trigger_notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
+        EventDispatcher::notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
         return ['moved_from_lounge' => $movedFromLounge, 'category' => ['id' => $ucCategoryId, 'nb_photos' => $categoryInfos['nb_photos'], 'label' => $categoryName]];
     }
 

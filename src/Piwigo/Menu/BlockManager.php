@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Config\Config;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 /**
@@ -32,7 +33,7 @@ class BlockManager
      */
     public function loadRegisteredBlocks(): void
     {
-        trigger_notify('blockmanager_register_blocks', [$this]);
+        EventDispatcher::notify('blockmanager_register_blocks', [$this]);
     }
 
     /**
@@ -93,7 +94,7 @@ class BlockManager
             $idx++;
         }
         $this->sortBlocks();
-        trigger_notify('blockmanager_prepare_display', [$this]);
+        EventDispatcher::notify('blockmanager_prepare_display', [$this]);
         $this->sortBlocks();
     }
 
@@ -167,7 +168,7 @@ class BlockManager
         $template = TemplateRegistry::current();
 
         $template->setFilename('menubar', $file);
-        trigger_notify('blockmanager_apply', [$this]);
+        EventDispatcher::notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
             if (empty($block->raw_content) and empty($block->template)) {

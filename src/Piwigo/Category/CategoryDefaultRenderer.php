@@ -10,6 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 
@@ -30,7 +31,7 @@ final class CategoryDefaultRenderer
         $pageStart = is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0;
         $pageNbImagePage = is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : null;
         $selection = array_values(array_filter(
-            trigger_change(
+            EventDispatcher::dispatch(
                 'loc_index_thumbnails_selection',
                 array_slice($pageItems, $pageStart, $pageNbImagePage)
             ),
@@ -74,7 +75,7 @@ SELECT image_id, COUNT(*) AS nb_comments
 
         $template->setFilenames(['index_thumbnails' => 'thumbnails.tpl']);
 
-        trigger_notify('loc_begin_index_thumbnails', $pictures);
+        EventDispatcher::notify('loc_begin_index_thumbnails', $pictures);
         $tpl_thumbnails_var = [];
 
         foreach ($pictures as $row) {
@@ -125,11 +126,11 @@ SELECT image_id, COUNT(*) AS nb_comments
         }
 
         $template->assign([
-            'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', IMG_THUMB))),
+            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', IMG_THUMB))),
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);
-        $tpl_thumbnails_var = trigger_change('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
+        $tpl_thumbnails_var = EventDispatcher::dispatch('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
         $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');

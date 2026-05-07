@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Tag\SelectedTagsRenderer;
@@ -55,7 +56,7 @@ final class GalleryController implements ControllerInterface
             page_not_found('', duplicate_index_url(['start' => 0]));
         }
 
-        trigger_notify('loc_begin_index');
+        EventDispatcher::notify('loc_begin_index');
 
         // Image display-order change
         $imageOrder = input_int('image_order', null, $_GET);
@@ -350,7 +351,7 @@ final class GalleryController implements ControllerInterface
 
         // Render page (outputs directly — legacy Smarty model)
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_index');
+        EventDispatcher::notify('loc_end_index');
         flush_page_messages();
         $tpl->parseIndexButtons();
         $tpl->pparse('index');

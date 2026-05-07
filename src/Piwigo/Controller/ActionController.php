@@ -12,6 +12,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -108,7 +109,7 @@ SELECT id FROM ' . CATEGORIES_TABLE . '
             pwg_log($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
-        trigger_notify('loc_action_before_http_headers');
+        EventDispatcher::notify('loc_action_before_http_headers');
 
         $http_headers = [];
         $ctype        = null;

@@ -19,6 +19,7 @@ use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\SqlExpr;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeRepository;
@@ -105,7 +106,7 @@ final readonly class Util
         if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
             CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
             load_language('common.lang');
-            trigger_notify('loading_lang');
+            EventDispatcher::notify('loading_lang');
             load_language('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
@@ -165,7 +166,7 @@ final readonly class Util
                 $themes[$themeId] = is_scalar($row['name']) ? (string) $row['name'] : '';
             }
         }
-        $themes = trigger_change('get_pwg_themes', $themes);
+        $themes = EventDispatcher::dispatch('get_pwg_themes', $themes);
         return $themes;
     }
 
@@ -199,7 +200,7 @@ final readonly class Util
                 USERS_TABLE,
                 Config::webmasterId()
             );
-        $email = trigger_change('get_webmaster_mail_address', $email);
+        $email = EventDispatcher::dispatch('get_webmaster_mail_address', $email);
         return (string) $email;
     }
 
@@ -447,7 +448,7 @@ final readonly class Util
         if (PermissionService::get()->isAGuest()) {
             $doLog = Config::historyGuest();
         }
-        return (bool) trigger_change('pwg_log_allowed', $doLog, $imageId, $imageType);
+        return (bool) EventDispatcher::dispatch('pwg_log_allowed', $doLog, $imageId, $imageType);
     }
 
     public function pwgLog(int|string|null $imageId = null, ?string $imageType = null, ?string $formatId = null): bool
@@ -462,7 +463,7 @@ final readonly class Util
         $userId    = CurrentUser::get()->id;
         $lastVisit = is_scalar($user['last_visit'] ?? null) ? (string) $user['last_visit'] : '';
         $updateLastVisit = empty($lastVisit) || strtotime($lastVisit) < time() - Config::sessionLength();
-        $updateLastVisit = trigger_change('pwg_log_update_last_visit', $updateLastVisit);
+        $updateLastVisit = EventDispatcher::dispatch('pwg_log_update_last_visit', $updateLastVisit);
 
         if ($updateLastVisit) {
             ServiceLocator::get(UserRepository::class)->updateLastVisit($userId);

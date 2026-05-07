@@ -15,6 +15,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -83,7 +84,7 @@ final class ImageAdminService
         if (count($ids) === 0) {
             return 0;
         }
-        trigger_notify('begin_delete_elements', $ids);
+        EventDispatcher::notify('begin_delete_elements', $ids);
         if ($physicalDeletion) {
             $ids = $this->deleteElementFiles($ids);
             if (count($ids) === 0) {
@@ -107,7 +108,7 @@ final class ImageAdminService
         if (count($categoryIds) > 0) {
             ServiceLocator::get(CategoryAdminService::class)->updateCategory($categoryIds);
         }
-        trigger_notify('delete_elements', $ids);
+        EventDispatcher::notify('delete_elements', $ids);
         pwg_activity('photo', $ids, 'delete');
         return count($ids);
     }

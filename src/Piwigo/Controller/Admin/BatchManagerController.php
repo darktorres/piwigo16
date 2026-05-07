@@ -24,6 +24,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
@@ -195,7 +196,7 @@ final class BatchManagerController
                 $bmf['search'] = ['q' => $_POST['q']];
             }
 
-            $_SESSION['bulk_manager_filter'] = trigger_change('batch_manager_register_filters', $bmf);
+            $_SESSION['bulk_manager_filter'] = EventDispatcher::dispatch('batch_manager_register_filters', $bmf);
         } elseif (isset($_GET['filter'])) {
             if (!is_array($_GET['filter'])) {
                 $_GET['filter'] = explode(',', is_scalar($_GET['filter']) ? (string) $_GET['filter'] : '');
@@ -275,7 +276,7 @@ final class BatchManagerController
                         }
                         break;
                     default:
-                        $bmf = trigger_change('batch_manager_url_filter', $bmf, $filter);
+                        $bmf = EventDispatcher::dispatch('batch_manager_url_filter', $bmf, $filter);
                         break;
                 }
             }
@@ -361,7 +362,7 @@ final class BatchManagerController
                     }
                     break;
                 default:
-                    $filter_sets = trigger_change('perform_batch_manager_prefilters', $filter_sets, $bmf_prefilter);
+                    $filter_sets = EventDispatcher::dispatch('perform_batch_manager_prefilters', $filter_sets, $bmf_prefilter);
                     break;
             }
         }
@@ -444,7 +445,7 @@ final class BatchManagerController
             }
         }
 
-        $filter_sets = trigger_change('batch_manager_perform_filters', $filter_sets, $bmf);
+        $filter_sets = EventDispatcher::dispatch('batch_manager_perform_filters', $filter_sets, $bmf);
 
         $current_set = array_shift($filter_sets);
         foreach ($filter_sets as $set) {
@@ -590,7 +591,7 @@ final class BatchManagerController
             check_pwg_token();
         }
 
-        trigger_notify('loc_begin_element_set_global');
+        EventDispatcher::notify('loc_begin_element_set_global');
 
         check_input_parameter('del_tags', $_POST, true, PATTERN_ID);
         check_input_parameter('associate', $_POST, true, PATTERN_ID);
@@ -787,7 +788,7 @@ final class BatchManagerController
                 ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
             }
 
-            trigger_notify('element_set_global_action', $action, $collection_int);
+            EventDispatcher::notify('element_set_global_action', $action, $collection_int);
             if ($redirect) {
                 redirect($redirect_url);
             }
@@ -905,7 +906,7 @@ final class BatchManagerController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        trigger_notify('loc_end_element_set_global');
+        EventDispatcher::notify('loc_end_element_set_global');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
     }
 
@@ -921,7 +922,7 @@ final class BatchManagerController
         $user = $GLOBALS['user'];
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-        trigger_notify('loc_begin_element_set_unit');
+        EventDispatcher::notify('loc_begin_element_set_unit');
 
         if (isset($_POST['submit'])) {
             check_pwg_token();
@@ -1158,7 +1159,7 @@ final class BatchManagerController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        trigger_notify('loc_end_element_set_unit');
+        EventDispatcher::notify('loc_end_element_set_unit');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
     }
 

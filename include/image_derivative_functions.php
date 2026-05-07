@@ -12,21 +12,6 @@ use Piwigo\Image\SizingParams;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 
-// Stubs for functions that are not loaded in the i.php minimal bootstrap.
-// When accessed via the full pipeline (common.inc.php), these are already
-// defined in include/functions.inc.php, so the function_exists guards skip them.
-
-if (!function_exists('trigger_notify')) {
-    function trigger_notify(string $event, mixed ...$args): void
-    {
-    }
-}
-if (!function_exists('trigger_change')) {
-    function trigger_change(string $event, mixed ...$args): mixed
-    {
-        return $args[0] ?? null;
-    }
-}
 if (!function_exists('get_extension')) {
     function get_extension(string $filename): string
     {

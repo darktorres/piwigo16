@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Smarty\Debug;
@@ -526,7 +527,7 @@ class Template
             }
             $href .= '?v' . ($combi->version ?: PHPWG_VERSION);
             // trigger the event for eventual use of a cdn
-            $href = trigger_change('combined_css', $href, $combi);
+            $href = EventDispatcher::dispatch('combined_css', $href, $combi);
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
         }
         $this->output = str_replace(
@@ -922,7 +923,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $ret .= '?v'. ($script->version ?: PHPWG_VERSION);
         }
         // trigger the event for eventual use of a cdn
-        $ret = trigger_change('combined_script', $ret, $script);
+        $ret = EventDispatcher::dispatch('combined_script', $ret, $script);
         return embellish_url($ret);
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 final class SelectedTagsRenderer
@@ -26,7 +27,7 @@ final class SelectedTagsRenderer
 
             $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
             $selected_related_tags_info[$key] = [
-                'tag_name' => trigger_change('render_tag_name', $tagName, $tag),
+                'tag_name' => EventDispatcher::dispatch('render_tag_name', $tagName, $tag),
                 'item_count' => '',
                 'index_url' => make_index_url(['tags' => [$tag]]),
                 'remove_url' => make_index_url(['tags' => $other_tags]),

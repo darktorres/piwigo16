@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
@@ -24,7 +25,7 @@ final class SearchController implements ControllerInterface
     {
         PermissionService::get()->checkStatus(ACCESS_GUEST);
 
-        trigger_notify('loc_begin_search');
+        EventDispatcher::notify('loc_begin_search');
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];

@@ -14,6 +14,7 @@ use Piwigo\Controller\ControllerInterface;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -54,9 +55,9 @@ final class AdminController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        add_event_handler('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
+        EventDispatcher::addListener('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
 
-        trigger_notify('loc_begin_admin');
+        EventDispatcher::notify('loc_begin_admin');
 
         PermissionService::get()->checkStatus(ACCESS_ADMINISTRATOR);
 
@@ -365,7 +366,7 @@ final class AdminController implements ControllerInterface
 
         // ── Dispatch to admin sub-page ────────────────────────────────────────
 
-        trigger_notify('loc_begin_admin_page');
+        EventDispatcher::notify('loc_begin_admin_page');
         $this->dispatchToSubController($adminPage);
 
         $tpl->assign('ACTIVE_MENU', ServiceLocator::get(AdminService::class)->getActiveMenu($adminPage));
@@ -376,7 +377,7 @@ final class AdminController implements ControllerInterface
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
 
-        trigger_notify('loc_end_admin');
+        EventDispatcher::notify('loc_end_admin');
 
         flush_page_messages();
 

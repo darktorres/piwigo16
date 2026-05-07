@@ -12,6 +12,7 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 
 final readonly class AuthService
@@ -142,7 +143,7 @@ final readonly class AuthService
         $uid = is_numeric($userId) ? (int) $userId : 0;
         $_SESSION['pwg_uid'] = $uid;
 
-        trigger_notify('user_login', $uid);
+        EventDispatcher::notify('user_login', $uid);
         pwg_activity('user', $uid, 'login');
     }
 
@@ -162,7 +163,7 @@ final readonly class AuthService
                         $_SESSION['connected_with'] = 'pwg_ui';
                     }
                     $this->logUser((int) $cookie[0], true);
-                    trigger_notify('login_success', is_scalar($username) ? stripslashes((string) $username) : '');
+                    EventDispatcher::notify('login_success', is_scalar($username) ? stripslashes((string) $username) : '');
                     return true;
                 }
             }
@@ -173,7 +174,7 @@ final readonly class AuthService
 
     public function tryLogUser(mixed $username, mixed $password, mixed $rememberMe): bool
     {
-        return (bool) trigger_change('try_log_user', false, $username, $password, $rememberMe);
+        return (bool) EventDispatcher::dispatch('try_log_user', false, $username, $password, $rememberMe);
     }
 
     public function pwgLogin(bool $success, string $username, string $password, bool $rememberMe): bool
@@ -194,17 +195,17 @@ final readonly class AuthService
             if (!empty($userFound) && !$passwordVerify) {
                 pwg_activity('user', $ufId, 'login_failure_wrong_password');
             }
-            trigger_notify('login_failure', stripslashes($username));
+            EventDispatcher::notify('login_failure', stripslashes($username));
             return false;
         }
 
         $stateInit = ['can_login' => true, 'reason' => null, 'authenticated' => false];
-        $state     = trigger_change('finalize_login', $stateInit, $userFound, $rememberMe);
+        $state     = EventDispatcher::dispatch('finalize_login', $stateInit, $userFound, $rememberMe);
 
         if (!$state['can_login']) {
             $stateReason = is_scalar($state['reason']) ? (string) $state['reason'] : 'login_failure_before_log_user';
             pwg_activity('user', $ufId, $stateReason);
-            trigger_notify('login_failure_before_log_user', stripslashes($username));
+            EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
 
@@ -213,7 +214,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        trigger_notify('login_success', stripslashes($username));
+        EventDispatcher::notify('login_success', stripslashes($username));
         return true;
     }
 
@@ -259,7 +260,7 @@ final readonly class AuthService
     public function logoutUser(): void
     {
         $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
-        trigger_notify('user_logout', $logoutUid);
+        EventDispatcher::notify('user_logout', $logoutUid);
         pwg_activity('user', $logoutUid, 'logout');
 
         $_SESSION = [];
@@ -356,7 +357,7 @@ SELECT
         }
 
         $this->logUser(is_numeric($user['id']) ? (int) $user['id'] : 0, false);
-        trigger_notify('login_success', $key['username']);
+        EventDispatcher::notify('login_success', $key['username']);
         $page['auth_key_id'] = $key['auth_key_id'];
 
         return true;

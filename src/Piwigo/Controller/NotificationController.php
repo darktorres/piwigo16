@@ -8,6 +8,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -24,7 +25,7 @@ final class NotificationController implements ControllerInterface
     {
         PermissionService::get()->checkStatus(ACCESS_GUEST);
 
-        trigger_notify('loc_begin_notification');
+        EventDispatcher::notify('loc_begin_notification');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -61,7 +62,7 @@ final class NotificationController implements ControllerInterface
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_notification');
+        EventDispatcher::notify('loc_end_notification');
         flush_page_messages();
         $tpl->pparse('notification');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

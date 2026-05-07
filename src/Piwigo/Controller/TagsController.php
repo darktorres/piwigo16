@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -24,7 +25,7 @@ final class TagsController implements ControllerInterface
     {
         PermissionService::get()->checkStatus(ACCESS_GUEST);
 
-        trigger_notify('loc_begin_tags');
+        EventDispatcher::notify('loc_begin_tags');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -113,7 +114,7 @@ final class TagsController implements ControllerInterface
         }
 
         require PHPWG_ROOT_PATH . 'include/page_header.php';
-        trigger_notify('loc_end_tags');
+        EventDispatcher::notify('loc_end_tags');
         flush_page_messages();
         $tpl->pparse('tags');
         require PHPWG_ROOT_PATH . 'include/page_tail.php';

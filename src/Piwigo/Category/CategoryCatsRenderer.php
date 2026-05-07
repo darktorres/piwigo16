@@ -13,6 +13,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -71,7 +72,7 @@ SELECT SQL_CALC_FOUND_ROWS
   LIMIT ' . $nb_cats_page . ' OFFSET ' . (is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0) . '
 ;';
 
-        $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
+        $query = EventDispatcher::dispatch('loc_begin_index_category_thumbnails_query', $query);
 
         $conn = ServiceLocator::get(Connection::class);
         $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
@@ -212,7 +213,7 @@ SELECT *
             ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($categories);
 
             $template->setFilename('index_category_thumbnails', 'mainpage_categories.tpl');
-            trigger_notify('loc_begin_index_category_thumbnails', $categories);
+            EventDispatcher::notify('loc_begin_index_category_thumbnails', $categories);
             $tpl_thumbnails_var = [];
 
             foreach ($categories as $category) {
@@ -220,7 +221,7 @@ SELECT *
                     continue;
                 }
 
-                $category['name'] = trigger_change(
+                $category['name'] = EventDispatcher::dispatch(
                     'render_category_name',
                     is_scalar($category['name'] ?? null) ? (string) $category['name'] : '',
                     'subcatify_category_name'
@@ -248,9 +249,9 @@ SELECT *
                         true,
                         '<br>'
                     ),
-                    'DESCRIPTION' => trigger_change(
+                    'DESCRIPTION' => EventDispatcher::dispatch(
                         'render_category_literal_description',
-                        trigger_change('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
+                        EventDispatcher::dispatch('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
                     ),
                     'NAME' => $name,
                 ]);
@@ -280,8 +281,8 @@ SELECT *
             }
 
             $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
-            $derivative_params = trigger_change('get_index_album_derivative_params', ImageStdParams::getByType(IMG_THUMB));
-            $tpl_thumbnails_var_selection = trigger_change('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
+            $derivative_params = EventDispatcher::dispatch('get_index_album_derivative_params', ImageStdParams::getByType(IMG_THUMB));
+            $tpl_thumbnails_var_selection = EventDispatcher::dispatch('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
             $template->assign([
                 'maxRequests' => Config::maxRequests(),
                 'category_thumbnails' => $tpl_thumbnails_var_selection,

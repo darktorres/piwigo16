@@ -9,6 +9,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
 class Plugins
@@ -100,7 +101,7 @@ class Plugins
                 $installVersionStr = is_string($installVersion) ? $installVersion : '';
                 self::buildMaintainClass($plugin_id)->install($installVersionStr, $errors);
                 $activity_details['version'] = $installVersionStr;
-                $errors = trigger_change('plugin_install_errors', $errors);
+                $errors = EventDispatcher::dispatch('plugin_install_errors', $errors);
 
                 if (empty($errors)) {
                     ServiceLocator::get(PluginRepository::class)->insert($plugin_id, $installVersionStr);

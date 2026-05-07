@@ -31,6 +31,7 @@ use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -104,8 +105,8 @@ final class MiscController
 
         PermissionService::get()->checkStatus($this->getTabStatus($page['mode']));
 
-        add_event_handler('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
-        trigger_notify('nbm_event_handler_added');
+        EventDispatcher::addListener('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
+        EventDispatcher::notify('nbm_event_handler_added');
 
         if (count($_POST) == 0) {
             $this->insertNewDataUserMailNotification($base_url);
@@ -340,7 +341,7 @@ final class MiscController
                 continue;
             }
             $tag_name       = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
-            $orphan_tag_names[] = trigger_change('render_tag_name', $tag_name, $tag);
+            $orphan_tag_names[] = EventDispatcher::dispatch('render_tag_name', $tag_name, $tag);
         }
 
         $orphan_tag_names_array = '[]';
@@ -364,13 +365,13 @@ final class MiscController
         foreach ($_tagRepo->findAll() as $tag) {
             $raw_name       = $tag['name'];
             $tag['raw_name'] = $raw_name;
-            $tag['name']    = trigger_change('render_tag_name', $raw_name, $tag);
+            $tag['name']    = EventDispatcher::dispatch('render_tag_name', $raw_name, $tag);
             $tag_id_key     = is_scalar($tag['id']) ? (string) $tag['id'] : '';
             $counter        = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
             if ($counter > 0) {
                 $tag['counter'] = $counter;
             }
-            $alt_names      = array_diff(array_unique(trigger_change('get_tag_alt_names', [], $raw_name)), [$tag['name']]);
+            $alt_names      = array_diff(array_unique(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name)), [$tag['name']]);
             if (count($alt_names)) {
                 $tag['alt_names'] = implode(', ', $alt_names);
             }
@@ -401,7 +402,7 @@ final class MiscController
         $tabsheet->select($selected);
         $tabsheet->assign();
 
-        trigger_notify('loc_end_help');
+        EventDispatcher::notify('loc_end_help');
 
         $tpl->setFilenames(['help' => 'help.tpl']);
         $tpl->assign([
@@ -444,7 +445,7 @@ final class MiscController
             if ($help_content == false) {
                 $help_content = '';
             }
-            $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['help']);
+            $help_content = EventDispatcher::dispatch('get_popup_help_content', $help_content, $_GET['help']);
         } else {
             throw new AuthException('Hacking attempt!');
         }
@@ -549,7 +550,7 @@ final class MiscController
             }
         }
 
-        trigger_notify('loc_end_intro');
+        EventDispatcher::notify('loc_end_intro');
 
         $nb_weeks         = Config::dashboardActivityNbWeeks();
         $mondays          = 0;
@@ -1167,7 +1168,7 @@ final class MiscController
                     if (empty($customize_mail_content)) {
                         $customize_mail_content = Config::nbmComplementaryMailContent();
                     }
-                    $customize_mail_content = trigger_change('nbm_render_global_customize_mail_content', $customize_mail_content);
+                    $customize_mail_content = EventDispatcher::dispatch('nbm_render_global_customize_mail_content', $customize_mail_content);
                     $msg_break_timeout = $is_action_send ? l10n('Time to send mail is limited. Others mails are skipped.') : l10n('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
                     ServiceLocator::get(NotificationAdminService::class)->beginUsersEnvNbm($is_action_send);
@@ -1218,7 +1219,7 @@ final class MiscController
                                     $nbmTpl->assign('global_new_lines', $news);
                                 }
 
-                                $nbm_user_customize_mail_content = trigger_change('nbm_render_user_customize_mail_content', $customize_mail_content, $nbm_user);
+                                $nbm_user_customize_mail_content = EventDispatcher::dispatch('nbm_render_user_customize_mail_content', $customize_mail_content, $nbm_user);
                                 if (!empty($nbm_user_customize_mail_content)) {
                                     $nbmTpl->assign('custom_mail_content', $nbm_user_customize_mail_content);
                                 }

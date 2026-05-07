@@ -8,6 +8,7 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 final class FilterResolver
@@ -37,7 +38,7 @@ final class FilterResolver
         }
 
         /** @var list<array<string, string>> $prefilters */
-        $prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
+        $prefilters = EventDispatcher::dispatch('get_batch_manager_prefilters', $prefilters);
 
         usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 

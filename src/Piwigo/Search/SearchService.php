@@ -11,6 +11,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Exception\ValidationException;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Template\TemplateRegistry;
@@ -635,7 +636,7 @@ final readonly class SearchService
                     }
                     break;
                 default:
-                    $clauses = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                    $clauses = EventDispatcher::dispatch('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
                     break;
             }
             if (!empty($clauses)) {
@@ -704,7 +705,7 @@ final readonly class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, tag_alpha_compare(...));
         foreach ($allTags as &$tag) {
-            $tagName    = trigger_change('render_tag_name', $tag['name'], $tag);
+            $tagName    = EventDispatcher::dispatch('render_tag_name', $tag['name'], $tag);
             $tag['name'] = is_string($tagName) ? $tagName : (is_scalar($tagName) ? (string) $tagName : '');
         }
         $qsr->all_tags = $allTags;
@@ -774,7 +775,7 @@ final readonly class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, tag_alpha_compare(...));
         foreach ($allCats as &$cat) {
-            $catName    = trigger_change('render_category_name', $cat['name'], $cat);
+            $catName    = EventDispatcher::dispatch('render_category_name', $cat['name'], $cat);
             $cat['name'] = is_string($catName) ? $catName : (is_scalar($catName) ? (string) $catName : '');
         }
         $qsr->all_cats = $allCats;
@@ -871,7 +872,7 @@ final readonly class SearchService
     {
         $q             = trim(stripslashes($q));
         $searchResults = ['items' => [], 'qs' => ['q' => $q]];
-        $q             = trigger_change('qsearch_pre', $q);
+        $q             = EventDispatcher::dispatch('qsearch_pre', $q);
 
         $scopes   = [];
         $scopes[] = new QSearchScope('tag', ['tags']);
@@ -897,7 +898,7 @@ final readonly class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopes     = trigger_change('qsearch_get_scopes', $scopes);
+        $scopes     = EventDispatcher::dispatch('qsearch_get_scopes', $scopes);
         $expression = new QExpression($q, $scopes);
 
         $langCode = substr(UserService::get()->getDefaultLanguage(), 0, 2);
@@ -919,7 +920,7 @@ final readonly class SearchService
             }
         }
 
-        trigger_notify('qsearch_expression_parsed', $expression);
+        EventDispatcher::notify('qsearch_expression_parsed', $expression);
 
         if (count($expression->stokens) == 0) {
             return $searchResults;
@@ -929,7 +930,7 @@ final readonly class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        trigger_notify('qsearch_before_eval', $expression, $qsr);
+        EventDispatcher::notify('qsearch_before_eval', $expression, $qsr);
 
         $tmp   = false;
         $searchResults['qs']['unmatched_terms'] = [];
@@ -951,7 +952,7 @@ final readonly class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResults = trigger_change('qsearch_results', $searchResults, $expression, $qsr);
+        $searchResults = EventDispatcher::dispatch('qsearch_results', $searchResults, $expression, $qsr);
         $extraItems    = array_map(static fn (mixed $v): int => (int) $v, $searchResults['items']);
         $ids           = array_merge($ids, $extraItems);
 

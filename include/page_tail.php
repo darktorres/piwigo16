@@ -9,6 +9,7 @@ use Piwigo\Users\PermissionService;
 global $persistent_cache, $title, $debug, $t2;
 
 use Piwigo\Admin\Updates;
+use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
 // +-----------------------------------------------------------------------+
@@ -26,7 +27,7 @@ if (!is_array($page)) {
 
 $template->setFilenames(['tail' => 'footer.tpl']);
 
-trigger_notify('loc_begin_page_tail');
+EventDispatcher::notify('loc_begin_page_tail');
 
 $template->assign(
     [
@@ -100,7 +101,7 @@ if (!empty(Config::mobilTheme()) && (get_device() != 'desktop' || mobile_theme()
     );
 }
 
-trigger_notify('loc_end_page_tail');
+EventDispatcher::notify('loc_end_page_tail');
 //
 // Generate the page
 //

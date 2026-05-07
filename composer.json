@@ -51,6 +51,7 @@
       "Piwigo\\": "src/Piwigo/"
     },
     "files": [
+      "src/Piwigo/Calendar/CalendarConstants.php",
       "src/Piwigo/Search/QConstants.php"
     ]
   },

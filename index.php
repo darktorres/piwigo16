@@ -18,7 +18,7 @@ use Piwigo\Http\ResponseEmitter;
 
 define('PHPWG_ROOT_PATH', './');
 
-$_qs = ltrim($_SERVER['QUERY_STRING'] ?? '', '/');
+$_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRING'] : '', '/');
 
 if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.

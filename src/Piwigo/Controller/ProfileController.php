@@ -18,6 +18,7 @@ use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the user profile / preferences page (/profile).
@@ -146,7 +147,7 @@ final class ProfileController implements ControllerInterface
         EventDispatcher::notify('loc_end_profile');
         flush_page_messages();
         $tpl->pparse('profile');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

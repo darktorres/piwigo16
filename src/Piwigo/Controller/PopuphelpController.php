@@ -12,6 +12,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 final class PopuphelpController implements ControllerInterface
 {
@@ -49,7 +50,7 @@ final class PopuphelpController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         $tpl->pparse('popuphelp');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

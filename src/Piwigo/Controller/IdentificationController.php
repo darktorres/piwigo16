@@ -17,6 +17,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the login page (/identification).
@@ -140,7 +141,7 @@ final class IdentificationController implements ControllerInterface
         EventDispatcher::notify('loc_end_identification');
         flush_page_messages();
         $tpl->pparse('identification');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

@@ -24,6 +24,7 @@ use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles all admin pages (/admin{rest}).
@@ -384,7 +385,7 @@ final class AdminController implements ControllerInterface
 
         $tpl->pparse('admin');
 
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

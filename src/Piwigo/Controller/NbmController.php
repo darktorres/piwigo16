@@ -16,6 +16,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 final class NbmController implements ControllerInterface
 {
@@ -58,7 +59,7 @@ final class NbmController implements ControllerInterface
         PageHeaderRenderer::render($title);
         flush_page_messages();
         $tpl->parse('nbm');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

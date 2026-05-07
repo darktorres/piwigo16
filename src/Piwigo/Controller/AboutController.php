@@ -13,6 +13,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 final class AboutController implements ControllerInterface
 {
@@ -52,7 +53,7 @@ final class AboutController implements ControllerInterface
         EventDispatcher::notify('loc_end_about');
         flush_page_messages();
         $tpl->pparse('about');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

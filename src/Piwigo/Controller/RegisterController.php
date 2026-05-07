@@ -17,6 +17,7 @@ use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the user registration page (/register).
@@ -135,7 +136,7 @@ final class RegisterController implements ControllerInterface
         EventDispatcher::notify('loc_end_register');
         flush_page_messages();
         $tpl->parse('register');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

@@ -15,6 +15,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the notification/RSS subscription page (/notification).
@@ -66,7 +67,7 @@ final class NotificationController implements ControllerInterface
         EventDispatcher::notify('loc_end_notification');
         flush_page_messages();
         $tpl->pparse('notification');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

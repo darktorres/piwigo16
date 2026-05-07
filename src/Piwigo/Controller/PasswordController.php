@@ -17,6 +17,7 @@ use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the three-stage password-reset flow (/password).
@@ -170,7 +171,7 @@ final class PasswordController implements ControllerInterface
         EventDispatcher::notify('loc_end_password');
         flush_page_messages();
         $tpl->pparse('password');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

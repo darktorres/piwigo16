@@ -20,6 +20,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the paginated comments list page (/comments).
@@ -378,7 +379,7 @@ SELECT *
             $tpl->assignVarFromHandle('COMMENT_LIST', 'comment_list');
         }
         $tpl->pparse('comments');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

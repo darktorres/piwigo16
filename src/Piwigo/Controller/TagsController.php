@@ -15,6 +15,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the tags cloud/alphabetic page (/tags/{rest}).
@@ -118,7 +119,7 @@ final class TagsController implements ControllerInterface
         EventDispatcher::notify('loc_end_tags');
         flush_page_messages();
         $tpl->pparse('tags');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

@@ -21,6 +21,7 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,
@@ -358,7 +359,7 @@ final class GalleryController implements ControllerInterface
         $tpl->pparse('index');
 
         pwg_log();
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

@@ -43,6 +43,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 
 final class MiscController
 {
@@ -460,7 +461,7 @@ final class MiscController
         }
 
         $tpl->pparse('popuphelp');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
     }
 
     // ── intro ─────────────────────────────────────────────────────────────────

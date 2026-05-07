@@ -31,6 +31,7 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Piwigo\Page\PageTailRenderer;
 
 /**
  * Handles the single-image page (/picture/{rest}).
@@ -604,7 +605,7 @@ SELECT *
 
         $picIdRaw = $currentPic['id'] ?? null;
         pwg_log((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
-        require PHPWG_ROOT_PATH . 'include/page_tail.php';
+        PageTailRenderer::render();
 
         return ResponseFactory::create(200);
     }

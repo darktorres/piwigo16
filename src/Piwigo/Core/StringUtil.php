@@ -285,7 +285,11 @@ final class StringUtil
      * @param array<mixed>|string $value
      * @return array<mixed>
      */
-    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
+    /**
+     * @param array<mixed>|string $value
+     * @return array<mixed>
+     * @pre-boot Safe to call before Kernel::boot() — no DI container required.
+     */
     public static function safeUnserialize(array|string $value): array
     {
         if (is_string($value)) {

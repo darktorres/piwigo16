@@ -47,6 +47,7 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class MiscController
 {
@@ -168,7 +169,7 @@ final class MiscController
         }
 
         $tpl->setFilenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
-        $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . get_query_string_diff([])]);
+        $tpl->assign(['PWG_TOKEN' => get_pwg_token(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
@@ -308,7 +309,7 @@ final class MiscController
         $deleted_permalinks = [];
         foreach (ServiceLocator::get(Connection::class)->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
             $row['name']     = get_cat_display_name_cache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
-            $row['U_DELETE'] = add_url_params($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
+            $row['U_DELETE'] = UrlService::get()->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
             $deleted_permalinks[] = $row;
         }
 
@@ -881,9 +882,9 @@ final class MiscController
 
         $tpl->setFilename('rating', 'rating.tpl');
         $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
-        $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
+        $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create'), 'nb_elements' => $nb_elements];
 
-        $tpl->assign(['navbar' => create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
+        $tpl->assign(['navbar' => create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
         $available_order_by = [[l10n('Rate date'), 'recently_rated DESC'], [l10n('Rating score'), 'score DESC'], [l10n('Average rate'), 'avg_rates DESC'], [l10n('Number of rates'), 'nb_rates DESC'], [l10n('Sum of rates'), 'sum_rates DESC'], [l10n('File name'), 'file DESC'], [l10n('Creation date'), 'date_creation DESC'], [l10n('Post date'), 'date_available DESC']];
         for ($i = 0; $i < count($available_order_by); $i++) {
@@ -982,7 +983,7 @@ final class MiscController
             $params = ImageStdParams::getByType(IMG_SQUARE);
             foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
                 $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => make_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']])];
+                $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']])];
             }
         }
 
@@ -1041,7 +1042,7 @@ final class MiscController
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => get_root_url(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->setFilename('rating', 'rating_user.tpl');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
@@ -1134,7 +1135,7 @@ final class MiscController
                 $untreated_keys = array_diff($check_key_list, $check_key_treated);
                 if (count($untreated_keys) != 0) {
                     ServiceLocator::get(NotificationRepository::class)->deleteByCheckKeys(array_values($untreated_keys));
-                    redirect($base_url . get_query_string_diff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
+                    redirect($base_url . UrlService::get()->getQueryStringDiff([], false), l10n('Operation in progress') . "\n" . l10n('Please wait...'));
                 }
             }
         }
@@ -1191,14 +1192,14 @@ final class MiscController
 
                         if ($is_action_send) {
                             $auth = null;
-                            $add_url_params = [];
+                            $url_params = [];
                             $auth_key = AuthService::get()->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
                             if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
                                 $auth = $auth_key['auth_key'];
-                                $add_url_params['auth'] = $auth;
+                                $url_params['auth'] = $auth;
                             }
 
-                            set_make_full_url();
+                            UrlService::get()->setMakeFullUrl();
                             $return_list[] = (string) $nbm_user['check_key'];
                             $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
 
@@ -1237,7 +1238,7 @@ final class MiscController
                                     }
                                 }
 
-                                $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
+                                $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
 
                                 $ret = pwg_mail(['name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
@@ -1247,7 +1248,7 @@ final class MiscController
                                 } else {
                                     ServiceLocator::get(NotificationAdminService::class)->incMailSentFailed($nbm_user);
                                 }
-                                unset_make_full_url();
+                                UrlService::get()->unsetMakeFullUrl();
                             }
                         } else {
                             $last_send = isset($nbm_user['last_send']) ? (string) $nbm_user['last_send'] : null;
@@ -1318,7 +1319,7 @@ final class MiscController
             $disp = '↓';
             if ($field !== ($_GET[$get_param] ?? null)) {
                 if ($default_field != $field) {
-                    $url = add_url_params($url, [$get_param => $field]);
+                    $url = UrlService::get()->addUrlParams($url, [$get_param => $field]);
                 } elseif (!isset($_GET[$get_param])) {
                     $ret[] = $field;
                     $disp = '<em>' . $disp . '</em>';

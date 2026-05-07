@@ -296,18 +296,18 @@ SELECT DISTINCT(image_id)
             }
             $page = array_merge($page, [
                 'items' => $searchResult['items'],
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Search results') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Search results') . '</a>',
             ]);
         } elseif ($section === 'favorites') {
             UserService::get()->checkUserFavorites();
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Favorites') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Favorites') . '</a>',
             ]);
             $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 ServiceLocator::get(UserRepository::class)->deleteAllFavoritesByUserId($userId);
-                redirect(make_index_url(['section' => 'favorites']));
+                redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
@@ -323,8 +323,8 @@ SELECT image_id
                 ]);
                 if (count($page['items']) > 0) {
                     TemplateRegistry::current()->assign('favorite', [
-                        'U_FAVORITE' => add_url_params(
-                            make_index_url(['section' => 'favorites']),
+                        'U_FAVORITE' => UrlService::get()->addUrlParams(
+                            UrlService::get()->makeIndexUrl(['section' => 'favorites']),
                             ['action' => 'remove_all_from_favorites']
                         ),
                     ]);
@@ -346,12 +346,12 @@ SELECT DISTINCT(id)
   ' . $forbidden . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Recent photos') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Recent photos') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'recent_cats') {
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Recent albums') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Recent albums') . '</a>',
             ]);
         } elseif ($section === 'most_visited') {
             $page['super_order_by'] = true;
@@ -366,7 +366,7 @@ SELECT DISTINCT(id)
   LIMIT ' . Config::topNumber() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">'
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . l10n('Most visited') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
@@ -383,7 +383,7 @@ SELECT DISTINCT(id)
   LIMIT ' . Config::topNumber() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">'
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . l10n('Best rated') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
@@ -398,7 +398,7 @@ SELECT DISTINCT(id)
   ' . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Random photos') . '</a>',
+                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . l10n('Random photos') . '</a>',
                 'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         }
@@ -413,7 +413,7 @@ SELECT DISTINCT(id)
         // ── Title ─────────────────────────────────────────────────────────────
 
         if (isset($page['title'])) {
-            $page['section_title'] = '<a href="' . get_gallery_home_url() . '">' . l10n('Home') . '</a>';
+            $page['section_title'] = '<a href="' . UrlService::get()->getGalleryHomeUrl() . '">' . l10n('Home') . '</a>';
             $pageTitle = is_string($page['title']) ? $page['title'] : '';
             if ($pageTitle !== '') {
                 $page['section_title'] .= Config::levelSeparator() . $pageTitle;
@@ -469,7 +469,7 @@ SELECT DISTINCT(id)
             if ($needRedirect) {
                 $catId = is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
                 check_restrictions($catId);
-                $redirectUrl = $scriptContext === 'picture' ? duplicate_picture_url() : duplicate_index_url();
+                $redirectUrl = $scriptContext === 'picture' ? UrlService::get()->duplicatePictureUrl() : UrlService::get()->duplicateIndexUrl();
                 if (!headers_sent()) {
                     set_status_header(301);
                     redirect_http($redirectUrl);

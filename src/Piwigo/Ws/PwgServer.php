@@ -15,6 +15,7 @@ use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Url\UrlService;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
@@ -513,7 +514,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         }
         $server->setEncoder($responseFormat, $encoder);
 
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
     }
 
     public function isAuthorizedMethodForAPIKEY(): bool

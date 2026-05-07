@@ -11,6 +11,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Url\UrlService;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.
@@ -42,7 +43,7 @@ final class UserBootstrap
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_scalar($_GET['act']) && (string) $_GET['act'] === 'logout') {
                 AuthService::get()->logoutUser();
-                redirect(get_gallery_home_url());
+                redirect(UrlService::get()->getGalleryHomeUrl());
             } elseif (!empty($_SESSION['pwg_uid'])) {
                 $user['id'] = $_SESSION['pwg_uid'];
             }

@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 
 final class PageHeaderRenderer
 {
@@ -39,7 +40,7 @@ final class PageHeaderRenderer
             'BODY_ID'                => $page['body_id'] ?? '',
             'CONTENT_ENCODING'       => get_pwg_charset(),
             'PAGE_TITLE'             => strip_tags($title),
-            'U_HOME'                 => get_gallery_home_url(),
+            'U_HOME'                 => UrlService::get()->getGalleryHomeUrl(),
             'LEVEL_SEPARATOR'        => Config::levelSeparator(),
             'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
             'BODY_CLASSES'           => $pageState->bodyClasses,

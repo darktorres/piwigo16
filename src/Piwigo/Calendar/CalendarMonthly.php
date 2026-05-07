@@ -13,6 +13,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 
 /**
  * @package functions\calendar
@@ -263,7 +264,7 @@ class CalendarMonthly extends CalendarBase
 
         foreach ($items as $year => $year_data) {
             $chronology_date = [ $year ];
-            $url = duplicate_index_url(['chronology_date' => $chronology_date]);
+            $url = UrlService::get()->duplicateIndexUrl(['chronology_date' => $chronology_date]);
 
             $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
@@ -337,7 +338,7 @@ class CalendarMonthly extends CalendarBase
         foreach ($items as $month => $month_data) {
             $cyearRaw = $chronologyDate[CYEAR] ?? '';
             $chronology_date = [ $cyearRaw, $month ];
-            $url = duplicate_index_url(['chronology_date' => $chronology_date]);
+            $url = UrlService::get()->duplicateIndexUrl(['chronology_date' => $chronology_date]);
 
             $nav_bar = $this->getNavBarFromItems(
                 $chronology_date,
@@ -479,7 +480,7 @@ class CalendarMonthly extends CalendarBase
                           'DAY' => $day,
                         ];
                 } else {
-                    $url = duplicate_index_url(
+                    $url = UrlService::get()->duplicateIndexUrl(
                         [
                           'chronology_date' =>
                             [

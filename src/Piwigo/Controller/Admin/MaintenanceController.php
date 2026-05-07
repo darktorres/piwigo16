@@ -50,6 +50,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class MaintenanceController
 {
@@ -836,7 +837,7 @@ final class MaintenanceController
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
         if (isset($page['search_id'])) {
-            $navbar = create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
+            $navbar = create_navigation_bar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
             $tpl->assign('navbar', $navbar);
         }
 
@@ -1002,7 +1003,7 @@ final class MaintenanceController
 
         if (isset($_POST['submit']) && !empty($_POST['galleries_url'])) {
             $galleries_url = is_scalar($_POST['galleries_url']) ? (string) $_POST['galleries_url'] : '';
-            $is_remote = url_is_remote($galleries_url);
+            $is_remote = UrlService::urlIsRemote($galleries_url);
             if ($is_remote) {
                 fatal_error('remote sites not supported');
             }
@@ -1044,7 +1045,7 @@ final class MaintenanceController
         }
 
         $tpl->assign([
-            'F_ACTION'   => ServiceLocator::get(UrlGenerator::class)->admin() . get_query_string_diff(['action', 'site', 'pwg_token']),
+            'F_ACTION'   => ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['action', 'site', 'pwg_token']),
             'PWG_TOKEN'  => get_pwg_token(),
             'ADMIN_PAGE_TITLE' => l10n('Synchronize'),
             'page_data_json' => json_encode(['str_delete_site_confirm' => l10n('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
@@ -1054,7 +1055,7 @@ final class MaintenanceController
 
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
             $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $is_remote  = url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '');
+            $is_remote  = UrlService::urlIsRemote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '');
             $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&amp;site=' . $row_id_str . '&amp;pwg_token=' . get_pwg_token() . '&amp;action=';
             $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
@@ -1108,7 +1109,7 @@ final class MaintenanceController
             throw new NotFoundException('site ' . $site_id . ' does not exist');
         }
         $site_url_str  = (string) $site_url;
-        $site_is_remote = url_is_remote($site_url_str);
+        $site_is_remote = UrlService::urlIsRemote($site_url_str);
 
         defined('CURRENT_DATE') or define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 

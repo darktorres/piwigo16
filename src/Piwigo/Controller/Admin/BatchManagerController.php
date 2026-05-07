@@ -33,6 +33,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class BatchManagerController
 {
@@ -839,7 +840,7 @@ final class BatchManagerController
         $nb_thumbs_page = 0;
 
         if (count($catElementsId) > 0) {
-            $nav_bar = create_navigation_bar($base_url . get_query_string_diff(['start']), count($catElementsId), $pageStart, $nbImages);
+            $nav_bar = create_navigation_bar($base_url . UrlService::get()->getQueryStringDiff(['start']), count($catElementsId), $pageStart, $nbImages);
             $tpl->assign('navbar', $nav_bar);
 
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
@@ -892,7 +893,7 @@ final class BatchManagerController
             'CACHE_KEYS'                           => $cache_keys,
             'batch_manager_global_page_data_json'  => json_encode([
                 'CACHE_KEYS'              => $cache_keys,
-                'ROOT_URL'                => get_root_url(),
+                'ROOT_URL'                => UrlService::getRootUrl(),
                 'associated_categories'   => $associated_categories,
                 'str_create'              => l10n('Create'),
                 'nb_thumbs_page'          => $nb_thumbs_page,
@@ -982,7 +983,7 @@ final class BatchManagerController
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         $tpl->assign([
-            'U_ELEMENTS_PAGE' => $base_url . get_query_string_diff(['display', 'start']),
+            'U_ELEMENTS_PAGE' => $base_url . UrlService::get()->getQueryStringDiff(['display', 'start']),
             'level_options'   => get_privacy_level_options(),
             'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
             'PWG_TOKEN'       => get_pwg_token(),
@@ -1016,7 +1017,7 @@ final class BatchManagerController
         $tpl->assign('per_page', $nbImagesU);
 
         if (count($catElementsIdU) > 0) {
-            $nav_bar = create_navigation_bar($base_url . get_query_string_diff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
+            $nav_bar = create_navigation_bar($base_url . UrlService::get()->getQueryStringDiff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
             $tpl->assign(['navbar' => $nav_bar]);
 
             $element_ids      = [];
@@ -1091,10 +1092,10 @@ final class BatchManagerController
                 $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $url_img  = null;
                 if (isset($row['cat_id']) && in_array($row['cat_id'], $authorizeds)) {
-                    $url_img = make_picture_url(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);
+                    $url_img = UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);
                 } else {
                     foreach ($authorizeds as $category) {
-                        $url_img = make_picture_url(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null]);
+                        $url_img = UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null]);
                         break;
                     }
                 }
@@ -1154,7 +1155,7 @@ final class BatchManagerController
             'CACHE_KEYS'                          => $cache_keys,
             'batch_manager_unit_page_data_json'   => json_encode([
                 'CACHE_KEYS'            => $cache_keys,
-                'ROOT_URL'              => get_root_url(),
+                'ROOT_URL'              => UrlService::getRootUrl(),
                 'associated_categories' => $associated_categories,
                 'str_create'            => l10n('Create'),
                 'active_plugins'        => array_keys($pwg_loaded_plugins),

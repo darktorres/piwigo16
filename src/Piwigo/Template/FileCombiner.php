@@ -11,6 +11,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\PermissionService;
+use Piwigo\Url\UrlService;
 
 /**
  * Allows merging of javascript and css files into a single one.
@@ -70,7 +71,7 @@ final class FileCombiner
 
         $result = [];
         $pending = [];
-        $ini_key = $this->is_css ? [get_absolute_root_url(false)] : []; //because for css we modify bg url;
+        $ini_key = $this->is_css ? [UrlService::getAbsoluteRootUrl(false)] : []; //because for css we modify bg url;
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
@@ -250,11 +251,11 @@ final class FileCombiner
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
-                if (!url_is_remote($match[1]) && $match[1][0] != '/' && !str_contains($match[1], 'data:image/')) {
+                if (!UrlService::urlIsRemote($match[1]) && $match[1][0] != '/' && !str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/$match[1]";
                     $search[] = $match[0];
-                    $url = embellish_url(get_absolute_root_url(false).$relative);
-                    $replace[] = 'url('.(is_string($url) ? $url : get_absolute_root_url(false).$relative).')';
+                    $url = UrlService::embellishUrl(UrlService::getAbsoluteRootUrl(false).$relative);
+                    $replace[] = 'url('.(is_string($url) ? $url : UrlService::getAbsoluteRootUrl(false).$relative).')';
                 }
             }
             $css = str_replace($search, $replace, $css);

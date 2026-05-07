@@ -19,6 +19,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class GroupsController
 {
@@ -60,11 +61,11 @@ final class GroupsController
             'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
             'PWG_TOKEN'                 => get_pwg_token(),
             'CACHE_KEYS'                => $cache_keys,
-            'ROOT_URL'                  => get_root_url(),
-            'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create')]),
+            'ROOT_URL'                  => UrlService::getRootUrl(),
+            'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create')]),
             'page_data_json'            => json_encode([
                 'pwg_token'                    => get_pwg_token(),
-                'rootUrl'                      => get_root_url(),
+                'rootUrl'                      => UrlService::getRootUrl(),
                 'serverId'                     => $cache_keys['_hash'],
                 'serverKey'                    => $cache_keys['users'],
                 'str_copy'                     => l10n(' (copy)'),

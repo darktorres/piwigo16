@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Url;
 
 use Piwigo\Routing\Router;
+use Piwigo\Url\UrlService;
 
 /**
  * Typed facade for building application URLs.
@@ -223,12 +224,12 @@ final readonly class UrlGenerator
     /** URL for downloading original/representative image. */
     public function actionDownload(int $id, string $part, string $pwgToken): string
     {
-        return get_root_url() . 'index.php?/action&amp;id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
+        return UrlService::getRootUrl() . 'index.php?/action&amp;id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
     }
     /** URL for downloading a specific image format. */
     public function actionFormat(int $formatId): string
     {
-        return get_root_url() . 'index.php?/action&amp;format=' . $formatId . '&amp;download';
+        return UrlService::getRootUrl() . 'index.php?/action&amp;format=' . $formatId . '&amp;download';
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

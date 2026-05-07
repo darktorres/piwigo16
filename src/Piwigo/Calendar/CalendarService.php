@@ -11,6 +11,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class CalendarService
 {
@@ -163,7 +164,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                         } else {
                             $chronologyDate = $chronologyDateAll;
                         }
-                        $url = duplicate_index_url([
+                        $url = UrlService::get()->duplicateIndexUrl([
                             'chronology_style' => $style,
                             'chronology_view'  => $view,
                             'chronology_date'  => $chronologyDate,
@@ -181,7 +182,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                     }
                 }
             }
-            $url           = duplicate_index_url([], ['start', 'chronology_date']);
+            $url           = UrlService::get()->duplicateIndexUrl([], ['start', 'chronology_date']);
             $calendarTitle = '<a href="' . $url . '">' . $fields[$chronologyField]['label'] . '</a>';
             $calendarTitle .= $calendar->getDisplayName();
             $template->assign('chronology', ['TITLE' => $calendarTitle]);

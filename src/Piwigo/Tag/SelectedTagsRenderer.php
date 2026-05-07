@@ -6,6 +6,7 @@ namespace Piwigo\Tag;
 
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 
 final class SelectedTagsRenderer
 {
@@ -29,8 +30,8 @@ final class SelectedTagsRenderer
             $selected_related_tags_info[$key] = [
                 'tag_name' => EventDispatcher::dispatch('render_tag_name', $tagName, $tag),
                 'item_count' => '',
-                'index_url' => make_index_url(['tags' => [$tag]]),
-                'remove_url' => make_index_url(['tags' => $other_tags]),
+                'index_url' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
+                'remove_url' => UrlService::get()->makeIndexUrl(['tags' => $other_tags]),
             ];
         }
 

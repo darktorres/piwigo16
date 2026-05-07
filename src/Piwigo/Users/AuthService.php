@@ -15,6 +15,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class AuthService
 {
@@ -427,9 +428,9 @@ SELECT
             'activation_key_expire' => $expire,
         ], ['user_id' => $userId]);
 
-        set_make_full_url();
-        $passwordLink = add_url_params(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
-        unset_make_full_url();
+        UrlService::get()->setMakeFullUrl();
+        $passwordLink = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
+        UrlService::get()->unsetMakeFullUrl();
 
         $timeValidation = time_since(strtotime('now -' . $duration . ' second') ?: null, 'second', null, false);
 

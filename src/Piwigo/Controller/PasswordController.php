@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the three-stage password-reset flow (/password).
@@ -96,11 +97,11 @@ final class PasswordController implements ControllerInterface
 
         if ('reset' == $page['action']) {
             if (($get_key === null && (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
-                redirect(get_gallery_home_url());
+                redirect(UrlService::get()->getGalleryHomeUrl());
             }
         }
         if ('lost' == $page['action'] && !PermissionService::get()->isAGuest()) {
-            redirect(get_gallery_home_url());
+            redirect(UrlService::get()->getGalleryHomeUrl());
         }
         if ('lost_code' == $page['action'] && !isset($_SESSION['reset_password_code'])) {
             redirect(ServiceLocator::get(UrlGenerator::class)->identification());
@@ -159,8 +160,8 @@ final class PasswordController implements ControllerInterface
         $tpl->assign(['language_options' => $language_options, 'current_language' => $userLang]);
         $tpl->assign('page_data_json', json_encode([
             'selected_language' => $language_options[$userLang] ?? '',
-            'url_logo_light'    => get_root_url() . 'themes/standard_pages/images/piwigo_logo.svg',
-            'url_logo_dark'     => get_root_url() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
+            'url_logo_light'    => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo.svg',
+            'url_logo_dark'     => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $help_link = str_starts_with($userLang, 'fr')

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Url\UrlService;
+
 /**
  * A Combinable represents a JS or CSS file ready for cobination and minification.
  */
@@ -33,6 +35,6 @@ class Combinable
 
     public function isRemote(): bool
     {
-        return url_is_remote($this->path) || str_starts_with($this->path, '//');
+        return UrlService::urlIsRemote($this->path) || str_starts_with($this->path, '//');
     }
 }

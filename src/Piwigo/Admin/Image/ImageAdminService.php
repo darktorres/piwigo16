@@ -21,6 +21,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\UserRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class ImageAdminService
 {
@@ -45,7 +46,7 @@ final class ImageAdminService
         }
         foreach ($repo->findPathsByIds($ids) as $row) {
             $rowPath = is_scalar($row['path']) ? (string) $row['path'] : '';
-            if (url_is_remote($rowPath)) {
+            if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
             $files   = [];

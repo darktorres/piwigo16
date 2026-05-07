@@ -11,6 +11,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 final class PictureRateRenderer
 {
@@ -56,7 +57,7 @@ final class PictureRateRenderer
             }
 
             $template->assign('rating', [
-                'F_ACTION' => add_url_params($url_self, ['action' => 'rate']),
+                'F_ACTION' => UrlService::get()->addUrlParams($url_self, ['action' => 'rate']),
                 'USER_RATE' => $user_rate ?? null,
                 'marks' => Config::rateItems(),
             ]);

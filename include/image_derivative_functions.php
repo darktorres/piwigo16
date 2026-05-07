@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
+use Piwigo\Url\UrlService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Image\DerivativeParams;
@@ -297,7 +298,7 @@ function send_derivative(int|false $expires, ImageDerivativeContext $ctx): void
 {
     if (isset($_GET['ajaxload']) && $_GET['ajaxload'] == 'true') {
         require_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
-        echo json_encode(['url' => embellish_url(get_absolute_root_url() . $ctx->derivativePath)]);
+        echo json_encode(['url' => UrlService::embellishUrl(UrlService::getAbsoluteRootUrl() . $ctx->derivativePath)]);
         return;
     }
     $fp = fopen($ctx->derivativePath, 'rb');

@@ -17,6 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the tags cloud/alphabetic page (/tags/{rest}).
@@ -89,7 +90,7 @@ final class TagsController implements ControllerInterface
                     $letter         = ['tags' => []];
                 }
 
-                $letter['tags'][] = array_merge($tagArr, ['URL' => make_index_url(['tags' => [$tag]])]);
+                $letter['tags'][] = array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]);
                 $current_tag_idx++;
             }
 
@@ -105,7 +106,7 @@ final class TagsController implements ControllerInterface
 
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
-                $tpl->append('tags', array_merge($tagArr, ['URL' => make_index_url(['tags' => [$tag]])]));
+                $tpl->append('tags', array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]));
             }
         }
 

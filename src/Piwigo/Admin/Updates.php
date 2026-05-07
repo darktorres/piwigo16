@@ -15,6 +15,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Url\UrlService;
 
 class Updates
 {
@@ -100,7 +101,7 @@ class Updates
             $url = PHPWG_URL.'/download/all_versions.php';
             $url .= '?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)); // Avoid server cache
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
-            $url .= '&origin_hash='.sha1(Config::secretKey().get_absolute_root_url());
+            $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
 
             if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result)) {
                 $all_versions = explode("\n", $result);
@@ -607,7 +608,7 @@ class Updates
 
                         PageState::current()->addError(l10n(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-                            get_root_url().Config::dataLocation().'update/log_error.txt'
+                            UrlService::getRootUrl().Config::dataLocation().'update/log_error.txt'
                         ));
                     }
                 } else {

@@ -28,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the Piwigo installation wizard (/install).
@@ -293,7 +294,7 @@ final class InstallController implements ControllerInterface
                         get_l10n_args('', ''),
                         get_l10n_args('Here are your connection settings', ''),
                         get_l10n_args('', ''),
-                        get_l10n_args('Link: %s', get_absolute_root_url()),
+                        get_l10n_args('Link: %s', UrlService::getAbsoluteRootUrl()),
                         get_l10n_args('Username: %s', $admin_name),
                         get_l10n_args('Password: ********** (no copy by email)', ''),
                         get_l10n_args('Email: %s', $admin_mail),

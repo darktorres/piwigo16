@@ -14,6 +14,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class CategoryDefaultRenderer
 {
@@ -54,8 +55,8 @@ final class CategoryDefaultRenderer
 
         if (count($pictures) > 0) {
             $row = reset($pictures);
-            $page['cat_slideshow_url'] = add_url_params(
-                duplicate_picture_url(
+            $page['cat_slideshow_url'] = UrlService::get()->addUrlParams(
+                UrlService::get()->duplicatePictureUrl(
                     ['image_id' => $row['id'], 'image_file' => $row['file']],
                     ['start']
                 ),
@@ -80,7 +81,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         $tpl_thumbnails_var = [];
 
         foreach ($pictures as $row) {
-            $url = duplicate_picture_url(
+            $url = UrlService::get()->duplicatePictureUrl(
                 ['image_id' => $row['id'], 'image_file' => $row['file']],
                 ['start']
             );

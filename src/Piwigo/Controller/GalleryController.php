@@ -23,6 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,
@@ -56,7 +57,7 @@ final class GalleryController implements ControllerInterface
             check_restrictions($catId);
         }
         if ($start > 0 && $start >= count($items)) {
-            page_not_found('', duplicate_index_url(['start' => 0]));
+            page_not_found('', UrlService::get()->duplicateIndexUrl(['start' => 0]));
         }
 
         EventDispatcher::notify('loc_begin_index');
@@ -69,7 +70,7 @@ final class GalleryController implements ControllerInterface
             } else {
                 pwg_unset_session_var('image_order');
             }
-            redirect(duplicate_index_url([], ['start']));
+            redirect(UrlService::get()->duplicateIndexUrl([], ['start']));
         }
 
         $display = input_string('display', null, $_GET);
@@ -88,7 +89,7 @@ final class GalleryController implements ControllerInterface
         $page['navigation_bar'] = [];
         if (count($items) > $nbImagePage) {
             $page['navigation_bar'] = create_navigation_bar(
-                duplicate_index_url([], ['start']),
+                UrlService::get()->duplicateIndexUrl([], ['start']),
                 count($items),
                 $start,
                 $nbImagePage,
@@ -101,18 +102,18 @@ final class GalleryController implements ControllerInterface
         // Caddie filling
         if (input_string('caddie', null, $_GET) !== null) {
             fill_caddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
-            redirect(duplicate_index_url());
+            redirect(UrlService::get()->duplicateIndexUrl());
         }
 
         // Canonical URL
         if (isset($page['is_homepage']) && $page['is_homepage']) {
-            $canonicalUrl = get_gallery_home_url();
+            $canonicalUrl = UrlService::get()->getGalleryHomeUrl();
         } else {
             $safeStart = $nbImagePage > 0 ? (int) ($nbImagePage * round($start / $nbImagePage)) : 0;
             if ($safeStart > 0 && $safeStart >= count($items)) {
                 $safeStart -= $nbImagePage;
             }
-            $canonicalUrl = duplicate_index_url(['start' => $safeStart]);
+            $canonicalUrl = UrlService::get()->duplicateIndexUrl(['start' => $safeStart]);
         }
         $tpl->assign('U_CANONICAL', $canonicalUrl);
         $tpl->assign('use_standard_pages', conf_get_param('use_standard_pages', false));
@@ -130,11 +131,11 @@ final class GalleryController implements ControllerInterface
             $page['body_id'] = 'theCategoryPage';
 
             if (isset($page['flat']) || isset($page['chronology_field'])) {
-                $tpl->assign('U_MODE_NORMAL', duplicate_index_url([], ['chronology_field', 'start', 'flat']));
+                $tpl->assign('U_MODE_NORMAL', UrlService::get()->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));
             }
 
             if (Config::indexFlatIcon() && !isset($page['flat']) && $section === 'categories') {
-                $tpl->assign('U_MODE_FLAT', duplicate_index_url(['flat' => ''], ['start', 'chronology_field']));
+                $tpl->assign('U_MODE_FLAT', UrlService::get()->duplicateIndexUrl(['flat' => ''], ['start', 'chronology_field']));
             }
 
             if (!isset($page['chronology_field'])) {
@@ -144,17 +145,17 @@ final class GalleryController implements ControllerInterface
                     'chronology_view'  => 'list',
                 ];
                 if (Config::indexCreatedDateIcon()) {
-                    $tpl->assign('U_MODE_CREATED', duplicate_index_url($chronoParams, ['start', 'flat']));
+                    $tpl->assign('U_MODE_CREATED', UrlService::get()->duplicateIndexUrl($chronoParams, ['start', 'flat']));
                 }
                 if (Config::indexPostedDateIcon()) {
                     $chronoParams['chronology_field'] = 'posted';
-                    $tpl->assign('U_MODE_POSTED', duplicate_index_url($chronoParams, ['start', 'flat']));
+                    $tpl->assign('U_MODE_POSTED', UrlService::get()->duplicateIndexUrl($chronoParams, ['start', 'flat']));
                 }
             } else {
                 $chronoField = is_string($page['chronology_field']) && $page['chronology_field'] === 'created'
                     ? 'posted' : 'created';
                 if (Config::raw('index_' . $chronoField . '_date_icon')) {
-                    $url = duplicate_index_url(
+                    $url = UrlService::get()->duplicateIndexUrl(
                         ['chronology_field' => $chronoField],
                         ['chronology_date', 'start', 'flat']
                     );
@@ -168,7 +169,7 @@ final class GalleryController implements ControllerInterface
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => add_url_params(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['cat_id' => $catId]),
+                    'SEARCH_IN_SET_URL'    => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['cat_id' => $catId]),
                 ]);
             }
 
@@ -186,8 +187,8 @@ final class GalleryController implements ControllerInterface
                 foreach ($tags as $tag) {
                     $tagArr = is_array($tag) ? $tag : [];
                     $relatedTags[] = array_merge($tagArr, [
-                        'U_ADD' => make_index_url(['tags' => array_merge($pageTags, [$tag])]),
-                        'URL'   => make_index_url(['tags' => [$tag]]),
+                        'U_ADD' => UrlService::get()->makeIndexUrl(['tags' => array_merge($pageTags, [$tag])]),
+                        'URL'   => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
                     ]);
                 }
                 usort(
@@ -203,7 +204,7 @@ final class GalleryController implements ControllerInterface
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => add_url_params(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['tag_id' => implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds))]),
+                    'SEARCH_IN_SET_URL'    => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['tag_id' => implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds))]),
                     'COMBINABLE_TAGS' => $relatedTags,
                 ]);
             }
@@ -213,7 +214,7 @@ final class GalleryController implements ControllerInterface
             }
 
             if (PermissionService::get()->isAdmin() && !empty($items) && Config::indexCaddieIcon()) {
-                $tpl->assign('U_CADDIE', add_url_params(duplicate_index_url(), ['caddie' => 1]));
+                $tpl->assign('U_CADDIE', UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['caddie' => 1]));
             }
 
             // Search results hints
@@ -239,7 +240,7 @@ final class GalleryController implements ControllerInterface
                     if (!is_array($tag)) {
                         continue;
                     }
-                    $tag['URL'] = make_index_url(['tags' => [$tag]]);
+                    $tag['URL'] = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
                     $tpl->append('tag_search_results', $tag);
                 }
                 if (empty($items)) {
@@ -262,7 +263,7 @@ final class GalleryController implements ControllerInterface
                     $firstOrder = substr($firstOrder, 0, $pos);
                 }
                 $firstOrder    = trim($firstOrder);
-                $url           = add_url_params(duplicate_index_url(), ['image_order' => '']);
+                $url           = UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['image_order' => '']);
                 $tplOrders     = [];
                 $orderSelected = false;
                 foreach ($preferredOrders as $orderId => $order) {
@@ -309,7 +310,7 @@ final class GalleryController implements ControllerInterface
                 ServiceLocator::get(CategoryDefaultRenderer::class)->render();
 
                 if (Config::indexSizesIcon()) {
-                    $url        = add_url_params(duplicate_index_url(), ['display' => '']);
+                    $url        = UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['display' => '']);
                     $derivObj   = $tpl->getTemplateVars('derivative_params');
                     $selType    = is_object($derivObj) ? (string) ($derivObj->type ?? '') : '';
                     $tpl->clearAssign('derivative_params');
@@ -342,7 +343,7 @@ final class GalleryController implements ControllerInterface
                 $relTags    = [];
                 foreach ($commonTags as $tag) {
                     $relTags[] = array_merge(is_array($tag) ? $tag : [], [
-                        'URL' => make_index_url(['tags' => [$tag]]),
+                        'URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
                     ]);
                 }
                 $tpl->assign([

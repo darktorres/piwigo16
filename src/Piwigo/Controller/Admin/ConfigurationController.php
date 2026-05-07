@@ -23,6 +23,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class ConfigurationController
 {
@@ -463,7 +464,7 @@ final class ConfigurationController
                     ]);
                 }
 
-                $tpl->assign('page_data_json', json_encode(['root_url' => get_root_url()], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+                $tpl->assign('page_data_json', json_encode(['root_url' => UrlService::getRootUrl()], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
                 break;
 
             case 'search':

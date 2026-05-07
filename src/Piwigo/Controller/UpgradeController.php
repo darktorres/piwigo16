@@ -17,6 +17,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the Piwigo database upgrade (/upgrade).
@@ -109,7 +110,7 @@ final class UpgradeController implements ControllerInterface
         $page = &$GLOBALS['page'];
         $has_remote_site = false;
         foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
-            if (url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
+            if (UrlService::urlIsRemote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
                 $has_remote_site = true;
             }
         }

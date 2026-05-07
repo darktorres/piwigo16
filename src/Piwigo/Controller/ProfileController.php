@@ -21,6 +21,7 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the user profile / preferences page (/profile).
@@ -65,7 +66,7 @@ final class ProfileController implements ControllerInterface
         $tpl->setFilename('profile', 'profile.tpl');
         $tpl->setFilename('profile_content', 'profile_content.tpl');
 
-        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), make_index_url(), $userdata);
+        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), UrlService::get()->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
         $special_user = in_array($userdata_id, [Config::guestId(), Config::defaultUserId()]);
@@ -137,8 +138,8 @@ final class ProfileController implements ControllerInterface
         $tpl->assign(['language_options' => $language_options, 'language_selection' => $userLang]);
         $tpl->assign('std_pages_data_json', json_encode([
             'selected_language' => $language_options[$userLang] ?? '',
-            'url_logo_light'    => get_root_url() . 'themes/standard_pages/images/piwigo_logo.svg',
-            'url_logo_dark'     => get_root_url() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
+            'url_logo_light'    => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo.svg',
+            'url_logo_dark'     => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $help_link = str_starts_with($userLang, 'fr')

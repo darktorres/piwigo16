@@ -17,6 +17,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class AdminService
 {
@@ -149,7 +150,7 @@ final readonly class AdminService
         } else {
             $requested = array_intersect($requested, array_keys($tables));
         }
-        $keys = ['_hash' => md5((string) get_absolute_root_url())];
+        $keys = ['_hash' => md5((string) UrlService::getAbsoluteRootUrl())];
         foreach ($requested as $item) {
             $keys[$item] = $this->conn->executeQuery(
                 'SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*)) FROM `' . $tables[$item] . '`'
@@ -228,7 +229,7 @@ final readonly class AdminService
      */
     public function fetchRemote(string $src, mixed &$dest, array $getData = [], array $postData = [], string $userAgent = 'Piwigo', int $step = 0): bool
     {
-        if (!url_is_remote($src)) {
+        if (!UrlService::urlIsRemote($src)) {
             $content = is_readable($src) ? file_get_contents($src) : false;
             if ($content !== false) {
                 if (is_resource($dest)) {

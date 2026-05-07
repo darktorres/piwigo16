@@ -12,6 +12,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class ProfileService
 {
@@ -146,7 +147,7 @@ final class ProfileService
             pwg_activity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
 
             if (!empty($_POST['redirect'])) {
-                redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : get_root_url());
+                redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
             }
         }
         return true;

@@ -11,6 +11,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 final class MenubarRenderer
 {
@@ -64,11 +65,11 @@ final class MenubarRenderer
         $block = $menu->getBlock('mbCategories');
         if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and get_filter_page_value('used')) {
             if ($filter['enabled']) {
-                $template->assign('U_STOP_FILTER', add_url_params(make_index_url([]), ['filter' => 'stop']));
+                $template->assign('U_STOP_FILTER', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl([]), ['filter' => 'stop']));
             } else {
                 $template->assign(
                     'U_START_FILTER',
-                    add_url_params(make_index_url([]), ['filter' => 'start-recent-' . (is_scalar($user['recent_period'] ?? null) ? (string) $user['recent_period'] : '')])
+                    UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl([]), ['filter' => 'start-recent-' . (is_scalar($user['recent_period'] ?? null) ? (string) $user['recent_period'] : '')])
                 );
             }
         }
@@ -77,7 +78,7 @@ final class MenubarRenderer
             $block->data = [
                 'NB_PICTURE' => $user['nb_total_images'] ?? 0,
                 'MENU_CATEGORIES' => get_categories_menu(),
-                'U_CATEGORIES' => make_index_url(['section' => 'categories']),
+                'U_CATEGORIES' => UrlService::get()->makeIndexUrl(['section' => 'categories']),
             ];
             $block->template = 'menubar_categories.tpl';
         }
@@ -113,7 +114,7 @@ final class MenubarRenderer
             $tags = array_slice($tags, 0, Config::menubarTagCloudItemsNumber());
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
-                $block->data[] = array_merge($tagArr, ['URL' => make_index_url(['tags' => [$tag]])]);
+                $block->data[] = array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]);
             }
             if (!empty($block->data)) {
                 $block->template = 'menubar_tags.tpl';
@@ -123,34 +124,34 @@ final class MenubarRenderer
         if (($block = $menu->getBlock('mbSpecials')) != null) {
             if (!PermissionService::get()->isAGuest()) {
                 $block->data['favorites'] = [
-                    'URL' => make_index_url(['section' => 'favorites']),
+                    'URL' => UrlService::get()->makeIndexUrl(['section' => 'favorites']),
                     'TITLE' => l10n('display your favorites photos'),
                     'NAME' => l10n('Your favorites'),
                 ];
             }
 
             $block->data['most_visited'] = [
-                'URL' => make_index_url(['section' => 'most_visited']),
+                'URL' => UrlService::get()->makeIndexUrl(['section' => 'most_visited']),
                 'TITLE' => l10n('display most visited photos'),
                 'NAME' => l10n('Most visited'),
             ];
 
             if (Config::rateEnabled()) {
                 $block->data['best_rated'] = [
-                    'URL' => make_index_url(['section' => 'best_rated']),
+                    'URL' => UrlService::get()->makeIndexUrl(['section' => 'best_rated']),
                     'TITLE' => l10n('display best rated photos'),
                     'NAME' => l10n('Best rated'),
                 ];
             }
 
             $block->data['recent_pics'] = [
-                'URL' => make_index_url(['section' => 'recent_pics']),
+                'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_pics']),
                 'TITLE' => l10n('display most recent photos'),
                 'NAME' => l10n('Recent photos'),
             ];
 
             $block->data['recent_cats'] = [
-                'URL' => make_index_url(['section' => 'recent_cats']),
+                'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_cats']),
                 'TITLE' => l10n('display recently updated albums'),
                 'NAME' => l10n('Recent albums'),
             ];
@@ -163,7 +164,7 @@ final class MenubarRenderer
             ];
 
             $block->data['calendar'] = [
-                'URL' => make_index_url([
+                'URL' => UrlService::get()->makeIndexUrl([
                     'chronology_field' => (Config::calendarDatefield() == 'date_available' ? 'posted' : 'created'),
                     'chronology_style' => 'monthly',
                     'chronology_view' => 'calendar',
@@ -231,7 +232,7 @@ final class MenubarRenderer
                 $template->assign('U_PROFILE', ServiceLocator::get(UrlGenerator::class)->profile());
             }
             if (!Config::apacheAuthentication()) {
-                $template->assign('U_LOGOUT', get_root_url() . '?act=logout');
+                $template->assign('U_LOGOUT', UrlService::getRootUrl() . '?act=logout');
             }
             if (PermissionService::get()->isAdmin()) {
                 $template->assign('U_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin());

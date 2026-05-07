@@ -18,6 +18,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class CategoryCatsRenderer
 {
@@ -242,7 +243,7 @@ SELECT *
                     'ID' => $category['id'],
                     'representative' => $representative_infos,
                     'TN_ALT' => strip_tags((string) $category['name']),
-                    'URL' => make_index_url(['category' => $category]),
+                    'URL' => UrlService::get()->makeIndexUrl(['category' => $category]),
                     'CAPTION_NB_IMAGES' => get_display_images_count(
                         is_numeric($category['nb_images'] ?? null) ? (int) $category['nb_images'] : 0,
                         is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
@@ -295,7 +296,7 @@ SELECT *
             $page['cats_navigation_bar'] = [];
             if ($page['total_categories'] > Config::nbCategoriesPage()) {
                 $page['cats_navigation_bar'] = create_navigation_bar(
-                    duplicate_index_url([], ['startcat']),
+                    UrlService::get()->duplicateIndexUrl([], ['startcat']),
                     is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
                     is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
                     Config::nbCategoriesPage(),

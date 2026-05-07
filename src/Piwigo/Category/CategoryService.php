@@ -17,6 +17,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class CategoryService
 {
@@ -103,7 +104,7 @@ WHERE ' . $where . '
                     false,
                     ' / '
                 ),
-                'URL'         => make_index_url(['category' => $row]),
+                'URL'         => UrlService::get()->makeIndexUrl(['category' => $row]),
                 'LEVEL'       => substr_count(is_scalar($row['global_rank']) ? (string) $row['global_rank'] : '', '.') + 1,
                 'SELECTED'    => ($selectedCategory !== null && $selectedCategory['id'] == $row['id']) ? true : false,
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
@@ -589,7 +590,7 @@ SELECT
                     $urlParams['category'] = $cat;
                 }
 
-                $cats[$idx]['url'] = make_index_url($urlParams);
+                $cats[$idx]['url'] = UrlService::get()->makeIndexUrl($urlParams);
             }
 
             if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {

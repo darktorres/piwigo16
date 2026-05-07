@@ -18,6 +18,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class HtmlService
 {
@@ -48,7 +49,7 @@ final class HtmlService
             if (!isset($url)) {
                 $output .= $cat['name'];
             } elseif ($url == '') {
-                $output .= '<a href="' . make_index_url(['category' => $cat]) . '">';
+                $output .= '<a href="' . UrlService::get()->makeIndexUrl(['category' => $cat]) . '">';
                 $output .= $cat['name'] . '</a>';
             } else {
                 $output .= '<a href="' . PHPWG_ROOT_PATH . $url . (is_scalar($cat['id']) ? (string) $cat['id'] : '') . '">';
@@ -83,7 +84,7 @@ SELECT id, name, permalink
         $output = '';
         if ($singleLink) {
             $uppercatsArray = explode(',', $uppercats);
-            $singleUrl      = add_url_params(get_root_url() . $url . array_pop($uppercatsArray), $addUrlParamsArr);
+            $singleUrl      = UrlService::get()->addUrlParams(UrlService::getRootUrl() . $url . array_pop($uppercatsArray), $addUrlParamsArr);
             $output .= '<a href="' . $singleUrl . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -114,7 +115,7 @@ SELECT id, name, permalink
                 $output .= $catName;
             } elseif ($url == '') {
                 $output .= '
-<a href="' . add_url_params(make_index_url(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
+<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
             } else {
                 $output .= '
 <a href="' . PHPWG_ROOT_PATH . $url . $categoryId . '">' . $catName . '</a>';
@@ -199,20 +200,20 @@ SELECT id, name, permalink
   <div style="text-align:center;">
     <img src="themes/_base/icon/warning-triangle.svg" alt="warning-triangle" >
     <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
-    <a href="' . make_index_url() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
+    <a href="' . UrlService::get()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
   </div>
 </div>';
             exit();
         }
 
         $requestUri = is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '';
-        redirect_http(add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
+        redirect_http(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg, ?string $alternateUrl = null): void
     {
         $this->setStatusHeader(403);
-        $redirectUrl = $alternateUrl ?? make_index_url();
+        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
         redirect_html(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
@@ -224,7 +225,7 @@ SELECT id, name, permalink
     public function badRequest(string $msg, ?string $alternateUrl = null): void
     {
         $this->setStatusHeader(400);
-        $redirectUrl = $alternateUrl ?? make_index_url();
+        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
         redirect_html(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
@@ -236,7 +237,7 @@ SELECT id, name, permalink
     public function pageNotFound(?string $msg, ?string $alternateUrl = null): void
     {
         $this->setStatusHeader(404);
-        $redirectUrl = $alternateUrl ?? make_index_url();
+        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
         redirect_html(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
@@ -315,13 +316,13 @@ $btraceMsg
                 if (count($otherCats) > 0) {
                     $params['combined_categories'] = $otherCats;
                 }
-                $removeUrl = make_index_url($params);
+                $removeUrl = UrlService::get()->makeIndexUrl($params);
 
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="'
                   . l10n('remove this tag from the list')
                   . '"><img src="'
-                    . get_root_url() . (is_string(get_themeconf('icon_dir')) ? get_themeconf('icon_dir') : '') . '/remove_s.png'
+                    . UrlService::getRootUrl() . (is_string(get_themeconf('icon_dir')) ? get_themeconf('icon_dir') : '') . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';
@@ -435,7 +436,7 @@ $btraceMsg
 
     public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string
     {
-        return get_action_url($srcImage->id, $srcImage->isOriginal() ? 'e' : 'r', false);
+        return UrlService::get()->getActionUrl($srcImage->id, $srcImage->isOriginal() ? 'e' : 'r', false);
     }
 
     /** @param array<string, mixed> $infos */
@@ -447,7 +448,7 @@ $btraceMsg
                 return $url;
             }
         }
-        return get_action_url(is_int($infos['id'] ?? null) || is_string($infos['id'] ?? null) ? $infos['id'] : 0, 'e', false);
+        return UrlService::get()->getActionUrl(is_int($infos['id'] ?? null) || is_string($infos['id'] ?? null) ? $infos['id'] : 0, 'e', false);
     }
 
     public function flushPageMessages(): void

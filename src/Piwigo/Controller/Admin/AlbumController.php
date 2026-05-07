@@ -31,6 +31,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class AlbumController
 {
@@ -300,7 +301,7 @@ final class AlbumController
 
         if (isset($_POST['submitEmail'])) {
             check_pwg_token();
-            set_make_full_url();
+            UrlService::get()->setMakeFullUrl();
 
             $img = [];
             if (!empty($category['representative_picture_id'])) {
@@ -308,7 +309,7 @@ final class AlbumController
                     ->findById(is_numeric($category['representative_picture_id']) ? (int) $category['representative_picture_id'] : 0);
                 if ($element !== null) {
                     $img = [
-                        'link' => make_picture_url(['image_id' => $element['id'], 'image_file' => $element['file'], 'category' => $category]),
+                        'link' => UrlService::get()->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file'], 'category' => $category]),
                         'src'  => DerivativeImage::url(IMG_THUMB, $element),
                     ];
                 }
@@ -320,7 +321,7 @@ final class AlbumController
                 'assign'   => [
                     'IMG'         => $img,
                     'CAT_NAME'    => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'),
-                    'LINK'        => make_index_url(['category' => ['id' => $category['id'], 'name' => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'), 'permalink' => $category['permalink']]]),
+                    'LINK'        => UrlService::get()->makeIndexUrl(['category' => ['id' => $category['id'], 'name' => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'), 'permalink' => $category['permalink']]]),
                     'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes(is_scalar($_POST['mail_content']) ? (string) $_POST['mail_content'] : ''),
                 ],
             ];
@@ -335,9 +336,9 @@ final class AlbumController
                     $authkey     = AuthService::get()->createUserAuthKey(is_numeric($u['user_id']) ? (int) $u['user_id'] : 0, is_string($u['status']) ? $u['status'] : null);
                     $user_tpl    = $mailTpl;
                     if ($authkey !== false) {
-                        $user_tpl['assign']['LINK'] = add_url_params($mailTpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);
+                        $user_tpl['assign']['LINK'] = UrlService::get()->addUrlParams($mailTpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);
                         if (isset($user_tpl['assign']['IMG']['link'])) {
-                            $user_tpl['assign']['IMG']['link'] = add_url_params($user_tpl['assign']['IMG']['link'], ['auth' => $authkey['auth_key']]);
+                            $user_tpl['assign']['IMG']['link'] = UrlService::get()->addUrlParams($user_tpl['assign']['IMG']['link'], ['auth' => $authkey['auth_key']]);
                         }
                     }
                     $user_args = $args;
@@ -359,7 +360,7 @@ final class AlbumController
                 $tpl->assign(['save_success' => l10n('An information email was sent to group "%s"', $group_name)]);
             }
 
-            unset_make_full_url();
+            UrlService::get()->unsetMakeFullUrl();
         }
 
         $catIdScalar = is_scalar($page['cat']) ? (string) $page['cat'] : '';
@@ -548,7 +549,7 @@ final class AlbumController
                 'NB_SUB_ALBUMS'    => isset($subcats_of[$catIdStr]) ? count($subcats_of[$catIdStr]) : 0,
                 'ID'               => $category['id'],
                 'RANK'             => (is_numeric($category['rank'] ?? null) ? (int) $category['rank'] : 0) * 10,
-                'U_JUMPTO'         => make_index_url(['category' => $category]),
+                'U_JUMPTO'         => UrlService::get()->makeIndexUrl(['category' => $category]),
                 'U_CHILDREN'       => $cat_list_url . '&amp;parent_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'U_EDIT'           => $base_url . 'album-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
@@ -649,7 +650,7 @@ final class AlbumController
             'IS_VISIBLE'            => BoolUtil::toString($catVisible),
             'CAT_ADMIN_ACCESS'      => ServiceLocator::get(UserAdminService::class)->catAdminAccess($catIntId),
             'U_DELETE'              => $base_url . 'albums',
-            'U_JUMPTO'              => make_index_url(['category' => $category]),
+            'U_JUMPTO'              => UrlService::get()->makeIndexUrl(['category' => $category]),
             'U_ADD_PHOTOS_ALBUM'    => $base_url . 'photos_add&amp;album=' . $catId,
             'U_CHILDREN'            => $cat_list_url . '&amp;parent_id=' . $catId,
             'U_MOVE'                => $base_url . 'albums&amp;parent_id=' . $catId,
@@ -967,7 +968,7 @@ final class AlbumController
             'PWG_TOKEN'               => get_pwg_token(),
             'INHERIT'                 => Config::inheritanceByDefault(),
             'CACHE_KEYS'              => $cache_keys,
-            'cat_perm_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create'), 'has_indirect_perms' => count($user_granted_indirect_ids) > 0]),
+            'cat_perm_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create'), 'has_indirect_perms' => count($user_granted_indirect_ids) > 0]),
         ]);
 
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'cat_perm');
@@ -1048,7 +1049,7 @@ final class AlbumController
         }
 
         $navigation = get_cat_display_name_cache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
-        $tpl->assign(['CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)), 'F_ACTION' => $base_url . get_query_string_diff([])]);
+        $tpl->assign(['CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         $imgRows = ServiceLocator::get(ImageRepository::class)->findByCategoryIdOrdered((int) $page['category_id']);
         if (count($imgRows) > 0) {

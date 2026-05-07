@@ -30,6 +30,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class ExtensionsController
 {
@@ -647,7 +648,7 @@ final class ExtensionsController
         }
 
         $adminTheme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
-        $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
+        $tpl->assign('default_screenshot', UrlService::getRootUrl() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
     }
@@ -821,7 +822,7 @@ final class ExtensionsController
         $default_language = UserService::get()->getDefaultLanguage();
         $tpl_languages    = [];
         foreach ($languages->fs_languages as $language_id => $language) {
-            $language['u_action'] = add_url_params($base_url, ['language' => $language_id]);
+            $language['u_action'] = UrlService::get()->addUrlParams($base_url, ['language' => $language_id]);
             if (in_array($language_id, array_keys($languages->db_languages))) {
                 $language['state']      = 'active';
                 $language['deactivable'] = true;

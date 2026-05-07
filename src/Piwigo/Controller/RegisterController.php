@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the user registration page (/register).
@@ -78,7 +79,7 @@ final class RegisterController implements ControllerInterface
                 if ($user_id !== false) {
                     AuthService::get()->logUser((int) $user_id, false);
                 }
-                redirect(make_index_url());
+                redirect(UrlService::get()->makeIndexUrl());
             }
             $registration_post_key = get_ephemeral_key(2);
         } else {
@@ -91,7 +92,7 @@ final class RegisterController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['register' => 'register.tpl']);
         $tpl->assign([
-            'U_HOME'                      => make_index_url(),
+            'U_HOME'                      => UrlService::get()->makeIndexUrl(),
             'F_KEY'                       => $registration_post_key,
             'F_ACTION'                    => ServiceLocator::get(UrlGenerator::class)->register(),
             'F_LOGIN'                     => $login,
@@ -124,8 +125,8 @@ final class RegisterController implements ControllerInterface
         $tpl->assign(['language_options' => $language_options, 'current_language' => $userLang]);
         $tpl->assign('page_data_json', json_encode([
             'selected_language' => $language_options[$userLang] ?? '',
-            'url_logo_light'    => get_root_url() . 'themes/standard_pages/images/piwigo_logo.svg',
-            'url_logo_dark'     => get_root_url() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
+            'url_logo_light'    => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo.svg',
+            'url_logo_dark'     => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $help_link = str_starts_with($userLang, 'fr')

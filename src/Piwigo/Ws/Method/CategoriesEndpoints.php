@@ -27,6 +27,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class CategoriesEndpoints
 {
@@ -77,7 +78,7 @@ final class CategoriesEndpoints
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
             }
             $orderBy     = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-            $favoriteIds = get_user_favorites();
+            $favoriteIds = UrlService::get()->getUserFavorites();
             $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
             $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
             $query       = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id WHERE ' . implode("\n    AND ", $whereClauses2) . ' GROUP BY i.id ' . $orderBy . ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
@@ -129,8 +130,8 @@ final class CategoriesEndpoints
                         if (!isset($detailsForCategory[$catIdKey])) {
                             continue;
                         }
-                        $url     = make_index_url(['category' => $detailsForCategory[$catIdKey]]);
-                        $pageUrl = make_picture_url(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'], 'image_file' => $image['file']]);
+                        $url     = UrlService::get()->makeIndexUrl(['category' => $detailsForCategory[$catIdKey]]);
+                        $pageUrl = UrlService::get()->makePictureUrl(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'], 'image_file' => $image['file']]);
                         $imageCats[] = ['id' => is_numeric($catId) ? (int) $catId : 0, 'url' => $url, 'page_url' => $pageUrl];
                     }
                     $images[$idx]['categories'] = new PwgNamedArray($imageCats, 'category', ['id', 'url', 'page_url']);
@@ -205,7 +206,7 @@ final class CategoriesEndpoints
         $userRepresentativeUpdatesFor = [];
         $cats                        = [];
         foreach ($getListRows as $row) {
-            $row['url'] = make_index_url(['category' => $row]);
+            $row['url'] = UrlService::get()->makeIndexUrl(['category' => $row]);
             foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
                 $row[$key] = is_numeric($row[$key]) ? (int) $row[$key] : 0;
             }

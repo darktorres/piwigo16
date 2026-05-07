@@ -11,6 +11,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Url\UrlService;
 
 final class PageTailRenderer
 {
@@ -66,7 +67,7 @@ final class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         if (!empty(Config::mobilTheme()) && (get_device() !== 'desktop' || mobile_theme())) {
-            $template->assign('TOGGLE_MOBILE_THEME_URL', add_url_params(
+            $template->assign('TOGGLE_MOBILE_THEME_URL', UrlService::get()->addUrlParams(
                 htmlspecialchars(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : ''),
                 ['mobile' => mobile_theme() ? 'false' : 'true']
             ));

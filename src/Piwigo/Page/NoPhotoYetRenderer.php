@@ -13,6 +13,7 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
+use Piwigo\Url\UrlService;
 
 final class NoPhotoYetRenderer
 {
@@ -40,13 +41,13 @@ final class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ('browse' == $_GET['no_photo_yet']) {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        redirect(make_index_url());
+                        redirect(UrlService::get()->makeIndexUrl());
                         exit();
                     }
 
                     if ('deactivate' == $_GET['no_photo_yet']) {
                         conf_update_param('no_photo_yet', 'false');
-                        redirect(make_index_url());
+                        redirect(UrlService::get()->makeIndexUrl());
                         exit();
                     }
                 }
@@ -61,20 +62,20 @@ final class NoPhotoYetRenderer
                     } elseif ($url === '' || $url === 'admin.php?page=photos_add') {
                         $url = ServiceLocator::get(UrlGenerator::class)->admin('photos_add');
                     } else {
-                        $url = get_root_url() . $url;
+                        $url = UrlService::getRootUrl() . $url;
                     }
 
                     $template->assign([
                         'step' => 2,
                         'intro' => l10n('Hello %s, your Piwigo photo gallery is empty!', $user['username'] ?? ''),
                         'next_step_url' => $url,
-                        'deactivate_url' => get_root_url() . '?no_photo_yet=deactivate',
+                        'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=deactivate',
                     ]);
                 } else {
                     $template->assign([
                         'step' => 1,
                         'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
-                        'deactivate_url' => get_root_url() . '?no_photo_yet=browse',
+                        'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=browse',
                     ]);
                 }
 

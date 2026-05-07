@@ -15,6 +15,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class SearchFilterRenderer
 {
@@ -827,7 +828,7 @@ SELECT
                             if (!is_array($tag)) {
                                 continue;
                             }
-                            $url = make_index_url(['tags' => [$tag]]);
+                            $url = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
                             $tags_found[] = sprintf('<a href="%s">%s</a>', $url, is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '');
                         }
 

@@ -35,6 +35,7 @@ use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class GeneralEndpoints
 {
@@ -661,7 +662,7 @@ final class GeneralEndpoints
             $imageId        = '';
             if ($lineImageIdStr !== '') {
                 $imageEditString = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $lineImageIdStr);
-                $pictureUrl      = make_picture_url(['image_id' => $lineImageId]);
+                $pictureUrl      = UrlService::get()->makePictureUrl(['image_id' => $lineImageId]);
                 $element         = [];
                 if (isset($imageInfos[$lineImageIdStr])) {
                     $element = ['id' => $lineImageId, 'file' => $imageInfos[$lineImageIdStr]['file'], 'path' => $imageInfos[$lineImageIdStr]['path'], 'representative_ext' => $imageInfos[$lineImageIdStr]['representative_ext']];

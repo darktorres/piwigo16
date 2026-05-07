@@ -7,6 +7,7 @@ namespace Piwigo\Auth;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Url\UrlService;
 
 class PwgTOTP
 {
@@ -53,7 +54,7 @@ class PwgTOTP
      */
     public static function getOtpAuthUrl(string $secret): string
     {
-        $url = substr((string) get_absolute_root_url(), 0, -1);
+        $url = substr((string) UrlService::getAbsoluteRootUrl(), 0, -1);
         return 'otpauth://totp/'.CurrentUser::get()->username.':'.$url.'?secret='.$secret.'&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 

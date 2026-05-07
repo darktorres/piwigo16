@@ -34,6 +34,7 @@ use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class ImagesEndpoints
 {
@@ -219,8 +220,8 @@ final class ImagesEndpoints
                 $isCommentable = true;
             }
             unset($row['commentable']);
-            $row['url']      = make_index_url(['category' => $row]);
-            $row['page_url'] = make_picture_url(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
+            $row['url']      = UrlService::get()->makeIndexUrl(['category' => $row]);
+            $row['page_url'] = UrlService::get()->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $catNameRaw      = EventDispatcher::dispatch('render_category_name', $row['name'], __FUNCTION__);
             $row['name']     = strip_tags(is_scalar($catNameRaw) ? (string) $catNameRaw : '');
@@ -233,8 +234,8 @@ final class ImagesEndpoints
         /** @var list<array<string, mixed>> $relatedTags */
         $relatedTags = get_common_tags([$imageRowId], -1);
         foreach ($relatedTags as $i => $tag) {
-            $tag['url']      = make_index_url(['tags' => [$tag]]);
-            $tag['page_url'] = make_picture_url(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'tags' => [$tag]]);
+            $tag['url']      = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
+            $tag['page_url'] = UrlService::get()->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'tags' => [$tag]]);
             unset($tag['counter']);
             $tag['id']       = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
             $relatedTags[$i] = $tag;
@@ -325,7 +326,7 @@ final class ImagesEndpoints
         if (count($imageIds)) {
             $imageIdsInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds);
             $imageIdsFlip = array_flip($imageIdsInt);
-            $favoriteIds  = get_user_favorites();
+            $favoriteIds  = UrlService::get()->getUserFavorites();
             foreach (ServiceLocator::get(ImageRepository::class)->findByIds($imageIdsInt) as $row) {
                 $image       = [];
                 $rowId       = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -682,7 +683,7 @@ final class ImagesEndpoints
             ServiceLocator::get(TagAdminService::class)->setTags(explode(',', is_scalar($params['tag_ids']) ? (string) $params['tag_ids'] : ''), $imageId);
         }
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        return ['image_id' => $imageId, 'url' => make_picture_url($urlParams)];
+        return ['image_id' => $imageId, 'url' => UrlService::get()->makePictureUrl($urlParams)];
     }
 
     /**
@@ -748,7 +749,7 @@ final class ImagesEndpoints
             $urlParams['category'] = $category;
         }
         ServiceLocator::get(MetadataAdminService::class)->syncMetadata([$imageId]);
-        return ['image_id' => $imageId, 'url' => make_picture_url($urlParams)];
+        return ['image_id' => $imageId, 'url' => UrlService::get()->makePictureUrl($urlParams)];
     }
 
     /** @param array<mixed> $params */
@@ -1102,7 +1103,7 @@ final class ImagesEndpoints
         foreach ($imgRepo->findByIds(array_map(intval(...), $imageIds)) as $row) {
             $rowPath = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
             $rowId   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
-            if (url_is_remote($rowPath)) {
+            if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
             $imagePath = get_element_path($row);

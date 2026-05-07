@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Url\UrlService;
 
 /**
  * Holds information (path, url, dimensions) about a derivative image.
@@ -73,8 +74,8 @@ final class DerivativeImage
         if ($params == null) {
             return $src_image->getUrl();
         }
-        $urlArg = EventDispatcher::dispatch('get_derivative_url', get_root_url().$rel_url, $params, $src_image, $rel_url);
-        return embellish_url($urlArg);
+        $urlArg = EventDispatcher::dispatch('get_derivative_url', UrlService::getRootUrl().$rel_url, $params, $src_image, $rel_url);
+        return UrlService::embellishUrl($urlArg);
     }
 
     /**
@@ -223,8 +224,8 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->getUrl();
         }
-        $urlArg2 = EventDispatcher::dispatch('get_derivative_url', get_root_url().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
-        return embellish_url($urlArg2);
+        $urlArg2 = EventDispatcher::dispatch('get_derivative_url', UrlService::getRootUrl().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
+        return UrlService::embellishUrl($urlArg2);
     }
 
     public function sameAsSource(): bool

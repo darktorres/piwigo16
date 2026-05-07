@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the login page (/identification).
@@ -31,7 +32,7 @@ final class IdentificationController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!PermissionService::get()->isAGuest()) {
-            redirect(get_gallery_home_url());
+            redirect(UrlService::get()->getGalleryHomeUrl());
         }
 
         EventDispatcher::notify('loc_begin_identification');
@@ -72,11 +73,11 @@ final class IdentificationController implements ControllerInterface
                 $remember_me  = input_string('remember_me', null, $_POST) !== null && input_string('remember_me', null, $_POST) == 1;
                 $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
                 if (AuthService::get()->tryLogUser($username, $post_password, $remember_me)) {
-                    $root_url = get_absolute_root_url();
+                    $root_url = UrlService::getAbsoluteRootUrl();
                     $_SESSION['connected_with'] = 'pwg_ui';
                     redirect(
                         empty($redirect_to)
-                        ? get_gallery_home_url()
+                        ? UrlService::get()->getGalleryHomeUrl()
                         : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) CookieService::cookiePath())) . $redirect_to
                     );
                 } else {
@@ -129,8 +130,8 @@ final class IdentificationController implements ControllerInterface
         $tpl->assign(['language_options' => $language_options, 'current_language' => $userLang]);
         $tpl->assign('page_data_json', json_encode([
             'selected_language' => $language_options[$userLang] ?? '',
-            'url_logo_light'    => get_root_url() . 'themes/standard_pages/images/piwigo_logo.svg',
-            'url_logo_dark'     => get_root_url() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
+            'url_logo_light'    => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo.svg',
+            'url_logo_dark'     => UrlService::getRootUrl() . 'themes/standard_pages/images/piwigo_logo_dark.svg',
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $help_link = str_starts_with($userLang, 'fr')

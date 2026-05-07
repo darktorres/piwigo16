@@ -10,6 +10,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 final class WsHelper
 {
@@ -126,7 +127,7 @@ final class WsHelper
     {
         $ret = [];
 
-        $ret['page_url'] = make_picture_url([
+        $ret['page_url'] = UrlService::get()->makePictureUrl([
             'image_id' => $image_row['id'],
             'image_file' => $image_row['file'],
         ]);
@@ -140,13 +141,13 @@ final class WsHelper
                 $provide_download_url = true;
             }
         } else {
-            $ret['element_url'] = get_element_url($image_row);
+            $ret['element_url'] = UrlService::get()->getElementUrl($image_row);
             $provide_download_url = true;
         }
 
         $ret['download_url'] = null;
         if ($provide_download_url) {
-            $ret['download_url'] = get_action_url(is_int($image_row['id']) || is_string($image_row['id']) ? $image_row['id'] : 0, 'e', true);
+            $ret['download_url'] = UrlService::get()->getActionUrl(is_int($image_row['id']) || is_string($image_row['id']) ? $image_row['id'] : 0, 'e', true);
         }
 
         $derivatives = DerivativeImage::getAll($src_image);

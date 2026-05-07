@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Url\UrlService;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -114,12 +115,12 @@ final class SrcImage
     /** @return string|array<mixed> */
     public function getUrl(): string|array
     {
-        $url = get_root_url().$this->rel_path;
+        $url = UrlService::getRootUrl().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
             $changed = EventDispatcher::dispatch('get_src_image_url', $url, $this);
             $url = $changed;
         }
-        return embellish_url($url);
+        return UrlService::embellishUrl($url);
     }
 
     public function hasSize(): bool

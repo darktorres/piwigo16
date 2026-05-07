@@ -24,6 +24,7 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the paginated comments list page (/comments).
@@ -42,7 +43,7 @@ final class CommentsController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $url_self   = ServiceLocator::get(UrlGenerator::class)->comments() . get_query_string_diff(['delete', 'edit', 'validate', 'pwg_token']);
+        $url_self   = ServiceLocator::get(UrlGenerator::class)->comments() . UrlService::get()->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
         $sort_order = ['DESC' => l10n('descending'), 'ASC' => l10n('ascending')];
         $sort_by    = ['date' => l10n('comment date'), 'image_id' => l10n('photo')];
         $items_number = [5, 10, 20, 50, 'all'];
@@ -115,7 +116,7 @@ final class CommentsController implements ControllerInterface
             check_input_parameter('comment_id', $_GET, false, ValidationPattern::ID);
             if (!PermissionService::get()->isAdmin()) {
                 $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
-                $login_url  = add_url_params(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
+                $login_url  = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
                 redirect($login_url);
             }
             $page['where_clauses'][] = 'com.id = ' . $get_comment_id_filter;
@@ -281,7 +282,7 @@ SELECT id, name, uppercats, global_rank
             $category_ids[] = $row['category_id'];
         }
 
-        $url     = ServiceLocator::get(UrlGenerator::class)->comments() . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
+        $url     = ServiceLocator::get(UrlGenerator::class)->comments() . UrlService::get()->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
         $navbar  = create_navigation_bar(
             $url,
             is_numeric($counter) ? (int) $counter : 0,
@@ -315,7 +316,7 @@ SELECT *
                 $element_row  = $elements[(string) $cImageId] ?? [];
                 $name         = !empty($element_row['name']) ? (string) $element_row['name'] : get_name_from_file((string) ($element_row['file'] ?? ''));
                 $src_image    = new SrcImage($element_row);
-                $url          = make_picture_url([
+                $url          = UrlService::get()->makePictureUrl([
                     'category'   => $categories[(string) $cCategoryId] ?? [],
                     'image_id'   => $cImageId,
                     'image_file' => (string) ($element_row['file'] ?? ''),
@@ -344,10 +345,10 @@ SELECT *
                     $tpl_comment['EMAIL'] = $email;
                 }
                 if (PermissionService::get()->canManageComment('delete', $cAuthorId)) {
-                    $tpl_comment['U_DELETE'] = add_url_params($url_self, ['delete' => $cId, 'pwg_token' => get_pwg_token()]);
+                    $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => get_pwg_token()]);
                 }
                 if (PermissionService::get()->canManageComment('edit', $cAuthorId)) {
-                    $tpl_comment['U_EDIT'] = add_url_params($url_self, ['edit' => $cId]);
+                    $tpl_comment['U_EDIT'] = UrlService::get()->addUrlParams($url_self, ['edit' => $cId]);
                     if ($edit_comment !== null && $cId == $edit_comment) {
                         $key = get_ephemeral_key(2, (string) $cImageId);
                         $tpl_comment['IN_EDIT']   = true;
@@ -359,7 +360,7 @@ SELECT *
                     }
                 }
                 if (PermissionService::get()->canManageComment('validate', $cAuthorId) && 'true' != $comment['validated']) {
-                    $tpl_comment['U_VALIDATE'] = add_url_params($url_self, ['validate' => $cId, 'pwg_token' => get_pwg_token()]);
+                    $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => get_pwg_token()]);
                 }
                 $tpl->append('comments', $tpl_comment);
             }

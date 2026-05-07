@@ -21,6 +21,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class MailService
 {
@@ -382,14 +383,14 @@ SELECT
                 if ($authkey !== false) {
                     $authKeyStr = is_scalar($authkey['auth_key'] ?? null) ? (string) $authkey['auth_key'] : '';
                     $assign     = is_array($userTpl['assign'] ?? null) ? $userTpl['assign'] : [];
-                    $assign['LINK']     = add_url_params(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authKeyStr]);
+                    $assign['LINK']     = UrlService::get()->addUrlParams(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authKeyStr]);
                     $userTpl['assign']  = $assign;
 
                     $tplAssign = is_array($tpl['assign'] ?? null) ? $tpl['assign'] : [];
                     $tplImg    = is_array($tplAssign['IMG'] ?? null) ? $tplAssign['IMG'] : [];
                     if (isset($tplImg['link'])) {
                         $imgArr = is_array($userTpl['assign']['IMG'] ?? null) ? $userTpl['assign']['IMG'] : [];
-                        $imgArr['link']        = add_url_params(is_string($tplImg['link']) ? $tplImg['link'] : '', ['auth' => $authKeyStr]);
+                        $imgArr['link']        = UrlService::get()->addUrlParams(is_string($tplImg['link']) ? $tplImg['link'] : '', ['auth' => $authKeyStr]);
                         $userTpl['assign']['IMG'] = $imgArr;
                     }
                 }
@@ -443,7 +444,7 @@ SELECT
         $mail->WordWrap = 76;
         $mail->CharSet  = 'UTF-8';
 
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
 
         if (empty($args['from'])) {
             $from = ['email' => $this->getMailSenderEmail(), 'name' => $this->getMailSenderName()];
@@ -530,7 +531,7 @@ SELECT
                 }
 
                 $mailTpl->assign([
-                    'GALLERY_URL'      => add_url_params(get_gallery_home_url(), $addUrlParams),
+                    'GALLERY_URL'      => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $addUrlParams),
                     'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
@@ -604,7 +605,7 @@ SELECT
             $contents[$contentType] .= $template->parse('mail_footer', true) ?? '';
         }
 
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
 
         $htmlContent  = is_string($contents['text/html'] ?? null) ? $contents['text/html'] : null;
         $plainContent = $contents['text/plain'];
@@ -722,7 +723,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): array
     {
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
         $message  = l10n('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
@@ -734,7 +735,7 @@ SELECT
         $message .= ' ';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
 
@@ -748,7 +749,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): array
     {
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
         $message .= l10n('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
@@ -760,7 +761,7 @@ SELECT
         $message .= ' ';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
         $subject = l10n('Welcome to %s', $galleryTitle);
@@ -775,13 +776,13 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateCodeVerificationMail(string $code): array
     {
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
         $message  = '<p style="margin: 20px 0">';
         $message .= l10n('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
         $message .= l10n('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
 
         $subject = '[' . Config::galleryTitle() . '] ' . l10n('Your verification code');
         return [
@@ -794,7 +795,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
         $profileUrl = ServiceLocator::get(UrlGenerator::class)->profile();
 
         $message  = '<p style="margin-top: 20px;">' . l10n('Hello %s,', $username) . '</p>';
@@ -808,7 +809,7 @@ SELECT
             $message .= l10n('If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.', $nbOfApikeys, $profileUrl);
             $message .= '</p>';
         }
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
 
         $subject = '[' . Config::galleryTitle() . '] ' . l10n('Your password has been reset');
         return [

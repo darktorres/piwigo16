@@ -14,6 +14,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class PictureCommentRenderer
 {
@@ -99,7 +100,7 @@ final class PictureCommentRenderer
             $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
             $navigation_bar = create_navigation_bar(
-                duplicate_picture_url([], ['start']),
+                UrlService::get()->duplicatePictureUrl([], ['start']),
                 $nb_comments,
                 $startOffset,
                 Config::nbCommentPage(),
@@ -120,7 +121,7 @@ final class PictureCommentRenderer
                 $comments_order = pwg_get_session_var('comments_order', Config::commentsOrder());
 
                 $template->assign([
-                    'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
+                    'COMMENTS_ORDER_URL' => UrlService::get()->addUrlParams(UrlService::get()->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
                     'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? l10n('Show latest comments first') : l10n('Show oldest comments first'),
                 ]);
 
@@ -169,14 +170,14 @@ SELECT
                     ];
 
                     if (PermissionService::get()->canManageComment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
-                        $tpl_comment['U_DELETE'] = add_url_params($url_self, [
+                        $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
                             'pwg_token' => get_pwg_token(),
                         ]);
                     }
                     if (PermissionService::get()->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
-                        $tpl_comment['U_EDIT'] = add_url_params($url_self, [
+                        $tpl_comment['U_EDIT'] = UrlService::get()->addUrlParams($url_self, [
                             'action' => 'edit_comment',
                             'comment_to_edit' => $row['id'],
                         ]);
@@ -193,7 +194,7 @@ SELECT
                         $tpl_comment['EMAIL'] = $email;
 
                         if ($row['validated'] != 'true') {
-                            $tpl_comment['U_VALIDATE'] = add_url_params($url_self, [
+                            $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],
                                 'pwg_token' => get_pwg_token(),

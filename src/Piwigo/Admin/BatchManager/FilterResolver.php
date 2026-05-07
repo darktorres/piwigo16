@@ -11,6 +11,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class FilterResolver
 {
@@ -56,8 +57,8 @@ final class FilterResolver
             'all_elements' => $catElementsId,
             'START' => $start,
             'PWG_TOKEN' => get_pwg_token(),
-            'U_DISPLAY' => $baseUrl . get_query_string_diff(['display']),
-            'F_ACTION' => $baseUrl . get_query_string_diff(['cat', 'start', 'tag', 'filter']),
+            'U_DISPLAY' => $baseUrl . UrlService::get()->getQueryStringDiff(['display']),
+            'F_ACTION' => $baseUrl . UrlService::get()->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             'ADMIN_PAGE_TITLE' => l10n('Batch Manager'),
         ]);
 

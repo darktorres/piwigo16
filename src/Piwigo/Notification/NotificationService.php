@@ -14,6 +14,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class NotificationService
 {
@@ -236,14 +237,14 @@ final readonly class NotificationService
 
         if (!$excludeImgCats) {
             $nbElements = $this->nbNewElements($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbElements) ? (int) $nbElements : 0, '%d new photo', '%d new photos', add_url_params(make_index_url(['section' => 'recent_pics']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbElements) ? (int) $nbElements : 0, '%d new photo', '%d new photos', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams), $addUrl);
 
             $nbCats = $this->nbUpdatedCategories($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbCats) ? (int) $nbCats : 0, '%d album updated', '%d albums updated', add_url_params(make_index_url(['section' => 'recent_cats']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbCats) ? (int) $nbCats : 0, '%d album updated', '%d albums updated', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_cats']), $addUrlParams), $addUrl);
         }
 
         $nbComments = $this->nbNewComments($start, $end);
-        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', add_url_params(ServiceLocator::get(UrlGenerator::class)->comments(), $addUrlParams), $addUrl);
+        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), $addUrlParams), $addUrl);
 
         if (PermissionService::get()->isAdmin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
@@ -347,7 +348,7 @@ SELECT
         $description  = '<ul>';
         $description .= '<li>'
           . l10n_dec('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0)
-          . ' (<a href="' . add_url_params(make_index_url(['section' => 'recent_pics']), $addUrlParams) . '">' . l10n('Recent photos') . '</a>)'
+          . ' (<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams) . '">' . l10n('Recent photos') . '</a>)'
           . '</li><br>';
 
         $elements = is_array($dateDetail['elements'] ?? null) ? $dateDetail['elements'] : [];
@@ -356,7 +357,7 @@ SELECT
             $tnSrcRaw = DerivativeImage::thumbUrl($element);
             $tnSrc    = is_string($tnSrcRaw) ? $tnSrcRaw : '';
             $description .= '<a href="'
-              . add_url_params(make_picture_url(['image_id' => $element['id'], 'image_file' => $element['file']]), $addUrlParams)
+              . UrlService::get()->addUrlParams(UrlService::get()->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file']]), $addUrlParams)
               . '"><img src="' . $tnSrc . '"></a>';
         }
         $description .= '...<br>';

@@ -17,6 +17,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class TagsEndpoints
 {
@@ -36,7 +37,7 @@ final class TagsEndpoints
         for ($i = 0; $i < count($tags); $i++) {
             $tags[$i]['id']      = is_numeric($tags[$i]['id'] ?? null) ? (int) $tags[$i]['id'] : 0;
             $tags[$i]['counter'] = is_numeric($tags[$i]['counter'] ?? null) ? (int) $tags[$i]['counter'] : 0;
-            $tags[$i]['url']     = make_index_url(['section' => 'tags', 'tags' => [$tags[$i]]]);
+            $tags[$i]['url']     = UrlService::get()->makeIndexUrl(['section' => 'tags', 'tags' => [$tags[$i]]]);
         }
         return ['tags' => new PwgNamedArray($tags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
     }
@@ -90,7 +91,7 @@ final class TagsEndpoints
         $images = [];
         if (!empty($imageIds)) {
             $rankOf      = array_flip($imageIds);
-            $favoriteIds = get_user_favorites();
+            $favoriteIds = UrlService::get()->getUserFavorites();
             $imageRows   = ServiceLocator::get(ImageRepository::class)->findByIds($imageIds);
             foreach ($imageRows as $row) {
                 $image       = [];
@@ -114,8 +115,8 @@ final class TagsEndpoints
                 $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgIdKey] ?? []);
                 $imageTags   = [];
                 foreach ($imageTagIds as $tagId) {
-                    $url    = make_index_url(['section' => 'tags', 'tags' => [$tagsById[$tagId]]]);
-                    $pageUrl = make_picture_url(['section' => 'tags', 'tags' => [$tagsById[$tagId]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
+                    $url    = UrlService::get()->makeIndexUrl(['section' => 'tags', 'tags' => [$tagsById[$tagId]]]);
+                    $pageUrl = UrlService::get()->makePictureUrl(['section' => 'tags', 'tags' => [$tagsById[$tagId]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
                     $imageTags[] = ['id' => (int) $tagId, 'url' => $url, 'page_url' => $pageUrl];
                 }
                 $image['tags'] = new PwgNamedArray($imageTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());

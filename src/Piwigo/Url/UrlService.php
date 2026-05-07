@@ -15,7 +15,12 @@ use Piwigo\Db\Tables;
 
 final class UrlService
 {
-    public function getRootUrl(): string
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
+    public static function getRootUrl(): string
     {
         $page     = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $rootPath = $page['root_path'] ?? null;
@@ -29,7 +34,7 @@ final class UrlService
         return $rootUrl;
     }
 
-    public function getAbsoluteRootUrl(bool $withScheme = true): string
+    public static function getAbsoluteRootUrl(bool $withScheme = true): string
     {
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) and 'https' == $_SERVER['HTTP_X_FORWARDED_PROTO']) {
             $_SERVER['HTTPS'] = 'on';
@@ -643,10 +648,10 @@ final class UrlService
      * @param string|string[] $url
      * @return string|string[]
      */
-    public function embellishUrl(string|array $url): string|array
+    public static function embellishUrl(string|array $url): string|array
     {
         if (is_array($url)) {
-            return array_map(fn (string $u): string => is_string($r = $this->embellishUrl($u)) ? $r : $u, $url);
+            return array_map(fn (string $u): string => is_string($r = self::embellishUrl($u)) ? $r : $u, $url);
         }
         $url = str_replace('/./', '/', $url);
         while (($dotdot = strpos($url, '/../', 1)) !== false) {
@@ -688,7 +693,7 @@ final class UrlService
         return '?' . http_build_query($vars, '', $escape ? '&amp;' : '&');
     }
 
-    public function urlIsRemote(string $url): bool
+    public static function urlIsRemote(string $url): bool
     {
         if (str_starts_with($url, 'http://')
           or str_starts_with($url, 'https://')) {

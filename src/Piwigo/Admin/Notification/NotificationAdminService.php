@@ -15,6 +15,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class NotificationAdminService
 {
@@ -148,15 +149,15 @@ final class NotificationAdminService
     {
         $ctx = MailNotificationContext::current();
         $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set in assignVarsNbmMailContent');
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
         $tpl->assign([
             'USERNAME'        => stripslashes((string) $nbmUser['username']),
             'SEND_AS_NAME'    => $ctx->sendAsName,
-            'UNSUBSCRIBE_LINK' => add_url_params(ServiceLocator::get(UrlGenerator::class)->nbm(), ['unsubscribe' => $nbmUser['check_key']]),
-            'SUBSCRIBE_LINK'   => add_url_params(ServiceLocator::get(UrlGenerator::class)->nbm(), ['subscribe' => $nbmUser['check_key']]),
+            'UNSUBSCRIBE_LINK' => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->nbm(), ['unsubscribe' => $nbmUser['check_key']]),
+            'SUBSCRIBE_LINK'   => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->nbm(), ['subscribe' => $nbmUser['check_key']]),
             'CONTACT_EMAIL'    => $ctx->sendAsMailAddress,
         ]);
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
     }
 
     /**
@@ -165,7 +166,7 @@ final class NotificationAdminService
      */
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe = false, array $checkKeyList = []): array
     {
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
         $checkKeyTreated         = [];
         $updatedDataCount        = 0;
         $errorOnUpdatedDataCount = 0;
@@ -194,7 +195,7 @@ final class NotificationAdminService
                     $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_') . ($isAdminRequest ? 'admin' : 'himself');
                     $ctx = MailNotificationContext::current();
                     $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
-                    $tpl->assign([$sectionActionBy => true, 'GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => get_gallery_home_url()]);
+                    $tpl->assign([$sectionActionBy => true, 'GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->getGalleryHomeUrl()]);
                     $ret = pwg_mail(
                         ['name' => stripslashes((string) $nbmUser['username']), 'email' => $nbmUser['mail_address']],
                         ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $tpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat]
@@ -227,7 +228,7 @@ final class NotificationAdminService
         if ($errorOnUpdatedDataCount != 0) {
             PageState::current()->addError(l10n_dec('%d user was not updated.', '%d users were not updated.', $errorOnUpdatedDataCount));
         }
-        unset_make_full_url();
+        UrlService::get()->unsetMakeFullUrl();
         return $checkKeyTreated;
     }
 

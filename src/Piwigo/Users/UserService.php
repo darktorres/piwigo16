@@ -23,6 +23,7 @@ use Piwigo\Url\UrlGenerator;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class UserService
 {
@@ -121,7 +122,7 @@ final readonly class UserService
                     get_l10n_args('', ''),
                     get_l10n_args('Here are your connection settings', ''),
                     get_l10n_args('', ''),
-                    get_l10n_args('Link: %s', get_absolute_root_url()),
+                    get_l10n_args('Link: %s', UrlService::getAbsoluteRootUrl()),
                     get_l10n_args('Username: %s', stripslashes($login)),
                     get_l10n_args('Password: %s', str_repeat('*', $length)),
                     get_l10n_args('Email: %s', $mailAddress),

@@ -35,6 +35,7 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * Handles the single-image page (/picture/{rest}).
@@ -80,7 +81,7 @@ final class PictureController implements ControllerInterface
                 $row     = $imageRepo->findByFilePattern($pattern);
             }
             if ($row === null) {
-                page_not_found('The requested image does not exist', duplicate_index_url());
+                page_not_found('The requested image does not exist', UrlService::get()->duplicateIndexUrl());
                 return ResponseFactory::create(404);
             }
             if (is_numeric($row['level'] ?? null) && is_numeric($user['level'] ?? null) && $row['level'] > $user['level']) {
@@ -94,7 +95,7 @@ final class PictureController implements ControllerInterface
                 $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
                 $visibleImages   = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
                 if ($visibleImages !== '' && !in_array($imageId, explode(',', $visibleImages))) {
-                    page_not_found('The requested image is filtered', duplicate_index_url());
+                    page_not_found('The requested image is filtered', UrlService::get()->duplicateIndexUrl());
                     return ResponseFactory::create(404);
                 }
                 if ('categories' == $page['section'] && !isset($page['category'])) {
@@ -114,7 +115,7 @@ SELECT id
                             $items[]                   = $imageId;
                             $page['items']             = $items;
                         } else {
-                            $url = make_picture_url(['image_id' => $imageId, 'image_file' => is_scalar($page['image_file'] ?? null) ? $page['image_file'] : '', 'section' => 'categories', 'flat' => true]);
+                            $url = UrlService::get()->makePictureUrl(['image_id' => $imageId, 'image_file' => is_scalar($page['image_file'] ?? null) ? $page['image_file'] : '', 'section' => 'categories', 'flat' => true]);
                             set_status_header('recent_pics' == $page['section'] ? 301 : 302);
                             redirect_http($url);
                         }
@@ -161,11 +162,11 @@ SELECT id
             $page['last_item'] = $items[$lastRank];
         }
 
-        $url_up = duplicate_index_url(
+        $url_up = UrlService::get()->duplicateIndexUrl(
             ['start' => (int) floor($currentRank / $nbImagePage) * $nbImagePage],
             ['start']
         );
-        $url_self = duplicate_picture_url();
+        $url_self = UrlService::get()->duplicatePictureUrl();
 
         // Actions
         $get_action = input_string('action', null, $_GET);
@@ -321,15 +322,15 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 if ($row['src_image']->isOriginal()) {
                     if ($user['enabled_high'] == 'true') {
                         $row['element_url']  = $row['src_image']->getUrl();
-                        $row['download_url'] = get_action_url($src_id, 'e', true);
+                        $row['download_url'] = UrlService::get()->getActionUrl($src_id, 'e', true);
                     }
                 } else {
-                    $row['element_url']  = get_element_url($row);
-                    $row['download_url'] = get_action_url($src_id, 'e', true);
+                    $row['element_url']  = UrlService::get()->getElementUrl($row);
+                    $row['download_url'] = UrlService::get()->getActionUrl($src_id, 'e', true);
                 }
             }
 
-            $row['url'] = duplicate_picture_url(['image_id' => $row['id'], 'image_file' => $row['file']], ['start']);
+            $row['url'] = UrlService::get()->duplicatePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']], ['start']);
             $row['TITLE']     = render_element_name($row);
             $row['TITLE_ESC'] = str_replace('"', '&quot;', $row['TITLE']);
             $picture[$i]      = $row;
@@ -365,7 +366,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 }
                 if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
                     $refresh  = $slideshow_params['period'];
-                    $url_link = add_url_params((string) $picture[$id_pict_redirect]['url'], $slideshow_url_params);
+                    $url_link = UrlService::get()->addUrlParams((string) $picture[$id_pict_redirect]['url'], $slideshow_url_params);
                 }
             }
         } else {
@@ -381,8 +382,8 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $title    = (string) $picture['current']['TITLE'];
         $title_nb = ($currentRank + 1) . '/' . count($items);
 
-        $url_metadata     = duplicate_picture_url();
-        $url_metadata     = add_url_params($url_metadata, ['metadata' => null]);
+        $url_metadata     = UrlService::get()->duplicatePictureUrl();
+        $url_metadata     = UrlService::get()->addUrlParams($url_metadata, ['metadata' => null]);
         $curSrcImg = $picture['current']['src_image'];
         $metadata_showable = EventDispatcher::dispatch(
             'get_element_metadata_available',
@@ -404,7 +405,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
             if (isset($picture[$which_image])) {
                 $imgArr = $picture[$which_image];
-                $tpl->assign($which_image, array_merge($imgArr, ['U_IMG' => add_url_params(is_string($imgArr['url'] ?? null) ? $imgArr['url'] : '', $slideshow_url_params)]));
+                $tpl->assign($which_image, array_merge($imgArr, ['U_IMG' => UrlService::get()->addUrlParams(is_string($imgArr['url'] ?? null) ? $imgArr['url'] : '', $slideshow_url_params)]));
             }
         }
 
@@ -447,20 +448,20 @@ SELECT *
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
             foreach (['repeat', 'play'] as $p) {
                 $var_name = 'U_' . ($slideshow_params[$p] ? 'STOP_' : 'START_') . strtoupper($p);
-                $tpl_slideshow[$var_name] = add_url_params($currentUrl, ['slideshow' => encode_slideshow_params(array_merge($slideshow_params, [$p => !$slideshow_params[$p]]))]);
+                $tpl_slideshow[$var_name] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => encode_slideshow_params(array_merge($slideshow_params, [$p => !$slideshow_params[$p]]))]);
             }
             foreach (['dec', 'inc'] as $op) {
                 $periodRaw = $slideshow_params['period'] ?? 0;
                 $new_period  = (is_numeric($periodRaw) ? $periodRaw : 0) + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
                 $new_params  = correct_slideshow_params(array_merge($slideshow_params, ['period' => $new_period]));
                 if ($new_params['period'] === $new_period) {
-                    $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = add_url_params($currentUrl, ['slideshow' => encode_slideshow_params($new_params)]);
+                    $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => encode_slideshow_params($new_params)]);
                 }
             }
             $tpl->assign('slideshow', $tpl_slideshow);
         } elseif (Config::pictureSlideShowIcon()) {
             $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
-            $tpl->assign(['U_SLIDESHOW_START' => add_url_params($currentUrl, ['slideshow' => ''])]);
+            $tpl->assign(['U_SLIDESHOW_START' => UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ''])]);
         }
 
         $tpl->assign([
@@ -479,13 +480,13 @@ SELECT *
 
         if (PermissionService::get()->isAdmin()) {
             if (isset($page['category']) && Config::pictureRepresentativeIcon()) {
-                $tpl->assign(['U_SET_AS_REPRESENTATIVE' => add_url_params($url_self, ['action' => 'set_as_representative'])]);
+                $tpl->assign(['U_SET_AS_REPRESENTATIVE' => UrlService::get()->addUrlParams($url_self, ['action' => 'set_as_representative'])]);
             }
             if (Config::pictureEditIcon()) {
                 $tpl->assign('U_PHOTO_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId));
             }
             if (Config::pictureCaddieIcon()) {
-                $tpl->assign('U_CADDIE', add_url_params($url_self, ['action' => 'add_to_caddie']));
+                $tpl->assign('U_CADDIE', UrlService::get()->addUrlParams($url_self, ['action' => 'add_to_caddie']));
             }
         }
 
@@ -494,7 +495,7 @@ SELECT *
                 is_numeric($user['id']) ? (int) $user['id'] : 0,
                 $imageId
             );
-            $tpl->assign('favorite', ['IS_FAVORITE' => $is_favorite, 'U_FAVORITE' => add_url_params($url_self, ['action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites'])]);
+            $tpl->assign('favorite', ['IS_FAVORITE' => $is_favorite, 'U_FAVORITE' => UrlService::get()->addUrlParams($url_self, ['action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites'])]);
         }
 
         // Picture info
@@ -508,12 +509,12 @@ SELECT *
         if (!empty($currentPic['date_creation'])) {
             $dc   = (is_string($currentPic['date_creation']) || is_int($currentPic['date_creation'])) ? $currentPic['date_creation'] : null;
             $val  = format_date($dc);
-            $url  = make_index_url(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
+            $url  = UrlService::get()->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
             $infos['INFO_CREATION_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
         }
         $da  = (isset($currentPic['date_available']) && (is_string($currentPic['date_available']) || is_int($currentPic['date_available']))) ? $currentPic['date_available'] : null;
         $val = format_date($da);
-        $url = make_index_url(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
+        $url = UrlService::get()->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
         $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
         if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
@@ -532,7 +533,7 @@ SELECT *
         $tags = get_common_tags([$imageId], -1);
         foreach ($tags as $tag) {
             $tagArr = is_array($tag) ? $tag : [];
-            $tpl->append('related_tags', array_merge($tagArr, ['URL' => make_index_url(['tags' => [$tag]]), 'U_TAG_IMAGE' => duplicate_picture_url(['section' => 'tags', 'tags' => [$tag]])]));
+            $tpl->append('related_tags', array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]), 'U_TAG_IMAGE' => UrlService::get()->duplicatePictureUrl(['section' => 'tags', 'tags' => [$tag]])]));
         }
 
         // Related categories
@@ -576,7 +577,7 @@ SELECT *
             }
         }
 
-        $tpl->assign('U_CANONICAL', make_picture_url(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
+        $tpl->assign('U_CANONICAL', UrlService::get()->makePictureUrl(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
 
         ServiceLocator::get(PictureRateRenderer::class)->render();
         if (Config::activateComments()) {

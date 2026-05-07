@@ -15,6 +15,7 @@ use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Url\UrlService;
 
 /**
  * Generates the RSS 2.0 feed and sends it directly as XML output.
@@ -52,14 +53,14 @@ final class FeedController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-        set_make_full_url();
+        UrlService::get()->setMakeFullUrl();
 
         $rss           = new PiwigoFeedCreator();
         $rss->encoding = get_pwg_charset();
         $rss->title    = Config::galleryTitle();
         $username      = is_scalar($user['username'] ?? null) ? (string) $user['username'] : '';
         $rss->title   .= ' (as ' . stripslashes($username) . ')';
-        $rss->link     = get_gallery_home_url();
+        $rss->link     = UrlService::get()->getGalleryHomeUrl();
 
         $news = [];
         if (!$image_only) {
@@ -70,7 +71,7 @@ final class FeedController implements ControllerInterface
             if (count($news) > 0) {
                 $item = new \FeedItem();
                 $item->title = l10n('New on %s', format_date($dbnow));
-                $item->link  = get_gallery_home_url();
+                $item->link  = UrlService::get()->getGalleryHomeUrl();
                 $item->description = '<ul>';
                 foreach ($news as $line) {
                     $item->description .= '<li>' . $line . '</li>';
@@ -103,13 +104,13 @@ final class FeedController implements ControllerInterface
             $item  = new \FeedItem();
             $date  = is_scalar($date_detail['date_available'] ?? null) ? (string) $date_detail['date_available'] : '';
             $item->title = get_title_recent_post_date($date_detail);
-            $item->link  = make_index_url([
+            $item->link  = UrlService::get()->makeIndexUrl([
                 'chronology_field' => 'posted',
                 'chronology_style' => 'monthly',
                 'chronology_view'  => 'calendar',
                 'chronology_date'  => explode('-', substr($date, 0, 10)),
             ]);
-            $item->description = '<a href="' . make_index_url() . '">' . Config::galleryTitle() . '</a><br> ';
+            $item->description = '<a href="' . UrlService::get()->makeIndexUrl() . '">' . Config::galleryTitle() . '</a><br> ';
             $item->description .= get_html_description_recent_post_date($date_detail);
             $item->descriptionHtmlSyndicated = true;
             $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($date));

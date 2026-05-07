@@ -25,6 +25,7 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final class UsersController
 {
@@ -374,7 +375,7 @@ final class UsersController
             'PWG_TOKEN'                    => get_pwg_token(),
             'INHERIT'                      => Config::inheritanceByDefault(),
             'CACHE_KEYS'                   => $cache_keys,
-            'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create')]),
+            'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => l10n('Create')]),
         ]);
 
         $nb_lines_for_user = array_column(DbConnection::get()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');

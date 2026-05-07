@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Url\UrlService;
+
 final class StringUtil
 {
     public function microSeconds(): string
@@ -361,7 +363,7 @@ final class StringUtil
     public function getElementPath(array $elementInfo): string
     {
         $path = is_scalar($elementInfo['path']) ? (string) $elementInfo['path'] : '';
-        if (!url_is_remote($path)) {
+        if (!UrlService::urlIsRemote($path)) {
             $path = PHPWG_ROOT_PATH . $path;
         }
         return $path;

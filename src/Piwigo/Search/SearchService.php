@@ -21,6 +21,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 final readonly class SearchService
 {
@@ -1047,7 +1048,7 @@ final readonly class SearchService
             PreferencesService::get()->userprefsUpdateParam('gallery_search_filters', array_keys($rulesFields));
         }
 
-        $url = make_index_url(['section' => 'search', 'search' => $searchUuid]);
+        $url = UrlService::get()->makeIndexUrl(['section' => 'search', 'search' => $searchUuid]);
 
         return [$searchUuid, $url];
     }

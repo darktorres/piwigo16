@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Url\UrlService;
 
 /**
  * File download / inline-serve handler for original photos, representatives,
@@ -117,7 +118,7 @@ SELECT id FROM ' . Tables::categories() . '
         $http_headers = [];
         $ctype        = null;
 
-        if (!url_is_remote($file)) {
+        if (!UrlService::urlIsRemote($file)) {
             if (!is_readable($file)) {
                 $this->error(404, "Requested file not found - $file");
             }

@@ -7,14 +7,17 @@ Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 
 ## Summary
 
-| Category | ~Count | Status |
-|---|---|---|
-| One-line ServiceLocator delegates (`functions_*.inc.php`) | ~304 | Pending — Phase C |
-| Pre-boot standalones — permanent | ~37 | Must stay |
-| Derivative URL helpers | 5 | 🔒 Permanent |
-| `image_derivative_functions.php` | 7 | Mostly permanent |
-| `common.inc.php` | 1 | Pre-boot standalone |
-| **Total (excl. plugins)** | **~354** | |
+| File | Functions | Deletable delegates | Permanent |
+|---|---|---|---|
+| `functions.inc.php` | 207 | ~169 | ~38 pre-boot standalones |
+| `functions_user.inc.php` | 60 | ~48 | ~12 real auth logic |
+| `functions_url.inc.php` | 21 | ~20 | 1 pre-boot (`get_root_url`) |
+| `functions_plugins.inc.php` | 12 | ~6 | 6 (event system + factories) |
+| `functions_cookie.inc.php` | 3 | 2 | 1 pre-boot (`cookie_path`) |
+| `image_derivative_functions.php` | 7 | 0 | 7 (fast-path) |
+| `derivative_params.inc.php` | 5 | 0 | 5 (URL helpers) |
+| `common.inc.php` | 1 | 0 | 1 pre-boot |
+| **Total** | **316** | **~245** | **~71** |
 
 **Completed phases:**
 - ✅ **Phase A** — `include/ws_functions/` (98 functions, 9 files) deleted
@@ -31,7 +34,7 @@ Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 
 | File | Functions | Category | Notes |
 |---|---|---|---|
-| `functions.inc.php` | 208 | Mixed — see below | Largest file; ~170 one-line delegates, ~38 real-logic standalones |
+| `functions.inc.php` | 207 | Mixed — see below | Largest file; ~169 one-line delegates, ~38 real-logic standalones |
 | `functions_user.inc.php` | 60 | Mixed | ~12 real-logic functions (`log_user`, `auto_login`, `register_user`, `build_user`, etc.); ~48 delegates to `AuthService` / `UserService` / `PermissionService` / `PreferencesService` |
 | `functions_url.inc.php` | 21 | Mixed | 19 `UrlService` delegates; `get_root_url()` is pre-boot permanent; `get_user_favorites()` is misplaced (belongs in `functions_user`) |
 | `functions_plugins.inc.php` | 12 | Mixed | 4 event-system core (`add/remove_event_handler`, `trigger_change/notify` — permanent); 6 `PluginService` delegates; 2 factory helpers (`instantiate_*_maintain` — permanent) |
@@ -48,7 +51,7 @@ Only `index.php` (security redirect) remains. All 9 function files (98 one-line 
 
 ## `include/functions.inc.php` detail
 
-The single largest file. 208 functions in three categories:
+The single largest file. 207 functions in three categories:
 
 ### One-line ServiceLocator delegates (~170)
 
@@ -97,7 +100,7 @@ These **cannot** be deleted yet because they are called before `Kernel::boot()` 
 
 ## Deletion plan
 
-### Phase C — `include/functions_*.inc.php` delegates (~304 functions)
+### Phase C — `include/functions_*.inc.php` delegates (~245 deletable)
 
 Call sites in `src/` already use typed services. Call sites in `include/` still use free functions. The last step is sweeping the remaining callers in `include/` itself.
 

@@ -4,21 +4,21 @@
 <p>Definire le condizioni di sostituzione per ogni template (modello) dalla directory template-extension
 (template chiamato il "replacer" ("modelli personalizzato" / "sostituto")).</p>
 
-<p>I "templates originali" provengono da ./themes/default/template (o qualunque altro tema)
- saranno rimpiazzati da un sostituto se quest'ultimo è collegato al "template originale"
+<p>I "templates originali" provengono da ./themes/_base/template (o qualunque altro tema)
+ saranno rimpiazzati da un sostituto se quest'ultimo ï¿½ collegato al "template originale"
  (e in modo facoltativo, quando l'URL richiesta contiene un "parametro facoltativo dell'URL").</p>
 
 <p>I "parametri facoltativi dell'URL" sono quelli che potete trovare dopo il nome del modulo nell'indirizzo (URL).</p>
 
-<p>Quindi un "parametro facoltativo dell'URL" può essere un "permalink" attivo (per maggiore informazioni 
+<p>Quindi un "parametro facoltativo dell'URL" puï¿½ essere un "permalink" attivo (per maggiore informazioni 
 vedere i permalinks nella nostra documentazione).</p>
 
 <p>Leggere: `<a href="#warnings">Avvertimenti</a>` sulle condizioni d'uso.</p>
 
 <h3>Che cosa sono le estensioni dei template?</h3>
 
-<p>Questo tool di configurazione è potente sia per i principianti che per gli utenti esperti.
-Trammite FTP, nella directory template-estensione, il Webmaster può duplicare i file
+<p>Questo tool di configurazione ï¿½ potente sia per i principianti che per gli utenti esperti.
+Trammite FTP, nella directory template-estensione, il Webmaster puï¿½ duplicare i file
  .tpl ("template originali") con un nome diverso
  (sostituto).
 
@@ -43,9 +43,9 @@ Trammite FTP, nella directory template-estensione, il Webmaster può duplicare i 
 
 <h3>Dove posso trovare i "templates originali"?</h3>
 
-<p>I templates originali sono in /themes/default/template/
-(non modificare i templates originali per evitare problemi durante gli aggiornamenti futuri). Così, con
-i "templates originali", il webmaster può creare i suoi "replacers (modelli personalizzati)".</p>
+<p>I templates originali sono in /themes/_base/template/
+(non modificare i templates originali per evitare problemi durante gli aggiornamenti futuri). Cosï¿½, con
+i "templates originali", il webmaster puï¿½ creare i suoi "replacers (modelli personalizzati)".</p>
 
 <h3>Dove posso salvare i "modelli personalizzati"?</h3>
 
@@ -58,7 +58,7 @@ class="filename">template-extension/my-extension/video.tpl</span>.</p>
 <h3>Come posso attivare i miei "modelli personalizzati"?</h3>
 <p>Un <strong>template originale</strong> dovrebbe essere assegnato a 
  <strong>un replacer (modello personalizzato)</strong> per potere attivare i modelli personalizzati associati.
- Attivare i modelli personalizzati è la funzione "Estende i templates" nel menu di Configurazione dell'Amministrazione.</p>
+ Attivare i modelli personalizzati ï¿½ la funzione "Estende i templates" nel menu di Configurazione dell'Amministrazione.</p>
 
 <p>Se selezionate un <strong>Parametro facoltativo del URL</strong> i modelli personalizzati saranno utilizzati 
 unicamente sulle pagine con questa parola chiave. Per esempio: <span
@@ -83,11 +83,11 @@ unicamente sulle pagine con questa parola chiave. Per esempio: <span
 
   <li>Se diversi <strong>replacers (templates personalizzati)</strong> hanno lo stesso 
   <strong>template originale</strong> e lo stesso <strong>parametro facoltativo del URL</strong> 
-  solo l'ultimo sostituto satà attivo.</li>
+  solo l'ultimo sostituto satï¿½ attivo.</li>
 
   <li>Non selezionare <strong>il parametro facoltativo del URL</strong> 
-  attiverà il sostituto ad ogni uso del template.
-  Come detto precedente, l'ordine può annullare i modelli personalizzati precedenti.</li>
+  attiverï¿½ il sostituto ad ogni uso del template.
+  Come detto precedente, l'ordine puï¿½ annullare i modelli personalizzati precedenti.</li>
 
   <li>Le sottodirectory:
   Le sottodirectory sono ignorate, ma sono utili per cambiare l'ordine dei modelli personalizzati.<br />
@@ -96,6 +96,6 @@ distributed-samples: sono distribuite per le vostre prove!
 </li>
 
   <li>Alla cancellazione di un sostituto, il <strong>template originale</strong>
-  sarà immediatamente riattivato.</li>
+  sarï¿½ immediatamente riattivato.</li>
 
 </ul>

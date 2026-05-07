@@ -10,7 +10,7 @@ declare global {
     const cookie_path: string;
     const cookie_domain: string;
 
-    // ── From themes/default/js/scripts.ts (core.scripts bundle) ─────────────
+    // ── From themes/_base/js/scripts.ts (core.scripts bundle) ─────────────
     function phpWGOpenWindow(theURL: string, winName: string, features: string): void;
     function pwgBind(
         object: object,

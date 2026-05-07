@@ -42,10 +42,10 @@ Reduce `any` escapes in authored TypeScript from the current **479** to **≤250
 
 ### Current state
 
-- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `themes/admin/_base/js/` (24 files) + 39 in `themes/default/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
+- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `themes/admin/_base/js/` (24 files) + 39 in `themes/_base/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
 - ESLint `@typescript-eslint/no-explicit-any` is set to `error` in `eslint.config.ts`, so each occurrence is a lint error today. Only one file has an `eslint-disable` for this rule (`group_list.ts`); the rest cause `npm run lint` to fail. Closing this item is what unlocks a clean lint baseline.
 - Largest concentrations: `tags.ts` (80), `user_list.ts` (58), `albums.ts` (52), `group_list.ts` (45), `album_selector.ts` (35), `batchManagerUnit.ts` (31), `batchManagerGlobal.ts` (27).
-- No `themes/default/js/types/` or `themes/admin/_base/js/types/` declaration directory exists yet — Tier 1 hasn't started.
+- No `themes/_base/js/types/` or `themes/admin/_base/js/types/` declaration directory exists yet — Tier 1 hasn't started.
 
 ### Approach
 
@@ -79,7 +79,7 @@ const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
 
 ### Steps
 
-1. Create `themes/default/js/types/admin-globals.d.ts` and `themes/default/js/types/ws-responses.d.ts`.
+1. Create `themes/_base/js/types/admin-globals.d.ts` and `themes/_base/js/types/ws-responses.d.ts`.
 2. Fill in Tier 1 declarations — `npm run typecheck` confirms each file as it is typed.
 3. Tier 2: replace cast per file, largest files first (`common.ts`, `batchManagerGlobal.ts`, `user_list.ts`).
 4. Tier 3: add WS response interfaces, replace `any` in `fetch().then((data: any) =>` chains.
@@ -87,7 +87,7 @@ const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
 ### Verification
 
 ```bash
-grep -rn ": any\b\|as any\b\|(window as any)" themes/admin/_base/js/ themes/default/js/ --include="*.ts" | wc -l
+grep -rn ": any\b\|as any\b\|(window as any)" themes/admin/_base/js/ themes/_base/js/ --include="*.ts" | wc -l
 # current: 479 — target: ≤ 250
 npm run typecheck   # still zero errors
 npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
@@ -103,7 +103,7 @@ npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
 
 All `window.foo = value` data-bridge assignments in Smarty `{footer_script}` blocks are gone. The four clusters listed below (and all smaller satellite cases) migrated to `<script type="application/json" id="pwg-<page>-data">` page-data blocks consumed by `getPageData<T>()`, or to `data-*` attributes on triggering elements consumed via `dataset` in the corresponding `.ts`.
 
-The work expanded beyond the original 20 assignments: `{footer_script}` blocks themselves were eliminated codebase-wide as part of `PLAN-inline-assets-extraction.md` (Phases 2-4). Final count: **0 `{footer_script}` blocks** and **0 inline-JS event-handler attributes** across `themes/admin/_base/`, `themes/default/`, `themes/standard_pages/`.
+The work expanded beyond the original 20 assignments: `{footer_script}` blocks themselves were eliminated codebase-wide as part of `PLAN-inline-assets-extraction.md` (Phases 2-4). Final count: **0 `{footer_script}` blocks** and **0 inline-JS event-handler attributes** across `themes/admin/_base/`, `themes/_base/`, `themes/standard_pages/`.
 
 ### Verification
 
@@ -112,13 +112,13 @@ grep -rn "^window\." themes/admin/_base/template/ --include="*.tpl" \
   | grep -v "window\.location\|window\.open\|window\.confirm"
 # returns empty ✓
 
-grep -rn "{footer_script}" themes/admin/_base/template/ themes/default/template/ themes/standard_pages/template/ --include="*.tpl"
+grep -rn "{footer_script}" themes/admin/_base/template/ themes/_base/template/ themes/standard_pages/template/ --include="*.tpl"
 # returns empty ✓
 ```
 
 ### Original plan (historical)
 
-Initial inventory: **20 remaining assignments** in `themes/admin/_base/template/` (0 in `themes/default/template/`). Key clusters:
+Initial inventory: **20 remaining assignments** in `themes/admin/_base/template/` (0 in `themes/_base/template/`). Key clusters:
 
 | Template                   | Globals                                                                                         | Migration                     |
 | -------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------- |
@@ -161,12 +161,12 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
    export default defineConfig({
      test: {
        environment: 'node',
-       include: ['themes/default/js/**/*.test.ts', 'themes/admin/_base/js/**/*.test.ts'],
+       include: ['themes/_base/js/**/*.test.ts', 'themes/admin/_base/js/**/*.test.ts'],
        environmentMatchGlobs: [['**/*.dom.test.ts', 'happy-dom']],
        coverage: {
          provider: 'v8',
          reporter: ['text', 'html'],
-         include: ['themes/default/js/**/*.ts', 'themes/admin/_base/js/**/*.ts'],
+         include: ['themes/_base/js/**/*.ts', 'themes/admin/_base/js/**/*.ts'],
          exclude: ['**/*.test.ts', '**/types/*.d.ts', '**/plugins/**'],
          thresholds: { lines: 50, functions: 50, branches: 40 },
        },
@@ -239,7 +239,7 @@ Per-entrypoint bundle size budgets gate every PR. Regressions block merge. Bundl
        "path": "dist/assets/picture_modify-*.js",
        "limit": "55 kB"
      },
-     { "name": "themes/default/script", "path": "dist/assets/script-*.js", "limit": "45 kB" }
+     { "name": "themes/_base/script", "path": "dist/assets/script-*.js", "limit": "45 kB" }
    ]
    ```
 
@@ -293,9 +293,9 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 
 **Stays as static asset (cannot move to npm):**
 
-- Fontello custom-glyph subsets in `themes/admin/_base/fontello/`, `themes/default/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`. These are project-specific glyph builds from fontello.com, not packageable.
+- Fontello custom-glyph subsets in `themes/admin/_base/fontello/`, `themes/_base/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`. These are project-specific glyph builds from fontello.com, not packageable.
 - Bundled themes (`themes/elegant`, `themes/modus`, `themes/smartpocket`, `themes/bootstrap_darkroom`) — themes, not libs; out of 16.x core scope per ROADMAP-CSS.
-- `themes/default/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no maintenance burden.
+- `themes/_base/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no maintenance burden.
 
 **Already migrated:** PHP libs (`smarty`, `phpmailer`, `minify`, `pclzip`, `feedcreator`, `jshrink`, `passwordhash`, `mdetect`, `emogrifier`, `phpqrcode`) all moved to Composer in 16.x. `pint.json`'s `exclude` still lists them — stale entries; harmless, worth a one-line cleanup.
 
@@ -310,7 +310,7 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 
 **Tier 2 — Stylelint / ESLint scope cleanup (XS, parallel to Tier 1). ✅ Done.**
 
-`.stylelintrc.json` already ignores `plugins/**`, `themes/admin/_base/fonts/**`, `themes/default/vendor/fontello/**`, and `themes/default/js/plugins/**`, which subsumes the originally-listed vendor paths (videojs / leaflet / codemirror / open-sans). `eslint.config.ts` likewise ignores `plugins/**`, `themes/default/js/plugins/selectize.*`, the bundled themes, and the PHP vendor paths. No further config additions are needed for this tier; when Tier 3/4/5 delete the vendor dirs the ignores can stay (they still cover Piwigo plugin code) or be narrowed.
+`.stylelintrc.json` already ignores `plugins/**`, `themes/admin/_base/fonts/**`, `themes/_base/vendor/fontello/**`, and `themes/_base/js/plugins/**`, which subsumes the originally-listed vendor paths (videojs / leaflet / codemirror / open-sans). `eslint.config.ts` likewise ignores `plugins/**`, `themes/_base/js/plugins/selectize.*`, the bundled themes, and the PHP vendor paths. No further config additions are needed for this tier; when Tier 3/4/5 delete the vendor dirs the ignores can stay (they still cover Piwigo plugin code) or be narrowed.
 
 **Tier 3 — video.js consolidation (M).**
 

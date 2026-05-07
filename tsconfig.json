@@ -18,7 +18,7 @@
   },
   "include": [
     "themes/admin/_base/js/**/*.ts",
-    "themes/default/js/**/*.ts",
+    "themes/_base/js/**/*.ts",
     "themes/standard_pages/js/**/*.ts",
     "src/types/**/*",
     "build/**/*.ts",

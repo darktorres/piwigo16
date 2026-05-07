@@ -32,7 +32,7 @@ final class AboutController implements ControllerInterface
 
         $tpl->assign('ABOUT_MESSAGE', load_language('about.html', '', ['return' => true]));
 
-        $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : 'default';
+        $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
         $themeAbout = load_language('about.html', PHPWG_THEMES_PATH . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
             $tpl->assign('THEME_ABOUT', $themeAbout);

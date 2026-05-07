@@ -48,7 +48,7 @@
   {/if}
 {/foreach}
 
-{combine_script id="core.scripts" load="footer" path="themes/default/js/scripts.js"}
+{combine_script id="core.scripts" load="footer" path="themes/_base/js/scripts.js"}
 {/strip}
 
 <!-- BEGIN get_combined -->
@@ -58,7 +58,7 @@
 <!-- END get_combined -->
 
 <!--[if lt IE 7]>
-<script type="text/javascript" src="{$ROOT_URL}themes/default/js/pngfix.js"></script>
+<script type="text/javascript" src="{$ROOT_URL}themes/_base/js/pngfix.js"></script>
 <![endif]-->
 
 {if not empty($head_elements)}

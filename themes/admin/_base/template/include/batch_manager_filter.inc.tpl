@@ -27,7 +27,7 @@
 {/if}
 
       <span id="add_md5sum" hidden>
-        <img class="loading" src="themes/default/images/ajax-loader-small.gif">
+        <img class="loading" src="themes/_base/images/ajax-loader-small.gif">
         <span id="md5sum_added">0</span>% -
         <span id="md5sum_to_add" data-origin="{$NB_NO_MD5SUM}">{$NB_NO_MD5SUM}</span>
         {'checksums to add'|translate}
@@ -36,7 +36,7 @@
       <span id="add_md5sum_error" class="errors" hidden></span>
 
       <span id="orphans_deletion" hidden>
-        <img class="loading" src="themes/default/images/ajax-loader-small.gif">
+        <img class="loading" src="themes/_base/images/ajax-loader-small.gif">
         <span id="orphans_deleted">0</span>% -
         <span id="orphans_to_delete" data-origin="{$NB_ORPHANS}">{$NB_ORPHANS}</span>
         {'orphans to delete'|translate}
@@ -158,7 +158,7 @@
         <i class="icon-help-circled"></i>
         <span>{'Search tips'|translate}</span>
       </p>
-      {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+      {combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 {if (isset($no_search_results))}
 <div>{'No results for'|@translate} :
 <em><strong>
@@ -226,7 +226,7 @@
       </div>
       <div class="quick-search-syntax">
         {assign var=is_dark_mode value=$themeconf.colorscheme == 'dark'}
-        {include file='themes/default/template/help/quick_search.tpl' dark_mode=$is_dark_mode}
+        {include file='themes/_base/template/help/quick_search.tpl' dark_mode=$is_dark_mode}
       </div>
     </div>
   </div>

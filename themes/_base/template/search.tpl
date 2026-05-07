@@ -1,12 +1,12 @@
 
-{combine_script id='search' load='footer' path='themes/default/js/search.js'}
+{combine_script id='search' load='footer' path='themes/_base/js/search.js'}
 
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
 
 	<div class="titrePage">
 		<ul class="categoryActions">
-			{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+			{combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 			<li><a href="{$U_HELP}" data-popuphelp title="{'Help'|@translate}" class="pwg-state-default pwg-button">
 				<span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{'Help'|@translate}</span>
 			</a></li>

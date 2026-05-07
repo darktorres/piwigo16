@@ -515,7 +515,7 @@ final class ExtensionsController
 
         $tpl_themes = [];
         foreach ($themes->fs_themes as $theme_id => $fs_theme) {
-            if ($theme_id == 'default' || $theme_id == 'standard_pages') {
+            if ($theme_id == '_base' || $theme_id == 'standard_pages') {
                 continue;
             }
             $tpl_theme = ['ID' => $theme_id, 'NAME' => $fs_theme['name'], 'VISIT_URL' => $fs_theme['uri'], 'VERSION' => $fs_theme['version'], 'DESC' => $fs_theme['description'], 'AUTHOR' => $fs_theme['author'], 'AUTHOR_URL' => $fs_theme['author uri'] ?? null, 'PARENT' => $fs_theme['parent'] ?? null, 'SCREENSHOT' => $fs_theme['screenshot'], 'IS_MOBILE' => $fs_theme['mobile'], 'ADMIN_URI' => $fs_theme['admin_uri'] ?? null];

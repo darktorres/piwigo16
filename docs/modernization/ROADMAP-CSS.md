@@ -12,7 +12,7 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 - Stylelint passing for all first-party CSS with zero errors and no `!important` outside JS-toggled visibility rules.
 - CSS custom properties for all repeated colors, spacing values, and breakpoints.
-- Monster files split into per-concern files: `themes/admin/_base/theme.css` (9,635 lines) and `themes/default/theme.css` (1,305 lines) become thin `@import` lists.
+- Monster files split into per-concern files: `themes/admin/_base/theme.css` (9,635 lines) and `themes/_base/theme.css` (1,305 lines) become thin `@import` lists.
 - Admin child themes (`clear`, `roma`) reduced to `:root {}` variable override blocks.
 - `themes/standard_pages/skins/*.css` refactored from hundreds of element overrides to single `:root {}` blocks.
 
@@ -21,11 +21,11 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 - `themes/admin/_base/theme.css`: **9,635 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
 - `themes/admin/dark/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
 - `themes/admin/light/theme.css`: **1,234 lines** — same problem.
-- `themes/default/theme.css`: **1,305 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
-- `themes/default/fix-khtml.css`: **16 lines**, orphan — zero references anywhere in the repo.
-- `themes/default/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/default/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
+- `themes/_base/theme.css`: **1,305 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
+- `themes/_base/fix-khtml.css`: **16 lines**, orphan — zero references anywhere in the repo.
+- `themes/_base/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/_base/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
 - `themes/admin/_base/template/install.tpl:17` and `upgrade.tpl:18` reference a non-existent `themes/admin/_base/fix-ie7.css` (broken link, also IE-only).
-- `themes/default/css/clear-search.css` + `dark-search.css`: **346 + 333 lines** — color-only variants duplicating `search.css` structure.
+- `themes/_base/css/clear-search.css` + `dark-search.css`: **346 + 333 lines** — color-only variants duplicating `search.css` structure.
 - `themes/standard_pages/skins/*.css`: **11 skin files** (cadmium, cobalt, default, fuchsia, green, lime, purple, red, sienna, silver, teal), each ~337 lines, each with **20 `!important` instances** — fight specificity with the parent theme; same anti-pattern modus had.
 - **~689 `!important` declarations** across first-party CSS:
   - `themes/admin/dark/theme.css`: 162
@@ -33,7 +33,7 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
   - `themes/admin/light/theme.css`: 45
   - `themes/admin/_base/css/**`: ~71 (pages/components combined)
   - `themes/standard_pages/`: ~235 (theme + 11 skins)
-  - `themes/default/theme.css`: 10, `print.css`: 1
+  - `themes/_base/theme.css`: 10, `print.css`: 1
   - Roughly half justified (child-theme load order, JS-toggled visibility); the rest disappear when the token system lands.
 - Stylelint coverage and rules are correctly configured (commit `ba17576e8`). Current state: **298 errors, 0 warnings** — mostly newly-flagged `color-named` (`white`), `no-duplicate-selectors`, and tightened-rule violations introduced by the latest config.
 - `declaration-no-important` was tried as a warning then dropped (commit `9a482db86`) — too noisy until the token system reduces the genuine count.
@@ -44,7 +44,7 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 **Frontend themes:**
 
-- `themes/default/theme.css`, `css/search.css`, `css/clear-search.css`, `css/dark-search.css`, plus small per-page CSS (`thumbnails.css`, `month_calendar.css`, `mainpage_categories.css`, `comment_list.css`, `redirect.css`, `no-photo-yet.css`)
+- `themes/_base/theme.css`, `css/search.css`, `css/clear-search.css`, `css/dark-search.css`, plus small per-page CSS (`thumbnails.css`, `month_calendar.css`, `mainpage_categories.css`, `comment_list.css`, `redirect.css`, `no-photo-yet.css`)
 - `themes/standard_pages/theme.css` + 11 skin files in `skins/`
 
 **Admin themes:**
@@ -53,13 +53,13 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 - `themes/admin/light/theme.css`
 - `themes/admin/dark/theme.css`, `css/components/general.css`
 
-**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/default/js/plugins/**`, `themes/default/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `themes/admin/_base/{fontello,fonts}/**`, `**/*.min.css`.
+**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/_base/js/plugins/**`, `themes/_base/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `themes/admin/_base/{fontello,fonts}/**`, `**/*.min.css`.
 
 ### Inline `<style>` block inventory ✅ Extracted
 
 All static `<style>` and `{html_style}` blocks were extracted to `css/pages/<name>.css` files via `{combine_css}`. The dynamic blocks initially flagged "must stay inline" — `batch_manager_global.tpl` (first block), `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl` — were also migrated using the **CSS custom property pattern**: the wrapper element carries `style="--var: value"` (governed by CSP `style-src-attr`, separate from `style-src`) while the consuming rules live in static CSS. See `PLAN-inline-assets-extraction.md` for the full record.
 
-Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/default/`, `themes/standard_pages/`, `themes/admin/_base/` (excluding `mail/text/html/` which intentionally keeps inline styles for email clients, and `plugins/` which is out of the 16.x core scope).
+Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/_base/`, `themes/standard_pages/`, `themes/admin/_base/` (excluding `mail/text/html/` which intentionally keeps inline styles for email clients, and `plugins/` which is out of the 16.x core scope).
 
 ### `!important` tier breakdown
 
@@ -70,8 +70,8 @@ Counts re-measured against the current tree; the modus-skin tier from the origin
 | Reason                                                                                                                       | Files                                                                     | Count |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----: |
 | Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css`             |  ~150 |
-| Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/default/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
-| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/default/theme.css`              |     2 |
+| Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/_base/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
+| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/_base/theme.css`              |     2 |
 | JS-toggled visibility (`display: none/flex/block`)                                                                           | `themes/admin/_base/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
 
 **Tier 2 — Fix with higher specificity: tom-select overrides.**
@@ -169,7 +169,7 @@ base.css.tpl                ← Smarty token emitter (Step 10)
 theme.css                   ← thin entry: @import the above in order
 ```
 
-**`themes/default/css/`** (post-split):
+**`themes/_base/css/`** (post-split):
 
 ```text
 tokens.css                 ← :root {} block (Step 6)
@@ -189,9 +189,9 @@ no-photo-yet.css           ← (existing)
 redirect.css               ← (existing)
 popup.css
 search.css                 ← variable-driven (replaces search.css + clear-search.css + dark-search.css after Step 5)
-print.css                  ← (currently at themes/default/print.css; move under css/)
-themes/default/iconset.css ← (existing, unchanged)
-themes/default/theme.css   ← thin entry: @import the above
+print.css                  ← (currently at themes/_base/print.css; move under css/)
+themes/_base/iconset.css ← (existing, unchanged)
+themes/_base/theme.css   ← thin entry: @import the above
 ```
 
 ### Steps
@@ -207,18 +207,18 @@ Multiple `stylelint --fix` passes have eliminated auto-fixable formatting errors
 **Step 3 — Delete orphans.**
 
 ```bash
-git rm themes/default/fix-khtml.css
-git rm themes/default/fix-ie5-ie6.css themes/default/fix-ie7.css
-# Drop the IE conditional-comment block in themes/default/local_head.tpl
+git rm themes/_base/fix-khtml.css
+git rm themes/_base/fix-ie5-ie6.css themes/_base/fix-ie7.css
+# Drop the IE conditional-comment block in themes/_base/local_head.tpl
 # Drop the broken themes/admin/_base/fix-ie7.css <link> in install.tpl + upgrade.tpl
 ```
 
 IE conditional comments are inert in modern browsers; the install/upgrade `<link>` already points to a non-existent file. All four references are dead.
 
-**Step 4 — Split `themes/default/theme.css`** (1,305 lines) along its section markers into the per-concern files listed in the target layout above. `themes/default/theme.css` becomes an `@import` list. `themes/default/template/header.tpl` is unchanged — it still loads `theme.css`.
+**Step 4 — Split `themes/_base/theme.css`** (1,305 lines) along its section markers into the per-concern files listed in the target layout above. `themes/_base/theme.css` becomes an `@import` list. `themes/_base/template/header.tpl` is unchanged — it still loads `theme.css`.
 
 **Step 5 — Collapse search CSS variants.**
-Replace `themes/default/css/{search,clear-search,dark-search}.css` with a single `search.css` using `--search-*` CSS variables:
+Replace `themes/_base/css/{search,clear-search,dark-search}.css` with a single `search.css` using `--search-*` CSS variables:
 
 ```css
 /* search.css — variable-driven */
@@ -230,10 +230,10 @@ Replace `themes/default/css/{search,clear-search,dark-search}.css` with a single
 }
 ```
 
-Each colorscheme supplies its `--search-*` variable set in its theme `:root` block. Drop the `{combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css"}` load in `themes/default/template/include/search_filters.inc.tpl:3`. Net savings: ~500 lines.
+Each colorscheme supplies its `--search-*` variable set in its theme `:root` block. Drop the `{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css"}` load in `themes/_base/template/include/search_filters.inc.tpl:3`. Net savings: ~500 lines.
 
 **Step 6 — Non-color design tokens at theme root.**
-Add a single `:root {}` token block at the top of `themes/default/theme.css` (or its post-split `colors.css` / new `tokens.css`) and `themes/admin/_base/theme.css`:
+Add a single `:root {}` token block at the top of `themes/_base/theme.css` (or its post-split `colors.css` / new `tokens.css`) and `themes/admin/_base/theme.css`:
 
 ```css
 :root {
@@ -324,7 +324,7 @@ bun run lint:css                                            # zero errors
 git ls-files | grep -E "fix-(khtml|ie5-ie6|ie7)"            # empty (after Step 3)
 git ls-files | grep -E "clear-search|dark-search"           # empty (after Step 5)
 wc -l themes/admin/_base/theme.css                        # ≤ 30 (just @imports, after Step 11)
-wc -l themes/default/theme.css                              # ≤ 15 (just @imports, after Step 4)
+wc -l themes/_base/theme.css                              # ≤ 15 (just @imports, after Step 4)
 grep -rn "!important" themes/standard_pages/skins/          # empty (after Step 8)
 ```
 

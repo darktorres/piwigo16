@@ -1,5 +1,5 @@
 // Configuration is read from <body data-error-icon="..." data-max-requests="...">
-// (set by themes/default/template/header.tpl). Falling back to ambient globals
+// (set by themes/_base/template/header.tpl). Falling back to ambient globals
 // for any plugin that still defines `error_icon` / `max_requests` inline.
 declare let error_icon: string;
 

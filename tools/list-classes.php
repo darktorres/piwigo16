@@ -85,7 +85,7 @@ $searchRoots = [
     $root . '/include',
     $root . '/admin',
     $root . '/install',
-    $root . '/themes/default',
+    $root . '/themes/_base',
 ];
 $haystack = [];
 foreach ($searchRoots as $sr) {

@@ -416,7 +416,7 @@ SELECT DISTINCT f.image_id
             return $theme;
         }
         $activeThemes = array_keys(get_pwg_themes());
-        return $activeThemes[0] ?? 'default';
+        return $activeThemes[0] ?? '_base';
     }
 
     public function getDefaultLanguage(): string

@@ -17,16 +17,16 @@ export default defineConfig({
         manifest: true,
         rollupOptions: {
             input: {
-                // ── Frontend (themes/default) ─────────────────────────────
-                'core.scripts': r('themes/default/js/scripts.ts'),
-                'core.switchbox': r('themes/default/js/switchbox.ts'),
-                search: r('themes/default/js/search.ts'),
-                popuphelp: r('themes/default/js/popuphelp.ts'),
-                picture_nav_keys: r('themes/default/js/picture_nav_keys.ts'),
-                mcs: r('themes/default/js/mcs.ts'),
-                pngfix: r('themes/default/js/pngfix.ts'),
-                rating: r('themes/default/js/rating.ts'),
-                'thumbnails.loader': r('themes/default/js/thumbnails.loader.ts'),
+                // ── Frontend (themes/_base) ─────────────────────────────
+                'core.scripts': r('themes/_base/js/scripts.ts'),
+                'core.switchbox': r('themes/_base/js/switchbox.ts'),
+                search: r('themes/_base/js/search.ts'),
+                popuphelp: r('themes/_base/js/popuphelp.ts'),
+                picture_nav_keys: r('themes/_base/js/picture_nav_keys.ts'),
+                mcs: r('themes/_base/js/mcs.ts'),
+                pngfix: r('themes/_base/js/pngfix.ts'),
+                rating: r('themes/_base/js/rating.ts'),
+                'thumbnails.loader': r('themes/_base/js/thumbnails.loader.ts'),
                 // ── Standard pages ────────────────────────────────────────
                 toaster_js: r('themes/standard_pages/js/toaster.ts'),
                 standard_pages_js: r('themes/standard_pages/js/standard_pages.ts'),

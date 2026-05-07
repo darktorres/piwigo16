@@ -6,7 +6,7 @@ import '@uppy/dashboard/css/style.css';
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { config } from './config';
-import Piecon from '../../../../themes/default/js/plugins/piecon';
+import Piecon from '../../../../themes/_base/js/plugins/piecon';
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 
 interface PhotosAddDirectPageData {

@@ -84,6 +84,6 @@
 </tr>
 {/foreach}{*images*}
 </table>
-{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+{combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 
 {if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}

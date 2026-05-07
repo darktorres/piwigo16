@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="themes/default/theme.css">
+<link rel="stylesheet" type="text/css" href="themes/_base/theme.css">
 <title>Piwigo, {'Welcome'|@translate}</title>
-<link rel="stylesheet" type="text/css" href="themes/default/css/no-photo-yet.css">
+<link rel="stylesheet" type="text/css" href="themes/_base/css/no-photo-yet.css">
 
 </head>
 

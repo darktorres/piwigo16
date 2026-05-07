@@ -14,7 +14,7 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/include', __DIR__ . '/admin', __DIR__ . '/install', __DIR__ . '/src',
         __DIR__ . '/index.php',
-        __DIR__ . '/themes/default',
+        __DIR__ . '/themes/_base',
     ])
     ->withSkip([
         __DIR__ . '/install/db', __DIR__ . '/language',

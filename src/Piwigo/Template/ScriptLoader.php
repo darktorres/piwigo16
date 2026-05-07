@@ -25,7 +25,7 @@ class ScriptLoader
 
     /** @var array<string, string> */
     private static array $known_paths = [
-        'core.scripts' => 'themes/default/js/scripts.js',
+        'core.scripts' => 'themes/_base/js/scripts.js',
       ];
 
     public function __construct()

@@ -200,7 +200,7 @@ Procedural PHP included by `common.inc.php`. **Not namespaced, not Rector-proces
 
 ## `themes/admin/` and `themes/` — presentation layer
 
-### `themes/default/` — gallery theme
+### `themes/_base/` — gallery theme
 
 ```
 css/                    SCSS-compiled stylesheets

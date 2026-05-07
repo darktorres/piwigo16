@@ -31,7 +31,7 @@ final class NoPhotoYetRenderer
         ) {
             $nb_photos = ServiceLocator::get(ImageRepository::class)->countAll();
             if (0 == $nb_photos) {
-                $theme = is_string($user['theme'] ?? null) ? $user['theme'] : 'default';
+                $theme = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
                 TemplateRegistry::set($template);
 

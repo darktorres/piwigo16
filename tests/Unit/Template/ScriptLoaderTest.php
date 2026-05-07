@@ -73,10 +73,10 @@ final class ScriptLoaderTest extends TestCase
     public function test_add_without_manifest_registers_original_path(): void
     {
         $loader = new ScriptLoader();
-        $loader->add('jquery', 0, [], 'themes/default/js/jquery.min.js');
+        $loader->add('jquery', 0, [], 'themes/_base/js/jquery.min.js');
         $scripts = $this->getRegisteredScripts($loader);
         self::assertArrayHasKey('jquery', $scripts);
-        self::assertSame('themes/default/js/jquery.min.js', $scripts['jquery']->path);
+        self::assertSame('themes/_base/js/jquery.min.js', $scripts['jquery']->path);
     }
 
     public function test_add_with_manifest_uses_hashed_path(): void
@@ -115,9 +115,9 @@ final class ScriptLoaderTest extends TestCase
         ]);
 
         $loader = new ScriptLoader();
-        $loader->add('jquery', 0, [], 'themes/default/js/jquery.min.js');
+        $loader->add('jquery', 0, [], 'themes/_base/js/jquery.min.js');
         $scripts = $this->getRegisteredScripts($loader);
-        self::assertSame('themes/default/js/jquery.min.js', $scripts['jquery']->path);
+        self::assertSame('themes/_base/js/jquery.min.js', $scripts['jquery']->path);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────

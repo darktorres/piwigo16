@@ -1,11 +1,11 @@
 {
   "_comment": "Vite entry inventory for Phase 5. Each id maps to the authored source file.",
   "entries": {
-    "core.scripts": "themes/default/js/scripts.ts",
-    "switchbox": "themes/default/js/switchbox.ts",
-    "pngfix": "themes/default/js/pngfix.ts",
-    "rating": "themes/default/js/rating.ts",
-    "thumbnails.loader": "themes/default/js/thumbnails.loader.ts",
+    "core.scripts": "themes/_base/js/scripts.ts",
+    "switchbox": "themes/_base/js/switchbox.ts",
+    "pngfix": "themes/_base/js/pngfix.ts",
+    "rating": "themes/_base/js/rating.ts",
+    "thumbnails.loader": "themes/_base/js/thumbnails.loader.ts",
 
     "toaster": "themes/standard_pages/js/toaster.ts",
     "standard_pages": "themes/standard_pages/js/standard_pages.ts",

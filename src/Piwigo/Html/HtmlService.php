@@ -190,10 +190,10 @@ SELECT id, name, permalink
             $this->setStatusHeader(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
+<link rel="shortcut icon" type="image/x-icon" href="themes/_base/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
-    <img src="themes/default/icon/warning-triangle.svg" alt="warning-triangle" >
+    <img src="themes/_base/icon/warning-triangle.svg" alt="warning-triangle" >
     <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
     <a href="' . make_index_url() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
   </div>

@@ -2,7 +2,7 @@
 
 $themeconf = array(
   'name' => 'standard_pages',
-  'parent' => 'default',
+  'parent' => '_base',
   'load_parent_css' => false,
   'img_dir' => 'themes/standard_pages/images',
 );

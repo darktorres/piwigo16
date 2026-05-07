@@ -83,8 +83,8 @@ class Themes
                     break;
                 }
 
-                if ('default' == $theme_id) {
-                    // you can't activate the "default" theme
+                if ('_base' == $theme_id) {
+                    // you can't activate the "_base" theme
                     break;
                 }
 
@@ -139,7 +139,7 @@ class Themes
 
                 if ($theme_id == get_default_theme()) {
                     $themeRepo = ServiceLocator::get(ThemeRepository::class);
-                    $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? 'default';
+                    $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? '_base';
                     $this->set_default_theme($new_theme);
                 }
 
@@ -196,7 +196,7 @@ class Themes
         $parent = $this->fs_themes[$theme_id]['parent'];
         $parent = is_scalar($parent) ? (string) $parent : '';
 
-        if ('default' == $parent) {
+        if ('_base' == $parent) {
             return null;
         }
 

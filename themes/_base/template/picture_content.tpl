@@ -1,5 +1,5 @@
 {if !$current.selected_derivative->is_cached()}
-{combine_script id='thumbnails.loader' path='themes/default/js/thumbnails.loader.js' load='footer'}
+{combine_script id='thumbnails.loader' path='themes/_base/js/thumbnails.loader.js' load='footer'}
 {/if}
 
 {if isset($current.path_ext) and $current.path_ext == 'pdf' and $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD}

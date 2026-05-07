@@ -33,7 +33,7 @@ export function attachMonitor(page: Page): PageMonitor {
 
     // Track requests in flight so reset() can mark them as "ignore on
     // failure". Without this, a navigation that cancels prior-page XHRs
-    // (e.g. gallery thumbnails fired by themes/default/js/thumbnails.loader.ts
+    // (e.g. gallery thumbnails fired by themes/_base/js/thumbnails.loader.ts
     // after loginAsAdmin lands on /) produces requestfailed events AFTER
     // reset(), which then look like fresh failures of the next page.
     const inFlight = new Set<PwRequest>();

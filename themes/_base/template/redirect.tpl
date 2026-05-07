@@ -1,4 +1,4 @@
-{combine_css path="themes/default/css/redirect.css"}
+{combine_css path="themes/_base/css/redirect.css"}
 <div class="redirect-message">
 	{$REDIRECT_MSG}
 </div>

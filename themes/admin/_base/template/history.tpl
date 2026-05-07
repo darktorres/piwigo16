@@ -8,7 +8,7 @@
 {combine_script id='geoip' load='footer' path='themes/admin/_base/js/geoip.js'}
 
 {combine_css path="themes/admin/_base/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{combine_css path="themes/_base/vendor/fontello/css/gallery-icon.css" order=-10}
 
 <form class="filter" method="post" name="filter" action="">
 <fieldset class="history-filter">

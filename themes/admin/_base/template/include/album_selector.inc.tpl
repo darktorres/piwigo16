@@ -3,7 +3,7 @@
 {if empty($load_mode)}{$load_mode='footer'}{/if}
 {include file='include/colorbox.inc.tpl' load_mode=$load_mode}
 {combine_css path="themes/admin/_base/css/components/album_selector.css"}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{combine_css path="themes/_base/vendor/fontello/css/gallery-icon.css" order=-10}
 {combine_script id='common' load='footer' path='themes/admin/_base/js/common.js'}
 <script id="pwg-album-selector-data" type="application/json">{$album_selector_page_data_json}</script>
 

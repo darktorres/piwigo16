@@ -1050,7 +1050,7 @@ All user-facing file I/O goes through `League\Flysystem\Filesystem`. Named files
    return [
        'uploads'      => fn () => new Filesystem(new LocalFilesystemAdapter('_data/i/upload')),
        'derivatives'  => fn () => new Filesystem(new LocalFilesystemAdapter('_data/i')),
-       'watermarks'   => fn () => new Filesystem(new LocalFilesystemAdapter('themes/default/watermarks')),
+       'watermarks'   => fn () => new Filesystem(new LocalFilesystemAdapter('themes/_base/watermarks')),
        'themes'       => fn () => new Filesystem(new LocalFilesystemAdapter('themes')),
        'plugins'      => fn () => new Filesystem(new LocalFilesystemAdapter('plugins')),
        'exports'      => fn () => new Filesystem(new LocalFilesystemAdapter('_data/exports')),
@@ -1813,12 +1813,12 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
 ### Current state
 
 - **`smarty/smarty: ^5.0`** in `composer.json`.
-- **169 `.tpl` files**: `themes/admin/_base/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
+- **169 `.tpl` files**: `themes/admin/_base/template/` 69, `themes/_base/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
 - **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
   - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
   - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
   - **Compilers:** `get_combined_css`.
-  - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/default/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
+  - **Blocks:** `html_head`, `html_style`, `footer_script`. Of these, only `html_head` is currently called from a template (`themes/_base/template/notification.tpl`). `html_style` and `footer_script` have zero in-scope callers — kept implemented in `Template.php` for the future `{html_style}` + nonce path described in `PLAN-inline-assets-extraction.md`.
   - **Filters:** `prefilter_white_space` (whitespace stripper).
 - **Bundled plugin templates** under `plugins/*/template/`: `LocalFilesEditor`, `nbc_ThemeChanger`, `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags` ship their own `.tpl` files and rely on the Smarty plugin API.
 - **No `.css.tpl` files remain** — the original modus theme that carried `themes/modus/css/base.css.tpl` is no longer in the codebase. Step 4 of "convert templates in waves" below referenced it; that wave is now empty.
@@ -1841,14 +1841,14 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
    - **`l10n`** — same as translate; one filter, one alias.
    - **`combine_script`/`combine_css`/`get_combined_scripts`/`get_combined_css`** — Latte function tags. Implement as `Piwigo\Template\Latte\Extension\AssetExtension`.
    - **`define_derivative`** — Latte function tag in a `DerivativeExtension`.
-   - **`html_head`** — Latte `{block}` extension or custom tag. Wire to the existing buffering logic in `Template.php`. Only `themes/default/template/notification.tpl` uses it.
+   - **`html_head`** — Latte `{block}` extension or custom tag. Wire to the existing buffering logic in `Template.php`. Only `themes/_base/template/notification.tpl` uses it.
    - **`html_style`/`footer_script`** — zero in-scope callers post-template-extraction; the Latte port can defer porting these until the `{html_style}` + nonce path (per `PLAN-inline-assets-extraction.md`) materializes.
    - **`prefilter_white_space`** — Latte template loader wrapper (run before compilation).
 
 5. **Convert templates in waves.** Order risk-low → risk-high:
-   - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/default/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
+   - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/_base/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
    - **Wave 1 — admin templates** (lowest risk, 69 files in `themes/admin/_base/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
-   - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
+   - **Wave 2 — public theme `default`** (55 files in `themes/_base/template/`).
    - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.
    - **Wave 4 — plugin templates** (31 files across 5 bundled plugins). Each plugin gets its own commit.
 
@@ -2123,7 +2123,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 #### Current state
 
 - **`themes/<id>/themeconf.inc.php`** is the only required file. It declares `$themeconf = ['name' => …, 'parent' => …, 'icon_dir' => …, 'img_dir' => …, 'load_parent_css' => …, 'local_head' => …]` and may also run arbitrary code (template assigns, event-handler registrations, config reads). Example: `themes/standard_pages/themeconf.inc.php` calls `$this->assign(...)` and `conf_get_param(...)` directly at file load.
-- **2 frontend themes** bundled: `themes/default`, `themes/standard_pages` (the latter inherits from `default`).
+- **2 frontend themes** bundled: `themes/_base`, `themes/standard_pages` (the latter inherits from `default`).
 - **3 admin themes** bundled: `themes/admin/_base`, `themes/admin/light`, `themes/admin/dark` (clear and roma inherit from default).
 - **`src/Piwigo/Admin/ThemeMaintain`** is the only typed part of the theme API today.
 - **3rd-party themes** rely on `themeconf.inc.php` being `include`'d at load time; breaking that shatters the ecosystem.

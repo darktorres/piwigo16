@@ -46,7 +46,7 @@
             <div id="checkActions">
               <span>{'Select'|@translate}</span>
               <a href="#" id="selectAllPage">{'The whole page'|@translate}</a>
-              <a href="#" id="selectSet">{'The whole set'|@translate}</a><span class="loading" hidden><img src="themes/default/images/ajax-loader-small.gif"></span>
+              <a href="#" id="selectSet">{'The whole set'|@translate}</a><span class="loading" hidden><img src="themes/_base/images/ajax-loader-small.gif"></span>
               <a href="#" id="selectNone">{'None'|@translate}</a>
               <a href="#" id="selectInvert">{'Invert'|@translate}</a>
               <span id="selectedMessage"></span>
@@ -382,7 +382,7 @@
 
           <p id="applyActionBlock" hidden class="actionButtons">
             <input id="applyAction" class="submit" type="submit" value="{'Apply action'|@translate}" name="submit"> <span id="applyOnDetails"></span></input>
-            <span id="applyActionLoading" hidden><img src="themes/default/images/ajax-loader-small.gif"></span>
+            <span id="applyActionLoading" hidden><img src="themes/_base/images/ajax-loader-small.gif"></span>
             <br />
             <span id="applyActionUserListMessage" class="infos icon-ok icon-green" hidden>{'Users modified'|translate}</span>
           </p>

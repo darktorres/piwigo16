@@ -1,5 +1,5 @@
-{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{combine_script id='core.switchbox' load='async' path='themes/_base/js/switchbox.js'}
+{combine_css path="themes/_base/vendor/fontello/css/gallery-icon.css" order=-10}
 
 {$MENUBAR}
 
@@ -208,7 +208,7 @@
 {/if}
 
 {if !empty($SEARCH_ID)}
-  {include file='themes/default/template/include/search_filters.inc.tpl'}
+  {include file='themes/_base/template/include/search_filters.inc.tpl'}
 {/if}
 
 {if !empty($THUMBNAILS)}

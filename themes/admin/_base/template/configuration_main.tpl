@@ -192,10 +192,10 @@
                 {$name}
               </div>
               <div class="themeShot">
-                <img src="{$ROOT_URL}themes/default/template/mail/screenshot-{$theme}.png" width="150"/>
+                <img src="{$ROOT_URL}themes/_base/template/mail/screenshot-{$theme}.png" width="150"/>
               </div>
             </label>
-            <a href="{$ROOT_URL}themes/default/template/mail/screenshot-{$theme}.png" class="icon-zoom-in">{'Preview'|translate}</a>
+            <a href="{$ROOT_URL}themes/_base/template/mail/screenshot-{$theme}.png" class="icon-zoom-in">{'Preview'|translate}</a>
           </div>
         {/foreach}
         </div>

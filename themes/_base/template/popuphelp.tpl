@@ -14,7 +14,7 @@
     <a href="#" data-close-window>{'Close this window'|@translate}</a>
 </p>
 
-{combine_script id='popuphelp' load='footer' path='themes/default/js/popuphelp.js'}
+{combine_script id='popuphelp' load='footer' path='themes/_base/js/popuphelp.js'}
 </div> <!-- content -->
 
 

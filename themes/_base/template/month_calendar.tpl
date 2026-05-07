@@ -41,7 +41,7 @@
 {/if}
 
 {if isset($chronology_calendar.month_view)}
-{combine_css path="themes/default/css/month_calendar.css"}
+{combine_css path="themes/_base/css/month_calendar.css"}
 <table class="calMonth" style="--cal-cell-w:{$chronology_calendar.month_view.CELL_WIDTH}px;--cal-cell-h:{$chronology_calendar.month_view.CELL_HEIGHT}px">
  <thead>
  <tr>

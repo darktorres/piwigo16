@@ -179,7 +179,7 @@ class Template
         // We loop over the theme and the parent theme, so if we exclude default,
         // standard pages can't get the header to load the html header
         if (
-            'default' != $theme
+            '_base' != $theme
             and in_array(script_basename(), ['identification', 'register', 'password', 'profile'])
             and (($themeconf['use_standard_pages'] ?? false) or conf_get_param('use_standard_pages', false))
         ) {

@@ -1,5 +1,5 @@
 {combine_css id='standard_pages_css' path="themes/standard_pages/skins/{$STD_PGS_SELECTED_SKIN}.css" order=100}
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{combine_css path="themes/_base/vendor/fontello/css/gallery-icon.css" order=-10}
 
 <script id="pwg-std-pages-data" type="application/json">{$page_data_json}</script>
 {combine_script id='standard_pages_js' load='async' path='themes/standard_pages/js/standard_pages.js'}

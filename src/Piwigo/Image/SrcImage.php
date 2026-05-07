@@ -56,7 +56,7 @@ final class SrcImage
                 if ('svg' == $ext) {
                     $this->rel_path = $path;
                 } else {
-                    $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
+                    $this->rel_path = 'themes/_base/icon/mimetypes/unknown.png';
                 }
                 $size = pwg_safe_getimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }

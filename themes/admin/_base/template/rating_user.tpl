@@ -32,7 +32,7 @@
 	<input type="hidden" name="page" value="rating_user">
 </fieldset>
 </form>
-{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+{combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 {combine_script id='geoip' load='async'}
 <table id="rateTable">
 <thead>

@@ -2,7 +2,7 @@
 {combine_script id='common' load='footer' path='themes/admin/_base/js/common.js'}
 {combine_script id='configuration_search' load='footer' require='common' path='themes/admin/_base/js/configuration_search.js'}
 
-{combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
+{combine_css path="themes/_base/vendor/fontello/css/gallery-icon.css" order=-10}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

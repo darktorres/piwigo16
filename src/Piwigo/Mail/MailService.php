@@ -144,7 +144,7 @@ final readonly class MailService
 
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template(PHPWG_ROOT_PATH . 'themes', 'default', 'template/mail/' . $emailFormat);
+        return new Template(PHPWG_ROOT_PATH . 'themes', '_base', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string

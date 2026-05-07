@@ -11,7 +11,7 @@ plugins/piwigo-videojs/video-js-5/
 plugins/piwigo-videojs/video-js-6/
 plugins/piwigo-videojs/video-js-7/
 plugins/user_tags/js/jquery.addtags.js
-themes/default/vendor/fontello/
+themes/_base/vendor/fontello/
 themes/admin/_base/fontello/
 themes/admin/_base/fonts/
 package-lock.json

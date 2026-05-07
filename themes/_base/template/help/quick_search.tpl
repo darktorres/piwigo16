@@ -1,4 +1,4 @@
-{combine_css path="themes/default/css/help/quick_search.css"}
+{combine_css path="themes/_base/css/help/quick_search.css"}
 
 <div class="quick-search-headers">
   <span class="mcs-popin-title">{"Search using extended syntax"|translate}</span>

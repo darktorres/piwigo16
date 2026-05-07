@@ -1,4 +1,4 @@
-{combine_script id='core.switchbox' load='async' path='themes/default/js/switchbox.js'}
+{combine_script id='core.switchbox' load='async' path='themes/_base/js/switchbox.js'}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content"{if isset($MENUBAR)} class="contentWithMenu"{/if}>
 
@@ -32,7 +32,7 @@
   </a><br>
   {/foreach}
   {if isset($U_ORIGINAL)}
-    {combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
+    {combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
   <a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')" rel="nofollow">{'Original'|@translate}</a>
   {/if}
 </div>
@@ -236,8 +236,8 @@
 				<input type="submit" name="rate" value="{$mark}" class="rateButton" title="{$mark}">
 			{/if}
 			{/foreach}
-			{strip}{combine_script id='core.scripts' load='async' path='themes/default/js/scripts.js'}
-			{combine_script id='rating' load='async' require='core.scripts' path='themes/default/js/rating.js'}
+			{strip}{combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
+			{combine_script id='rating' load='async' require='core.scripts' path='themes/_base/js/rating.js'}
 			{/strip}
 			</div>
 			</form>

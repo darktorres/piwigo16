@@ -114,7 +114,7 @@ sub used_keys {
 
         my $is_admin = 0;
 
-        if ($File::Find::name =~ m{themes/default/template/mail}) {
+        if ($File::Find::name =~ m{themes/_base/template/mail}) {
             $is_admin = 1;
         }
         if ($File::Find::name =~ m{/admin/}) {
@@ -136,7 +136,7 @@ sub used_keys {
         if ($File::Find::name =~ m{/install(\.tpl|\.php|/)}) {
             return 0;
         }
-        if ($File::Find::name =~ m{/admin(/|\.php)} or $File::Find::name =~ m{themes/default/template/mail}) {
+        if ($File::Find::name =~ m{/admin(/|\.php)} or $File::Find::name =~ m{themes/_base/template/mail}) {
             return 0;
         }
     }

@@ -83,4 +83,4 @@
 {/if}{/strip}-->*}
 {/if}
 </div>
-{combine_script id='picture_nav_keys' load='footer' path='themes/default/js/picture_nav_keys.js'}
+{combine_script id='picture_nav_keys' load='footer' path='themes/_base/js/picture_nav_keys.js'}

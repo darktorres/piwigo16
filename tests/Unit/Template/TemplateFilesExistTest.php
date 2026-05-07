@@ -12,8 +12,8 @@ use PHPUnit\Framework\TestCase;
  *
  * Template search path mirrors Template::set_theme():
  *   admin pages  → themes/admin/_base/template/
- *   public pages → themes/default/template/   (including subdirectories)
- *   mail         → themes/default/template/mail/
+ *   public pages → themes/_base/template/   (including subdirectories)
+ *   mail         → themes/_base/template/mail/
  */
 final class TemplateFilesExistTest extends TestCase
 {
@@ -31,7 +31,7 @@ final class TemplateFilesExistTest extends TestCase
 
         self::$searchDirs = [
             self::$root . '/themes/admin/_base/template',
-            self::$root . '/themes/default/template',
+            self::$root . '/themes/_base/template',
             self::$root . '/themes/standard_pages/template',
         ];
 

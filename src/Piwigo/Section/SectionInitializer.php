@@ -12,10 +12,10 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
-use Piwigo\Users\UserRepository;
-use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Resolves the gallery section from the request URL and populates $GLOBALS['page']

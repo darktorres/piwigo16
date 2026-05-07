@@ -22,9 +22,9 @@ use Piwigo\Plugin\PluginRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\UserService;
-use Piwigo\Users\PreferencesService;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 
 final class ExtensionsController
 {

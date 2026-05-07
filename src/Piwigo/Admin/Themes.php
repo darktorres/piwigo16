@@ -12,8 +12,8 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 
 class Themes
 {

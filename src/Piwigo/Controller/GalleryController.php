@@ -16,9 +16,9 @@ use Piwigo\Section\SectionInitializer;
 use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 /**
  * Handles the gallery index page: categories, thumbnails, tags, search,

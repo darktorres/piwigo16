@@ -10,11 +10,11 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\UserService;
 
 /**
  * Handles the user registration page (/register).

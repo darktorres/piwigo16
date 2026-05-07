@@ -11,10 +11,10 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\PermissionService;
 
 final class PasswordService
 {

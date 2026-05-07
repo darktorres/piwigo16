@@ -8,12 +8,12 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 /**
  * Handles all requests routed to /ws (web services API).

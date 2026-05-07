@@ -6,8 +6,6 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserService;
 
 /** Persistence layer for the user domain. */
 final class UserRepository extends AbstractRepository

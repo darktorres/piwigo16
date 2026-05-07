@@ -7,9 +7,9 @@ namespace Piwigo\Controller;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 /**
  * Quick-search redirect: ?q=term → /search page.

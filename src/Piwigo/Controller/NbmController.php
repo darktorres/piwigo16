@@ -11,9 +11,9 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 final class NbmController implements ControllerInterface
 {

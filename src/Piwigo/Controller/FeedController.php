@@ -10,10 +10,10 @@ use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Feed\PiwigoFeedCreator;
 use Piwigo\Http\ResponseFactory;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Generates the RSS 2.0 feed and sends it directly as XML output.

@@ -23,12 +23,12 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Users\PermissionService;
 
 final class ImagesEndpoints
 {

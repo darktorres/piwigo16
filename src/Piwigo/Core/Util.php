@@ -21,10 +21,10 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
-use Psr\Log\LoggerInterface;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Psr\Log\LoggerInterface;
 
 final readonly class Util
 {

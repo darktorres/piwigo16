@@ -18,9 +18,6 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Url\UrlGenerator;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Piwigo\Users\PermissionService;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\PreferencesService;
 
 final readonly class UserService
 {

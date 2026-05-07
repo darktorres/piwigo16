@@ -33,11 +33,11 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\ProfileService;
-use Piwigo\Users\UserRepository;
+use Piwigo\Users\AuthService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Users\AuthService;
+use Piwigo\Users\ProfileService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 final class MiscController

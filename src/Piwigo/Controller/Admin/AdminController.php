@@ -17,11 +17,11 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
-use Piwigo\Users\PreferencesService;
 
 /**
  * Handles all admin pages (/admin{rest}).

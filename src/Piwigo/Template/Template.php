@@ -9,10 +9,10 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Smarty\Debug;
 use Smarty\Smarty;
 use Smarty\TemplateBase;
-use Piwigo\Users\PermissionService;
 
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);

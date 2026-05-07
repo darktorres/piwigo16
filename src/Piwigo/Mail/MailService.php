@@ -14,10 +14,10 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserService;
-use Piwigo\Users\PermissionService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserService;
 
 final readonly class MailService
 {

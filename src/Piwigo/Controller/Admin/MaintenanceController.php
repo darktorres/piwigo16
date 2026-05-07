@@ -16,6 +16,7 @@ use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -39,10 +40,9 @@ use Piwigo\Site\SiteRepository;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Piwigo\Users\PermissionService;
-use Piwigo\Auth\CookieService;
 
 final class MaintenanceController
 {

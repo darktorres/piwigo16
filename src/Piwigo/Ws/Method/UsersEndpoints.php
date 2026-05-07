@@ -14,17 +14,17 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
+use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Users\PermissionService;
-use Piwigo\Users\UserService;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\AuthService;
 
 final class UsersEndpoints
 {

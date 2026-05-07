@@ -8,10 +8,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Search\SearchService;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Builds a search query from GET params, saves it and redirects to results.

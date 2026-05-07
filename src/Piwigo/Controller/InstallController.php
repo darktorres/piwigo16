@@ -18,11 +18,11 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Users\AuthService;
+use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\UserService;
-use Piwigo\Users\PreferencesService;
 
 /**
  * Handles the Piwigo installation wizard (/install).

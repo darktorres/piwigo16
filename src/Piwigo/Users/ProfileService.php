@@ -8,8 +8,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\UserService;
 
 final class ProfileService
 {

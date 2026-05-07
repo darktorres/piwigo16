@@ -10,11 +10,11 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 /**
  * Handles the user profile / preferences page (/profile).

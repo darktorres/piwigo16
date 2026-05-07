@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -21,15 +22,14 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\PermissionService;
-use Piwigo\Auth\CookieService;
 
 final class GeneralEndpoints
 {

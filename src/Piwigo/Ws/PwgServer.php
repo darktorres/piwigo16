@@ -7,13 +7,13 @@ namespace Piwigo\Ws;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
+use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
-use Piwigo\Users\PermissionService;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}

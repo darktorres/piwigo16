@@ -14,9 +14,9 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Users\PermissionService;
 
 /**
  * Handles the paginated comments list page (/comments).

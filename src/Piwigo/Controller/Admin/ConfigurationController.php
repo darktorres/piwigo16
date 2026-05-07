@@ -17,8 +17,8 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\ProfileService;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
 
 final class ConfigurationController

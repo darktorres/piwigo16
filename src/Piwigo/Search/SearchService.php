@@ -13,10 +13,10 @@ use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
-use Psr\Log\LoggerInterface;
 use Piwigo\Users\PermissionService;
-use Piwigo\Users\UserService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserService;
+use Psr\Log\LoggerInterface;
 
 final readonly class SearchService
 {

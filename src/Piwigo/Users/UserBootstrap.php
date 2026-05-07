@@ -10,10 +10,6 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Users\AuthService;
-use Piwigo\Users\UserService;
-use Piwigo\Users\PreferencesService;
-use Piwigo\Users\PermissionService;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.

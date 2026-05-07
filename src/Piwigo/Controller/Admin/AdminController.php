@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\CoreTabsRegistrar;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Comment\CommentRepository;
@@ -51,7 +52,7 @@ final class AdminController implements ControllerInterface
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/add_core_tabs.inc.php';
+        add_event_handler('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
 
         trigger_notify('loc_begin_admin');
 

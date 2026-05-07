@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\UpgradeService;
 use Piwigo\Bootstrap\ExceptionHandler;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCacheRegistry;
@@ -316,8 +317,7 @@ if (Config::galleryLocked()) {
 }
 
 if (Config::checkUpgradeFeed()) {
-    require_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php');
-    if (check_upgrade_feed()) {
+    if (UpgradeService::checkUpgradeFeed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
           .'<a href="'.get_absolute_root_url(false).'index.php?/upgrade_feed">upgrade now</a>';
     }

@@ -71,7 +71,6 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     $GLOBALS['prefixeTable'] = Config::dbPrefix();
     require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
     require_once(PHPWG_ROOT_PATH . 'include/functions.inc.php');
-    require_once(PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php');
     (new UpgradeFeedController())(RequestFactory::fromGlobals());
     exit;
 }

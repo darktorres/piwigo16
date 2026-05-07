@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
@@ -24,13 +25,13 @@ final class UpgradeFeedController implements ControllerInterface
             die('upgrade feed is not active');
         }
 
-        prepare_conf_upgrade();
+        UpgradeService::prepareConfUpgrade();
 
         define('PREFIX_TABLE', Config::dbPrefix());
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
         $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
-        $existing = get_available_upgrade_ids();
+        $existing = UpgradeService::getAvailableUpgradeIds();
         $to_apply = array_diff($existing, $applied);
 
         echo '<pre>';

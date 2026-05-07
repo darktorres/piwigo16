@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
+use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Config\TestMode;
 use Piwigo\Core\Filesystem;
@@ -122,11 +124,9 @@ final class InstallController implements ControllerInterface
         }
 
         require PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
-        require PHPWG_ROOT_PATH . 'admin/include/functions_install.inc.php';
-        require PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
 
         if (isset($_POST['install'])) {
-            install_db_connect($infos, $errors);
+            InstallService::installDbConnect($infos, $errors);
 
             if (count($errors) > 0) {
                 print_r($errors);
@@ -179,8 +179,8 @@ final class InstallController implements ControllerInterface
                 Config::override('db_base', $dbname);
                 Config::override('db_prefix', $prefixeTable);
 
-                execute_sqlfile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
-                execute_sqlfile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
+                InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
+                InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
 
                 single_insert($prefixeTable . 'config', [
                     'param'   => 'secret_key',
@@ -194,8 +194,8 @@ final class InstallController implements ControllerInterface
 
                 $languages->perform_action('activate', $language);
                 load_conf_from_db();
-                activate_core_themes();
-                activate_core_plugins();
+                InstallService::activateCoreThemes();
+                InstallService::activateCorePlugins();
 
                 mass_inserts(SITES_TABLE, ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
 
@@ -208,7 +208,7 @@ final class InstallController implements ControllerInterface
 
                 define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
                 $datas = [];
-                foreach (get_available_upgrade_ids() as $upgrade_id) {
+                foreach (UpgradeService::getAvailableUpgradeIds() as $upgrade_id) {
                     $datas[] = ['id' => $upgrade_id, 'applied' => CURRENT_DATE, 'description' => 'upgrade included in installation'];
                 }
                 if (!empty($datas)) {

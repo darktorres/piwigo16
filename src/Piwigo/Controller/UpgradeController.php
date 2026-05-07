@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
+use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
@@ -92,10 +93,9 @@ final class UpgradeController implements ControllerInterface
         load_language('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
         load_language('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
 
-        require_once PHPWG_ROOT_PATH . 'admin/include/functions_upgrade.php';
         require PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php';
 
-        upgrade_db_connect();
+        UpgradeService::upgradeDbConnect();
 
         define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 

@@ -202,7 +202,7 @@ final class InstallController implements ControllerInterface
                 ServiceLocator::get(ConfigService::class)->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
 
                 $languages->performAction('activate', $language);
-                ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+                ConfigService::loadConfFromDb();
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 

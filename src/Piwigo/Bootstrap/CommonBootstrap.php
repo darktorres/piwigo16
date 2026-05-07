@@ -130,7 +130,7 @@ final class CommonBootstrap
             Config::override('webmaster_id', 1);
         }
 
-        ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+        ConfigService::loadConfFromDb();
 
         $GLOBALS['logger'] = new Logger([
             'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),

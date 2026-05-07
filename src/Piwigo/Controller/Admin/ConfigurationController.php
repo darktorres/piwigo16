@@ -237,7 +237,7 @@ final class ConfigurationController
                 ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
             }
 
-            ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+            ConfigService::loadConfFromDb();
         }
 
         // ── Restore default derivatives ───────────────────────────────────────
@@ -245,7 +245,7 @@ final class ConfigurationController
         if ($section === 'sizes' && isset($_GET['action']) && 'restore_settings' == $_GET['action']) {
             ImageStdParams::restoreDefault();
             ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
-            ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+            ConfigService::loadConfFromDb();
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
             ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
         }

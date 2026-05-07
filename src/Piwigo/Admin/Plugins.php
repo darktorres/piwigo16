@@ -148,7 +148,7 @@ class Plugins
                 if (!isset($crt_db_plugin)) {
                     $errors = $this->performAction('install', $plugin_id);
                     [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
-                    ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+                    ConfigService::loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
                 }

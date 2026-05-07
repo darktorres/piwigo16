@@ -21,7 +21,7 @@ final readonly class ConfigService
     ) {
     }
 
-    public function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
+    public static function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {
         $sql  = 'SELECT param, value FROM ' . Tables::config() .
             (!empty($condition) ? ' WHERE ' . $condition : '');

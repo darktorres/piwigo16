@@ -733,7 +733,7 @@ final readonly class Util
             return;
         }
 
-        ServiceLocator::get(ConfigService::class)->loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
+        ConfigService::loadConfFromDb('param = "send_piwigo_infos_last_notice"', false);
 
         $doSend = false;
         if (Config::has('send_piwigo_infos_last_notice')) {

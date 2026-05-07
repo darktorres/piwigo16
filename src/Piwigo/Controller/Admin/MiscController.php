@@ -389,7 +389,8 @@ final class MiscController
             if ($counter > 0) {
                 $tag['counter'] = $counter;
             }
-            $alt_names      = array_diff(array_unique(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name)), [$tag['name']]);
+            $tagNameStr     = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
+            $alt_names      = array_diff(array_unique(array_filter(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name), 'is_string')), [$tagNameStr]);
             if (count($alt_names)) {
                 $tag['alt_names'] = implode(', ', $alt_names);
             }
@@ -699,7 +700,8 @@ final class MiscController
         if (Config::addCacheToStorageChart() && Config::has('cache_sizes')) {
             $cache_sizes = unserialize((string) Config::cacheSizes());
             if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-                $data_storage['Cache']['total']['filesize'] = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024;
+                $cacheFilesize = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024;
+                $data_storage['Cache'] = ['total' => ['filesize' => $cacheFilesize, 'nb_files' => 0], 'details' => []];
             }
         }
 

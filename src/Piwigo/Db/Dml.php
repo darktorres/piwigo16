@@ -98,8 +98,8 @@ class Dml
             self::massInserts($tmp, $all_fields, $datas);
 
             $funcSet = ($flags & self::SKIP_EMPTY)
-                ? fn ($s): string => "t1.$s = IFNULL(t2.$s, t1.$s)"
-                : fn ($s): string => "t1.$s = t2.$s";
+                ? fn (string $s): string => "t1.$s = IFNULL(t2.$s, t1.$s)"
+                : fn (string $s): string => "t1.$s = t2.$s";
 
             $conn->executeStatement(
                 'UPDATE ' . self::protectColumnName($tablename) . ' AS t1, ' . $tmp . ' AS t2 SET ' .

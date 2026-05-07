@@ -205,12 +205,8 @@ final class AlbumController
         foreach ($allAlbum as $album) {
             $album['name'] = EventDispatcher::dispatch('render_category_name', $album['name'], 'admin_cat_list');
             $album['lastmodified'] = ServiceLocator::get(DateService::class)->timeSince(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
-            $parents = explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : '');
-            $the_place = &$associatedTree[strval($parents[0])];
-            for ($i = 1; $i < count($parents); $i++) {
-                $the_place = &$the_place['children'][strval($parents[$i])];
-            }
-            $the_place['cat'] = $album;
+            $parents = array_map('strval', explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : ''));
+            self::placeAlbumInTree($associatedTree, $parents, $album);
         }
 
         $is_forbidden = array_fill_keys(explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : ''), 1);
@@ -1209,5 +1205,34 @@ final class AlbumController
             return $local_dir;
         }
         return $full_dir[0] . '/' . $full_dir[1] . '/&hellip;/' . end($full_dir);
+    }
+
+    /**
+     * Recursively place an album into the associated-tree structure.
+     * Uses copy-and-reassign instead of PHP references to stay PHPStan-compatible.
+     *
+     * @param array<mixed> &$tree
+     * @param list<string> $keys
+     * @param array<mixed> $album
+     */
+    private static function placeAlbumInTree(array &$tree, array $keys, array $album): void
+    {
+        $key = array_shift($keys);
+        if ($key === null) {
+            return;
+        }
+        if (!isset($tree[$key]) || !is_array($tree[$key])) {
+            $tree[$key] = ['children' => [], 'cat' => null];
+        }
+        $node = $tree[$key];
+        if (count($keys) === 0) {
+            $node['cat'] = $album;
+            $tree[$key] = $node;
+        } else {
+            $children = is_array($node['children']) ? $node['children'] : [];
+            self::placeAlbumInTree($children, $keys, $album);
+            $node['children'] = $children;
+            $tree[$key] = $node;
+        }
     }
 }

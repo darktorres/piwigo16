@@ -30,7 +30,7 @@ class Themes
     public array $fs_themes = [];
     /** @var array<string, array<string,mixed>> */
     public array $db_themes_by_id = [];
-    /** @var array<int|string, array<string, mixed>> */
+    /** @var array<int|string, array<mixed>> */
     public array $server_themes = [];
 
     /**
@@ -498,19 +498,23 @@ class Themes
                 if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
                     $zip = new \PclZip($archive);
-                    if ($list = $zip->listContent()) {
+                    $listRaw = $zip->listContent();
+                    if (is_array($listRaw) && $listRaw) {
+                        $list = $listRaw;
                         $main_filepath = null;
                         $status = 'ok';
                         foreach ($list as $file) {
-                            // we search main.inc.php in archive
-                            if (basename((string) $file['filename']) == 'themeconf.inc.php'
+                            if (!is_array($file)) continue;
+                            $filename = is_string($file['filename'] ?? null) ? (string) $file['filename'] : '';
+                            // we search themeconf.inc.php in archive
+                            if (basename($filename) == 'themeconf.inc.php'
                               and ($main_filepath === null
-                              or strlen((string) $file['filename']) < strlen($main_filepath))) {
-                                $main_filepath = $file['filename'];
+                              or strlen($filename) < strlen($main_filepath))) {
+                                $main_filepath = $filename;
                             }
                         }
 
-                        $logger->debug(__FUNCTION__.', $main_filepath = '.$main_filepath);
+                        $logger->debug(__FUNCTION__.', $main_filepath = '.(string) $main_filepath);
 
                         if (isset($main_filepath)) {
                             $root = dirname($main_filepath); // main.inc.php path in archive
@@ -522,18 +526,20 @@ class Themes
                             $extract_path = Config::themesPath() . $theme_id;
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
-                            if (
-                                $result = $zip->extract(
-                                    PCLZIP_OPT_PATH,
-                                    $extract_path,
-                                    PCLZIP_OPT_REMOVE_PATH,
-                                    $root,
-                                    PCLZIP_OPT_REPLACE_NEWER
-                                )
-                            ) {
+                            $resultRaw = $zip->extract(
+                                PCLZIP_OPT_PATH,
+                                $extract_path,
+                                PCLZIP_OPT_REMOVE_PATH,
+                                $root,
+                                PCLZIP_OPT_REPLACE_NEWER
+                            );
+                            if (is_array($resultRaw) && $resultRaw) {
+                                $result = $resultRaw;
                                 foreach ($result as $file) {
-                                    if ($file['stored_filename'] == $main_filepath) {
-                                        $status = $file['status'];
+                                    if (!is_array($file)) continue;
+                                    $storedFilename = is_string($file['stored_filename'] ?? null) ? $file['stored_filename'] : '';
+                                    if ($storedFilename == $main_filepath) {
+                                        $status = is_string($file['status'] ?? null) ? $file['status'] : 'ok';
                                         break;
                                     }
                                 }

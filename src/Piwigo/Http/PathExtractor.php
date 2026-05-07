@@ -19,7 +19,7 @@ namespace Piwigo\Http;
 final class PathExtractor
 {
     /**
-     * @param array<string, mixed> $server  Typically $_SERVER.
+     * @param array<mixed> $server  Typically $_SERVER.
      */
     public static function fromServer(array $server): string
     {

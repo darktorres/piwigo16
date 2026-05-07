@@ -196,7 +196,7 @@ SELECT DISTINCT id
             ];
         }
         $datas    = [];
-        $callback = (fn (array $m): string => (string) ($catMap[$m[1]]['rank'] ?? 0));
+        $callback = (fn (array $m): string => is_string($m[1]) ? (string) ($catMap[$m[1]]['rank'] ?? 0) : '0');
         foreach ($catMap as $id => $cat) {
             $uppercatsStr   = is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '';
             $newGlobalRank  = preg_replace_callback('/(\d+)/', $callback, str_replace(',', '.', $uppercatsStr));
@@ -349,7 +349,7 @@ SELECT DISTINCT id
         $categories   = DbConnection::get()->executeQuery(
             'SELECT id, uppercats, site_id FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND id IN (' . wordwrap(implode(', ', $catIds), 80, "\n") . ')'
         )->fetchAllAssociative();
-        $callback     = (fn (array $m): string => is_scalar($catDirs[$m[1]] ?? null) ? (string) $catDirs[$m[1]] : '');
+        $callback     = (fn (array $m): string => is_string($m[1]) && is_scalar($catDirs[$m[1]] ?? null) ? (string) $catDirs[$m[1]] : '');
         $catFulldirs  = [];
         foreach ($categories as $category) {
             $uppercats = str_replace(',', '/', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '');

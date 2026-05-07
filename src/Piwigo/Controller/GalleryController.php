@@ -322,7 +322,7 @@ final class GalleryController implements ControllerInterface
                 if (Config::indexSizesIcon()) {
                     $url        = UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['display' => '']);
                     $derivObj   = $tpl->getTemplateVars('derivative_params');
-                    $selType    = is_object($derivObj) ? (string) ($derivObj->type ?? '') : '';
+                    $selType    = is_object($derivObj) ? (is_scalar($derivObj->type ?? null) ? (string) $derivObj->type : '') : '';
                     $tpl->clearAssign('derivative_params');
                     $typeMap = ImageStdParams::getDefinedTypeMap();
                     unset($typeMap[DerivativeSize::TwoXLarge->value], $typeMap[DerivativeSize::XLarge->value]);

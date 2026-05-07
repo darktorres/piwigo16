@@ -850,7 +850,7 @@ SELECT
     /**
      * Normalize a mixed cache value into a typed date-filter data structure.
      *
-     * @return array{pre_counters: array<string, int>, list_of_dates: array<string, mixed>}
+     * @return array{pre_counters: array<string, int>, list_of_dates: array<mixed>}
      */
     private function normalizeDateData(mixed $raw): array
     {
@@ -868,7 +868,7 @@ SELECT
     /**
      * Normalize a mixed cache value to a flat array of rows.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array<mixed>>
      */
     private function normalizeRows(mixed $raw): array
     {

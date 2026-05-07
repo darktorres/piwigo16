@@ -62,6 +62,50 @@ class Updates
         }
     }
 
+    /** @return array<string, array<mixed>> */
+    public function getFsByType(string $type): array
+    {
+        return match($type) {
+            'plugins'   => $this->plugins->fs_plugins,
+            'themes'    => $this->themes->fs_themes,
+            'languages' => $this->languages->fs_languages,
+            default     => [],
+        };
+    }
+
+    /** @return array<int|string, array<mixed>> */
+    public function getServerByType(string $type): array
+    {
+        return match($type) {
+            'plugins'   => $this->plugins->server_plugins,
+            'themes'    => $this->themes->server_themes,
+            'languages' => $this->languages->server_languages,
+            default     => [],
+        };
+    }
+
+    /** @param array<int|string, array<mixed>> $data */
+    public function setServerByType(string $type, array $data): void
+    {
+        match($type) {
+            'plugins'   => ($this->plugins->server_plugins = $data),
+            'themes'    => ($this->themes->server_themes = $data),
+            'languages' => ($this->languages->server_languages = $data),
+            default     => null,
+        };
+    }
+
+    /** @return string[] */
+    public function getDefaultsByType(string $type): array
+    {
+        return match($type) {
+            'plugins'   => $this->default_plugins,
+            'themes'    => $this->default_themes,
+            'languages' => $this->default_languages,
+            default     => [],
+        };
+    }
+
     public static function checkPiwigoUpgrade(): void
     {
         $_SESSION['need_update'.AppInfo::VERSION] = null;
@@ -297,9 +341,9 @@ class Updates
         $ext_to_check = [];
         foreach ($this->types as $type) {
             $fs = 'fs_'.$type;
-            foreach ($this->$type->$fs as $ext) {
-                if (isset($ext['extension'])) {
-                    $ext_to_check[(string) $ext['extension']] = $type;
+            foreach ($this->getFsByType($type) as $ext) {
+                if (isset($ext['extension']) && is_string($ext['extension'])) {
+                    $ext_to_check[$ext['extension']] = $type;
                 }
             }
         }
@@ -353,7 +397,7 @@ class Updates
             foreach ($servers as $server_type => $extension_list) {
                 $server_string = 'server_'.$server_type;
 
-                $this->$server_type->$server_string = $extension_list;
+                $this->setServerByType($server_type, $extension_list);
             }
 
             $this->checkMissingExtensions($ext_to_check);
@@ -375,8 +419,8 @@ class Updates
         foreach ($this->types as $type) {
             $fs = 'fs_'.$type;
             $server = 'server_'.$type;
-            $server_ext = $this->$type->$server;
-            $fs_ext = $this->$type->$fs;
+            $server_ext = $this->getServerByType($type);
+            $fs_ext = $this->getFsByType($type);
 
             $ignore_list = [];
 
@@ -385,8 +429,9 @@ class Updates
             $typeIgnoreList = is_array($updatesIgnoredArr[$type] ?? null) ? $updatesIgnoredArr[$type] : [];
 
             foreach ($fs_ext as $ext_id => $fs_ext_item) {
-                if (isset($fs_ext_item['extension']) and isset($server_ext[$fs_ext_item['extension']])) {
-                    $ext_info = $server_ext[$fs_ext_item['extension']];
+                $extKey2 = is_string($fs_ext_item['extension'] ?? null) ? $fs_ext_item['extension'] : null;
+                if ($extKey2 !== null && isset($server_ext[$extKey2])) {
+                    $ext_info = $server_ext[$extKey2];
 
                     // Skip dev mode extensions (version='auto')
                     if ('auto' === $fs_ext_item['version']) {
@@ -417,7 +462,7 @@ class Updates
             $typeUpdates = is_array($extensionsNeedUpdate[$type] ?? null) ? $extensionsNeedUpdate[$type] : [];
             if (!empty($typeUpdates)) {
                 $fs = 'fs_'.$type;
-                foreach ($this->$type->$fs as $ext_id => $fs_ext) {
+                foreach ($this->getFsByType($type) as $ext_id => $fs_ext) {
                     $need_update_version = is_scalar($typeUpdates[$ext_id] ?? null)
                         ? (string) $typeUpdates[$ext_id]
                         : '';
@@ -441,8 +486,8 @@ class Updates
             }
             $fs = 'fs_'.$type;
             $default = 'default_'.$type;
-            $defaultList = is_array($this->$default) ? $this->$default : [];
-            foreach ($this->$type->$fs as $ext_id => $ext) {
+            $defaultList = $this->getDefaultsByType($type);
+            foreach ($this->getFsByType($type) as $ext_id => $ext) {
                 if (isset($ext['extension']) and $id == $ext['extension']
                   and !in_array($ext_id, $defaultList)
                   and !in_array($ext['extension'], $this->merged_extensions)) {
@@ -543,7 +588,7 @@ class Updates
 
             if (Filesystem::tryFilesize($filename)) {
                 $zip = new \PclZip($filename);
-                if ($result = $zip->extract(
+                $resultRaw = $zip->extract(
                     PCLZIP_OPT_PATH,
                     PHPWG_ROOT_PATH,
                     PCLZIP_OPT_REMOVE_PATH,
@@ -551,7 +596,9 @@ class Updates
                     PCLZIP_OPT_SET_CHMOD,
                     0755,
                     PCLZIP_OPT_REPLACE_NEWER
-                )) {
+                );
+                if (is_array($resultRaw) && $resultRaw) {
+                    $result = $resultRaw;
                     //Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
@@ -563,7 +610,7 @@ class Updates
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
-                              and ($res = $zip->extract(
+                              and is_array($res = $zip->extract(
                                   PCLZIP_OPT_BY_NAME,
                                   $remove_path.'/'.$extractFilename,
                                   PCLZIP_OPT_PATH,
@@ -574,7 +621,8 @@ class Updates
                                   0755,
                                   PCLZIP_OPT_REPLACE_NEWER
                               ))
-                              and isset($res[0]['status'])
+                              and isset($res[0]) && is_array($res[0])
+                              and is_string($res[0]['status'] ?? null)
                               and $res[0]['status'] == 'ok') {
                                 continue;
                             } else {

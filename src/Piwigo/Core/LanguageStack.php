@@ -23,7 +23,7 @@ final class LanguageStack
     private static array $stack = [];
 
     /**
-     * @var array<string, array{lang_info: array<string,mixed>, lang: array<string,mixed>}>
+     * @var array<string, array{lang_info: array<mixed>, lang: array<mixed>}>
      * Snapshots of lang/lang_info per language code, saved on first switch.
      */
     private static array $saved = [];
@@ -43,7 +43,7 @@ final class LanguageStack
     // $lang accessors
     // -------------------------------------------------------------------------
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function lang(): array
     {
         $raw = $GLOBALS['lang'] ?? [];
@@ -54,7 +54,7 @@ final class LanguageStack
      * Replace the entire $lang array in-place, preserving any reference bridge
      * (e.g. the one set by Lang::attachGlobals() to Lang::$data).
      *
-     * @param array<string, mixed> $lang
+     * @param array<mixed> $lang
      */
     public static function setLang(array $lang): void
     {
@@ -92,7 +92,7 @@ final class LanguageStack
     // $lang_info accessors
     // -------------------------------------------------------------------------
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function info(): array
     {
         $raw = $GLOBALS['lang_info'] ?? [];

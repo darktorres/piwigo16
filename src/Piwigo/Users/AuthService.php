@@ -246,7 +246,7 @@ final readonly class AuthService
         return null;
     }
 
-    /** @return array<string,mixed> */
+    /** @return array<mixed> */
     public function generateFakeUser(): array
     {
         if (!isset($_SESSION['fake_user_cache'])) {

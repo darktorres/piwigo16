@@ -162,9 +162,9 @@ class BlockManager
     /**
      * Parse the menu and assign the result in a template variable.
      *
-     * @param string|string[] $var
+     * @param string $var
      */
-    public function apply(string|array $var, string $file): void
+    public function apply(string $var, string $file): void
     {
         $template = TemplateRegistry::current();
 

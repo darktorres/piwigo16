@@ -21,7 +21,7 @@ class Languages
     public array $fs_languages = [];
     /** @var array<string, array<string,mixed>> */
     public array $db_languages = [];
-    /** @var array<int|string, array<string, mixed>> */
+    /** @var array<int|string, array<mixed>> */
     public array $server_languages = [];
 
     /**
@@ -263,19 +263,23 @@ class Languages
             if (is_resource($fh) && ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
                 $zip = new \PclZip($archive);
-                if ($list = $zip->listContent()) {
+                $listRaw = $zip->listContent();
+                if (is_array($listRaw) && $listRaw) {
+                    $list = $listRaw;
                     $main_filepath = null;
                     $status = 'ok';
                     foreach ($list as $file) {
+                        if (!is_array($file)) continue;
+                        $filename = is_string($file['filename'] ?? null) ? (string) $file['filename'] : '';
                         // we search common.lang.php in archive
-                        if (basename((string) $file['filename']) == 'common.lang.php'
+                        if (basename($filename) == 'common.lang.php'
                           and ($main_filepath === null
-                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
-                            $main_filepath = $file['filename'];
+                          or strlen($filename) < strlen($main_filepath))) {
+                            $main_filepath = $filename;
                         }
                     }
 
-                    $logger->debug(__FUNCTION__.', $main_filepath = '.$main_filepath);
+                    $logger->debug(__FUNCTION__.', $main_filepath = '.(string) $main_filepath);
 
                     if (isset($main_filepath)) {
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive
@@ -287,18 +291,20 @@ class Languages
 
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
-                            if (
-                                $result = $zip->extract(
-                                    PCLZIP_OPT_PATH,
-                                    $extract_path,
-                                    PCLZIP_OPT_REMOVE_PATH,
-                                    $root,
-                                    PCLZIP_OPT_REPLACE_NEWER
-                                )
-                            ) {
+                            $resultRaw = $zip->extract(
+                                PCLZIP_OPT_PATH,
+                                $extract_path,
+                                PCLZIP_OPT_REMOVE_PATH,
+                                $root,
+                                PCLZIP_OPT_REPLACE_NEWER
+                            );
+                            if (is_array($resultRaw) && $resultRaw) {
+                                $result = $resultRaw;
                                 foreach ($result as $file) {
-                                    if ($file['stored_filename'] == $main_filepath) {
-                                        $status = $file['status'];
+                                    if (!is_array($file)) continue;
+                                    $storedFilename = is_string($file['stored_filename'] ?? null) ? $file['stored_filename'] : '';
+                                    if ($storedFilename == $main_filepath) {
+                                        $status = is_string($file['status'] ?? null) ? $file['status'] : 'ok';
                                         break;
                                     }
                                 }

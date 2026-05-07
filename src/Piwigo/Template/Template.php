@@ -249,11 +249,15 @@ class Template
     /**
      * Gets the template root directory for this Template object.
      *
-     * @return string|array<string>
+     * @return array<string>|string
      */
     public function getTemplateDir(): string|array
     {
-        return $this->smarty->getTemplateDir();
+        $dirs = $this->smarty->getTemplateDir();
+        if (is_string($dirs)) {
+            return $dirs;
+        }
+        return array_filter($dirs, 'is_string');
     }
 
     /**
@@ -389,11 +393,11 @@ class Template
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
-     * @param string|string[] $varname
+     * @param string $varname
      * @param string $handle
      * @return true
      */
-    public function assignVarFromHandle(string|array $varname, $handle): bool
+    public function assignVarFromHandle(string $varname, $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
         return true;

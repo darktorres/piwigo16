@@ -221,7 +221,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
 
     public static function checkType(mixed &$param, int $type, string $name): ?PwgError
     {
-        $opts = [];
+        $opts = ['options' => []];
         $msg = '';
         if (self::hasFlag($type, WS_TYPE_POSITIVE | WS_TYPE_NOTNULL)) {
             $opts['options']['min_range'] = 1;

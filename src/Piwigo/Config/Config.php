@@ -1272,7 +1272,7 @@ final class Config
         $v = self::src()['nbm_max_treatment_timeout_percent'] ?? 0.8;
         return is_scalar($v) ? (float) $v : 0.8;
     }
-    /** @return array<string,mixed> */
+    /** @return array<mixed> */
     public static function links(): array
     {
         $v = self::src()['links'] ?? [];
@@ -1318,7 +1318,7 @@ final class Config
         }
         return $result;
     }
-    /** @return array<string,mixed> */
+    /** @return array<mixed> */
     public static function filterPages(): array
     {
         $default = [
@@ -1432,7 +1432,7 @@ final class Config
         }
         return array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
-    /** @return array<string,mixed> */
+    /** @return array<mixed> */
     public static function defaultFiltersViews(): array
     {
         $default = [

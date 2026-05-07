@@ -489,7 +489,7 @@ final class GeneralEndpoints
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
         $displayThumbnails = ['no_display_thumbnail' => Lang::t('No display'), 'display_thumbnail_classic' => Lang::t('Classic display'), 'display_thumbnail_hoverbox' => Lang::t('Hoverbox display')];
         $page['errors'] = [];
-        $search         = [];
+        $search         = ['fields' => []];
         if (!empty($param['start'])) {
             ServiceLocator::get(Util::class)->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];

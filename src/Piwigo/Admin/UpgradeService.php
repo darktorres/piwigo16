@@ -21,7 +21,7 @@ final class UpgradeService
     public static function checkUpgrade(): bool
     {
         if (defined('PHPWG_IN_UPGRADE')) {
-            return PHPWG_IN_UPGRADE;
+            return (bool) PHPWG_IN_UPGRADE;
         }
         return false;
     }

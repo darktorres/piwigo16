@@ -33,7 +33,7 @@ final readonly class MetadataService
             return $result;
         }
 
-        if (isset($imginfo['APP13']) && is_string($imginfo['APP13'])) {
+        if (is_array($imginfo) && isset($imginfo['APP13']) && is_string($imginfo['APP13'])) {
             $iptc = iptcparse($imginfo['APP13']);
             if (is_array($iptc)) {
                 $rmap = array_flip($map);

@@ -28,7 +28,8 @@ class PwgTOTP
         $offset = ord(substr($hash, -1)[0]) & 0x0F;
         $part = substr($hash, $offset, 4);
         $unpacked = unpack('N', $part);
-        $number = ($unpacked !== false ? $unpacked[1] : 0) & 0x7FFFFFFF;
+        $rawNum = $unpacked !== false ? $unpacked[1] : 0;
+        $number = (is_int($rawNum) ? $rawNum : 0) & 0x7FFFFFFF;
 
         $code = $number % 1000000; // code 6 digits $number % 10^6
         return str_pad((string)$code, 6, '0', STR_PAD_LEFT); // 123 become 000123

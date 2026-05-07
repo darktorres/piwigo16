@@ -13,7 +13,7 @@ use Piwigo\Html\HtmlService;
  */
 class ScriptLoader
 {
-    /** @var Script[] */
+    /** @var array<string, Script> */
     private array $registered_scripts;
     /** @var string[] */
     public $inline_scripts;

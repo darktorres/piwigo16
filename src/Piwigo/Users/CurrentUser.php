@@ -63,7 +63,7 @@ final class CurrentUser
      * raw-attribute array. Used by NBM begin/end/set helpers that swap the
      * current user wholesale to send mail as different recipients.
      *
-     * @param array<string,mixed> $attrs
+     * @param array<mixed> $attrs
      */
     public static function setRawAttributes(array $attrs): void
     {

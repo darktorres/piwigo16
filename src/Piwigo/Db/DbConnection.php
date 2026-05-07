@@ -28,7 +28,7 @@ final class DbConnection
             return ServiceLocator::get(Connection::class);
         }
         static $conn = null;
-        if ($conn === null) {
+        if (!($conn instanceof Connection)) {
             $conn = self::build();
         }
         return $conn;

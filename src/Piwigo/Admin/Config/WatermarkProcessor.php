@@ -26,6 +26,7 @@ final class WatermarkProcessor
         }
 
         $errors = [];
+        $wmErrors = [];
         /** @var array<string, mixed> $pwatermark */
         $pwatermark = is_array($_POST['w'] ?? null) ? $_POST['w'] : [];
 
@@ -98,17 +99,20 @@ final class WatermarkProcessor
         // step 2 — check validity
         $v = is_numeric($pwatermark['xpos'] ?? null) ? (int) $pwatermark['xpos'] : 0;
         if ($v < 0 || $v > 100) {
-            $errors['watermark']['xpos'] = '[0..100]';
+            $wmErrors['xpos'] = '[0..100]';
         }
 
         $v = is_numeric($pwatermark['ypos'] ?? null) ? (int) $pwatermark['ypos'] : 0;
         if ($v < 0 || $v > 100) {
-            $errors['watermark']['ypos'] = '[0..100]';
+            $wmErrors['ypos'] = '[0..100]';
         }
 
         $v = is_numeric($pwatermark['opacity'] ?? null) ? (int) $pwatermark['opacity'] : 0;
         if ($v <= 0 || $v > 100) {
-            $errors['watermark']['opacity'] = '(0..100]';
+            $wmErrors['opacity'] = '(0..100]';
+        }
+        if (!empty($wmErrors)) {
+            $errors['watermark'] = $wmErrors;
         }
 
         // step 3 — save data

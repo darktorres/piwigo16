@@ -30,21 +30,21 @@ final class StringUtil
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
 
-    /** @param array<string,mixed> $source */
+    /** @param array<mixed> $source */
     public function inputInt(string $key, ?int $default = null, array $source = []): ?int
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (is_numeric($src[$key]) ? (int) $src[$key] : 0) : $default;
     }
 
-    /** @param array<string,mixed> $source */
+    /** @param array<mixed> $source */
     public function inputString(string $key, ?string $default = null, array $source = []): ?string
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? trim(is_scalar($src[$key]) ? (string) $src[$key] : '') : $default;
     }
 
-    /** @param array<string,mixed> $source */
+    /** @param array<mixed> $source */
     public function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
     {
         $src = $source ?: ($_POST + $_GET);
@@ -320,12 +320,8 @@ final class StringUtil
         return $value;
     }
 
-    /**
-     * @param array<string,mixed>|null $imageInfo
-     * @param-out array<string,mixed> $imageInfo
-     * @return array<int|string,mixed>|false
-     */
-    public function pwgSafeGetimagesize(string $filename, ?array &$imageInfo = null): array|false
+    /** @return array<int|string,mixed>|false */
+    public function pwgSafeGetimagesize(string $filename, mixed &$imageInfo = null): array|false
     {
         set_error_handler(static fn (): bool => true);
         try {
@@ -339,7 +335,7 @@ final class StringUtil
         return $result;
     }
 
-    /** @return array<string,mixed>|false */
+    /** @return array<mixed>|false */
     public function pwgSafeExifReadData(string $filename): array|false
     {
         if (!function_exists('exif_read_data')) {
@@ -424,7 +420,7 @@ final class StringUtil
 
     public function safeVersionCompare(mixed $a, mixed $b, mixed $op = null): int|bool
     {
-        $replaceChars = static fn (array $m): string => (string) ord((strtolower((string) ($m[1] ?? ''))[0] ?? '')[0]);
+        $replaceChars = static fn (array $m): string => (string) ord((strtolower(is_scalar($m[1] ?? null) ? (string) $m[1] : '')[0] ?? '')[0]);
         $aStr = is_scalar($a) ? (string) $a : '';
         $bStr = is_scalar($b) ? (string) $b : '';
         $aStr = (string) preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $aStr);

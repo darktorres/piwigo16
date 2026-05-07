@@ -66,61 +66,61 @@ final class Config
         return $out;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function leftMenu(): array
     {
         return self::section('left_menu');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function mainMenu(): array
     {
         return self::section('main_menu');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function rightPanel(): array
     {
         return self::section('right_panel');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function categoryDescription(): array
     {
         return self::section('category_description');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function map(): array
     {
         return self::section('map');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function pin(): array
     {
         return self::section('pin');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function gpx(): array
     {
         return self::section('gpx');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function batch(): array
     {
         return self::section('batch');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     public static function communityBm(): array
     {
         return self::section('community_bm');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<mixed> */
     private static function section(string $name): array
     {
         $section = self::all()[$name] ?? [];

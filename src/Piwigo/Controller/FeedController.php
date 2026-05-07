@@ -128,7 +128,8 @@ final class FeedController implements ControllerInterface
         $fileName = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
         Util::mkgetdir($fileName);
         $fileName .= '/feed.xml';
-        echo $rss->saveFeed('RSS2.0', $fileName, true);
+        $feedOutput = $rss->saveFeed('RSS2.0', $fileName, true);
+        echo is_string($feedOutput) ? $feedOutput : '';
 
         return ResponseFactory::create(200);
     }

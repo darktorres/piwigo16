@@ -248,8 +248,8 @@ final class FileCombiner
      */
     private static function processCssRec(string $css, string $dir, string &$header): string
     {
-        static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
-        static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
+        $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
+        $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];

@@ -380,7 +380,7 @@ final class ImagesEndpoints
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
             }
         }
-        $search = ['mode' => 'AND'];
+        $search = ['mode' => 'AND', 'fields' => []];
         if (isset($params['allwords'])) {
             $search['fields']['allwords'] = [];
             if (!isset($params['allwords_mode'])) {

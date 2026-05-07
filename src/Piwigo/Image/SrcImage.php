@@ -33,7 +33,7 @@ final class SrcImage
     /**
      * @param array $infos assoc array of data from images table
      */
-    /** @param array<string,mixed> $infos */
+    /** @param array<mixed> $infos */
     public function __construct(array $infos)
     {
         $idRaw = $infos['id'] ?? 0;

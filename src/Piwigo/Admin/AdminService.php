@@ -461,7 +461,7 @@ final readonly class AdminService
                 break;
             case 'gd':
                 $gdInfo   = gd_info();
-                $library .= '/' . ($gdInfo['GD Version'] ?? '');
+                $library .= '/' . (is_string($gdInfo['GD Version'] ?? null) ? $gdInfo['GD Version'] : '');
                 break;
         }
         return $library;

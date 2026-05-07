@@ -399,7 +399,7 @@ final class MaintenanceController
                 break;
             case 'gd':
                 $gd_info = gd_info();
-                $tpl->assign('GRAPHICS_LIBRARY', 'GD ' . ($gd_info['GD Version'] ?? ''));
+                $tpl->assign('GRAPHICS_LIBRARY', 'GD ' . (is_string($gd_info['GD Version'] ?? null) ? $gd_info['GD Version'] : ''));
                 break;
         }
 

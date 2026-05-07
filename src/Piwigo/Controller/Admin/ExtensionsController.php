@@ -997,10 +997,8 @@ final class ExtensionsController
         $updates_extension = [];
 
         foreach ($autoupdate->types as $type) {
-            $fs         = 'fs_' . $type;
-            $server     = 'server_' . $type;
-            $server_ext = $autoupdate->$type->$server;
-            $fs_ext     = $autoupdate->$type->$fs;
+            $server_ext = $autoupdate->getServerByType($type);
+            $fs_ext     = $autoupdate->getFsByType($type);
 
             if (empty($server_ext)) {
                 continue;
@@ -1008,25 +1006,32 @@ final class ExtensionsController
             $updates_extension[$type] = [];
 
             foreach ($fs_ext as $ext_id => $fs_ext_item) {
-                if (!isset($fs_ext_item['extension']) || !isset($server_ext[$fs_ext_item['extension']])) {
+                $extKey = is_string($fs_ext_item['extension'] ?? null) ? $fs_ext_item['extension'] : null;
+                if ($extKey === null || !isset($server_ext[$extKey])) {
                     continue;
                 }
-                if ('auto' === $fs_ext_item['version']) {
+                if ('auto' === ($fs_ext_item['version'] ?? '')) {
                     continue;
                 }
 
-                $ext_info = $server_ext[$fs_ext_item['extension']];
+                $ext_info = $server_ext[$extKey];
                 $updates_ignored     = Config::raw('updates_ignored');
                 $updates_ignored_arr = is_array($updates_ignored) ? $updates_ignored : [];
                 $updates_ignored_for_type = is_array($updates_ignored_arr[$type] ?? null) ? $updates_ignored_arr[$type] : [];
 
-                if (!ServiceLocator::get(StringUtil::class)->safeVersionCompare($fs_ext_item['version'], $ext_info['revision_name'], '>=')) {
+                $extVersion = is_scalar($fs_ext_item['version'] ?? null) ? (string) $fs_ext_item['version'] : '';
+                $revName = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
+                if (!ServiceLocator::get(StringUtil::class)->safeVersionCompare($extVersion, $revName, '>=')) {
+                    $extId = is_scalar($ext_info['extension_id'] ?? null) ? $ext_info['extension_id'] : '';
+                    $revId = is_scalar($ext_info['revision_id'] ?? null) ? $ext_info['revision_id'] : '';
+                    $revDesc = is_scalar($ext_info['revision_description'] ?? null) ? (string) $ext_info['revision_description'] : '';
+                    $dlUrl = is_scalar($ext_info['download_url'] ?? null) ? (string) $ext_info['download_url'] : '';
                     array_push($updates_extension[$type], [
-                        'ID' => $ext_info['extension_id'], 'REVISION_ID' => $ext_info['revision_id'], 'EXT_ID' => $ext_id, 'EXT_NAME' => $fs_ext_item['name'],
-                        'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $ext_info['extension_id'] . '#changelog',
-                        'REV_DESC' => trim((string) $ext_info['revision_description'], " \n\r"),
-                        'CURRENT_VERSION' => $fs_ext_item['version'], 'NEW_VERSION' => $ext_info['revision_name'],
-                        'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
+                        'ID' => $extId, 'REVISION_ID' => $revId, 'EXT_ID' => $ext_id, 'EXT_NAME' => is_scalar($fs_ext_item['name'] ?? null) ? $fs_ext_item['name'] : '',
+                        'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . (string) $extId . '#changelog',
+                        'REV_DESC' => trim($revDesc, " \n\r"),
+                        'CURRENT_VERSION' => $extVersion, 'NEW_VERSION' => $revName,
+                        'URL_DOWNLOAD' => $dlUrl . '&amp;origin=piwigo_download',
                         'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
                     ]);
                 }

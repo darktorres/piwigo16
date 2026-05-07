@@ -30,7 +30,8 @@ final readonly class SpecBuilder
 
     public function build(): OpenApiDocument
     {
-        $version = defined('PHPWG_VERSION') ? (string) constant('PHPWG_VERSION') : '16.x';
+        $versionRaw = defined('PHPWG_VERSION') ? constant('PHPWG_VERSION') : '16.x';
+        $version = is_scalar($versionRaw) ? (string) $versionRaw : '16.x';
         $defs    = $this->server->getMethodDefs();
 
         $paths = [];

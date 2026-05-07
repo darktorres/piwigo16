@@ -114,7 +114,7 @@ final readonly class TagAdminService
                 $extraClauses = EventDispatcher::dispatch('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
                     $existing = array_column(DbConnection::get()->executeQuery(
-                        'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(strval(...), $extraClauses))
+                        'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $extraClauses))
                     )->fetchAllAssociative(), 'id');
                 }
                 if (count($existing) === 0) {
@@ -227,7 +227,7 @@ final readonly class TagAdminService
             $taglist[] = ['name' => $name, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
             if (!$onlyUserLanguage) {
                 $altNames = EventDispatcher::dispatch('get_tag_alt_names', [], $rawName);
-                foreach (array_diff(array_unique($altNames), [$name]) as $alt) {
+                foreach (array_diff(array_unique(array_filter($altNames, 'is_string')), [$name]) as $alt) {
                     $altlist[] = ['name' => $alt, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
                 }
             }

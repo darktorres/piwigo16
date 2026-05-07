@@ -14,8 +14,8 @@ namespace Piwigo\Users;
 final class User
 {
     /**
-     * @param array<string,mixed> $internalStatus
-     * @param array<string,mixed> $rawAttributes   Full original $user array, for legacy reads.
+     * @param array<mixed> $internalStatus
+     * @param array<mixed> $rawAttributes   Full original $user array, for legacy reads.
      */
     public function __construct(
         public readonly int $id,
@@ -30,7 +30,7 @@ final class User
     ) {
     }
 
-    /** @param array<string,mixed> $row */
+    /** @param array<mixed> $row */
     public static function fromUserArray(array $row): self
     {
         $id = $row['id'] ?? 0;

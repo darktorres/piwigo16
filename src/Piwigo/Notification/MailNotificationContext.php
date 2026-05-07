@@ -26,7 +26,7 @@ final class MailNotificationContext
     public bool $isSendmailTimeout = false;
 
     // Set during begin_users_env_nbm
-    /** @var array<string, mixed> */
+    /** @var array<mixed> */
     public array $saveUser = [];
     public bool $isToSendMail = false;
     public string $emailFormat = '';

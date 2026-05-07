@@ -11,13 +11,13 @@ Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 |---|---|---|---|
 | `functions.inc.php` | 207 | ~190 | ~17 pre-boot standalones |
 | `functions_user.inc.php` | 60 | 60 | 0 — all pure ServiceLocator delegates |
-| `functions_url.inc.php` | 21 | 18 | 3 (`get_root_url`, `get_absolute_root_url`, `embellish_url` — own implementations) |
-| `functions_plugins.inc.php` | 12 | ~6 | 6 (event system + factories) |
+| `functions_url.inc.php` | 21 | 17 | 4 (`get_root_url`, `get_absolute_root_url`, `embellish_url` — own implementations; `url_is_remote` — has pre-boot fallback) |
+| `functions_plugins.inc.php` | 12 | 4 | 8 (4 EventDispatcher calls, 2 LoadedPluginRegistry calls, 2 factory helpers — all pre-boot or NoDynamicNew) |
 | `functions_cookie.inc.php` | 3 | 2 | 1 pre-boot (`cookie_path`) |
 | `image_derivative_functions.php` | 7 | 0 | 7 (fast-path) |
 | `derivative_params.inc.php` | 5 | 0 | 5 (URL helpers) |
 | `common.inc.php` | 1 | 0 | 1 pre-boot |
-| **Total** | **316** | **~276** | **~40** |
+| **Total** | **316** | **~273** | **~43** |
 
 **Completed phases:**
 - ✅ **Phase A** — `include/ws_functions/` (98 functions, 9 files) deleted
@@ -36,8 +36,8 @@ Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 |---|---|---|---|
 | `functions.inc.php` | 207 | Mixed — see below | Largest file; ~169 one-line delegates, ~38 real-logic standalones |
 | `functions_user.inc.php` | 60 | One-line delegates | All 60 call `AuthService` / `UserService` / `PermissionService` / `PreferencesService` — zero real logic |
-| `functions_url.inc.php` | 21 | Mixed | 18 `UrlService` delegates; `get_root_url`, `get_absolute_root_url`, `embellish_url` have own implementations; `get_user_favorites()` is misplaced (belongs in `functions_user`) |
-| `functions_plugins.inc.php` | 12 | Mixed | 4 event-system core (`add/remove_event_handler`, `trigger_change/notify` — permanent); 6 `PluginService` delegates; 2 factory helpers (`instantiate_*_maintain` — permanent) |
+| `functions_url.inc.php` | 21 | Mixed | 17 `UrlService` delegates; `get_root_url`, `get_absolute_root_url`, `embellish_url`, `url_is_remote` have own implementations (3 pre-boot standalone, 1 with pre-boot fallback); `get_user_favorites()` is misplaced (belongs in `functions_user`) |
+| `functions_plugins.inc.php` | 12 | Mixed | 4 `PluginService` delegates (`get_db_plugins`, `load_plugin`, `autoupdate_plugin`, `load_plugins`); 4 pre-boot `EventDispatcher`/`LoadedPluginRegistry` direct calls (permanent); 2 factory helpers (permanent) |
 | `functions_cookie.inc.php` | 3 | Mixed | `cookie_path()` is pre-boot permanent; `pwg_set/get_cookie_var` delegate to `CookieService` |
 | `derivative_params.inc.php` | 5 | 🔒 Permanent | Low-level URL helpers (`derivative_to_url`, `size_to_url`, `size_equals`, `char_to_fraction`, `fraction_to_char`) — no service boundary benefit |
 | `image_derivative_functions.php` | 7 | Mostly permanent | Fast-path helpers for `index.php?/i/` bypass: `ierror`, `time_step`, `url_to_size`, `parse_custom_params`, `parse_request`, `try_switch_source`, `send_derivative` |
@@ -100,7 +100,7 @@ These **cannot** be deleted yet because they are called before `Kernel::boot()` 
 
 ## Deletion plan
 
-### Phase C — `include/functions_*.inc.php` delegates (~276 deletable)
+### Phase C — `include/functions_*.inc.php` delegates (~273 deletable)
 
 Call sites in `src/` already use typed services. Call sites in `include/` still use free functions. The last step is sweeping the remaining callers in `include/` itself.
 

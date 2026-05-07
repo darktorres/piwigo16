@@ -11,7 +11,7 @@ namespace Piwigo\Page\Context;
  * typed properties (e.g. AlbumAdminContext, UserAdminContext) once #23
  * admin template waves begin.
  *
- * Consumed by #23 Wave 1 Latte templates (themes/admin/default/template/).
+ * Consumed by #23 Wave 1 Latte templates (themes/admin/_base/template/).
  */
 readonly class AdminPageContext
 {

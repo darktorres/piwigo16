@@ -20,7 +20,7 @@ declare global {
     function pwgAddEventListener(elem: Element | Window, evt: string, fn: EventListener): void;
     function popuphelp(url: string): void;
 
-    // ── From themes/admin/default/js/common.ts ───────────────────────────────
+    // ── From themes/admin/_base/js/common.ts ───────────────────────────────
     function array_delete<T>(arr: T[], item: T): void;
     function str_repeat(s: string, n: number): string;
     function getRandomInt(min: number, max: number): number;

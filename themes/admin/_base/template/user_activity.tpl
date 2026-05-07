@@ -1,0 +1,190 @@
+{include file='include/colorbox.inc.tpl'}
+{combine_script id='common' load='footer' path='themes/admin/_base/js/common.js'}
+
+{combine_css path="themes/admin/_base/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-user-activity-data" type="application/json">{$user_activity_page_data_json}</script>
+
+{combine_script id='user_activity' load='async' path='themes/admin/_base/js/user_activity.js'}
+<div class="container"> 
+    <div>
+        <div class="activity-header">
+            <div class="user_activity_end_options">
+                <a class="download_csv tiptip" title="{'Download all activities'|translate}" href="{$ADMIN_URL}&amp;page=user_activity&amp;type=download_logs">
+                    <i class="icon-download"> </i>
+                </a>
+                <div id="activityMoreFilters" class="activity-more-filters">
+                    <span class="icon-filter"></span>{'Filters'|@translate}
+                </div>
+            </div>
+        </div>
+        <div id="activityMoreFiltersContent" class="activity-more-filters-content">
+            <div class="activity-select">
+                <span class="activity-select"> {'User'|translate} </span>
+            
+                <select class="user-selecter" placeholder="---" single>
+                    <option value="none">
+                        <span class='username_filter'>---</span>
+                    </option>
+                    {foreach from=$ulist item=user}
+                        <option value="{$user.id}">
+                            <span class='username_filter'>{$user.username}</span>
+                            <span class='nb_lines_str'>
+                                {'(%d)'|translate:$user.nb_lines}
+                            </span>
+                        </option>
+                    {/foreach}
+                </select>
+            </div>
+
+            <div class="activity-select">
+                <span class="activity-select"> {'Action'|translate} </span>
+            
+                <select class="action-selecter" placeholder="---" single>
+                    <option value="none">
+                        <span class='action_filter'>---</span>
+                    </option>
+                    {foreach from=$ACTIONS item=action}
+                        <option value="{$action.value}">
+                            <span class='action_filter'>
+                                {ucfirst($action.object)|translate}
+                                /
+                                {if $action.action == 'delete'}
+                                    {'deletion'|translate : $action.object}
+                                {else}
+                                    {$action.action|translate}
+                                {/if}
+                                {' (%d)'|translate : $action.counter}
+                            </span>
+                        </option>
+                    {/foreach}
+                </select>
+            </div>
+            
+            <div class="activity-select">
+                <span class="activity-select">{'Start-Date'|translate}</span>
+                <input 
+                    class="activity-date-selecter"
+                    type="date"
+                    id="date_min_activity"
+                    value="{$ACTIVITY_DATES.min}"
+                    min="{$ACTIVITY_DATES.min}"
+                    max="{$ACTIVITY_DATES.max}"
+                />
+            </div>
+
+            <div class="activity-select">
+                <span class="activity-select">{'End-Date'|translate}</span>
+                <input 
+                    class="activity-date-selecter"
+                    type="date"
+                    id="date_max_activity"
+                    value="{$ACTIVITY_DATES.max}"
+                    min="{$ACTIVITY_DATES.min}"
+                    max="{$ACTIVITY_DATES.max}"
+                />
+            </div>
+
+            {if $ADDITIONAL_FILT.type}
+            <div class="additional-filters-section">
+                <div class="additional-filters-info">
+                    {'Additional filters'|translate}
+                </div>
+                <div class="additional-filters">
+                    <div class="activity-filter-container">
+                    {if $ADDITIONAL_FILT.type == 'photo'}
+                        <span class="icon-picture">{$ADDITIONAL_FILT.name}</span>
+                    {else if $ADDITIONAL_FILT.type == 'album'}
+                        <span class="icon-folder-open">{$ADDITIONAL_FILT.name}</span>
+                    {else}
+                        <span class="icon-group">{$ADDITIONAL_FILT.name}</span>
+                    {/if}
+                    </div>
+                </div>
+            </div>
+            {/if}
+        </div>
+    </div>
+
+  <div class="pagination-container">
+      <div class="pagination-arrow left">
+        <span class="icon-left-open"></span>
+      </div>
+      <div class="pagination-item-container">
+      </div>
+      <div class="user-update-spinner icon-spin6 animate-spin"></div>
+      <div class="pagination-arrow rigth">
+        <span class="icon-left-open"></span>
+      </div>
+    </div>
+
+    <div class="activity-noresult">
+        {'No results'|translate}
+    </div>
+
+    
+
+    <div class="tab-title">
+        <div class="action-title">
+            {'Action'|translate}
+        </div>
+
+        <div class="date-title">
+            {'Date'|translate}
+        </div>
+
+        <div class="user-title">
+            {'User'|translate}
+        </div>
+
+        <div class="detail-title">
+            {'Details'|translate}
+        </div>
+    </div>
+
+
+    <div class="tab">
+    <div class="loading"> 
+        <span class="icon-spin6 animate-spin"> </span>
+    </div>
+        <div class="line hide" id="-1">
+            <div class="action-section">
+                <div class="action-type">
+                    <span class="action-icon"></span>
+                    <span class="action-name"> Edit </span>
+                </div>
+                <div class="action-infos">
+                    <span class="action-infos-test"> T </span>
+                </div>
+            </div>
+
+            <div class="date-section">
+                <span class="icon-clock"> </span>
+                <span class="date-day">1 Janvier 1970</span>
+                <span class="date-hour">a 00:00</span>
+            </div> 
+
+            <div class="user-section">
+                <div class="user-pic">
+                </div>
+                <div class="user-name">
+                    Username
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-item detail-item-1">
+                    detail 1
+                </div>
+                <div class=" detail-item detail-item-2">
+                    detail 2
+                </div>
+                <div class="detail-item detail-item-3">
+                    detail 3
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{combine_css path="themes/admin/_base/css/pages/user-activity.css"}

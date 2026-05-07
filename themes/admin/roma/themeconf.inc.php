@@ -3,6 +3,6 @@
 declare(strict_types=1);
 $themeconf = [
   'name'  => 'roma',
-  'parent' => 'default',
+  'parent' => '_base',
   'colorscheme' => 'dark',
 ];

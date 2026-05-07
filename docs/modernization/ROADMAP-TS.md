@@ -42,10 +42,10 @@ Reduce `any` escapes in authored TypeScript from the current **479** to **≤250
 
 ### Current state
 
-- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `themes/admin/default/js/` (24 files) + 39 in `themes/default/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
+- **479** `: any` / `as any` / `(window as any)` patterns: 440 in `themes/admin/_base/js/` (24 files) + 39 in `themes/default/js/` (6 files). Slight increase from the original 468 baseline (drift since the roadmap was first written).
 - ESLint `@typescript-eslint/no-explicit-any` is set to `error` in `eslint.config.ts`, so each occurrence is a lint error today. Only one file has an `eslint-disable` for this rule (`group_list.ts`); the rest cause `npm run lint` to fail. Closing this item is what unlocks a clean lint baseline.
 - Largest concentrations: `tags.ts` (80), `user_list.ts` (58), `albums.ts` (52), `group_list.ts` (45), `album_selector.ts` (35), `batchManagerUnit.ts` (31), `batchManagerGlobal.ts` (27).
-- No `themes/default/js/types/` or `themes/admin/default/js/types/` declaration directory exists yet — Tier 1 hasn't started.
+- No `themes/default/js/types/` or `themes/admin/_base/js/types/` declaration directory exists yet — Tier 1 hasn't started.
 
 ### Approach
 
@@ -87,7 +87,7 @@ const pluginSave = (window as Record<string, unknown>)[pluginId + '_save'] as
 ### Verification
 
 ```bash
-grep -rn ": any\b\|as any\b\|(window as any)" themes/admin/default/js/ themes/default/js/ --include="*.ts" | wc -l
+grep -rn ": any\b\|as any\b\|(window as any)" themes/admin/_base/js/ themes/default/js/ --include="*.ts" | wc -l
 # current: 479 — target: ≤ 250
 npm run typecheck   # still zero errors
 npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
@@ -103,22 +103,22 @@ npm run lint        # eventually exits 0 once `no-explicit-any` is satisfied
 
 All `window.foo = value` data-bridge assignments in Smarty `{footer_script}` blocks are gone. The four clusters listed below (and all smaller satellite cases) migrated to `<script type="application/json" id="pwg-<page>-data">` page-data blocks consumed by `getPageData<T>()`, or to `data-*` attributes on triggering elements consumed via `dataset` in the corresponding `.ts`.
 
-The work expanded beyond the original 20 assignments: `{footer_script}` blocks themselves were eliminated codebase-wide as part of `PLAN-inline-assets-extraction.md` (Phases 2-4). Final count: **0 `{footer_script}` blocks** and **0 inline-JS event-handler attributes** across `themes/admin/default/`, `themes/default/`, `themes/standard_pages/`.
+The work expanded beyond the original 20 assignments: `{footer_script}` blocks themselves were eliminated codebase-wide as part of `PLAN-inline-assets-extraction.md` (Phases 2-4). Final count: **0 `{footer_script}` blocks** and **0 inline-JS event-handler attributes** across `themes/admin/_base/`, `themes/default/`, `themes/standard_pages/`.
 
 ### Verification
 
 ```bash
-grep -rn "^window\." themes/admin/default/template/ --include="*.tpl" \
+grep -rn "^window\." themes/admin/_base/template/ --include="*.tpl" \
   | grep -v "window\.location\|window\.open\|window\.confirm"
 # returns empty ✓
 
-grep -rn "{footer_script}" themes/admin/default/template/ themes/default/template/ themes/standard_pages/template/ --include="*.tpl"
+grep -rn "{footer_script}" themes/admin/_base/template/ themes/default/template/ themes/standard_pages/template/ --include="*.tpl"
 # returns empty ✓
 ```
 
 ### Original plan (historical)
 
-Initial inventory: **20 remaining assignments** in `themes/admin/default/template/` (0 in `themes/default/template/`). Key clusters:
+Initial inventory: **20 remaining assignments** in `themes/admin/_base/template/` (0 in `themes/default/template/`). Key clusters:
 
 | Template                   | Globals                                                                                         | Migration                     |
 | -------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------- |
@@ -161,12 +161,12 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
    export default defineConfig({
      test: {
        environment: 'node',
-       include: ['themes/default/js/**/*.test.ts', 'themes/admin/default/js/**/*.test.ts'],
+       include: ['themes/default/js/**/*.test.ts', 'themes/admin/_base/js/**/*.test.ts'],
        environmentMatchGlobs: [['**/*.dom.test.ts', 'happy-dom']],
        coverage: {
          provider: 'v8',
          reporter: ['text', 'html'],
-         include: ['themes/default/js/**/*.ts', 'themes/admin/default/js/**/*.ts'],
+         include: ['themes/default/js/**/*.ts', 'themes/admin/_base/js/**/*.ts'],
          exclude: ['**/*.test.ts', '**/types/*.d.ts', '**/plugins/**'],
          thresholds: { lines: 50, functions: 50, branches: 40 },
        },
@@ -286,14 +286,14 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 | Leaflet                      | `plugins/piwigo-openstreetmap/leaflet/leaflet.js`                                                                                                      |                **0.7.7** (2015) |     ~135 KB | `leaflet` (1.9+)                                                                                                                                          |
 | Leaflet plugins (×8)         | `plugins/piwigo-openstreetmap/leaflet/*` (MarkerCluster, Search, Elevation, MiniMap, contextmenu, providers, EditInOSM, omnivore, jcarousel, qleaflet) |                     all 0.7-era |     ~500 KB | `leaflet.markercluster`, `leaflet-search`, `leaflet.contextmenu`, `leaflet-providers`, `leaflet.elevation`, `leaflet-control-minimap`, `leaflet-omnivore` |
 | CodeMirror                   | `plugins/LocalFilesEditor/codemirror/`                                                                                                                 |                  ~v2 (1915 LOC) |      ~70 KB | `codemirror` (v6 — full rewrite; `codemirror@5` for low-risk path)                                                                                        |
-| Open Sans webfont            | `themes/admin/default/fonts/open-sans/`                                                                                                                |        locally generated subset |     ~250 KB | `@fontsource/open-sans`                                                                                                                                   |
+| Open Sans webfont            | `themes/admin/_base/fonts/open-sans/`                                                                                                                |        locally generated subset |     ~250 KB | `@fontsource/open-sans`                                                                                                                                   |
 | Open Sans variable font      | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf`                                                                                      |               Google Fonts dump |     ~340 KB | `@fontsource-variable/open-sans`                                                                                                                          |
 | jQuery tablesorter           | `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`                                                                                               |                         ancient |      ~15 KB | `tablesorter`                                                                                                                                             |
 | jquery.addtags (token-input) | `plugins/user_tags/js/jquery.addtags.js`                                                                                                               |               packed/obfuscated |       ~3 KB | replace with `tom-select` (already a Piwigo dep) — drops the jQuery dependency                                                                            |
 
 **Stays as static asset (cannot move to npm):**
 
-- Fontello custom-glyph subsets in `themes/admin/default/fontello/`, `themes/default/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`. These are project-specific glyph builds from fontello.com, not packageable.
+- Fontello custom-glyph subsets in `themes/admin/_base/fontello/`, `themes/default/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`. These are project-specific glyph builds from fontello.com, not packageable.
 - Bundled themes (`themes/elegant`, `themes/modus`, `themes/smartpocket`, `themes/bootstrap_darkroom`) — themes, not libs; out of 16.x core scope per ROADMAP-CSS.
 - `themes/default/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no maintenance burden.
 
@@ -303,14 +303,14 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 
 **Tier 1 — Quick wins (S, ≤1 day each).**
 
-1. `@fontsource/open-sans` replaces `themes/admin/default/fonts/open-sans/`. Vite serves the WOFF2/CSS via npm; delete the in-repo dir.
+1. `@fontsource/open-sans` replaces `themes/admin/_base/fonts/open-sans/`. Vite serves the WOFF2/CSS via npm; delete the in-repo dir.
 2. `@fontsource-variable/open-sans` replaces `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf`.
 3. `tablesorter` replaces `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`.
 4. **`tom-select` swap for `user_tags/jquery.addtags.js`** — already a Piwigo dep; deletes the jQuery dependency for that plugin entirely. Convert `init.php`/templates to load the Piwigo-shared tom-select bundle.
 
 **Tier 2 — Stylelint / ESLint scope cleanup (XS, parallel to Tier 1). ✅ Done.**
 
-`.stylelintrc.json` already ignores `plugins/**`, `themes/admin/default/fonts/**`, `themes/default/vendor/fontello/**`, and `themes/default/js/plugins/**`, which subsumes the originally-listed vendor paths (videojs / leaflet / codemirror / open-sans). `eslint.config.ts` likewise ignores `plugins/**`, `themes/default/js/plugins/selectize.*`, the bundled themes, and the PHP vendor paths. No further config additions are needed for this tier; when Tier 3/4/5 delete the vendor dirs the ignores can stay (they still cover Piwigo plugin code) or be narrowed.
+`.stylelintrc.json` already ignores `plugins/**`, `themes/admin/_base/fonts/**`, `themes/default/vendor/fontello/**`, and `themes/default/js/plugins/**`, which subsumes the originally-listed vendor paths (videojs / leaflet / codemirror / open-sans). `eslint.config.ts` likewise ignores `plugins/**`, `themes/default/js/plugins/selectize.*`, the bundled themes, and the PHP vendor paths. No further config additions are needed for this tier; when Tier 3/4/5 delete the vendor dirs the ignores can stay (they still cover Piwigo plugin code) or be narrowed.
 
 **Tier 3 — video.js consolidation (M).**
 
@@ -343,7 +343,7 @@ After each tier:
 git ls-files plugins/piwigo-videojs/video-js-{4,5}/        # empty (after Tier 3)
 git ls-files plugins/piwigo-openstreetmap/leaflet/         # contains only Piwigo-authored glue (after Tier 4)
 git ls-files plugins/LocalFilesEditor/codemirror/          # empty (after Tier 5)
-git ls-files themes/admin/default/fonts/open-sans/         # empty (after Tier 1.1)
+git ls-files themes/admin/_base/fonts/open-sans/         # empty (after Tier 1.1)
 
 # Dependencies show up where they belong
 jq '.dependencies' package.json | grep -E "video.js|leaflet|codemirror|@fontsource"

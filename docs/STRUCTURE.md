@@ -217,7 +217,7 @@ js/*.ts                 TypeScript entries: toaster_js, standard_pages_js, stand
 template/               Login, register, password, profile templates
 ```
 
-### `themes/admin/default/` — admin theme
+### `themes/admin/_base/` — admin theme
 
 ```
 css/                    Admin SCSS

@@ -17,7 +17,7 @@
     "types": ["node"]
   },
   "include": [
-    "admin/themes/default/js/**/*.ts",
+    "themes/admin/default/js/**/*.ts",
     "themes/default/js/**/*.ts",
     "themes/standard_pages/js/**/*.ts",
     "src/types/**/*",

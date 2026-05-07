@@ -99,7 +99,7 @@ final class UpgradeController implements ControllerInterface
 
         define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
-        $tpl = new Template(PHPWG_ROOT_PATH . 'admin/themes', 'roma');
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'roma');
         TemplateRegistry::set($tpl);
         $tpl->set_filenames(['upgrade' => 'upgrade.tpl']);
         $tpl->assign([

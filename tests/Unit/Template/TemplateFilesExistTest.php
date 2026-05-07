@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  * set_filenames() calls inside src/ actually exists on disk.
  *
  * Template search path mirrors Template::set_theme():
- *   admin pages  → admin/themes/default/template/
+ *   admin pages  → themes/admin/default/template/
  *   public pages → themes/default/template/   (including subdirectories)
  *   mail         → themes/default/template/mail/
  */
@@ -30,7 +30,7 @@ final class TemplateFilesExistTest extends TestCase
         self::$root = dirname(__DIR__, 3);
 
         self::$searchDirs = [
-            self::$root . '/admin/themes/default/template',
+            self::$root . '/themes/admin/default/template',
             self::$root . '/themes/default/template',
             self::$root . '/themes/standard_pages/template',
         ];

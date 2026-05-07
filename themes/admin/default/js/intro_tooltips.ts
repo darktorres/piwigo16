@@ -88,7 +88,7 @@ if (dashboard.newsletter) {
         `
   <div class="promote-newsletter">
     <div class="promote-content">
-      <img class="promote-image" src="admin/themes/default/images/promote-newsletter.png">
+      <img class="promote-image" src="themes/admin/default/images/promote-newsletter.png">
       <div class="promote-newsletter-content">
         <span class="promote-newsletter-title">${nl.str_subscribe_title}</span>
         <div class="promote-content subscribe-newsletter">

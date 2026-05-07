@@ -198,7 +198,7 @@ Procedural PHP included by `common.inc.php`. **Not namespaced, not Rector-proces
 
 ---
 
-## `admin/themes/` and `themes/` — presentation layer
+## `themes/admin/` and `themes/` — presentation layer
 
 ### `themes/default/` — gallery theme
 
@@ -217,7 +217,7 @@ js/*.ts                 TypeScript entries: toaster_js, standard_pages_js, stand
 template/               Login, register, password, profile templates
 ```
 
-### `admin/themes/default/` — admin theme
+### `themes/admin/default/` — admin theme
 
 ```
 css/                    Admin SCSS
@@ -226,7 +226,7 @@ template/               Admin Smarty templates (one per admin page)
 fontello/               Admin icon font
 ```
 
-### `admin/themes/clear/` and `admin/themes/roma/`
+### `themes/admin/clear/` and `themes/admin/roma/`
 
 Alternate admin skins (CSS + icon overrides only).
 

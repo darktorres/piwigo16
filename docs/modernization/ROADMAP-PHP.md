@@ -1813,7 +1813,7 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
 ### Current state
 
 - **`smarty/smarty: ^5.0`** in `composer.json`.
-- **169 `.tpl` files**: `admin/themes/default/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
+- **169 `.tpl` files**: `themes/admin/default/template/` 69, `themes/default/template/` 55, plugins 31, `themes/standard_pages/` 7, plus a handful in includes/standard_pages skins. Zero `.latte` files yet.
 - **`src/Piwigo/Template/Template.php`** wraps Smarty and registers ~30+ custom plugins:
   - **Modifiers:** `translate`, `translate_dec`, `sprintf`, `urlencode`, `intval`, `file_exists`, `constant`, `json_encode`, `json_decode`, `htmlspecialchars`, `implode`, `stripslashes`, `in_array`, `ucfirst`, `strstr`, `stristr`, `trim`, `md5`, `strtolower`, `str_ireplace`, `explode`, `ternary`, `get_extent`, `url_is_remote`, `is_null`, `l10n`, `str_replace`, `is_admin`, `is_classic_user`, `get_device`, `is_file`.
   - **Functions:** `combine_script`, `get_combined_scripts`, `combine_css`, `define_derivative`.
@@ -1847,7 +1847,7 @@ Migrate every template from Smarty 5 to [Nette Latte](https://latte.nette.org). 
 
 5. **Convert templates in waves.** Order risk-low → risk-high:
    - **Wave 0 — extract layout partials from `include/`.** Ten files in `include/` are pure-rendering procedural scripts that are `include`d for their output (`page_header.php`, `page_tail.php`, `picture_comment.inc.php`, `picture_metadata.inc.php`, `picture_rate.inc.php`, `no_photo_yet.inc.php`, `search_filters.inc.php`, `selected_tags.inc.php`, `category_cats.inc.php`, `category_default.inc.php`). Each becomes a `.latte` partial under `themes/default/template/_partials/`, declared `{templateType}` against the relevant Page Context DTO from item #22 step 5c. New `Piwigo\Page\PageRenderer` exposes `renderHeader(HeaderContext)` / `renderTail(TailContext)` / `renderPartial(string $name, object $ctx)` so callers stop `include`-ing PHP files. This wave unblocks the remaining `global $template, $user, $page, $lang;` declarations in those files and is a hard prerequisite for the controllers in item #22.
-   - **Wave 1 — admin templates** (lowest risk, 69 files in `admin/themes/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
+   - **Wave 1 — admin templates** (lowest risk, 69 files in `themes/admin/default/template/`). Each `.tpl` → `.latte`. Smarty syntax → Latte syntax. Run the page in the browser after each conversion.
    - **Wave 2 — public theme `default`** (55 files in `themes/default/template/`).
    - **Wave 3 — public theme `standard_pages`** (7 files) and email templates.
    - **Wave 4 — plugin templates** (31 files across 5 bundled plugins). Each plugin gets its own commit.
@@ -2124,7 +2124,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 
 - **`themes/<id>/themeconf.inc.php`** is the only required file. It declares `$themeconf = ['name' => …, 'parent' => …, 'icon_dir' => …, 'img_dir' => …, 'load_parent_css' => …, 'local_head' => …]` and may also run arbitrary code (template assigns, event-handler registrations, config reads). Example: `themes/standard_pages/themeconf.inc.php` calls `$this->assign(...)` and `conf_get_param(...)` directly at file load.
 - **2 frontend themes** bundled: `themes/default`, `themes/standard_pages` (the latter inherits from `default`).
-- **3 admin themes** bundled: `admin/themes/default`, `admin/themes/clear`, `admin/themes/roma` (clear and roma inherit from default).
+- **3 admin themes** bundled: `themes/admin/default`, `themes/admin/clear`, `themes/admin/roma` (clear and roma inherit from default).
 - **`src/Piwigo/Admin/ThemeMaintain`** is the only typed part of the theme API today.
 - **3rd-party themes** rely on `themeconf.inc.php` being `include`'d at load time; breaking that shatters the ecosystem.
 - **Inheritance** is resolved at load time by walking the `parent` chain and merging `$themeconf` arrays.
@@ -2184,11 +2184,11 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 
 6. **Legacy `themeconf.inc.php` shim.** For themes that haven't migrated, the registry detects a missing `theme.json`, falls back to including `themeconf.inc.php`, and synthesizes a `LegacyTheme` instance from the resulting `$themeconf` array. The synthesized instance routes any registered legacy event handlers through the Phase 1 bridge.
 
-7. **Admin theme support.** Admin themes (`admin/themes/<id>/`) follow the same contract. The "Themes" admin page reads `theme.json` and walks the registry instead of grepping `themeconf.inc.php` headers.
+7. **Admin theme support.** Admin themes (`themes/admin/<id>/`) follow the same contract. The "Themes" admin page reads `theme.json` and walks the registry instead of grepping `themeconf.inc.php` headers.
 
 8. **Migrate the 5 bundled themes.** One theme per PR:
    - Add `theme.json`.
-   - Add `Theme` class under `themes/<id>/src/` (or `admin/themes/<id>/src/`).
+   - Add `Theme` class under `themes/<id>/src/` (or `themes/admin/<id>/src/`).
    - Move `themeconf.inc.php` side-effects into `boot()`.
    - Convert `ThemeMaintain` callers to the new lifecycle methods.
    - Convert templates to Latte (item #23).
@@ -2204,7 +2204,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 
 ```bash
 # All bundled themes have manifests:
-for t in themes/*/ admin/themes/*/; do
+for t in themes/*/ themes/admin/*/; do
   test -f "$t/theme.json" || echo "MISSING: $t"
 done
 

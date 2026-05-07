@@ -277,7 +277,7 @@ if (is_array($notify_exp)) {
 // template instance
 if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {// Admin template
     $admin_theme_raw = userprefs_get_param('admin_theme', 'roma');
-    $template = new Template(PHPWG_ROOT_PATH.'admin/themes', is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'roma');
+    $template = new Template(PHPWG_ROOT_PATH.'themes/admin', is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'roma');
 } else { // Classic template
     $user_arr_theme = $GLOBALS['user'];
     $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';

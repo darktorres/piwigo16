@@ -86,7 +86,7 @@ final class ScriptLoaderTest extends TestCase
         ]);
 
         $loader = new ScriptLoader();
-        $loader->add('common', 1, [], 'admin/themes/default/js/common.js');
+        $loader->add('common', 1, [], 'themes/admin/default/js/common.js');
         $scripts = $this->getRegisteredScripts($loader);
         self::assertArrayHasKey('common', $scripts);
         self::assertSame('dist/assets/common-XYZ789.js', $scripts['common']->path);
@@ -99,7 +99,7 @@ final class ScriptLoaderTest extends TestCase
         ]);
 
         $loader = new ScriptLoader();
-        $loader->add('common', 1, ['jquery', 'jquery.ui'], 'admin/themes/default/js/common.js');
+        $loader->add('common', 1, ['jquery', 'jquery.ui'], 'themes/admin/default/js/common.js');
         $scripts = $this->getRegisteredScripts($loader);
         // Manifest resolves the dist path, but the caller-supplied require list is
         // preserved — legacy plugins and other Vite entries are not encoded as

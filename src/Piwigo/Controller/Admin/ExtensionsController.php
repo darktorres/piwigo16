@@ -639,7 +639,7 @@ final class ExtensionsController
         }
 
         $adminTheme = userprefs_get_param('admin_theme', 'roma');
-        $tpl->assign('default_screenshot', get_root_url() . 'admin/themes/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'roma') . '/images/missing_screenshot.png');
+        $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'roma') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

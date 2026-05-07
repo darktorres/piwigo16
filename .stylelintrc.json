@@ -38,7 +38,7 @@
     "plugins/piwigo-openstreetmap/fontello/**",
     "plugins/piwigo-videojs/video-js-*/**",
     "themes/default/vendor/fontello/**",
-    "admin/themes/default/fontello/**",
-    "admin/themes/default/fonts/**"
+    "themes/admin/default/fontello/**",
+    "themes/admin/default/fonts/**"
   ]
 }

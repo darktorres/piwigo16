@@ -150,7 +150,7 @@ Vite 5 with 39 entry points in `vite.config.ts`:
 ```text
 themes/default/js/*.ts          → core.scripts, mcs, switchbox, pngfix, rating, thumbnails.loader
 themes/standard_pages/js/*.ts   → toaster_js, standard_pages_js, standard_profile_js
-admin/themes/default/js/*.ts    → common, addAlbum, albums, batchManagerGlobal, … (30 files)
+themes/admin/default/js/*.ts    → common, addAlbum, albums, batchManagerGlobal, … (30 files)
 ```
 
 `LocalStorageCache`, `album_selector`, and `doubleSlider` are imported by multiple entries
@@ -180,7 +180,7 @@ npm run clean        # remove dist/ and _data/combined/
 
 ### Adding a new JS module
 
-1. Create `.ts` in `admin/themes/default/js/` or `themes/default/js/`.
+1. Create `.ts` in `themes/admin/default/js/` or `themes/default/js/`.
 2. Add it as a Vite entry in `vite.config.ts` with the id that Smarty templates will reference.
 3. Reference it from a template: `{combine_script id="my_module" path="...my_module.ts"}`.
 4. Run `npm run typecheck && npm run build`.

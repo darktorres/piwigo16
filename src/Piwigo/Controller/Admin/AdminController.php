@@ -43,7 +43,7 @@ final class AdminController implements ControllerInterface
         // Replace it with the admin-theme template now that IN_ADMIN is defined.
         $admin_theme_raw = userprefs_get_param('admin_theme', 'roma');
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'roma';
-        $adminTpl        = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
+        $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
         $GLOBALS['template'] = $adminTpl;
 

@@ -1,4 +1,4 @@
-// Behavioural regression net for the album tree (admin/themes/default/js/
+// Behavioural regression net for the album tree (themes/admin/default/js/
 // album-tree/). Originally written against jqTree as a safety net for the
 // rewrite; now exercises the vanilla TS module. All assertions describe
 // what the user sees, not implementation details — survives further refactors.

@@ -9,6 +9,8 @@ use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Url\UrlGenerator;
 
 final readonly class AuthService
@@ -110,7 +112,7 @@ final readonly class AuthService
             if (!array_key_exists($cookieLang, get_languages())) {
                 fatal_error('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
-            single_update(USER_INFOS_TABLE, ['language' => $cookieLang], ['user_id' => $userId]);
+            Dml::singleUpdate(USER_INFOS_TABLE, ['language' => $cookieLang], ['user_id' => $userId]);
             setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
         }
 
@@ -344,7 +346,7 @@ SELECT
         $user['id'] = $key['user_id'];
         CurrentUser::setRawAttributes($user);
 
-        single_update(USER_AUTH_KEYS_TABLE, ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
+        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
 
         $_SESSION['connected_with'] = $validKey;
 
@@ -391,8 +393,8 @@ SELECT
                 'expired_on' => $expiry,
                 'key_type'   => 'auth_key',
             ];
-            single_insert(USER_AUTH_KEYS_TABLE, $key);
-            $lastId = get_dbal_connection()->lastInsertId();
+            Dml::singleInsert(USER_AUTH_KEYS_TABLE, $key);
+            $lastId = DbConnection::get()->lastInsertId();
             $key['auth_key_id'] = is_numeric($lastId) ? (int) $lastId : 0;
             return $key;
         } else {
@@ -407,7 +409,7 @@ SELECT
 
     public function deactivatePasswordResetKey(mixed $userId): void
     {
-        single_update(USER_INFOS_TABLE, ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
+        Dml::singleUpdate(USER_INFOS_TABLE, ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
     }
 
     /** @return array<string,mixed> */
@@ -417,7 +419,7 @@ SELECT
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
         $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
-        single_update(USER_INFOS_TABLE, [
+        Dml::singleUpdate(USER_INFOS_TABLE, [
             'activation_key'        => password_hash($activationKey, PASSWORD_BCRYPT),
             'activation_key_expire' => $expire,
         ], ['user_id' => $userId]);

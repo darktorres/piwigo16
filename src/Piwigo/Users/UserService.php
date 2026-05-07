@@ -13,6 +13,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Job\SendNotificationEmailJob;
@@ -75,15 +77,15 @@ final readonly class UserService
                 Config::userFields()['email']    => $mailAddress,
             ];
 
-            single_insert(USERS_TABLE, $insert);
-            $userId = (int) get_dbal_connection()->lastInsertId();
+            Dml::singleInsert(USERS_TABLE, $insert);
+            $userId = (int) DbConnection::get()->lastInsertId();
 
             $inserts = [];
             foreach ($this->userRepo->findDefaultGroupIds() as $groupId) {
                 $inserts[] = ['user_id' => $userId, 'group_id' => $groupId];
             }
             if (count($inserts) != 0) {
-                mass_inserts(USER_GROUP_TABLE, ['user_id', 'group_id'], $inserts);
+                Dml::massInserts(USER_GROUP_TABLE, ['user_id', 'group_id'], $inserts);
             }
 
             $override = [];
@@ -275,7 +277,7 @@ final readonly class UserService
                 $userdata['forbidden_categories'] = $udForbiddenCats;
 
                 $query = 'SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
-                $forbiddenIds = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+                $forbiddenIds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (empty($forbiddenIds)) {
                     $forbiddenIds[] = 0;
                 }
@@ -302,7 +304,7 @@ final readonly class UserService
                 }
 
                 $this->conn->executeStatement('DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . ' WHERE user_id = ?', [$udId]);
-                mass_inserts(USER_CACHE_CATEGORIES_TABLE, ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
+                Dml::massInserts(USER_CACHE_CATEGORIES_TABLE, ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
 
                 $this->conn->executeStatement('DELETE FROM ' . USER_CACHE_TABLE . ' WHERE user_id = ?', [$udId]);
                 $udNeedUpdate        = ($userdata['need_update'] ?? '') === 'true';
@@ -349,8 +351,8 @@ SELECT DISTINCT f.image_id
   WHERE f.user_id = ' . $currentUser->id . '
   ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
 ;';
-        $authorizeds = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
-        $favorites   = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
+        $authorizeds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id');
+        $favorites   = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
 
         $toDeletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
         if (count($toDeletes) > 0) {
@@ -463,7 +465,7 @@ SELECT DISTINCT f.image_id
                 $inserts[] = $insert;
             }
 
-            mass_inserts(USER_INFOS_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(USER_INFOS_TABLE, array_keys($inserts[0]), $inserts);
         }
     }
 
@@ -580,7 +582,7 @@ SELECT DISTINCT f.image_id
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        single_update(USERS_TABLE, $updates, [Config::userFields()['id'] => $paramUid0]);
+        Dml::singleUpdate(USERS_TABLE, $updates, [Config::userFields()['id'] => $paramUid0]);
 
         if (isset($updates[Config::userFields()['password']])) {
             AuthService::get()->deactivateUserAuthKeys($paramUid0);
@@ -625,7 +627,7 @@ SELECT DISTINCT f.image_id
                         $inserts[] = ['user_id' => $uid, 'group_id' => $gid];
                     }
                 }
-                mass_inserts(USER_GROUP_TABLE, array_keys($inserts[0]), $inserts);
+                Dml::massInserts(USER_GROUP_TABLE, array_keys($inserts[0]), $inserts);
             }
         }
 
@@ -658,7 +660,7 @@ SELECT DISTINCT f.image_id
         }
         $key['expired_on'] = $expiration;
 
-        single_insert(USER_AUTH_KEYS_TABLE, $key);
+        Dml::singleInsert(USER_AUTH_KEYS_TABLE, $key);
         $key['apikey_secret'] = $keySecret;
         return $key;
     }
@@ -669,7 +671,7 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
             return l10n('API Key not found');
         }
-        single_update(USER_AUTH_KEYS_TABLE, ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
+        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
         return true;
     }
 
@@ -678,14 +680,14 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
             return l10n('API Key not found');
         }
-        single_update(USER_AUTH_KEYS_TABLE, ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
+        Dml::singleUpdate(USER_AUTH_KEYS_TABLE, ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
         return true;
     }
 
     /** @return list<array<mixed>>|false */
     public function getApiKey(string $userId): false|array
     {
-        $apiKeys = get_dbal_connection()->executeQuery('SELECT * FROM `' . USER_AUTH_KEYS_TABLE . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
+        $apiKeys = DbConnection::get()->executeQuery('SELECT * FROM `' . USER_AUTH_KEYS_TABLE . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
         if (!$apiKeys) {
             return false;
         }

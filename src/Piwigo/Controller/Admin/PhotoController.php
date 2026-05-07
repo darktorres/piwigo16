@@ -18,6 +18,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -144,7 +146,7 @@ SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE representative_picture_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . '
 ;';
-        $represented_albums = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $represented_albums = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
 
         if (isset($_GET['delete'])) {
             check_pwg_token();
@@ -177,7 +179,7 @@ SELECT id
             $data['date_creation'] = !empty($_POST['date_creation']) ? $_POST['date_creation'] : null;
             $data = trigger_change('picture_modify_before_update', $data);
 
-            single_update(IMAGES_TABLE, $data, ['id' => $data['id']]);
+            Dml::singleUpdate(IMAGES_TABLE, $data, ['id' => $data['id']]);
 
             $tag_ids = [];
             if (!empty($_POST['tags'])) {
@@ -310,7 +312,7 @@ SELECT id
             $intro_vars['stats'] .= ', ' . sprintf(l10n('Rated %d times, score : %.2f'), (int) $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
@@ -348,12 +350,12 @@ SELECT id
             $tpl->assign('U_JUMPTO', make_picture_url(['image_id' => is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
             $authorizeds = array_diff(
-                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
                 explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
             );
             if (count($authorizeds) > 0) {
                 $category = $authorizeds[array_rand($authorizeds)];
-                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $tpl->assign('U_JUMPTO', make_picture_url([
                     'image_id'   => $_GET['image_id'],
                     'image_file' => $image_file,
@@ -362,7 +364,7 @@ SELECT id
             }
         }
 
-        $associated_albums = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
+        $associated_albums = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
@@ -478,9 +480,9 @@ SELECT id
         check_input_parameter('image_id', $_GET, false, PATTERN_ID);
         $picFmtId = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
 
-        $images  = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
+        $images  = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
         $image   = $images[0];
-        $formats = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
 
         /** @var array<string, mixed> $lang */
         $lang = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
@@ -572,7 +574,7 @@ SELECT id
             foreach (array_unique(explode(',', is_scalar($_GET['batch']) ? (string) $_GET['batch'] : '')) as $image_id) {
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
-            mass_inserts(CADDIE_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(CADDIE_TABLE, array_keys($inserts[0]), $inserts);
             redirect(ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
@@ -601,7 +603,7 @@ SELECT id
                 $src_image = new SrcImage($formats_original_info);
                 $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
                 $fmtId  = is_scalar($formats_original_info['id'] ?? null) ? (string) $formats_original_info['id'] : '0';
-                $fmtRow = get_dbal_connection()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
+                $fmtRow = DbConnection::get()->executeQuery('SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
                 if (!empty($fmtRow)) {
                     $format_strings = [];
                     $formats_exts   = [];

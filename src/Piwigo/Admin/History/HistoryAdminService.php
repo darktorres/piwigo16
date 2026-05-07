@@ -9,6 +9,8 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\History\HistoryRepository;
 
@@ -54,9 +56,9 @@ final class HistoryAdminService
 SELECT
     id
   FROM ' . IMAGES_TABLE . '
-  WHERE file LIKE ' . get_dbal_connection()->quote(is_scalar($fields['filename']) ? (string) $fields['filename'] : '') . '
+  WHERE file LIKE ' . DbConnection::get()->quote(is_scalar($fields['filename']) ? (string) $fields['filename'] : '') . '
 ;';
-            $search['image_ids'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+            $search['image_ids'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         }
 
         $clauses = [];
@@ -108,7 +110,7 @@ SELECT
         }
 
         if (isset($fields['ip'])) {
-            $clauses[] = 'IP LIKE ' . get_dbal_connection()->quote(is_scalar($fields['ip']) ? (string) $fields['ip'] : '');
+            $clauses[] = 'IP LIKE ' . DbConnection::get()->quote(is_scalar($fields['ip']) ? (string) $fields['ip'] : '');
         }
 
         $clauses = prepend_append_array_items($clauses, '(', ')');
@@ -148,7 +150,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-        $summary_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $summary_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
         $history_min_id = 0;
         if (count($summary_lines) > 0) {
@@ -160,7 +162,7 @@ SELECT
     MIN(id) AS min_id
   FROM ' . HISTORY_TABLE . '
 ;';
-            $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             if (count($history_lines) > 0) {
                 $history_min_id = (is_numeric($history_lines[0]['min_id']) ? (int) $history_lines[0]['min_id'] : 0) - 1;
             }
@@ -286,7 +288,7 @@ SELECT *
         }
 
         if (count($updates) > 0) {
-            mass_updates(
+            Dml::massUpdates(
                 HISTORY_SUMMARY_TABLE,
                 ['primary' => ['year', 'month', 'day', 'hour'], 'update' => ['nb_pages', 'history_id_to']],
                 $updates
@@ -294,7 +296,7 @@ SELECT *
         }
 
         if (count($inserts) > 0) {
-            mass_inserts(HISTORY_SUMMARY_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(HISTORY_SUMMARY_TABLE, array_keys($inserts[0]), $inserts);
         }
     }
 
@@ -322,7 +324,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-        $summary_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $summary_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         if (count($summary_lines) == 0) {
             return;
         }
@@ -336,7 +338,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-        $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         if (count($history_lines) == 0) {
             return;
         }
@@ -349,7 +351,7 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-        $history_lines = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         $history_id_oldest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
 
         $search_min = [

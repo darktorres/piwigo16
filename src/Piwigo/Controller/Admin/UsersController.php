@@ -13,6 +13,7 @@ use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
@@ -93,13 +94,13 @@ final class UsersController
         $password_protected_users = [(string) Config::guestId()];
 
         if ($userStatus === 'admin') {
-            $admin_ids = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
+            $admin_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
             $admin_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids);
             $protected_users = array_merge($protected_users, $admin_ids_str);
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids_str, [(string) $userId]));
         }
 
-        $owner_username = array_column(get_dbal_connection()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
+        $owner_username = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
 
         $tpl->assign([
             'U_HISTORY'                 => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
@@ -374,14 +375,14 @@ final class UsersController
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => get_root_url(), 'str_create' => l10n('Create')]),
         ]);
 
-        $nb_lines_for_user = array_column(get_dbal_connection()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
+        $nb_lines_for_user = array_column(DbConnection::get()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
 
         $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
         if (count($nb_lines_for_user) > 0) {
             $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
         }
 
-        $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+        $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
         $filterable_users = [];
         foreach ($nb_lines_for_user as $id => $nb_line) {
@@ -405,7 +406,7 @@ final class UsersController
         foreach (['photo' => IMAGES_TABLE, 'album' => CATEGORIES_TABLE, 'group' => GROUPS_TABLE] as $filter_key => $filter_table) {
             if (isset($_GET[$filter_key])) {
                 $filterId = is_scalar($_GET[$filter_key]) ? (string) $_GET[$filter_key] : '0';
-                $rows = get_dbal_connection()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
+                $rows = DbConnection::get()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
                 if (count($rows) == 0) {
                     fatal_error($filter_key . ' #' . $filterId . ' does not exist');
                 }
@@ -424,7 +425,7 @@ final class UsersController
         }
         $query .= ' GROUP BY action, object ORDER BY object ASC;';
 
-        $actions = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $actions = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($actions as &$action) {
             $action['value'] = (is_scalar($action['object']) ? (string) $action['object'] : '') . '/' . (is_scalar($action['action']) ? (string) $action['action'] : '');
         }

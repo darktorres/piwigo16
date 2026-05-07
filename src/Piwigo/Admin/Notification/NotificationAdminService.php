@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Url\UrlGenerator;
@@ -218,7 +219,7 @@ final class NotificationAdminService
 
             $this->endUsersEnvNbm();
             $this->displayCounterInfo();
-            mass_updates(USER_MAIL_NOTIFICATION_TABLE, ['primary' => ['check_key'], 'update' => ['enabled']], $updates);
+            Dml::massUpdates(USER_MAIL_NOTIFICATION_TABLE, ['primary' => ['check_key'], 'update' => ['enabled']], $updates);
         }
 
         PageState::current()->addInfo(l10n_dec('%d user was updated.', '%d users were updated.', $updatedDataCount));

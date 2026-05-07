@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Template\TemplateRegistry;
 
@@ -226,7 +227,7 @@ $this->inner_sql.
 $this->getDateWhere($level).'
   GROUP BY period;';
 
-        $level_items = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
+        $level_items = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
 
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
@@ -309,7 +310,7 @@ GROUP BY period';
             $stringDate[] = is_string($d) ? $d : (is_int($d) ? (string) $d : '');
         }
         $current = implode('-', $stringDate);
-        $upper_items = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'period');
+        $upper_items = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'period');
 
         usort($upper_items, fn (mixed $a, mixed $b): int => version_compare(is_scalar($a) ? (string) $a : '', is_scalar($b) ? (string) $b : ''));
         $upper_items_str = array_map(fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $upper_items);

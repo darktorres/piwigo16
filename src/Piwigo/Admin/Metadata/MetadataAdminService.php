@@ -8,6 +8,8 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
 
@@ -232,11 +234,11 @@ final class MetadataAdminService
             $update_fields[] = 'date_metadata_update';
             $update_fields = array_diff($update_fields, ['tags', 'keywords']);
 
-            mass_updates(
+            Dml::massUpdates(
                 IMAGES_TABLE,
                 ['primary' => ['id'], 'update' => $update_fields],
                 $datas,
-                MASS_UPDATES_SKIP_EMPTY
+                Dml::SKIP_EMPTY
             );
         }
 
@@ -260,7 +262,7 @@ SELECT id
         if (is_numeric($category_id)) {
             if ($recursive) {
                 $query .= '
-    AND uppercats ' . DB_REGEX_OPERATOR . " '(^|,)" . $category_id . "(,|$)'";
+    AND uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $category_id . "(,|$)'";
             } else {
                 $query .= '
     AND id = ' . $category_id;
@@ -268,7 +270,7 @@ SELECT id
         }
         $query .= ';';
 
-        foreach (get_dbal_connection()->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (DbConnection::get()->executeQuery($query)->fetchAllAssociative() as $row) {
             $cat_ids[] = $row['id'];
         }
 
@@ -286,7 +288,7 @@ SELECT id, path, representative_ext
         }
         $query .= ';';
 
-        return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+        return array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
     }
 
     public function normalizeKeywordsString(string $keywordsString): string

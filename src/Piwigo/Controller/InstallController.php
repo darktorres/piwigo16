@@ -14,6 +14,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
@@ -185,7 +186,7 @@ final class InstallController implements ControllerInterface
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
 
-                single_insert($prefixeTable . 'config', [
+                Dml::singleInsert($prefixeTable . 'config', [
                     'param'   => 'secret_key',
                     'value'   => sha1(random_bytes(1000)),
                     'comment' => 'a secret key specific to the gallery for internal use',
@@ -200,13 +201,13 @@ final class InstallController implements ControllerInterface
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 
-                mass_inserts(SITES_TABLE, ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
+                Dml::massInserts(SITES_TABLE, ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
 
                 $inserts = [
                     ['id' => 1, 'username' => $admin_name, 'password' => password_hash((string) $admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
                     ['id' => 2, 'username' => 'guest'],
                 ];
-                mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+                Dml::massInserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
                 UserService::get()->createUserInfos([1, 2], ['language' => $language]);
 
                 define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
@@ -215,7 +216,7 @@ final class InstallController implements ControllerInterface
                     $datas[] = ['id' => $upgrade_id, 'applied' => CURRENT_DATE, 'description' => 'upgrade included in installation'];
                 }
                 if (!empty($datas)) {
-                    mass_inserts(UPGRADE_TABLE, array_keys($datas[0]), $datas);
+                    Dml::massInserts(UPGRADE_TABLE, array_keys($datas[0]), $datas);
                 }
                 InstallSentinel::markInstalled();
             }

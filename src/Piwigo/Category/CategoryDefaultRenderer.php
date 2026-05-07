@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -67,7 +68,7 @@ SELECT image_id, COUNT(*) AS nb_comments
     AND image_id IN (' . implode(',', array_map(strval(...), $selection)) . ')
   GROUP BY image_id
 ;';
-                $nb_comments_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
+                $nb_comments_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
             }
         }
 

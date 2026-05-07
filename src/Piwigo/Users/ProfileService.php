@@ -7,6 +7,8 @@ namespace Piwigo\Users;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Template\TemplateRegistry;
 
 final class ProfileService
@@ -113,7 +115,7 @@ final class ProfileService
                     }
                 }
 
-                mass_updates(USERS_TABLE, ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
+                Dml::massUpdates(USERS_TABLE, ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
 
                 if ($_POST['mail_address'] != $userdata['email']) {
                     ServiceLocator::get(AuthService::class)->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
@@ -133,7 +135,7 @@ final class ProfileService
                         $data[$field] = $_POST[$field];
                     }
                 }
-                mass_updates(USER_INFOS_TABLE, ['primary' => ['user_id'], 'update' => $fields], [$data]);
+                Dml::massUpdates(USER_INFOS_TABLE, ['primary' => ['user_id'], 'update' => $fields], [$data]);
                 $activity_details_tables[] = 'user_infos';
             }
 
@@ -205,7 +207,7 @@ final class ProfileService
         }
 
         $query  = 'SELECT ' . implode(', ', $duration) . ';';
-        $result = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
+        $result = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
         foreach ($result as $day => $date) {
             $display_duration[$day] = l10n('%d days', $day) . ' (' . format_date(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
         }

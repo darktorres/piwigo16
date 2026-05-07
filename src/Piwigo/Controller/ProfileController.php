@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Template\TemplateRegistry;
@@ -119,7 +120,7 @@ final class ProfileController implements ControllerInterface
                 fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            single_update(USER_INFOS_TABLE, ['language' => $cookie_lang], ['user_id' => $user['id']]);
+            Dml::singleUpdate(USER_INFOS_TABLE, ['language' => $cookie_lang], ['user_id' => $user['id']]);
             load_language('common.lang', '', ['language' => $cookie_lang]);
         }
 

@@ -14,7 +14,7 @@ final class SchemaHelper
     public static function getEnums(string $table, string $field): array
     {
         $options = [];
-        foreach (get_dbal_connection()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
+        foreach (DbConnection::get()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
             if ($row['Field'] === $field) {
                 $raw = explode(',', substr(is_scalar($row['Type']) ? (string) $row['Type'] : '', 5, -1));
                 foreach ($raw as $option) {

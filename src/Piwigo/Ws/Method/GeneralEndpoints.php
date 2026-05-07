@@ -14,6 +14,8 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -198,13 +200,13 @@ final class GeneralEndpoints
     {
         $userId = CurrentUser::get()->id;
         $query  = 'SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . CADDIE_TABLE . ' ON id=element_id AND user_id=' . $userId . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) . ') AND element_id IS NULL;';
-        $result = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $result = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         $datas  = [];
         foreach ($result as $id) {
             $datas[] = ['element_id' => $id, 'user_id' => $userId];
         }
         if (count($datas)) {
-            mass_inserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
+            Dml::massInserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
         }
         return count($datas);
     }
@@ -220,7 +222,7 @@ final class GeneralEndpoints
         if (!empty($params['image_id'])) {
             $query .= ' AND element_id=' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
         }
-        $changes = get_dbal_connection()->executeStatement($query);
+        $changes = DbConnection::get()->executeStatement($query);
         if ($changes > 0) {
             update_rating_score();
         }
@@ -323,10 +325,10 @@ final class GeneralEndpoints
             $where .= ' AND performed_by=' . (is_numeric($param['uid']) ? (int) $param['uid'] : 0);
         }
         if (isset($param['action'])) {
-            $where .= ' AND action=' . get_dbal_connection()->quote(is_scalar($param['action']) ? (string) $param['action'] : '');
+            $where .= ' AND action=' . DbConnection::get()->quote(is_scalar($param['action']) ? (string) $param['action'] : '');
         }
         if (isset($param['object'])) {
-            $where .= ' AND object=' . get_dbal_connection()->quote(is_scalar($param['object']) ? (string) $param['object'] : '');
+            $where .= ' AND object=' . DbConnection::get()->quote(is_scalar($param['object']) ? (string) $param['object'] : '');
         }
         if (!empty($param['date_min'])) {
             $where .= ' AND occured_on >= "' . $min . '"';
@@ -345,7 +347,7 @@ final class GeneralEndpoints
         $moreRowsAvailable = true;
         while (count($outputLines) < $pageSize && $moreRowsAvailable) {
             $query = 'SELECT activity_id, performed_by, object, object_id, action, session_idx, ip_address, occured_on, details, user_agent FROM ' . ACTIVITY_TABLE . ' ' . $where . ' ORDER BY activity_id DESC LIMIT ' . $nbRowsToFetch . ' OFFSET ' . $pageOffset . ';';
-            $rows  = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $rows  = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             if (count($rows) < $nbRowsToFetch) {
                 $moreRowsAvailable = false;
             }
@@ -399,7 +401,7 @@ final class GeneralEndpoints
         $usernameOf = [];
         if (count($userIds) > 0) {
             $query = 'SELECT `' . Config::userFields()['id'] . '` AS user_id, `' . Config::userFields()['username'] . '` AS username FROM ' . USERS_TABLE . ' WHERE `' . Config::userFields()['id'] . '` IN (' . implode(',', array_keys($userIds)) . ');';
-            $usernameOf = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
+            $usernameOf = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
         }
         foreach ($outputLines as $idx => $outputLine) {
             if ('user' === ($outputLine['object'] ?? '')) {
@@ -545,7 +547,7 @@ final class GeneralEndpoints
         if (count($searchIds) > 0) {
             $searchIdsStr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $searchIds);
             $sdQuery       = 'SELECT id, rules FROM ' . SEARCH_TABLE . ' WHERE id IN (' . implode(',', $searchIdsStr) . ');';
-            $searchDetails = array_column(get_dbal_connection()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
+            $searchDetails = array_column(DbConnection::get()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
                 $rulesArr    = safe_unserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
                 $rulesFields = is_array($rulesArr['fields'] ?? null) ? $rulesArr['fields'] : [];
@@ -582,7 +584,7 @@ final class GeneralEndpoints
         $fullCatPath    = [];
         if (count($categoryIds) > 0) {
             $categoryIdsStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $categoryIds);
-            $uppercatsOf    = array_column(get_dbal_connection()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
+            $uppercatsOf    = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
                 $albumBase = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-';
@@ -592,7 +594,7 @@ final class GeneralEndpoints
             }
         }
         if (count($imageIds) > 0) {
-            $imageInfos = array_column(get_dbal_connection()->executeQuery('SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(',', array_keys($imageIds)) . ');')->fetchAllAssociative(), null, 'id');
+            $imageInfos = array_column(DbConnection::get()->executeQuery('SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(',', array_keys($imageIds)) . ');')->fetchAllAssociative(), null, 'id');
         }
         $nameOfTag = [];
         if ($hasTags) {

@@ -6,6 +6,7 @@ namespace Piwigo\Url;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -708,7 +709,7 @@ SELECT
   WHERE user_id = ' . CurrentUser::get()->id . '
 ';
 
-        $raw    = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'fake_value', 'image_id');
+        $raw    = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'fake_value', 'image_id');
         $result = [];
         foreach ($raw as $imageId => $val) {
             $result[(int) $imageId] = true;

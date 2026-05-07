@@ -1057,18 +1057,24 @@ array(
       <td><?= $trigger['type'] ?></td>
       <td><?php
         for ($i = 0; $i < count($trigger['vars']); $i += 2) {
-            if ($i > 0) echo ', ';
+            if ($i > 0) {
+                echo ', ';
+            }
             echo $trigger['vars'][$i];
-            if (!empty($trigger['vars'][$i + 1])) echo ' <i>$' . $trigger['vars'][$i + 1] . '</i>';
+            if (!empty($trigger['vars'][$i + 1])) {
+                echo ' <i>$' . $trigger['vars'][$i + 1] . '</i>';
+            }
         }
       ?></td>
       <td><?php
         $f = true;
-        foreach ($trigger['files'] as $file) {
-            if (!$f) echo '<br>';
-            $f = false;
-            echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', htmlspecialchars($file));
-        }
+      foreach ($trigger['files'] as $file) {
+          if (!$f) {
+              echo '<br>';
+          }
+          $f = false;
+          echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', htmlspecialchars($file));
+      }
       ?></td>
       <td><?= $trigger['infos'] ?? '' ?></td>
     </tr>

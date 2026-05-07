@@ -9,6 +9,8 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Tag\TagRepository;
 
 final readonly class TagAdminService
@@ -61,7 +63,7 @@ final readonly class TagAdminService
                 $inserts[] = ['image_id' => $imageId, 'tag_id' => $tagId];
             }
         }
-        mass_inserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
+        Dml::massInserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
         $taglistAfter  = $this->getImageTagIds($imagesArr);
         $toUpdate      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
         ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($toUpdate);
@@ -106,16 +108,16 @@ final readonly class TagAdminService
             if (count($existing) === 0) {
                 $extraClauses = trigger_change('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
-                    $existing = array_column(get_dbal_connection()->executeQuery(
+                    $existing = array_column(DbConnection::get()->executeQuery(
                         'SELECT id FROM ' . TAGS_TABLE . ' WHERE ' . implode(' OR ', array_map(strval(...), $extraClauses))
                     )->fetchAllAssociative(), 'id');
                 }
                 if (count($existing) === 0) {
-                    mass_inserts(TAGS_TABLE, ['name', 'url_name'], [['name' => $tagName, 'url_name' => $urlName]]);
+                    Dml::massInserts(TAGS_TABLE, ['name', 'url_name'], [['name' => $tagName, 'url_name' => $urlName]]);
                     if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
                         $page['tag_id_from_tag_name_cache'] = [];
                     }
-                    $newId = (int) get_dbal_connection()->lastInsertId();
+                    $newId = (int) DbConnection::get()->lastInsertId();
                     $page['tag_id_from_tag_name_cache'][$tagName] = $newId;
                     ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
                     return $newId;
@@ -149,7 +151,7 @@ final readonly class TagAdminService
             }
         }
         if (count($inserts)) {
-            mass_inserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(IMAGE_TAG_TABLE, array_keys($inserts[0]), $inserts);
         }
         $taglistAfter = $this->getImageTagIds($imageIds);
         $logger->debug('taglist_after', $taglistAfter);
@@ -256,8 +258,8 @@ final readonly class TagAdminService
         $tagName    = strip_tags($tagName);
         $existingId = ServiceLocator::get(TagRepository::class)->findIdByExactName($tagName);
         if ($existingId === null) {
-            single_insert(TAGS_TABLE, ['name' => $tagName, 'url_name' => trigger_change('render_tag_url', $tagName)]);
-            return ['info' => l10n('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) get_dbal_connection()->lastInsertId()];
+            Dml::singleInsert(TAGS_TABLE, ['name' => $tagName, 'url_name' => trigger_change('render_tag_url', $tagName)]);
+            return ['info' => l10n('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) DbConnection::get()->lastInsertId()];
         }
         return ['error' => l10n('Tag "%s" already exists', stripslashes($tagName))];
     }

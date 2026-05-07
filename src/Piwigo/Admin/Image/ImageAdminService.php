@@ -10,6 +10,8 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -330,7 +332,7 @@ final class ImageAdminService
         if (!is_numeric($imageId)) {
             fatal_error('[getImageInfos] invalid image identifier ' . htmlentities((string) $imageId));
         }
-        $images = get_dbal_connection()->executeQuery(
+        $images = DbConnection::get()->executeQuery(
             'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id = ' . $imageId
         )->fetchAllAssociative();
         if (count($images) === 0) {
@@ -345,7 +347,7 @@ final class ImageAdminService
     /** @return int[] */
     public function getPhotosNoMd5sum(): array
     {
-        $raw = array_column(get_dbal_connection()->executeQuery(
+        $raw = array_column(DbConnection::get()->executeQuery(
             'SELECT id FROM ' . IMAGES_TABLE . ' WHERE md5sum is null'
         )->fetchAllAssociative(), 'id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
@@ -355,14 +357,14 @@ final class ImageAdminService
     public function addMd5sum(array|string $ids): int
     {
         $idsArray  = is_array($ids) ? $ids : explode(',', $ids);
-        $pathForId = array_column(get_dbal_connection()->executeQuery(
+        $pathForId = array_column(DbConnection::get()->executeQuery(
             'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(', ', $idsArray) . ')'
         )->fetchAllAssociative(), 'path', 'id');
         $updates = [];
         foreach ($pathForId as $id => $path) {
             $updates[] = ['id' => $id, 'md5sum' => md5_file(PHPWG_ROOT_PATH . (is_scalar($path) ? (string) $path : ''))];
         }
-        mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['md5sum']], $updates);
+        Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['md5sum']], $updates);
         return count($pathForId);
     }
 
@@ -381,13 +383,13 @@ final class ImageAdminService
     /** @return int[] */
     public function getOrphans(): array
     {
-        $loungedIds = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . LOUNGE_TABLE)->fetchAllAssociative(), 'image_id');
+        $loungedIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . LOUNGE_TABLE)->fetchAllAssociative(), 'image_id');
         $query = 'SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id WHERE category_id IS NULL';
         if (count($loungedIds) > 0) {
             $query .= ' AND id NOT IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $loungedIds)) . ')';
         }
         $query .= ' ORDER BY id ASC';
-        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     public function fsQuickCheck(): void
@@ -405,7 +407,7 @@ final class ImageAdminService
         $page['fs_quick_check_already_called'] = true;
         conf_update_param('fs_quick_check_last_check', date('c'));
 
-        $issue1827Ids = array_column(get_dbal_connection()->executeQuery(
+        $issue1827Ids = array_column(DbConnection::get()->executeQuery(
             'SELECT id FROM ' . IMAGES_TABLE . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
         )->fetchAllAssociative(), 'id');
         shuffle($issue1827Ids);
@@ -413,7 +415,7 @@ final class ImageAdminService
 
         $randomImageIds = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-            array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LIMIT 5000')->fetchAllAssociative(), 'id')
+            array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LIMIT 5000')->fetchAllAssociative(), 'id')
         );
         shuffle($randomImageIds);
         $randomImageIds = array_slice($randomImageIds, 0, 50);
@@ -423,7 +425,7 @@ final class ImageAdminService
             return;
         }
 
-        $paths = array_column(get_dbal_connection()->executeQuery(
+        $paths = array_column(DbConnection::get()->executeQuery(
             'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE id IN (' . implode(',', $checkIds) . ')'
         )->fetchAllAssociative(), 'path', 'id');
 
@@ -435,7 +437,7 @@ final class ImageAdminService
             }
         }
 
-        $duplicatePaths = get_dbal_connection()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
+        $duplicatePaths = DbConnection::get()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
         if (count($duplicatePaths) > 0) {
             $template->assign('header_msgs', [l10n('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
         }

@@ -14,6 +14,8 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -74,7 +76,7 @@ final class UploadService
             }
         }
         if (count($errors) === 0) {
-            mass_updates(CONFIG_TABLE, ['primary' => ['param'], 'update' => ['value']], $updates);
+            Dml::massUpdates(CONFIG_TABLE, ['primary' => ['param'], 'update' => ['value']], $updates);
             return true;
         }
         return false;
@@ -91,7 +93,7 @@ final class UploadService
         $md5sum = $originalMd5sum ?? md5_file($sourceFilepath);
 
         if (!isset($imageId) && Config::uploadDetectDuplicate()) {
-            $imagesFound = get_dbal_connection()->executeQuery(
+            $imagesFound = DbConnection::get()->executeQuery(
                 'SELECT id FROM ' . IMAGES_TABLE . " WHERE md5sum = '$md5sum'"
             )->fetchAllAssociative();
             if (count($imagesFound) > 0) {
@@ -192,7 +194,7 @@ final class UploadService
             if (isset($level)) {
                 $update['level'] = $level;
             }
-            single_update(IMAGES_TABLE, $update, ['id' => $imageId]);
+            Dml::singleUpdate(IMAGES_TABLE, $update, ['id' => $imageId]);
         } else {
             $file   = $originalFilename ?? basename($filePath);
             $insert = ['file' => $file, 'name' => get_name_from_file($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
@@ -202,8 +204,8 @@ final class UploadService
             if ($representativeExt !== '') {
                 $insert['representative_ext'] = $representativeExt;
             }
-            single_insert(IMAGES_TABLE, $insert);
-            $imageId = (int) get_dbal_connection()->lastInsertId();
+            Dml::singleInsert(IMAGES_TABLE, $insert);
+            $imageId = (int) DbConnection::get()->lastInsertId();
             pwg_activity('photo', $imageId, 'add');
         }
 
@@ -263,7 +265,7 @@ final class UploadService
             $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $formatExtList);
             throw new ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
         }
-        $images = get_dbal_connection()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
+        $images = DbConnection::get()->executeQuery('SELECT path FROM ' . IMAGES_TABLE . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
         if (!isset($images[0])) {
             throw new NotFoundException('[addFormat] photo does not exist in database');
         }
@@ -284,16 +286,16 @@ final class UploadService
         Filesystem::tryChmod($formatPath, 0644);
         $fileInfos = $this->pwgImageInfos($formatPath);
         $insert    = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
-        $formats   = get_dbal_connection()->executeQuery(
+        $formats   = DbConnection::get()->executeQuery(
             'SELECT format_id FROM ' . IMAGE_FORMAT_TABLE . ' WHERE image_id = ' . $formatOf . ' AND ext = "' . $formatExt . '"'
         )->fetchAllAssociative();
         if ($formats) {
-            single_update(IMAGE_FORMAT_TABLE, ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
+            Dml::singleUpdate(IMAGE_FORMAT_TABLE, ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
             $formatId  = $formats[0]['format_id'];
             $addStatus = 'update';
         } else {
-            single_insert(IMAGE_FORMAT_TABLE, $insert);
-            $formatId  = (int) get_dbal_connection()->lastInsertId();
+            Dml::singleInsert(IMAGE_FORMAT_TABLE, $insert);
+            $formatId  = (int) DbConnection::get()->lastInsertId();
             $addStatus = 'add';
         }
         pwg_activity('photo', $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]);

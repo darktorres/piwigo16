@@ -23,7 +23,9 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
@@ -1043,7 +1045,7 @@ final class MaintenanceController
             'page_data_json' => json_encode(['str_delete_site_confirm' => l10n('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $sites_detail = array_column(get_dbal_connection()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . CATEGORIES_TABLE . ' AS c LEFT JOIN ' . IMAGES_TABLE . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
+        $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . CATEGORIES_TABLE . ' AS c LEFT JOIN ' . IMAGES_TABLE . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
 
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
             $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
@@ -1167,12 +1169,12 @@ final class MaintenanceController
             $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
-                    $query .= ' AND uppercats ' . DB_REGEX_OPERATOR . " '(^|,)" . $_POST['cat'] . "(,|$)'";
+                    $query .= ' AND uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $_POST['cat'] . "(,|$)'";
                 } else {
                     $query .= ' AND id = ' . $_POST['cat'];
                 }
             }
-            $db_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $db_categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             $db_fulldirs   = ServiceLocator::get(CategoryAdminService::class)->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
@@ -1198,7 +1200,7 @@ final class MaintenanceController
                 $next_rank[$ruk] = $row['next_rank'];
             }
 
-            $next_id_raw = get_dbal_connection()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . CATEGORIES_TABLE . '`')->fetchOne();
+            $next_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . CATEGORIES_TABLE . '`')->fetchOne();
             $next_id     = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
 
             $fs_fulldirs = $site_reader->getFullDirectories($basedir);
@@ -1248,7 +1250,7 @@ final class MaintenanceController
             }
 
             if (count($inserts) > 0 && !$simulate) {
-                mass_inserts(CATEGORIES_TABLE, ['id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable', 'visible', 'status', 'rank', 'global_rank'], $inserts);
+                Dml::massInserts(CATEGORIES_TABLE, ['id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable', 'visible', 'status', 'rank', 'global_rank'], $inserts);
                 $category_ids = $category_up = [];
                 foreach ($inserts as $category) {
                     $category_ids[] = $category['id'];
@@ -1304,8 +1306,8 @@ final class MaintenanceController
                             }
                         }
                     }
-                    mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
-                    mass_inserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
+                    Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $insert_granted_grps);
+                    Dml::massInserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
                 } else {
                     ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($category_ids, ServiceLocator::get(UserAdminService::class)->getAdmins());
                 }
@@ -1347,10 +1349,10 @@ final class MaintenanceController
             $db_elements = [];
             if (count($cat_ids) > 0) {
                 $query       = 'SELECT id, path FROM ' . IMAGES_TABLE . ' WHERE storage_category_id IN (' . wordwrap(implode(', ', $cat_ids), 160, "\n") . ')';
-                $db_elements = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
+                $db_elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
             }
 
-            $next_element_id_raw = get_dbal_connection()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . IMAGES_TABLE . '`')->fetchOne();
+            $next_element_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . IMAGES_TABLE . '`')->fetchOne();
             $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
             $start             = get_moment();
@@ -1431,15 +1433,15 @@ final class MaintenanceController
 
             if (!$simulate) {
                 if (count($inserts) > 0) {
-                    mass_inserts(IMAGES_TABLE, array_keys($inserts[0]), $inserts);
-                    mass_inserts(IMAGE_CATEGORY_TABLE, array_keys($insert_links[0]), $insert_links);
+                    Dml::massInserts(IMAGES_TABLE, array_keys($inserts[0]), $inserts);
+                    Dml::massInserts(IMAGE_CATEGORY_TABLE, array_keys($insert_links[0]), $insert_links);
                     pwg_activity('photo', $caddiables, 'add', ['sync' => true]);
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         fill_caddie($caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {
-                    mass_inserts(IMAGE_FORMAT_TABLE, array_keys($insert_formats[0]), $insert_formats);
+                    Dml::massInserts(IMAGE_FORMAT_TABLE, array_keys($insert_formats[0]), $insert_formats);
                 }
                 if (count($formats_to_delete) > 0) {
                     ServiceLocator::get(ImageRepository::class)->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
@@ -1497,7 +1499,7 @@ final class MaintenanceController
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
-                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
+                    Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . get_elapsed_time($start, get_moment()) . ' -->');
             }
@@ -1546,7 +1548,7 @@ final class MaintenanceController
             }
             if (!$simulate) {
                 if (count($datas) > 0) {
-                    mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : MASS_UPDATES_SKIP_EMPTY);
+                    Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
@@ -1631,15 +1633,15 @@ final class MaintenanceController
             $date  = new \DateTime();
             $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
             $query .= ' LIMIT ' . $limit;
-            $result   = get_dbal_connection()->executeQuery($query . ';')->fetchAllAssociative();
+            $result   = DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative();
             $lastDate = $date->sub(new \DateInterval('P' . ((int) $last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return $this->setMissingValues('month', $result, $lastDate, new \DateTime());
         }
-        if (count(get_dbal_connection()->executeQuery($query . ';')->fetchAllAssociative()) > 1) {
-            return $this->setMissingValues('month', get_dbal_connection()->executeQuery($query . ';')->fetchAllAssociative());
+        if (count(DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative()) > 1) {
+            return $this->setMissingValues('month', DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative());
         } else {
             $last_year_date = new \DateTime();
-            return $this->setMissingValues('month', get_dbal_connection()->executeQuery($query . ';')->fetchAllAssociative(), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
+            return $this->setMissingValues('month', DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative(), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
         }
     }
 
@@ -1657,7 +1659,7 @@ final class MaintenanceController
             ' WHERE ((year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ') OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ') OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')) AND day IS NOT NULL AND hour IS NULL ORDER BY year DESC, month DESC;';
 
         $months = [];
-        foreach (get_dbal_connection()->executeQuery($query)->fetchAllAssociative() as $value) {
+        foreach (DbConnection::get()->executeQuery($query)->fetchAllAssociative() as $value) {
             $dt = $this->getDateObject($value);
             $months[$dt->format('Y/m/1')][] = $value;
         }

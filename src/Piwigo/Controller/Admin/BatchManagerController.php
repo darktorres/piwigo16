@@ -17,6 +17,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -296,24 +298,24 @@ final class BatchManagerController
             switch ($bmf_prefilter) {
                 case 'caddie':
                     $userId        = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT element_id FROM ' . CADDIE_TABLE . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'element_id');
+                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT element_id FROM ' . CADDIE_TABLE . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'element_id');
                     break;
                 case 'favorites':
                     $userId2       = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $userId2 . ';')->fetchAllAssociative(), 'image_id');
+                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . FAVORITES_TABLE . ' WHERE user_id = ' . $userId2 . ';')->fetchAllAssociative(), 'image_id');
                     break;
                 case 'last_import':
                     $last_import_date = ServiceLocator::get(ImageRepository::class)->findMaxDateAvailable();
                     if (!empty($last_import_date)) {
-                        $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
+                        $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
                     }
                     break;
                 case 'no_virtual_album':
-                    $all_elements    = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ';')->fetchAllAssociative(), 'id');
+                    $all_elements    = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ';')->fetchAllAssociative(), 'id');
                     $linked_to_virtual = [];
-                    $virtual_categories = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NULL;')->fetchAllAssociative(), 'id');
+                    $virtual_categories = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NULL;')->fetchAllAssociative(), 'id');
                     if (!empty($virtual_categories)) {
-                        $linked_to_virtual = array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)) . ');')->fetchAllAssociative(), 'image_id');
+                        $linked_to_virtual = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)) . ');')->fetchAllAssociative(), 'image_id');
                     }
                     $filter_sets[] = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual));
                     break;
@@ -324,7 +326,7 @@ final class BatchManagerController
                     $filter_sets[] = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
                     break;
                 case 'no_tag':
-                    $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
+                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
                     break;
                 case 'duplicates':
                     $duplicates_on_fields = [];
@@ -347,7 +349,7 @@ final class BatchManagerController
                     }
                     $query .= ' GROUP BY ' . implode(',', $duplicates_on_fields) . ' HAVING COUNT(*) > 1;';
                     $ids = [];
-                    foreach (array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
+                    foreach (array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
                         $ids_string = rtrim(is_scalar($ids_string) ? (string) $ids_string : '', ',');
                         $ids = array_merge($ids, explode(',', $ids_string));
                     }
@@ -355,7 +357,7 @@ final class BatchManagerController
                     break;
                 case 'all_photos':
                     if (count($bmf) == 1) {
-                        $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                        $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
                     }
                     break;
                 default:
@@ -371,13 +373,13 @@ final class BatchManagerController
                 redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? get_subcat_ids([$bmf_category]) : [$bmf_category];
-            $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
+            $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
         }
 
         if (isset($bmf['level'])) {
             $operator  = isset($bmf['level_include_lower']) ? '<=' : '=';
             $bmf_level = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-            $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE level ' . $operator . ' ' . $bmf_level . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE level ' . $operator . ' ' . $bmf_level . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
         }
 
         if (!empty($bmf['tags'])) {
@@ -409,7 +411,7 @@ final class BatchManagerController
                 $where_clause[] = 'width/height < ' . ($max_ratio + 0.01);
             }
             if (!empty($where_clause)) {
-                $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
             }
         }
 
@@ -425,7 +427,7 @@ final class BatchManagerController
                 $where_clause[] = 'filesize <= ' . (($fs_max + 0.1) * 1024);
             }
             if (!empty($where_clause)) {
-                $filter_sets[] = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . IMAGES_TABLE . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
             }
         }
 
@@ -710,7 +712,7 @@ final class BatchManagerController
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'author' => $_POST['author']];
                 }
-                mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['author']], $datas);
+                Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['author']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'author']);
             } elseif ('title' == $action) {
                 if (isset($_POST['remove_title'])) {
@@ -720,7 +722,7 @@ final class BatchManagerController
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'name' => $_POST['title']];
                 }
-                mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name']], $datas);
+                Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'title']);
             } elseif ('date_creation' == $action) {
                 $date_creation = (isset($_POST['remove_date_creation']) || empty($_POST['date_creation'])) ? null : $_POST['date_creation'];
@@ -728,14 +730,14 @@ final class BatchManagerController
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
-                mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['date_creation']], $datas);
+                Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['date_creation']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
             } elseif ('level' == $action) {
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'level' => $_POST['level']];
                 }
-                mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['level']], $datas);
+                Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['level']], $datas);
                 pwg_activity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
@@ -953,7 +955,7 @@ final class BatchManagerController
                 ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
             }
 
-            mass_updates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name', 'author', 'level', 'comment', 'date_creation']], $datas);
+            Dml::massUpdates(IMAGES_TABLE, ['primary' => ['id'], 'update' => ['name', 'author', 'level', 'comment', 'date_creation']], $datas);
             PageState::current()->addInfo(l10n('Photo informations updated'));
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
@@ -1040,11 +1042,11 @@ final class BatchManagerController
             }
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU . ';';
 
-            $images         = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $images         = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             $added_by_ids   = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $added_by_username_of = array_column(get_dbal_connection()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username, ' . Config::userFields()['id'] . ' AS id FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $added_by_ids) . ');')->fetchAllAssociative(), 'username', 'id');
+                $added_by_username_of = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username, ' . Config::userFields()['id'] . ' AS id FROM ' . USERS_TABLE . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $added_by_ids) . ');')->fetchAllAssociative(), 'username', 'id');
             }
 
             $storage_category_id = null;
@@ -1079,11 +1081,11 @@ final class BatchManagerController
 
                 $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '0';
                 $authorizeds = array_diff(
-                    array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
+                    array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
                     explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
                 );
 
-                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $url_img  = null;
                 if (isset($row['cat_id']) && in_array($row['cat_id'], $authorizeds)) {
                     $url_img = make_picture_url(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);

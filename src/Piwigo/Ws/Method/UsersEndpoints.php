@@ -11,6 +11,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
@@ -47,13 +49,13 @@ final class UsersEndpoints
             $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdArr)) . ')';
         }
         if (!empty($params['username'])) {
-            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . get_dbal_connection()->quote(is_scalar($params['username']) ? (string) $params['username'] : '');
+            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . DbConnection::get()->quote(is_scalar($params['username']) ? (string) $params['username'] : '');
         }
         $filteredGroups = [];
         if (!empty($params['filter'])) {
             $filterStr      = is_scalar($params['filter']) ? (string) $params['filter'] : '';
             $filteredGroups = ServiceLocator::get(GroupRepository::class)->findIdsByNameLike($filterStr);
-            $filterQuoted   = get_dbal_connection()->quote('%' . $filterStr . '%');
+            $filterQuoted   = DbConnection::get()->quote('%' . $filterStr . '%');
             $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ' . $filterQuoted . ' OR u.' . Config::userFields()['email'] . ' LIKE ' . $filterQuoted;
             if (!empty($filteredGroups)) {
                 $filterWhere .= ' OR ug.group_id IN (' . implode(',', array_map(fn (int $v): string => (string) $v, $filteredGroups)) . ')';
@@ -276,7 +278,7 @@ final class UsersEndpoints
         $currentUser = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
         if ($currentUser->status === 'admin') {
-            $protectedUsers = array_merge($protectedUsers, array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
+            $protectedUsers = array_merge($protectedUsers, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
         }
         $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
         $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));
@@ -370,7 +372,7 @@ final class UsersEndpoints
         if (!ServiceLocator::get(ImageRepository::class)->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        single_insert(FAVORITES_TABLE, ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
+        Dml::singleInsert(FAVORITES_TABLE, ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
         return true;
     }
 

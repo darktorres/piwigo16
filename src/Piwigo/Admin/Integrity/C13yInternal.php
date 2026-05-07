@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Dml;
 use Piwigo\Users\UserService;
 
 class C13yInternal
@@ -175,7 +176,7 @@ class C13yInternal
                             'password' => $password,
                             ],
                           ];
-                        mass_inserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
+                        Dml::massInserts(USERS_TABLE, array_keys($inserts[0]), $inserts);
 
                         UserService::get()->createUserInfos($id);
 
@@ -200,7 +201,7 @@ class C13yInternal
                             'status'  => $status,
                             ],
                           ];
-                        mass_updates(
+                        Dml::massUpdates(
                             USER_INFOS_TABLE,
                             ['primary' => ['user_id'],'update' => ['status']],
                             $updates

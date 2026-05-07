@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
@@ -211,7 +212,7 @@ final class PasswordService
             return false;
         }
 
-        single_update(
+        Dml::singleUpdate(
             USERS_TABLE,
             [Config::userFields()['password'] => password_hash(is_scalar($_POST['use_new_pwd']) ? (string) $_POST['use_new_pwd'] : '', PASSWORD_BCRYPT)],
             [Config::userFields()['id'] => $user_id]

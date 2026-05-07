@@ -11,6 +11,8 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -36,7 +38,7 @@ final class CategoriesEndpoints
         /** @var int[] $catIds */
         $catIds = array_values(array_unique(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCatId)));
         if (count($catIds) > 0) {
-            $dbCatIds     = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
+            $dbCatIds     = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
             $missingCatIds = array_diff($catIds, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $dbCatIds));
             if (count($missingCatIds) > 0) {
                 return new PwgError(404, 'cat_id {' . implode(',', $missingCatIds) . '} not found');
@@ -48,7 +50,7 @@ final class CategoriesEndpoints
         $whereClauses = [];
         foreach ($catIds as $catIdInt) {
             if ($params['recursive']) {
-                $whereClauses[] = 'uppercats ' . DB_REGEX_OPERATOR . " '(^|,)" . $catIdInt . "(,|$)'";
+                $whereClauses[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $catIdInt . "(,|$)'";
             } else {
                 $whereClauses[] = 'id=' . $catIdInt;
             }
@@ -112,7 +114,7 @@ final class CategoriesEndpoints
                 }
                 $detailsForCategory = [];
                 if (count($categoryIds) > 0) {
-                    $detailsForCategory = array_column(get_dbal_connection()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $categoryIds)) . ');')->fetchAllAssociative(), null, 'id');
+                    $detailsForCategory = array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $categoryIds)) . ');')->fetchAllAssociative(), null, 'id');
                 }
                 foreach ($images as $idx => $image) {
                     $imageCats  = [];
@@ -162,7 +164,7 @@ final class CategoriesEndpoints
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($getlistCatId > 0) {
-            $where[] = 'uppercats ' . DB_REGEX_OPERATOR . " '(^|,)" . $getlistCatId . "(,|$)'";
+            $where[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $getlistCatId . "(,|$)'";
         }
         if ($params['public']) {
             $where[]  = 'status = "public"';
@@ -175,7 +177,7 @@ final class CategoriesEndpoints
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order FROM ' . CATEGORIES_TABLE . ' ' . $joinType . ' JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id=cat_id AND user_id=' . $joinUser . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . get_dbal_connection()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
+            $query .= ' AND name LIKE ' . DbConnection::get()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
             if (!isset($params['limit'])) {
                 $query .= ' LIMIT ' . Config::linkedAlbumSearchLimit();
             }
@@ -223,7 +225,7 @@ final class CategoriesEndpoints
                 $imageId = get_random_image_in_category($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    $subQuery = 'SELECT representative_picture_id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ",%' AND representative_picture_id IS NOT NULL" . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . DB_RANDOM_FUNCTION . '() LIMIT 1;';
+                    $subQuery = 'SELECT representative_picture_id FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ",%' AND representative_picture_id IS NOT NULL" . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . Dml::RANDOM_FUNCTION . '() LIMIT 1;';
                     $subval = ServiceLocator::get(Connection::class)->executeQuery($subQuery)->fetchOne();
                     if ($subval !== false) {
                         $imageId = is_numeric($subval) ? (int) $subval : null;
@@ -280,7 +282,7 @@ final class CategoriesEndpoints
             foreach ($userRepresentativeUpdatesFor as $catId => $imageId) {
                 $updates[] = ['user_id' => $user['id'], 'cat_id' => $catId, 'user_representative_picture_id' => $imageId];
             }
-            mass_updates(USER_CACHE_CATEGORIES_TABLE, ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']], $updates);
+            Dml::massUpdates(USER_CACHE_CATEGORIES_TABLE, ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']], $updates);
         }
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
@@ -309,7 +311,7 @@ final class CategoriesEndpoints
             $params['additional_output'] = '';
         }
         $params['additional_output'] = array_map(trim(...), explode(',', is_scalar($params['additional_output']) ? (string) $params['additional_output'] : ''));
-        $nbImagesOf = array_column(get_dbal_connection()->executeQuery('SELECT category_id, COUNT(*) AS counter FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'counter', 'category_id');
+        $nbImagesOf = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS counter FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'counter', 'category_id');
         $where      = ['1=1'];
         $adminCatId = is_numeric($params['cat_id']) ? (int) $params['cat_id'] : 0;
         if (!$params['recursive']) {
@@ -319,11 +321,11 @@ final class CategoriesEndpoints
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($adminCatId > 0) {
-            $where[] = 'uppercats ' . DB_REGEX_OPERATOR . " '(^|,)" . $adminCatId . "(,|$)'";
+            $where[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $adminCatId . "(,|$)'";
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order FROM ' . CATEGORIES_TABLE . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . get_dbal_connection()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%') . ' LIMIT ' . Config::linkedAlbumSearchLimit();
+            $query .= ' AND name LIKE ' . DbConnection::get()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%') . ' LIMIT ' . Config::linkedAlbumSearchLimit();
         }
         $query     .= ';';
         $searchConn = ServiceLocator::get(Connection::class);
@@ -352,7 +354,7 @@ final class CategoriesEndpoints
             $catsIds    = array_column($cats, 'id');
             $nbSubcatsOf = [];
             if (!empty($catsIds)) {
-                $nbSubcatsOf = array_column(get_dbal_connection()->executeQuery('SELECT id_uppercat, COUNT(*) AS nb_subcats FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catsIds)) . ') GROUP BY id_uppercat;')->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
+                $nbSubcatsOf = array_column(DbConnection::get()->executeQuery('SELECT id_uppercat, COUNT(*) AS nb_subcats FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catsIds)) . ') GROUP BY id_uppercat;')->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
             }
             foreach ($cats as $idx => $cat) {
                 $catIdKey            = is_scalar($cat['id']) ? (string) $cat['id'] : '';
@@ -400,7 +402,7 @@ final class CategoriesEndpoints
         $rawSetrankIds  = is_array($params['category_id']) ? $params['category_id'] : [];
         /** @var int[] $setrankCategoryIds */
         $setrankCategoryIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawSetrankIds);
-        $categories     = get_dbal_connection()->executeQuery('SELECT id, id_uppercat, `rank` FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $setrankCategoryIds) . ');')->fetchAllAssociative();
+        $categories     = DbConnection::get()->executeQuery('SELECT id, id_uppercat, `rank` FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $setrankCategoryIds) . ');')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
@@ -409,7 +411,7 @@ final class CategoriesEndpoints
             $orderNew      = $setrankCategoryIds;
             $orderNewById  = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
-            $catAsc        = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
+            $catAsc        = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
             $catAscStr     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catAsc);
             $orderNewStr   = array_map(fn (int $v): string => (string) $v, $orderNewById);
             if (strcmp(implode(',', $catAscStr), implode(',', $orderNewStr)) !== 0) {
@@ -419,7 +421,7 @@ final class CategoriesEndpoints
         } else {
             $singleCatId    = implode('', array_map(fn (int $v): string => (string) $v, $setrankCategoryIds));
             $idUppercatStr  = is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '';
-            $orderOld       = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat ' . (empty($idUppercatStr) ? 'IS NULL' : '= ' . $idUppercatStr) . ' AND id != ' . $singleCatId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'id');
+            $orderOld       = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id_uppercat ' . (empty($idUppercatStr) ? 'IS NULL' : '= ' . $idUppercatStr) . ' AND id != ' . $singleCatId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'id');
             $rankTarget     = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
             $orderNew       = [];
             $wasInserted    = false;
@@ -447,7 +449,7 @@ final class CategoriesEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $categories = get_dbal_connection()->executeQuery('SELECT * FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $categoryId . ';')->fetchAllAssociative();
+        $categories = DbConnection::get()->executeQuery('SELECT * FROM ' . CATEGORIES_TABLE . ' WHERE id = ' . $categoryId . ';')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
@@ -487,7 +489,7 @@ final class CategoriesEndpoints
             }
         }
         if ($performUpdate) {
-            single_update(CATEGORIES_TABLE, $update, ['id' => $update['id']]);
+            Dml::singleUpdate(CATEGORIES_TABLE, $update, ['id' => $update['id']]);
         }
         pwg_activity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
         return null;
@@ -569,7 +571,7 @@ final class CategoriesEndpoints
         if (count($categoryIds) === 0) {
             return null;
         }
-        $rawCategoryIds = array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $categoryIds) . ');')->fetchAllAssociative(), 'id');
+        $rawCategoryIds = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $categoryIds) . ');')->fetchAllAssociative(), 'id');
         if (count($rawCategoryIds) === 0) {
             return null;
         }
@@ -626,7 +628,7 @@ final class CategoriesEndpoints
             $catDisplayName = get_cat_display_name_cache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
-        $nbPhotosIn = array_column(get_dbal_connection()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+        $nbPhotosIn = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . IMAGE_CATEGORY_TABLE . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
         $updateCats = [];
         foreach (array_unique($updateCatIds) as $updateCat) {
             $nbSubPhotos      = 0;
@@ -648,19 +650,19 @@ final class CategoriesEndpoints
         $category['has_images'] = ServiceLocator::get(CategoryRepository::class)->hasCategoryImages($categoryId);
         $subcatIds     = get_subcat_ids([$categoryId]);
         $category['nb_subcats'] = count($subcatIds) - 1;
-        $imageIdsRecursive = array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+        $imageIdsRecursive = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
         $category['nb_images_recursive'] = count($imageIdsRecursive);
         $category['nb_images_becoming_orphan']     = 0;
         $category['nb_images_associated_outside']  = 0;
         if ($category['nb_images_recursive'] > 0) {
             if ($category['nb_images_recursive'] < 1000) {
-                $imageIdsAssociatedOutside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ') AND image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive)) . ');')->fetchAllAssociative(), 'image_id'));
+                $imageIdsAssociatedOutside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ') AND image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive)) . ');')->fetchAllAssociative(), 'image_id'));
                 $category['nb_images_associated_outside'] = count($imageIdsAssociatedOutside);
                 $imageIdsBecomingOrphan = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive), $imageIdsAssociatedOutside);
                 $category['nb_images_becoming_orphan'] = count($imageIdsBecomingOrphan);
             } else {
                 $imageIdsRecursiveKeys = array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $imageIdsRecursive));
-                $imageIdsAssociatedOutside2 = array_column(get_dbal_connection()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+                $imageIdsAssociatedOutside2 = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
                 $imageIdsNotOrphan = [];
                 foreach ($imageIdsAssociatedOutside2 as $imageId) {
                     if (isset($imageIdsRecursiveKeys[is_scalar($imageId) ? (string) $imageId : ''])) {

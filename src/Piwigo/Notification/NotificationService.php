@@ -7,6 +7,8 @@ namespace Piwigo\Notification;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
@@ -281,7 +283,7 @@ SELECT
   ORDER BY date_available DESC
   LIMIT ' . $maxDates . '
 ;';
-        $dates = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $dates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
         for ($i = 0; $i < count($dates); $i++) {
             $dateAvailable = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
@@ -292,10 +294,10 @@ SELECT DISTINCT i.*
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
   ' . $whereSql . '
     AND date_available=\'' . $dateAvailable . '\'
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT ' . $maxElements . '
 ;';
-                $dates[$i]['elements'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['elements'] = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             }
 
             if ($maxCats > 0) {
@@ -312,7 +314,7 @@ SELECT
   ORDER BY img_count DESC
   LIMIT ' . $maxCats . '
 ;';
-                $dates[$i]['categories'] = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['categories'] = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             }
         }
 

@@ -8,7 +8,7 @@ final class DbInfo
 {
     public static function version(): string
     {
-        $v = get_dbal_connection()->executeQuery('SELECT VERSION()')->fetchOne();
+        $v = DbConnection::get()->executeQuery('SELECT VERSION()')->fetchOne();
         return is_string($v) ? $v : '';
     }
 }

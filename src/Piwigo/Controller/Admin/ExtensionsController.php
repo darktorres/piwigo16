@@ -13,6 +13,7 @@ use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
@@ -1135,7 +1136,7 @@ final class ExtensionsController
         $new_extensions = ServiceLocator::get(AdminService::class)->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];
-        $permalinks = array_column(get_dbal_connection()->executeQuery('SELECT permalink FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
+        $permalinks = array_column(DbConnection::get()->executeQuery('SELECT permalink FROM ' . CATEGORIES_TABLE . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         $eligible_templates = ['----------' => 'N/A', 'about.tpl' => 'about', 'comments.tpl' => 'comments', 'comment_list.tpl' => 'comment_list', 'footer.tpl' => 'tail', 'header.tpl' => 'header', 'identification.tpl' => 'identification', 'index.tpl' => 'index', 'mainpage_categories.tpl' => 'index_category_thumbnails', 'menubar.tpl' => 'menubar', 'menubar_categories.tpl' => 'mbCategories', 'menubar_identification.tpl' => 'mbIdentification', 'menubar_links.tpl' => 'mbLinks', 'menubar_menu.tpl' => 'mbMenu', 'menubar_specials.tpl' => 'mbSpecials', 'menubar_tags.tpl' => 'mbTags', 'month_calendar.tpl' => 'month_calendar', 'navigation_bar.tpl' => 'navbar', 'nbm.tpl' => 'nbm', 'notification.tpl' => 'notification', 'password.tpl' => 'password', 'picture.tpl' => 'picture', 'picture_content.tpl' => 'default_content', 'picture_nav_buttons.tpl' => 'picture_nav_buttons', 'popuphelp.tpl' => 'popuphelp', 'profile.tpl' => 'profile', 'profile_content.tpl' => 'profile_content', 'redirect.tpl' => 'redirect', 'register.tpl' => 'register', 'search.tpl' => 'search', 'slideshow.tpl' => 'slideshow', 'tags.tpl' => 'tags', 'thumbnails.tpl' => 'index_thumbnails'];

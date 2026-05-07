@@ -7,6 +7,7 @@ namespace Piwigo\Calendar;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -400,7 +401,7 @@ class CalendarMonthly extends CalendarBase
             $query .= $this->inner_sql;
             $query .= $this->getDateWhere();
             $query .= '
-    ORDER BY '.DB_RANDOM_FUNCTION.'()
+    ORDER BY '.Dml::RANDOM_FUNCTION.'()
     LIMIT 1';
             if (is_array($page)) {
                 $cdTmp2 = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];

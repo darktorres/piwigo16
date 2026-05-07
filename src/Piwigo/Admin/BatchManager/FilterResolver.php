@@ -7,6 +7,7 @@ namespace Piwigo\Admin\BatchManager;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\TemplateRegistry;
 
 final class FilterResolver
@@ -113,7 +114,7 @@ SELECT
       OR i.storage_category_id IS NULL
     )
 ;';
-            $associated_categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
+            $associated_categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
         }
         $tpl->assign('associated_categories', $associated_categories);
 

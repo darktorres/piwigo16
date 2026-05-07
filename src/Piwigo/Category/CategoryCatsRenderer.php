@@ -8,6 +8,8 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -97,7 +99,7 @@ SELECT representative_picture_id
   WHERE uppercats LIKE \'' . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
                     . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
                 $subval = ServiceLocator::get(Connection::class)->executeQuery($subquery)->fetchOne();
@@ -136,7 +138,7 @@ SELECT
 ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
 ;';
-                $dates_of_category = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
+                $dates_of_category = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
             }
         }
 
@@ -199,7 +201,7 @@ SELECT *
                     'user_representative_picture_id' => $image_id,
                 ];
             }
-            mass_updates(
+            Dml::massUpdates(
                 USER_CACHE_CATEGORIES_TABLE,
                 ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']],
                 $updates

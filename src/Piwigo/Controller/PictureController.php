@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -272,7 +273,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   WHERE image_id = ' . $imageId . '
 ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
 ;';
-        $related_categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $related_categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         usort($related_categories, global_rank_compare(...));
 
         // Load prev/current/next picture data
@@ -410,7 +411,7 @@ SELECT *
   FROM ' . IMAGE_FORMAT_TABLE . '
   WHERE image_id = ' . (is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0) . '
 ;';
-                $formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 array_unshift($formats, [
                     'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
                     'ext'          => get_extension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
@@ -539,7 +540,7 @@ SELECT *
             }
             $ids    = array_unique($ids);
             $query  = 'SELECT id, name, permalink FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', $ids) . ')';
-            $catMap = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $catMap = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '') as $id) {

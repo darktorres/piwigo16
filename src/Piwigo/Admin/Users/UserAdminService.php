@@ -8,6 +8,7 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Users\UserRepository;
@@ -30,14 +31,14 @@ final class UserAdminService
     {
         $baseUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column(get_dbal_connection()->executeQuery(
+            array_column(DbConnection::get()->executeQuery(
                 'SELECT ' . Config::userFields()['id'] . ' AS id FROM ' . USERS_TABLE
             )->fetchAllAssociative(), 'id')
         );
 
         $infosUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column(get_dbal_connection()->executeQuery(
+            array_column(DbConnection::get()->executeQuery(
                 'SELECT user_id FROM ' . USER_INFOS_TABLE
             )->fetchAllAssociative(), 'user_id')
         );
@@ -56,7 +57,7 @@ final class UserAdminService
             $toDelete = array_diff(
                 array_map(
                     fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                    array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT user_id FROM ' . $table)->fetchAllAssociative(), 'user_id')
+                    array_column(DbConnection::get()->executeQuery('SELECT DISTINCT user_id FROM ' . $table)->fetchAllAssociative(), 'user_id')
                 ),
                 $baseUsers
             );
@@ -83,7 +84,7 @@ final class UserAdminService
         if ($includeWebmaster) {
             $statusList[] = 'webmaster';
         }
-        $raw = array_column(get_dbal_connection()->executeQuery(
+        $raw = array_column(DbConnection::get()->executeQuery(
             'SELECT user_id FROM ' . USER_INFOS_TABLE . " WHERE status IN ('" . implode("','", $statusList) . "')"
         )->fetchAllAssociative(), 'user_id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
@@ -120,7 +121,7 @@ final class UserAdminService
         $groupRepo     = ServiceLocator::get(GroupRepository::class);
         $permRepo->deleteGroupAccessByGroups($groupIds);
         $groupRepo->deleteUserGroupByGroupIds($groupIds);
-        $groupList = array_column(get_dbal_connection()->executeQuery(
+        $groupList = array_column(DbConnection::get()->executeQuery(
             'SELECT id, name FROM `' . GROUPS_TABLE . '` WHERE id IN (' . $groupIdString . ')'
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));

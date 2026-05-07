@@ -7,6 +7,7 @@ namespace Piwigo\Db;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Piwigo\Config\Config;
+use Piwigo\Core\ServiceLocator;
 
 /**
  * Factory for the shared Doctrine DBAL connection.
@@ -17,6 +18,22 @@ use Piwigo\Config\Config;
  */
 final class DbConnection
 {
+    /**
+     * Returns the shared connection. Post-boot: from the DI container.
+     * Pre-boot (install/upgrade): lazily builds one and caches it statically.
+     */
+    public static function get(): Connection
+    {
+        if (ServiceLocator::has(Connection::class)) {
+            return ServiceLocator::get(Connection::class);
+        }
+        static $conn = null;
+        if ($conn === null) {
+            $conn = self::build();
+        }
+        return $conn;
+    }
+
     public static function build(): Connection
     {
         $conn = DriverManager::getConnection([

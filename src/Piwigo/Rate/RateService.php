@@ -6,6 +6,7 @@ namespace Piwigo\Rate;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -110,7 +111,7 @@ final readonly class RateService
             }
             $updates[] = ['id' => $id, 'rating_score' => $score];
         }
-        mass_updates(
+        Dml::massUpdates(
             IMAGES_TABLE,
             [
                 'primary' => ['id'],

@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Dml;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -162,7 +163,7 @@ final class GroupsController
             foreach (array_diff($private_uppercats, $authorized_ids) as $to_autorize_id) {
                 $inserts[] = ['group_id' => $group_id, 'cat_id' => $to_autorize_id];
             }
-            mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
+            Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 

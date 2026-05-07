@@ -7,6 +7,8 @@ namespace Piwigo\Ws\Method;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
@@ -27,7 +29,7 @@ final class GroupsEndpoints
         }
         $whereClauses = ['1=1'];
         if (!empty($params['name'])) {
-            $whereClauses[] = 'LOWER(name) LIKE ' . get_dbal_connection()->quote(is_scalar($params['name']) ? (string) $params['name'] : '');
+            $whereClauses[] = 'LOWER(name) LIKE ' . DbConnection::get()->quote(is_scalar($params['name']) ? (string) $params['name'] : '');
         }
         if (!empty($params['group_id'])) {
             $groupIdArr     = is_array($params['group_id']) ? $params['group_id'] : [];
@@ -36,7 +38,7 @@ final class GroupsEndpoints
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $page    = is_numeric($params['page']) ? (int) $params['page'] : 0;
         $query   = 'SELECT g.*, COUNT(user_id) AS nb_users FROM `' . GROUPS_TABLE . '` AS g LEFT JOIN ' . USER_GROUP_TABLE . ' AS ug ON ug.group_id = g.id WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY id ORDER BY ' . $orderStr . ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
-        $groups  = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $groups  = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($groups)]), 'groups' => new PwgNamedArray($groups, 'group')];
     }
 
@@ -53,8 +55,8 @@ final class GroupsEndpoints
         }
         $isDefaultRaw = $params['is_default'];
         $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
-        single_insert(GROUPS_TABLE, ['name' => $params['name'], 'is_default' => BoolUtil::toString($isDefaultVal)]);
-        $insertedId = (int) get_dbal_connection()->lastInsertId();
+        Dml::singleInsert(GROUPS_TABLE, ['name' => $params['name'], 'is_default' => BoolUtil::toString($isDefaultVal)]);
+        $insertedId = (int) DbConnection::get()->lastInsertId();
         pwg_activity('group', $insertedId, 'add');
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
@@ -98,7 +100,7 @@ final class GroupsEndpoints
             $isDefaultUpd          = $params['is_default'];
             $updates['is_default'] = BoolUtil::toString(is_bool($isDefaultUpd) ? $isDefaultUpd : (is_string($isDefaultUpd) ? $isDefaultUpd : ''));
         }
-        single_update(GROUPS_TABLE, $updates, ['id' => $setinfoGroupId]);
+        Dml::singleUpdate(GROUPS_TABLE, $updates, ['id' => $setinfoGroupId]);
         pwg_activity('group', $setinfoGroupId, 'edit');
         return $service->invoke('pwg.groups.getList', ['group_id' => $setinfoGroupId]);
     }
@@ -118,7 +120,7 @@ final class GroupsEndpoints
         foreach ($userIds as $userId) {
             $inserts[] = ['group_id' => $adduserGroupId, 'user_id' => $userId];
         }
-        mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        Dml::massInserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('group', $adduserGroupId, 'edit');
         pwg_activity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit');
@@ -143,14 +145,14 @@ final class GroupsEndpoints
         if ($groupRepo->countByIds($allGroups) !== count($allGroups)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
         }
-        $userInMergeGroups = array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(user_id) FROM `' . USER_GROUP_TABLE . '` WHERE group_id IN (' . implode(',', $mergeGroup) . ');')->fetchAllAssociative(), 'user_id');
-        $userInDest        = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM `' . USER_GROUP_TABLE . '` WHERE group_id = ' . $destGroupId . ';')->fetchAllAssociative(), 'user_id');
+        $userInMergeGroups = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(user_id) FROM `' . USER_GROUP_TABLE . '` WHERE group_id IN (' . implode(',', $mergeGroup) . ');')->fetchAllAssociative(), 'user_id');
+        $userInDest        = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM `' . USER_GROUP_TABLE . '` WHERE group_id = ' . $destGroupId . ';')->fetchAllAssociative(), 'user_id');
         $userToAdd         = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $userInMergeGroups), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $userInDest));
         $inserts           = [];
         foreach ($userToAdd as $user) {
             $inserts[] = ['group_id' => $destGroupId, 'user_id' => $user];
         }
-        mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        Dml::massInserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         pwg_activity('group', $destGroupId, 'edit');
         foreach ($userToAdd as $userId) {
@@ -177,15 +179,15 @@ final class GroupsEndpoints
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
         $isDefault = $groupRepo->findIsDefault($dupGroupId);
-        single_insert(GROUPS_TABLE, ['name' => $copyNameStr, 'is_default' => BoolUtil::toString(is_string($isDefault) ? $isDefault : '')]);
-        $insertedId = (int) get_dbal_connection()->lastInsertId();
+        Dml::singleInsert(GROUPS_TABLE, ['name' => $copyNameStr, 'is_default' => BoolUtil::toString(is_string($isDefault) ? $isDefault : '')]);
+        $insertedId = (int) DbConnection::get()->lastInsertId();
         pwg_activity('group', $insertedId, 'add');
-        $users   = array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM `' . USER_GROUP_TABLE . '` WHERE group_id = ' . $dupGroupId . ';')->fetchAllAssociative(), 'user_id');
+        $users   = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM `' . USER_GROUP_TABLE . '` WHERE group_id = ' . $dupGroupId . ';')->fetchAllAssociative(), 'user_id');
         $inserts = [];
         foreach ($users as $user) {
             $inserts[] = ['group_id' => $insertedId, 'user_id' => $user];
         }
-        mass_inserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        Dml::massInserts(USER_GROUP_TABLE, ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         foreach ($users as $userId) {
             $uid = is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0);

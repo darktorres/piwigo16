@@ -12,7 +12,9 @@ use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\SqlExpr;
 use Piwigo\History\HistoryRepository;
@@ -206,14 +208,14 @@ final readonly class Util
     {
         $userId = CurrentUser::get()->id;
         $query  = 'SELECT element_id FROM ' . CADDIE_TABLE . ' WHERE user_id = ' . $userId . ';';
-        $inCaddie = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'element_id');
+        $inCaddie = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'element_id');
         $caddiables = array_diff($elementsId, array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $inCaddie));
         $datas = [];
         foreach ($caddiables as $caddiable) {
             $datas[] = ['element_id' => $caddiable, 'user_id' => $userId];
         }
         if (count($caddiables) > 0) {
-            mass_inserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
+            Dml::massInserts(CADDIE_TABLE, ['element_id', 'user_id'], $datas);
         }
     }
 
@@ -234,7 +236,7 @@ final readonly class Util
                 . ' WHERE ' . implode(' AND ', $where);
             $count = $this->conn->executeQuery($query)->fetchOne();
             $nb    = is_numeric($count) ? (int) $count : 0;
-            single_update(USER_CACHE_TABLE, ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
+            Dml::singleUpdate(USER_CACHE_TABLE, ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
             return $nb;
         });
         return is_int($cached) ? $cached : 0;
@@ -325,7 +327,7 @@ final readonly class Util
             'get_icon',
             'sql_recent_date',
             static function () use ($recentPeriod): string {
-                $v = get_dbal_connection()->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
+                $v = DbConnection::get()->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
                 return is_scalar($v) ? (string) $v : '';
             }
         );
@@ -621,7 +623,7 @@ final readonly class Util
                 'user_agent'  => $userAgent ?? '',
             ];
         }
-        mass_inserts(ACTIVITY_TABLE, array_keys($inserts[0]), $inserts);
+        Dml::massInserts(ACTIVITY_TABLE, array_keys($inserts[0]), $inserts);
     }
 
     public function checkLounge(): void
@@ -633,7 +635,7 @@ final readonly class Util
             return;
         }
         $query   = 'SELECT image_id, date_available, NOW() AS dbnow FROM ' . LOUNGE_TABLE . ' JOIN ' . IMAGES_TABLE . ' ON image_id = id ORDER BY image_id ASC LIMIT 1;';
-        $voyagers = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $voyagers = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         if (count($voyagers)) {
             $voyager = $voyagers[0];
             $age = strtotime(is_scalar($voyager['dbnow']) ? (string) $voyager['dbnow'] : '') - strtotime(is_scalar($voyager['date_available']) ? (string) $voyager['date_available'] : '');
@@ -759,9 +761,9 @@ final readonly class Util
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
             $query = 'SELECT COUNT(*) AS counter FROM `' . IMAGES_TABLE . '` WHERE storage_category_id IS NOT NULL;';
-            if (array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
+            if (array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
                 $query = 'SELECT IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method, MAX(date_available) AS last_added_on, COUNT(*) AS nb_files FROM `' . IMAGES_TABLE . '` GROUP BY add_method;';
-                $filesByMethod = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
+                $filesByMethod = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
                 $piwigoInfos['general_stats']['nb_photos_synced']  = $filesByMethod['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesByMethod['sync']['last_added_on'];
                 $methodOfLastPhoto = 'sync';
@@ -771,14 +773,14 @@ final readonly class Util
                 $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'];
             } else {
                 $query  = 'SELECT date_available FROM `' . IMAGES_TABLE . '` ORDER BY id DESC LIMIT 1;';
-                $images = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                $images = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
             }
 
             $query = 'SELECT SUBSTRING_INDEX(path,".",-1) AS ext, COUNT(*) AS counter, SUM(filesize) AS filesize FROM `' . IMAGES_TABLE . '` GROUP BY ext;';
-            $piwigoInfos['file_extensions'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
+            $piwigoInfos['file_extensions'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
         }
 
         $url         = PEM_URL . '/api/get_extension_list.php';
@@ -872,7 +874,7 @@ final readonly class Util
 
         $piwigoInfos['themes_usage'] = [];
         $query      = 'SELECT theme, COUNT(*) AS theme_counter FROM ' . USER_INFOS_TABLE . ' GROUP BY theme ORDER BY theme;';
-        $themesUsed = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
+        $themesUsed = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
         foreach ($themesUsed as $themeUsed => $counter) {
             if (isset($privateThemes[$themeUsed])) {
                 $themeUsed = 'private theme';
@@ -883,13 +885,13 @@ final readonly class Util
         $piwigoInfos['general_stats']['default_language'] = UserService::get()->getDefaultLanguage();
 
         $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . USER_INFOS_TABLE . ' GROUP BY language ORDER BY language;';
-        $piwigoInfos['languages_usage'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
+        $piwigoInfos['languages_usage'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
 
         $piwigoInfos['activities']                      = [];
         $piwigoInfos['general_stats']['nb_activities']  = 0;
 
         $query      = 'SELECT object, action, COUNT(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object != 'system' GROUP BY object, action;";
-        $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($activities as $activity) {
             $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
             $objectKey = is_scalar($activity['object']) ? (string) $activity['object'] : '';
@@ -902,7 +904,7 @@ final readonly class Util
 
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
         $query      = 'SELECT object, object_id, action, COUNT(*) AS counter FROM ' . ACTIVITY_TABLE . " WHERE object = 'system' GROUP BY object, object_id, action;";
-        $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         $systemActivities = [];
         foreach ($activities as $activity) {
             $objectIdKey = is_numeric($activity['object_id']) ? (int) $activity['object_id'] : 0;
@@ -916,7 +918,7 @@ final readonly class Util
         $piwigoInfos['activities']['system'] = $systemActivities;
 
         $query   = 'SELECT action, occured_on, details FROM ' . ACTIVITY_TABLE . " WHERE object = 'system' AND object_id = " . ACTIVITY_SYSTEM_CORE . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
-        $updates = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $updates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($updates as $update) {
             $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
             if (isset($details['from_version']) && isset($details['to_version'])) {
@@ -933,7 +935,7 @@ final readonly class Util
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
         $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . ACTIVITY_TABLE . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
-        $activities = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         $apps       = [];
         $appsPattern = [
             'Piwigo iOS'          => '/^Piwigo\/\d+ CFNetwork/',

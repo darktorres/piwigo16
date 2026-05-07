@@ -13,6 +13,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
@@ -297,7 +298,7 @@ final class ConfigurationController
 
                 $groups = array_map(
                     fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    array_column(get_dbal_connection()->executeQuery('SELECT id, name FROM `' . GROUPS_TABLE . '`;')->fetchAllAssociative(), 'name', 'id')
+                    array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . GROUPS_TABLE . '`;')->fetchAllAssociative(), 'name', 'id')
                 );
                 natcasesort($groups);
                 $tpl->assign(['group_options' => $groups]);

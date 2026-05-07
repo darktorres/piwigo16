@@ -6,6 +6,7 @@ namespace Piwigo\Calendar;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -215,7 +216,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                   . $calendar->inner_sql . '
   ' . $calendar->getDateWhere() . '
   ' . $orderBy;
-                $page['items'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+                $page['items'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (isset($cacheKey)) {
                     $persistentCache->set($cacheKey, $page['items']);
                 }

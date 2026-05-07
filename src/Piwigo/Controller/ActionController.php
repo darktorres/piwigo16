@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -33,7 +34,7 @@ final class ActionController implements ControllerInterface
             $get_format = input_int('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . IMAGE_FORMAT_TABLE . ' WHERE format_id = ' . $get_format . ';';
-            $formats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
             if (count($formats) == 0) {
                 $this->error(400, 'Invalid request - format');

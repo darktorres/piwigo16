@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Search\SearchService;
 use Piwigo\Users\PermissionService;
@@ -88,7 +89,7 @@ SELECT *
   WHERE cat_id = ' . $cat_id . '
     AND user_id = ' . (is_scalar($user['id']) ? (int) $user['id'] : 0) . '
 ;';
-            $found_categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $found_categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             if (empty($found_categories)) {
                 page_not_found(l10n('Requested album does not exist'));
             }
@@ -123,7 +124,7 @@ SELECT id
     AND author IS NOT NULL
     LIMIT 1
 ;';
-            $first_author = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+            $first_author = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
             if (count($first_author) > 0) {
                 $search['fields']['author'] = ['words' => [], 'mode' => 'OR'];
             }

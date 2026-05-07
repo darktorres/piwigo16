@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Core\PageState;
+use Piwigo\Db\DbConnection;
 
 final class MaintenanceService
 {
     public static function repairAndOptimize(): void
     {
         $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
-        $conn = get_dbal_connection();
+        $conn = DbConnection::get();
 
         $allTables = $conn->executeQuery("SHOW TABLES LIKE '" . $prefixeTable . "%'")->fetchFirstColumn();
         if ($allTables === []) {

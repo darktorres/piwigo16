@@ -9,6 +9,7 @@ use Piwigo\Calendar\CalendarService;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -218,7 +219,7 @@ SELECT id
                                 ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
                                 "\n  AND"
                             );
-                        $subcatIds   = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+                        $subcatIds   = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
                         $subcatIds[] = $catId;
                         $subcatIdsStr = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $subcatIds);
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
@@ -248,7 +249,7 @@ SELECT DISTINCT(image_id)
 ' . $forbidden . '
   ' . Config::orderBy() . '
 ;';
-                    $page['items'] = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id');
+                    $page['items'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id');
                     if (isset($cacheKey)) {
                         PersistentCacheRegistry::current()->set($cacheKey, $page['items']);
                     }
@@ -316,7 +317,7 @@ SELECT image_id
   ' . Config::orderBy() . '
 ;';
                 $page = array_merge($page, [
-                    'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id'),
+                    'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id'),
                 ]);
                 if (count($page['items']) > 0) {
                     TemplateRegistry::current()->assign('favorite', [
@@ -344,7 +345,7 @@ SELECT DISTINCT(id)
 ;';
             $page = array_merge($page, [
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Recent photos') . '</a>',
-                'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'recent_cats') {
             $page = array_merge($page, [
@@ -365,7 +366,7 @@ SELECT DISTINCT(id)
             $page = array_merge($page, [
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . l10n('Most visited') . '</a>',
-                'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'best_rated') {
             $page['super_order_by'] = true;
@@ -382,7 +383,7 @@ SELECT DISTINCT(id)
             $page = array_merge($page, [
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . l10n('Best rated') . '</a>',
-                'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'list') {
             $listIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $pageList);
@@ -396,7 +397,7 @@ SELECT DISTINCT(id)
 ;';
             $page = array_merge($page, [
                 'title' => '<a href="' . duplicate_index_url(['start' => 0]) . '">' . l10n('Random photos') . '</a>',
-                'items' => array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         }
 

@@ -10,6 +10,7 @@ use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Psr\Http\Message\ResponseInterface;
@@ -109,7 +110,7 @@ final class UpgradeController implements ControllerInterface
 
         $page = &$GLOBALS['page'];
         $has_remote_site = false;
-        foreach (get_dbal_connection()->executeQuery('SELECT galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative() as $row) {
+        foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative() as $row) {
             if (url_is_remote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
                 $has_remote_site = true;
             }
@@ -136,7 +137,7 @@ final class UpgradeController implements ControllerInterface
         $columns_of = $this->getColumnsOf($tables);
 
         $applied_upgrades = in_array(PREFIX_TABLE . 'upgrade', $tables, true)
-            ? array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id')
+            ? array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id')
             : [];
 
         if (!in_array('181', $applied_upgrades, true)) {
@@ -161,7 +162,7 @@ final class UpgradeController implements ControllerInterface
     private function getTables(): array
     {
         $tables = [];
-        foreach (get_dbal_connection()->executeQuery('SHOW TABLES')->fetchFirstColumn() as $tableName) {
+        foreach (DbConnection::get()->executeQuery('SHOW TABLES')->fetchFirstColumn() as $tableName) {
             $tableNameStr = is_scalar($tableName) ? (string) $tableName : '';
             if (preg_match('/^' . PREFIX_TABLE . '/', $tableNameStr)) {
                 $tables[] = $tableNameStr;
@@ -180,7 +181,7 @@ final class UpgradeController implements ControllerInterface
         foreach ($tables as $table) {
             $columns_of[$table] = array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                get_dbal_connection()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
+                DbConnection::get()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
             );
         }
         return $columns_of;

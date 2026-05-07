@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Method;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
@@ -52,7 +53,7 @@ final class CommentsEndpoints
         }
         if (!empty($params['search'])) {
             $whereClauses   = ['1=1'];
-            $whereClauses[] = 'content LIKE ' . get_dbal_connection()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
+            $whereClauses[] = 'content LIKE ' . DbConnection::get()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
         }
         $conn = ServiceLocator::get(Connection::class);
         $querySum = 'SELECT count(*) as all_comments, sum(validated = \'true\') as validated, sum(validated = \'false\') as pending FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
@@ -88,7 +89,7 @@ final class CommentsEndpoints
         $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];
         unset($whereClauses['author_id']);
         $authorsQuery = 'SELECT author, author_id, count(*) as nb_authors FROM ' . COMMENTS_TABLE . ' WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY author_id;';
-        $nbAuthorsIn  = get_dbal_connection()->executeQuery($authorsQuery)->fetchAllAssociative();
+        $nbAuthorsIn  = DbConnection::get()->executeQuery($authorsQuery)->fetchAllAssociative();
         $totalCount   = is_numeric($totalComments) ? (int) $totalComments : 0;
         return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'] ?? null, 'ended_at' => $dates['ended_at'] ?? null], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, ceil($totalCount / max(1, $perPage)) - 1)]];
     }

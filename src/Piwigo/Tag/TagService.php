@@ -6,6 +6,8 @@ namespace Piwigo\Tag;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
@@ -24,7 +26,7 @@ final readonly class TagService
         }
         if (!isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
-            single_update(
+            Dml::singleUpdate(
                 USER_CACHE_TABLE,
                 ['nb_available_tags' => $user['nb_available_tags']],
                 ['user_id' => CurrentUser::get()->id]
@@ -77,11 +79,11 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $cacheKey    = $persistentCache->makeKey('get_available_tags' . $userId . $cacheUpdate);
             $tagCounters = [];
             if (!$persistentCache->get($cacheKey, $tagCounters)) {
-                $tagCounters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+                $tagCounters = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
                 $persistentCache->set($cacheKey, $tagCounters);
             }
         } else {
-            $tagCounters = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+            $tagCounters = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
         }
 
         if (!is_array($tagCounters) || empty($tagCounters)) {
@@ -204,7 +206,7 @@ SELECT id
         }
         $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**

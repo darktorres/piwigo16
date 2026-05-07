@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
@@ -161,7 +162,7 @@ final class UpgradeService
                 .' INNER JOIN '.USER_INFOS_TABLE.' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
                 .' WHERE '.Config::userFields()['username'].' = ?';
         }
-        $row = get_dbal_connection()->executeQuery($query, [$username])->fetchAssociative() ?: null;
+        $row = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative() ?: null;
 
         if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
             PageState::current()->addError(l10n('Invalid password!'));
@@ -197,13 +198,13 @@ final class UpgradeService
         $query   = 'SELECT id FROM '.UPGRADE_TABLE.';';
         $applied = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id')
+            array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id')
         );
         return count(array_diff(self::getAvailableUpgradeIds(), $applied)) > 0;
     }
 
     public static function upgradeDbConnect(): void
     {
-        get_dbal_connection();
+        DbConnection::get();
     }
 }

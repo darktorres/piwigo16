@@ -8,6 +8,7 @@ use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
@@ -72,7 +73,7 @@ final class HtmlService
 SELECT id, name, permalink
   FROM ' . CATEGORIES_TABLE . '
 ;';
-            return array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            return array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
         });
         /** @var array<int|string, array<string,mixed>> $catNames */
         $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];

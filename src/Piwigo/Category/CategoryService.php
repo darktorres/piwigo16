@@ -8,6 +8,8 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Filter\FilterService;
 use Piwigo\Template\TemplateRegistry;
@@ -148,7 +150,7 @@ WHERE ' . $where . '
     FROM ' . CATEGORIES_TABLE . '
     WHERE id IN (' . (is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') . ')
   ;';
-            $names = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $names = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             $cat['upper_names'] = [];
             foreach ($upperIds as $catId) {
@@ -204,7 +206,7 @@ WHERE ' . $where . '
     /** @param int[]|string $selecteds */
     public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true): void
     {
-        $categories = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         usort($categories, $this->globalRankCompare(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -228,11 +230,11 @@ SELECT DISTINCT(id)
                 $query .= '
     OR ';
             }
-            $query .= 'uppercats ' . DB_REGEX_OPERATOR . ' \'(^|,)' . $categoryId . '(,|$)\'';
+            $query .= 'uppercats ' . Dml::REGEX_OPERATOR . ' \'(^|,)' . $categoryId . '(,|$)\'';
         }
         $query .= '
 ;';
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -256,7 +258,7 @@ SELECT id, permalink, 0 AS is_old
   FROM ' . CATEGORIES_TABLE . '
   WHERE permalink IN (' . $in . ')
 ;';
-        $permaHash = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
+        $permaHash = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
 
         if (empty($permaHash)) {
             return null;
@@ -318,7 +320,7 @@ SELECT image_id
             }
             $query .= '
     ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
-  ORDER BY ' . DB_RANDOM_FUNCTION . '()
+  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
             $val = $this->conn->executeQuery($query)->fetchOne();
@@ -477,7 +479,7 @@ SELECT id
         }
         $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
 
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -559,7 +561,7 @@ SELECT
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', array_keys($catIds)) . ')
 ;';
-        $cats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+        $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         usort($cats, $this->globalRankCompare(...));
 
         $indexOfCat = [];

@@ -9,6 +9,7 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
@@ -136,12 +137,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_author_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                        $filter_rows_raw = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = $this->normalizeRows($filter_rows_raw);
                 } else {
-                    $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 }
 
                 $author_names = [];
@@ -177,7 +178,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
 ;';
-                    $thresholds = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
+                    $thresholds = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
 
                     $query = '
 SELECT
@@ -275,7 +276,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m,
     SUBDATE(NOW(), INTERVAL 12 MONTH) AS 12m
 ;';
-                    $thresholds = get_dbal_connection()->executeQuery($query)->fetchAllAssociative()[0];
+                    $thresholds = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
 
                     $query = '
 SELECT
@@ -376,12 +377,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_added_by_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                        $filter_rows_raw = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = $this->normalizeRows($filter_rows_raw);
                 } else {
-                    $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 }
 
                 $added_by = $filter_rows;
@@ -399,7 +400,7 @@ SELECT
   FROM ' . USERS_TABLE . '
   WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $user_ids) . ')
 ;';
-                    $username_of = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+                    $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
                     foreach (array_keys($added_by) as $added_by_idx) {
                         $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
@@ -467,7 +468,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $all_exts_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $all_exts_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
                     $persistent_cache->set($cache_key, $all_exts_raw);
                 }
                 $all_exts = is_array($all_exts_raw) ? $all_exts_raw : [];
@@ -483,7 +484,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $filtered_exts = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $filtered_exts = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
 
                     $exts = [];
                     foreach ($all_exts as $ext => $counter) {
@@ -517,7 +518,7 @@ SELECT
     JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause;
 
-                        $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                        $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                         $ratings = array_fill(0, 6, 0);
 
                         foreach ($filter_rows as $row) {
@@ -613,7 +614,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-                    $filter_rows = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                     $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
                     foreach ($filter_rows as $row) {
@@ -661,12 +662,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_height_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'height');
+                        $filter_rows_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'height');
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
-                    $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'height');
+                    $filter_rows = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'height');
                 }
 
                 $heights = $filter_rows;
@@ -702,12 +703,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_width_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'width');
+                        $filter_rows_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'width');
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
-                    $filter_rows = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'width');
+                    $filter_rows = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'width');
                 }
 
                 $widths = $filter_rows;
@@ -796,7 +797,7 @@ SELECT
     INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON c.id = cat_id and user_id = ' . $userId . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
-                        $cats = get_dbal_connection()->executeQuery($query)->fetchAllAssociative();
+                        $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                         usort($cats, fn (array $a, array $b): int => name_compare($a, $b));
                         $albums_found = [];
                         foreach ($cats as $cat) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http\Middleware;
 
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -127,7 +128,7 @@ WHERE ' . $catClause . '
 
             $visibleImageStr = implode(',', array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'image_id')
+                array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id')
             ));
             $filter['visible_images'] = $visibleImageStr !== '' ? $visibleImageStr : -1;
 

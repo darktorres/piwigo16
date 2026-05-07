@@ -13,6 +13,8 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -102,7 +104,7 @@ SELECT DISTINCT c.id
     AND ' . sprintf($whereCats, 'c.id') . '
     AND i.id IS NULL
 ;';
-        $wrongRep = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $wrongRep = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         if (count($wrongRep) > 0) {
             ServiceLocator::get(CategoryRepository::class)->clearRepresentatives(
                 array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $wrongRep)
@@ -116,7 +118,7 @@ SELECT DISTINCT id
   WHERE representative_picture_id IS NULL
     AND ' . sprintf($whereCats, 'category_id') . '
 ;';
-            $toRand = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id'));
+            $toRand = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
             if (count($toRand) > 0) {
                 $this->setRandomRepresentant($toRand);
             }
@@ -135,7 +137,7 @@ SELECT DISTINCT id
         foreach ($relatedColumns as $fullcol) {
             [$table, $column] = explode('.', $fullcol);
             $query = 'SELECT ' . $column . ' FROM ' . $table . ' LEFT JOIN ' . CATEGORIES_TABLE . ' ON id = ' . $column . ' WHERE id IS NULL';
-            $orphans = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), $column)));
+            $orphans = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), $column)));
             if (count($orphans) > 0) {
                 $this->conn->executeStatement('DELETE FROM ' . $table . ' WHERE ' . $column . ' IN (' . implode(',', $orphans) . ')');
             }
@@ -162,7 +164,7 @@ SELECT DISTINCT id
             }
             $datas[] = ['id' => $id, 'rank' => $currentRank];
         }
-        mass_updates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['rank']], $datas);
+        Dml::massUpdates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['rank']], $datas);
         $this->updateGlobalRank();
     }
 
@@ -194,7 +196,7 @@ SELECT DISTINCT id
                 $datas[] = ['id' => $id, 'rank' => $cat['rank'], 'global_rank' => $newGlobalRank];
             }
         }
-        mass_updates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['rank', 'global_rank']], $datas);
+        Dml::massUpdates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['rank', 'global_rank']], $datas);
         return count($datas);
     }
 
@@ -275,7 +277,7 @@ SELECT DISTINCT id
                 }
                 $subCatsForRef = get_subcat_ids([is_scalar($topCategory['id']) ? (string) $topCategory['id'] : '0']);
                 foreach ($tables as $table => $field) {
-                    $refAccess = array_column(get_dbal_connection()->executeQuery(
+                    $refAccess = array_column(DbConnection::get()->executeQuery(
                         'SELECT ' . $field . ' FROM ' . $table . ' WHERE cat_id = ' . $refCatId
                     )->fetchAllAssociative(), $field);
                     if (count($refAccess) === 0) {
@@ -319,7 +321,7 @@ SELECT DISTINCT id
         foreach ($categories as $categoryId) {
             $datas[] = ['id' => $categoryId, 'representative_picture_id' => $imgRepo->findRandomIdByCategoryId((int) $categoryId)];
         }
-        mass_updates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['representative_picture_id']], $datas);
+        Dml::massUpdates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['representative_picture_id']], $datas);
     }
 
     /**
@@ -334,9 +336,9 @@ SELECT DISTINCT id
         if (count($catIds) === 0) {
             return [];
         }
-        $catDirs = array_column(get_dbal_connection()->executeQuery('SELECT id, dir FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL')->fetchAllAssociative(), 'dir', 'id');
-        $galleriesUrl = array_column(get_dbal_connection()->executeQuery('SELECT id, galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative(), 'galleries_url', 'id');
-        $categories   = get_dbal_connection()->executeQuery(
+        $catDirs = array_column(DbConnection::get()->executeQuery('SELECT id, dir FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL')->fetchAllAssociative(), 'dir', 'id');
+        $galleriesUrl = array_column(DbConnection::get()->executeQuery('SELECT id, galleries_url FROM ' . SITES_TABLE)->fetchAllAssociative(), 'galleries_url', 'id');
+        $categories   = DbConnection::get()->executeQuery(
             'SELECT id, uppercats, site_id FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL AND id IN (' . wordwrap(implode(', ', $catIds), 80, "\n") . ')'
         )->fetchAllAssociative();
         $callback     = (fn (array $m): string => is_scalar($catDirs[$m[1]] ?? null) ? (string) $catDirs[$m[1]] : '');
@@ -353,7 +355,7 @@ SELECT DISTINCT id
 
     public function updateUppercats(): void
     {
-        $catMap = array_column(get_dbal_connection()->executeQuery('SELECT id, id_uppercat, uppercats FROM ' . CATEGORIES_TABLE)->fetchAllAssociative(), null, 'id');
+        $catMap = array_column(DbConnection::get()->executeQuery('SELECT id, id_uppercat, uppercats FROM ' . CATEGORIES_TABLE)->fetchAllAssociative(), null, 'id');
         $datas  = [];
         foreach ($catMap as $id => $cat) {
             $upperList = [];
@@ -368,12 +370,12 @@ SELECT DISTINCT id
                 $datas[] = ['id' => $id, 'uppercats' => $newUppercats];
             }
         }
-        mass_updates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['uppercats']], $datas);
+        Dml::massUpdates(CATEGORIES_TABLE, ['primary' => ['id'], 'update' => ['uppercats']], $datas);
     }
 
     public function updatePath(): void
     {
-        $catIds   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT DISTINCT(storage_category_id) FROM ' . IMAGES_TABLE . ' WHERE storage_category_id IS NOT NULL')->fetchAllAssociative(), 'storage_category_id'));
+        $catIds   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(storage_category_id) FROM ' . IMAGES_TABLE . ' WHERE storage_category_id IS NOT NULL')->fetchAllAssociative(), 'storage_category_id'));
         $fulldirs = $this->getFulldirs($catIds);
         foreach ($catIds as $catId) {
             ServiceLocator::get(ImageRepository::class)->updatePathByStorageCategoryId($catId, $fulldirs[$catId] ?? '');
@@ -453,19 +455,19 @@ SELECT DISTINCT id
                 $uppercatsPrefix = (is_scalar($parent['uppercats']) ? (string) $parent['uppercats'] : '') . ',';
             }
         }
-        single_insert(CATEGORIES_TABLE, $insert);
-        $insertedId = (int) get_dbal_connection()->lastInsertId();
-        single_update(CATEGORIES_TABLE, ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
+        Dml::singleInsert(CATEGORIES_TABLE, $insert);
+        $insertedId = (int) DbConnection::get()->lastInsertId();
+        Dml::singleUpdate(CATEGORIES_TABLE, ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
         $this->updateGlobalRank();
         $idUppercatStr = is_scalar($insert['id_uppercat'] ?? null) ? (string) $insert['id_uppercat'] : '0';
         if ($insert['status'] === 'private' && !empty($insert['id_uppercat']) && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
-            $grantedGrps = array_column(get_dbal_connection()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'group_id');
+            $grantedGrps = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . GROUP_ACCESS_TABLE . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'group_id');
             $inserts     = [];
             foreach ($grantedGrps as $grp) {
                 $inserts[] = ['group_id' => $grp, 'cat_id' => $insertedId];
             }
-            mass_inserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
-            $grantedUsers = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'user_id'));
+            Dml::massInserts(GROUP_ACCESS_TABLE, ['group_id', 'cat_id'], $inserts);
+            $grantedUsers = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . USER_ACCESS_TABLE . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'user_id'));
             $this->addPermissionOnCategory($insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
             $userId = CurrentUser::get()->id;
@@ -490,7 +492,7 @@ SELECT DISTINCT id
             $catKey            = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
             $existing[$catKey][] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
         }
-        $currentRankOf = array_column(get_dbal_connection()->executeQuery(
+        $currentRankOf = array_column(DbConnection::get()->executeQuery(
             'SELECT category_id, MAX(`rank`) AS max_rank FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $categories) . ') GROUP BY category_id'
         )->fetchAllAssociative(), 'max_rank', 'category_id');
 
@@ -510,7 +512,7 @@ SELECT DISTINCT id
             }
         }
         if (count($inserts)) {
-            mass_inserts(IMAGE_CATEGORY_TABLE, array_keys($inserts[0]), $inserts);
+            Dml::massInserts(IMAGE_CATEGORY_TABLE, array_keys($inserts[0]), $inserts);
             $this->updateCategory($categories);
         }
     }
@@ -524,7 +526,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
     AND id IN (' . implode(',', is_array($images) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $images) : []) . ')
     AND (category_id != storage_category_id OR storage_category_id IS NULL)
 ;';
-        $dissociables = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $dissociables = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         if (!empty($dissociables)) {
             ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByCategoryAndImageIds(
                 (int) $category,
@@ -564,7 +566,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         if (count($sources) === 0) {
             return;
         }
-        $images = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(get_dbal_connection()->executeQuery(
+        $images = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery(
             'SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . ' WHERE category_id IN (' . implode(',', $sources) . ')'
         )->fetchAllAssociative(), 'image_id'));
         $this->associateImagesToCategories($images, $destinations);
@@ -589,7 +591,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         if (isset($_POST['apply_on_sub'])) {
             $catIds = array_merge($catIds, get_subcat_ids($categoryIds));
         }
-        $privateCats = array_column(get_dbal_connection()->executeQuery(
+        $privateCats = array_column(DbConnection::get()->executeQuery(
             'SELECT id FROM ' . CATEGORIES_TABLE . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_numeric($v) ? (string)(int)$v : '0', $catIds)) . ") AND status = 'private'"
         )->fetchAllAssociative(), 'id');
         if (count($privateCats) === 0) {
@@ -601,7 +603,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
                 $inserts[] = ['user_id' => $userId, 'cat_id' => $catId];
             }
         }
-        mass_inserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], $inserts, ['ignore' => true]);
+        Dml::massInserts(USER_ACCESS_TABLE, ['user_id', 'cat_id'], $inserts, ['ignore' => true]);
     }
 
     public function saveImagesOrder(mixed $categoryId, mixed $images): void
@@ -614,7 +616,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         foreach ($images as $id) {
             $datas[] = ['category_id' => $categoryId, 'image_id' => $id, 'rank' => ++$currentRank];
         }
-        mass_updates(IMAGE_CATEGORY_TABLE, ['primary' => ['image_id', 'category_id'], 'update' => ['rank']], $datas);
+        Dml::massUpdates(IMAGE_CATEGORY_TABLE, ['primary' => ['image_id', 'category_id'], 'update' => ['rank']], $datas);
     }
 
     /**
@@ -630,7 +632,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
             }
         }
         if (count($inserts)) {
-            mass_inserts(LOUNGE_TABLE, array_keys($inserts[0]), $inserts, ['ignore' => true]);
+            Dml::massInserts(LOUNGE_TABLE, array_keys($inserts[0]), $inserts, ['ignore' => true]);
         }
     }
 
@@ -656,7 +658,7 @@ SELECT id FROM ' . IMAGE_CATEGORY_TABLE . '
         }
         $logger->debug('empty_lounge, exec=' . $execId . ' wins the race!');
         $maxImageId = 0;
-        $rows       = get_dbal_connection()->executeQuery('SELECT image_id, category_id FROM ' . LOUNGE_TABLE . ' ORDER BY category_id ASC, image_id ASC')->fetchAllAssociative();
+        $rows       = DbConnection::get()->executeQuery('SELECT image_id, category_id FROM ' . LOUNGE_TABLE . ' ORDER BY category_id ASC, image_id ASC')->fetchAllAssociative();
         $images     = [];
         foreach ($rows as $idx => $row) {
             if (is_numeric($row['image_id']) && (int) $row['image_id'] > $maxImageId) {

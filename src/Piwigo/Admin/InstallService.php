@@ -110,7 +110,7 @@ final class InstallService
         Config::override('db_base', $dbname);
 
         try {
-            get_dbal_connection();
+            DbConnection::get();
             $dbVersion = DbInfo::version();
             if (version_compare($dbVersion, REQUIRED_MYSQL_VERSION, '<')) {
                 $errors[] = sprintf(

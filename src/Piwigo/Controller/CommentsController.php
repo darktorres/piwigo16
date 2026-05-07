@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
@@ -290,12 +291,12 @@ SELECT *
   FROM ' . IMAGES_TABLE . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $element_ids)) . ')
 ;';
-            $elements = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             $query = 'SELECT id, name, permalink, uppercats
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')';
-            $categories = array_column(get_dbal_connection()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             foreach ($comments as $comment) {
                 /** @var array<string, float|int|string|null> $comment */

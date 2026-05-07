@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
@@ -500,14 +501,14 @@ final readonly class AdminService
     {
         $piwigoOrigins = '2001-09-01 00:00:00';
         $candidate     = null;
-        $users = get_dbal_connection()->executeQuery(
+        $users = DbConnection::get()->executeQuery(
             'SELECT registration_date FROM ' . USER_INFOS_TABLE . ' WHERE user_id = 2'
         )->fetchAllAssociative();
         if (count($users) > 0) {
             $candidate = $users[0]['registration_date'];
         }
         if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $users = get_dbal_connection()->executeQuery(
+            $users = DbConnection::get()->executeQuery(
                 'SELECT MIN(registration_date) AS min_registration_date FROM ' . USER_INFOS_TABLE . " WHERE registration_date > '$piwigoOrigins'"
             )->fetchAllAssociative();
             if (count($users) > 0) {
@@ -515,7 +516,7 @@ final readonly class AdminService
             }
         }
         if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $images = get_dbal_connection()->executeQuery(
+            $images = DbConnection::get()->executeQuery(
                 'SELECT date_available FROM ' . IMAGES_TABLE . ' ORDER BY id ASC LIMIT 1'
             )->fetchAllAssociative();
             if (count($images) > 0) {

@@ -6,6 +6,8 @@ namespace Piwigo\Controller;
 
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,7 +32,7 @@ final class UpgradeFeedController implements ControllerInterface
         define('PREFIX_TABLE', Config::dbPrefix());
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column(get_dbal_connection()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
+        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
         $existing = UpgradeService::getAvailableUpgradeIds();
         $to_apply = array_diff($existing, $applied);
 
@@ -44,7 +46,7 @@ final class UpgradeFeedController implements ControllerInterface
 
             require(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
 
-            single_insert(PREFIX_TABLE . 'upgrade', [
+            Dml::singleInsert(PREFIX_TABLE . 'upgrade', [
                 'id'          => $upgrade_id,
                 'applied'     => new \DateTimeImmutable()->format('Y-m-d H:i:s'),
                 'description' => is_string($upgrade_description ?? null) ? $upgrade_description : '',

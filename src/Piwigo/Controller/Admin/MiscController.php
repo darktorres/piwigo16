@@ -390,7 +390,7 @@ final class MiscController
                 $tag['counter'] = $counter;
             }
             $tagNameStr     = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
-            $alt_names      = array_diff(array_unique(array_filter(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name), 'is_string')), [$tagNameStr]);
+            $alt_names      = array_diff(array_unique(array_filter(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name), is_string(...))), [$tagNameStr]);
             if (count($alt_names)) {
                 $tag['alt_names'] = implode(', ', $alt_names);
             }

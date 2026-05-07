@@ -205,7 +205,7 @@ final class AlbumController
         foreach ($allAlbum as $album) {
             $album['name'] = EventDispatcher::dispatch('render_category_name', $album['name'], 'admin_cat_list');
             $album['lastmodified'] = ServiceLocator::get(DateService::class)->timeSince(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
-            $parents = array_map('strval', explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : ''));
+            $parents = array_map(strval(...), explode(',', is_scalar($album['uppercats']) ? (string) $album['uppercats'] : ''));
             self::placeAlbumInTree($associatedTree, $parents, $album);
         }
 

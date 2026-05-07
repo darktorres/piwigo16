@@ -227,7 +227,7 @@ final readonly class TagAdminService
             $taglist[] = ['name' => $name, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
             if (!$onlyUserLanguage) {
                 $altNames = EventDispatcher::dispatch('get_tag_alt_names', [], $rawName);
-                foreach (array_diff(array_unique(array_filter($altNames, 'is_string')), [$name]) as $alt) {
+                foreach (array_diff(array_unique(array_filter($altNames, is_string(...))), [$name]) as $alt) {
                     $altlist[] = ['name' => $alt, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
                 }
             }

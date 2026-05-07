@@ -504,7 +504,9 @@ class Themes
                         $main_filepath = null;
                         $status = 'ok';
                         foreach ($list as $file) {
-                            if (!is_array($file)) continue;
+                            if (!is_array($file)) {
+                                continue;
+                            }
                             $filename = is_string($file['filename'] ?? null) ? (string) $file['filename'] : '';
                             // we search themeconf.inc.php in archive
                             if (basename($filename) == 'themeconf.inc.php'
@@ -536,7 +538,9 @@ class Themes
                             if (is_array($resultRaw) && $resultRaw) {
                                 $result = $resultRaw;
                                 foreach ($result as $file) {
-                                    if (!is_array($file)) continue;
+                                    if (!is_array($file)) {
+                                        continue;
+                                    }
                                     $storedFilename = is_string($file['stored_filename'] ?? null) ? $file['stored_filename'] : '';
                                     if ($storedFilename == $main_filepath) {
                                         $status = is_string($file['status'] ?? null) ? $file['status'] : 'ok';

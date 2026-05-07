@@ -257,7 +257,7 @@ class Template
         if (is_string($dirs)) {
             return $dirs;
         }
-        return array_filter($dirs, 'is_string');
+        return array_filter($dirs, is_string(...));
     }
 
     /**
@@ -393,7 +393,6 @@ class Template
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
-     * @param string $varname
      * @param string $handle
      * @return true
      */

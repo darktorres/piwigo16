@@ -647,7 +647,7 @@ final readonly class SearchService
                     break;
             }
             if (!empty($clauses)) {
-                $query = $queryBase . '(' . implode("\n OR ", array_filter($clauses, 'is_string')) . ')';
+                $query = $queryBase . '(' . implode("\n OR ", array_filter($clauses, is_string(...))) . ')';
                 $qsr->images_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
             }
         }

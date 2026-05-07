@@ -8,10 +8,10 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Tables;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Piwigo\Db\Tables;
 
 #[AsMessageHandler]
 final class SendNotificationEmailHandler

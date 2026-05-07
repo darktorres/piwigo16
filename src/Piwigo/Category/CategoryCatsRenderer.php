@@ -10,15 +10,15 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class CategoryCatsRenderer
 {

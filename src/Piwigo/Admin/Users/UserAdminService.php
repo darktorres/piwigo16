@@ -6,16 +6,16 @@ namespace Piwigo\Admin\Users;
 
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Tables;
 
 final class UserAdminService
 {

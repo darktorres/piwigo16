@@ -6,8 +6,6 @@ namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\AdminService;
-use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\PageTailRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Plugins;
@@ -19,8 +17,11 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -30,10 +31,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 
 final readonly class Util
 {

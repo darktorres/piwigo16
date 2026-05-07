@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
 
 final class UpgradeService
 {

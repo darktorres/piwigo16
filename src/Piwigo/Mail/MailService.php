@@ -9,19 +9,19 @@ use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final readonly class MailService
 {

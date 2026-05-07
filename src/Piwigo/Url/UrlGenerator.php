@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Url;
 
 use Piwigo\Routing\Router;
-use Piwigo\Url\UrlService;
 
 /**
  * Typed facade for building application URLs.

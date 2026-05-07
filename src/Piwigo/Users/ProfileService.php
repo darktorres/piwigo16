@@ -9,9 +9,9 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
 
 final class ProfileService

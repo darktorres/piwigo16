@@ -13,19 +13,19 @@ use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaHelper;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class UsersController
 {

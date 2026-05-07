@@ -6,12 +6,12 @@ namespace Piwigo\Page;
 
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\PermissionService;
-use Piwigo\Core\AppInfo;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\PermissionService;
 
 final class PageTailRenderer
 {
@@ -39,7 +39,7 @@ final class PageTailRenderer
             if ($check_for_updates) {
                 $exec_id = pwg_unique_exec_begins('check_for_updates');
                 if ($exec_id !== false) {
-                    (new Updates())->notifyPiwigoNewVersions();
+                    new Updates()->notifyPiwigoNewVersions();
                     pwg_unique_exec_ends('check_for_updates');
                 }
             }

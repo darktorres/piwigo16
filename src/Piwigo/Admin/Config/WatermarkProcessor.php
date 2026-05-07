@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Config;
 
 use Piwigo\Admin\Image\ImageAdminService;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
@@ -12,7 +13,6 @@ use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
-use Piwigo\Core\ActivitySystem;
 
 final class WatermarkProcessor
 {

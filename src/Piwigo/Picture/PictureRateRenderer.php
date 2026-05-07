@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 final class PictureRateRenderer
 {

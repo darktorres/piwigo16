@@ -8,16 +8,16 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class TagsEndpoints
 {

@@ -10,9 +10,9 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Db\Tables;
 
 final class MetadataAdminService
 {

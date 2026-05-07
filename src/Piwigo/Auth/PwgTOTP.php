@@ -6,8 +6,8 @@ namespace Piwigo\Auth;
 
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 
 class PwgTOTP
 {

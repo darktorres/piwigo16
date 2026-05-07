@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 final class WsHelper
 {

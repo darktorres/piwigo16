@@ -9,13 +9,13 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class NotificationAdminService
 {

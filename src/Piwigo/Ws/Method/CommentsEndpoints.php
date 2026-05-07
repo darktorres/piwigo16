@@ -8,12 +8,12 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Db\Tables;
 
 final class CommentsEndpoints
 {

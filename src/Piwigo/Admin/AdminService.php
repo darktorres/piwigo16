@@ -12,12 +12,12 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\UserRepository;
 
 final readonly class AdminService
 {

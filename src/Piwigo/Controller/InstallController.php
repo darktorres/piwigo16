@@ -11,24 +11,24 @@ use Piwigo\Admin\UpgradeService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Config\TestMode;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 /**
  * Handles the Piwigo installation wizard (/install).

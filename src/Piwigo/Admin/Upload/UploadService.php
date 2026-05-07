@@ -16,6 +16,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -28,7 +29,6 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServerRegistry;
-use Piwigo\Db\Tables;
 
 final class UploadService
 {

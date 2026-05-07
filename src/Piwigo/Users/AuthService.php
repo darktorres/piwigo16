@@ -12,9 +12,9 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
 
 final readonly class AuthService

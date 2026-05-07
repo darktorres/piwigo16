@@ -8,9 +8,9 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
 
 final class FilterResolver

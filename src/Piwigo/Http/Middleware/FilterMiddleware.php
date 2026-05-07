@@ -7,11 +7,11 @@ namespace Piwigo\Http\Middleware;
 use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\Tables;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Piwigo\Db\Tables;
 
 /**
  * Resolves the "recent photos" filter state and populates $GLOBALS['filter'].

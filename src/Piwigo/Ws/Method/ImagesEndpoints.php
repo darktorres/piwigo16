@@ -16,8 +16,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -25,6 +27,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
@@ -32,9 +35,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class ImagesEndpoints
 {

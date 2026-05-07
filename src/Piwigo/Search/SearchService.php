@@ -10,18 +10,18 @@ use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final readonly class SearchService
 {

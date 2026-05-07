@@ -9,9 +9,9 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Core\ValidationPattern;
 
 final class DirectPreparer
 {

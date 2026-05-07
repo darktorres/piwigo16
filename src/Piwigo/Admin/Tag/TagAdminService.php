@@ -11,9 +11,9 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
-use Piwigo\Db\Tables;
 
 final readonly class TagAdminService
 {

@@ -12,11 +12,13 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -25,6 +27,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -33,9 +36,6 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class GeneralEndpoints
 {

@@ -6,13 +6,13 @@ namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Core\AppInfo;
 
 class Plugins
 {

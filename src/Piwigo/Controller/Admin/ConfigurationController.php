@@ -11,19 +11,19 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class ConfigurationController
 {

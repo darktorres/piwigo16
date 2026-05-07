@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
@@ -15,8 +17,6 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
 
 class Themes
 {

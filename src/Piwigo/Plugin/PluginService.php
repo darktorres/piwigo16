@@ -6,11 +6,11 @@ namespace Piwigo\Plugin;
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
-use Piwigo\Core\ActivitySystem;
 
 final readonly class PluginService
 {

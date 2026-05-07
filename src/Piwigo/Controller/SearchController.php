@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
@@ -14,9 +17,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 
 /**
  * Builds a search query from GET params, saves it and redirects to results.

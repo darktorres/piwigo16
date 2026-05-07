@@ -8,10 +8,10 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Db\Tables;
 
 final class UrlService
 {
@@ -104,14 +104,14 @@ final class UrlService
     /** @param array<mixed> $params */
     public function makeIndexUrl(array $params = []): string
     {
-        $url = $this->getRootUrl() . 'index.php?';
+        $url = self::getRootUrl() . 'index.php?';
 
         $urlBeforeParams = $url;
         $url .= $this->makeSectionInUrl($params);
         $url  = $this->addWellKnownParamsInUrl($url, $params);
 
         if ($url == $urlBeforeParams) {
-            $url = $this->getAbsoluteRootUrl($this->urlIsRemote($url));
+            $url = self::getAbsoluteRootUrl(self::urlIsRemote($url));
         }
 
         return $url;
@@ -158,7 +158,7 @@ final class UrlService
     /** @param array<mixed> $params */
     public function makePictureUrl(array $params): string
     {
-        $url = $this->getRootUrl() . 'index.php?/picture/';
+        $url = self::getRootUrl() . 'index.php?/picture/';
         switch (Config::pictureUrlStyle()) {
             case 'id-file':
                 $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
@@ -580,15 +580,15 @@ final class UrlService
             $params['download'] = null;
         }
 
-        return $this->addUrlParams($this->getRootUrl() . 'index.php?/action', $params);
+        return $this->addUrlParams(self::getRootUrl() . 'index.php?/action', $params);
     }
 
     /** @param array<string,mixed> $elementInfo */
     public function getElementUrl(array $elementInfo): string
     {
         $url = is_scalar($elementInfo['path']) ? (string) $elementInfo['path'] : '';
-        if (!$this->urlIsRemote($url)) {
-            $url = $this->embellishUrl($this->getRootUrl() . $url);
+        if (!self::urlIsRemote($url)) {
+            $url = self::embellishUrl(self::getRootUrl() . $url);
             $url = is_string($url) ? $url : '';
         }
         return (string) EventDispatcher::dispatch('get_element_url', $url, $elementInfo);
@@ -610,7 +610,7 @@ final class UrlService
             }
             $newSave['count']       = 1;
             $page['save_root_path'] = $newSave;
-            $page['root_path']      = $this->getAbsoluteRootUrl();
+            $page['root_path']      = self::getAbsoluteRootUrl();
         } else {
             $count             = is_numeric($save['count'] ?? null) ? (int) $save['count'] : 0;
             $save['count']     = $count + 1;
@@ -668,10 +668,10 @@ final class UrlService
     public function getGalleryHomeUrl(): string
     {
         if (!empty(Config::galleryUrl())) {
-            if ($this->urlIsRemote(Config::galleryUrl()) or Config::galleryUrl()[0] == '/') {
+            if (self::urlIsRemote(Config::galleryUrl()) or Config::galleryUrl()[0] == '/') {
                 return Config::galleryUrl();
             }
-            return $this->getRootUrl() . Config::galleryUrl();
+            return self::getRootUrl() . Config::galleryUrl();
         } else {
             return $this->makeIndexUrl();
         }

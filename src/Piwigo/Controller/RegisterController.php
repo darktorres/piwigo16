@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\PageTailRenderer;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 /**
  * Handles the user registration page (/register).

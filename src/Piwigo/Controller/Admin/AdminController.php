@@ -5,29 +5,29 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AdminService;
-use Piwigo\Url\UrlService;
 use Piwigo\Admin\CoreTabsRegistrar;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Controller\ControllerInterface;
+use Piwigo\Core\AccessLevel;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\PageTailRenderer;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Core\AppInfo;
 
 /**
  * Handles all admin pages (/admin{rest}).

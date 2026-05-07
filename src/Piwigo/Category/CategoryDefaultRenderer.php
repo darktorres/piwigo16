@@ -7,14 +7,14 @@ namespace Piwigo\Category;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 
 final class CategoryDefaultRenderer
 {

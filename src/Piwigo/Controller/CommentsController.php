@@ -6,25 +6,25 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\PageTailRenderer;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 /**
  * Handles the paginated comments list page (/comments).

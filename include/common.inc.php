@@ -9,6 +9,8 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
@@ -18,6 +20,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugin\PluginService;
@@ -31,9 +34,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

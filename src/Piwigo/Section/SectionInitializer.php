@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Template\TemplateRegistry;
@@ -18,7 +19,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Db\Tables;
 
 /**
  * Resolves the gallery section from the request URL and populates $GLOBALS['page']

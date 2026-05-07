@@ -9,9 +9,9 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Url\UrlService;
 
 final readonly class CommentService
 {

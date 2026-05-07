@@ -11,9 +11,11 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
@@ -28,8 +30,6 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 
 final class UsersEndpoints
 {

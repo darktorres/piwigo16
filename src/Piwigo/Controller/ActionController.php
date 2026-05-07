@@ -6,20 +6,20 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 /**
  * File download / inline-serve handler for original photos, representatives,

@@ -7,15 +7,15 @@ namespace Piwigo\Ws\Method;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 
 final class GroupsEndpoints
 {

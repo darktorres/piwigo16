@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
-use Psr\Cache\CacheItemPoolInterface;
 use Piwigo\Core\AppInfo;
+use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Legacy persistent-cache API. Concrete subclasses wrap a PSR-6 pool

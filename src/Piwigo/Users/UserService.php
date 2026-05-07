@@ -10,20 +10,20 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final readonly class UserService
 {

@@ -17,9 +17,11 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -30,10 +32,8 @@ use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\PermissionService;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\PermissionService;
 
 final class BatchManagerController
 {

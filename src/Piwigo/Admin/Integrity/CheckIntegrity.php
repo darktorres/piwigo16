@@ -6,11 +6,11 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Core\AppInfo;
 
 class CheckIntegrity
 {

@@ -9,14 +9,14 @@ use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
 
 final class ExtensionsEndpoints
 {

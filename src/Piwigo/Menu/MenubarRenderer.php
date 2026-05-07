@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 final class MenubarRenderer
 {

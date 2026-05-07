@@ -8,16 +8,16 @@ use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 /**
  * Handles the Piwigo database upgrade (/upgrade).

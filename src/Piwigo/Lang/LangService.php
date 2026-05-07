@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Lang;
 
 use Gettext\Loader\PoLoader;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Core\AppInfo;
 
 final class LangService
 {

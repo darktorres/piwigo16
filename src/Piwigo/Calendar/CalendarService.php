@@ -7,11 +7,11 @@ namespace Piwigo\Calendar;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class CalendarService
 {

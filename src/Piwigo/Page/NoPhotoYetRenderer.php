@@ -12,8 +12,8 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\PermissionService;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\PermissionService;
 
 final class NoPhotoYetRenderer
 {

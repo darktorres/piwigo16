@@ -8,10 +8,10 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Db\Tables;
 
 final readonly class TagService
 {

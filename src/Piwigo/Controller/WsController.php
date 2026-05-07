@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
@@ -14,7 +15,6 @@ use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AccessLevel;
 
 /**
  * Handles all requests routed to /ws (web services API).

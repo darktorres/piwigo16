@@ -12,13 +12,13 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
 
 final class GroupsController

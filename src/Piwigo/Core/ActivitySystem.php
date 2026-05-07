@@ -6,7 +6,7 @@ namespace Piwigo\Core;
 
 final class ActivitySystem
 {
-    const Core   = 1;
-    const Plugin = 2;
-    const Theme  = 3;
+    public const int Core   = 1;
+    public const int Plugin = 2;
+    public const int Theme  = 3;
 }

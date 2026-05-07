@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Page\PageHeaderRenderer;
-use Piwigo\Page\PageTailRenderer;
-use Piwigo\Core\AccessLevel;
 
 /**
  * Handles the notification/RSS subscription page (/notification).

@@ -10,8 +10,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Plugins\EventDispatcher;
-use Piwigo\Users\PermissionService;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\PermissionService;
 
 /**
  * Allows merging of javascript and css files into a single one.

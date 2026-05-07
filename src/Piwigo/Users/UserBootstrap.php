@@ -8,10 +8,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Url\UrlService;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.

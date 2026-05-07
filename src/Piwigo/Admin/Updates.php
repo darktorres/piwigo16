@@ -6,16 +6,16 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Url\UrlService;
 
 class Updates
 {

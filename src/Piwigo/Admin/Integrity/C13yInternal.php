@@ -8,14 +8,14 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserService;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
 
 class C13yInternal
 {

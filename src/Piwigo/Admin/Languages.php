@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Piwigo\Core\AppInfo;
 
 class Languages
 {

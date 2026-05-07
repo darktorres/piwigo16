@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Feed\PiwigoFeedCreator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 /**
  * Generates the RSS 2.0 feed and sends it directly as XML output.

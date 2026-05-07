@@ -7,13 +7,13 @@ namespace Piwigo\Admin\Config;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
-use Piwigo\Core\ActivitySystem;
 
 final class SizesProcessor
 {

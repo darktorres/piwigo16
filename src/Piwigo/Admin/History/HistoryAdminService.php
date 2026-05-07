@@ -12,8 +12,8 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
-use Piwigo\History\HistoryRepository;
 use Piwigo\Db\Tables;
+use Piwigo\History\HistoryRepository;
 
 final class HistoryAdminService
 {

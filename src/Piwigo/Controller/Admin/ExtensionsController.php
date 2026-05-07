@@ -11,9 +11,12 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
@@ -24,13 +27,10 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class ExtensionsController
 {

@@ -12,6 +12,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -19,9 +20,8 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\UserRepository;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\UserRepository;
 
 final class ImageAdminService
 {

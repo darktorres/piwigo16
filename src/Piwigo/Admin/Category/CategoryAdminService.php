@@ -15,11 +15,11 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
-use Piwigo\Db\Tables;
 
 final readonly class CategoryAdminService
 {

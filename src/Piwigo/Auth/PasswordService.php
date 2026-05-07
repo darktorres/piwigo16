@@ -9,6 +9,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
@@ -16,7 +17,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-use Piwigo\Db\Tables;
 
 final class PasswordService
 {

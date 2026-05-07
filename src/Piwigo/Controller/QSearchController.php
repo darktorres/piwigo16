@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Piwigo\Core\AccessLevel;
-use Piwigo\Url\UrlService;
 
 /**
  * Quick-search redirect: ?q=term → /search page.

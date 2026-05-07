@@ -6,10 +6,10 @@ namespace Piwigo\Core;
 
 final class AccessLevel
 {
-    const Free          = 0;
-    const Guest         = 1;
-    const Classic       = 2;
-    const Administrator = 3;
-    const Webmaster     = 4;
-    const Closed        = 5;
+    public const int Free          = 0;
+    public const int Guest         = 1;
+    public const int Classic       = 2;
+    public const int Administrator = 3;
+    public const int Webmaster     = 4;
+    public const int Closed        = 5;
 }

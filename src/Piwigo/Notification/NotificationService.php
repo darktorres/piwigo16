@@ -9,12 +9,12 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final readonly class NotificationService
 {

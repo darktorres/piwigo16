@@ -19,14 +19,18 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -43,14 +47,10 @@ use Piwigo\Site\SiteRepository;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
-use Piwigo\Url\UrlService;
 
 final class MaintenanceController
 {

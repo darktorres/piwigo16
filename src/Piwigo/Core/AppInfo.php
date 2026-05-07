@@ -6,8 +6,8 @@ namespace Piwigo\Core;
 
 final class AppInfo
 {
-    const VERSION              = '16.3.0';
-    const DEFAULT_LANGUAGE     = 'en_UK';
-    const DEFAULT_TEMPLATE     = 'modus';
-    const REQUIRED_PHP_VERSION = '8.5.0';
+    public const string VERSION              = '16.3.0';
+    public const string DEFAULT_LANGUAGE     = 'en_UK';
+    public const string DEFAULT_TEMPLATE     = 'modus';
+    public const string REQUIRED_PHP_VERSION = '8.5.0';
 }

@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Piwigo\Config\Config;
-use Piwigo\Url\UrlService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
+use Piwigo\Url\UrlService;
 
 defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 

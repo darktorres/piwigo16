@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\SizingParams;
-use Piwigo\Db\Tables;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |

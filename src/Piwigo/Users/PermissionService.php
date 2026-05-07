@@ -6,9 +6,9 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\SqlExpr;
-use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Tables;
 
 final readonly class PermissionService

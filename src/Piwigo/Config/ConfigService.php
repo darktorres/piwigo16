@@ -9,8 +9,8 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Db\Tables;
+use Piwigo\Plugins\EventDispatcher;
 
 final readonly class ConfigService
 {

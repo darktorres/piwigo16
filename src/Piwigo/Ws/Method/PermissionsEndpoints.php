@@ -8,11 +8,11 @@ use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
-use Piwigo\Db\Tables;
 
 final class PermissionsEndpoints
 {

@@ -15,8 +15,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
@@ -28,10 +30,8 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Users\AuthService;
-use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\AuthService;
 
 final class AlbumController
 {

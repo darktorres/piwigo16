@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
@@ -64,7 +65,7 @@ final class UrlService
                 }
             }
         }
-        $url .= cookie_path();
+        $url .= CookieService::cookiePath();
         return $url;
     }
 

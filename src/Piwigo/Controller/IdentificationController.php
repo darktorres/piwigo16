@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
@@ -37,7 +38,7 @@ final class IdentificationController implements ControllerInterface
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
-        check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) cookie_path()) . '}');
+        check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -72,7 +73,7 @@ final class IdentificationController implements ControllerInterface
                     redirect(
                         empty($redirect_to)
                         ? get_gallery_home_url()
-                        : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) cookie_path())) . $redirect_to
+                        : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) CookieService::cookiePath())) . $redirect_to
                     );
                 } else {
                     $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];

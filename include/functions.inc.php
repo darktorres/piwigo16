@@ -48,7 +48,6 @@ require_once(PHPWG_ROOT_PATH . 'include/functions_cookie.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
-require_once(PHPWG_ROOT_PATH . 'include/derivative.inc.php');
 
 // ── StringUtil delegates ──────────────────────────────────────────────────
 

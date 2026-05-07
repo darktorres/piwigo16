@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -27,7 +28,7 @@ final class PictureContentRenderer
             if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
                 pwg_set_session_var('picture_deriv', $cookiePictureDeriv);
             }
-            setcookie('picture_deriv', '', ['expires' => 0, 'path' => cookie_path() ?? '']);
+            setcookie('picture_deriv', '', ['expires' => 0, 'path' => CookieService::cookiePath() ?? '']);
         }
 
         $derivType           = pwg_get_session_var('picture_deriv', Config::derivativeDefaultSize());
@@ -69,7 +70,7 @@ final class PictureContentRenderer
         }
         $tpl->append('current', ['selected_derivative' => $selectedDerivative, 'unique_derivatives' => $uniqueDerivatives], true);
         $tpl->setFilenames(['default_content' => 'picture_content.tpl']);
-        $tpl->assign(['ALT_IMG' => $elementInfo['file'], 'COOKIE_PATH' => cookie_path()]);
+        $tpl->assign(['ALT_IMG' => $elementInfo['file'], 'COOKIE_PATH' => CookieService::cookiePath()]);
 
         return (string) $tpl->parse('default_content', true);
     }

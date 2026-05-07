@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\CookieService;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
@@ -263,7 +264,7 @@ final class InstallController implements ControllerInterface
                     ini_set('session.cookie_httponly', 1);
                 }
                 session_name(Config::sessionName());
-                session_set_cookie_params(0, cookie_path());
+                session_set_cookie_params(0, CookieService::cookiePath());
                 register_shutdown_function(session_write_close(...));
 
                 $user = UserService::get()->buildUser(1, false);

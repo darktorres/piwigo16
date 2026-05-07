@@ -326,7 +326,7 @@ if (Config::galleryLocked()) {
 if (Config::checkUpgradeFeed()) {
     if (UpgradeService::checkUpgradeFeed()) {
         $header_msgs[] = 'Some database upgrades are missing, '
-          .'<a href="'.get_absolute_root_url(false).'index.php?/upgrade_feed">upgrade now</a>';
+          .'<a href="'.UrlService::getAbsoluteRootUrl(false).'index.php?/upgrade_feed">upgrade now</a>';
     }
 }
 

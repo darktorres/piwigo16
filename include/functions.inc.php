@@ -49,7 +49,6 @@ use Piwigo\Users\UserService;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-require_once(PHPWG_ROOT_PATH . 'include/functions_url.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_params.inc.php');
 require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
 

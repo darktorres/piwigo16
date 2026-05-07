@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AdminService;
+use Piwigo\Url\UrlService;
 use Piwigo\Admin\CoreTabsRegistrar;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
@@ -236,9 +237,9 @@ final class AdminController implements ControllerInterface
             'U_TAGS'                 => $link_start . 'tags',
             'U_USERS'                => $link_start . 'user_list',
             'U_GROUPS'               => $link_start . 'group_list',
-            'U_RETURN'               => get_gallery_home_url(),
+            'U_RETURN'               => UrlService::get()->getGalleryHomeUrl(),
             'U_ADMIN'                => ServiceLocator::get(UrlGenerator::class)->admin(),
-            'U_LOGOUT'               => get_root_url() . '?act=logout',
+            'U_LOGOUT'               => UrlService::getRootUrl() . '?act=logout',
             'U_PLUGINS'              => $link_start . 'plugins',
             'U_ADD_PHOTOS'           => $link_start . 'photos_add',
             'U_CHANGE_THEME'         => $change_theme_url,

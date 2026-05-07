@@ -11,6 +11,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Smarty\Debug;
 use Smarty\Smarty;
@@ -135,7 +136,7 @@ class Template
         $this->smarty->registerPlugin('compiler', 'get_combined_css', $this->funcGetCombinedCss(...));
         $this->smarty->registerPlugin('block', 'footer_script', $this->blockFooterScript(...));
         $this->smarty->registerFilter('pre', self::prefilterWhiteSpace(...));
-        $this->smarty->registerPlugin('modifier', 'url_is_remote', 'url_is_remote');
+        $this->smarty->registerPlugin('modifier', 'url_is_remote', UrlService::urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
@@ -458,7 +459,7 @@ class Template
             fatal_error("Template->parse(): Couldn't load template file for handle $handle");
         }
 
-        $this->smarty->assign('ROOT_URL', get_root_url());
+        $this->smarty->assign('ROOT_URL', UrlService::getRootUrl());
         $wsBase = ServiceLocator::get(UrlGenerator::class)->ws();
         $this->smarty->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
         $this->smarty->assign('U_SEARCH', ServiceLocator::get(UrlGenerator::class)->searchPage());
@@ -522,9 +523,9 @@ class Template
 
         $content = [];
         foreach ($css as $combi) {
-            $href = embellish_url(get_root_url().$combi->path);
+            $href = UrlService::embellishUrl(UrlService::getRootUrl().$combi->path);
             if (!is_string($href)) {
-                $href = get_root_url().$combi->path;
+                $href = UrlService::getRootUrl().$combi->path;
             }
             $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
             // trigger the event for eventual use of a cdn
@@ -920,12 +921,12 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         if ($script->isRemote()) {
             $ret = $script->path;
         } else {
-            $ret = get_root_url().$script->path;
+            $ret = UrlService::getRootUrl().$script->path;
             $ret .= '?v'. ($script->version ?: AppInfo::VERSION);
         }
         // trigger the event for eventual use of a cdn
         $ret = EventDispatcher::dispatch('combined_script', $ret, $script);
-        return embellish_url($ret);
+        return UrlService::embellishUrl($ret);
     }
 
     /**

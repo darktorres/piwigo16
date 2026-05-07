@@ -297,7 +297,6 @@ function try_switch_source(DerivativeParams $params, ?int $original_mtime, Image
 function send_derivative(int|false $expires, ImageDerivativeContext $ctx): void
 {
     if (isset($_GET['ajaxload']) && $_GET['ajaxload'] == 'true') {
-        require_once PHPWG_ROOT_PATH . 'include/functions_url.inc.php';
         echo json_encode(['url' => UrlService::embellishUrl(UrlService::getAbsoluteRootUrl() . $ctx->derivativePath)]);
         return;
     }

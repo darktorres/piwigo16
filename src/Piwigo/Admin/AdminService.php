@@ -113,7 +113,7 @@ final readonly class AdminService
             }
             if (!empty($trashPath)) {
                 if (!is_dir($trashPath)) {
-                    mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
+                    mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
                 }
                 while ($r = $trashPath . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                     if (!is_dir($r)) {

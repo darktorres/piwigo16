@@ -45,8 +45,7 @@ if (str_starts_with($_qs, 'i/')) {
     defined('MKGETDIR_RECURSIVE')        or define('MKGETDIR_RECURSIVE', 1);
     defined('MKGETDIR_DIE_ON_ERROR')     or define('MKGETDIR_DIE_ON_ERROR', 2);
     defined('MKGETDIR_PROTECT_INDEX')    or define('MKGETDIR_PROTECT_INDEX', 4);
-    defined('MKGETDIR_PROTECT_HTACCESS') or define('MKGETDIR_PROTECT_HTACCESS', 8);
-    defined('MKGETDIR_DEFAULT')          or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
+defined('MKGETDIR_DEFAULT')          or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
     (new ImageDerivativeController())(RequestFactory::fromGlobals());
     exit;
 }

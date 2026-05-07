@@ -52,12 +52,6 @@ final readonly class Util
                 }
                 fatal_error("$dir " . l10n('no write access'));
             }
-            if ($flags & MKGETDIR_PROTECT_HTACCESS) {
-                $file = $dir . '/.htaccess';
-                if (!file_exists($file) && is_writable($dir)) {
-                    file_put_contents($file, 'deny from all');
-                }
-            }
             if ($flags & MKGETDIR_PROTECT_INDEX) {
                 $file = $dir . '/index.htm';
                 if (!file_exists($file) && is_writable($dir)) {

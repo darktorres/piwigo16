@@ -113,8 +113,6 @@ define('MKGETDIR_RECURSIVE', 1);
 define('MKGETDIR_DIE_ON_ERROR', 2);
 /** sets mkgetdir() add a index.htm file */
 define('MKGETDIR_PROTECT_INDEX', 4);
-/** sets mkgetdir() add a .htaccess file */
-define('MKGETDIR_PROTECT_HTACCESS', 8);
 /** default options for mkgetdir() */
 define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
 
@@ -144,12 +142,6 @@ function mkgetdir(mixed $dir, mixed $flags = MKGETDIR_DEFAULT): bool
                     return false;
                 }
                 fatal_error("$d " . l10n('no write access'));
-            }
-            if ($f & MKGETDIR_PROTECT_HTACCESS) {
-                $file = $d . '/.htaccess';
-                if (!file_exists($file) && is_writable($d)) {
-                    file_put_contents($file, 'deny from all');
-                }
             }
             if ($f & MKGETDIR_PROTECT_INDEX) {
                 $file = $d . '/index.htm';

@@ -1,6 +1,6 @@
 
 {include file='include/autosize.inc.tpl'}
-{combine_script id='notification_by_mail' load='footer' path='admin/themes/default/js/notification_by_mail.js'}
+{combine_script id='notification_by_mail' load='footer' path='themes/admin/default/js/notification_by_mail.js'}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

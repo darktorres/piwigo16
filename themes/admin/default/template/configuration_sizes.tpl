@@ -1,8 +1,8 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='configuration_sizes' load='footer' require='common' path='admin/themes/default/js/configuration_sizes.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='configuration_sizes' load='footer' require='common' path='themes/admin/default/js/configuration_sizes.js'}
 
-{combine_css path="admin/themes/default/css/pages/configuration_sizes.css"}
+{combine_css path="themes/admin/default/css/pages/configuration_sizes.css"}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

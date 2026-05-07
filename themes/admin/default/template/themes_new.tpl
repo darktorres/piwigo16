@@ -1,5 +1,5 @@
 {include file='include/colorbox.inc.tpl'}
-{combine_script id='themes_new' load='footer' path='admin/themes/default/js/themes_new.js'}
+{combine_script id='themes_new' load='footer' path='themes/admin/default/js/themes_new.js'}
 
 {if not empty($new_themes)}
 <div class="themeBoxes">

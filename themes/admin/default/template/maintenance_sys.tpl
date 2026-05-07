@@ -1,6 +1,6 @@
 {if $isWebmaster == 1}
-    {combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-    {combine_script id='sys' load='footer' path='admin/themes/default/js/maintenance_sys.js'}
+    {combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+    {combine_script id='sys' load='footer' path='themes/admin/default/js/maintenance_sys.js'}
     <fieldset id="activities-system">
         <div class="tab-header">
             <div class="tab-object">
@@ -61,5 +61,5 @@
         <div id="tab-body-content"></div>
 
     </fieldset>
-    {combine_css path="admin/themes/default/css/pages/maintenance-sys.css"}
+    {combine_css path="themes/admin/default/css/pages/maintenance-sys.css"}
 {/if}

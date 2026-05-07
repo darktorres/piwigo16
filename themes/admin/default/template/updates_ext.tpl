@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='updates_ext' load='footer' require='common' path='admin/themes/default/js/updates_ext.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='updates_ext' load='footer' require='common' path='themes/admin/default/js/updates_ext.js'}
 
 {if $isWebmaster == 1}
 
@@ -11,7 +11,7 @@
 <div class="head-button-2 icon-ccw" id="reset_ignore" {if !$SHOW_RESET}hidden{/if}>{'Reset ignored updates'|@translate}</div>
 </div>
 <div class="autoupdate_bar" hidden>
-{'Please wait...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif">
+{'Please wait...'|@translate}<br><img src="themes/admin/default/images/ajax-loader-bar.gif">
 </div>
 
 <p id="up_to_date" hidden>{'All %s are up to date.'|@sprintf:$EXT_TYPE|@translate}</p>

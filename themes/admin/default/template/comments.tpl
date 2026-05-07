@@ -4,10 +4,10 @@
   <p><a href="{$U_CONFIGURATION}">{'Enable user comments'|@translate}</a></p>
 </div>
 {else}
-{combine_script id="comments" load="footer" path="admin/themes/default/js/comments.js"}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id="comments" load="footer" path="themes/admin/default/js/comments.js"}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_css path="admin/themes/default/css/pages/comments.css"}
+{combine_css path="themes/admin/default/css/pages/comments.css"}
 <div class="comments" id="comments">
   <div class="comments-filters">
     <div class="comments-tabs-filters">

@@ -1,6 +1,6 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='cat_modify' load='footer' path='admin/themes/default/js/cat_modify.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='cat_modify' load='footer' path='themes/admin/default/js/cat_modify.js'}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
@@ -172,4 +172,4 @@
   </div>
 </div>
 
-{combine_css path="admin/themes/default/css/pages/cat-modify.css"}
+{combine_css path="themes/admin/default/css/pages/cat-modify.css"}

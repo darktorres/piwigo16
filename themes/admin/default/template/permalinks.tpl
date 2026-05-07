@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='permalinks' load='footer' path='admin/themes/default/js/permalinks.js'}
+{combine_script id='permalinks' load='footer' path='themes/admin/default/js/permalinks.js'}
 
-{combine_css path="admin/themes/default/css/pages/permalinks.css"}
+{combine_css path="themes/admin/default/css/pages/permalinks.css"}
 
 <p id="showAddPermalink"><a href="#" id="addPermalinkOpen">{'Add/delete a permalink'|@translate}</a></p>
 

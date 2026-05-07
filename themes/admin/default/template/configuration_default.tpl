@@ -1,4 +1,4 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
 <form method="post" name="profile" action="{$GUEST_F_ACTION}" id="profile" class="properties">
 

@@ -18,7 +18,7 @@
 
 <div id="footer">
   <div>
-    <a class="externalLink tiptip piwigo-logo" href="{$PHPWG_URL}" title="{'Visit Piwigo project website'|translate}"><img src="admin/themes/default/images/piwigo-grey.svg"></a>
+    <a class="externalLink tiptip piwigo-logo" href="{$PHPWG_URL}" title="{'Visit Piwigo project website'|translate}"><img src="themes/admin/default/images/piwigo-grey.svg"></a>
     {if isset($DISPLAY_BELL) and $DISPLAY_BELL}
     <span id="whats_new_notification" class="icon-blue tiptip" title="{'What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}">
       <i class="icon-bell"></i>
@@ -74,7 +74,7 @@
 
 
 
-{combine_script id='admin_footer' load='footer' path='admin/themes/default/js/admin_footer.js'}
+{combine_script id='admin_footer' load='footer' path='themes/admin/default/js/admin_footer.js'}
 
 <!-- BEGIN get_combined -->
 {get_combined_scripts load='footer'}

@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='intro_tooltips' load='footer' path='admin/themes/default/js/intro_tooltips.js'}
+{combine_script id='intro_tooltips' load='footer' path='themes/admin/default/js/intro_tooltips.js'}
 
-{combine_css path="admin/themes/default/css/pages/intro.css"}
+{combine_css path="themes/admin/default/css/pages/intro.css"}
 
 <h2>{'Piwigo Administration'|@translate}</h2>
 

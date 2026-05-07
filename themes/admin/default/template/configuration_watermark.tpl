@@ -1,6 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='configuration_watermark' load='footer' require='common' path='admin/themes/default/js/configuration_watermark.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='configuration_watermark' load='footer' require='common' path='themes/admin/default/js/configuration_watermark.js'}
 
 <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
 

@@ -1,5 +1,5 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='configuration_comments' load='footer' require='common' path='admin/themes/default/js/configuration_comments.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='configuration_comments' load='footer' require='common' path='themes/admin/default/js/configuration_comments.js'}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

@@ -1,7 +1,7 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='rating_admin' load='footer' require='common' path='admin/themes/default/js/rating_admin.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='rating_admin' load='footer' require='common' path='themes/admin/default/js/rating_admin.js'}
 
-{combine_css path="admin/themes/default/css/pages/rating.css"}
+{combine_css path="themes/admin/default/css/pages/rating.css"}
 
 <script id="pwg-rating-data" type="application/json">{$rating_page_data_json}</script>
 

@@ -1,6 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='stats' load='footer' path='admin/themes/default/js/stats.js'}
+{combine_script id='stats' load='footer' path='themes/admin/default/js/stats.js'}
 
 <div class="stat-compare-mode">
   <label class="switch">

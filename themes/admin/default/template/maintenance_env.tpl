@@ -1,6 +1,6 @@
-{combine_script id='ajax' load='footer' path='admin/themes/default/js/maintenance.js'}
-{combine_script id='activated_plugin_list' load='footer' path='admin/themes/default/js/maintenance_env.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
+{combine_script id='ajax' load='footer' path='themes/admin/default/js/maintenance.js'}
+{combine_script id='activated_plugin_list' load='footer' path='themes/admin/default/js/maintenance_env.js'}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10}
  {* order 10 is required, see issue 1080 *}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
@@ -43,4 +43,4 @@
   </ul>
 </fieldset>
 
-{combine_css path="admin/themes/default/css/pages/maintenance-env.css"}
+{combine_css path="themes/admin/default/css/pages/maintenance-env.css"}

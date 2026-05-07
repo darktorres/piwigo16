@@ -1,4 +1,4 @@
-{combine_script id='admin' load='footer' path='admin/themes/default/js/admin.js'}
+{combine_script id='admin' load='footer' path='themes/admin/default/js/admin.js'}
 
 <div id="menubar" data-active-menu="{$ACTIVE_MENU}">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i> {'Dashboard'|@translate}</a></div>
@@ -91,7 +91,7 @@
   {/if}
   {if isset($U_HELP)}
   {include file='include/colorbox.inc.tpl'}
-{combine_script id='admin_help_glightbox' load='footer' path='admin/themes/default/js/admin_help_glightbox.js'}
+{combine_script id='admin_help_glightbox' load='footer' path='themes/admin/default/js/admin_help_glightbox.js'}
   <ul class="HelpActions">
     <li><a href="{$U_HELP}&amp;output=content_only" title="{'Help'|@translate}" class="help-popin"><span class="icon-help-circled"></span></a></li>
   </ul>

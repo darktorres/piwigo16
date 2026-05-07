@@ -1,4 +1,4 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
 <section class="std_pgs">
   <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
@@ -133,4 +133,4 @@
   </form>
 </section>
 
-{combine_script id="themes_standard_pages" load="footer" path="admin/themes/default/js/themes_standard_pages.js"}
+{combine_script id="themes_standard_pages" load="footer" path="themes/admin/default/js/themes_standard_pages.js"}

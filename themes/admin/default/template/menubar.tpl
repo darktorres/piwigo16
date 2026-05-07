@@ -1,7 +1,7 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='menubar' load='footer' require='common' path='admin/themes/default/js/menubar.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='menubar' load='footer' require='common' path='themes/admin/default/js/menubar.js'}
 
-{combine_css path="admin/themes/default/css/pages/menubar.css"}
+{combine_css path="themes/admin/default/css/pages/menubar.css"}
 
 <form id="menuOrdering" action="{$F_ACTION}" method="post">
   <ul class="menuUl">

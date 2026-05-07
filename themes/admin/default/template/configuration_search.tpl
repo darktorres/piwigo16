@@ -1,6 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='configuration_search' load='footer' require='common' path='admin/themes/default/js/configuration_search.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='configuration_search' load='footer' require='common' path='themes/admin/default/js/configuration_search.js'}
 
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
 

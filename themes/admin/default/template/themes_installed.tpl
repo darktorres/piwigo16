@@ -1,7 +1,7 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 {include file='include/colorbox.inc.tpl'}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='themes_installed' load='footer' require='common' path='admin/themes/default/js/themes_installed.js'}
+{combine_script id='themes_installed' load='footer' require='common' path='themes/admin/default/js/themes_installed.js'}
 
 <div id="themesContent">
 

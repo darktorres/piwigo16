@@ -1,7 +1,7 @@
 {include file='include/colorbox.inc.tpl'}
-{combine_script id='photos_add_applications_glightbox' load='footer' path='admin/themes/default/js/photos_add_applications_glightbox.js'}
+{combine_script id='photos_add_applications_glightbox' load='footer' path='themes/admin/default/js/photos_add_applications_glightbox.js'}
 
-{combine_css path="admin/themes/default/css/pages/photos-add-applications.css"}
+{combine_css path="themes/admin/default/css/pages/photos-add-applications.css"}
 
 <div class="applicationContainer">
 

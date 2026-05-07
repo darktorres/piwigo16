@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='updates_pwg' load='footer' path='admin/themes/default/js/updates_pwg.js'}
+{combine_script id='updates_pwg' load='footer' path='themes/admin/default/js/updates_pwg.js'}
 
-{combine_css path="admin/themes/default/css/pages/updates-pwg.css"}
+{combine_css path="themes/admin/default/css/pages/updates-pwg.css"}
 
 {if isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)}
 <div class="warnings">
@@ -85,7 +85,7 @@
     {/if}
   {/if}
 </p>
-<p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
+<p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="themes/admin/default/images/ajax-loader-bar.gif"></p>
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>
 </form>
 {/if}
@@ -134,7 +134,7 @@
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
 {/if}
   </p>
-  <p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="admin/themes/default/images/ajax-loader-bar.gif"></p>
+  <p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="themes/admin/default/images/ajax-loader-bar.gif"></p>
 </fieldset>
 
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>

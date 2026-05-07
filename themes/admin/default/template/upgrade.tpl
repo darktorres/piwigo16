@@ -10,21 +10,21 @@
 {get_combined_css}
 {foreach from=$themes item=theme}
 {if $theme.load_css}
-{combine_css path="admin/themes/`$theme.id`/theme.css" order=-10}
+{combine_css path="themes/admin/`$theme.id`/theme.css" order=-10}
 {/if}
 {/foreach}
 
 <!--[if IE 7]>
-  <link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fix-ie7.css">
+  <link rel="stylesheet" type="text/css" href="{$ROOT_URL}themes/admin/default/fix-ie7.css">
 <![endif]-->
 
-{combine_script id='install' load='footer' path='admin/themes/default/js/install.js'}
+{combine_script id='install' load='footer' path='themes/admin/default/js/install.js'}
 
 <!-- BEGIN get_combined_scripts -->
 {get_combined_scripts load='header'}
 <!-- END get_combined_scripts -->
 
-{combine_css path="admin/themes/default/css/pages/install-upgrade.css"}
+{combine_css path="themes/admin/default/css/pages/install-upgrade.css"}
 <title>Piwigo {$RELEASE} - {'Upgrade'|@translate}</title>
 </head>
 

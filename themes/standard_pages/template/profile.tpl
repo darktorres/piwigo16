@@ -1,12 +1,12 @@
 {combine_css id='standard_pages_css' path="themes/standard_pages/skins/{$STD_PGS_SELECTED_SKIN}.css" order=100}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
-{combine_css path="admin/themes/default/fontello/css/fontello.css" order=-11}
+{combine_css path="themes/admin/default/fontello/css/fontello.css" order=-11}
 
 <script id="pwg-std-pages-data" type="application/json">{$std_pages_data_json}</script>
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 {combine_script id='standard_pages_js' load='async' path='themes/standard_pages/js/standard_pages.js'}
 {combine_script id='standard_profile_js' load='footer' path='themes/standard_pages/js/profile.js'}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
 <container id="mode" class="light">
   <section id="header-options">

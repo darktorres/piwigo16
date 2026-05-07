@@ -11,17 +11,17 @@
 <meta charset="{$CONTENT_ENCODING}">
 <title>{$GALLERY_TITLE} :: {$PAGE_TITLE}</title>
 <link rel="icon" type="image/svg+xml" href="{$ROOT_URL}{$themeconf.icon_dir}/piwigo.org-icon 1.svg">
-<link rel="stylesheet" type="text/css" href="{$ROOT_URL}admin/themes/default/fonts/open-sans/open-sans.css">
+<link rel="stylesheet" type="text/css" href="{$ROOT_URL}themes/admin/default/fonts/open-sans/open-sans.css">
 
 {strip}
-{combine_css path="admin/themes/default/fontello/css/fontello.css" order=-10}
+{combine_css path="themes/admin/default/fontello/css/fontello.css" order=-10}
 {assign "theme_id" ""}
 {foreach from=$themes item=theme}
   {assign "theme_id" $theme.id}
 
   {if $theme.load_css}
-  {combine_css path="admin/themes/`$theme.id`/theme.css" order=-10}
-  {combine_css path="admin/themes/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}
+  {combine_css path="themes/admin/`$theme.id`/theme.css" order=-10}
+  {combine_css path="themes/admin/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}
   {/if}
   {if !empty($theme.local_head)}
   {include file=$theme.local_head load_css=$theme.load_css}

@@ -1,10 +1,10 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script id="pwg-group-list-data" type="application/json">{$group_list_page_data_json}</script>
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='group_list' load='footer' path='admin/themes/default/js/group_list.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='group_list' load='footer' path='themes/admin/default/js/group_list.js'}
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 {* Define template function for the content of Groups*}
 {function name=groupContent}

@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
-{combine_script id='pluginInstallated' load='footer' path='admin/themes/default/js/plugins_installated.js'}
+{combine_script id='pluginInstallated' load='footer' path='themes/admin/default/js/plugins_installated.js'}
 
 {if isset($plugins)}
 

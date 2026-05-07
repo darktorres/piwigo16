@@ -1,4 +1,4 @@
-{combine_script id='popuphelp_window' load='footer' path='admin/themes/default/js/popuphelp_window.js'}
+{combine_script id='popuphelp_window' load='footer' path='themes/admin/default/js/popuphelp_window.js'}
 <div id="content" class="content">
 {$HELP_CONTENT}
 </div> <!-- content -->

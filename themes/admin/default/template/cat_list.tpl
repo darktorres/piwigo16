@@ -1,6 +1,6 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
-{combine_script id='cat_list' load='footer' path='admin/themes/default/js/cat_list.js'}
+{combine_script id='cat_list' load='footer' path='themes/admin/default/js/cat_list.js'}
 
 <div class="selectedAlbum cat-list-album-path">
   <span class="icon-sitemap selectedAlbum-first">{$CATEGORIES_NAV}</span>
@@ -60,4 +60,4 @@
     {/if}
 </div>
 
-{combine_css path="admin/themes/default/css/pages/cat-list.css"}
+{combine_css path="themes/admin/default/css/pages/cat-list.css"}

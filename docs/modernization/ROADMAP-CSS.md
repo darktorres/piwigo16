@@ -12,26 +12,26 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 - Stylelint passing for all first-party CSS with zero errors and no `!important` outside JS-toggled visibility rules.
 - CSS custom properties for all repeated colors, spacing values, and breakpoints.
-- Monster files split into per-concern files: `admin/themes/default/theme.css` (9,635 lines) and `themes/default/theme.css` (1,305 lines) become thin `@import` lists.
+- Monster files split into per-concern files: `themes/admin/default/theme.css` (9,635 lines) and `themes/default/theme.css` (1,305 lines) become thin `@import` lists.
 - Admin child themes (`clear`, `roma`) reduced to `:root {}` variable override blocks.
 - `themes/standard_pages/skins/*.css` refactored from hundreds of element overrides to single `:root {}` blocks.
 
 ### Current state
 
-- `admin/themes/default/theme.css`: **9,635 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
-- `admin/themes/roma/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
-- `admin/themes/clear/theme.css`: **1,234 lines** — same problem.
+- `themes/admin/default/theme.css`: **9,635 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
+- `themes/admin/roma/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
+- `themes/admin/clear/theme.css`: **1,234 lines** — same problem.
 - `themes/default/theme.css`: **1,305 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
 - `themes/default/fix-khtml.css`: **16 lines**, orphan — zero references anywhere in the repo.
 - `themes/default/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/default/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
-- `admin/themes/default/template/install.tpl:17` and `upgrade.tpl:18` reference a non-existent `admin/themes/default/fix-ie7.css` (broken link, also IE-only).
+- `themes/admin/default/template/install.tpl:17` and `upgrade.tpl:18` reference a non-existent `themes/admin/default/fix-ie7.css` (broken link, also IE-only).
 - `themes/default/css/clear-search.css` + `dark-search.css`: **346 + 333 lines** — color-only variants duplicating `search.css` structure.
 - `themes/standard_pages/skins/*.css`: **11 skin files** (cadmium, cobalt, default, fuchsia, green, lime, purple, red, sienna, silver, teal), each ~337 lines, each with **20 `!important` instances** — fight specificity with the parent theme; same anti-pattern modus had.
 - **~689 `!important` declarations** across first-party CSS:
-  - `admin/themes/roma/theme.css`: 162
-  - `admin/themes/default/theme.css`: 150
-  - `admin/themes/clear/theme.css`: 45
-  - `admin/themes/default/css/**`: ~71 (pages/components combined)
+  - `themes/admin/roma/theme.css`: 162
+  - `themes/admin/default/theme.css`: 150
+  - `themes/admin/clear/theme.css`: 45
+  - `themes/admin/default/css/**`: ~71 (pages/components combined)
   - `themes/standard_pages/`: ~235 (theme + 11 skins)
   - `themes/default/theme.css`: 10, `print.css`: 1
   - Roughly half justified (child-theme load order, JS-toggled visibility); the rest disappear when the token system lands.
@@ -49,17 +49,17 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 **Admin themes:**
 
-- `admin/themes/default/theme.css`, `css/components/{general,album_selector,batch_manager,flatpickr}.css`, `css/pages/*.css` (28 files)
-- `admin/themes/clear/theme.css`
-- `admin/themes/roma/theme.css`, `css/components/general.css`
+- `themes/admin/default/theme.css`, `css/components/{general,album_selector,batch_manager,flatpickr}.css`, `css/pages/*.css` (28 files)
+- `themes/admin/clear/theme.css`
+- `themes/admin/roma/theme.css`, `css/components/general.css`
 
-**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/default/js/plugins/**`, `themes/default/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `admin/themes/default/{fontello,fonts}/**`, `**/*.min.css`.
+**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/default/js/plugins/**`, `themes/default/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `themes/admin/default/{fontello,fonts}/**`, `**/*.min.css`.
 
 ### Inline `<style>` block inventory ✅ Extracted
 
 All static `<style>` and `{html_style}` blocks were extracted to `css/pages/<name>.css` files via `{combine_css}`. The dynamic blocks initially flagged "must stay inline" — `batch_manager_global.tpl` (first block), `thumbnails.tpl`, `month_calendar.tpl`, `mainpage_categories.tpl`, `comment_list.tpl` — were also migrated using the **CSS custom property pattern**: the wrapper element carries `style="--var: value"` (governed by CSP `style-src-attr`, separate from `style-src`) while the consuming rules live in static CSS. See `PLAN-inline-assets-extraction.md` for the full record.
 
-Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/default/`, `themes/standard_pages/`, `admin/themes/default/` (excluding `mail/text/html/` which intentionally keeps inline styles for email clients, and `plugins/` which is out of the 16.x core scope).
+Result: **0 `<style>` tags and 0 `{html_style}` blocks remain** in `themes/default/`, `themes/standard_pages/`, `themes/admin/default/` (excluding `mail/text/html/` which intentionally keeps inline styles for email clients, and `plugins/` which is out of the 16.x core scope).
 
 ### `!important` tier breakdown
 
@@ -69,28 +69,28 @@ Counts re-measured against the current tree; the modus-skin tier from the origin
 
 | Reason                                                                                                                       | Files                                                                     | Count |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----: |
-| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `admin/themes/roma/theme.css`, `admin/themes/clear/theme.css`             |  ~150 |
+| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/roma/theme.css`, `themes/admin/clear/theme.css`             |  ~150 |
 | Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/default/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
-| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `admin/themes/default/theme.css`, `themes/default/theme.css`              |     2 |
-| JS-toggled visibility (`display: none/flex/block`)                                                                           | `admin/themes/default/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
+| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/default/theme.css`, `themes/default/theme.css`              |     2 |
+| JS-toggled visibility (`display: none/flex/block`)                                                                           | `themes/admin/default/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
 
 **Tier 2 — Fix with higher specificity: tom-select overrides.**
-`batch_manager_unit.css` and `picture_modify.css` carry tom-select `.ts-control .item` overrides at specificity (0,2,0); tom-select ships `.ts-control > .item` at (0,1,1) — our specificity already wins, `!important` is redundant. Verify against `node_modules/tom-select/dist/css/tom-select.css`, drop `!important`, and extract the shared block into `admin/themes/default/css/components/tomselect-item.css`.
+`batch_manager_unit.css` and `picture_modify.css` carry tom-select `.ts-control .item` overrides at specificity (0,2,0); tom-select ships `.ts-control > .item` at (0,1,1) — our specificity already wins, `!important` is redundant. Verify against `node_modules/tom-select/dist/css/tom-select.css`, drop `!important`, and extract the shared block into `themes/admin/default/css/components/tomselect-item.css`.
 
 **Tier 3 — Fix internal specificity battles.**
 These exist because rules that used to live in cascade order inside the monolithic `theme.css` were extracted to per-page files (Step 16) and lost their position advantage. Concrete hot spots in the current tree:
 
 | File                                                                     |  Count | Notes                                                      |
 | ------------------------------------------------------------------------ | -----: | ---------------------------------------------------------- |
-| `admin/themes/default/css/pages/user-list.css`                           |     20 | Mixed: tom-select items + layout + a few JS-toggled (keep) |
-| `admin/themes/default/css/pages/picture_modify.css`                      |     11 | Tom-select `.item` (Tier 2)                                |
-| `admin/themes/default/css/components/general.css`                        |      9 | Buttons, head-buttons fighting parent specificity          |
-| `admin/themes/default/css/pages/albums.css`                              |      6 | Tom-select `.item` + margin                                |
-| `admin/themes/default/css/pages/maintenance-sys.css`                     |      4 |                                                            |
-| `admin/themes/default/css/pages/user-activity.css`                       |      3 | Excluding JS-toggled                                       |
-| `admin/themes/default/css/pages/history.css`                             |      3 |                                                            |
-| `admin/themes/default/css/pages/{batch_manager_unit,cat-list,intro}.css` | 2 each |                                                            |
-| `admin/themes/default/css/components/{album_selector}.css`               |      2 |                                                            |
+| `themes/admin/default/css/pages/user-list.css`                           |     20 | Mixed: tom-select items + layout + a few JS-toggled (keep) |
+| `themes/admin/default/css/pages/picture_modify.css`                      |     11 | Tom-select `.item` (Tier 2)                                |
+| `themes/admin/default/css/components/general.css`                        |      9 | Buttons, head-buttons fighting parent specificity          |
+| `themes/admin/default/css/pages/albums.css`                              |      6 | Tom-select `.item` + margin                                |
+| `themes/admin/default/css/pages/maintenance-sys.css`                     |      4 |                                                            |
+| `themes/admin/default/css/pages/user-activity.css`                       |      3 | Excluding JS-toggled                                       |
+| `themes/admin/default/css/pages/history.css`                             |      3 |                                                            |
+| `themes/admin/default/css/pages/{batch_manager_unit,cat-list,intro}.css` | 2 each |                                                            |
+| `themes/admin/default/css/components/{album_selector}.css`               |      2 |                                                            |
 
 Approach per instance: (1) note the property + selector, (2) grep for conflicting rule, (3) fix by raising specificity, lowering source rule specificity, or reordering within the file.
 
@@ -101,7 +101,7 @@ Approach per instance: (1) note the property + selector, (2) grep for conflictin
 
 Many `pages/` files already exist (extracted by Step 16) and several `components/` exist too — the split here is the rest of the monolith plus a few new components. Existing files marked `(existing)`.
 
-**`admin/themes/default/css/`** (post-split):
+**`themes/admin/default/css/`** (post-split):
 
 ```text
 base/
@@ -210,7 +210,7 @@ Multiple `stylelint --fix` passes have eliminated auto-fixable formatting errors
 git rm themes/default/fix-khtml.css
 git rm themes/default/fix-ie5-ie6.css themes/default/fix-ie7.css
 # Drop the IE conditional-comment block in themes/default/local_head.tpl
-# Drop the broken admin/themes/default/fix-ie7.css <link> in install.tpl + upgrade.tpl
+# Drop the broken themes/admin/default/fix-ie7.css <link> in install.tpl + upgrade.tpl
 ```
 
 IE conditional comments are inert in modern browsers; the install/upgrade `<link>` already points to a non-existent file. All four references are dead.
@@ -233,7 +233,7 @@ Replace `themes/default/css/{search,clear-search,dark-search}.css` with a single
 Each colorscheme supplies its `--search-*` variable set in its theme `:root` block. Drop the `{combine_css path="themes/default/css/{$themeconf.colorscheme}-search.css"}` load in `themes/default/template/include/search_filters.inc.tpl:3`. Net savings: ~500 lines.
 
 **Step 6 — Non-color design tokens at theme root.**
-Add a single `:root {}` token block at the top of `themes/default/theme.css` (or its post-split `colors.css` / new `tokens.css`) and `admin/themes/default/theme.css`:
+Add a single `:root {}` token block at the top of `themes/default/theme.css` (or its post-split `colors.css` / new `tokens.css`) and `themes/admin/default/theme.css`:
 
 ```css
 :root {
@@ -282,7 +282,7 @@ The `!important` in skin files exists solely because they fight specificity with
 **Step 9 — (deleted; was modus split — modus is no longer in the codebase).**
 
 **Step 10 — Introduce CSS design tokens in admin parent.**
-Create `admin/themes/default/css/base.css.tpl` (Smarty-templated):
+Create `themes/admin/default/css/base.css.tpl` (Smarty-templated):
 
 ```smarty
 :root {
@@ -293,12 +293,12 @@ Create `admin/themes/default/css/base.css.tpl` (Smarty-templated):
 }
 ```
 
-Each `themeconf.inc.php` for `clear` and `roma` defines its `$admin_skin` array. `admin/themes/default/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS. Removes the current `{combine_css path="admin/themes/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}` workaround in `header.tpl:24`.
+Each `themeconf.inc.php` for `clear` and `roma` defines its `$admin_skin` array. `themes/admin/default/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS. Removes the current `{combine_css path="themes/admin/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}` workaround in `header.tpl:24`.
 
-**Step 11 — Split `admin/themes/default/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `admin/themes/default/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
+**Step 11 — Split `themes/admin/default/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `themes/admin/default/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
 
 **Step 12 — Slim admin child themes.**
-With `var(--admin-*)` in place, `admin/themes/clear/theme.css` (1,234 lines) and `admin/themes/roma/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `admin/themes/{clear,roma}/css/components/general.css` — content moves into the parent.
+With `var(--admin-*)` in place, `themes/admin/clear/theme.css` (1,234 lines) and `themes/admin/roma/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/{clear,roma}/css/components/general.css` — content moves into the parent.
 
 **Step 13 — (deleted; plugin CSS quick-wins; the named plugins — GDThumb, AdminTools, language_switch — are no longer in the tree).**
 
@@ -308,7 +308,7 @@ With `var(--admin-*)` in place, `admin/themes/clear/theme.css` (1,234 lines) and
 Work through Tier 2 (tom-select: `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`) then Tier 3 file-by-file from largest to smallest. After each file: `bunx stylelint --fix <file>` + browser smoke-test of that admin page. Keep all Tier 1 instances; add `/* reason */` comment to any that are missing one. Once the count is low enough, reinstate `declaration-no-important` as a Stylelint warning (it was dropped in `9a482db86`).
 
 **Step 16 — Extract static inline `<style>` blocks.** ✅ Done.
-Every static template's CSS moved to `css/pages/<name>.css`, replaced with `{combine_css path="admin/themes/default/css/pages/<name>.css"}`. `install.tpl` and `upgrade.tpl` share `install-upgrade.css`. Plus the dynamic blocks (`thumbnails`, `mainpage_categories`, `comment_list`, `month_calendar`, `batch_manager_global` first block) migrated via CSS custom properties on the wrapping element. See `PLAN-inline-assets-extraction.md`.
+Every static template's CSS moved to `css/pages/<name>.css`, replaced with `{combine_css path="themes/admin/default/css/pages/<name>.css"}`. `install.tpl` and `upgrade.tpl` share `install-upgrade.css`. Plus the dynamic blocks (`thumbnails`, `mainpage_categories`, `comment_list`, `month_calendar`, `batch_manager_global` first block) migrated via CSS custom properties on the wrapping element. See `PLAN-inline-assets-extraction.md`.
 
 ### Verification
 
@@ -323,7 +323,7 @@ After each step:
 bun run lint:css                                            # zero errors
 git ls-files | grep -E "fix-(khtml|ie5-ie6|ie7)"            # empty (after Step 3)
 git ls-files | grep -E "clear-search|dark-search"           # empty (after Step 5)
-wc -l admin/themes/default/theme.css                        # ≤ 30 (just @imports, after Step 11)
+wc -l themes/admin/default/theme.css                        # ≤ 30 (just @imports, after Step 11)
 wc -l themes/default/theme.css                              # ≤ 15 (just @imports, after Step 4)
 grep -rn "!important" themes/standard_pages/skins/          # empty (after Step 8)
 ```

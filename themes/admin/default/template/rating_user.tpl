@@ -1,8 +1,8 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='rating_user' load='footer' require='common' path='admin/themes/default/js/rating_user.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='rating_user' load='footer' require='common' path='themes/admin/default/js/rating_user.js'}
 
-{combine_css path="admin/themes/default/css/pages/rating_user.css"}
+{combine_css path="themes/admin/default/css/pages/rating_user.css"}
 
 <form action="{$F_ACTION}" method="GET">
 <fieldset>

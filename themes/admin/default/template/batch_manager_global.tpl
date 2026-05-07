@@ -1,14 +1,14 @@
 {include file='include/datepicker.inc.tpl' load_mode='async'}
 {include file='include/add_album.inc.tpl' load_mode='async'}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
-{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum' path='admin/themes/default/js/batchManagerGlobal.js'}
+{combine_script id='batchManagerGlobal' load='async' require='datepicker,addAlbum' path='themes/admin/default/js/batchManagerGlobal.js'}
 
 <script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json}</script>
 
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">
   <form action="{$F_ACTION}" method="post">
@@ -271,4 +271,4 @@
 </div> <!-- #batchManagerGlobal -->
 {include file='include/album_selector.inc.tpl'}
 
-{combine_css path="admin/themes/default/css/pages/batch_manager_global.css"}
+{combine_css path="themes/admin/default/css/pages/batch_manager_global.css"}

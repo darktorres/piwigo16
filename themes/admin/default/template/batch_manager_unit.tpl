@@ -2,11 +2,11 @@
 {include file='include/datepicker.inc.tpl'}
 
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json}</script>
 
-{combine_script id='batchManagerUnit' load='footer' path='admin/themes/default/js/batchManagerUnit.js'}
+{combine_script id='batchManagerUnit' load='footer' path='themes/admin/default/js/batchManagerUnit.js'}
 <div id="batchManagerGlobal">
 	<div class="u-clear-both"></div>
 	{if isset($ELEMENT_IDS)}
@@ -254,4 +254,4 @@
 
 {include file='include/album_selector.inc.tpl'}
 
-{combine_css path="admin/themes/default/css/pages/batch_manager_unit.css"}
+{combine_css path="themes/admin/default/css/pages/batch_manager_unit.css"}

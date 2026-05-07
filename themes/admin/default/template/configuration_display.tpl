@@ -1,6 +1,6 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
-{combine_css path="admin/themes/default/css/pages/configuration_display.css"}
+{combine_css path="themes/admin/default/css/pages/configuration_display.css"}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

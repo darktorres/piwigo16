@@ -1,8 +1,8 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
-{combine_script id='tags' load='footer' path='admin/themes/default/js/tags.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_script id='tags' load='footer' path='themes/admin/default/js/tags.js'}
 
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>

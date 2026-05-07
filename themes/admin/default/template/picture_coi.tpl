@@ -29,5 +29,5 @@
 </fieldset>
 </form>
 
-{combine_script id='picture_coi' load='footer' path='admin/themes/default/js/picture_coi.js'}
+{combine_script id='picture_coi' load='footer' path='themes/admin/default/js/picture_coi.js'}
 

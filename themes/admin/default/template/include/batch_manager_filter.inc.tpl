@@ -1,6 +1,6 @@
 <script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json}</script>
 
-{combine_script id='batchManagerFilter' load='footer' path='admin/themes/default/js/batchManagerFilter.js'}
+{combine_script id='batchManagerFilter' load='footer' path='themes/admin/default/js/batchManagerFilter.js'}
 <fieldset>
 <legend><span class='icon-filter icon-green'></span>{'Filter'|@translate}</legend>
 <div class="filterBlock">

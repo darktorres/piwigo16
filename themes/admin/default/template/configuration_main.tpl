@@ -1,7 +1,7 @@
 {include file='include/colorbox.inc.tpl'}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='configuration_main' load='footer' require='common' path='admin/themes/default/js/configuration_main.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='configuration_main' load='footer' require='common' path='themes/admin/default/js/configuration_main.js'}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 
@@ -166,7 +166,7 @@
           {'in administration'|translate}
         </label>
 
-        <span class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip" title="{'Displays a banner to install or open the official Piwigo app'|translate}<br><img src='admin/themes/default/images/piwigo_app_banner.jpg' style='width:100%;margin-top:5px;'>"></span>
+        <span class="icon-help-circled tiptip-with-img show-mobile-app-banner-tooltip" title="{'Displays a banner to install or open the official Piwigo app'|translate}<br><img src='themes/admin/default/images/piwigo_app_banner.jpg' style='width:100%;margin-top:5px;'>"></span>
       </li>
 
       <li>

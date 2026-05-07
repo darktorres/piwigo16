@@ -1,14 +1,14 @@
 {if isset($ADD_TO_ALBUM) or isset($selected_category_name)}{$can_upload=true}{else}{$can_upload=false}{/if}
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 {include file='include/colorbox.inc.tpl'}
 {if !$DISPLAY_FORMATS}
   {include file='include/add_album.inc.tpl'}
 {/if}
 
-{combine_script id='add_photo' load='footer' path='admin/themes/default/js/photos_add_direct.js'}
+{combine_script id='add_photo' load='footer' path='themes/admin/default/js/photos_add_direct.js'}
 
-{combine_css path="admin/themes/default/css/pages/photos_add_direct.css"}
+{combine_css path="themes/admin/default/css/pages/photos_add_direct.css"}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 

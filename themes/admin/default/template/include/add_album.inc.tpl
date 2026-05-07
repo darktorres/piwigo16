@@ -1,9 +1,9 @@
 {if empty($load_mode)}{$load_mode='footer'}{/if}
 {include file='include/colorbox.inc.tpl' load_mode=$load_mode}
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-{combine_script id='addAlbum' load=$load_mode path='admin/themes/default/js/addAlbum.js'}
+{combine_script id='addAlbum' load=$load_mode path='themes/admin/default/js/addAlbum.js'}
 
 <div hidden>
   <div id="addAlbumForm">

@@ -1,4 +1,4 @@
-{combine_script id='site_update' load='footer' path='admin/themes/default/js/site_update.js'}
+{combine_script id='site_update' load='footer' path='themes/admin/default/js/site_update.js'}
 
 <div class="selectedAlbum site-url-path">
   <span class="icon-folder-open selectedAlbum-first">{$SITE_URL}</span>

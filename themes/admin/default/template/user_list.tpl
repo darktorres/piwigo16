@@ -1,11 +1,11 @@
 
-{combine_script id='common' load='header' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='header' path='themes/admin/default/js/common.js'}
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='user_list' load='footer' path='admin/themes/default/js/user_list.js'}
+{combine_script id='user_list' load='footer' path='themes/admin/default/js/user_list.js'}
 
 <div class="selection-mode-group-manager">
   <label class="switch">
@@ -1066,4 +1066,4 @@
   </div>
 </div>
 
-{combine_css path="admin/themes/default/css/pages/user-list.css"}
+{combine_css path="themes/admin/default/css/pages/user-list.css"}

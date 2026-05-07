@@ -1,7 +1,7 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='site_manager' load='footer' require='common' path='admin/themes/default/js/site_manager.js'}
-{combine_css path="admin/themes/default/css/pages/site_manager.css"}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='site_manager' load='footer' require='common' path='themes/admin/default/js/site_manager.js'}
+{combine_css path="themes/admin/default/css/pages/site_manager.css"}
 
 {if not empty($remote_output)}
 <div class="remoteOutput">

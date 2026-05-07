@@ -1,11 +1,11 @@
 {include file='include/colorbox.inc.tpl'}
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 <script id="pwg-user-activity-data" type="application/json">{$user_activity_page_data_json}</script>
 
-{combine_script id='user_activity' load='async' path='admin/themes/default/js/user_activity.js'}
+{combine_script id='user_activity' load='async' path='themes/admin/default/js/user_activity.js'}
 <div class="container"> 
     <div>
         <div class="activity-header">
@@ -187,4 +187,4 @@
     </div>
 </div>
 
-{combine_css path="admin/themes/default/css/pages/user-activity.css"}
+{combine_css path="themes/admin/default/css/pages/user-activity.css"}

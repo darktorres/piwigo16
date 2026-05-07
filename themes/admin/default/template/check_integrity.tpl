@@ -54,7 +54,7 @@
         </table>
 
         <p>
-          {combine_script id='check_integrity' load='footer' path='admin/themes/default/js/check_integrity.js'}
+          {combine_script id='check_integrity' load='footer' path='themes/admin/default/js/check_integrity.js'}
           {if $c13y_show_submit_ignore}
               <a href="#" data-c13y-check-all>{'Check all'|@translate}</a>
             / <a href="#" data-c13y-uncheck-all>{'Uncheck all'|@translate}</a>

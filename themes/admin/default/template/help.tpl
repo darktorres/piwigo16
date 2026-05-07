@@ -1,4 +1,4 @@
-{combine_css path="admin/themes/default/css/pages/help.css"}
+{combine_css path="themes/admin/default/css/pages/help.css"}
 
 <h2>{'Help'|@translate} &raquo; {$HELP_SECTION_TITLE}</h2>
 

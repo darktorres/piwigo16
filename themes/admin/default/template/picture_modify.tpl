@@ -3,8 +3,8 @@
 
 <script id="pwg-picture-modify-data" type="application/json">{$picture_modify_page_data_json}</script>
 
-{combine_script id='picture_modify' load='footer' path='admin/themes/default/js/picture_modify.js'}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_script id='picture_modify' load='footer' path='themes/admin/default/js/picture_modify.js'}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
 <form action="{$F_ACTION}" method="post" id="pictureModify">
 {if $INTRO.is_svg}
@@ -164,4 +164,4 @@
 
 {include file='include/album_selector.inc.tpl'}
 
-{combine_css path="admin/themes/default/css/pages/picture_modify.css"}
+{combine_css path="themes/admin/default/css/pages/picture_modify.css"}

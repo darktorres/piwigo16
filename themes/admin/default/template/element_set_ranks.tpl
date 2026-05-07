@@ -1,5 +1,5 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='element_set_ranks' load='footer' path='admin/themes/default/js/element_set_ranks.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='element_set_ranks' load='footer' path='themes/admin/default/js/element_set_ranks.js'}
 
 <form action="{$F_ACTION}" method="post" id="element_set_ranks">
 {if !empty($thumbnails)}

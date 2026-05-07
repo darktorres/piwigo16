@@ -51,7 +51,7 @@ Loaded at the top of almost every admin sub-controller method. Deletion gate: ad
 | File | Lines |
 |---|---|
 | `src/Piwigo/Admin/Plugins.php` | 226 |
-| `src/Piwigo/Admin/Themes.php` | 176 |
+| `src/Piwigo/themes/admin.php` | 176 |
 | `src/Piwigo/Controller/Admin/AdminController.php` | 51 |
 | `src/Piwigo/Controller/Admin/AlbumController.php` | 115, 278, 421, 578, 762, 843, 990 |
 | `src/Piwigo/Controller/Admin/BatchManagerController.php` | 58, 582, 924 |
@@ -146,9 +146,9 @@ These load runtime-determined files and cannot be statically resolved. Not candi
 | File | Line | Pattern |
 |---|---|---|
 | `src/Piwigo/Admin/Plugins.php` | 267, 277 | `$path . '/main.inc.php'` |
-| `src/Piwigo/Admin/Themes.php` | 45 | `PHPWG_THEMES_PATH . $themeId . '/admin/maintain.inc.php'` |
-| `src/Piwigo/Admin/Themes.php` | 268, 279 | `$path . '/themeconf.inc.php'` |
-| `src/Piwigo/Admin/Themes.php` | 333 | `$path . '/admin/admin.inc.php'` |
+| `src/Piwigo/themes/admin.php` | 45 | `PHPWG_THEMES_PATH . $themeId . '/admin/maintain.inc.php'` |
+| `src/Piwigo/themes/admin.php` | 268, 279 | `$path . '/themeconf.inc.php'` |
+| `src/Piwigo/themes/admin.php` | 333 | `$path . '/admin/admin.inc.php'` |
 | `src/Piwigo/Controller/Admin/ExtensionsController.php` | 745 | `PHPWG_THEMES_PATH . $theme . '/admin/admin.inc.php'` |
 | `src/Piwigo/Core/Util.php` | 174 | `Config::themesDir() . '/' . $themeId . '/themeconf.inc.php'` |
 | `src/Piwigo/Plugin/PluginService.php` | 29, 41 | `PHPWG_PLUGINS_PATH . $pluginId . '/main.inc.php'` |

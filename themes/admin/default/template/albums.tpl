@@ -1,11 +1,11 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
 {* tree.css is now bundled into albums.js via the album-tree module *}
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 
-{combine_script id='cat_search' load='footer' path='admin/themes/default/js/cat_search.js'}
-{combine_script id='albums' load='footer' path='admin/themes/default/js/albums.js'}
+{combine_script id='cat_search' load='footer' path='themes/admin/default/js/cat_search.js'}
+{combine_script id='albums' load='footer' path='themes/admin/default/js/albums.js'}
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
@@ -229,4 +229,4 @@
     </div>
   </div>
 </div>
-{combine_css path="admin/themes/default/css/pages/albums.css"}
+{combine_css path="themes/admin/default/css/pages/albums.css"}

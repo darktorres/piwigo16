@@ -1,7 +1,7 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='album_notification' load='footer' path='admin/themes/default/js/album_notification.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='album_notification' load='footer' path='themes/admin/default/js/album_notification.js'}
 
-{combine_css path="admin/themes/default/css/pages/album_notification.css"}
+{combine_css path="themes/admin/default/css/pages/album_notification.css"}
 
 <form action="{$F_ACTION}" method="post" id="categoryNotify">
 <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

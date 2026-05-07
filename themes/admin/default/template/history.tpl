@@ -3,11 +3,11 @@
 
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
 
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='history' load='footer' path='admin/themes/default/js/history.js' require='common,geoip'}
-{combine_script id='geoip' load='footer' path='admin/themes/default/js/geoip.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='history' load='footer' path='themes/admin/default/js/history.js' require='common,geoip'}
+{combine_script id='geoip' load='footer' path='themes/admin/default/js/geoip.js'}
 
-{combine_css path="admin/themes/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
+{combine_css path="themes/admin/default/fontello/css/animation.css" order=10} {* order 10 is required, see issue 1080 *}
 {combine_css path="themes/default/vendor/fontello/css/gallery-icon.css" order=-10}
 
 <form class="filter" method="post" name="filter" action="">
@@ -186,4 +186,4 @@
 
 {if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
 
-{combine_css path="admin/themes/default/css/pages/history.css"}
+{combine_css path="themes/admin/default/css/pages/history.css"}

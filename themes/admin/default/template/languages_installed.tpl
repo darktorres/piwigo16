@@ -1,6 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='languages_installed' load='footer' require='common' path='admin/themes/default/js/languages_installed.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='languages_installed' load='footer' require='common' path='themes/admin/default/js/languages_installed.js'}
 
 {foreach from=$language_states item=language_state}
 <fieldset>

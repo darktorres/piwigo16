@@ -1,5 +1,5 @@
-{combine_script id='common' load='footer' path='admin/themes/default/js/common.js'}
-{combine_script id='cat_perm' load='footer' require='common' path='admin/themes/default/js/cat_perm.js'}
+{combine_script id='common' load='footer' path='themes/admin/default/js/common.js'}
+{combine_script id='cat_perm' load='footer' require='common' path='themes/admin/default/js/cat_perm.js'}
 
 <script id="pwg-cat-perm-data" type="application/json">{$cat_perm_page_data_json}</script>
 

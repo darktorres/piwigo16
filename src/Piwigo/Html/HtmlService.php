@@ -251,6 +251,7 @@ SELECT id, name, permalink
         );
     }
 
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
         if (empty($title)) {

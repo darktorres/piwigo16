@@ -58,7 +58,7 @@ final class ProfileController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->assign('DEFAULT_USER_VALUES', $default_user);
 
-        if (StringUtil::inputString('reset_to_default', null, $_POST) !== null) {
+        if (StringUtil::get()->inputString('reset_to_default', null, $_POST) !== null) {
             $userdata = array_merge($userdata, $default_user ?? []);
         }
 
@@ -125,7 +125,7 @@ final class ProfileController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
 
-        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

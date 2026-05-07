@@ -17,6 +17,7 @@ use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
@@ -130,7 +131,20 @@ final class CommonBootstrap
             Config::override('webmaster_id', 1);
         }
 
-        ConfigService::loadConfFromDb();
+        // Boot the DI container now — env credentials are loaded and the DB connection
+        // is verified. The container is lazy (PHP-DI instantiates nothing until first
+        // get() call), so booting here does NOT require Config::$data to be populated.
+        Kernel::boot();
+
+        // Load application config from the DB. Container is available, so this can
+        // go through the typed service path.
+        ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+
+        // Run DB migrations only after Config is loaded from the DB, because
+        // migrations may inspect Config values (e.g. Config::autoMigrate()).
+        if (Config::autoMigrate()) {
+            MigrationRunner::migrate();
+        }
 
         $GLOBALS['logger'] = new Logger([
             'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
@@ -146,8 +160,6 @@ final class CommonBootstrap
                 Util::get()->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
             }
         }
-
-        Kernel::boot();
 
         ImageStdParams::loadFromDb();
 

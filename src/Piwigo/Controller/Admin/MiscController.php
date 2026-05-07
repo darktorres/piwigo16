@@ -589,7 +589,7 @@ final class MiscController
 
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
-            $start_time = ServiceLocator::get(StringUtil::class)->getMoment();
+            $start_time = StringUtil::get()->getMoment();
             $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
@@ -606,7 +606,7 @@ final class MiscController
                 $activity_last_weeks[$week][$day_nb]['date']   = ServiceLocator::get(DateService::class)->formatDate($day_date->getTimestamp());
             }
 
-            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::getElapsedTime($start_time, ServiceLocator::get(StringUtil::class)->getMoment()));
+            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::get()->getElapsedTime($start_time, StringUtil::get()->getMoment()));
             $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
         }
 
@@ -1103,7 +1103,7 @@ final class MiscController
                 $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST[$post_keyname]) : [];
                 $post_count       = count($post_keyname_val);
                 $treated_count    = count($check_key_treated);
-                $time_refresh     = $treated_count !== 0 ? (int) ceil((ServiceLocator::get(StringUtil::class)->getMoment() - $ctx->startTime) * $post_count / $treated_count) : 0;
+                $time_refresh     = $treated_count !== 0 ? (int) ceil((StringUtil::get()->getMoment() - $ctx->startTime) * $post_count / $treated_count) : 0;
                 $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
                 $this->mustRepost = true;
                 PageState::current()->addError(Translator::get()->plural('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));

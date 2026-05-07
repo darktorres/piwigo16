@@ -56,6 +56,7 @@ final readonly class Util
     ) {
     }
 
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
     {
         if (!is_dir($dir)) {
@@ -727,7 +728,7 @@ final readonly class Util
 
     public function sendPiwigoInfos(): void
     {
-        $startTime = ServiceLocator::get(StringUtil::class)->getMoment();
+        $startTime = StringUtil::get()->getMoment();
 
         if (!Config::sendPiwigoInfos()) {
             return;
@@ -835,7 +836,7 @@ final readonly class Util
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->sendPiwigoInfosRetryLater(1 * 60 * 60);
             $this->pwgUniqueExecEnds('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::get()->getElapsedTime($startTime, StringUtil::get()->getMoment()));
             return;
         }
 
@@ -1019,6 +1020,6 @@ final readonly class Util
         }
 
         $this->pwgUniqueExecEnds('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::get()->getElapsedTime($startTime, StringUtil::get()->getMoment()));
     }
 }

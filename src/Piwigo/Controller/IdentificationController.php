@@ -44,7 +44,7 @@ final class IdentificationController implements ControllerInterface
 
         unset($_SESSION['reset_password_code']);
 
-        $post_redirect = StringUtil::inputString('redirect', null, $_POST);
+        $post_redirect = StringUtil::get()->inputString('redirect', null, $_POST);
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
@@ -54,28 +54,28 @@ final class IdentificationController implements ControllerInterface
         $page = &$GLOBALS['page'];
 
         $redirect_to = '';
-        $get_redirect = StringUtil::inputString('redirect', null, $_GET);
+        $get_redirect = StringUtil::get()->inputString('redirect', null, $_GET);
         if (!empty($get_redirect)) {
             $redirect_to = urldecode($get_redirect);
-            if (Config::guestAccess() && StringUtil::inputString('hide_redirect_error', null, $_GET) === null) {
+            if (Config::guestAccess() && StringUtil::get()->inputString('hide_redirect_error', null, $_GET) === null) {
                 $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
                 $pgErrors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
                 $page['errors'] = $pgErrors;
             }
         }
 
-        if (StringUtil::inputString('login', null, $_POST) !== null) {
+        if (StringUtil::get()->inputString('login', null, $_POST) !== null) {
             if (!isset($_COOKIE[session_name()])) {
                 $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
                 $pgErrors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
                 $page['errors'] = $pgErrors;
             } else {
-                $username = StringUtil::inputString('username', null, $_POST) ?? '';
+                $username = StringUtil::get()->inputString('username', null, $_POST) ?? '';
                 if (Config::insensitiveCaseLogon() == true) {
                     $username = AuthService::get()->searchCaseUsername($username);
                 }
                 $redirect_to  = $post_redirect !== null ? urldecode($post_redirect) : '';
-                $remember_me  = StringUtil::inputString('remember_me', null, $_POST) !== null && StringUtil::inputString('remember_me', null, $_POST) == 1;
+                $remember_me  = StringUtil::get()->inputString('remember_me', null, $_POST) !== null && StringUtil::get()->inputString('remember_me', null, $_POST) == 1;
                 $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
                 if (AuthService::get()->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
@@ -118,7 +118,7 @@ final class IdentificationController implements ControllerInterface
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

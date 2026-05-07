@@ -47,9 +47,9 @@ final class PasswordController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $get_action = StringUtil::inputString('action', null, $_GET);
+        $get_action = StringUtil::get()->inputString('action', null, $_GET);
 
-        if (StringUtil::inputString('submit', null, $_POST) !== null) {
+        if (StringUtil::get()->inputString('submit', null, $_POST) !== null) {
             ServiceLocator::get(Util::class)->checkPwgToken();
 
             if ('lost' == $get_action) {
@@ -71,13 +71,13 @@ final class PasswordController implements ControllerInterface
             }
         }
 
-        if (StringUtil::inputString('key', null, $_GET) !== null && !PermissionService::get()->isAGuest()) {
+        if (StringUtil::get()->inputString('key', null, $_GET) !== null && !PermissionService::get()->isAGuest()) {
             unset($_GET['key']);
         }
 
         $first_login = false;
-        $get_key     = StringUtil::inputString('key', null, $_GET);
-        if ($get_key !== null && StringUtil::inputString('submit', null, $_POST) === null) {
+        $get_key     = StringUtil::get()->inputString('key', null, $_GET);
+        if ($get_key !== null && StringUtil::get()->inputString('submit', null, $_POST) === null) {
             $user_id = ServiceLocator::get(PasswordService::class)->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
                 $userdata = UserService::get()->getuserdata($user_id, false);
@@ -120,7 +120,7 @@ final class PasswordController implements ControllerInterface
 
         if ('lost' == $page['action']) {
             $title       = Lang::t('Forgot your password?');
-            $post_uoe    = StringUtil::inputString('username_or_email', null, $_POST);
+            $post_uoe    = StringUtil::get()->inputString('username_or_email', null, $_POST);
             if ($post_uoe !== null) {
                 $tpl->assign('username_or_email', htmlspecialchars(stripslashes($post_uoe)));
             }
@@ -149,7 +149,7 @@ final class PasswordController implements ControllerInterface
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

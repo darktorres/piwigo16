@@ -1181,7 +1181,7 @@ final class MaintenanceController
         }
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
-            $start = ServiceLocator::get(StringUtil::class)->getMoment();
+            $start = StringUtil::get()->getMoment();
             $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
@@ -1351,15 +1351,15 @@ final class MaintenanceController
                 }
                 $counts['del_categories'] = count($to_delete);
             }
-            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
         }
 
         // ── files / elements ──────────────────────────────────────────────────
 
         if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
-            $start_files = $start = ServiceLocator::get(StringUtil::class)->getMoment();
+            $start_files = $start = StringUtil::get()->getMoment();
             $fs = $site_reader->getElements($basedir);
-            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
 
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
             $db_elements = [];
@@ -1371,7 +1371,7 @@ final class MaintenanceController
             $next_element_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
             $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
-            $start             = ServiceLocator::get(StringUtil::class)->getMoment();
+            $start             = StringUtil::get()->getMoment();
             $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
 
             foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements)) as $path) {
@@ -1479,22 +1479,22 @@ final class MaintenanceController
                 } $counts['del_elements'] = count($to_delete_elements);
             }
 
-            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::getElapsedTime($start_files, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::get()->getElapsedTime($start_files, StringUtil::get()->getMoment()) . ' -->');
         }
 
         // ── sync categories & files ───────────────────────────────────────────
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
             if (!$simulate) {
-                $start = ServiceLocator::get(StringUtil::class)->getMoment();
+                $start = StringUtil::get()->getMoment();
                 ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
-                $start = ServiceLocator::get(StringUtil::class)->getMoment();
+                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+                $start = StringUtil::get()->getMoment();
                 ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
             }
             if ($_POST['sync'] == 'files') {
-                $start = ServiceLocator::get(StringUtil::class)->getMoment();
+                $start = StringUtil::get()->getMoment();
                 $opts  = ['category_id' => '', 'recursive' => true];
                 if (isset($_POST['cat'])) {
                     $opts['category_id'] = $_POST['cat'];
@@ -1504,8 +1504,8 @@ final class MaintenanceController
                 }
                 $catIdOpt = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
                 $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdOpt, (int) $site_id, (bool) $opts['recursive'], false);
-                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
-                $start = ServiceLocator::get(StringUtil::class)->getMoment();
+                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+                $start = StringUtil::get()->getMoment();
                 $datas = [];
                 foreach ($files as $id => $file) {
                     $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
@@ -1517,7 +1517,7 @@ final class MaintenanceController
                 if (!$simulate && count($datas) > 0) {
                     Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
                 }
-                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
             }
         }
 
@@ -1535,11 +1535,11 @@ final class MaintenanceController
                     $opts['recursive'] = false;
                 }
             }
-            $start       = ServiceLocator::get(StringUtil::class)->getMoment();
+            $start       = StringUtil::get()->getMoment();
             $catIdMeta   = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
             $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdMeta, (int) $site_id, (bool) $opts['recursive'], (bool) $opts['only_new']);
-            $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
-            $start = ServiceLocator::get(StringUtil::class)->getMoment();
+            $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+            $start = StringUtil::get()->getMoment();
             $datas = $tags_of = [];
             foreach ($files as $id => $element_infos) {
                 $element_infos_arr = is_array($element_infos) ? $element_infos : [];
@@ -1568,7 +1568,7 @@ final class MaintenanceController
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
-            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
             $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($errors)]);
         }
 

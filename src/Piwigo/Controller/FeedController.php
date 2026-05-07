@@ -34,8 +34,8 @@ final class FeedController implements ControllerInterface
 
         ServiceLocator::get(Util::class)->checkInputParameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-        $feed_id    = StringUtil::inputString('feed', '', $_GET);
-        $image_only = StringUtil::inputString('image_only', null, $_GET) !== null;
+        $feed_id    = StringUtil::get()->inputString('feed', '', $_GET);
+        $image_only = StringUtil::get()->inputString('image_only', null, $_GET) !== null;
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];

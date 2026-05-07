@@ -249,11 +249,11 @@ final readonly class UserService
                 $execId = ServiceLocator::get(Util::class)->pwgUniqueExecBegins($cacheTokenName);
                 if (false === $execId) {
                     $logger->info($loggerMsgPrefix . 'starts to wait for another request to build user_cache');
-                    $waitStart = ServiceLocator::get(StringUtil::class)->getMoment();
+                    $waitStart = StringUtil::get()->getMoment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
                         $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::userCache() . ' WHERE user_id=' . $udId . ';')->fetchOne();
-                        $waitingTime  = StringUtil::getElapsedTime($waitStart, ServiceLocator::get(StringUtil::class)->getMoment());
+                        $waitingTime  = StringUtil::get()->getElapsedTime($waitStart, StringUtil::get()->getMoment());
 
                         if ($nbCacheLines > 0) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt, after waiting ' . $waitingTime);
@@ -265,7 +265,7 @@ final readonly class UserService
                             $logger->info($loggerMsgPrefix . 'user_cache not ready yet, after waiting ' . $waitingTime);
                         }
                     }
-                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . StringUtil::getElapsedTime($waitStart, ServiceLocator::get(StringUtil::class)->getMoment()));
+                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . StringUtil::get()->getElapsedTime($waitStart, StringUtil::get()->getMoment()));
                     ServiceLocator::get(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
                     if (!headers_sent()) {
                         header('Retry-After: 900');
@@ -280,7 +280,7 @@ final readonly class UserService
             }
 
             if ($generateUserCache) {
-                $genStart                    = ServiceLocator::get(StringUtil::class)->getMoment();
+                $genStart                    = StringUtil::get()->getMoment();
                 $userdata['cache_update_time'] = time();
                 $userdata['need_update']       = false;
 
@@ -341,7 +341,7 @@ final readonly class UserService
                 );
 
                 ServiceLocator::get(Util::class)->pwgUniqueExecEnds($cacheTokenName);
-                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . StringUtil::getElapsedTime($genStart, ServiceLocator::get(StringUtil::class)->getMoment()));
+                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . StringUtil::get()->getElapsedTime($genStart, StringUtil::get()->getMoment()));
             }
         }
 

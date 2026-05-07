@@ -21,6 +21,7 @@ final readonly class ConfigService
     ) {
     }
 
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {
         $sql  = 'SELECT param, value FROM ' . Tables::config() .

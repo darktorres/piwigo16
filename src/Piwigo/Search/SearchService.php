@@ -473,7 +473,7 @@ final readonly class SearchService
         $cache    = is_array($details['getItemsForFilter'] ?? null) ? $details['getItemsForFilter'] : [];
 
         if (!isset($cache[$cacheKey])) {
-            $functionStart = ServiceLocator::get(StringUtil::class)->getMoment();
+            $functionStart = StringUtil::get()->getMoment();
             $first         = $imageIdsForFilter[array_shift($otherFilters)] ?? [];
             $otherFiltersItems = is_array($first)
                 ? array_values(array_filter($first, fn ($v): bool => is_int($v) || is_string($v)))
@@ -486,7 +486,7 @@ final readonly class SearchService
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
             $debugMsg  = '[getItemsForFilter] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . StringUtil::getElapsedTime($functionStart, ServiceLocator::get(StringUtil::class)->getMoment());
+            $debugMsg .= ', time = ' . StringUtil::get()->getElapsedTime($functionStart, StringUtil::get()->getMoment());
             $this->logger->debug($debugMsg);
 
             if (empty($otherFiltersItems)) {

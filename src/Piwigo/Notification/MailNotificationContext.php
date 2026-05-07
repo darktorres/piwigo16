@@ -44,7 +44,7 @@ final class MailNotificationContext
 
     private function __construct()
     {
-        $this->startTime = ServiceLocator::get(StringUtil::class)->getMoment();
+        $this->startTime = StringUtil::get()->getMoment();
         $timeout = intval(ini_get('max_execution_time')) * Config::nbmMaxTreatmentTimeoutPercent();
         $this->sendmailTimeout = $timeout > 0 ? $timeout : Config::nbmTreatmentTimeoutDefault();
     }

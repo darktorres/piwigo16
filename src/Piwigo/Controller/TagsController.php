@@ -45,7 +45,7 @@ final class TagsController implements ControllerInterface
         $tpl->setFilenames(['tags' => 'tags.tpl']);
 
         $page['display_mode'] = Config::tagsDefaultDisplayMode();
-        $display_mode         = StringUtil::inputString('display_mode', null, $_GET);
+        $display_mode         = StringUtil::get()->inputString('display_mode', null, $_GET);
         if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
             $page['display_mode'] = $display_mode;
         }

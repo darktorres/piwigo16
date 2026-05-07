@@ -76,7 +76,7 @@ final class SearchController implements ControllerInterface
         }
 
         $words = [];
-        $q     = StringUtil::inputString('q', null, $_GET);
+        $q     = StringUtil::get()->inputString('q', null, $_GET);
         if (!empty($q)) {
             $words = ServiceLocator::get(SearchService::class)->splitAllwords($q);
         }
@@ -90,7 +90,7 @@ final class SearchController implements ControllerInterface
         }
 
         $cat_ids  = [];
-        $cat_id   = StringUtil::inputInt('cat_id', null, $_GET);
+        $cat_id   = StringUtil::get()->inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
             ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
@@ -112,7 +112,7 @@ SELECT *
 
         if (count(ServiceLocator::get(TagService::class)->getAvailableTags()) > 0) {
             $tag_ids = [];
-            $tag_id  = StringUtil::inputString('tag_id', null, $_GET);
+            $tag_id  = StringUtil::get()->inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
                 ServiceLocator::get(Util::class)->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);

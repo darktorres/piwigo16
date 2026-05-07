@@ -8,6 +8,11 @@ use Piwigo\Url\UrlService;
 
 final class StringUtil
 {
+    public static function get(): self
+    {
+        return ServiceLocator::get(self::class);
+    }
+
     public function microSeconds(): string
     {
         $t1 = explode(' ', microtime());
@@ -15,32 +20,32 @@ final class StringUtil
         return $t1[1] . substr($t2[1], 0, 6);
     }
 
-    public static function getMoment(): float
+    public function getMoment(): float
     {
         return microtime(true);
     }
 
-    public static function getElapsedTime(float $start, float $end): string
+    public function getElapsedTime(float $start, float $end): string
     {
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
 
     /** @param array<string,mixed> $source */
-    public static function inputInt(string $key, ?int $default = null, array $source = []): ?int
+    public function inputInt(string $key, ?int $default = null, array $source = []): ?int
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (is_numeric($src[$key]) ? (int) $src[$key] : 0) : $default;
     }
 
     /** @param array<string,mixed> $source */
-    public static function inputString(string $key, ?string $default = null, array $source = []): ?string
+    public function inputString(string $key, ?string $default = null, array $source = []): ?string
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? trim(is_scalar($src[$key]) ? (string) $src[$key] : '') : $default;
     }
 
     /** @param array<string,mixed> $source */
-    public static function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
+    public function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (bool) $src[$key] : $default;
@@ -280,6 +285,7 @@ final class StringUtil
      * @param array<mixed>|string $value
      * @return array<mixed>
      */
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function safeUnserialize(array|string $value): array
     {
         if (is_string($value)) {
@@ -369,12 +375,14 @@ final class StringUtil
         return $path;
     }
 
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function generateKey(int $size): string
     {
         $bytes = random_bytes(max(1, $size + 10));
         return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
     }
 
+    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function scriptBasename(): string
     {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {

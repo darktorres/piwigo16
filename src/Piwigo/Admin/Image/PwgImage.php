@@ -74,7 +74,7 @@ class PwgImage
     /** @return array<mixed> */
     public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
-        $starttime = ServiceLocator::get(StringUtil::class)->getMoment();
+        $starttime = StringUtil::get()->getMoment();
 
         if ($this->image === null) {
             throw new \LogicException('Image library not initialized');
@@ -350,7 +350,7 @@ class PwgImage
           'width'       => $width,
           'height'      => $height,
           'size'        => floor(filesize($destination_filepath) / 1024).' KB',
-          'time'        => $time ? number_format((StringUtil::getMoment() - $time) * 1000, 2, '.', ' ').' ms' : null,
+          'time'        => $time ? number_format((StringUtil::get()->getMoment() - $time) * 1000, 2, '.', ' ').' ms' : null,
           'library'     => $this->library,
         ];
     }

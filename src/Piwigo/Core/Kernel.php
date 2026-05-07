@@ -14,7 +14,6 @@ use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\MiddlewarePipeline;
-use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
@@ -66,9 +65,9 @@ final class Kernel
         // from procedural upload code without going through the container.
         self::$container->get(StorageRegistry::class);
 
-        if (Config::autoMigrate()) {
-            MigrationRunner::migrate();
-        }
+        // MigrationRunner::migrate() is intentionally NOT called here.
+        // It runs in CommonBootstrap::run() after ConfigService::loadConfFromDb(),
+        // because migrations depend on Config::$data being populated from the DB.
     }
 
     /**

@@ -37,7 +37,7 @@ final class NotificationAdminService
     public function checkSendmailTimeout(): bool
     {
         $ctx                   = MailNotificationContext::current();
-        $ctx->isSendmailTimeout = ((ServiceLocator::get(StringUtil::class)->getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
+        $ctx->isSendmailTimeout = ((StringUtil::get()->getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
         return $ctx->isSendmailTimeout;
     }
 

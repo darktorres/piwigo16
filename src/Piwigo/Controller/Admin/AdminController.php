@@ -96,13 +96,13 @@ final class AdminController implements ControllerInterface
 
         // ── Direct / AJAX actions ─────────────────────────────────────────────
 
-        $plugins_new_order = StringUtil::inputString('plugins_new_order', null, $_GET);
+        $plugins_new_order = StringUtil::get()->inputString('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
             ServiceLocator::get(SessionService::class)->setSessionVar('plugins_new_order', $plugins_new_order);
             exit;
         }
 
-        if (StringUtil::inputString('change_theme', null, $_GET) !== null) {
+        if (StringUtil::get()->inputString('change_theme', null, $_GET) !== null) {
             $admin_themes = ['dark', 'light'];
             $rawTheme         = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
             $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];

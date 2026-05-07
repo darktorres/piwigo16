@@ -574,7 +574,7 @@ class Template
             $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
             $this->smarty->assign(
                 [
-        'AAAA_DEBUG_TOTAL_TIME__' => StringUtil::getElapsedTime($t2, StringUtil::getMoment()),
+        'AAAA_DEBUG_TOTAL_TIME__' => StringUtil::get()->getElapsedTime($t2, StringUtil::get()->getMoment()),
         ]
             );
             new Debug()->display_debug($this->smarty);

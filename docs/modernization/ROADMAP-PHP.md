@@ -53,14 +53,14 @@ Every file under `src/`, `include/`, and `admin/` declares `strict_types=1`. A P
 
 ### Current state
 
-- `grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'` is empty — every PHP file in scope has the declaration. No deferral to #17 was needed; the sweep was global.
-- `Piwigo\Tools\PhpStan\StrictTypesRequiredRule` lives at `tools/phpstan/StrictTypesRequiredRule.php` and is registered in `phpstan.neon` alongside `NoDynamicNewRule` and `NoGlobalInSrcRule`. It walks `FileNode` and flags any file under `src/`, `include/`, or `admin/` that lacks `declare(strict_types=1);`. PHPStan reports zero hits on the clean tree, and a probe file dropped under `src/Piwigo/` confirmed the rule fires on regression.
+- `grep -rL 'declare(strict_types=1);' src/ --include='*.php'` is empty — every PHP file in scope has the declaration. No deferral to #17 was needed; the sweep was global.
+- `Piwigo\Tools\PhpStan\StrictTypesRequiredRule` lives at `tools/phpstan/StrictTypesRequiredRule.php` and is registered in `phpstan.neon` alongside `NoDynamicNewRule` and `NoGlobalInSrcRule`. It walks `FileNode` and flags any file under `src/` that lacks `declare(strict_types=1);`. PHPStan reports zero hits on the clean tree, and a probe file dropped under `src/Piwigo/` confirmed the rule fires on regression.
 - CI enforcement is live: `.github/workflows/ci.yml` runs `vendor/bin/phpstan analyse` in the `phpstan` job, so the rule blocks any push that adds an unguarded file.
 
 ### Verification
 
 ```bash
-grep -rL 'declare(strict_types=1);' src/ admin/ include/ --include='*.php'   # empty (already)
+grep -rL 'declare(strict_types=1);' src/ --include='*.php'   # empty (already)
 vendor/bin/phpstan analyse --no-progress                     # green, including new rule
 ```
 
@@ -76,7 +76,7 @@ Composer's `--strict-psr` mode passes clean. Every class in `src/` lives in a Pa
 
 ### Current state
 
-All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been renamed to PascalCase, with their files moved via `git mv` to match. Every first-party caller (admin/, include/, top-level entry-points) now references the new names. `composer dump-autoload --strict-psr` exits clean. The 17 legacy `include/*.class.php` and `admin/include/*.class.php` placeholder stubs (5-line `<?php declare(strict_types=1);` files) are still present and slated for deletion in #30; no first-party code depends on them.
+All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been renamed to PascalCase, with their files moved via `git mv` to match. Every first-party caller (admin/, include/, top-level entry-points) now references the new names. `composer dump-autoload --strict-psr` exits clean. The 17 legacy `include/*.class.php` and `admin/include/*.class.php` placeholder stubs were deleted in #31; no first-party code depended on them.
 
 **Renames applied:**
 
@@ -99,6 +99,8 @@ All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been rename
 
 `rector.php`'s `RenameClassRector` map keeps the legacy unqualified names as **keys** pointing to the new FQN values, so any leftover bare reference (e.g. inside an out-of-tree plugin) gets rewritten correctly when rector is run on it. No `src/Piwigo/Compat/aliases.php` shim is needed — first-party code is fully migrated.
 
+`DummyPluginMaintain` and `DummyThemeMaintain` were deleted in a follow-up commit (`89b2781ed`) — the Dummy* pattern was replaced by `function_exists()` guards in `Plugins.php` and `Themes.php`.
+
 **Out-of-band naming corrections in `src/` (historical context, already in place):**
 
 - `include/Logger.class.php` was moved to `src/Piwigo/Core/Logger.php` (not `src/Piwigo/Log/Logger.php` as the original plan said). The `Log\` namespace doesn't exist.
@@ -112,7 +114,7 @@ All 14 lowercase / mixed-case classes under `src/Piwigo/Admin/` have been rename
 
 2. **Rename lowercase classes.** ✅ Done — class declarations, internal self-references, all first-party `use` and `new` sites, the FQN type hint inside `C13yInternal`, the `\Piwigo\Admin\Plugins`-style FQN constructions in `pwg.extensions.php`, and the doc strings in `tools/triggers_list.php` were all updated. Out-of-tree plugins were deliberately left untouched per the original plan; `rector.php`'s rename map points old keys at the new FQNs so any bare legacy reference still gets rewritten if rector runs on it.
 
-3. **Delete the empty `*.class.php` placeholders.** ✅ Done as #30.
+3. **Delete the empty `*.class.php` placeholders.** ✅ Done as #31.
 
 4. **Run `composer dump-autoload --strict-psr`.** ✅ Clean.
 
@@ -506,11 +508,11 @@ php -r "
 
 ## #6 — Eliminate procedural `global` declarations across the codebase
 
-**Status:** ✅ Function-internal globals fully removed (Tier 1 + Tier 2). File-top globals distributed to later tasks — see `docs/modernization/remaining-globals.md`. &nbsp;|&nbsp; **Size:** L
+**Status:** ✅ Complete — all `global $x;` declarations removed from `src/`. &nbsp;|&nbsp; **Size:** L
 
 ### Goal
 
-Zero function-internal `global $x;` declarations anywhere in `src/`, `include/`, `admin/`. File-top globals in entry-scripts are a separate concern owned by the MVC controller migration (#22) and the pre-boot-includes-to-services work (#17).
+Zero `global $x;` declarations anywhere in `src/`. File-top globals in entry-scripts were a separate concern; all resolved when `include/` and `admin/` were deleted.
 
 ### What was done
 
@@ -544,28 +546,23 @@ Zero function-internal `global $x;` declarations anywhere in `src/`, `include/`,
 - `NoGlobalInSrcRule` REPLACEMENTS updated for all migrated variables
 - `unformat_email()` got a proper `@return array{email: string, name: string}` — a pre-existing type gap exposed when `$conf_mail` (which was `mixed`) stopped suppressing downstream inference
 
-**What remains (not in scope here)**
+**What remains**
 
-File-top `global` declarations (~78 lines across 89 files) are not removed here — they are PHPStan typing bridges required until the consuming entry-scripts and pre-boot includes are migrated to typed controllers/services. Full inventory and plan: `docs/modernization/remaining-globals.md`.
-
-- File-top globals in root entry-scripts (15 files) → **#22** (MVC controllers)
-- File-top globals in admin entry-scripts (57 files) → **#22**
-- Pre-boot includes (`page_header.php`, `page_tail.php`, `section_init.inc.php`, etc.) → **#17**
-- `tools/` dev scripts (4 sites) → permanently out of scope
+None. All file-top globals in root entry-scripts, admin entry-scripts, and pre-boot includes were eliminated when those files were deleted or migrated as part of #22 and #17. The `tools/` dev scripts (`translation_analysis.php`, `test_piwigo.php`) that carried `global $lang, $user, $mysqli` were also deleted.
 
 ### Steps
 
 1. **Add a `Template` accessor.** ✅ Done.
 2. **Migrate `include/` function-internal globals.** ✅ Done (Tier 1 + Tier 2).
 3. **Migrate `admin/` function-internal globals.** ✅ Done (Tier 1 `$env_nbm`, Tier 2 `$lang_info`/`$lang` in NBM functions).
-4. **Extend the PHPStan rule.** Deferred to when MVC migration eliminates the last file-top globals.
-5. **Drop the bootstrap stubs.** Deferred — same blocker.
+4. **Extend the PHPStan rule.** ✅ Done — `NoGlobalInSrcRule` enforces zero `global $x;` in `src/`; gate cleared when `include/` and `admin/` were deleted.
+5. **Drop the bootstrap stubs.** ✅ Partially done — `$conf` and `$mysqli` stubs removed; `$GLOBALS` reference bridges for `$page`, `$user`, `$lang`, `$template`, etc. remain in `phpstan-bootstrap.php` because `$GLOBALS[...]` direct access is still used throughout `src/`.
 
 ### Verification
 
 ```bash
-# Zero function-internal globals for all formerly-guarded variables:
-grep -rn "^\s*global \$" include/ admin/ src/ | grep -v "^include/common.inc.php:153"  # only wiring line
+# Zero global declarations in src/:
+grep -rn "^\s*global \$" src/   # returns empty
 
 # PHPStan level 9 clean:
 vendor/bin/phpstan analyse --memory-limit=2G
@@ -622,7 +619,7 @@ grep -rn "TODO\|FIXME" src/ include/ --include="*.php" | grep -v "vendor\|instal
 | `include/ws_protocols/rest_encoder.php`        | Same getter migration; added `use Piwigo\Ws\PwgNamedArray` + `PwgNamedStruct`                                          |
 | `ws.php`                                       | Added `use Piwigo\Ws\PwgServer`                                                                                        |
 
-Enum conversion of `WS_TYPE_*` / `WS_PARAM_*` constants deferred to task #19.
+`include/ws_core.inc.php` was subsequently deleted entirely (all constants migrated to `WsType.php` / `WsParam.php`; callers updated). Enum conversion of `WS_TYPE_*` / `WS_PARAM_*` constants deferred to task #19.
 
 ---
 
@@ -677,7 +674,7 @@ Replacement patterns by tier:
    `@set_status_header(...)` gated with `if (!headers_sent())`.
 8. **Residue + lint rule.** The single legitimate edge case
    (install-time `new mysqli()` connection probe in
-   `admin/include/functions_install.inc.php`) wraps the call in a tight
+   `InstallController`) wraps the call in a tight
    `set_error_handler`/`restore_error_handler` block instead of `@`.
    Added `tools/phpstan/NoErrorSuppressionRule.php` (wired into
    `phpstan.neon`) — fails on any future `@` use, with no allowlist.
@@ -696,8 +693,7 @@ Helpers introduced or extended:
 ```bash
 # Count actionable @ suppressions (excludes PHPDoc/comments, language/, vendor/)
 perl -ne 'next if m{^\s*[*/]}; while(m{(?:[\s=(\[,;!&|?:]|^|return\s)\@(\$|[a-zA-Z_]\w*\s*\()}gx){$c++} END{print "TOTAL: $c\n"}' \
-  $(find src include admin tools tests -name '*.php') \
-  action.php i.php index.php install.php profile.php upgrade.php upgrade_feed.php ws.php feed.php password.php notification.php picture.php comments.php
+  $(find src tools tests -name '*.php') index.php migrations.php
 # Result: 0
 
 vendor/bin/phpstan analyse           # green at level 9 (NoErrorSuppressionRule active)
@@ -746,7 +742,11 @@ Define a typed exception hierarchy under `Piwigo\Exception\`. Replace the 27 `di
 ### Verification
 
 ```bash
-grep -rn 'die(' include/ admin/ --include='*.php' | wc -l       # 0 (excluding tests/ and dev/)
+grep -rn 'die(' src/ --include='*.php'
+# 14 calls remain — all are intentional pre-boot safety guards or image-library
+# fatal conditions (PwgImage, ImageGd, InstallController, UpgradeController, Plugins,
+# Themes, Languages, ProfileService::hacking-attempt, CheckIntegrity::assertion).
+# The original goal was to eliminate die() in include/ and admin/ — both now deleted.
 grep -rnE 'throw new \\?Exception\(' src/ include/ admin/ \
   --include='*.php' | wc -l                                       # 0
 vendor/bin/phpstan analyse                                        # green

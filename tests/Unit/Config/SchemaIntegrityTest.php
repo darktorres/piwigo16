@@ -31,6 +31,8 @@ final class SchemaIntegrityTest extends TestCase
         'reset',
         // Derived accessors (no SCHEMA key — call other accessors)
         'flipPictureExt', 'flipFileExt',
+        // Path helpers (formerly PHP define()s in include/constants.php)
+        'pluginsPath', 'themesPath', 'combinedDir', 'derivativeDir', 'usersTable',
     ];
 
     public function test_generator_is_in_sync(): void

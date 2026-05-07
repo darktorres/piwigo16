@@ -226,7 +226,7 @@ template/               Admin Smarty templates (one per admin page)
 fontello/               Admin icon font
 ```
 
-### `themes/admin/clear/` and `themes/admin/roma/`
+### `themes/admin/light/` and `themes/admin/dark/`
 
 Alternate admin skins (CSS + icon overrides only).
 

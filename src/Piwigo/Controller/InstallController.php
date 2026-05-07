@@ -116,7 +116,7 @@ final class InstallController implements ControllerInterface
             $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
-        $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'roma');
+        $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
         $tpl->set_filenames(['install' => 'install.tpl']);
         if (!isset($step)) {

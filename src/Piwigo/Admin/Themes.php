@@ -320,8 +320,8 @@ class Themes
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        $admin_theme = userprefs_get_param('admin_theme', 'roma');
-                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'roma';
+                        $admin_theme = userprefs_get_param('admin_theme', 'dark');
+                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'themes/admin/'
                           .$admin_theme

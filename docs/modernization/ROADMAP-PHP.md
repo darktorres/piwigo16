@@ -2124,7 +2124,7 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 
 - **`themes/<id>/themeconf.inc.php`** is the only required file. It declares `$themeconf = ['name' => …, 'parent' => …, 'icon_dir' => …, 'img_dir' => …, 'load_parent_css' => …, 'local_head' => …]` and may also run arbitrary code (template assigns, event-handler registrations, config reads). Example: `themes/standard_pages/themeconf.inc.php` calls `$this->assign(...)` and `conf_get_param(...)` directly at file load.
 - **2 frontend themes** bundled: `themes/default`, `themes/standard_pages` (the latter inherits from `default`).
-- **3 admin themes** bundled: `themes/admin/_base`, `themes/admin/clear`, `themes/admin/roma` (clear and roma inherit from default).
+- **3 admin themes** bundled: `themes/admin/_base`, `themes/admin/light`, `themes/admin/dark` (clear and roma inherit from default).
 - **`src/Piwigo/Admin/ThemeMaintain`** is the only typed part of the theme API today.
 - **3rd-party themes** rely on `themeconf.inc.php` being `include`'d at load time; breaking that shatters the ecosystem.
 - **Inheritance** is resolved at load time by walking the `parent` chain and merging `$themeconf` arrays.

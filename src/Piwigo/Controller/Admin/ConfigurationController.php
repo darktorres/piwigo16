@@ -102,7 +102,7 @@ final class ConfigurationController
         ];
 
         $comments_order = ['ASC' => l10n('Show oldest comments first'), 'DESC' => l10n('Show latest comments first')];
-        $mail_themes    = ['clear' => 'Clear', 'dark' => 'Dark'];
+        $mail_themes    = ['light' => 'Light', 'dark' => 'Dark'];
 
         // ── POST submission ───────────────────────────────────────────────────
 

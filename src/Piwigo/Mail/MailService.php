@@ -472,7 +472,7 @@ SELECT
             }
         }
 
-        if (empty($args['theme']) or !in_array($args['theme'], ['clear', 'dark'])) {
+        if (empty($args['theme']) or !in_array($args['theme'], ['light', 'dark'])) {
             $args['theme'] = Config::mailTheme();
         }
 

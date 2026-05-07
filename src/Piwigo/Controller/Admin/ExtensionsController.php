@@ -638,8 +638,8 @@ final class ExtensionsController
             PageState::current()->addError(l10n('Can\'t connect to server.'));
         }
 
-        $adminTheme = userprefs_get_param('admin_theme', 'roma');
-        $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'roma') . '/images/missing_screenshot.png');
+        $adminTheme = userprefs_get_param('admin_theme', 'dark');
+        $tpl->assign('default_screenshot', get_root_url() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
         $tpl->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

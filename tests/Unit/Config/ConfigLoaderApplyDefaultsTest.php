@@ -61,7 +61,7 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
     {
         ConfigLoader::applyDefaults();
 
-        self::assertSame('roma', Config::adminTheme());
+        self::assertSame('dark', Config::adminTheme());
         self::assertSame('./themes', Config::themesDir());
         self::assertTrue(Config::activateComments());
         self::assertSame(15, Config::topNumber());

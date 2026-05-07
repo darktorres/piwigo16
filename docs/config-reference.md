@@ -25,7 +25,7 @@ with a key not in the table below.
 | `activate_comments`                       | `bool`   | `true`                      | `Config::activateComments()`                   | —                         |
 | `activity_display_connections`            | `string` | `all`                       | `Config::activityDisplayConnections()`         | —                         |
 | `add_cache_to_storage_chart`              | `bool`   | `true`                      | `Config::addCacheToStorageChart()`             | —                         |
-| `admin_theme`                             | `string` | `roma`                      | `Config::adminTheme()`                         | —                         |
+| `admin_theme`                             | `string` | `dark`                      | `Config::adminTheme()`                         | —                         |
 | `album_description_on_all_pages`          | `bool`   | `false`                     | `Config::albumDescriptionOnAllPages()`         | —                         |
 | `album_move_delay_before_auto_opening`    | `int`    | `3000`                      | `Config::albumMoveDelayBeforeAutoOpening()`    | —                         |
 | `allow_html_descriptions`                 | `bool`   | `true`                      | `Config::allowHtmlDescriptions()`              | —                         |

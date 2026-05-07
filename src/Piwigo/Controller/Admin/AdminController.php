@@ -41,8 +41,8 @@ final class AdminController implements ControllerInterface
 
         // common.inc.php creates the frontend template (IN_ADMIN not yet set).
         // Replace it with the admin-theme template now that IN_ADMIN is defined.
-        $admin_theme_raw = userprefs_get_param('admin_theme', 'roma');
-        $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'roma';
+        $admin_theme_raw = userprefs_get_param('admin_theme', 'dark');
+        $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
         $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
         $GLOBALS['template'] = $adminTpl;
@@ -89,9 +89,9 @@ final class AdminController implements ControllerInterface
         }
 
         if (input_string('change_theme', null, $_GET) !== null) {
-            $admin_themes     = ['roma', 'clear'];
-            $rawTheme         = userprefs_get_param('admin_theme', 'roma');
-            $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'roma'];
+            $admin_themes = ['dark', 'light'];
+            $rawTheme         = userprefs_get_param('admin_theme', 'dark');
+            $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];
             $result           = array_diff($admin_themes, $admin_theme_array);
             $new_admin_theme  = array_pop($result);
 

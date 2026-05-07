@@ -19,8 +19,8 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 ### Current state
 
 - `themes/admin/_base/theme.css`: **9,635 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
-- `themes/admin/roma/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
-- `themes/admin/clear/theme.css`: **1,234 lines** — same problem.
+- `themes/admin/dark/theme.css`: **2,837 lines** — duplicates parent section headers and carries far more than color overrides.
+- `themes/admin/light/theme.css`: **1,234 lines** — same problem.
 - `themes/default/theme.css`: **1,305 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
 - `themes/default/fix-khtml.css`: **16 lines**, orphan — zero references anywhere in the repo.
 - `themes/default/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/default/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
@@ -28,9 +28,9 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 - `themes/default/css/clear-search.css` + `dark-search.css`: **346 + 333 lines** — color-only variants duplicating `search.css` structure.
 - `themes/standard_pages/skins/*.css`: **11 skin files** (cadmium, cobalt, default, fuchsia, green, lime, purple, red, sienna, silver, teal), each ~337 lines, each with **20 `!important` instances** — fight specificity with the parent theme; same anti-pattern modus had.
 - **~689 `!important` declarations** across first-party CSS:
-  - `themes/admin/roma/theme.css`: 162
+  - `themes/admin/dark/theme.css`: 162
   - `themes/admin/_base/theme.css`: 150
-  - `themes/admin/clear/theme.css`: 45
+  - `themes/admin/light/theme.css`: 45
   - `themes/admin/_base/css/**`: ~71 (pages/components combined)
   - `themes/standard_pages/`: ~235 (theme + 11 skins)
   - `themes/default/theme.css`: 10, `print.css`: 1
@@ -50,8 +50,8 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 **Admin themes:**
 
 - `themes/admin/_base/theme.css`, `css/components/{general,album_selector,batch_manager,flatpickr}.css`, `css/pages/*.css` (28 files)
-- `themes/admin/clear/theme.css`
-- `themes/admin/roma/theme.css`, `css/components/general.css`
+- `themes/admin/light/theme.css`
+- `themes/admin/dark/theme.css`, `css/components/general.css`
 
 **Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/default/js/plugins/**`, `themes/default/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `themes/admin/_base/{fontello,fonts}/**`, `**/*.min.css`.
 
@@ -69,7 +69,7 @@ Counts re-measured against the current tree; the modus-skin tier from the origin
 
 | Reason                                                                                                                       | Files                                                                     | Count |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----: |
-| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/roma/theme.css`, `themes/admin/clear/theme.css`             |  ~150 |
+| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css`             |  ~150 |
 | Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/default/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
 | `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/default/theme.css`              |     2 |
 | JS-toggled visibility (`display: none/flex/block`)                                                                           | `themes/admin/_base/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
@@ -298,7 +298,7 @@ Each `themeconf.inc.php` for `clear` and `roma` defines its `$admin_skin` array.
 **Step 11 — Split `themes/admin/_base/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `themes/admin/_base/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
 
 **Step 12 — Slim admin child themes.**
-With `var(--admin-*)` in place, `themes/admin/clear/theme.css` (1,234 lines) and `themes/admin/roma/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/{clear,roma}/css/components/general.css` — content moves into the parent.
+With `var(--admin-*)` in place, `themes/admin/light/theme.css` (1,234 lines) and `themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/{clear,roma}/css/components/general.css` — content moves into the parent.
 
 **Step 13 — (deleted; plugin CSS quick-wins; the named plugins — GDThumb, AdminTools, language_switch — are no longer in the tree).**
 

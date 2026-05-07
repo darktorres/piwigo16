@@ -12,16 +12,17 @@ use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__ . '/include', __DIR__ . '/admin', __DIR__ . '/install', __DIR__ . '/src',
+        __DIR__ . '/install',
+        __DIR__ . '/src',
         __DIR__ . '/index.php',
         __DIR__ . '/themes/_base',
     ])
     ->withSkip([
-        __DIR__ . '/install/db', __DIR__ . '/language',
-        __DIR__ . '/include/feedcreator.class.php',
-        __DIR__ . '/include/phpqrcode.php',
-        __DIR__ . '/include/passwordhash.class.php',
-        __DIR__ . '/themes', __DIR__ . '/vendor',
+        __DIR__ . '/install/db',
+        __DIR__ . '/language',
+        __DIR__ . '/node_modules',
+        __DIR__ . '/themes',
+        __DIR__ . '/vendor',
         // load_external_filters() uses implode('', $callback) for compile_id — array callbacks only.
         // Skip ArrayToFirstClassCallableRector on Template so set_prefilter callbacks stay as arrays.
         \Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector::class => [
@@ -98,9 +99,7 @@ return RectorConfig::configure()
         'languages'             => \Piwigo\Admin\Languages::class,
         'updates'               => \Piwigo\Admin\Updates::class,
         'plugins'               => \Piwigo\Admin\Plugins::class,
-        'DummyPlugin_maintain'  => \Piwigo\Admin\DummyPluginMaintain::class,
         'themes'                => \Piwigo\Admin\Themes::class,
-        'DummyTheme_maintain'   => \Piwigo\Admin\DummyThemeMaintain::class,
         'c13y_internal'         => \Piwigo\Admin\Integrity\C13yInternal::class,
         'check_integrity'       => \Piwigo\Admin\Integrity\CheckIntegrity::class,
         // Admin image backends

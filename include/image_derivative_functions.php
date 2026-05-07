@@ -177,6 +177,10 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     }
 
     $req = ltrim($req, '/');
+    // Strip the /i/ route prefix added when routing through index.php?/i/...
+    if (str_starts_with($req, 'i/')) {
+        $req = substr($req, 2);
+    }
 
     foreach (preg_split('#/+#', $req) ?: [] as $token) {
         preg_match(Config::syncCharsRegex(), $token) or ierror('Invalid chars in request', 400);

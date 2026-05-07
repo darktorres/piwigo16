@@ -602,7 +602,6 @@ class Template
      * Usage :
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
-     * @see l10n()
      */
     /** @param array<mixed> $params */
     public static function modcompilerTranslate(array $params): string
@@ -616,7 +615,7 @@ class Template
                 ) {
                     return var_export(Lang::t($key), true);
                 }
-                return 'l10n('.$p0.')';
+                return '\Piwigo\Core\Lang::t('.$p0.')';
 
             default:
                 $rest = array_slice($params, 1);
@@ -628,7 +627,7 @@ class Template
                     $ret .= ')';
                     return $ret;
                 }
-                return 'l10n('.$p0.','.implode(',', $restStr).')';
+                return '\Piwigo\Core\Lang::t('.$p0.','.implode(',', $restStr).')';
         }
     }
 
@@ -636,7 +635,6 @@ class Template
      * "translate_dec" variable modifier.
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
-     * @see l10n_dec()
      */
     /** @param array<mixed> $params */
     public static function modcompilerTranslateDec(array $params): string
@@ -660,7 +658,7 @@ class Template
             $ret .= ')';
             return $ret;
         }
-        return 'l10n_dec('.$p1.','.$p2.','.$p0.')';
+        return '\Piwigo\Lang\Translator::get()->plural('.$p1.','.$p2.','.$p0.')';
     }
 
     /**

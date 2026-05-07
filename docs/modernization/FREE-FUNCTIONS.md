@@ -32,13 +32,13 @@ Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 | File | Functions | Category | Notes |
 |---|---|---|---|
 | `functions.inc.php` | 208 | Mixed — see below | Largest file; ~170 one-line delegates, ~38 real-logic standalones |
-| `functions_user.inc.php` | 60 | One-line delegates | All call `PermissionService` / `AuthService` / `UserService` / `PreferencesService` |
-| `functions_url.inc.php` | 21 | One-line delegates | All call `UrlService` |
-| `functions_plugins.inc.php` | 12 | Mixed | 6 event-system delegates + 2 `PluginService` delegates + 2 factory helpers (stay) + 1 define block |
-| `functions_cookie.inc.php` | 3 | One-line delegates | `CookieService` |
+| `functions_user.inc.php` | 60 | Mixed | ~12 real-logic functions (`log_user`, `auto_login`, `register_user`, `build_user`, etc.); ~48 delegates to `AuthService` / `UserService` / `PermissionService` / `PreferencesService` |
+| `functions_url.inc.php` | 21 | Mixed | 19 `UrlService` delegates; `get_root_url()` is pre-boot permanent; `get_user_favorites()` is misplaced (belongs in `functions_user`) |
+| `functions_plugins.inc.php` | 12 | Mixed | 4 event-system core (`add/remove_event_handler`, `trigger_change/notify` — permanent); 6 `PluginService` delegates; 2 factory helpers (`instantiate_*_maintain` — permanent) |
+| `functions_cookie.inc.php` | 3 | Mixed | `cookie_path()` is pre-boot permanent; `pwg_set/get_cookie_var` delegate to `CookieService` |
 | `derivative_params.inc.php` | 5 | 🔒 Permanent | Low-level URL helpers (`derivative_to_url`, `size_to_url`, `size_equals`, `char_to_fraction`, `fraction_to_char`) — no service boundary benefit |
-| `image_derivative_functions.php` | 7 | Mostly permanent | Fast-path helpers for `index.php?/i/` bypass: `ierror`, `parse_request`, `send_derivative`, `safe_unserialize`, `get_derivative_storage`, `time_step`, `get_remote_addr_session_hash` |
-| `common.inc.php` | 1 | Pre-boot standalone | `sanitize_mysql_kv()` — inline helper for `array_walk_recursive` |
+| `image_derivative_functions.php` | 7 | Mostly permanent | Fast-path helpers for `index.php?/i/` bypass: `ierror`, `time_step`, `url_to_size`, `parse_custom_params`, `parse_request`, `try_switch_source`, `send_derivative` |
+| `common.inc.php` | 1 | Pre-boot standalone | `sanitize_mysql_kv()` — inline helper for `array_walk_recursive` on `$_GET`/`$_POST`/`$_COOKIE` |
 
 #### `include/ws_functions/`
 

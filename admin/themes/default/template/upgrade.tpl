@@ -53,7 +53,7 @@
   <tr>
     <td>{'Language'|@translate}</td>
     <td>
-      <select name="language" data-language-select-redirect="upgrade.php">
+      <select name="language" data-language-select-redirect="index.php?/upgrade">
         {html_options options=$language_options selected=$language_selection}
       </select>
     </td>

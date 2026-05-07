@@ -93,7 +93,7 @@ if (!Kernel::isBooted()) :
     $prefixeTable = Config::dbPrefix();
 
     if (!InstallSentinel::isInstalled()) {
-        header('Location: install.php');
+        header('Location: index.php?/install');
         exit;
     }
     // Only mysqli is supported. The self-heal for old 'mysql' installs and the
@@ -153,7 +153,7 @@ if (!Kernel::isBooted()) :
 
     if (!Config::checkUpgradeFeed()) {
         if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != get_branch_from_version(PHPWG_VERSION)) {
-            redirect(get_root_url().'upgrade.php');
+            redirect(get_root_url().'index.php?/upgrade');
         }
     }
 

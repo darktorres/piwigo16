@@ -22,7 +22,7 @@ final class UpgradeChainTest extends IntegrationTestCase
         // setUp() loaded the 16.x fixture; apply the pre-15.x patch on top.
         $this->loadFixture(self::FIXTURE_PRE15);
 
-        $ch = curl_init($this->baseUrl . '/upgrade.php');
+        $ch = curl_init($this->baseUrl . '/index.php?/upgrade');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
@@ -32,13 +32,13 @@ final class UpgradeChainTest extends IntegrationTestCase
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 
-        self::assertSame(409, $statusCode, 'upgrade.php must return 409 for pre-15.x databases');
+        self::assertSame(409, $statusCode, 'index.php?/upgrade must return 409 for pre-15.x databases');
         self::assertStringContainsString('Upgrade refused', $body);
     }
 
     public function test_upgrade_from_16x_dump_lands_on_current_version(): void
     {
-        $ch = curl_init($this->baseUrl . '/upgrade.php');
+        $ch = curl_init($this->baseUrl . '/index.php?/upgrade');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query([
@@ -52,12 +52,12 @@ final class UpgradeChainTest extends IntegrationTestCase
         $statusCode = (int) curl_getinfo(curl_exec($ch) !== false ? $ch : $ch, CURLINFO_HTTP_CODE);
         unset($ch); // curl_close() deprecated in PHP 8.5; unset triggers cleanup equivalently
 
-        self::assertSame(200, $statusCode, 'upgrade.php must return 200');
+        self::assertSame(200, $statusCode, 'index.php?/upgrade must return 200');
 
         $version = $this->queryScalar(
             "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
         // get_branch_from_version('16.3.0') returns '16' (first segment only, per Piwigo ≥ 11 convention)
-        self::assertSame('16', $version, 'upgrade.php must land on current branch version');
+        self::assertSame('16', $version, 'index.php?/upgrade must land on current branch version');
     }
 }

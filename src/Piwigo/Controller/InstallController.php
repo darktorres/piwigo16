@@ -21,9 +21,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Handles the Piwigo installation wizard (/install).
- * Corresponds to the former install.php entry-point.
+ * Corresponds to the former install.php entry-point; now routed via index.php?/install.
  *
- * Accessed directly via the install.php shim — NOT via common.inc.php
+ * Accessed directly via the index.php?/install route — bypasses common.inc.php
  * (the DB may not exist yet). The shim loads vendor/autoload.php and
  * functions.inc.php before calling this controller.
  */
@@ -230,7 +230,7 @@ final class InstallController implements ControllerInterface
         $tpl->assign([
             'T_CONTENT_ENCODING'     => 'utf-8',
             'RELEASE'                => PHPWG_VERSION,
-            'F_ACTION'               => 'install.php?language=' . $language,
+            'F_ACTION'               => 'index.php?/install&language=' . $language,
             'F_DB_HOST'              => $dbhost,
             'F_DB_USER'              => $dbuser,
             'F_DB_PASSWD'            => $dbpasswd,

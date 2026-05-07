@@ -111,7 +111,7 @@ function install_piwigo($option)
     $ch = curl_init();
 
     $curLopt = array(
-      CURLOPT_URL             =>  $option['url'].'/install.php',
+      CURLOPT_URL             =>  $option['url'].'/index.php?/install',
       CURLOPT_COOKIESESSION   =>  true,
       CURLOPT_RETURNTRANSFER  =>  true,
       CURLOPT_POST            =>  1,

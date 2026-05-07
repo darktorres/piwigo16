@@ -16,9 +16,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Handles the Piwigo database upgrade (/upgrade).
- * Corresponds to the former upgrade.php entry-point.
+ * Corresponds to the former upgrade.php entry-point; now routed via index.php?/upgrade.
  *
- * Accessed directly via the upgrade.php shim — NOT via common.inc.php.
+ * Accessed directly via the index.php?/upgrade route — bypasses common.inc.php.
  * The shim loads vendor/autoload.php and ConfigLoader before calling this.
  */
 final class UpgradeController implements ControllerInterface
@@ -29,7 +29,7 @@ final class UpgradeController implements ControllerInterface
         $GLOBALS['prefixeTable'] = $prefixeTable;
 
         if (!InstallSentinel::isInstalled()) {
-            die('Piwigo is not installed yet — run install.php first.');
+            die('Piwigo is not installed yet — navigate to index.php?/install first.');
         }
 
         define('USERS_TABLE', $prefixeTable . 'users');

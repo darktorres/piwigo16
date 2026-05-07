@@ -6,7 +6,7 @@ The release tarball ships with `vendor/` pre-populated for **production dependen
 
 1. Download and unpack the tarball.
 2. Point your web server at the unpacked directory.
-3. Navigate to `install.php` in your browser and follow the wizard.
+3. Navigate to `index.php?/install` in your browser and follow the wizard.
 
 ## Developer clone
 

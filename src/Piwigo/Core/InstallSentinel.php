@@ -9,7 +9,7 @@ use Piwigo\Config\TestMode;
 /**
  * Authoritative answer to "is Piwigo installed on this filesystem?".
  *
- * Sole signal: an empty stamp file under `local/` (created by install.php
+ * Sole signal: an empty stamp file under `local/` (created by InstallController (index.php?/install)
  * at the end of a successful install).
  *
  * The stamp filename depends on TestMode — production uses
@@ -18,8 +18,8 @@ use Piwigo\Config\TestMode;
  * sentinel.
  *
  * Used by:
- *   - install.php   (refuse to re-install)
- *   - common.inc.php (redirect to install.php on first request)
+ *   - index.php?/install  (refuse to re-install)
+ *   - common.inc.php (redirect to index.php?/install on first request)
  *   - functions_session.inc.php (gate the DB session handler)
  *   - functions_user.inc.php (skip user-mail / registration before install)
  *   - functions.inc.php (language fallback during upgrade)

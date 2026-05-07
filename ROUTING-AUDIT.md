@@ -53,8 +53,8 @@ Files at `/` that Apache serves directly as PHP scripts, **bypassing the kernel*
 | File | Reason |
 |------|--------|
 | `index.php` | **The kernel entry point** — routes all requests through `Kernel::handle()` |
-| `install.php` | Custom bootstrap — no DB exists yet, must not load `common.inc.php` |
-| `upgrade.php` | Custom bootstrap — DB schema may be mid-migration |
+| `index.php?/install` | Custom bootstrap — no DB exists yet, must not load `common.inc.php` |
+| `index.php?/upgrade` | Custom bootstrap — DB schema may be mid-migration |
 | `i.php` | **Performance shim** — image derivative server; deliberately avoids the full Piwigo stack to minimize per-image overhead. Calls `ImageDerivativeController` directly after only `ConfigLoader`. |
 | `migrations.php` | Doctrine Migrations CLI config — not a request handler |
 | `rector.php` | Rector static analysis config — not a request handler |

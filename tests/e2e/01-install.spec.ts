@@ -38,7 +38,7 @@ const INSTALL_ADMIN_PASS = 'p4ssword!';
 test('fresh install completes end-to-end @install-flow', async ({ page }) => {
     const monitor = attachMonitor(page);
 
-    const installResp = await page.goto(pwgUrl('/install.php'));
+    const installResp = await page.goto(pwgUrl('/index.php?/install'));
     assertHttpOk(installResp, 'install.php navigation');
 
     // Once installed, install.php redirects away. Skip rather than fail —

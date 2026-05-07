@@ -13,7 +13,6 @@ use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/include', __DIR__ . '/admin', __DIR__ . '/install', __DIR__ . '/src',
-        __DIR__ . '/install.php', __DIR__ . '/upgrade.php',
         __DIR__ . '/index.php',
         __DIR__ . '/themes/default',
     ])

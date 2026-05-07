@@ -5,8 +5,6 @@ parameters:
         - admin
         - src
         - tools/phpstan
-        - install.php
-        - upgrade.php
         - index.php
         - i.php
     excludePaths:

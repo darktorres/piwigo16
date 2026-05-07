@@ -57,7 +57,7 @@ final class Kernel
         ServiceLocator::setContainer(self::$container);
 
         // Seed LoggerRegistry with a NullLogger if common.inc.php hasn't set a real one yet
-        // (install.php and upgrade.php do not include common.inc.php).
+        // (index.php?/install and index.php?/upgrade bypass common.inc.php).
         if (!LoggerRegistry::isInitialized()) {
             LoggerRegistry::set(new NullLogger());
         }

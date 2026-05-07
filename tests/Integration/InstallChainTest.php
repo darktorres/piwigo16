@@ -31,7 +31,7 @@ final class InstallChainTest extends IntegrationTestCase
             $dbHostField .= ':' . $this->dbPort;
         }
 
-        $ch = curl_init($this->baseUrl . '/install.php');
+        $ch = curl_init($this->baseUrl . '/index.php?/install');
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query([
@@ -54,7 +54,7 @@ final class InstallChainTest extends IntegrationTestCase
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 
-        self::assertSame(200, $statusCode, 'install.php must return 200 on successful install');
+        self::assertSame(200, $statusCode, 'index.php?/install must return 200 on successful install');
 
         self::assertStringContainsString(
             'Congratulations',
@@ -67,6 +67,6 @@ final class InstallChainTest extends IntegrationTestCase
         );
         self::assertSame('16', $version, 'install must write piwigo_db_version = 16');
 
-        self::assertFileExists(self::INSTALLED_STAMP, 'install.php must create the .installed.test sentinel');
+        self::assertFileExists(self::INSTALLED_STAMP, 'index.php?/install must create the .installed.test sentinel');
     }
 }

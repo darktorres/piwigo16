@@ -11,8 +11,8 @@ index.php               Kernel entry point — the only HTTP entry point for all
 action.php              Permanent shim: binary file-server (downloads, format variants)
 i.php                   Permanent shim: image derivative server (minimal bootstrap, no full stack)
 qsearch.php             Redirect shim: ?q= → UrlGenerator::searchPage()
-install.php             Pre-DB bootstrap; does not load common.inc.php
-upgrade.php             Mid-migration bootstrap; custom sequence
+index.php?/install  Install wizard (detected early in index.php, no DB needed)
+index.php?/upgrade  Upgrade wizard (detected early in index.php)
 upgrade_feed.php        Feed-based DB upgrade runner; gated by Config::checkUpgradeFeed()
 migrations.php          Doctrine Migrations CLI config (not a request handler)
 rector.php              Rector static analysis config (not a request handler)

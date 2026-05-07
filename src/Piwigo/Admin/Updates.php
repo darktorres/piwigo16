@@ -597,7 +597,7 @@ class Updates
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
-                            redirect(PHPWG_ROOT_PATH.'upgrade.php?now=');
+                            redirect(PHPWG_ROOT_PATH.'index.php?/upgrade&now=');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);

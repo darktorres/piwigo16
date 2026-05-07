@@ -19,7 +19,7 @@ The [piwigo.org](https://piwigo.org) website introduces you to Piwigo. You'll fi
 
 - Download the [NetInstall script](https://piwigo.org/download/dlcounter.php?code=netinstall)
 - Transfer the script to your web space with any FTP client
-- Open the script in you web browser (for example <http://example.com/piwigo-netinstall.php>) and follow the steps
+- Open the script in you web browser (for example <http://example.com/piwigo-netindex.php?/install>) and follow the steps
 
 [More information](https://piwigo.org/guides/install/netinstall)
 
@@ -47,7 +47,7 @@ Fresh installs write `PIWIGO_DB_*` to a `.env` file at the repository root.
 to `$conf` before the DB connection is opened.
 
 ```bash
-# .env (gitignored; written by install.php on a fresh install)
+# .env (gitignored; written by index.php?/install on a fresh install)
 PIWIGO_DB_HOST=db.example.com
 PIWIGO_DB_USER=piwigo
 PIWIGO_DB_PASSWORD=secret
@@ -62,7 +62,7 @@ credentials, since the test suite drops and recreates `PIWIGO_DB_BASE`.
 
 `Piwigo\Core\InstallSentinel::isInstalled()` is the authoritative answer to
 "is Piwigo installed on this filesystem?". The signal is an empty stamp file at
-`local/.installed`, touched by `install.php` after a successful fresh install.
+`local/.installed`, touched by `index.php?/install` after a successful fresh install.
 
 ## Contributing
 

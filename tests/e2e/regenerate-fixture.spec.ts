@@ -99,7 +99,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
     });
 
     test('install Piwigo with fixture admin credentials', async ({ page }) => {
-        await page.goto(pwgUrl('/install.php'));
+        await page.goto(pwgUrl('/index.php?/install'));
         await expect(page.getByRole('heading', { name: /Installation/ })).toBeVisible();
 
         await page.fill('input[name="dbhost"]', DB_HOST);

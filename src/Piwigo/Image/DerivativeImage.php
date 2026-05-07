@@ -202,11 +202,13 @@ final class DerivativeImage
         }
 
         if ($url_style == 2) {
-            $rel_url = 'i';
-            if (Config::questionMarkInUrls()) {
-                $rel_url .= '?';
+            if (Config::phpExtensionInUrls()) {
+                $rel_url = Config::questionMarkInUrls()
+                    ? 'index.php?/i/' . $loc
+                    : 'index.php/i/' . $loc;
+            } else {
+                $rel_url = 'i/' . $loc;
             }
-            $rel_url .= '/'.$loc;
         } else {
             $rel_url = $rel_path;
         }

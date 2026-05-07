@@ -86,7 +86,7 @@ class Template
 
         if (!Config::has('data_dir_checked')) {
             $dir = PHPWG_ROOT_PATH.Config::dataLocation();
-            Util::get()->mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            Util::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (!is_writable($dir)) {
                 LangService::get()->loadLanguage('admin.lang');
                 HtmlService::fatalError(
@@ -104,7 +104,7 @@ class Template
         }
 
         $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
-        Util::get()->mkgetdir($compile_dir);
+        Util::mkgetdir($compile_dir);
 
         $this->smarty->setCompileDir($compile_dir);
 
@@ -147,7 +147,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
         $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $s = ''): bool => PermissionService::get()->isAdmin($s));
         $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $s = ''): bool => PermissionService::get()->isClassicUser($s));
-        $this->smarty->registerPlugin('modifier', 'get_device', Util::get()->getDevice(...));
+        $this->smarty->registerPlugin('modifier', 'get_device', fn (): string => Util::get()->getDevice());
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');

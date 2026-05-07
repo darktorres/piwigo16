@@ -125,7 +125,7 @@ final class FileCombiner
                     $output .= "\n";
                 }
                 $output = "/*BEGIN header */\n" . $header . "\n" . $output;
-                Util::get()->mkgetdir(dirname(PHPWG_ROOT_PATH.$file));
+                Util::mkgetdir(dirname(PHPWG_ROOT_PATH.$file));
                 file_put_contents(PHPWG_ROOT_PATH.$file, $output);
                 Filesystem::tryChmod(PHPWG_ROOT_PATH.$file, 0644);
             }

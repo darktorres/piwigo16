@@ -694,7 +694,7 @@ final class ExtensionsController
                 $tpl->assign(['save_error' => 'Invalid image file.']);
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
-                if (Util::get()->mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     $std_pgs_logo_name = is_scalar($std_pgs_logo_file['name'] ?? null) ? (string) $std_pgs_logo_file['name'] : '';
                     $pathinfo  = pathinfo($std_pgs_logo_name);
                     $file_path = $upload_dir . '/' . ServiceLocator::get(StringUtil::class)->str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];

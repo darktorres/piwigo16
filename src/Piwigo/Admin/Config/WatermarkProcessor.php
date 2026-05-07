@@ -38,7 +38,7 @@ final class WatermarkProcessor
                 $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
-                if (Util::get()->mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     $wm_file_name = is_scalar($watermarkImage['name']) ? (string) $watermarkImage['name'] : '';
                     $new_name = ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($wm_file_name));
 

@@ -119,7 +119,7 @@ final readonly class AdminService
             }
             if (!empty($trashPath)) {
                 if (!is_dir($trashPath)) {
-                    Util::get()->mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
+                    Util::mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
                 }
                 while ($r = $trashPath . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                     if (!is_dir($r)) {
@@ -424,7 +424,7 @@ final readonly class AdminService
                         'url'       => $topic['url'] ?? null,
                     ];
                 }
-                if (Util::get()->mkgetdir(dirname($cachePath))) {
+                if (Util::mkgetdir(dirname($cachePath))) {
                     file_put_contents($cachePath, serialize($news));
                 }
             } else {

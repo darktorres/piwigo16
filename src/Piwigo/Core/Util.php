@@ -56,7 +56,7 @@ final readonly class Util
     ) {
     }
 
-    public function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
+    public static function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
     {
         if (!is_dir($dir)) {
             if (str_starts_with(PHP_OS, 'WIN')) {

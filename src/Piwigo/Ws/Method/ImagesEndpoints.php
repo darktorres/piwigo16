@@ -577,7 +577,7 @@ final class ImagesEndpoints
     {
         $logger    = LoggerRegistry::current();
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!Util::get()->mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         $pOriginalSum = is_scalar($params['original_sum']) ? (string) $params['original_sum'] : '';
@@ -781,7 +781,7 @@ final class ImagesEndpoints
             }
         }
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!Util::get()->mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         if (isset($_REQUEST['name'])) {
@@ -884,7 +884,7 @@ final class ImagesEndpoints
         $outputFilepathPrefix  = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-u' . $pUserId;
         $chunkfilePathPattern  = $outputFilepathPrefix . '-%03uof%03u.chunk';
         $chunkfilePath         = sprintf($chunkfilePathPattern, $pChunk + 1, $pChunks);
-        if (!Util::get()->mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Util::mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         ServiceLocator::get(StringUtil::class)->secureDirectory(dirname($chunkfilePath));

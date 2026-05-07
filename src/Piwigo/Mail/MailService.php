@@ -703,7 +703,7 @@ SELECT
         $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
 
         $dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
-        if (Util::get()->mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (Util::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes(CurrentUser::get()->username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
             if ($args['content_format'] == 'text/plain') {
                 $filename .= '.txt';

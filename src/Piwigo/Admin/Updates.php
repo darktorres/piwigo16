@@ -516,7 +516,7 @@ class Updates
         if (empty($pageErrors)) {
             $path = PHPWG_ROOT_PATH.Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
-            Util::get()->mkgetdir($path);
+            Util::mkgetdir($path);
 
             $chunk_num = 0;
             $end = false;

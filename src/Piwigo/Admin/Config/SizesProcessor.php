@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
@@ -136,7 +137,7 @@ final class SizesProcessor
 
             $enabled = ImageStdParams::getDefinedTypeMap();
             /** @var array<string, DerivativeParams> $disabled */
-            $disabled = safe_unserialize(ImageStdParams::getDisabledTypeMap());
+            $disabled = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());
             $changed_types = [];
 
             foreach (ImageStdParams::getAllTypes() as $type) {

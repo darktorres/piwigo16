@@ -12,6 +12,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -71,7 +72,7 @@ final class GalleryController implements ControllerInterface
         EventDispatcher::notify('loc_begin_index');
 
         // Image display-order change
-        $imageOrder = input_int('image_order', null, $_GET);
+        $imageOrder = StringUtil::inputInt('image_order', null, $_GET);
         if ($imageOrder !== null) {
             if ($imageOrder > 0) {
                 ServiceLocator::get(SessionService::class)->setSessionVar('image_order', $imageOrder);
@@ -81,7 +82,7 @@ final class GalleryController implements ControllerInterface
             Util::get()->redirect(UrlService::get()->duplicateIndexUrl([], ['start']));
         }
 
-        $display = input_string('display', null, $_GET);
+        $display = StringUtil::inputString('display', null, $_GET);
         if ($display !== null) {
             $metaRobots             = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : [];
             $metaRobots['noindex']  = 1;
@@ -108,7 +109,7 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('thumb_navbar', $page['navigation_bar']);
 
         // Caddie filling
-        if (input_string('caddie', null, $_GET) !== null) {
+        if (StringUtil::inputString('caddie', null, $_GET) !== null) {
             ServiceLocator::get(Util::class)->fillCaddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
             Util::get()->redirect(UrlService::get()->duplicateIndexUrl());
         }
@@ -338,7 +339,7 @@ final class GalleryController implements ControllerInterface
             // Slideshow
             if (!empty($page['cat_slideshow_url'])) {
                 $slideshowUrl = is_string($page['cat_slideshow_url']) ? $page['cat_slideshow_url'] : '';
-                if (input_string('slideshow', null, $_GET) !== null) {
+                if (StringUtil::inputString('slideshow', null, $_GET) !== null) {
                     Util::get()->redirect($slideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
                     $tpl->assign('U_SLIDESHOW', $slideshowUrl);

@@ -11,6 +11,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -39,7 +40,7 @@ final class SearchFilterRenderer
         $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
         /** @var array<string, array<string,mixed>> $filters_views */
-        $filters_views = safe_unserialize($filters_views_str);
+        $filters_views = StringUtil::safeUnserialize($filters_views_str);
 
         $template->assign('display_filter', $filters_views);
 

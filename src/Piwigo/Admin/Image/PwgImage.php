@@ -350,7 +350,7 @@ class PwgImage
           'width'       => $width,
           'height'      => $height,
           'size'        => floor(filesize($destination_filepath) / 1024).' KB',
-          'time'        => $time ? number_format((get_moment() - $time) * 1000, 2, '.', ' ').' ms' : null,
+          'time'        => $time ? number_format((StringUtil::getMoment() - $time) * 1000, 2, '.', ' ').' ms' : null,
           'library'     => $this->library,
         ];
     }

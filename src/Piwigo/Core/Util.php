@@ -23,6 +23,7 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
+use Piwigo\Language\LanguageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
@@ -35,6 +36,12 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
+
+defined('MKGETDIR_NONE') or define('MKGETDIR_NONE', 0);
+defined('MKGETDIR_RECURSIVE') or define('MKGETDIR_RECURSIVE', 1);
+defined('MKGETDIR_DIE_ON_ERROR') or define('MKGETDIR_DIE_ON_ERROR', 2);
+defined('MKGETDIR_PROTECT_INDEX') or define('MKGETDIR_PROTECT_INDEX', 4);
+defined('MKGETDIR_DEFAULT') or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
 
 final readonly class Util
 {
@@ -162,7 +169,7 @@ final readonly class Util
     public function getLanguages(): array
     {
         $languages = [];
-        foreach (ServiceLocator::get(\Piwigo\Language\LanguageRepository::class)->findIdNameMap() as $id => $name) {
+        foreach (ServiceLocator::get(LanguageRepository::class)->findIdNameMap() as $id => $name) {
             if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
                 $languages[$id] = $name;
             }
@@ -523,7 +530,7 @@ final readonly class Util
             if (!Config::has('history_sections_cache')) {
                 ServiceLocator::get(ConfigService::class)->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
             }
-            $historySectionsCache = safe_unserialize(Config::historySectionsCache() ?? '');
+            $historySectionsCache = StringUtil::safeUnserialize(Config::historySectionsCache() ?? '');
             Config::override('history_sections_cache', $historySectionsCache);
             if (
                 in_array($pageSection, $historySectionsCache)
@@ -811,7 +818,7 @@ final readonly class Util
         }
 
         $url         = PEM_URL . '/api/get_extension_list.php';
-        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) ? safe_unserialize($result) : [];
+        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) ? StringUtil::safeUnserialize($result) : [];
 
         if ($pemExtensions !== []) {
             $officialExts = [];
@@ -828,7 +835,7 @@ final readonly class Util
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->sendPiwigoInfosRetryLater(1 * 60 * 60);
             $this->pwgUniqueExecEnds('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
             return;
         }
 
@@ -947,7 +954,7 @@ final readonly class Util
         $query   = 'SELECT action, occured_on, details FROM ' . Tables::activity() . " WHERE object = 'system' AND object_id = " . ActivitySystem::Core . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
         $updates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($updates as $update) {
-            $details = safe_unserialize(is_string($update['details']) ? $update['details'] : '');
+            $details = StringUtil::safeUnserialize(is_string($update['details']) ? $update['details'] : '');
             if (isset($details['from_version']) && isset($details['to_version'])) {
                 $piwigoInfos['updates'][] = [
                     'action'       => $update['action'],
@@ -1012,6 +1019,6 @@ final readonly class Util
         }
 
         $this->pwgUniqueExecEnds('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . get_elapsed_time($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, ServiceLocator::get(StringUtil::class)->getMoment()));
     }
 }

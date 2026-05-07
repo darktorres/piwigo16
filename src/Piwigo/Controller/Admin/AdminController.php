@@ -16,6 +16,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -95,13 +96,13 @@ final class AdminController implements ControllerInterface
 
         // ── Direct / AJAX actions ─────────────────────────────────────────────
 
-        $plugins_new_order = input_string('plugins_new_order', null, $_GET);
+        $plugins_new_order = StringUtil::inputString('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
             ServiceLocator::get(SessionService::class)->setSessionVar('plugins_new_order', $plugins_new_order);
             exit;
         }
 
-        if (input_string('change_theme', null, $_GET) !== null) {
+        if (StringUtil::inputString('change_theme', null, $_GET) !== null) {
             $admin_themes = ['dark', 'light'];
             $rawTheme         = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
             $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];
@@ -204,12 +205,12 @@ final class AdminController implements ControllerInterface
         $GLOBALS['link_start'] = $link_start = $adminBase . $adminSep . 'page=';
         $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&amp;section=';
 
-        check_input_parameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        Util::get()->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // ── Template init ─────────────────────────────────────────────────────
 
-        $title               = l10n('Piwigo Administration');
-        $page['page_banner'] = '<h1>' . l10n('Piwigo Administration') . '</h1>';
+        $title               = Lang::t('Piwigo Administration');
+        $page['page_banner'] = '<h1>' . Lang::t('Piwigo Administration') . '</h1>';
         $page['body_id']     = 'theAdminPage';
 
         $tpl = TemplateRegistry::current();

@@ -40,7 +40,7 @@ final class ActionController implements ControllerInterface
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
             ServiceLocator::get(Util::class)->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
-            $get_format = input_int('format', null, $_GET);
+            $get_format = StringUtil::inputInt('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $get_format . ';';
             $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
@@ -54,8 +54,8 @@ final class ActionController implements ControllerInterface
             $_GET['part'] = 'f';
         }
 
-        $get_id   = input_int('id', null, $_GET);
-        $get_part = input_string('part', null, $_GET);
+        $get_id   = StringUtil::inputInt('id', null, $_GET);
+        $get_part = StringUtil::inputString('part', null, $_GET);
         if ($get_id === null || $get_part === null || !in_array($get_part, ['e', 'r', 'f'])) {
             $this->error(400, 'Invalid request - id/part');
         }
@@ -66,7 +66,7 @@ final class ActionController implements ControllerInterface
         }
 
         $is_admin_download = false;
-        $get_pwg_token     = input_string('pwg_token', null, $_GET);
+        $get_pwg_token     = StringUtil::inputString('pwg_token', null, $_GET);
         if (PermissionService::get()->isAdmin() && $get_pwg_token !== null && ServiceLocator::get(Util::class)->getPwgToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (is_array($GLOBALS['user'] ?? null)) {
@@ -152,7 +152,7 @@ SELECT id FROM ' . Tables::categories() . '
         $http_headers[] = 'Cache-Control: public';
 
         $elementFile = is_scalar($element_info['file'] ?? null) ? (string) $element_info['file'] : basename($file);
-        if (input_string('download', null, $_GET) !== null) {
+        if (StringUtil::inputString('download', null, $_GET) !== null) {
             $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($elementFile) . '";';
             $http_headers[] = 'Content-Transfer-Encoding: binary';
         } else {

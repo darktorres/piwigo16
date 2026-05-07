@@ -606,7 +606,7 @@ final class MiscController
                 $activity_last_weeks[$week][$day_nb]['date']   = ServiceLocator::get(DateService::class)->formatDate($day_date->getTimestamp());
             }
 
-            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . get_elapsed_time($start_time, ServiceLocator::get(StringUtil::class)->getMoment()));
+            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::getElapsedTime($start_time, ServiceLocator::get(StringUtil::class)->getMoment()));
             $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
         }
 

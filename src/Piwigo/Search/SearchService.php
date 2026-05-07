@@ -106,7 +106,7 @@ final readonly class SearchService
 
         $imageIdsForFilter = [];
 
-        $displayFilters = safe_unserialize(Config::filtersViews() ?? '');
+        $displayFilters = StringUtil::safeUnserialize(Config::filtersViews() ?? '');
 
         foreach ($displayFilters as $filtName => $filtConf) {
             $filtConf = is_array($filtConf) ? $filtConf : [];
@@ -486,7 +486,7 @@ final readonly class SearchService
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
             $debugMsg  = '[getItemsForFilter] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . get_elapsed_time($functionStart, ServiceLocator::get(StringUtil::class)->getMoment());
+            $debugMsg .= ', time = ' . StringUtil::getElapsedTime($functionStart, ServiceLocator::get(StringUtil::class)->getMoment());
             $this->logger->debug($debugMsg);
 
             if (empty($otherFiltersItems)) {

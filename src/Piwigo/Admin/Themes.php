@@ -13,8 +13,10 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
@@ -99,7 +101,7 @@ class Themes
 
                 $missing_parent = $this->missingParentTheme($theme_id);
                 if (isset($missing_parent)) {
-                    $errors[] = l10n(
+                    $errors[] = Lang::t(
                         'Impossible to activate this theme, the parent theme is missing: %s',
                         $missing_parent
                     );
@@ -110,7 +112,7 @@ class Themes
                 if ($this->fs_themes[$theme_id]['mobile']
                     and !empty(Config::mobilTheme())
                     and Config::mobilTheme() != $theme_id) {
-                    $errors[] = l10n('You can activate only one mobile theme.');
+                    $errors[] = Lang::t('You can activate only one mobile theme.');
                     break;
                 }
 
@@ -129,7 +131,7 @@ class Themes
                     $activity_details['version'] = $themeVersion;
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
-                        conf_update_param('mobile_theme', $theme_id);
+                        ServiceLocator::get(ConfigService::class)->confUpdateParam('mobile_theme', $theme_id);
                     }
                 }
                 break;
@@ -294,7 +296,7 @@ class Themes
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    if (is_string($desc = load_language('description.txt', $path.'/', ['return' => true]))) {
+                    if (is_string($desc = LangService::get()->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
                         $theme['description'] = trim($desc);
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
@@ -387,7 +389,7 @@ class Themes
         $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -437,7 +439,7 @@ class Themes
             }
         }
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
-            $pem_themes = safe_unserialize($result);
+            $pem_themes = StringUtil::safeUnserialize($result);
             if ($pem_themes === []) {
                 return false;
             }

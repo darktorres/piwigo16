@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
+use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\LangService;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -144,7 +148,7 @@ class Plugins
                 if (!isset($crt_db_plugin)) {
                     $errors = $this->performAction('install', $plugin_id);
                     [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
-                    load_conf_from_db();
+                    ServiceLocator::get(ConfigService::class)->loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
                 }
@@ -225,7 +229,7 @@ class Plugins
                 break;
         }
 
-        pwg_activity('system', ActivitySystem::Plugin, $action, $activity_details);
+        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }
@@ -285,7 +289,7 @@ class Plugins
             if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
-            if (is_string($desc = load_language('description.txt', $path.'/', ['return' => true]))) {
+            if (is_string($desc = LangService::get()->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
                 $plugin['description'] = trim($desc);
             } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
@@ -329,7 +333,7 @@ class Plugins
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_plugins, name_compare(...));
+                uasort($this->fs_plugins, ServiceLocator::get(HtmlService::class)->nameCompare(...));
                 break;
             case 'status':
                 $this->sortPluginsByState();
@@ -352,7 +356,7 @@ class Plugins
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
@@ -431,7 +435,7 @@ class Plugins
             }
         }
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = safe_unserialize($result);
+            $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
             }
@@ -480,7 +484,7 @@ class Plugins
         ];
 
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
-            $pem_plugins = safe_unserialize($result);
+            $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
             }

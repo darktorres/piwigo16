@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\StringUtil;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
@@ -78,7 +79,7 @@ class BlockManager
         if (is_array($mb_conf_raw)) {
             $mb_conf = $mb_conf_raw;
         } elseif (is_string($mb_conf_raw)) {
-            $mb_conf = safe_unserialize($mb_conf_raw);
+            $mb_conf = StringUtil::safeUnserialize($mb_conf_raw);
         } else {
             $mb_conf = [];
         }

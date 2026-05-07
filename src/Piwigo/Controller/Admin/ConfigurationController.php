@@ -17,6 +17,7 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -90,7 +91,7 @@ final class ConfigurationController
             Config::persist('filters_views', serialize(Config::defaultFiltersViews()));
         }
 
-        $filters_views_raw = safe_unserialize(Config::filtersViews() ?? '');
+        $filters_views_raw = StringUtil::safeUnserialize(Config::filtersViews() ?? '');
         $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_raw), ['last_filters_conf']));
 
         $sort_fields = [
@@ -351,7 +352,7 @@ final class ConfigurationController
                     $tpl->append('display', [$checkbox => Config::raw($checkbox)], true);
                 }
                 $tpl->append('display', [
-                    'picture_informations' => safe_unserialize(is_string(Config::pictureInformations()) ? Config::pictureInformations() : ''),
+                    'picture_informations' => StringUtil::safeUnserialize(is_string(Config::pictureInformations()) ? Config::pictureInformations() : ''),
                     'NB_CATEGORIES_PAGE'   => Config::nbCategoriesPage(),
                 ], true);
                 break;
@@ -370,7 +371,7 @@ final class ConfigurationController
                     }
 
                     $enabled      = ImageStdParams::getDefinedTypeMap();
-                    $disabled_raw = safe_unserialize(ImageStdParams::getDisabledTypeMap());
+                    $disabled_raw = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());
                     $disabled     = $disabled_raw;
 
                     $tpl_vars = [];
@@ -474,7 +475,7 @@ final class ConfigurationController
 
             case 'search':
                 $tpl->assign('search', [
-                    'filters_views' => safe_unserialize(Config::filtersViews() ?? ''),
+                    'filters_views' => StringUtil::safeUnserialize(Config::filtersViews() ?? ''),
                     'filters_names' => $filters_names_checkboxes,
                 ]);
                 $tpl->assign('SHOW_FILTER_RATINGS', Config::rateEnabled());

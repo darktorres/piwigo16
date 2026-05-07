@@ -114,8 +114,6 @@ final class CommonBootstrap
             ini_set('session.gc_probability', (string) min((int) Config::sessionGcProbability(), 100));
         }
 
-        require PHPWG_ROOT_PATH . 'include/functions.inc.php';
-
         $GLOBALS['page']['execution_uuid'] = StringUtil::generateKey(10);
 
         $pool             = CacheFactory::create();

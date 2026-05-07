@@ -379,7 +379,7 @@ final class GeneralEndpoints
                     } else {
                         $rowDetailsStr = is_scalar($row['details']) ? (string) $row['details'] : '';
                         $rowDetailsStr = str_replace(['`groups`', '`rank`'], ['groups', 'rank'], $rowDetailsStr);
-                        $details       = safe_unserialize($rowDetailsStr);
+                        $details       = StringUtil::safeUnserialize($rowDetailsStr);
                         if (isset($row['user_agent'])) {
                             $details['agent'] = $row['user_agent'];
                         }
@@ -564,7 +564,7 @@ final class GeneralEndpoints
             $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', $searchIdsStr) . ');';
             $searchDetails = array_column(DbConnection::get()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
-                $rulesArr    = safe_unserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
+                $rulesArr    = StringUtil::safeUnserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
                 $rulesFields = is_array($rulesArr['fields'] ?? null) ? $rulesArr['fields'] : [];
                 $rfTags      = is_array($rulesFields['tags'] ?? null) ? $rulesFields['tags'] : [];
                 $rfCat       = is_array($rulesFields['cat'] ?? null) ? $rulesFields['cat'] : [];

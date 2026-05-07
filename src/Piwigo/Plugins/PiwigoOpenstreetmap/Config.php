@@ -6,6 +6,7 @@ namespace Piwigo\Plugins\PiwigoOpenstreetmap;
 
 use Piwigo\Config\Config as PiwigoConfig;
 use Piwigo\Config\ConfigStorage;
+use Piwigo\Core\StringUtil;
 
 /**
  * Typed Config facade for the bundled piwigo-openstreetmap plugin.
@@ -53,7 +54,7 @@ final class Config
     {
         $raw = PiwigoConfig::all()['osm_conf'] ?? [];
         if (is_string($raw) && $raw !== '') {
-            $raw = safe_unserialize($raw);
+            $raw = StringUtil::safeUnserialize($raw);
         }
         if (!is_array($raw)) {
             return [];

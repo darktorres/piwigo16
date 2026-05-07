@@ -135,7 +135,7 @@ SELECT id
             }
         }
 
-        if (input_string('metadata', null, $_GET) !== null) {
+        if (StringUtil::inputString('metadata', null, $_GET) !== null) {
             if (ServiceLocator::get(SessionService::class)->getSessionVar('show_metadata') == null) {
                 ServiceLocator::get(SessionService::class)->setSessionVar('show_metadata', 1);
             } else {
@@ -180,7 +180,7 @@ SELECT id
         $url_self = UrlService::get()->duplicatePictureUrl();
 
         // Actions
-        $get_action = input_string('action', null, $_GET);
+        $get_action = StringUtil::inputString('action', null, $_GET);
         if ($get_action !== null) {
             switch ($get_action) {
                 case 'add_to_favorites':
@@ -210,20 +210,20 @@ SELECT id
                     Util::get()->redirect($url_self);
                     break;
                 case 'rate':
-                    ServiceLocator::get(RateService::class)->ratePicture($imageId, input_int('rate', 0, $_POST));
+                    ServiceLocator::get(RateService::class)->ratePicture($imageId, StringUtil::inputInt('rate', 0, $_POST));
                     Util::get()->redirect($url_self);
                     break;
                 case 'edit_comment':
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
-                    $comment_to_edit = input_int('comment_to_edit', null, $_GET);
+                    $comment_to_edit = StringUtil::inputInt('comment_to_edit', null, $_GET);
                     $author_id       = ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_to_edit ?? 0);
                     if (PermissionService::get()->canManageComment('edit', (int) $author_id)) {
-                        $post_content = input_string('content', null, $_POST);
+                        $post_content = StringUtil::inputString('content', null, $_POST);
                         if (!empty($post_content)) {
                             ServiceLocator::get(Util::class)->checkPwgToken();
                             $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
-                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => input_string('website_url', null, $_POST)],
-                                input_string('key', null, $_POST) ?? ''
+                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                                StringUtil::inputString('key', null, $_POST) ?? ''
                             );
                             $perform_redirect = false;
                             switch ($comment_action) {
@@ -251,18 +251,18 @@ SELECT id
                 case 'delete_comment':
                     ServiceLocator::get(Util::class)->checkPwgToken();
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
-                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(input_int('comment_to_delete', null, $_GET) ?? 0);
+                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
                     if (PermissionService::get()->canManageComment('delete', (int) $author_id)) {
-                        ServiceLocator::get(CommentService::class)->deleteUserComment(input_int('comment_to_delete', null, $_GET) ?? 0);
+                        ServiceLocator::get(CommentService::class)->deleteUserComment(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
                     Util::get()->redirect($url_self);
                     break;
                 case 'validate_comment':
                     ServiceLocator::get(Util::class)->checkPwgToken();
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
-                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(input_int('comment_to_validate', null, $_GET) ?? 0);
+                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
                     if (PermissionService::get()->canManageComment('validate', (int) $author_id)) {
-                        ServiceLocator::get(CommentService::class)->validateUserComment(input_int('comment_to_validate', null, $_GET) ?? 0);
+                        ServiceLocator::get(CommentService::class)->validateUserComment(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
                     Util::get()->redirect($url_self);
                     break;
@@ -270,7 +270,7 @@ SELECT id
         }
 
         // Hit counter
-        $inc_hit_count = input_string('content', null, $_POST) === null;
+        $inc_hit_count = StringUtil::inputString('content', null, $_POST) === null;
         if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
             $inc_hit_count = false;
         } else {
@@ -360,7 +360,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
         $slideshow_params     = [];
         $slideshow_url_params = [];
-        $get_slideshow        = input_string('slideshow', null, $_GET);
+        $get_slideshow        = StringUtil::inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
             $page['slideshow']    = true;
@@ -402,7 +402,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $picture['current']
         );
 
-        if (input_string('metadata', null, $_GET) !== null) {
+        if (StringUtil::inputString('metadata', null, $_GET) !== null) {
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
         }
 

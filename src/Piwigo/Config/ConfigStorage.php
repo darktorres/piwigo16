@@ -34,7 +34,7 @@ final class ConfigStorage
      */
     public static function loadAll(?string $whereCondition = null, bool $dieOnEmpty = true): void
     {
-        \load_conf_from_db($whereCondition ?? '', $dieOnEmpty);
+        ServiceLocator::get(ConfigService::class)->loadConfFromDb($whereCondition ?? '', $dieOnEmpty);
     }
 
     /**

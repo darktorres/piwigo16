@@ -6,6 +6,7 @@ namespace Piwigo\Plugins\PiwigoVideojs;
 
 use Piwigo\Config\Config as PiwigoConfig;
 use Piwigo\Config\ConfigStorage;
+use Piwigo\Core\StringUtil;
 
 /**
  * Typed Config facade for the bundled piwigo-videojs plugin.
@@ -57,7 +58,7 @@ final class Config
     {
         $raw = self::confArray()[$key] ?? [];
         if (is_string($raw) && $raw !== '') {
-            $raw = safe_unserialize($raw);
+            $raw = StringUtil::safeUnserialize($raw);
         }
         if (!is_array($raw)) {
             return [];

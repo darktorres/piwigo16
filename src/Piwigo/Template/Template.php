@@ -147,7 +147,7 @@ class Template
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
         $this->smarty->registerPlugin('modifier', 'is_admin', fn (string $s = ''): bool => PermissionService::get()->isAdmin($s));
         $this->smarty->registerPlugin('modifier', 'is_classic_user', fn (string $s = ''): bool => PermissionService::get()->isClassicUser($s));
-        $this->smarty->registerPlugin('modifier', 'get_device', 'get_device');
+        $this->smarty->registerPlugin('modifier', 'get_device', Util::get()->getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');
         $this->smarty->registerPlugin('modifier', 'preg_match', 'preg_match');
@@ -461,7 +461,7 @@ class Template
     public function parse($handle, $return = false)
     {
         if (!isset($this->files[$handle])) {
-            fatal_error("Template->parse(): Couldn't load template file for handle $handle");
+            HtmlService::fatalError("Template->parse(): Couldn't load template file for handle $handle");
         }
 
         $this->smarty->assign('ROOT_URL', UrlService::getRootUrl());
@@ -574,7 +574,7 @@ class Template
             $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
             $this->smarty->assign(
                 [
-        'AAAA_DEBUG_TOTAL_TIME__' => get_elapsed_time($t2, get_moment()),
+        'AAAA_DEBUG_TOTAL_TIME__' => StringUtil::getElapsedTime($t2, StringUtil::getMoment()),
         ]
             );
             new Debug()->display_debug($this->smarty);
@@ -741,7 +741,7 @@ class Template
     /** @param array<mixed> $params */
     public function funcDefineDerivative(array $params, mixed $smarty): void
     {
-        !empty($params['name']) or fatal_error('define_derivative missing name');
+        !empty($params['name']) or HtmlService::fatalError('define_derivative missing name');
         if (isset($params['type'])) {
             $typeVal = $params['type'];
             $typeStr = is_string($typeVal) ? $typeVal : '';
@@ -753,8 +753,8 @@ class Template
             }
             return;
         }
-        !empty($params['width']) or fatal_error('define_derivative missing width');
-        !empty($params['height']) or fatal_error('define_derivative missing height');
+        !empty($params['width']) or HtmlService::fatalError('define_derivative missing width');
+        !empty($params['height']) or HtmlService::fatalError('define_derivative missing height');
 
         $widthVal = $params['width'];
         $heightVal = $params['height'];
@@ -778,9 +778,9 @@ class Template
                 $minWidthVal = $params['min_width'] ?? null;
                 $minHeightVal = $params['min_height'] ?? null;
                 $minw = empty($minWidthVal) ? $w : (is_int($minWidthVal) ? $minWidthVal : (is_numeric($minWidthVal) ? (int) $minWidthVal : $w));
-                $minw <= $w or fatal_error('define_derivative invalid min_width');
+                $minw <= $w or HtmlService::fatalError('define_derivative invalid min_width');
                 $minh = empty($minHeightVal) ? $h : (is_int($minHeightVal) ? $minHeightVal : (is_numeric($minHeightVal) ? (int) $minHeightVal : $h));
-                $minh <= $h or fatal_error('define_derivative invalid min_height');
+                $minh <= $h or HtmlService::fatalError('define_derivative invalid min_height');
             }
         }
 
@@ -971,7 +971,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function funcCombineCss(array $params): void
     {
         if (empty($params['path'])) {
-            fatal_error('combine_css missing path');
+            HtmlService::fatalError('combine_css missing path');
         }
 
         if (!isset($params['id'])) {

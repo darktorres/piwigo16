@@ -50,7 +50,6 @@ if (str_starts_with($_qs, 'install')) {
     defined('DEFAULT_PREFIX_TABLE') or define('DEFAULT_PREFIX_TABLE', 'piwigo_');
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
-    require PHPWG_ROOT_PATH . 'include/functions.inc.php';
     ConfigLoader::applyDefaults();
     (new InstallController())(RequestFactory::fromGlobals());
     exit;
@@ -64,7 +63,6 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
     $GLOBALS['prefixeTable'] = Config::dbPrefix();
-    require_once(PHPWG_ROOT_PATH . 'include/functions.inc.php');
     (new UpgradeFeedController())(RequestFactory::fromGlobals());
     exit;
 }

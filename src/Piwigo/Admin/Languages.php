@@ -173,7 +173,7 @@ class Languages
         $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -223,7 +223,7 @@ class Languages
         }
 
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
-            $pem_languages = safe_unserialize($result);
+            $pem_languages = StringUtil::safeUnserialize($result);
             if ($pem_languages === []) {
                 return false;
             }

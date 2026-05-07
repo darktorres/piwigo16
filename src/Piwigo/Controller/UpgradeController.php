@@ -45,7 +45,6 @@ final class UpgradeController implements ControllerInterface
         define('PREFIX_TABLE', $prefixeTable);
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-        require_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
         // Upgrade always reads fresh config from DB; prevent auto_migrate loop.
         Config::override('auto_migrate', false);
         Kernel::boot();

@@ -9,6 +9,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -30,7 +31,7 @@ final class PasswordService
             return true;
         }
 
-        $username_or_email = input_string('username_or_email', '', $_POST);
+        $username_or_email = StringUtil::inputString('username_or_email', '', $_POST);
         if (empty($username_or_email)) {
             PageState::current()->addKeyedError('password_form_error', Lang::t('Invalid username or email'));
             return false;
@@ -111,7 +112,7 @@ final class PasswordService
         $session_code['attempts']         = $current_attempts;
         $_SESSION['reset_password_code']  = $session_code;
 
-        $user_code = input_string('user_code', '', $_POST);
+        $user_code = StringUtil::inputString('user_code', '', $_POST);
         $is_valid  = !empty($user_code) && preg_match('/^\d{6}$/', $user_code) && ServiceLocator::get(UserService::class)->verifyUserCode($state['secret'], $user_code);
 
         if (!$is_valid) {
@@ -244,7 +245,7 @@ final class PasswordService
 
     public function resetPasswordKey(): int|false
     {
-        $key = input_string('key', null, $_GET);
+        $key = StringUtil::inputString('key', null, $_GET);
         if ($key === null) {
             return false;
         }

@@ -983,7 +983,7 @@ final class ExtensionsController
         }
 
         $updates_ignored_raw = Config::raw('updates_ignored');
-        Config::override('updates_ignored', safe_unserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
+        Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
         $pageStr = is_scalar($page['page']) ? (string) $page['page'] : 'updates';
         $autoupdate = new Updates($pageStr);
@@ -1059,8 +1059,6 @@ final class ExtensionsController
         if (!Config::enableCoreUpdate()) {
             throw new ConfigException('Piwigo core update system is disabled');
         }
-
-        require_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
 
         $step = is_numeric($_GET['step'] ?? null) ? (int) $_GET['step'] : 0;
         [$ct_env, $ct_build_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
@@ -1143,7 +1141,7 @@ final class ExtensionsController
     private function extendForTemplates(): void
     {
         $tpl = TemplateRegistry::current();
-        $tpl_extension = safe_unserialize(Config::extentsForTemplates() ?? '');
+        $tpl_extension = StringUtil::safeUnserialize(Config::extentsForTemplates() ?? '');
         $new_extensions = ServiceLocator::get(AdminService::class)->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];

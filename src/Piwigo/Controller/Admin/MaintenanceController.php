@@ -368,12 +368,12 @@ final class MaintenanceController
             'PHP_DATATIME'                => $php_current_timestamp,
             'DB_DATATIME'                 => $db_current_date,
             'pwg_token'                   => $pwg_token,
-            'cache_sizes'                 => Config::has('cache_sizes') ? safe_unserialize((string) Config::cacheSizes()) : null,
+            'cache_sizes'                 => Config::has('cache_sizes') ? StringUtil::safeUnserialize((string) Config::cacheSizes()) : null,
             'time_elapsed_since_last_calc' => (function (): ?string {
                 if (!Config::has('cache_sizes')) {
                     return null;
                 }
-                $cs    = safe_unserialize((string) Config::cacheSizes());
+                $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
                 $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
                 return ServiceLocator::get(DateService::class)->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
             })(),
@@ -573,12 +573,12 @@ final class MaintenanceController
             'U_PHPINFO'                   => sprintf($url_format, 'phpinfo'),
             'PHP_DATATIME'                => $php_current_timestamp,
             'DB_DATATIME'                 => $db_current_date,
-            'cache_sizes'                 => Config::has('cache_sizes') ? safe_unserialize((string) Config::cacheSizes()) : null,
+            'cache_sizes'                 => Config::has('cache_sizes') ? StringUtil::safeUnserialize((string) Config::cacheSizes()) : null,
             'time_elapsed_since_last_calc' => (function (): ?string {
                 if (!Config::has('cache_sizes')) {
                     return null;
                 }
-                $cs    = safe_unserialize((string) Config::cacheSizes());
+                $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
                 $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
                 return ServiceLocator::get(DateService::class)->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
             })(),
@@ -1351,7 +1351,7 @@ final class MaintenanceController
                 }
                 $counts['del_categories'] = count($to_delete);
             }
-            $tpl->append('footer_elements', '<!-- scanning dirs : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
         }
 
         // ── files / elements ──────────────────────────────────────────────────
@@ -1359,7 +1359,7 @@ final class MaintenanceController
         if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
             $start_files = $start = ServiceLocator::get(StringUtil::class)->getMoment();
             $fs = $site_reader->getElements($basedir);
-            $tpl->append('footer_elements', '<!-- get_elements: ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
 
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
             $db_elements = [];
@@ -1479,7 +1479,7 @@ final class MaintenanceController
                 } $counts['del_elements'] = count($to_delete_elements);
             }
 
-            $tpl->append('footer_elements', '<!-- scanning files : ' . get_elapsed_time($start_files, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::getElapsedTime($start_files, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
         }
 
         // ── sync categories & files ───────────────────────────────────────────
@@ -1488,10 +1488,10 @@ final class MaintenanceController
             if (!$simulate) {
                 $start = ServiceLocator::get(StringUtil::class)->getMoment();
                 ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
                 $start = ServiceLocator::get(StringUtil::class)->getMoment();
                 ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-                $tpl->append('footer_elements', '<!-- ordering categories : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
             }
             if ($_POST['sync'] == 'files') {
                 $start = ServiceLocator::get(StringUtil::class)->getMoment();
@@ -1504,7 +1504,7 @@ final class MaintenanceController
                 }
                 $catIdOpt = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
                 $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdOpt, (int) $site_id, (bool) $opts['recursive'], false);
-                $tpl->append('footer_elements', '<!-- get_filelist : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
                 $start = ServiceLocator::get(StringUtil::class)->getMoment();
                 $datas = [];
                 foreach ($files as $id => $file) {
@@ -1517,7 +1517,7 @@ final class MaintenanceController
                 if (!$simulate && count($datas) > 0) {
                     Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
                 }
-                $tpl->append('footer_elements', '<!-- update files : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
             }
         }
 
@@ -1538,7 +1538,7 @@ final class MaintenanceController
             $start       = ServiceLocator::get(StringUtil::class)->getMoment();
             $catIdMeta   = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
             $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdMeta, (int) $site_id, (bool) $opts['recursive'], (bool) $opts['only_new']);
-            $tpl->append('footer_elements', '<!-- get_filelist : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
             $start = ServiceLocator::get(StringUtil::class)->getMoment();
             $datas = $tags_of = [];
             foreach ($files as $id => $element_infos) {
@@ -1568,7 +1568,7 @@ final class MaintenanceController
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
-            $tpl->append('footer_elements', '<!-- metadata update : ' . get_elapsed_time($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::getElapsedTime($start, ServiceLocator::get(StringUtil::class)->getMoment()) . ' -->');
             $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($errors)]);
         }
 

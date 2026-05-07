@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
@@ -41,7 +42,7 @@ final class SearchController implements ControllerInterface
         $search = ['mode' => 'AND', 'fields' => []];
 
         $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
-        $filters_views     = safe_unserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
+        $filters_views     = StringUtil::safeUnserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
 
         $filter_rename_for = [
             'words'         => 'allwords',
@@ -75,7 +76,7 @@ final class SearchController implements ControllerInterface
         }
 
         $words = [];
-        $q     = input_string('q', null, $_GET);
+        $q     = StringUtil::inputString('q', null, $_GET);
         if (!empty($q)) {
             $words = ServiceLocator::get(SearchService::class)->splitAllwords($q);
         }
@@ -89,7 +90,7 @@ final class SearchController implements ControllerInterface
         }
 
         $cat_ids  = [];
-        $cat_id   = input_int('cat_id', null, $_GET);
+        $cat_id   = StringUtil::inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
             ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
@@ -111,7 +112,7 @@ SELECT *
 
         if (count(ServiceLocator::get(TagService::class)->getAvailableTags()) > 0) {
             $tag_ids = [];
-            $tag_id  = input_string('tag_id', null, $_GET);
+            $tag_id  = StringUtil::inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
                 ServiceLocator::get(Util::class)->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);

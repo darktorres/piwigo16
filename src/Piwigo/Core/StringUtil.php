@@ -15,32 +15,32 @@ final class StringUtil
         return $t1[1] . substr($t2[1], 0, 6);
     }
 
-    public function getMoment(): float
+    public static function getMoment(): float
     {
         return microtime(true);
     }
 
-    public function getElapsedTime(float $start, float $end): string
+    public static function getElapsedTime(float $start, float $end): string
     {
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
 
     /** @param array<string,mixed> $source */
-    public function inputInt(string $key, ?int $default = null, array $source = []): ?int
+    public static function inputInt(string $key, ?int $default = null, array $source = []): ?int
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (is_numeric($src[$key]) ? (int) $src[$key] : 0) : $default;
     }
 
     /** @param array<string,mixed> $source */
-    public function inputString(string $key, ?string $default = null, array $source = []): ?string
+    public static function inputString(string $key, ?string $default = null, array $source = []): ?string
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? trim(is_scalar($src[$key]) ? (string) $src[$key] : '') : $default;
     }
 
     /** @param array<string,mixed> $source */
-    public function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
+    public static function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (bool) $src[$key] : $default;

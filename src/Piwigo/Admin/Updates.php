@@ -208,7 +208,7 @@ class Updates
         if (!Config::has('update_notify_last_notification')) {
             $notify = true;
         } else {
-            $lastNotifArr = safe_unserialize(Config::updateNotifyLastNotification() ?? '');
+            $lastNotifArr = StringUtil::safeUnserialize(Config::updateNotifyLastNotification() ?? '');
             $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
             $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
 
@@ -271,7 +271,7 @@ class Updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = safe_unserialize($result)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -322,7 +322,7 @@ class Updates
         }
 
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data, $post_data)) {
-            $pem_exts = safe_unserialize($result);
+            $pem_exts = StringUtil::safeUnserialize($result);
             if ($pem_exts === []) {
                 return false;
             }
@@ -525,7 +525,7 @@ class Updates
             while (!$end) {
                 $chunk_num++;
                 if (ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
-                  and $input = safe_unserialize($result)) {
+                  and $input = StringUtil::safeUnserialize($result)) {
                     if (0 == ($input['remaining'] ?? -1)) {
                         $end = true;
                     }

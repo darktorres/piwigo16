@@ -47,12 +47,12 @@ final class RegisterController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $post_login    = input_string('login', null, $_POST);
-        $post_mail     = input_string('mail_address', null, $_POST);
-        $post_key      = input_string('key', null, $_POST) ?? '';
-        $post_send_mail = input_string('send_password_by_mail', null, $_POST) !== null;
+        $post_login    = StringUtil::inputString('login', null, $_POST);
+        $post_mail     = StringUtil::inputString('mail_address', null, $_POST);
+        $post_key      = StringUtil::inputString('key', null, $_POST) ?? '';
+        $post_send_mail = StringUtil::inputString('send_password_by_mail', null, $_POST) !== null;
 
-        if (input_string('submit', null, $_POST) !== null) {
+        if (StringUtil::inputString('submit', null, $_POST) !== null) {
             /** @var string[] $pgErrors */
             $pgErrors = [];
 
@@ -113,7 +113,7 @@ final class RegisterController implements ControllerInterface
             ServiceLocator::get(MenubarRenderer::class)->render();
         }
 
-        $cookie_lang = input_string('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

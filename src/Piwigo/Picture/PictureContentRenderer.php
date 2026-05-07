@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\StringUtil;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
@@ -26,7 +27,7 @@ final class PictureContentRenderer
             return $content;
         }
 
-        $cookiePictureDeriv = input_string('picture_deriv', null, $_COOKIE);
+        $cookiePictureDeriv = StringUtil::inputString('picture_deriv', null, $_COOKIE);
         if ($cookiePictureDeriv !== null) {
             if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
                 ServiceLocator::get(SessionService::class)->setSessionVar('picture_deriv', $cookiePictureDeriv);

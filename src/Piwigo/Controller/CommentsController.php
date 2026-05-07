@@ -78,23 +78,23 @@ final class CommentsController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_comments');
 
-        $get_since = input_int('since', null, $_GET);
+        $get_since = StringUtil::inputInt('since', null, $_GET);
         $page['since'] = !empty($get_since) ? $get_since : 4;
 
         $page['sort_by'] = 'date';
-        $get_sort_by = input_string('sort_by', null, $_GET);
+        $get_sort_by = StringUtil::inputString('sort_by', null, $_GET);
         if ($get_sort_by !== null && isset($sort_by[$get_sort_by])) {
             $page['sort_by'] = $get_sort_by;
         }
 
         $page['sort_order'] = 'DESC';
-        $get_sort_order = input_string('sort_order', null, $_GET);
+        $get_sort_order = StringUtil::inputString('sort_order', null, $_GET);
         if ($get_sort_order !== null && isset($sort_order[$get_sort_order])) {
             $page['sort_order'] = $get_sort_order;
         }
 
         $page['items_number'] = Config::commentsPageNbComments();
-        $get_items_number = input_string('items_number', null, $_GET);
+        $get_items_number = StringUtil::inputString('items_number', null, $_GET);
         if ($get_items_number !== null) {
             $page['items_number'] = $get_items_number;
         }
@@ -104,7 +104,7 @@ final class CommentsController implements ControllerInterface
 
         $page['where_clauses'] = [];
 
-        $get_cat = input_int('cat', null, $_GET);
+        $get_cat = StringUtil::inputInt('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
             ServiceLocator::get(Util::class)->checkInputParameter('cat', $_GET, false, ValidationPattern::ID);
             $category_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds([$get_cat]);
@@ -114,12 +114,12 @@ final class CommentsController implements ControllerInterface
             $page['where_clauses'][] = 'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
-        $get_author = input_string('author', null, $_GET);
+        $get_author = StringUtil::inputString('author', null, $_GET);
         if (!empty($get_author)) {
             $page['where_clauses'][] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
         }
 
-        $get_comment_id_filter = input_int('comment_id', null, $_GET);
+        $get_comment_id_filter = StringUtil::inputInt('comment_id', null, $_GET);
         if (!empty($get_comment_id_filter)) {
             ServiceLocator::get(Util::class)->checkInputParameter('comment_id', $_GET, false, ValidationPattern::ID);
             if (!PermissionService::get()->isAdmin()) {
@@ -130,7 +130,7 @@ final class CommentsController implements ControllerInterface
             $page['where_clauses'][] = 'com.id = ' . $get_comment_id_filter;
         }
 
-        $get_keyword = input_string('keyword', null, $_GET);
+        $get_keyword = StringUtil::inputString('keyword', null, $_GET);
         if (!empty($get_keyword)) {
             $page['where_clauses'][] = '(' . implode(' AND ', array_map(
                 fn (string $s): string => "content LIKE '%$s%'",
@@ -181,12 +181,12 @@ final class CommentsController implements ControllerInterface
                     $perform_redirect = true;
                 }
                 if ('edit' == $action) {
-                    $post_content = input_string('content', null, $_POST);
+                    $post_content = StringUtil::inputString('content', null, $_POST);
                     if (!empty($post_content)) {
                         ServiceLocator::get(Util::class)->checkPwgToken();
                         $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
-                            ['comment_id' => $comment_id, 'image_id' => input_int('image_id', null, $_POST), 'content' => $post_content, 'website_url' => input_string('website_url', null, $_POST)],
-                            input_string('key', null, $_POST) ?? ''
+                            ['comment_id' => $comment_id, 'image_id' => StringUtil::inputInt('image_id', null, $_POST), 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                            StringUtil::inputString('key', null, $_POST) ?? ''
                         );
                         switch ($comment_action) {
                             case 'moderate':
@@ -257,7 +257,7 @@ SELECT id, name, uppercats, global_rank
         $tpl->assign('item_number_options', $tpl_var);
         $tpl->assign('item_number_options_selected', $page['items_number']);
 
-        $start        = input_int('start', 0, $_GET);
+        $start        = StringUtil::inputInt('start', 0, $_GET);
         $comments     = [];
         $element_ids  = [];
         $category_ids = [];

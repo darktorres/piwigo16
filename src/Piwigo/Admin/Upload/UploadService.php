@@ -593,7 +593,7 @@ final class UploadService
     public function getOptimalDimensionsForRepresentative(): array
     {
         $enabled  = ImageStdParams::getDefinedTypeMap();
-        $disabled = safe_unserialize(ImageStdParams::getDisabledTypeMap());
+        $disabled = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());
         $w = $h   = 2000;
         foreach (ImageStdParams::getAllTypes() as $type) {
             $params = $enabled[$type] ?? ($disabled[$type] ?? null);

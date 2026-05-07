@@ -115,7 +115,7 @@ After the mass URL cleanup (replacing `admin.php`, `ws.php`, `identification.php
 
 ### 4a. `action.php` — download links
 
-`action.php` is a permanent lightweight shim (like `i.php`). URL generation is centralised:
+`action.php` is a permanent lightweight shim. URL generation is centralised:
 - `UrlGenerator::actionDownload(int $id, string $part, string $pwgToken): string`
 - `UrlGenerator::actionFormat(int $formatId): string`
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Controller\InstallController;
 use Piwigo\Controller\UpgradeController;
 use Piwigo\Core\Kernel;
@@ -19,6 +20,32 @@ use Piwigo\Http\ResponseEmitter;
 define('PHPWG_ROOT_PATH', './');
 
 $_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRING'] : '', '/');
+
+if (str_starts_with($_qs, 'i/')) {
+    // Image derivative fast-path — same minimal bootstrap as the former i.php.
+    // Deliberately skips common.inc.php and Kernel::boot() for performance.
+    defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
+    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
+    ConfigLoader::applyDefaults();
+    defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', \Piwigo\Config\Config::dataLocation() . 'i/');
+    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::applyEnvOverrides();
+    $GLOBALS['prefixeTable'] = \Piwigo\Config\Config::dbPrefix();
+    $logger = new \Piwigo\Core\Logger([
+        'directory' => PHPWG_ROOT_PATH . \Piwigo\Config\Config::dataLocation() . \Piwigo\Config\Config::logDir(),
+        'severity'  => \Piwigo\Config\Config::logLevel(),
+        'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Config\Config::dbPassword()) . '.txt',
+    ]);
+    \Piwigo\Core\LoggerRegistry::set($logger);
+    defined('MKGETDIR_NONE')             or define('MKGETDIR_NONE', 0);
+    defined('MKGETDIR_RECURSIVE')        or define('MKGETDIR_RECURSIVE', 1);
+    defined('MKGETDIR_DIE_ON_ERROR')     or define('MKGETDIR_DIE_ON_ERROR', 2);
+    defined('MKGETDIR_PROTECT_INDEX')    or define('MKGETDIR_PROTECT_INDEX', 4);
+    defined('MKGETDIR_PROTECT_HTACCESS') or define('MKGETDIR_PROTECT_HTACCESS', 8);
+    defined('MKGETDIR_DEFAULT')          or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
+    (new ImageDerivativeController())(RequestFactory::fromGlobals());
+    exit;
+}
 
 if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.

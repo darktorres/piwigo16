@@ -7,7 +7,7 @@ import { attachMonitor } from './helpers/page-monitor';
 test('admin login and dashboard load', async ({ page }) => {
     const monitor = attachMonitor(page);
     await loginAsAdmin(page);
-    // reset() marks any still-in-flight gallery-home requests (i.php thumbnails etc.)
+    // reset() marks any still-in-flight gallery-home requests (i/ thumbnails etc.)
     // as "ignore if they fail" — they'll be cancelled by the upcoming navigation
     // and that abort is expected, not a bug in the admin page.
     monitor.reset();

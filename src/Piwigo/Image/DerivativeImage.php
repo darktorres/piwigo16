@@ -203,9 +203,6 @@ final class DerivativeImage
 
         if ($url_style == 2) {
             $rel_url = 'i';
-            if (Config::phpExtensionInUrls()) {
-                $rel_url .= '.php';
-            }
             if (Config::questionMarkInUrls()) {
                 $rel_url .= '?';
             }

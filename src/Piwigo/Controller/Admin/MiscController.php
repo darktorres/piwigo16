@@ -27,6 +27,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\BlockManager;
@@ -980,7 +981,7 @@ final class MiscController
 
         $image_urls = [];
         if (count($image_ids) > 0) {
-            $params = ImageStdParams::getByType(IMG_SQUARE);
+            $params = ImageStdParams::getByType(DerivativeSize::Square->value);
             foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
                 $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']])];
@@ -1042,7 +1043,7 @@ final class MiscController
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => l10n('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => l10n('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->setFilename('rating', 'rating_user.tpl');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }

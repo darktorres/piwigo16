@@ -22,6 +22,7 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeService;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
@@ -223,7 +224,7 @@ final class UploadService
             return $imageId;
         }
 
-        ServiceLocator::get(DerivativeService::class)->generate($imageInfos, IMG_MEDIUM);
+        ServiceLocator::get(DerivativeService::class)->generate($imageInfos, DerivativeSize::Medium->value);
         $logger->info('[addUploadedFile] medium derivative generated', ['id' => $imageId]);
 
         EventDispatcher::notify('loc_end_add_uploaded_file', $imageInfos);

@@ -23,6 +23,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -825,7 +826,7 @@ final class BatchManagerController
             $del_deriv_map[$params->type] = l10n($params->type);
         }
         $gen_deriv_map  = $del_deriv_map;
-        $del_deriv_map[IMG_CUSTOM] = l10n(IMG_CUSTOM);
+        $del_deriv_map[DerivativeSize::Custom->value] = l10n(DerivativeSize::Custom->value);
         $tpl->assign(['del_derivatives_types' => $del_deriv_map, 'generate_derivatives_types' => $gen_deriv_map]);
 
         if (!empty($_GET['display'])) {
@@ -863,7 +864,7 @@ final class BatchManagerController
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart . ';';
 
             $batchRows   = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
-            $thumb_params = ImageStdParams::getByType(IMG_SQUARE);
+            $thumb_params = ImageStdParams::getByType(DerivativeSize::Square->value);
 
             foreach ($batchRows as $row) {
                 $nb_thumbs_page++;
@@ -879,7 +880,7 @@ final class BatchManagerController
                 $tpl->append('thumbnails', array_merge($row, [
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
                     'TITLE'    => $ttitle,
-                    'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
+                    'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['id']) ? (string) $row['id'] : '')),
                 ]));
             }
@@ -1111,8 +1112,8 @@ final class BatchManagerController
 
                 $tpl->append('elements', array_merge($row, [
                     'ID'                    => $row['id'],
-                    'TN_SRC'                => DerivativeImage::url(IMG_MEDIUM, $src_image),
-                    'FILE_SRC'              => DerivativeImage::url(IMG_LARGE, $src_image),
+                    'TN_SRC'                => DerivativeImage::url(DerivativeSize::Medium->value, $src_image),
+                    'FILE_SRC'              => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'LEGEND'                => $legend,
                     'U_EDIT'                => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str),
                     'NAME'                  => htmlspecialchars(is_scalar($row['name']) ? (string) $row['name'] : ''),

@@ -16,7 +16,7 @@ final class DerivativeService
      * Generate (or skip if already current) one derivative file for a given image row and size type.
      *
      * @param array<string, mixed> $imageRow  Full row from the images table (path, rotation, coi, …)
-     * @param string               $type      One of the IMG_* constants (e.g. IMG_THUMB, IMG_MEDIUM)
+     * @param string               $type      One of the IMG_* constants (e.g. DerivativeSize::Thumb->value, DerivativeSize::Medium->value)
      */
     public function generate(array $imageRow, string $type): void
     {

@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
@@ -315,7 +316,7 @@ final class GalleryController implements ControllerInterface
                     $selType    = is_object($derivObj) ? (string) ($derivObj->type ?? '') : '';
                     $tpl->clearAssign('derivative_params');
                     $typeMap = ImageStdParams::getDefinedTypeMap();
-                    unset($typeMap[IMG_XXLARGE], $typeMap[IMG_XLARGE]);
+                    unset($typeMap[DerivativeSize::TwoXLarge->value], $typeMap[DerivativeSize::XLarge->value]);
                     foreach ($typeMap as $params) {
                         $tpl->append('image_derivatives', [
                             'DISPLAY'  => l10n($params->type),

@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
@@ -552,7 +553,7 @@ final class CategoriesEndpoints
         pwg_activity('album', $categoryId, 'edit');
         $category = $catRepo3->findCategoryById($categoryId);
         $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
-        return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, IMG_SMALL);
+        return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
     }
 
     /** @param array<mixed> $params */

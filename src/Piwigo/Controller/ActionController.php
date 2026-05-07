@@ -13,6 +13,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
@@ -87,7 +88,7 @@ SELECT id FROM ' . Tables::categories() . '
             case 'e':
                 $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
                 if ($src_image->isOriginal() && !($user['enabled_high'] ?? false)) {
-                    $deriv = new DerivativeImage(IMG_XXLARGE, $src_image);
+                    $deriv = new DerivativeImage(DerivativeSize::TwoXLarge->value, $src_image);
                     if (!$deriv->sameAsSource()) {
                         $this->error(401, 'Access denied e');
                     }

@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
@@ -283,7 +284,7 @@ SELECT *
             }
 
             $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
-            $derivative_params = EventDispatcher::dispatch('get_index_album_derivative_params', ImageStdParams::getByType(IMG_THUMB));
+            $derivative_params = EventDispatcher::dispatch('get_index_album_derivative_params', ImageStdParams::getByType(DerivativeSize::Thumb->value));
             $tpl_thumbnails_var_selection = EventDispatcher::dispatch('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
             $template->assign([
                 'maxRequests' => Config::maxRequests(),

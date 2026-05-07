@@ -11,6 +11,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -33,7 +34,6 @@ final class ImageDerivativeController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         require_once PHPWG_ROOT_PATH . 'include/image_derivative_functions.php';
-        require_once PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php';
 
         $logger = LoggerRegistry::current();
 
@@ -140,7 +140,7 @@ SELECT *
         }
         $conn->close();
 
-        if (!try_switch_source($params, $src_mtime, $ctx) && $params->type == IMG_CUSTOM) {
+        if (!try_switch_source($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
             $sharpen = 0;
             foreach (ImageStdParams::getDefinedTypeMap() as $std_params) {
                 $sharpen += $std_params->sharpen;
@@ -240,7 +240,7 @@ SELECT *
         }
 
         $compression_quality = ImageStdParams::$quality;
-        if (in_array($ctx->derivativeType, [IMG_4XLARGE, IMG_3XLARGE])) {
+        if (in_array($ctx->derivativeType, [DerivativeSize::FourXLarge->value, DerivativeSize::ThreeXLarge->value])) {
             $compression_quality = min(ImageStdParams::$quality, 75);
         }
 

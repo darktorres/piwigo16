@@ -24,6 +24,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -272,8 +273,8 @@ SELECT id
             'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
             'U_ACTIVITY'         => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
             'PATH'               => $row['path'],
-            'TN_SRC'             => DerivativeImage::url(IMG_MEDIUM, $src_image),
-            'FILE_SRC'           => DerivativeImage::url(IMG_LARGE, $src_image),
+            'TN_SRC'             => DerivativeImage::url(DerivativeSize::Medium->value, $src_image),
+            'FILE_SRC'           => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
             'NAME'               => isset($_POST['name']) ? stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : ($row['name'] ?? null),
             'TITLE'              => render_element_name($row),
             'DIMENSIONS'         => (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''),
@@ -436,7 +437,7 @@ SELECT id
                     ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, $params->type);
                 }
             }
-            ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, IMG_CUSTOM);
+            ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, DerivativeSize::Custom->value);
             $uid = '&b=' . time();
             if (Config::derivativeUrlStyle() == 1) {
                 Config::override('derivative_url_style', 0);
@@ -448,7 +449,7 @@ SELECT id
         $tpl_var = [
             'TITLE' => render_element_name($row),
             'ALT'   => $row['file'],
-            'U_IMG' => DerivativeImage::url(IMG_LARGE, $row),
+            'U_IMG' => DerivativeImage::url(DerivativeSize::Large->value, $row),
         ];
 
         if (!empty($row['coi'])) {
@@ -505,7 +506,7 @@ SELECT id
 
         $tpl->assign([
             'ADD_FORMATS_URL' => ServiceLocator::get(UrlGenerator::class)->admin('photos_add') . '&formats=' . $picFmtId,
-            'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $image),
+            'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image),
             'FORMATS'         => $formats,
             'PWG_TOKEN'       => get_pwg_token(),
             'page_data_json'  => json_encode([
@@ -606,7 +607,7 @@ SELECT id
             $formats_original_info = ServiceLocator::get(ImageAdminService::class)->getImageInfos($formatsId);
             if ($formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
-                $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
+                $formats_original_info['src'] = DerivativeImage::url(DerivativeSize::Square->value, $src_image);
                 $fmtId  = is_scalar($formats_original_info['id'] ?? null) ? (string) $formats_original_info['id'] : '0';
                 $fmtRow = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
                 if (!empty($fmtRow)) {

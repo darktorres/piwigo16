@@ -7,6 +7,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -187,15 +188,15 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     }
 
     if ($ctx->derivativeType === null) {
-        if (DerivativeEncoding::derivativeToUrl(IMG_CUSTOM) == $deriv[0]) {
-            $ctx->derivativeType = IMG_CUSTOM;
+        if (DerivativeEncoding::derivativeToUrl(DerivativeSize::Custom->value) == $deriv[0]) {
+            $ctx->derivativeType = DerivativeSize::Custom->value;
         } else {
             ierror('Unknown parsing type', 400);
         }
     }
     array_shift($deriv);
 
-    if ($ctx->derivativeType == IMG_CUSTOM) {
+    if ($ctx->derivativeType == DerivativeSize::Custom->value) {
         $params = $ctx->derivativeParams = parse_custom_params($deriv);
         ImageStdParams::applyGlobal($params);
 

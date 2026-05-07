@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 
@@ -40,7 +41,7 @@ final class PictureContentRenderer
         $added             = [];
 
         foreach ($derivativesRaw as $type => $derivative) {
-            if ($type == IMG_SQUARE || $type == IMG_THUMB) {
+            if ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value) {
                 continue;
             }
             if (!array_key_exists((string) $type, ImageStdParams::getDefinedTypeMap())) {

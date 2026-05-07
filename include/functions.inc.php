@@ -49,8 +49,6 @@ use Piwigo\Users\UserService;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-require_once(PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php');
-
 // ── StringUtil delegates ──────────────────────────────────────────────────
 
 function micro_seconds(): string

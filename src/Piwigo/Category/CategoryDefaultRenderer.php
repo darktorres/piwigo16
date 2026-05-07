@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -128,7 +129,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         }
 
         $template->assign([
-            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', IMG_THUMB))),
+            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType(pwg_get_session_var('index_deriv', DerivativeSize::Thumb->value))),
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);

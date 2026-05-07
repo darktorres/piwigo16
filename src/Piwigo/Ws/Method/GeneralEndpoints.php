@@ -21,6 +21,7 @@ use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -679,7 +680,7 @@ final class GeneralEndpoints
                 $imageId = $lineImageId;
                 set_error_handler(static fn (): bool => true);
                 try {
-                    $imgUrl = DerivativeImage::url(ImageStdParams::getByType(IMG_SQUARE), $element);
+                    $imgUrl = DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $element);
                 } finally {
                     restore_error_handler();
                 }

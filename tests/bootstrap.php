@@ -54,21 +54,6 @@ if (!function_exists('set_status_header')) {
     }
 }
 
-// Derivative image type constants from include/derivative_std_params.inc.php.
-if (!defined('IMG_CUSTOM')) {
-    define('IMG_SQUARE', 'square');
-    define('IMG_THUMB', 'thumb');
-    define('IMG_XXSMALL', '2small');
-    define('IMG_XSMALL', 'xsmall');
-    define('IMG_SMALL', 'small');
-    define('IMG_MEDIUM', 'medium');
-    define('IMG_LARGE', 'large');
-    define('IMG_XLARGE', 'xlarge');
-    define('IMG_XXLARGE', 'xxlarge');
-    define('IMG_3XLARGE', '3xlarge');
-    define('IMG_4XLARGE', '4xlarge');
-    define('IMG_CUSTOM', 'custom');
-}
 
 // Search-module constants from include/functions_search.inc.php.
 if (!defined('QST_QUOTED')) {

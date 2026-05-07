@@ -13,6 +13,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
@@ -366,7 +367,7 @@ SELECT *
             }
         }
 
-        $derivative_params = EventDispatcher::dispatch('get_comments_derivative_params', ImageStdParams::getByType(IMG_THUMB));
+        $derivative_params = EventDispatcher::dispatch('get_comments_derivative_params', ImageStdParams::getByType(DerivativeSize::Thumb->value));
         $tpl->assign('comment_derivative_params', $derivative_params);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');

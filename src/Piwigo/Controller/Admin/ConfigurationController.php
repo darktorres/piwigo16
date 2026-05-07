@@ -17,6 +17,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -371,8 +372,8 @@ final class ConfigurationController
                     $tpl_vars = [];
                     foreach (ImageStdParams::getAllTypes() as $type) {
                         $tpl_var = [];
-                        $tpl_var['must_square']  = ($type == IMG_SQUARE);
-                        $tpl_var['must_enable']  = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == Config::derivativeDefaultSize());
+                        $tpl_var['must_square']  = ($type == DerivativeSize::Square->value);
+                        $tpl_var['must_enable']  = ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize());
                         $params = $enabled[$type] ?? null;
                         if ($params !== null) {
                             $tpl_var['enabled'] = true;

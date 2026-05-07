@@ -23,6 +23,7 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -310,7 +311,7 @@ final class AlbumController
                 if ($element !== null) {
                     $img = [
                         'link' => UrlService::get()->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file'], 'category' => $category]),
-                        'src'  => DerivativeImage::url(IMG_THUMB, $element),
+                        'src'  => DerivativeImage::url(DerivativeSize::Thumb->value, $element),
                     ];
                 }
             }
@@ -710,7 +711,7 @@ final class AlbumController
         if ($category['has_images'] || $catRepPic !== '') {
             $tpl_representant = [];
             if ($catRepPic !== '') {
-                $tpl_representant['picture'] = ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($catRepPic, IMG_MEDIUM);
+                $tpl_representant['picture'] = ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($catRepPic, DerivativeSize::Medium->value);
             }
             $tpl_representant['ALLOW_SET_RANDOM'] = (bool) $category['has_images'];
             if (($category['has_images'] && Config::allowRandomRepresentative()) || (!$category['has_images'] && $catRepPic !== '')) {
@@ -1054,7 +1055,7 @@ final class AlbumController
         $imgRows = ServiceLocator::get(ImageRepository::class)->findByCategoryIdOrdered((int) $page['category_id']);
         if (count($imgRows) > 0) {
             $current_rank     = 1;
-            $derivativeParams = ImageStdParams::getByType(IMG_SQUARE);
+            $derivativeParams = ImageStdParams::getByType(DerivativeSize::Square->value);
             foreach ($imgRows as $row) {
                 $derivative     = new DerivativeImage($derivativeParams, new SrcImage($row));
                 $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', get_filename_wo_extension(is_scalar($row['file']) ? (string) $row['file'] : ''));

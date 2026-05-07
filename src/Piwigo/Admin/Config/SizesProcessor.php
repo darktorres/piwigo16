@@ -11,6 +11,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
@@ -57,12 +58,12 @@ final class SizesProcessor
 
         // step 1 — sanitize HTML input
         foreach ($pderivatives as $type => &$pderivative) {
-            if ($pderivative['must_square'] = ($type == IMG_SQUARE)) {
+            if ($pderivative['must_square'] = ($type == DerivativeSize::Square->value)) {
                 $pderivative['h'] = $pderivative['w'];
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == Config::derivativeDefaultSize()) ? true : false;
+            $pderivative['must_enable'] = ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize()) ? true : false;
             $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
 
             if (isset($pderivative['crop'])) {
@@ -89,7 +90,7 @@ final class SizesProcessor
                 $errors[$type] = [];
             }
 
-            if ($type == IMG_THUMB) {
+            if ($type == DerivativeSize::Thumb->value) {
                 $w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
                 if ($w <= 0) {
                     $errors[$type]['w'] = '>0';

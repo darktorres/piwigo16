@@ -35,6 +35,7 @@ use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Job\RegenerateAllDerivativesJob;
@@ -324,7 +325,7 @@ final class MaintenanceController
         foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             $purge_urls[l10n($params->type)] = $params->type;
         }
-        $purge_urls[l10n(IMG_CUSTOM)] = IMG_CUSTOM;
+        $purge_urls[l10n(DerivativeSize::Custom->value)] = DerivativeSize::Custom->value;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
@@ -526,7 +527,7 @@ final class MaintenanceController
         foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             $purge_urls[l10n($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
         }
-        $purge_urls[l10n(IMG_CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . IMG_CUSTOM;
+        $purge_urls[l10n(DerivativeSize::Custom->value)] = sprintf($url_format, 'derivatives') . '&amp;type=' . DerivativeSize::Custom->value;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();

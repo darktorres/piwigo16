@@ -49,7 +49,7 @@ final class DerivativeImage
      */
     public static function thumbUrl(array|SrcImage $infos): string|array
     {
-        return self::url(IMG_THUMB, $infos);
+        return self::url(DerivativeSize::Thumb->value, $infos);
     }
 
     /**
@@ -82,7 +82,7 @@ final class DerivativeImage
      * Return associative an array of all DerivativeImage for a specific image.
      * Disabled derivative types can be still found in the return, mapped to an
      * enabled derivative (e.g. the values are not unique in the return array).
-     * This is useful for any plugin/theme to just use $deriv[IMG_XLARGE] even if
+     * This is useful for any plugin/theme to just use $deriv[DerivativeSize::XLarge->value] even if
      * the XLARGE is disabled.
      *
      * @param array|SrcImage $src_image array of info from db or SrcImage
@@ -175,7 +175,7 @@ final class DerivativeImage
         $tokens = [];
         $tokens[] = substr((string) $params->type, 0, 2);
 
-        if ($params->type == IMG_CUSTOM) {
+        if ($params->type == DerivativeSize::Custom->value) {
             $params->addUrlTokens($tokens);
         }
 

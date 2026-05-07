@@ -15,6 +15,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
@@ -228,19 +229,19 @@ final class ImageAdminService
     {
         if ($types === 'all') {
             $types   = ImageStdParams::getAllTypes();
-            $types[] = IMG_CUSTOM;
+            $types[] = DerivativeSize::Custom->value;
         } elseif (!is_array($types)) {
             $types = [$types];
         }
         $stringTypes = [];
         foreach ($types as $type) {
             $typeStr = is_scalar($type) ? (string) $type : '';
-            if ($type == IMG_CUSTOM) {
+            if ($type == DerivativeSize::Custom->value) {
                 $stringTypes[] = DerivativeEncoding::derivativeToUrl($typeStr) . '_[a-zA-Z0-9]+';
             } elseif (in_array($type, ImageStdParams::getAllTypes())) {
                 $stringTypes[] = DerivativeEncoding::derivativeToUrl($typeStr);
             } else {
-                $stringTypes[] = DerivativeEncoding::derivativeToUrl(IMG_CUSTOM) . '_' . $typeStr;
+                $stringTypes[] = DerivativeEncoding::derivativeToUrl(DerivativeSize::Custom->value) . '_' . $typeStr;
             }
         }
         $pattern = '#.*-';

@@ -10,6 +10,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Template\TemplateRegistry;
@@ -414,7 +415,7 @@ class CalendarMonthly extends CalendarBase
             if ($row === null) {
                 continue;
             }
-            $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
+            $derivative = new DerivativeImage(DerivativeSize::Square->value, new SrcImage($row));
             $dowRaw = $row['dow'] ?? 0;
             $items[$day] = [
                 'nb_images' => $nb_images,
@@ -446,7 +447,7 @@ class CalendarMonthly extends CalendarBase
                 array_push($wday_labels, array_shift($wday_labels) ?? '');
             }
 
-            [$cell_width, $cell_height] = ImageStdParams::getByType(IMG_SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size;
 
             $tpl_weeks    = [];
             $tpl_crt_week = [];

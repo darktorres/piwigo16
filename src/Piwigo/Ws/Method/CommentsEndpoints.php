@@ -10,6 +10,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\DerivativeSize;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
@@ -77,7 +78,7 @@ final class CommentsEndpoints
         $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . Tables::comments() . ' AS c INNER JOIN ' . Tables::images() . ' AS i ON i.id = c.image_id LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . Tables::userInfos() . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
         $list = [];
         foreach ($conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $mediumDerivative = DerivativeImage::getOne(IMG_MEDIUM, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
+            $mediumDerivative = DerivativeImage::getOne(DerivativeSize::Medium->value, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
             $medium = $mediumDerivative !== null ? $mediumDerivative->getUrl() : null;
             if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
                 $authorName = $row['author'];

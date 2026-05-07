@@ -1,22 +1,27 @@
 # Free-Function Inventory
 
 Snapshot of all remaining PHP free functions outside `src/` (where zero free functions exist).
-Generated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
+Updated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 
 ---
 
 ## Summary
 
-| Category | ~Count | Deletion gate |
+| Category | ~Count | Status |
 |---|---|---|
-| One-line ServiceLocator delegates (`functions_*.inc.php`) | ~500 | Call-site sweep (unlisted step after #19) |
-| `ws_functions/*.php` one-line delegates | 98 | Already backed by WS endpoint classes; delete after confirming no external callers |
-| Pre-boot standalones — permanent | ~50 | Must stay: called before `Kernel::boot()` (fatal\_error, l10n, load\_language, etc.) |
-| `admin/include/` delegates | ~133 | Admin call-site sweep (part of #22 cleanup) |
-| Install / upgrade scaffolding | 13 | 🔒 Out of scope — pre-service-layer bootstrap |
-| Derivative URL helpers | 5 | 🔒 Permanent — no service boundary benefit |
-| `image_derivative_functions.php` | 7 | Tied to `i.php` fast-path; partly permanent |
-| **Total (excl. plugins)** | **~623** | |
+| One-line ServiceLocator delegates (`functions_*.inc.php`) | ~304 | Pending — Phase C |
+| Pre-boot standalones — permanent | ~37 | Must stay |
+| Derivative URL helpers | 5 | 🔒 Permanent |
+| `image_derivative_functions.php` | 7 | Mostly permanent |
+| `common.inc.php` | 1 | Pre-boot standalone |
+| **Total (excl. plugins)** | **~354** | |
+
+**Completed phases:**
+- ✅ **Phase A** — `include/ws_functions/` (98 functions, 9 files) deleted
+- ✅ **Phase B** — `admin/include/` delegates (~133 functions, 8 files) deleted; `add_core_tabs`, `functions_upgrade`, `functions_install` migrated to typed classes
+- ✅ `include/ws_default_methods.php` deleted
+- ✅ `include/functions_search.inc.php`, `functions_calendar.inc.php`, `functions_filter.inc.php` deleted
+- ✅ `include/picture_functions.php`, `feed_functions.php`, `password_functions.php`, `profile_functions.php` deleted
 
 ---
 
@@ -26,56 +31,24 @@ Generated 2026-05-06. Excludes `vendor/`, `tools/`, `plugins/`, `tests/`.
 
 | File | Functions | Category | Notes |
 |---|---|---|---|
-| `functions.inc.php` | 207 | Mixed — see below | Largest file; ~170 one-line delegates, ~37 real-logic standalones |
+| `functions.inc.php` | 208 | Mixed — see below | Largest file; ~170 one-line delegates, ~38 real-logic standalones |
 | `functions_user.inc.php` | 60 | One-line delegates | All call `PermissionService` / `AuthService` / `UserService` / `PreferencesService` |
 | `functions_url.inc.php` | 21 | One-line delegates | All call `UrlService` |
-| `functions_search.inc.php` | 17 | One-line delegates | All call `SearchService` |
-| `functions_plugins.inc.php` | 11 | Mixed | 6 event-system delegates + 2 `PluginService` delegates + 2 factory helpers (stay) + 1 define block |
+| `functions_plugins.inc.php` | 12 | Mixed | 6 event-system delegates + 2 `PluginService` delegates + 2 factory helpers (stay) + 1 define block |
 | `functions_cookie.inc.php` | 3 | One-line delegates | `CookieService` |
-| `functions_calendar.inc.php` | 1 | One-line delegate | `CalendarService` |
-| `functions_filter.inc.php` | 1 | One-line delegate | `FilterService` |
 | `derivative_params.inc.php` | 5 | 🔒 Permanent | Low-level URL helpers (`derivative_to_url`, `size_to_url`, `size_equals`, `char_to_fraction`, `fraction_to_char`) — no service boundary benefit |
-| `image_derivative_functions.php` | 7 | Mostly permanent | `i.php` fast-path helpers: `ierror`, `parse_request`, `send_derivative`, `safe_unserialize` (also in functions.inc.php), `get_derivative_storage`, `mkgetdir` (dup), `get_remote_addr_session_hash` (dup) |
-| `common.inc.php` | 1 | Pre-boot standalone | `get_default_theme()` — called before Kernel::boot() |
-| `ws_default_methods.php` | 2 | One-line delegates | `ws_addDefaultMethods`, `ws_isInvokeAllowed` — delegates to WS endpoint classes |
+| `image_derivative_functions.php` | 7 | Mostly permanent | Fast-path helpers for `index.php?/i/` bypass: `ierror`, `parse_request`, `send_derivative`, `safe_unserialize`, `get_derivative_storage`, `time_step`, `get_remote_addr_session_hash` |
+| `common.inc.php` | 1 | Pre-boot standalone | `sanitize_mysql_kv()` — inline helper for `array_walk_recursive` |
 
 #### `include/ws_functions/`
 
-| File | Functions | Notes |
-|---|---|---|
-| `pwg.images.php` | 29 | One-line delegates → `ImagesEndpoints` |
-| `pwg.users.php` | 16 | One-line delegates → `UsersEndpoints` |
-| `pwg.php` | 13 | One-line delegates → `GeneralEndpoints` |
-| `pwg.tags.php` | 8 | One-line delegates → `TagsEndpoints` |
-| `pwg.groups.php` | 8 | One-line delegates → `GroupsEndpoints` |
-| `pwg.categories.php` | 12 | One-line delegates → `CategoriesEndpoints` |
-| `pwg.extensions.php` | 6 | One-line delegates → `ExtensionsEndpoints` |
-| `pwg.permissions.php` | 3 | One-line delegates → `PermissionsEndpoints` |
-| `pwg.comments.php` | 3 | One-line delegates → `CommentsEndpoints` |
-| **Total** | **98** | All deletable once external callers are confirmed gone |
-
----
-
-### `admin/include/`
-
-| File | Functions | Category | Notes |
-|---|---|---|---|
-| `functions.php` | 80 | One-line delegates | All call `CategoryAdminService` / `ImageAdminService` / `TagAdminService` / `UserAdminService` / `AdminService` |
-| `functions_upload.inc.php` | 21 | One-line delegates | All call `UploadService` |
-| `functions_notification_by_mail.inc.php` | 15 | One-line delegates | All call `NotificationAdminService` |
-| `functions_metadata.php` | 7 | One-line delegates | `MetadataAdminService` |
-| `functions_history.inc.php` | 6 | One-line delegates | `HistoryAdminService` |
-| `functions_permalinks.php` | 4 | One-line delegates | `PermalinkRepository` calls |
-| `functions_plugins.inc.php` | 1 | One-line delegate | `PluginService` |
-| `add_core_tabs.inc.php` | 1 | Free function | `add_core_tabs()` — builds tab sheets for the admin header; candidate for `AdminService` |
-| `functions_upgrade.php` | 9 | 🔒 Out of scope | Upgrade-flow bootstrap (`prepare_conf_upgrade`, SQL file execution); runs before service layer |
-| `functions_install.inc.php` | 4 | 🔒 Out of scope | Install-flow only (`execute_sqlfile`, etc.); pre-service-layer |
+Only `index.php` (security redirect) remains. All 9 function files (98 one-line delegates) were deleted in Phase A.
 
 ---
 
 ## `include/functions.inc.php` detail
 
-The single largest file. 207 functions in three categories:
+The single largest file. 208 functions in three categories:
 
 ### One-line ServiceLocator delegates (~170)
 
@@ -99,7 +72,7 @@ Ready to delete once call sites in `include/` are updated. Grouped by service:
 | `ConfigService` | ~3 | `conf_update_param`, `conf_get_param`, `conf_delete_param` |
 | `QueryHelper` | ~3 | `simple_hash_from_query`, `hash_from_query`, `array_from_query` |
 
-### Pre-boot standalones — permanent or gated on Latte/MVC (~37)
+### Pre-boot standalones — permanent or gated on Latte/MVC (~38)
 
 These **cannot** be deleted yet because they are called before `Kernel::boot()` or implement cross-cutting concerns that no single typed service owns:
 
@@ -124,25 +97,16 @@ These **cannot** be deleted yet because they are called before `Kernel::boot()` 
 
 ## Deletion plan
 
-### Phase A — `include/ws_functions/` (98 functions, 9 files)
+### Phase C — `include/functions_*.inc.php` delegates (~304 functions)
 
-All 9 files are one-line delegates to the WS endpoint classes already in `src/Piwigo/Ws/Method/`. Confirm no external plugins call these free functions directly, then delete all 9 files and remove the `require_once` from `WsController`.
+Call sites in `src/` already use typed services. Call sites in `include/` still use free functions. The last step is sweeping the remaining callers in `include/` itself.
 
-**Gate:** confirm no external callers, remove `require_once` of `ws_functions/*.php` in `WsController`.
-
----
-
-### Phase B — `admin/include/` delegates (~133 functions, 8 files)
-
-All call sites in `src/` already use typed services directly. The `require_once` calls to these files come from `admin/include/functions.php` (the loader file) and from legacy scripts. Sweep remaining call sites, then delete.
-
-**Gate:** audit `admin/include/functions.php` for any `require_once` of sub-files; check that no `include/*.inc.php` file calls these free functions.
-
----
-
-### Phase C — `include/functions_*.inc.php` delegates (~500 functions)
-
-Call sites in `src/` already use typed services. Call sites in `include/` still use free functions (e.g. `functions_user.inc.php` calling `functions.inc.php` helpers). The last step is sweeping the remaining callers in `include/` itself.
+**Files:**
+- `functions.inc.php` (~170 delegates)
+- `functions_user.inc.php` (60 delegates)
+- `functions_url.inc.php` (21 delegates)
+- `functions_plugins.inc.php` (~10 delegates)
+- `functions_cookie.inc.php` (3 delegates)
 
 **Gate:** after Tier 3 rendering includes are replaced (Latte / #23), the remaining call sites in `include/` will be pre-boot standalones only. At that point the delegate files can be deleted one by one.
 
@@ -153,6 +117,5 @@ Call sites in `src/` already use typed services. Call sites in `include/` still 
 | File | Reason |
 |---|---|
 | `include/derivative_params.inc.php` | 5 URL helpers; no service boundary benefit |
-| `admin/include/functions_upgrade.php` | Upgrade bootstrap; pre-service-layer |
-| `admin/include/functions_install.inc.php` | Install bootstrap; pre-service-layer |
+| `include/image_derivative_functions.php` | Fast-path helpers for `index.php?/i/` bypass; partly permanent |
 | Pre-boot standalones in `functions.inc.php` | Listed above; must stay until MVC/Latte fully replaces page lifecycle |

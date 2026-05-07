@@ -7,22 +7,12 @@ define('PHPWG_ROOT_PATH', __DIR__ . '/../');
 define('PWG_LOCAL_DIR', 'local/');
 define('IN_ADMIN', false);
 
-// Database table-prefix constant defined in include/constants.php at runtime.
+// PREFIX_TABLE is defined at runtime by UpgradeController / UpgradeFeedController (upgrade path only).
+// Declared here as a PHPStan placeholder so migration-step analysis resolves it.
 define('PREFIX_TABLE', 'piwigo_');
-
-// Calendar level indices — defined in include/functions_calendar.inc.php.
-// Redeclared here so analysis of src/Piwigo/Calendar/ finds them.
-if (!defined('CYEAR')) {
-    define('CYEAR', 0);
-    define('CMONTH', 1);
-    define('CDAY', 2);
-    define('CWEEK', 1);
-}
 
 /** @var string $prefixeTable */
 $prefixeTable = 'piwigo_';
-/** @var array<string,mixed> $conf */
-$conf = [];
 /** @var array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...} $user */
 $user = ['id' => 0, 'username' => '', 'email' => '', 'language' => 'en_UK', 'theme' => 'modus', 'status' => 'guest', 'enabled_high' => false, 'internal_status' => [], 'cache_update_time' => 0, 'last_visit' => ''];
 /** @var array<string,mixed> $page */
@@ -35,12 +25,10 @@ $template = null;
 $logger = null;
 /** @var array<string,mixed> $filter */
 $filter = [];
-/** @var string $pwg_event_handlers */
+/** @var array<string,mixed> $pwg_event_handlers */
 $pwg_event_handlers = [];
 /** @var array<string,mixed> $pwg_loaded_plugins */
 $pwg_loaded_plugins = [];
-/** @var \mysqli|null $mysqli */
-$mysqli = null;
 /** @var \Piwigo\Ws\PwgServer|null $service */
 $service = null;
 /** @var array<string,mixed> $persistent_cache */

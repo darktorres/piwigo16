@@ -6,9 +6,10 @@ namespace Piwigo\Db;
 
 class Dml
 {
-    public const SKIP_EMPTY      = 1;
-    public const REGEX_OPERATOR  = 'REGEXP';
-    public const RANDOM_FUNCTION = 'RAND';
+    public const SKIP_EMPTY             = 1;
+    public const REGEX_OPERATOR         = 'REGEXP';
+    public const RANDOM_FUNCTION        = 'RAND';
+    public const REQUIRED_MYSQL_VERSION = '5.0.0';
 
     /**
      * Updates multiple rows in a table.

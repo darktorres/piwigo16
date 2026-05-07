@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Dml;
 use Piwigo\Exception\DbException;
 
 final class InstallService
@@ -112,11 +113,11 @@ final class InstallService
         try {
             DbConnection::get();
             $dbVersion = DbInfo::version();
-            if (version_compare($dbVersion, REQUIRED_MYSQL_VERSION, '<')) {
+            if (version_compare($dbVersion, Dml::REQUIRED_MYSQL_VERSION, '<')) {
                 $errors[] = sprintf(
                     'your MySQL version is too old, you have "%s" and you need at least "%s"',
                     $dbVersion,
-                    REQUIRED_MYSQL_VERSION
+                    Dml::REQUIRED_MYSQL_VERSION
                 );
             }
         } catch (\Exception $e) {

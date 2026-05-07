@@ -127,8 +127,6 @@ final class InstallController implements ControllerInterface
             $step = 1;
         }
 
-        require PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
-
         if (isset($_POST['install'])) {
             InstallService::installDbConnect($infos, $errors);
 

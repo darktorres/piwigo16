@@ -41,7 +41,7 @@ class C13yInternal
         $check_list[] = [
             'type' => 'MySQL',
             'current' => DbInfo::version(),
-            'required' => REQUIRED_MYSQL_VERSION,
+            'required' => Dml::REQUIRED_MYSQL_VERSION,
             ];
 
         foreach ($check_list as $elem) {

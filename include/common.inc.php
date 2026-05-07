@@ -16,6 +16,8 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\Dml;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugin\PluginService;
@@ -102,10 +104,6 @@ if (!Kernel::isBooted()) :
         header('Location: index.php?/install');
         exit;
     }
-    // Only mysqli is supported. The self-heal for old 'mysql' installs and the
-    // dynamic include are gone; functions_mysqli.inc.php is the only dblayer.
-    require(PHPWG_ROOT_PATH . 'include/dblayer/functions_mysqli.inc.php');
-
     // Always route PHP errors to DevTools (X-PHP-Error-N response headers) rather
     // than inline output, which corrupts JSON/XML/binary responses.
     // The DB config show_php_errors controls error_reporting level only.
@@ -131,7 +129,7 @@ if (!Kernel::isBooted()) :
     // Database connection — DBAL connects lazily on first use.
     // Force it now so a bad config surfaces a clean error before rendering.
     try {
-        get_dbal_connection();
+        DbConnection::get();
     } catch (Exception $e) {
         fatal_error(l10n($e->getMessage()));
     }
@@ -267,7 +265,7 @@ if (is_array($notify_exp)) {
 
     if ($is_mail_send) {
         $notify_user_id_raw = is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0;
-        single_update(
+        Dml::singleUpdate(
             USER_AUTH_KEYS_TABLE,
             ['last_notified_on' => $notify_exp['dbnow']],
             [

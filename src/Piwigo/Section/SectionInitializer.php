@@ -46,17 +46,8 @@ final class SectionInitializer
 
         $routePath = is_string($request->getAttribute('_route_path')) ? $request->getAttribute('_route_path') : '/';
 
-        if (!Config::questionMarkInUrls()
-            && isset($_SERVER['PATH_INFO'])
-            && !empty($_SERVER['PATH_INFO'])) {
-            $rewritten = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
-            $rewritten = str_replace('//', '/', $rewritten);
-            $pathCount = count(explode('/', $rewritten));
-            $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $pathCount - 1);
-        } else {
-            $rewritten = $routePath;
-            $page['root_path'] = PHPWG_ROOT_PATH;
-        }
+        $rewritten         = $routePath;
+        $page['root_path'] = PHPWG_ROOT_PATH;
 
         if (str_starts_with((string) $page['root_path'], './')) {
             $page['root_path'] = substr((string) $page['root_path'], 2);

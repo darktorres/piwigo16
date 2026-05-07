@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Piwigo\Config\Config;
-
 final class StringUtil
 {
     public function microSeconds(): string
@@ -374,9 +372,6 @@ final class StringUtil
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
             if (!empty($_SERVER[$value])) {
                 $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
-                if (Config::phpExtensionInUrls() && $this->getExtension($filename) !== 'php') {
-                    continue;
-                }
                 $basename = basename($filename, '.php');
                 if (!empty($basename)) {
                     return $basename;

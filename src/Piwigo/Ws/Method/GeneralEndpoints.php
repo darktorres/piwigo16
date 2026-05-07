@@ -73,8 +73,6 @@ final class GeneralEndpoints
             $startId = $maxId;
         }
         $uid = '&b=' . time();
-        Config::override('question_mark_in_urls', true);
-        Config::override('php_extension_in_urls', true);
         Config::override('derivative_url_style', 2);
         $qlimit = min(5000, (int) ceil(max($imageCount / 500, $maxUrls / count($types))));
         /** @var array<string> $whereClauses */

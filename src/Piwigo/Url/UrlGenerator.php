@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
-use Piwigo\Config\Config;
 use Piwigo\Routing\Router;
 
 /**
@@ -12,8 +11,7 @@ use Piwigo\Routing\Router;
  *
  * Simple PSR-15 route URLs (identification, register, profile, feed, …) are
  * built via Router::generate() so the path is always derived from the named
- * route table and the URL-mode config (question_mark_in_urls /
- * php_extension_in_urls) is applied once in applyUrlMode().
+ * route table. All URLs use the server-agnostic index.php?/path format.
  *
  * Gallery / picture / tags / search URLs delegate to UrlService, which owns
  * the complex sub-token format (category/12-name/start-24, etc.).
@@ -244,10 +242,6 @@ final readonly class UrlGenerator
 
     private function applyUrlMode(string $rootUrl, string $relPath): string
     {
-        if (Config::phpExtensionInUrls()) {
-            $prefix = $rootUrl . 'index.php';
-            return Config::questionMarkInUrls() ? $prefix . '?/' . $relPath : $prefix . '/' . $relPath;
-        }
-        return $rootUrl . $relPath;
+        return $rootUrl . 'index.php?/' . $relPath;
     }
 }

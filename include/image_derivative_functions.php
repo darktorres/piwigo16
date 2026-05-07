@@ -160,21 +160,12 @@ function parse_custom_params(array $tokens): DerivativeParams
 
 function parse_request(ImageDerivativeContext $ctx): DerivativeParams
 {
-    if (Config::questionMarkInUrls() == false
-        && isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])
-    ) {
-        $req = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
-        $req = str_replace('//', '/', $req);
-        $path_count  = count(explode('/', $req));
-        $ctx->rootPath = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
-    } else {
-        $req = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
-        if ($pos = strpos($req, '&')) {
-            $req = substr($req, 0, $pos);
-        }
-        $req          = rawurldecode($req);
-        $ctx->rootPath = PHPWG_ROOT_PATH;
+    $req = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
+    if ($pos = strpos($req, '&')) {
+        $req = substr($req, 0, $pos);
     }
+    $req           = rawurldecode($req);
+    $ctx->rootPath = PHPWG_ROOT_PATH;
 
     $req = ltrim($req, '/');
     // Strip the /i/ route prefix added when routing through index.php?/i/...

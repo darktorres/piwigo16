@@ -589,10 +589,6 @@ function script_basename(): string
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
             if (!empty($_SERVER[$value])) {
                 $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
-                $ext = strrchr($filename, '.');
-                if (Config::phpExtensionInUrls() && ($ext === false ? '' : substr($ext, 1)) !== 'php') {
-                    continue;
-                }
                 $basename = basename($filename, '.php');
                 if (!empty($basename)) {
                     return $basename;

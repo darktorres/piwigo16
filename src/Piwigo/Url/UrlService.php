@@ -94,13 +94,7 @@ final class UrlService
     /** @param array<mixed> $params */
     public function makeIndexUrl(array $params = []): string
     {
-        $url = $this->getRootUrl() . 'index';
-        if (Config::phpExtensionInUrls()) {
-            $url .= '.php';
-        }
-        if (Config::questionMarkInUrls()) {
-            $url .= '?';
-        }
+        $url = $this->getRootUrl() . 'index.php?';
 
         $urlBeforeParams = $url;
         $url .= $this->makeSectionInUrl($params);
@@ -154,14 +148,7 @@ final class UrlService
     /** @param array<mixed> $params */
     public function makePictureUrl(array $params): string
     {
-        $url = $this->getRootUrl() . 'picture';
-        if (Config::phpExtensionInUrls()) {
-            $url .= '.php';
-        }
-        if (Config::questionMarkInUrls()) {
-            $url .= '?';
-        }
-        $url .= '/';
+        $url = $this->getRootUrl() . 'index.php?/picture/';
         switch (Config::pictureUrlStyle()) {
             case 'id-file':
                 $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';

@@ -428,8 +428,6 @@ SELECT id
             }
             ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($row, IMG_CUSTOM);
             $uid = '&b=' . time();
-            Config::override('question_mark_in_urls', true);
-            Config::override('php_extension_in_urls', true);
             if (Config::derivativeUrlStyle() == 1) {
                 Config::override('derivative_url_style', 0);
             }

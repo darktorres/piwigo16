@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Image;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\ImageRect;
 
 final class ImageRectTest extends TestCase
@@ -46,7 +47,7 @@ final class ImageRectTest extends TestCase
 
     public function testCropHorizontalWithCoiUsesStub(): void
     {
-        // char_to_fraction() stub returns 0.5 (center) for any char,
+        // DerivativeEncoding::charToFraction() stub returns 0.5 (center) for any char,
         // so COI at center = no change in split vs. null COI
         $rNoCoi = new ImageRect([800, 600]);
         $rNoCoi->cropH(100, null);

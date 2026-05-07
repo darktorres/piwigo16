@@ -13,6 +13,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -214,7 +215,7 @@ final class ImageAdminService
         if ($dot === false) {
             return;
         }
-        $pattern = $type === 'all' ? '-*' : '-' . derivative_to_url((string) $type) . '*';
+        $pattern = $type === 'all' ? '-*' : '-' . DerivativeEncoding::derivativeToUrl((string) $type) . '*';
         $path    = substr_replace($path, $pattern, $dot, 0);
         if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $path)) !== false) {
             foreach ($glob as $file) {
@@ -235,11 +236,11 @@ final class ImageAdminService
         foreach ($types as $type) {
             $typeStr = is_scalar($type) ? (string) $type : '';
             if ($type == IMG_CUSTOM) {
-                $stringTypes[] = derivative_to_url($typeStr) . '_[a-zA-Z0-9]+';
+                $stringTypes[] = DerivativeEncoding::derivativeToUrl($typeStr) . '_[a-zA-Z0-9]+';
             } elseif (in_array($type, ImageStdParams::getAllTypes())) {
-                $stringTypes[] = derivative_to_url($typeStr);
+                $stringTypes[] = DerivativeEncoding::derivativeToUrl($typeStr);
             } else {
-                $stringTypes[] = derivative_to_url(IMG_CUSTOM) . '_' . $typeStr;
+                $stringTypes[] = DerivativeEncoding::derivativeToUrl(IMG_CUSTOM) . '_' . $typeStr;
             }
         }
         $pattern = '#.*-';

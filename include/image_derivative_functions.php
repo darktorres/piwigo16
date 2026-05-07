@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
@@ -137,7 +138,7 @@ function parse_custom_params(array $tokens): DerivativeParams
             ierror('Sizing arr', 400);
         }
         $token    = array_shift($tokens);
-        $crop     = char_to_fraction($token);
+        $crop     = DerivativeEncoding::charToFraction($token);
         $token    = array_shift($tokens);
         $min_size = url_to_size($token ?? '');
     }
@@ -178,7 +179,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     $deriv = explode('_', $deriv);
 
     foreach (ImageStdParams::getDefinedTypeMap() as $type => $params) {
-        if (derivative_to_url($type) == $deriv[0]) {
+        if (DerivativeEncoding::derivativeToUrl($type) == $deriv[0]) {
             $ctx->derivativeType   = $type;
             $ctx->derivativeParams = $params;
             break;
@@ -186,7 +187,7 @@ function parse_request(ImageDerivativeContext $ctx): DerivativeParams
     }
 
     if ($ctx->derivativeType === null) {
-        if (derivative_to_url(IMG_CUSTOM) == $deriv[0]) {
+        if (DerivativeEncoding::derivativeToUrl(IMG_CUSTOM) == $deriv[0]) {
             $ctx->derivativeType = IMG_CUSTOM;
         } else {
             ierror('Unknown parsing type', 400);
@@ -276,7 +277,7 @@ function try_switch_source(DerivativeParams $params, ?int $original_mtime, Image
         $candidates[] = $candidate;
     }
     foreach (array_reverse($candidates) as $candidate) {
-        $candidate_path  = str_replace('-' . derivative_to_url($params->type), '-' . derivative_to_url($candidate->type), $ctx->derivativePath);
+        $candidate_path  = str_replace('-' . DerivativeEncoding::derivativeToUrl($params->type), '-' . DerivativeEncoding::derivativeToUrl($candidate->type), $ctx->derivativePath);
         $candidate_mtime = Filesystem::tryFileMtime($candidate_path);
         if ($candidate_mtime === false
             || $candidate_mtime < $original_mtime

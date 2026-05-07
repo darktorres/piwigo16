@@ -9,6 +9,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\ServiceLocator;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -160,13 +161,13 @@ final class SizesProcessor
                     if (isset($enabled[$type])) {
                         $old_params = $enabled[$type];
                         $same = true;
-                        if (!size_equals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
+                        if (!DerivativeEncoding::sizeEquals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
                             || $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
                             $same = false;
                         }
                         if ($same
                             && $new_params->sizing->max_crop != 0
-                            && !size_equals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
+                            && !DerivativeEncoding::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
                             $same = false;
                         }
                         if ($quality_changed || $new_params->sharpen != $old_params->sharpen) {

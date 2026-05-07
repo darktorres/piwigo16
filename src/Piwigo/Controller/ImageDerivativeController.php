@@ -33,7 +33,6 @@ final class ImageDerivativeController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         require_once PHPWG_ROOT_PATH . 'include/image_derivative_functions.php';
-        require_once PHPWG_ROOT_PATH . 'include/derivative_params.inc.php';
         require_once PHPWG_ROOT_PATH . 'include/derivative_std_params.inc.php';
 
         $logger = LoggerRegistry::current();

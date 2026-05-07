@@ -19,6 +19,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -184,7 +185,7 @@ final class GeneralEndpoints
         $infos['msizes']['custom'] = 0;
         $all = 0;
         foreach (array_keys($infos['msizes']) as $sizeType) {
-            $infos['msizes'][$sizeType] += $msizes[derivative_to_url($sizeType)] ?? 0;
+            $infos['msizes'][$sizeType] += $msizes[DerivativeEncoding::derivativeToUrl($sizeType)] ?? 0;
             $all += $infos['msizes'][$sizeType];
         }
         $infos['msizes']['all'] = $all;

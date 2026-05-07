@@ -22,6 +22,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -413,10 +414,10 @@ SELECT id
             if (strlen(is_scalar($lRaw) ? (string) $lRaw : '') == 0) {
                 $imgRepo->updateCoi((int) $imageIdCoi, null);
             } else {
-                $coi = fraction_to_char(is_numeric($lRaw) ? (float) $lRaw : 0)
-                    . fraction_to_char(is_numeric($_POST['t'] ?? null) ? (float) $_POST['t'] : 0)
-                    . fraction_to_char(is_numeric($_POST['r'] ?? null) ? (float) $_POST['r'] : 0)
-                    . fraction_to_char(is_numeric($_POST['b'] ?? null) ? (float) $_POST['b'] : 0);
+                $coi = DerivativeEncoding::fractionToChar(is_numeric($lRaw) ? (float) $lRaw : 0)
+                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['t'] ?? null) ? (float) $_POST['t'] : 0)
+                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['r'] ?? null) ? (float) $_POST['r'] : 0)
+                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['b'] ?? null) ? (float) $_POST['b'] : 0);
                 $imgRepo->updateCoi((int) $imageIdCoi, $coi);
             }
         }
@@ -453,10 +454,10 @@ SELECT id
         if (!empty($row['coi'])) {
             $coi = is_scalar($row['coi']) ? (string) $row['coi'] : '';
             $tpl_var['coi'] = [
-                'l' => char_to_fraction($coi[0]),
-                't' => char_to_fraction($coi[1]),
-                'r' => char_to_fraction($coi[2]),
-                'b' => char_to_fraction($coi[3]),
+                'l' => DerivativeEncoding::charToFraction($coi[0]),
+                't' => DerivativeEncoding::charToFraction($coi[1]),
+                'r' => DerivativeEncoding::charToFraction($coi[2]),
+                'b' => DerivativeEncoding::charToFraction($coi[3]),
             ];
         }
 

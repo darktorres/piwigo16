@@ -49,13 +49,13 @@ final class SizingParams
     public function addUrlTokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
-            $tokens[] = 's'.size_to_url($this->ideal_size);
-        } elseif ($this->max_crop == 1 && size_equals($this->ideal_size, $this->min_size)) {
-            $tokens[] = 'e'.size_to_url($this->ideal_size);
+            $tokens[] = 's'.DerivativeEncoding::sizeToUrl($this->ideal_size);
+        } elseif ($this->max_crop == 1 && DerivativeEncoding::sizeEquals($this->ideal_size, $this->min_size)) {
+            $tokens[] = 'e'.DerivativeEncoding::sizeToUrl($this->ideal_size);
         } else {
-            $tokens[] = size_to_url($this->ideal_size);
-            $tokens[] = fraction_to_char($this->max_crop);
-            $tokens[] = size_to_url($this->min_size);
+            $tokens[] = DerivativeEncoding::sizeToUrl($this->ideal_size);
+            $tokens[] = DerivativeEncoding::fractionToChar($this->max_crop);
+            $tokens[] = DerivativeEncoding::sizeToUrl($this->min_size);
         }
     }
 

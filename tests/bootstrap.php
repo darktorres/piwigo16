@@ -95,15 +95,6 @@ if (!function_exists('get_extension')) {
     }
 }
 
-// Image helper stub: returns the fractional position of a COI character.
-// Real implementation is in include/functions_image.inc.php.
-if (!function_exists('char_to_fraction')) {
-    function char_to_fraction(string $char): float
-    {
-        return 0.5;
-    }
-}
-
 // Charset helper stub used by PwgRestEncoder.
 if (!function_exists('get_pwg_charset')) {
     function get_pwg_charset(): string

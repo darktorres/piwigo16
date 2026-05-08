@@ -95,7 +95,7 @@ jobs:
           php-version: '8.5'
           coverage: none
       - uses: ramsey/composer-install@v4
-      - run: vendor/bin/rector --dry-run --no-progress
+      - run: vendor/bin/rector --dry-run --no-progress-bar
 
   integration:
     name: Integration tests

@@ -3,13 +3,14 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
+import type { CacheItem, SelectizerOptions } from './LocalStorageCache';
 import { getPageData } from './page-data';
 import { config } from './config';
 
 interface BatchManagerGlobalPageData {
     CACHE_KEYS: { tags: string; categories: string; _hash: string };
     ROOT_URL: string;
-    associated_categories: Record<string, any>;
+    associated_categories: Record<string, unknown>;
     str_create: string;
     nb_thumbs_page: number;
     nb_thumbs_set: number;
@@ -29,6 +30,38 @@ interface BatchManagerGlobalPageData {
     selectedMessage_all: string;
 }
 
+interface WindowGlobals {
+    pwgDatepicker?: (
+        el: HTMLElement,
+        opts: { showTimepicker: boolean; cancelButton: string }
+    ) => void;
+    pwgAddAlbum?: (el: HTMLElement) => void;
+    selectGenerateDerivAll?: () => void;
+    selectGenerateDerivNone?: () => void;
+    selectDelDerivAll?: () => void;
+    selectDelDerivNone?: () => void;
+    getDerivativeUrls?: () => void;
+}
+
+interface DerivativesUrlsResult {
+    urls: string[];
+}
+
+interface NbNoMd5sumResult {
+    nb_no_md5sum: number;
+}
+
+interface NbOrphansResult {
+    nb_orphans: number;
+}
+
+interface WsResponse<T> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
 const pageData = getPageData<BatchManagerGlobalPageData>('pwg-batch-manager-global-data');
 const lang = pageData.lang;
 
@@ -45,18 +78,18 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+tagsCache.selectize(document.querySelector('[data-selectize=tags]'), {
     lang: {
         Add: pageData.str_create,
     },
 });
 
-categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function (categories: any[], options: any) {
+categoriesCache.selectize(document.querySelector('[data-selectize=categories]'), {
+    filter: function (categories: CacheItem[], options: SelectizerOptions) {
         if (this.name === 'dissociate') {
-            const filtered = categories.filter(function (cat: any) {
-                return Boolean(pageData.associated_categories[cat.id]);
-            });
+            const filtered = categories.filter(
+                (cat) => pageData.associated_categories[String(cat.id)] !== undefined
+            );
 
             if (filtered.length > 0) {
                 options.default = filtered[0].id;
@@ -79,8 +112,6 @@ const selectedMessage_none = pageData.selectedMessage_none;
 const selectedMessage_all = pageData.selectedMessage_all;
 
 let elements: string[] = [];
-const i = 0;
-const input: HTMLInputElement | null = null;
 let percent = 0;
 let progressBar_max = 0;
 
@@ -150,14 +181,26 @@ function enableShiftClick(container: HTMLElement) {
 }
 
 /*---- Album Selector ----*/
-function select_album_action({ album, addSelectedAlbum }: { album: any; addSelectedAlbum: any }) {
+interface AlbumItem {
+    id: string | number;
+    name?: string;
+    full_name_with_admin_links?: string;
+}
+
+function select_album_action({
+    album,
+    addSelectedAlbum,
+}: {
+    album: AlbumItem;
+    addSelectedAlbum: () => void;
+}) {
     const assocP = qs('#associate_as p');
     if (assocP) assocP.innerHTML = str_add_alb_associate;
     qs('.selected-associate-action')?.insertAdjacentHTML(
         'beforeend',
         `<div class="selected-associate-item">
-            <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
-            <input type="hidden" id="associate_input_${album.id}" name="associate[]" value="${album.id}">
+            <span>${album.name ?? ''}</span><span id="${String(album.id)}" class="remove-associate icon-cancel-circled"></span>
+            <input type="hidden" id="associate_input_${String(album.id)}" name="associate[]" value="${String(album.id)}">
         </div>`
     );
     addSelectedAlbum();
@@ -167,11 +210,11 @@ function remove_album_action({
     id_album,
     getSelectedAlbum,
 }: {
-    id_album: any;
-    getSelectedAlbum: any;
+    id_album: string | number;
+    getSelectedAlbum: () => Array<string | number>;
 }) {
     document.getElementById(String(id_album))?.parentElement?.remove();
-    if (!getSelectedAlbum().length) {
+    if (getSelectedAlbum().length === 0) {
         const assocP = qs('#associate_as p');
         if (assocP) assocP.innerHTML = str_select_alb_associate;
     }
@@ -200,11 +243,12 @@ GLightbox({ selector: 'a.preview-box' });
 tippy('.thumbnails img', { delay: [0, 0], duration: [200, 200] });
 
 /*---- Datepicker + AddAlbum ----*/
+const winRef = window as unknown as Window & WindowGlobals;
 document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
-    (window as any).pwgDatepicker(el, { showTimepicker: true, cancelButton: lang.Cancel });
+    winRef.pwgDatepicker?.(el, { showTimepicker: true, cancelButton: lang.Cancel });
 });
 document.querySelectorAll<HTMLElement>('[data-add-album]').forEach((el) => {
-    (window as any).pwgAddAlbum(el);
+    winRef.pwgAddAlbum?.(el);
 });
 
 /*---- Toggle visibility ----*/
@@ -231,12 +275,17 @@ qs<HTMLInputElement>('input[name=remove_date_creation]')?.addEventListener(
 );
 
 /*---- Derivatives ----*/
-const derivatives: { elements: any; done: number; total: number; finished: () => boolean } = {
-    elements: null,
+const derivatives: {
+    elements: string[];
+    done: number;
+    total: number;
+    finished: () => boolean;
+} = {
+    elements: [],
     done: 0,
     total: 0,
     finished() {
-        return this.done === this.total && this.elements?.length === 0;
+        return this.done === this.total && this.elements.length === 0;
     },
 };
 
@@ -249,14 +298,14 @@ function progress_end() {
     hide(qs('#uploadingActions'));
 }
 
-function progress(success: any) {
+function progress(success: boolean | undefined) {
     percent = Math.floor((derivatives.done / derivatives.total) * 100);
     const pb = qs<HTMLElement>('#uploadingActions .progressbar');
     if (pb) pb.style.width = percent + '%';
     if (success !== undefined) {
         const type = success ? 'regenerateSuccess' : 'regenerateError';
         const inp = qs<HTMLInputElement>(`[name="${type}"]`);
-        if (inp) inp.value = String(parseInt(inp.value ?? '0') + 1);
+        if (inp) inp.value = String(parseInt(inp.value) + 1);
     }
     if (derivatives.finished()) {
         progress_end();
@@ -286,18 +335,18 @@ function getDerivativeUrls() {
     progress_start();
 
     const body = new URLSearchParams({ max_urls: '100000', types: types.join(',') });
-    ids.forEach((id: any) => body.append('ids[]', id));
+    ids.forEach((id) => body.append('ids[]', id));
     void fetch(config.wsUrl + 'format=json&method=pwg.getMissingDerivatives', {
         method: 'POST',
         body,
     })
-        .then((r) => r.json())
-        .then((data: any) => {
-            if (!data.stat || data.stat !== 'ok') return;
+        .then((r) => r.json() as Promise<WsResponse<DerivativesUrlsResult>>)
+        .then((data) => {
+            if (data.stat !== 'ok' || data.result === undefined) return;
             derivatives.total += data.result.urls.length;
             updateDerivativeBadge();
             progress(undefined);
-            data.result.urls.forEach((url: string) => {
+            data.result.urls.forEach((url) => {
                 derivativesQueue.add(async () => {
                     try {
                         await fetch(url + '&ajaxload=true');
@@ -311,7 +360,7 @@ function getDerivativeUrls() {
                     }
                 });
             });
-            if (derivatives.elements.length)
+            if (derivatives.elements.length > 0)
                 setTimeout(getDerivativeUrls, 25 * (derivatives.total - derivatives.done));
         });
 }
@@ -355,12 +404,21 @@ function selectDelDerivNone() {
 
 window.addEventListener('keypress', (e: KeyboardEvent) => {
     const selected = qs<HTMLSelectElement>("select[name='selectAction']")?.value;
-    const haveTextarea = selected
-        ? document.querySelectorAll(`#action_${selected} textarea`).length
-        : 0;
+    const haveTextarea =
+        selected !== undefined && selected !== ''
+            ? document.querySelectorAll(`#action_${selected} textarea`).length
+            : 0;
     const addLinkedAlbum = document.getElementById('addLinkedAlbum');
-    const isVisible = addLinkedAlbum && getComputedStyle(addLinkedAlbum).display !== 'none';
-    if (e.key === 'Enter' && selected && selected !== '-1' && !haveTextarea && !isVisible) {
+    const isVisible =
+        addLinkedAlbum !== null && getComputedStyle(addLinkedAlbum).display !== 'none';
+    if (
+        e.key === 'Enter' &&
+        selected !== undefined &&
+        selected !== '' &&
+        selected !== '-1' &&
+        haveTextarea === 0 &&
+        !isVisible
+    ) {
         e.preventDefault();
         qs<HTMLElement>('#applyAction')?.click();
     }
@@ -379,7 +437,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
         const regenText = qs('#regenerationText');
         if (regenText) regenText.innerHTML = lang.syncProgressMessage;
         elements = [];
-        if (qs<HTMLInputElement>('input[name=setSelected]')?.checked) {
+        if (qs<HTMLInputElement>('input[name=setSelected]')?.checked === true) {
             elements = all_elements;
         } else {
             document
@@ -391,7 +449,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
         progressBar_max = elements.length;
         let todo = 0;
         const syncBlockSize = Math.min(Math.floor(elements.length / 2) || 1, 1000);
-        let image_ids: any[] = [];
+        let image_ids: string[] = [];
         hide(qs('#applyActionBlock'));
         hide(qs('.permitActionListButton'));
         hide(qs('#confirmDel'));
@@ -424,7 +482,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
 
     if (selectAction === 'delete') {
         const confirmCb = qs<HTMLInputElement>('#confirmDel input[name=confirm_deletion]');
-        if (!confirmCb?.checked) {
+        if (confirmCb?.checked !== true) {
             const errSpan = qs<HTMLElement>('#confirmDel span.errors');
             if (errSpan) errSpan.style.visibility = 'visible';
             return;
@@ -437,7 +495,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
     qsa('.bulkAction').forEach(hide);
     const queuedMgr = new AjaxQueue(1);
     elements = [];
-    if (qs<HTMLInputElement>('input[name=setSelected]')?.checked) {
+    if (qs<HTMLInputElement>('input[name=setSelected]')?.checked === true) {
         elements = all_elements;
     } else {
         document
@@ -448,7 +506,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
     progressBar_max = elements.length;
     let todo = 0;
     const deleteBlockSize = Math.min(Math.floor(elements.length / 2) || 1, 1000);
-    let image_ids: any[] = [];
+    let image_ids: string[] = [];
     hide(qs('#applyActionBlock'));
     hide(qs('.permitActionListButton'));
     hide(qs('#confirmDel'));
@@ -494,10 +552,7 @@ function progress_bar_start() {
     const pb = qs<HTMLElement>('#uploadingActions .progress-bar');
     if (pb) pb.style.width = '0%';
 }
-function progress_bar_end() {
-    hide(qs('#uploadingActions'));
-}
-function progress_bar(val: any, max: any, _success: any) {
+function progress_bar(val: number, max: number, _success: boolean) {
     percent = Math.floor((val / max) * 100);
     const pb = qs<HTMLElement>('#uploadingActions .progressbar');
     if (pb) pb.style.width = percent + '%';
@@ -518,13 +573,17 @@ qs('#sync_md5sum')?.addEventListener('click', (e) => {
     add_md5sum_block(Math.min(Math.floor(origin / 2) || 1, 1000));
 });
 
-function add_md5sum_block(blockSize: any) {
-    const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch(config.wsUrl + 'format=json&method=pwg.images.setMd5sum', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((data: any) => {
+function add_md5sum_block(blockSize: number | undefined) {
+    const body = new URLSearchParams({
+        pwg_token,
+        block_size: blockSize === undefined ? '' : String(blockSize),
+    });
+    void fetch(config.wsUrl + 'format=json&method=pwg.images.setMd5sum', { method: 'POST', body })
+        .then((r) => r.json() as Promise<WsResponse<NbNoMd5sumResult>>)
+        .then((data) => {
+            if (data.result === undefined) return;
             const el = qs('#md5sum_to_add');
-            if (el) el.innerHTML = data.result.nb_no_md5sum;
+            if (el) el.innerHTML = String(data.result.nb_no_md5sum);
             const origin = parseInt(qs('#md5sum_to_add')?.dataset['origin'] ?? '0');
             const pctDone = 100 - Math.floor((data.result.nb_no_md5sum * 100) / origin);
             const addedEl = qs('#md5sum_added');
@@ -532,15 +591,16 @@ function add_md5sum_block(blockSize: any) {
             if (data.result.nb_no_md5sum > 0) {
                 add_md5sum_block(undefined);
             } else {
-                document.location = `${config.adminUrl}page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}`;
+                document.location = `${config.adminUrl}page=batch_manager&action=sync_md5sum&nb_md5sum_added=${String(origin)}`;
             }
         })
-        .catch((xhr: any) => {
+        .catch((xhr: unknown) => {
             hide(qs('#add_md5sum'));
             const errEl = qs('#add_md5sum_error');
             if (errEl) {
                 errEl.style.display = '';
-                errEl.innerHTML = 'error: ' + xhr.message;
+                const msg = xhr instanceof Error ? xhr.message : String(xhr);
+                errEl.innerHTML = 'error: ' + msg;
             }
         });
 }
@@ -553,13 +613,20 @@ qs('#delete_orphans')?.addEventListener('click', (e) => {
     delete_orphans_block(Math.min(Math.floor(origin / 2) || 1, 1000));
 });
 
-function delete_orphans_block(blockSize: any) {
-    const body = new URLSearchParams({ pwg_token, block_size: String(blockSize ?? '') });
-    fetch(config.wsUrl + 'format=json&method=pwg.images.deleteOrphans', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((data: any) => {
+function delete_orphans_block(blockSize: number | undefined) {
+    const body = new URLSearchParams({
+        pwg_token,
+        block_size: blockSize === undefined ? '' : String(blockSize),
+    });
+    void fetch(config.wsUrl + 'format=json&method=pwg.images.deleteOrphans', {
+        method: 'POST',
+        body,
+    })
+        .then((r) => r.json() as Promise<WsResponse<NbOrphansResult>>)
+        .then((data) => {
+            if (data.result === undefined) return;
             const el = qs('#orphans_to_delete');
-            if (el) el.innerHTML = data.result.nb_orphans;
+            if (el) el.innerHTML = String(data.result.nb_orphans);
             const origin = parseInt(qs('#orphans_to_delete')?.dataset['origin'] ?? '0');
             const pctDone = 100 - Math.floor((data.result.nb_orphans * 100) / origin);
             const delEl = qs('#orphans_deleted');
@@ -567,15 +634,16 @@ function delete_orphans_block(blockSize: any) {
             if (data.result.nb_orphans > 0) {
                 delete_orphans_block(undefined);
             } else {
-                document.location = `${config.adminUrl}page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}`;
+                document.location = `${config.adminUrl}page=batch_manager&action=delete_orphans&nb_orphans_deleted=${String(origin)}`;
             }
         })
-        .catch((xhr: any) => {
+        .catch((xhr: unknown) => {
             hide(qs('#orphans_deletion'));
             const errEl = qs('#orphans_deletion_error');
             if (errEl) {
                 errEl.style.display = '';
-                errEl.innerHTML = 'error: ' + xhr.message;
+                const msg = xhr instanceof Error ? xhr.message : String(xhr);
+                errEl.innerHTML = 'error: ' + msg;
             }
         });
 }
@@ -585,10 +653,11 @@ declare function sprintf(fmt: string, ...args: unknown[]): string;
 
 function checkPermitAction(): void {
     const setSelectedEl = qs<HTMLInputElement>('input[name=setSelected]');
-    const nbSelected = setSelectedEl?.checked
-        ? nb_thumbs_set
-        : qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter((el) => el.checked)
-              .length;
+    const nbSelected =
+        setSelectedEl?.checked === true
+            ? nb_thumbs_set
+            : qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').filter((el) => el.checked)
+                  .length;
 
     const permitAction = qs('#permitAction');
     const forbidAction = qs('#forbidAction');
@@ -672,7 +741,7 @@ qsa('.wrap1 label').forEach((label) => {
         const li = this.closest('li');
         const checkbox = this.querySelector<HTMLInputElement>('input[type=checkbox]');
 
-        if (checkbox?.checked) {
+        if (checkbox?.checked === true) {
             if (li) li.classList.add('thumbSelected');
         } else {
             if (li) li.classList.remove('thumbSelected');
@@ -702,7 +771,7 @@ qs('#selectNone')?.addEventListener('click', (e) => {
     }
     qsa('.thumbnails label').forEach((label) => {
         const checkbox = label.querySelector<HTMLInputElement>('input[type=checkbox]');
-        if (checkbox?.checked) {
+        if (checkbox?.checked === true) {
             checkbox.checked = false;
             checkbox.dispatchEvent(new Event('change'));
         }
@@ -726,7 +795,7 @@ qs('#selectInvert')?.addEventListener('click', (e) => {
             checkbox.dispatchEvent(new Event('change'));
         }
         const li = label.closest('li');
-        if (checkbox?.checked) {
+        if (checkbox?.checked === true) {
             if (li) li.classList.add('thumbSelected');
         } else {
             if (li) li.classList.remove('thumbSelected');
@@ -757,7 +826,7 @@ qs<HTMLInputElement>('input[name=setSelected]')?.addEventListener(
 // If the whole set was selected on page load (after a first action), trigger
 // change once so input[name=whole_set] is filled in.
 const setSelectedCheck = qs<HTMLInputElement>('input[name="setSelected"]');
-if (setSelectedCheck?.checked) {
+if (setSelectedCheck?.checked === true) {
     setSelectedCheck.dispatchEvent(new Event('change'));
 }
 
@@ -770,7 +839,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e) => {
 
     if (action === 'delete_derivatives') {
         const confirmDeletionEl = qs<HTMLInputElement>('#confirmDel input[name=confirm_deletion]');
-        if (!confirmDeletionEl?.checked) {
+        if (confirmDeletionEl?.checked !== true) {
             const errorsEl = qs<HTMLElement>('#confirmDel span.errors');
             if (errorsEl) errorsEl.style.visibility = 'visible';
             e.preventDefault();
@@ -789,12 +858,12 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e) => {
 
     derivatives.elements = [];
     const setSelectedEl = qs<HTMLInputElement>('input[name="setSelected"]');
-    if (setSelectedEl?.checked) {
+    if (setSelectedEl?.checked === true) {
         derivatives.elements = all_elements;
     } else {
         qsa<HTMLInputElement>('.thumbnails input[type=checkbox]').forEach((cb) => {
             if (cb.checked) {
-                (derivatives.elements as string[]).push(cb.value);
+                derivatives.elements.push(cb.value);
             }
         });
     }
@@ -830,10 +899,10 @@ qs<HTMLSelectElement>('select[name=filter_prefilter]')?.addEventListener(
     }
 );
 
-(window as any).selectGenerateDerivAll = selectGenerateDerivAll;
-(window as any).selectGenerateDerivNone = selectGenerateDerivNone;
-(window as any).selectDelDerivAll = selectDelDerivAll;
-(window as any).selectDelDerivNone = selectDelDerivNone;
-(window as any).getDerivativeUrls = getDerivativeUrls;
+winRef.selectGenerateDerivAll = selectGenerateDerivAll;
+winRef.selectGenerateDerivNone = selectGenerateDerivNone;
+winRef.selectDelDerivAll = selectDelDerivAll;
+winRef.selectDelDerivNone = selectDelDerivNone;
+winRef.getDerivativeUrls = getDerivativeUrls;
 
 export {};

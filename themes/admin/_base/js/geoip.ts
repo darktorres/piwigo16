@@ -21,7 +21,7 @@ const GeoIp = {
             if (cached !== null && cached !== '') {
                 const cacheObj = JSON.parse(cached) as Record<string, GeoIpData>;
                 for (const key in cacheObj) {
-                    if (new Date().getTime() - cacheObj[key].reqTime > 96 * 3600000) {
+                    if (new Date().getTime() - cacheObj[key]!.reqTime > 96 * 3600000) {
                         delete cacheObj[key];
                     }
                 }
@@ -33,9 +33,9 @@ const GeoIp = {
         }
 
         if (Object.prototype.hasOwnProperty.call(GeoIp.cache, ip)) {
-            callback(GeoIp.cache[ip]);
+            callback(GeoIp.cache[ip]!);
         } else if (ip in GeoIp.pending) {
-            GeoIp.pending[ip].push(callback);
+            GeoIp.pending[ip]!.push(callback);
         } else {
             GeoIp.pending[ip] = [callback];
             const controller = new AbortController();
@@ -60,7 +60,7 @@ const GeoIp = {
                             res.push(data.country_name);
                         data.fullName = res.join(', ');
                         GeoIp.cache[ip] = data;
-                        const callbacks = GeoIp.pending[ip];
+                        const callbacks = GeoIp.pending[ip]!;
                         delete GeoIp.pending[ip];
                         callbacks.forEach((cb) => cb(data));
                     }
@@ -69,7 +69,7 @@ const GeoIp = {
                     clearTimeout(timeout);
                     const data: GeoIpData = { ip, reqTime: new Date().getTime() };
                     GeoIp.cache[ip] = data;
-                    const callbacks = GeoIp.pending[ip];
+                    const callbacks = GeoIp.pending[ip]!;
                     delete GeoIp.pending[ip];
                     callbacks.forEach((cb) => cb(data));
                 });

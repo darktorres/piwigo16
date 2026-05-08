@@ -2,7 +2,7 @@
 // Modern browsers skip the filter block entirely.
 function correctPNG(): void {
     for (let i = 0; i < document.images.length; i++) {
-        const img = document.images[i];
+        const img = document.images[i]!;
         const imgName = img.src.toUpperCase();
         if (imgName.substring(imgName.length - 3) === 'PNG') {
             const imgID = img.id ? "id='" + img.id + "' " : '';

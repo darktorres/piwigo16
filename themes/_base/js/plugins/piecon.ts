@@ -52,8 +52,8 @@ const Piecon: PieconInstance = (() => {
     const getFaviconTag = (): HTMLLinkElement | false => {
         const links = document.getElementsByTagName('link');
         for (let i = 0, l = links.length; i < l; i++) {
-            const rel = links[i].getAttribute('rel');
-            if (rel === 'icon' || rel === 'shortcut icon') return links[i];
+            const rel = links[i]!.getAttribute('rel');
+            if (rel === 'icon' || rel === 'shortcut icon') return links[i]!;
         }
         return false;
     };
@@ -63,10 +63,10 @@ const Piecon: PieconInstance = (() => {
             document.getElementsByTagName('link'),
             0
         ) as HTMLLinkElement[];
-        const head = document.getElementsByTagName('head')[0];
+        const head = document.getElementsByTagName('head')[0]!;
         for (let i = 0, l = links.length; i < l; i++) {
-            const rel = links[i].getAttribute('rel');
-            if (rel === 'icon' || rel === 'shortcut icon') head.removeChild(links[i]);
+            const rel = links[i]!.getAttribute('rel');
+            if (rel === 'icon' || rel === 'shortcut icon') head.removeChild(links[i]!);
         }
     };
 
@@ -76,7 +76,7 @@ const Piecon: PieconInstance = (() => {
         link.type = 'image/x-icon';
         link.rel = 'icon';
         link.href = url;
-        document.getElementsByTagName('head')[0].appendChild(link);
+        document.getElementsByTagName('head')[0]!.appendChild(link);
     };
 
     const getCanvas = (): HTMLCanvasElement => {

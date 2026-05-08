@@ -130,7 +130,7 @@ function updateCertificationFilterLabel(value: number) {
     const certifNode = qs<HTMLElement>('.advanced-filter-certification .certification');
     if (!certifNode) return;
     certifNode.setAttribute('data-certification', String(value));
-    certifNode.title = strs_certification[String(value)];
+    certifNode.title = strs_certification[String(value)] ?? '';
     tippy(certifNode, { delay: [0, 0], duration: [200, 200] });
 }
 

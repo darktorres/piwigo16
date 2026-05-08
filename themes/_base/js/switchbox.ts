@@ -34,7 +34,7 @@ const existing = (window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).
 if (Array.isArray(existing)) {
     const arr: string[] = existing;
     for (let i = 0; i < arr.length; i += 2) {
-        sbFunc(arr[i], arr[i + 1]);
+        sbFunc(arr[i]!, arr[i + 1]!);
     }
 }
 

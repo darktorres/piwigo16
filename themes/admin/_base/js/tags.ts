@@ -358,8 +358,9 @@ function setupTagbox(tagBox: HTMLElement) {
         const id =
             (e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box')?.dataset['id'] ?? '';
         const tagIndex = dataTags.findIndex((tag) => String(tag.id) === id);
-        const tagRawName = dataTags[tagIndex].raw_name ?? q('.tag-name')?.dataset['rawname'] ?? '';
-        const tagName = dataTags[tagIndex].name;
+        if (tagIndex === -1) return;
+        const tagRawName = dataTags[tagIndex]!.raw_name ?? q('.tag-name')?.dataset['rawname'] ?? '';
+        const tagName = dataTags[tagIndex]!.name;
         set_up_popin(tagBox.dataset['id'] ?? '', tagRawName, tagName);
         rename_tag_open();
     });
@@ -448,9 +449,10 @@ function renameTag(id: TagId, new_name: string): Promise<Tag | void> {
                 const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view');
                 if (viewEl) viewEl.href = 'index.php?/tags/' + String(id) + '-' + result.url_name;
                 const idx = dataTags.findIndex((tag) => tag.id === id);
-                dataTags[idx].name = result.name;
-                dataTags[idx].raw_name = result.raw_name;
-                dataTags[idx].url_name = result.url_name;
+                if (idx === -1) return result;
+                dataTags[idx]!.name = result.name;
+                dataTags[idx]!.raw_name = result.raw_name;
+                dataTags[idx]!.url_name = result.url_name;
                 return result;
             } else {
                 throw new Error(str_already_exist.replace('%s', new_name));
@@ -581,7 +583,7 @@ function removeSelectedItem(id: TagId) {
                 ) {
                     isNotCreate = false;
                     const indexOfTag = dataTags.findIndex((tag) => tag.id === selected[i]);
-                    createSelectionItem(selected[i], dataTags[indexOfTag].name);
+                    createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
                 }
                 i++;
             }
@@ -832,7 +834,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
                             );
                     }
                     const idx = dataTags.findIndex((t) => t.id === result.destination_tag);
-                    if (idx !== -1) dataTags[idx].counter = result.images_in_merged_tag.length;
+                    if (idx !== -1) dataTags[idx]!.counter = result.images_in_merged_tag.length;
                 }
                 qsa('.tag-box').forEach((el) => {
                     el.dataset['selected'] = '0';
@@ -997,9 +999,9 @@ async function updatePage(): Promise<void> {
 
     const boxToRecycle = Math.min(dataToDisplay.length, tagBoxEls.length);
     for (let i = 0; i < boxToRecycle; i++) {
-        const tag = dataToDisplay[i];
+        const tag = dataToDisplay[i]!;
         recycleTagBox(
-            tagBoxEls[i],
+            tagBoxEls[i]!,
             tag.id,
             tag.name,
             tag.url_name,
@@ -1008,10 +1010,10 @@ async function updatePage(): Promise<void> {
         );
     }
     if (dataToDisplay.length < tagBoxEls.length) {
-        for (let j = boxToRecycle; j < tagBoxEls.length; j++) tagBoxEls[j].remove();
+        for (let j = boxToRecycle; j < tagBoxEls.length; j++) tagBoxEls[j]!.remove();
     } else if (dataToDisplay.length > tagBoxEls.length) {
         for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-            const tag = dataToDisplay[j];
+            const tag = dataToDisplay[j]!;
             const newTag = createTagBox(
                 tag.id,
                 tag.name,

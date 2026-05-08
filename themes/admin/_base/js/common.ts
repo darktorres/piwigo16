@@ -71,12 +71,13 @@ function sprintf(format: string, ...args: unknown[]): string {
         } else if (
             (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))
         ) {
-            const argRaw: unknown = args[m[1] ? parseInt(m[1]) - 1 : i++];
+            const m1 = m[1], m2 = m[2] ?? '', m3 = m[3] ?? '', m4 = m[4] ?? '', m5 = m[5] ?? '', m6 = m[6] ?? '', m7 = m[7]!;
+            const argRaw: unknown = args[m1 ? parseInt(m1) - 1 : i++];
             if (argRaw === null || argRaw === undefined) throw new Error('Too few arguments.');
-            if (/[^s]/.test(m[7]) && typeof argRaw !== 'number')
+            if (/[^s]/.test(m7) && typeof argRaw !== 'number')
                 throw new Error('Expecting number but found ' + typeof argRaw);
             let a: string | number = argRaw as string | number;
-            switch (m[7]) {
+            switch (m7) {
                 case 'b':
                     a = Number(a).toString(2);
                     break;
@@ -88,21 +89,21 @@ function sprintf(format: string, ...args: unknown[]): string {
                     break;
                 case 'e':
                     a =
-                        m[6] !== ''
-                            ? Number(a).toExponential(parseInt(m[6]))
+                        m6 !== ''
+                            ? Number(a).toExponential(parseInt(m6))
                             : Number(a).toExponential();
                     break;
                 case 'f':
                     a =
-                        m[6] !== ''
-                            ? parseFloat(String(a)).toFixed(parseInt(m[6]))
+                        m6 !== ''
+                            ? parseFloat(String(a)).toFixed(parseInt(m6))
                             : parseFloat(String(a));
                     break;
                 case 'o':
                     a = Number(a).toString(8);
                     break;
                 case 's':
-                    a = m[6] !== '' ? String(a).substring(0, parseInt(m[6])) : String(a);
+                    a = m6 !== '' ? String(a).substring(0, parseInt(m6)) : String(a);
                     break;
                 case 'u':
                     a = Math.abs(Number(a));
@@ -114,11 +115,11 @@ function sprintf(format: string, ...args: unknown[]): string {
                     a = Number(a).toString(16).toUpperCase();
                     break;
             }
-            a = /[def]/.test(m[7]) && m[2] !== '' && Number(a) >= 0 ? '+' + String(a) : a;
-            const c = m[3] !== '' ? (m[3] === '0' ? '0' : m[3].charAt(1)) : ' ';
-            const x = (m[5] !== '' ? parseInt(m[5]) : 0) - String(a).length - s.length;
-            const p = m[5] !== '' ? str_repeat(c, x) : '';
-            o.push(s + (m[4] !== '' ? String(a) + p : p + String(a)));
+            a = /[def]/.test(m7) && m2 !== '' && Number(a) >= 0 ? '+' + String(a) : a;
+            const c = m3 !== '' ? (m3 === '0' ? '0' : m3.charAt(1)) : ' ';
+            const x = (m5 !== '' ? parseInt(m5) : 0) - String(a).length - s.length;
+            const p = m5 !== '' ? str_repeat(c, x) : '';
+            o.push(s + (m4 !== '' ? String(a) + p : p + String(a)));
         } else {
             throw new Error('Huh ?!');
         }

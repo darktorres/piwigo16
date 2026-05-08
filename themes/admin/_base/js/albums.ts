@@ -555,7 +555,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
     contEl
         .querySelectorAll<HTMLElement>('span.icon-folder-open, span.icon-sitemap')
         .forEach((el) => {
-            el.classList.add(colors[Number(node.id) % 5], 'node-icon');
+            el.classList.add(colors[Number(node.id) % 5]!, 'node-icon');
         });
 
     contEl
@@ -696,6 +696,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
         .then((raw) => {
             if (raw.result === undefined) return;
             const orphanData = raw.result[0];
+            if (orphanData === undefined) return;
             if (orphanData.nb_images_recursive === 0) {
                 qsa<HTMLElement>('.deleteAlbumOptions').forEach((el) => {
                     el.style.display = 'none';

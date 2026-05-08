@@ -28,7 +28,7 @@ function displayResponse(
     }
     for (let index = 0; index < mDivs.length; index++) {
         const mDivName = (mDivs[index] as HTMLElement).getAttribute('name') ?? '';
-        (mDivs[index] as HTMLElement).title = unit_MB.replace('%s', mValues[mDivName]);
+        (mDivs[index] as HTMLElement).title = unit_MB.replace('%s', mValues[mDivName] ?? '');
     }
     document.querySelectorAll<HTMLElement>('.cache-lastCalculated-value').forEach((el) => {
         el.innerHTML = no_time_elapsed;
@@ -56,11 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             const n = Number(v);
                             return Number.isFinite(n) ? (n / 1024 / 1024).toFixed(2) : '?';
                         };
-                        const v1 = data.result.infos[1].value as Record<string, string>;
+                        const v1 = data.result.infos[1]!.value as Record<string, string>;
                         const domPairs: Array<[HTMLElement | null, string]> = [
                             [
                                 document.querySelector<HTMLElement>('.cache-size-value'),
-                                toMB(data.result.infos[0].value),
+                                toMB(data.result.infos[0]!.value),
                             ],
                             [
                                 document.querySelector<HTMLElement>('.multiple-pictures-sizes'),
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 document.querySelector<HTMLElement>(
                                     '.multiple-compiledTemplate-sizes'
                                 ),
-                                toMB(data.result.infos[2].value),
+                                toMB(data.result.infos[2]!.value),
                             ],
                         ];
                         const multipleSizes = document.querySelectorAll(

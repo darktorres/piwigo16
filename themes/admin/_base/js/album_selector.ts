@@ -753,7 +753,7 @@ class AlbumSelector {
             .then((r) => r.json() as Promise<WsResponse<{ categories: Category[] }>>)
             .then((data) => {
                 if (data.stat === 'ok' && data.result !== undefined)
-                    this.#select_new_album_and_close(data.result.categories[0]);
+                    this.#select_new_album_and_close(data.result.categories[0]!);
                 else this.#show_new_album_error(this.#str.str_an_error_has_occured);
             })
             .catch(() => this.#show_new_album_error(this.#str.str_an_error_has_occured));

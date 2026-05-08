@@ -36,7 +36,7 @@ export async function assertNoServerErrors(page: Page, context?: string): Promis
     // Include a short snippet around the first match so the failure is
     // diagnostic — chasing "Fatal error appeared" through 4MB of HTML is
     // not productive.
-    const firstHit = hits[0];
+    const firstHit = hits[0]!;
     const m = firstHit.pattern.exec(html);
     const snippet = m
         ? html

@@ -101,7 +101,7 @@ categoriesCache.selectize(document.querySelector('[data-selectize=categories]'),
             );
 
             if (filtered.length > 0) {
-                options.default = filtered[0].id;
+                options.default = filtered[0]!.id;
             }
 
             return filtered;

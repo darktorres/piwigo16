@@ -42,7 +42,7 @@ function line_constructor(line: ActivityLine): void {
         qs('.icon_user').classList.add('icon-robot-head');
     } else {
         const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
-        qs('.icon_user').classList.add(colors[line.user_id % 5]);
+        qs('.icon_user').classList.add(colors[line.user_id % 5]!);
         qs('.icon_user').innerHTML = initial_user;
     }
     qs('.text_username').textContent = line.username;
@@ -92,11 +92,11 @@ function line_constructor(line: ActivityLine): void {
         case 'from_to': {
             const items = line.detail as unknown as Array<{ icon: string; text: string }>;
             const from = cloneDetail();
-            from.querySelector<HTMLElement>('.icon_details')?.classList.add(items[0].icon);
+            from.querySelector<HTMLElement>('.icon_details')?.classList.add(items[0]!.icon);
             const fromTxt = from.querySelector<HTMLElement>('.text_details');
             if (fromTxt) {
-                fromTxt.textContent = items[0].text;
-                fromTxt.setAttribute('title', items[0].text);
+                fromTxt.textContent = items[0]!.text;
+                fromTxt.setAttribute('title', items[0]!.text);
             }
             tabDetails.append(from);
             const arrow = document.createElement('span');
@@ -104,11 +104,11 @@ function line_constructor(line: ActivityLine): void {
             arrow.textContent = '  ';
             tabDetails.append(arrow);
             const to = cloneDetail();
-            to.querySelector<HTMLElement>('.icon_details')?.classList.add(items[1].icon);
+            to.querySelector<HTMLElement>('.icon_details')?.classList.add(items[1]!.icon);
             const toTxt = to.querySelector<HTMLElement>('.text_details');
             if (toTxt) {
-                toTxt.textContent = items[1].text;
-                toTxt.setAttribute('title', items[1].text);
+                toTxt.textContent = items[1]!.text;
+                toTxt.setAttribute('title', items[1]!.text);
             }
             tabDetails.append(to);
             break;

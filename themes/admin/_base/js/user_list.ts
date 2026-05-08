@@ -350,7 +350,7 @@ const nb_image_page_init = 0;
 
 function getSliderKeyFromValue(value: number, values: number[]): number {
     for (let key = 0; key < values.length; key++) {
-        if (values[key] >= value) return key;
+        if (values[key]! >= value) return key;
     }
     return 0;
 }
@@ -488,7 +488,7 @@ function advanced_filter_hide() {
 
 function getDateStr(date: string): string {
     const parts = date.split('-');
-    return months[parseInt(parts[1]) - 1] + ' ' + parts[0];
+    return months[parseInt(parts[1]!) - 1]! + ' ' + parts[0]!;
 }
 
 function setupRegisterDates(register_dates: string[]) {
@@ -507,8 +507,8 @@ function setupRegisterDates(register_dates: string[]) {
         if (infoEl)
             infoEl.innerHTML = sprintf(
                 dates_infos,
-                getDateStr(register_dates[min]),
-                getDateStr(register_dates[max])
+                getDateStr(register_dates[min]!),
+                getDateStr(register_dates[max]!)
             );
     };
     slider.on('update', updateDates);
@@ -520,8 +520,8 @@ function setupRegisterDates(register_dates: string[]) {
     if (infoEl)
         infoEl.innerHTML = sprintf(
             dates_infos,
-            getDateStr(register_dates[0]),
-            getDateStr(register_dates[register_dates.length - 1])
+            getDateStr(register_dates[0]!),
+            getDateStr(register_dates[register_dates.length - 1]!)
         );
 }
 
@@ -639,8 +639,8 @@ function generate_user_selected_items() {
     let created = 0;
     const others = selection.length - 5;
     for (let i = 0; i < selection.length && created < 5; i++) {
-        if (typeof selection[i].username !== 'undefined') {
-            qs('.user-selected-list')?.appendChild(create_user_selected_item(selection[i]));
+        if (typeof selection[i]!.username !== 'undefined') {
+            qs('.user-selected-list')?.appendChild(create_user_selected_item(selection[i]!));
             created++;
         }
     }
@@ -656,7 +656,7 @@ function generate_user_selected_items() {
 function fill_user_selected_list() {
     let withUsername = 0;
     for (let i = 0; i < selection.length && withUsername < 5; i++) {
-        if (typeof selection[i].username !== 'undefined') withUsername++;
+        if (typeof selection[i]!.username !== 'undefined') withUsername++;
     }
     if (withUsername < 5 && withUsername !== selection.length)
         get_first_selection_usernames(generate_user_selected_items);
@@ -822,7 +822,7 @@ function generate_random_string() {
 }
 function get_initials(username: string) {
     const words = username.toUpperCase().split(' ');
-    return words[0][0] + (words.length > 1 && words[1][0] !== '' ? words[1][0] : '');
+    return (words[0]?.[0] ?? '') + (words.length > 1 && (words[1]?.[0] ?? '') !== '' ? words[1]![0]! : '');
 }
 function get_status_index(status: string) {
     const i = status_arr.indexOf(status);
@@ -852,14 +852,14 @@ function fill_user_edit_summary(user_to_edit: PwgUser, popIn: HTMLElement, isGue
         if (span) {
             span.innerHTML = initFill;
             span.classList.remove(...color_icons);
-            span.classList.add(color_icons[user_to_edit.id % 5]);
+            span.classList.add(color_icons[user_to_edit.id % 5]!);
             span.classList.toggle('small', initFill.length > 1);
         }
     } else {
         const span = q('.user-property-initials span');
         if (span) {
             span.classList.remove(...color_icons);
-            span.classList.add(color_icons[user_to_edit.id % 5]);
+            span.classList.add(color_icons[user_to_edit.id % 5]!);
         }
     }
     const usernameSpan = q('.user-property-username span:first-child');
@@ -1282,7 +1282,7 @@ function get_first_selection_usernames(callback: () => void) {
         .then((d) => {
             d.result.users.forEach((u) => {
                 const idx = selection.findIndex((x) => x.id === u.id);
-                if (idx !== -1) selection[idx].username = u.username;
+                if (idx !== -1) selection[idx]!.username = u.username;
             });
             callback();
         });
@@ -1332,14 +1332,14 @@ function update_user_username() {
         username,
     }).then((d) => {
         if (d.stat === 'ok' && last_user_index !== -1 && d.result !== undefined) {
-            current_users[last_user_index].username = d.result.users[0].username;
+            current_users[last_user_index]!.username = d.result.users[0]!.username;
             qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML =
-                current_users[last_user_index].username;
+                current_users[last_user_index]!.username;
             qs<HTMLElement>('#UserList .user-property-initials span')!.innerHTML = get_initials(
-                current_users[last_user_index].username
+                current_users[last_user_index]!.username
             );
             fill_container_user_info(
-                qsa('#user-table-content .user-container')[last_user_index],
+                qsa('#user-table-content .user-container')[last_user_index]!,
                 last_user_index
             );
             hide(qs('.user-property-username-change-input'));
@@ -1386,11 +1386,11 @@ function update_user_info() {
     );
     void pwgPost<{ users: PwgUser[] }>('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok' && d.result !== undefined) {
-            const result = d.result.users[0];
+            const result = d.result.users[0]!;
             if (last_user_index !== -1) {
-                current_users[last_user_index] = { ...current_users[last_user_index], ...result };
+                current_users[last_user_index] = { ...current_users[last_user_index]!, ...result };
                 fill_container_user_info(
-                    qsa('#user-table-content .user-container')[last_user_index],
+                    qsa('#user-table-content .user-container')[last_user_index]!,
                     last_user_index
                 );
             }
@@ -1425,7 +1425,7 @@ function get_guest_info() {
         user_id: guest_id,
     }).then((d) => {
         if (d.stat === 'ok' && d.result !== undefined) {
-            guest_user = d.result.users[0];
+            guest_user = d.result.users[0]!;
             fill_guest_edit();
         }
     });
@@ -1435,7 +1435,7 @@ function get_user_info(uid: number, callback: (() => void) | null = null) {
     void pwgPost<{ users: PwgUser[] }>('pwg.users.getList', { display: 'all', user_id: uid }).then(
         (d) => {
             if (d.stat === 'ok' && d.result !== undefined) {
-                fill_user_edit(d.result.users[0]);
+                fill_user_edit(d.result.users[0]!);
                 if (callback !== null) callback();
             }
         }
@@ -1517,9 +1517,9 @@ function update_user_list() {
                     const key = parseInt(
                         el.closest<HTMLElement>('.user-container')?.getAttribute('key') ?? '0'
                     );
-                    last_user_id = current_users[key].id;
+                    last_user_id = current_users[key]!.id;
                     last_user_index = key;
-                    fill_user_edit(current_users[key]);
+                    fill_user_edit(current_users[key]!);
                     show(document.getElementById('UserList'));
                     document
                         .getElementById('tab_properties')
@@ -1604,8 +1604,8 @@ function add_user() {
 
     void pwgPost<{ users: PwgUser[] }>('pwg.users.add', params).then((d) => {
         if (d.stat === 'ok' && d.result !== undefined) {
-            const new_user_id = d.result.users[0].id;
-            const default_group = d.result.users[0].groups ?? [];
+            const new_user_id = d.result.users[0]!.id;
+            const default_group = d.result.users[0]!.groups ?? [];
             add_infos_to_new_user(new_user_id, {
                 username,
                 email,
@@ -1639,7 +1639,7 @@ function add_infos_to_new_user(user_id: number, ajax_data: AddUserInfo) {
         pwg_token,
     }).then((d) => {
         if (d.stat === 'ok' && d.result !== undefined) {
-            const new_user_id = d.result.users[0].id;
+            const new_user_id = d.result.users[0]!.id;
             update_user_list();
             qs('#AddUserUpdated')?.classList.replace('icon-red', 'icon-green');
             qs('#AddUserUpdated')?.classList.replace('icon-cancel', 'icon-ok');
@@ -1660,7 +1660,7 @@ function add_infos_to_new_user(user_id: number, ajax_data: AddUserInfo) {
                     last_user_id = new_user_id;
                     last_user_index = get_container_index_from_uid(new_user_id);
                     if (last_user_index !== -1) {
-                        fill_user_edit(current_users[last_user_index]);
+                        fill_user_edit(current_users[last_user_index]!);
                         open_user_list();
                     } else get_user_info(new_user_id, open_user_list);
                 });
@@ -1956,7 +1956,8 @@ function setDisplayCompact() {
 function user_container_click(this: HTMLElement) {
     if (!isSelectionMode()) return;
     const key = parseInt(this.getAttribute('key') ?? '0');
-    const currUser = current_users[key] ?? { id: -1 };
+    const currUser = current_users[key];
+    if (currUser === undefined) return;
     const cb = this.querySelector<HTMLElement>('.user-list-checkbox');
     if (!cb) return;
     if (cb.dataset['selected'] === '1') {
@@ -1985,16 +1986,16 @@ function generate_groups(container: HTMLElement, groups: Array<number | string>)
     if (groups.length >= 1) {
         const pg = cloneByClass('.group-primary');
         if (pg !== null) {
-            pg.innerHTML = get_group_name_from_id(Number(groups[0]));
-            pg.classList.add(color_icons[Number(groups[0]) % 5]);
+            pg.innerHTML = get_group_name_from_id(Number(groups[0]!));
+            pg.classList.add(color_icons[Number(groups[0]!) % 5]!);
             groupsContainer.appendChild(pg);
         }
     }
     if (groups.length >= 2) {
         const pg2 = cloneByClass('.group-primary');
         if (pg2 !== null) {
-            pg2.innerHTML = get_group_name_from_id(Number(groups[1]));
-            pg2.classList.add(color_icons[Number(groups[1]) % 5]);
+            pg2.innerHTML = get_group_name_from_id(Number(groups[1]!));
+            pg2.classList.add(color_icons[Number(groups[1]!) % 5]!);
             groupsContainer.appendChild(pg2);
         }
     }
@@ -2002,7 +2003,7 @@ function generate_groups(container: HTMLElement, groups: Array<number | string>)
         const bonus = cloneByClass('.group-bonus');
         if (bonus !== null) {
             bonus.innerHTML = '...';
-            bonus.classList.add(color_icons[Number(groups[2]) % 5], 'tiptip');
+            bonus.classList.add(color_icons[Number(groups[2]!) % 5]!, 'tiptip');
             const title = groups
                 .slice(2)
                 .map((id) => get_group_name_from_id(Number(id)))
@@ -2034,11 +2035,11 @@ function fill_container_user_info(container: HTMLElement, user_index: number) {
     if (initSpan) {
         initSpan.innerHTML = initFill;
         initSpan.classList.remove(...color_icons);
-        initSpan.classList.add(color_icons[user.id % 5]);
+        initSpan.classList.add(color_icons[user.id % 5]!);
         initSpan.classList.toggle('small', initFill.length > 1);
     }
     const statusSpan = container.querySelector<HTMLElement>('.user-container-status span');
-    if (statusSpan) statusSpan.innerHTML = status_to_str[user.status];
+    if (statusSpan) statusSpan.innerHTML = status_to_str[user.status] ?? '';
     const emailSpan = container.querySelector<HTMLElement>('.user-container-email span');
     if (emailSpan) emailSpan.innerHTML = user.email ?? '';
     generate_groups(container, user.groups ?? []);

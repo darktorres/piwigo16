@@ -43,7 +43,7 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
         onChange: linked
             ? [
                   (_selectedDates, dateStr) => {
-                      targetEl.value = dateStr !== '' ? dateStr.split(' ')[0] : '';
+                      targetEl.value = dateStr !== '' ? (dateStr.split(' ')[0] ?? '') : '';
                   },
               ]
             : [],
@@ -93,7 +93,7 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     // the ISO string with the human-readable display format
     if (linked && originalValue !== '') {
         const parts = originalValue.split(' ');
-        if (parts[0].length === 10) {
+        if ((parts[0]?.length ?? 0) === 10) {
             const isoFormat = 'Y-m-d' + (wantsTime ? ' H:i' : '');
             fp.setDate(originalValue, false, isoFormat);
         }

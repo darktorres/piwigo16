@@ -165,7 +165,7 @@ function add_related_category({
                 `<option selected value="${String(album.id)}"></option>`
             );
         newSelectedAlbum();
-        parent_album = getSelectedAlbum()[0];
+        parent_album = getSelectedAlbum()[0] ?? 0;
     }
 }
 
@@ -220,7 +220,7 @@ async function showDeleteAlbumDialog(): Promise<string | null> {
             category_id: album_id,
         });
         if (r.result === undefined) return null;
-        orphanData = r.result[0];
+        orphanData = r.result[0]!;
     } catch (e: unknown) {
         console.error(e);
         return null;

@@ -34,14 +34,14 @@ function makeNiceRatingForm(options: RatingOptions): void {
     gRatingButtons = form.getElementsByTagName('input');
     gUserRating = '';
     for (let i = 0; i < gRatingButtons.length; i++) {
-        if (gRatingButtons[i].type === 'button') {
-            gUserRating = gRatingButtons[i].value;
+        if (gRatingButtons[i]!.type === 'button') {
+            gUserRating = gRatingButtons[i]!.value;
             break;
         }
     }
 
     for (let i = 0; i < gRatingButtons.length; i++) {
-        const rateButton = gRatingButtons[i] as RateButtonExt;
+        const rateButton = gRatingButtons[i]! as RateButtonExt;
         rateButton.initialRateValue = rateButton.value;
         try {
             rateButton.type = 'button';
@@ -75,8 +75,8 @@ function makeNiceRatingForm(options: RatingOptions): void {
 
 function updateRatingStarDisplay(userRating: string): void {
     for (let i = 0; i < gRatingButtons.length; i++) {
-        const btn = gRatingButtons[i] as RateButtonExt;
-        gRatingButtons[i].className =
+        const btn = gRatingButtons[i]! as RateButtonExt;
+        gRatingButtons[i]!.className =
             userRating !== '' && userRating >= (btn.initialRateValue ?? '')
                 ? 'rateButtonStarFull'
                 : 'rateButtonStarEmpty';
@@ -87,7 +87,7 @@ function updateRating(e: Event): void {
     const rateButton = (e as MouseEvent).target as RateButtonExt;
     if (rateButton.initialRateValue === gUserRating) return;
 
-    for (let i = 0; i < gRatingButtons.length; i++) gRatingButtons[i].disabled = true;
+    for (let i = 0; i < gRatingButtons.length; i++) gRatingButtons[i]!.disabled = true;
     const y = new window.PwgWS(gRatingOptions.rootUrl);
     y.callService(
         'pwg.images.rate',
@@ -104,7 +104,7 @@ function updateRating(e: Event): void {
             onSuccess: (result: unknown) => {
                 const res = result as RateResult;
                 gUserRating = rateButton.initialRateValue ?? '';
-                for (let i = 0; i < gRatingButtons.length; i++) gRatingButtons[i].disabled = false;
+                for (let i = 0; i < gRatingButtons.length; i++) gRatingButtons[i]!.disabled = false;
                 gRatingOptions.onSuccess?.(result);
                 if (gRatingOptions.updateRateElement !== undefined)
                     gRatingOptions.updateRateElement.innerHTML =
@@ -155,7 +155,7 @@ if (
     _pwgRatingAutoQueue.length
 ) {
     for (let i = 0; i < (_pwgRatingAutoQueue as RatingOptions[]).length; i++) {
-        makeNiceRatingForm((_pwgRatingAutoQueue as RatingOptions[])[i]);
+        makeNiceRatingForm((_pwgRatingAutoQueue as RatingOptions[])[i]!);
     }
 }
 _pwgRatingAutoQueue = {

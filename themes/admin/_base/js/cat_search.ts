@@ -125,7 +125,7 @@ function addAlbumResult(
     newCatNode
         .querySelector('.search-album-icon')
         ?.classList.add(haveChildren ? 'icon-sitemap' : 'icon-folder-open');
-    newCatNode.querySelector('.search-album-icon')?.classList.add(colors[id % 5]);
+    newCatNode.querySelector('.search-album-icon')?.classList.add(colors[id % 5]!);
     const nameEl = newCatNode.querySelector<HTMLElement>('.search-album-name');
     if (nameEl) nameEl.innerHTML = name.slice(0, -2);
     newCatNode

@@ -92,7 +92,7 @@ categoriesCache.selectize(document.querySelector('[data-selectize=categories]'),
             );
 
             if (filtered.length > 0) {
-                options.default = filtered[0].id;
+                options.default = filtered[0]!.id;
             }
 
             return filtered;
@@ -168,9 +168,9 @@ function enableShiftClick(container: HTMLElement) {
                     [first, last] = [last, first];
                 }
                 for (let idx = first; idx <= last; idx++) {
-                    inputs[idx].checked = lastClickedStatus;
-                    inputs[idx].dispatchEvent(new Event('change'));
-                    inputs[idx].closest('li')?.classList.toggle('thumbSelected', lastClickedStatus);
+                    inputs[idx]!.checked = lastClickedStatus;
+                    inputs[idx]!.dispatchEvent(new Event('change'));
+                    inputs[idx]!.closest('li')?.classList.toggle('thumbSelected', lastClickedStatus);
                 }
             } else {
                 lastClicked = pos;
@@ -457,7 +457,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
         progress_bar_start();
 
         for (let idx = 0; idx < elements.length; idx++) {
-            image_ids.push(elements[idx]);
+            image_ids.push(elements[idx]!);
             if (idx % syncBlockSize !== syncBlockSize - 1 && idx !== elements.length - 1) continue;
             const ids = [...image_ids];
             const thisBatchSize = ids.length;
@@ -516,7 +516,7 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
     progress_bar_start();
 
     for (let idx = 0; idx < elements.length; idx++) {
-        image_ids.push(elements[idx]);
+        image_ids.push(elements[idx]!);
         if (idx % deleteBlockSize !== deleteBlockSize - 1 && idx !== elements.length - 1) continue;
         const ids = [...image_ids];
         const thisBatchSize = ids.length;

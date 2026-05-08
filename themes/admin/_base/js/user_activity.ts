@@ -262,7 +262,7 @@ function get_user_activity(
                 emptyLine();
             }
 
-            _current_page_offset = page_offsets[page - 1];
+            _current_page_offset = page_offsets[page - 1] ?? 0;
             end_page = data.result.end_page;
             if (!page_offsets.includes(data.result.page_offset))
                 page_offsets.push(data.result.page_offset);
@@ -304,7 +304,7 @@ function lineConstructor(line: ActivityLine) {
     const c = String(line.counter);
     const addActionBase = (typeClass: string, icon: string, nameHtml: string) => {
         qs('.action-type')?.classList.add(typeClass);
-        qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+        qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
         qs('.action-icon')?.classList.add(icon);
         set('.action-name', nameHtml);
     };
@@ -496,7 +496,7 @@ function lineConstructor(line: ActivityLine) {
             break;
         case 'login':
             qs('.action-type')?.classList.add('icon-purple');
-            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
             qs('.action-icon')?.classList.add('icon-key');
             qs('.action-section')?.classList.add('icon-user-1');
             set('.action-name', actionType_login);
@@ -508,7 +508,7 @@ function lineConstructor(line: ActivityLine) {
             qs('.action-type')?.classList.add('icon-purple');
             const altId = line.object_id?.[0] ?? line.user_id;
             qs('.user-pic')?.classList.add(
-                color_icons[(line.user_id === 2 ? altId : line.user_id) % 5]
+                color_icons[(line.user_id === 2 ? altId : line.user_id) % 5]!
             );
             qs('.action-icon')?.classList.add('icon-logout');
             qs('.action-section')?.classList.add('icon-user-1');
@@ -520,7 +520,7 @@ function lineConstructor(line: ActivityLine) {
         }
         default:
             qs('.action-type')?.classList.add('icon-purple');
-            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
+            qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]!);
             qs('.action-section')?.classList.add('icon-user-1');
             set('.action-name', line.action);
             final_albumInfos = 'x' + c;
@@ -590,8 +590,8 @@ function emptyLine() {
 
 function get_initials(username: string): string {
     const words = username.toUpperCase().split(' ');
-    let res = words[0][0];
-    if (words.length > 1 && words[1][0] !== '') res += words[1][0];
+    let res = words[0]?.[0] ?? '';
+    if (words.length > 1 && (words[1]?.[0] ?? '') !== '') res += words[1]![0]!;
     return res;
 }
 
@@ -715,8 +715,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         additional_filt_value
                     );
                 } else {
-                    const obj = value.split('/')[0];
-                    action = value.split('/')[1];
+                    const obj = value.split('/')[0] ?? '';
+                    action = value.split('/')[1] ?? null;
                     get_user_activity(
                         1,
                         uid_filter,

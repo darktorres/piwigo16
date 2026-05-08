@@ -676,7 +676,7 @@ function lineConstructor(line: HistoryLine, id: number, _imageDisplay: string) {
             ?.classList.remove('icon-file-image');
         find('.toggle-img-option').style.display = 'none';
         const sIdx = sections.indexOf(line.SECTION);
-        if (sIdx !== -1) find('.type-icon i').classList.add(...icons[sIdx].split(' '));
+        if (sIdx !== -1) find('.type-icon i').classList.add(...icons[sIdx]!.split(' '));
         else console.warn('Unhandled section : ' + line.SECTION);
     }
 

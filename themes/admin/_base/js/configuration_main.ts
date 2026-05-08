@@ -17,7 +17,7 @@ const toggleTargets: Record<string, string> = {
 };
 
 for (const selector in toggleTargets) {
-    const target = toggleTargets[selector];
+    const target = toggleTargets[selector]!;
     const targetEl = document.querySelector<HTMLElement>(target);
     const selectorEl = document.querySelector<HTMLInputElement>(selector);
     if (targetEl && selectorEl) {

@@ -33,7 +33,7 @@ export function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOpt
     const sliderEl = container.querySelector<HTMLElement>('.slider-slider')!;
     const slider = noUiSlider.create(sliderEl, {
         range: { min: 0, max: options.values.length - 1 },
-        start: [values[0], values[1]],
+        start: [values[0]!, values[1]!],
         step: 1,
         connect: true,
     });

@@ -1014,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const str_between = str_between_rating.split('%d');
                 ratings_search_str +=
-                    str_between[0] + (ft - 1) + str_between[1] + ft + str_between[2];
+                    str_between[0]! + (ft - 1) + str_between[1]! + ft + str_between[2]!;
                 if (ratings.length - 1 !== i) {
                     ratings_search_str += ', ';
                 }

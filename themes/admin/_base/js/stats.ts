@@ -82,14 +82,15 @@ function piwigoToDayjsLocale(code: string): string {
         zh_CN: 'zh-cn',
         zh_TW: 'zh-tw',
     };
-    if (code in special) return special[code];
-    const lang = code.split('_')[0];
+    if (code in special) return special[code]!;
+    const lang = code.split('_')[0]!;
     return lang.toLowerCase();
 }
 
 async function loadDayjsLocale(code: string): Promise<void> {
     if (code === 'en') return;
     const loader = dayjsLocaleLoaders[code];
+    if (loader === undefined) return;
     await loader();
     dayjs.locale(code);
 }
@@ -142,7 +143,7 @@ const displayOptions = {
 };
 
 function getValues(d: Record<string, number>): Array<{ x: Date; y: number }> {
-    return Object.keys(d).map((key) => ({ x: new Date(key), y: d[key] }));
+    return Object.keys(d).map((key) => ({ x: new Date(key), y: d[key] ?? 0 }));
 }
 
 function getComparedYearDataset(): ChartDataset<'line'>[] {
@@ -156,9 +157,9 @@ function getComparedYearDataset(): ChartDataset<'line'>[] {
     });
     return Object.keys(valuesByYear).map((key, i) => ({
         label: key,
-        data: valuesByYear[Number(key)],
+        data: valuesByYear[Number(key)]!,
         tension: 0.2,
-        borderColor: colors[i % colors.length],
+        borderColor: colors[i % colors.length]!,
         backgroundColor: 'rgba(0,0,0,0)',
     }));
 }

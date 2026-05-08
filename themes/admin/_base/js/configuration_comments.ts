@@ -5,7 +5,7 @@ const targets: Record<string, string> = {
 };
 
 for (const selector in targets) {
-    const target = targets[selector];
+    const target = targets[selector]!;
 
     const targetEl = document.querySelector<HTMLElement>(target);
     const selectorEl = document.querySelector<HTMLInputElement>(selector);

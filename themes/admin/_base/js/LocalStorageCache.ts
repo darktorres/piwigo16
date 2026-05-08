@@ -132,7 +132,7 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
             const dataDefault = target.dataset['default'];
             if (dataDefault !== undefined) options.default = dataDefault;
             if (options.default !== undefined && String(options.default) === 'first')
-                options.default = filtered.length > 0 ? filtered[0].id : undefined;
+                options.default = filtered.length > 0 ? filtered[0]!.id : undefined;
 
             if (options.default !== undefined) {
                 if (ts.getValue() === '') ts.addItem(String(options.default), true);

@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.stat === 'ok' && data.result !== undefined) {
                         const inp = qs<HTMLInputElement>('.addGroupFormLabelAndInput input');
                         if (inp) inp.value = '';
-                        const newGroupEl = createGroup(data.result.groups[0]);
+                        const newGroupEl = createGroup(data.result.groups[0]!);
                         qs('#addGroupForm')?.after(newGroupEl);
                         setupGroupBox(newGroupEl);
                         updateBadge();
@@ -309,7 +309,7 @@ function createGroup(group: Group): HTMLElement {
     if (perms) perms.href = config.adminUrl + 'page=group_perm&group_id=' + String(group.id);
     hideAddGroupForm();
     const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
-    q('.icon-users-1')?.classList.add(colors[Number(group.id) % 5]);
+    q('.icon-users-1')?.classList.add(colors[Number(group.id) % 5]!);
     showMessage(q('.groupMessage'), str_group_created);
     return newgroup;
 }
@@ -446,7 +446,7 @@ function renameGroup(id: GroupId, newName: string) {
             .then((data) => {
                 ts.reverse();
                 if (data.stat === 'ok' && data.result !== undefined) {
-                    const updatedName = data.result.groups[0].name;
+                    const updatedName = data.result.groups[0]!.name;
                     showMessage(grpQ(id, '.groupMessage'), str_renaming_done);
                     const nameEl = grpQ(id, '#group_name');
                     if (nameEl) nameEl.innerHTML = updatedName;
@@ -565,7 +565,7 @@ function duplicateAction(id: GroupId) {
             ts.reverse();
             if (data.stat === 'ok' && data.result !== undefined) {
                 hide(grpQ(id, '#GroupOptions'));
-                const newGroup = data.result.groups[0];
+                const newGroup = data.result.groups[0]!;
                 const gb = createGroup(newGroup);
                 grp(id)?.after(gb);
                 setupGroupBox(gb);
@@ -649,7 +649,7 @@ function updateSelectionPanel(changedState = '') {
 
 function updateStatePanel(newState = 'Selection') {
     state = newState;
-    const els: Record<string, HTMLElement | null> = {
+    const els = {
         delete: document.getElementById('DeleteSelectionMode'),
         merge: document.getElementById('MergeSelectionMode'),
         mergeOpts: document.getElementById('MergeOptionsBlock'),
@@ -926,7 +926,7 @@ function openUserManager(grp_id: GroupId) {
                 let i = 0;
                 while (listContainer.offsetHeight <= maxOffsetUserCont && i < usersInGroup.length) {
                     listContainer.appendChild(
-                        getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id)
+                        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id)
                     );
                     i++;
                 }
@@ -1031,7 +1031,7 @@ qs('.AddUserBlock button')?.addEventListener('click', () => {
             });
 
             const listContainer = qs('.UsersInGroupList')!;
-            const idStr = Array.isArray(id) ? id[0] : id;
+            const idStr = Array.isArray(id) ? id[0]! : id;
             const userBlock = getUserDisplay(username, idStr, grp_id);
             listContainer.prepend(userBlock);
 
@@ -1082,7 +1082,7 @@ qs('.input-user-name')?.addEventListener('input', function (this: HTMLInputEleme
         let i = 0;
         while (listContainer.offsetHeight <= maxOffsetUserCont && i < usersInGroup.length) {
             listContainer.appendChild(
-                getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id)
+                getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id)
             );
             i++;
         }

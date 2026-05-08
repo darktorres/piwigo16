@@ -254,6 +254,7 @@ function initUppy() {
                     multiple: string[] = [];
                 files.forEach((f) => {
                     const search = images_search[f.id];
+                    if (search === undefined) return;
                     if (search.status === 'found') {
                         uppy.setFileMeta(f.id, { format_of: search.image_id });
                         formats.push([f.id, search.image_id]);
@@ -308,7 +309,7 @@ function initUppy() {
                 files.forEach((f) => {
                     uppy.setFileMeta(f.id, { format_of: originalImageId });
                     formats.push([f.id, originalImageId]);
-                    if (forms_exts.includes(exts[f.id])) formatsUpdated.push(f.id);
+                    if (forms_exts.includes(exts[f.id] ?? '')) formatsUpdated.push(f.id);
                 });
             }
         })();

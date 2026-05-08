@@ -136,16 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document
         .querySelectorAll<HTMLElement>('[data-slider=widths]')
-        .forEach((el) => pwgDoubleSlider(el, sliders.widths));
+        .forEach((el) => pwgDoubleSlider(el, sliders.widths!));
     document
         .querySelectorAll<HTMLElement>('[data-slider=heights]')
-        .forEach((el) => pwgDoubleSlider(el, sliders.heights));
+        .forEach((el) => pwgDoubleSlider(el, sliders.heights!));
     document
         .querySelectorAll<HTMLElement>('[data-slider=ratios]')
-        .forEach((el) => pwgDoubleSlider(el, sliders.ratios));
+        .forEach((el) => pwgDoubleSlider(el, sliders.ratios!));
     document
         .querySelectorAll<HTMLElement>('[data-slider=filesizes]')
-        .forEach((el) => pwgDoubleSlider(el, sliders.filesizes));
+        .forEach((el) => pwgDoubleSlider(el, sliders.filesizes!));
 
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();

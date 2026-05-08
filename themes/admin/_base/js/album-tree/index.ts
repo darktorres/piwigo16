@@ -86,12 +86,12 @@ class AlbumTreeImpl {
             getPreviousSibling: (): TreeNode | null => {
                 const siblings = node.parent ? node.parent.children : this.rootNodes;
                 const i = siblings.indexOf(node);
-                return i > 0 ? siblings[i - 1] : null;
+                return i > 0 ? (siblings[i - 1] ?? null) : null;
             },
             getNextSibling: (): TreeNode | null => {
                 const siblings = node.parent ? node.parent.children : this.rootNodes;
                 const i = siblings.indexOf(node);
-                return i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : null;
+                return i >= 0 && i < siblings.length - 1 ? (siblings[i + 1] ?? null) : null;
             },
         };
 

@@ -2,7 +2,7 @@
 {combine_css path="themes/_base/css/comment_list.css"}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"></div>
 {/if}
-<ul class="commentsList"{if isset($comment_derivative_params)} style="--comment-illu-w:{$comment_derivative_params->max_width()+5}px;--comment-desc-h:{$comment_derivative_params->max_height()+5}px"{/if}>
+<ul class="commentsList"{if isset($comment_derivative_params)} style="--comment-illu-w:{$comment_derivative_params->maxWidth()+5}px;--comment-desc-h:{$comment_derivative_params->maxHeight()+5}px"{/if}>
 {foreach from=$comments item=comment name=comment_loop}
 <li class="commentElement {if $smarty.foreach.comment_loop.index is odd}odd{else}even{/if}">
 	{if isset($comment.src_image)}
@@ -11,12 +11,12 @@
 	{else}
 	{assign var=derivative value=$pwg->derivative($derivative_params, $comment.src_image)}
 	{/if}
-	{if !$derivative->is_cached()}
+	{if !$derivative->isCached()}
   {combine_script id='thumbnails.loader' path='themes/_base/js/thumbnails.loader.js' load='footer'}
   {/if}
 	<div class="illustration">
 		<a href="{$comment.U_PICTURE}">
-		<img {if $derivative->is_cached()}src="{$derivative->get_url()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}"{/if} alt="{$comment.ALT}">
+		<img {if $derivative->isCached()}src="{$derivative->getUrl()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->getUrl()}"{/if} alt="{$comment.ALT}">
 		</a>
 	</div>
 	{/if}

@@ -26,9 +26,9 @@
 <div id="derivativeSwitchBox" class="switchBox" data-cookie-path="{$COOKIE_PATH|escape}">
   <div class="switchBoxTitle">{'Photo sizes'|@translate}</div>
   {foreach from=$current.unique_derivatives item=derivative key=derivative_type}
-  <span class="switchCheck{if $derivative->get_type() ne $current.selected_derivative->get_type()} u-invisible{/if}" id="derivativeChecked{$derivative->get_type()}">&#x2714; </span>
-  <a href="{$derivative->get_url()}" class="derivative-switch-item" data-type-save="{$derivative_type|escape}" data-type-map="{$derivative->get_type()|escape}">
-    {$derivative->get_type()|@translate}<span class="derivativeSizeDetails"> ({$derivative->get_size_hr()})</span>
+  <span class="switchCheck{if $derivative->getType() ne $current.selected_derivative->getType()} u-invisible{/if}" id="derivativeChecked{$derivative->getType()}">&#x2714; </span>
+  <a href="{$derivative->getUrl()}" class="derivative-switch-item" data-type-save="{$derivative_type|escape}" data-type-map="{$derivative->getType()|escape}">
+    {$derivative->getType()|@translate}<span class="derivativeSizeDetails"> ({$derivative->getSizeHr()})</span>
   </a><br>
   {/foreach}
   {if isset($U_ORIGINAL)}
@@ -110,7 +110,7 @@
 		{if isset($previous)}
 			<a class="navThumb" id="linkPrev" href="{$previous.U_IMG}" title="{'Previous'|@translate} : {$previous.TITLE_ESC}" rel="prev">
 				<span class="thumbHover prevThumbHover"></span>
-        <img class="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}svgImg{/if}" src="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}{$previous.path}{else}{$previous.derivatives.square->get_url()}{/if}" alt="{$previous.TITLE_ESC}">
+        <img class="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}svgImg{/if}" src="{if (isset($previous.path_ext) and $previous.path_ext == 'svg')}{$previous.path}{else}{$previous.derivatives.square->getUrl()}{/if}" alt="{$previous.TITLE_ESC}">
 			</a>
 		{elseif isset($U_UP)}
 			<a class="navThumb" id="linkPrev" href="{$U_UP}" title="{'Thumbnails'|@translate}">
@@ -120,7 +120,7 @@
 		{if isset($next)}
 			<a class="navThumb" id="linkNext" href="{$next.U_IMG}" title="{'Next'|@translate} : {$next.TITLE_ESC}" rel="next">
 				<span class="thumbHover nextThumbHover"></span>
-				<img class="{if (isset($next.path_ext) and $next.path_ext == 'svg')}svgImg{/if}" src="{if (isset($next.path_ext) and $next.path_ext == 'svg')}{$next.path}{else}{$next.derivatives.square->get_url()}{/if}" alt="{$next.TITLE_ESC}">
+				<img class="{if (isset($next.path_ext) and $next.path_ext == 'svg')}svgImg{/if}" src="{if (isset($next.path_ext) and $next.path_ext == 'svg')}{$next.path}{else}{$next.derivatives.square->getUrl()}{/if}" alt="{$next.TITLE_ESC}">
 			</a>
 		{elseif isset($U_UP)}
 			<a class="navThumb" id="linkNext"  href="{$U_UP}"  title="{'Thumbnails'|@translate}">

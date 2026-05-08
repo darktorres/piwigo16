@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Plugins\EventDispatcher;
 
@@ -36,7 +35,7 @@ class PwgImage
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($this->source_filepath));
+        $extension = strtolower(pathinfo($this->source_filepath, PATHINFO_EXTENSION));
 
         if (!in_array($extension, Config::pictureExtensions())) {
             die('[Image] unsupported file extension');
@@ -279,7 +278,7 @@ class PwgImage
 
         $rotation = 0;
 
-        $exif = ServiceLocator::get(StringUtil::class)->pwgSafeExifReadData($source_filepath);
+        $exif = StringUtil::get()->pwgSafeExifReadData($source_filepath);
 
         if (isset($exif['Orientation']) and is_scalar($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
             $orientation = $matches[1];

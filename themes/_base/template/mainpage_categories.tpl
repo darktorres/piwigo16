@@ -1,16 +1,16 @@
 {combine_css path="themes/_base/css/mainpage_categories.css"}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif"></div>
-<ul class="thumbnailCategories" style="--cat-illu-w:{$derivative_params->max_width()+5}px;--cat-desc-h:{$derivative_params->max_height()+5}px">
+<ul class="thumbnailCategories" style="--cat-illu-w:{$derivative_params->maxWidth()+5}px;--cat-desc-h:{$derivative_params->maxHeight()+5}px">
 {foreach from=$category_thumbnails item=cat name=cat_loop}
 {assign var=derivative value=$pwg->derivative($derivative_params, $cat.representative.src_image)}
-{if !$derivative->is_cached()}
+{if !$derivative->isCached()}
 {combine_script id='thumbnails.loader' path='themes/_base/js/thumbnails.loader.js' load='footer'}
 {/if}
   <li class="{if $smarty.foreach.cat_loop.index is odd}odd{else}even{/if}">
 		<div class="thumbnailCategory">
 			<div class="illustration">
 			<a href="{$cat.URL}">
-				<img {if $derivative->is_cached()}src="{$derivative->get_url()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->get_url()}"{/if} alt="{$cat.TN_ALT}" title="{$cat.NAME|@replace:'"':' '|@strip_tags:false} - {'display this album'|@translate}">
+				<img {if $derivative->isCached()}src="{$derivative->getUrl()}"{else}src="{$ROOT_URL}{$themeconf.icon_dir}/img_small.png" data-src="{$derivative->getUrl()}"{/if} alt="{$cat.TN_ALT}" title="{$cat.NAME|@replace:'"':' '|@strip_tags:false} - {'display this album'|@translate}">
 			</a>
 			</div>
 			<div class="description">

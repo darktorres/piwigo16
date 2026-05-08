@@ -1,4 +1,4 @@
-{if !$current.selected_derivative->is_cached()}
+{if !$current.selected_derivative->isCached()}
 {combine_script id='thumbnails.loader' path='themes/_base/js/thumbnails.loader.js' load='footer'}
 {/if}
 
@@ -7,7 +7,7 @@
         <embed src="{$ROOT_URL}{$current.path}" type="application/pdf"  />
     </div>
 {else}
-    <img class="file-ext-{if isset($current.file_ext)}{$current.file_ext}{/if} path-ext-{if isset($current.path_ext)}{$current.path_ext}{/if}" {if (isset($current.path_ext) and $current.path_ext == 'svg')} src="{$current.path}" {elseif $current.selected_derivative->is_cached()}src="{$current.selected_derivative->get_url()}"{$current.selected_derivative->get_size_htm()}{else}src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif" data-src="{$current.selected_derivative->get_url()}"{/if} alt="{$ALT_IMG}" id="theMainImage" usemap="#map{$current.selected_derivative->get_type()}" title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|@strip_tags:false|@replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}">
+    <img class="file-ext-{if isset($current.file_ext)}{$current.file_ext}{/if} path-ext-{if isset($current.path_ext)}{$current.path_ext}{/if}" {if (isset($current.path_ext) and $current.path_ext == 'svg')} src="{$current.path}" {elseif $current.selected_derivative->isCached()}src="{$current.selected_derivative->getUrl()}"{$current.selected_derivative->getSizeHtm()}{else}src="{$ROOT_URL}{$themeconf.img_dir}/ajax_loader.gif" data-src="{$current.selected_derivative->getUrl()}"{/if} alt="{$ALT_IMG}" id="theMainImage" usemap="#map{$current.selected_derivative->getType()}" title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|@strip_tags:false|@replace:'"':' '}{else}{$current.TITLE_ESC} - {$ALT_IMG}{/if}">
 
     {if isset($current.path_ext) and $current.path_ext == 'pdf' and $current.filesize > $PDF_VIEWER_FILESIZE_THRESHOLD}
         <div class="pdf-too-heavy">
@@ -18,8 +18,8 @@
 {/if}
 
 {foreach from=$current.unique_derivatives item=derivative key=derivative_type}{strip}
-<map name="map{$derivative->get_type()}">
-{assign var='size' value=$derivative->get_size()}
+<map name="map{$derivative->getType()}">
+{assign var='size' value=$derivative->getSize()}
 {if isset($previous)}
 <area shape=rect coords="0,0,{($size[0]/4)|@intval},{$size[1]}" href="{$previous.U_IMG}" title="{'Previous'|@translate} : {$previous.TITLE_ESC}" alt="{$previous.TITLE_ESC}">
 {/if}

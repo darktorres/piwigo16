@@ -57,7 +57,10 @@ final class PictureController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        ServiceLocator::get(SectionInitializer::class)->initialize($request, 'picture');
+        ServiceLocator::get(SectionInitializer::class)->initialize(
+            $request->withAttribute('_route_path', '/' . ($args['rest'] ?? '')),
+            'picture'
+        );
 
         UserService::get()->saveEditContext();
         PermissionService::get()->checkStatus(AccessLevel::Guest);

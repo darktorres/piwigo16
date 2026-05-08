@@ -146,7 +146,7 @@ final readonly class Util
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['redirect' => 'redirect.tpl']);
 
-        PageHeaderRenderer::render($title);
+        PageHeaderRenderer::render($title, $refresh, $url_link);
 
         $tpl->setFilenames(['redirect' => 'redirect.tpl']);
         $tpl->assign('REDIRECT_MSG', $msg);

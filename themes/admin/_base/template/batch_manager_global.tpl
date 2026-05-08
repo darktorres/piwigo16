@@ -39,7 +39,7 @@
     <input type="hidden" name="whole_set" value="">
   </p>
 
-	<ul class="thumbnails" style="--bm-thumb-w:{$thumb_params->max_width()+2}px;--bm-thumb-h:{$thumb_params->max_height()+25}px">
+	<ul class="thumbnails" style="--bm-thumb-w:{$thumb_params->maxWidth()+2}px;--bm-thumb-h:{$thumb_params->maxHeight()+25}px">
 		{foreach from=$thumbnails item=thumbnail}
 		{assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
 		<li{if $isSelected} class="thumbSelected"{/if}>
@@ -54,7 +54,7 @@
 						{if $thumbnail.level > 0}
 						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|@sprintf:$thumbnail.level|@translate}</em>
 						{/if}
-						<img src="{$thumbnail.thumb->get_url()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->get_size_htm()}>
+						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
 					</span>
 				</label>
 			</span>

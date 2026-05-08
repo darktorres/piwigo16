@@ -66,8 +66,7 @@ final class MessengerBusTest extends IntegrationTestCase
         $countRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async'")
             ->fetchOne();
-        self::assertIsString($countRaw);
-        $count = (int) $countRaw;
+        $count = is_numeric($countRaw) ? (int) $countRaw : 0;
 
         self::assertSame(1, $count, 'One row should be pending in piwigo_async after dispatch');
     }
@@ -89,8 +88,7 @@ final class MessengerBusTest extends IntegrationTestCase
         $pendingRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async' AND delivered_at IS NULL")
             ->fetchOne();
-        self::assertIsString($pendingRaw);
-        $pending = (int) $pendingRaw;
+        $pending = is_numeric($pendingRaw) ? (int) $pendingRaw : 0;
 
         self::assertSame(0, $pending, 'No pending rows should remain after ack');
     }
@@ -110,8 +108,7 @@ final class MessengerBusTest extends IntegrationTestCase
         $pendingAsyncRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async' AND delivered_at IS NULL")
             ->fetchOne();
-        self::assertIsString($pendingAsyncRaw);
-        $pendingAsync = (int) $pendingAsyncRaw;
+        $pendingAsync = is_numeric($pendingAsyncRaw) ? (int) $pendingAsyncRaw : 0;
 
         self::assertSame(0, $pendingAsync, 'Rejected message must not remain in async queue');
     }

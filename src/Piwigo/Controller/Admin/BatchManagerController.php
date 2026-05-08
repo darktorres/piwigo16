@@ -789,10 +789,12 @@ final class BatchManagerController
                 }
             } elseif ('generate_derivatives' == $action) {
                 if ($_POST['regenerateSuccess'] != '0') {
-                    PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $_POST['regenerateSuccess']));
+                    $regenSuccess = $_POST['regenerateSuccess'] ?? '';
+                    PageState::current()->addInfo(Lang::t('%s photos have been regenerated', is_string($regenSuccess) ? $regenSuccess : ''));
                 }
                 if ($_POST['regenerateError'] != '0') {
-                    PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $_POST['regenerateError']));
+                    $regenError = $_POST['regenerateError'] ?? '';
+                    PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', is_string($regenError) ? $regenError : ''));
                 }
             }
 
@@ -1139,9 +1141,9 @@ final class BatchManagerController
                     'EXT'                   => Lang::t('%s file type', end($extTab)),
                     'POST_DATE'             => Lang::t('Added on %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), ['day', 'month', 'year'])),
                     'AGE'                   => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), 'year'))),
-                    'ADDED_BY'              => Lang::t('Added by %s', $added_by_username_of[is_scalar($row['added_by']) ? (string) $row['added_by'] : ''] ?? Lang::t('N/A')),
-                    'STATS'                 => Lang::t('Visited %d times', $row['hit']),
-                    'FILE'                  => Lang::t('%s', $row['file']),
+                    'ADDED_BY'              => Lang::t('Added by %s', is_string($added_by_username_of[is_scalar($row['added_by']) ? (string) $row['added_by'] : ''] ?? null) ? $added_by_username_of[is_scalar($row['added_by']) ? (string) $row['added_by'] : ''] : Lang::t('N/A')),
+                    'STATS'                 => Lang::t('Visited %d times', is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0),
+                    'FILE'                  => Lang::t('%s', is_string($row['file'] ?? null) ? $row['file'] : ''),
                     'related_categories'    => $related_categories,
                     'related_category_ids'  => json_encode($related_category_ids),
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,

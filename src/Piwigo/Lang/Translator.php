@@ -124,7 +124,7 @@ final class Translator
         $this->mirrorToGlobal($translations);
     }
 
-    public function translate(string $key, mixed ...$args): string
+    public function translate(string $key, string|int|float|bool|null ...$args): string
     {
         $val = $this->inner->gettext($key);
 
@@ -142,14 +142,10 @@ final class Translator
             return $val;
         }
 
-        $scalarArgs = array_map(
-            static fn (mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '',
-            $args
-        );
-        return vsprintf($val, $scalarArgs);
+        return vsprintf($val, array_map(strval(...), $args));
     }
 
-    public function plural(string $singular, string $plural, int $n, mixed ...$args): string
+    public function plural(string $singular, string $plural, int $n, string|int|float|bool|null ...$args): string
     {
         $val = $this->inner->ngettext($singular, $plural, $n);
 
@@ -157,11 +153,7 @@ final class Translator
             return sprintf($val, $n);
         }
 
-        $scalarArgs = array_map(
-            static fn (mixed $a): string => is_scalar($a) || $a === null ? (string) $a : '',
-            $args
-        );
-        return vsprintf($val, [$n, ...$scalarArgs]);
+        return vsprintf($val, [$n, ...array_map(strval(...), $args)]);
     }
 
     private function mirrorToGlobal(Translations $translations): void

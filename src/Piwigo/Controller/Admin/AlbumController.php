@@ -320,7 +320,8 @@ final class AlbumController
                 }
             }
 
-            $args = ['subject' => Lang::t('[%s] Visit album %s', Config::galleryTitle(), EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'))];
+            $renderedName = EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list');
+            $args = ['subject' => Lang::t('[%s] Visit album %s', Config::galleryTitle(), is_string($renderedName) ? $renderedName : '')];
             $mailTpl = [
                 'filename' => 'cat_group_info',
                 'assign'   => [
@@ -688,7 +689,8 @@ final class AlbumController
         }
 
         $result = DbConnection::get()->executeQuery('SELECT COUNT(*) FROM `' . Tables::categories() . '` WHERE id_uppercat = ' . $catIntId)->fetchAllAssociative();
-        $tpl->assign(['INFO_DIRECT_SUB' => Lang::t('%d sub-albums', $result[0]['COUNT(*)'])]);
+        $countRaw = $result[0]['COUNT(*)'] ?? 0;
+        $tpl->assign(['INFO_DIRECT_SUB' => Lang::t('%d sub-albums', is_numeric($countRaw) ? (int) $countRaw : 0)]);
 
         $tpl->assign([
             'INFO_ID'                  => Lang::t('Numeric identifier : %d', $catId),

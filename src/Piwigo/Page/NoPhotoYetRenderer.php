@@ -71,7 +71,7 @@ final class NoPhotoYetRenderer
 
                     $template->assign([
                         'step' => 2,
-                        'intro' => Lang::t('Hello %s, your Piwigo photo gallery is empty!', $user['username'] ?? ''),
+                        'intro' => Lang::t('Hello %s, your Piwigo photo gallery is empty!', is_string($user['username'] ?? null) ? $user['username'] : ''),
                         'next_step_url' => $url,
                         'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=deactivate',
                     ]);

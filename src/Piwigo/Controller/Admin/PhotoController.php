@@ -307,12 +307,12 @@ SELECT id
 
         $extTab     = explode('.', is_scalar($row['file'] ?? null) ? (string) $row['file'] : '');
         $intro_vars = [
-            'file'    => Lang::t('%s', $row['file']),
+            'file'    => Lang::t('%s', is_string($row['file'] ?? null) ? $row['file'] : ''),
             'date'    => Lang::t('Posted the %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, ['day', 'month', 'year'])),
             'age'     => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, 'year'))),
-            'added_by' => Lang::t('Added by %s', $row['added_by']),
+            'added_by' => Lang::t('Added by %s', is_string($row['added_by'] ?? null) ? $row['added_by'] : ''),
             'size'    => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
-            'stats'   => Lang::t('Visited %d times', $row['hit']),
+            'stats'   => Lang::t('Visited %d times', is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0),
             'id'      => Lang::t(is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''),
             'ext'     => Lang::t('%s file type', strtoupper(end($extTab))),
             'is_svg'  => (strtoupper(end($extTab)) == 'SVG'),

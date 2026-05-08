@@ -535,7 +535,8 @@ SELECT *
             $infos['INFO_DIMENSIONS'] = (is_scalar($currentPic['width']) ? (string) $currentPic['width'] : '') . '*' . (is_scalar($currentPic['height'] ?? null) ? (string) $currentPic['height'] : '');
         }
         if (!empty($currentPic['filesize'] ?? null)) {
-            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $currentPic['filesize']);
+            $filesize = $currentPic['filesize'];
+            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', is_numeric($filesize) ? (int) $filesize : 0);
         }
         $infos['INFO_VISITS'] = $currentPic['hit'] ?? null;
         $infos['INFO_FILE']   = $currentPic['file'] ?? null;

@@ -21,7 +21,7 @@ final class LangService
         return ServiceLocator::get(self::class);
     }
 
-    public function l10n(?string $key, mixed ...$args): string
+    public function l10n(?string $key, string|int|float|bool|null ...$args): string
     {
         return Lang::t($key ?? '', ...$args);
     }

@@ -371,10 +371,8 @@ $btraceMsg
         return strip_tags($desc ?? '', '<span><p><a><br><b><i><small><big><strong><em>');
     }
 
-    /** @param BlockManager[] $menuRefArr */
-    public function registerDefaultMenubarBlocks(array $menuRefArr): void
+    public function registerDefaultMenubarBlocks(BlockManager $menu): void
     {
-        $menu = &$menuRefArr[0];
         if ($menu->getId() != 'menubar') {
             return;
         }
@@ -414,11 +412,11 @@ $btraceMsg
         $details = [];
 
         if (!empty($info['hit'])) {
-            $details[] = Lang::t('%d visits', $info['hit']);
+            $details[] = Lang::t('%d visits', is_numeric($info['hit']) ? (int) $info['hit'] : 0);
         }
 
         if (Config::rateEnabled() and !empty($info['rating_score'])) {
-            $details[] = Lang::t('rating score %s', $info['rating_score']);
+            $details[] = Lang::t('rating score %s', is_numeric($info['rating_score']) ? (float) $info['rating_score'] : '');
         }
 
         if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {

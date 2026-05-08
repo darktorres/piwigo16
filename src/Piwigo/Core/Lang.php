@@ -33,7 +33,7 @@ final class Lang
         $GLOBALS['lang'] = &self::$data;
     }
 
-    public static function t(string $key, mixed ...$args): string
+    public static function t(string $key, string|int|float|bool|null ...$args): string
     {
         // Delegate to Translator when PO files are loaded; it falls back to $lang
         // array internally so both pre-boot PHP-file loads and post-boot PO loads work.

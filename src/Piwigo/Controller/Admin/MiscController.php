@@ -507,7 +507,8 @@ final class MiscController
         if (isset($page['nb_pending_comments'])) {
             $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $my_base_url . 'comments">';
-            $message .= Lang::t('%d waiting for validation', $page['nb_pending_comments']);
+            $nbPending = $page['nb_pending_comments'];
+            $message .= Lang::t('%d waiting for validation', is_numeric($nbPending) ? (int) $nbPending : 0);
             $message .= ' <i class="icon-right"></i></a>';
             PageState::current()->addMessage($message);
         }
@@ -1140,7 +1141,7 @@ final class MiscController
                 $nbm_user['check_key'] = ServiceLocator::get(NotificationAdminService::class)->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
-                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), $nbm_user['mail_address']));
+                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), is_string($nbm_user['mail_address'] ?? null) ? $nbm_user['mail_address'] : ''));
             }
             Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);

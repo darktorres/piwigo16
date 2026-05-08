@@ -34,7 +34,7 @@ class BlockManager
      */
     public function loadRegisteredBlocks(): void
     {
-        EventDispatcher::notify('blockmanager_register_blocks', [$this]);
+        EventDispatcher::notify('blockmanager_register_blocks', $this);
     }
 
     /**

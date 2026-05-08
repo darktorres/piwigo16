@@ -329,9 +329,8 @@ final class CommonBootstrap
         EventDispatcher::addListener('render_tag_url', 'str2url');
         EventDispatcher::addListener(
             'blockmanager_register_blocks',
-            /** @param array<BlockManager> $menuRefArr */
-            static function (array $menuRefArr): void {
-                ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menuRefArr);
+            static function (BlockManager $menu): void {
+                ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menu);
             },
             EventDispatcher::NEUTRAL_PRIORITY - 1
         );

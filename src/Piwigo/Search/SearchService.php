@@ -93,7 +93,7 @@ final readonly class SearchService
      * @param array<mixed> $search
      * @return array<mixed>
      */
-    public function getRegularSearchResults(array $search, ?string $imagesWhere = ''): array
+    public function getRegularSearchResults(array $search, string $imagesWhere = ''): array
     {
         $this->logger->debug('getRegularSearchResults', $search);
 
@@ -440,10 +440,10 @@ final readonly class SearchService
         ];
     }
 
-    public function getClauseForFilter(mixed $filterName): string
+    public function getClauseForFilter(string $filterName): string
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        $otherFiltersItems = $this->getItemsForFilter(is_scalar($filterName) ? (string) $filterName : '');
+        $otherFiltersItems = $this->getItemsForFilter($filterName);
         if (false === $otherFiltersItems) {
             $details  = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
             $forbidden = is_string($details['forbidden'] ?? null) ? $details['forbidden'] : '';
@@ -994,14 +994,14 @@ final readonly class SearchService
     }
 
     /** @return array<mixed> */
-    public function getSearchResults(int|string $searchId, bool $superOrderBy, ?string $imagesWhere = ''): array
+    public function getSearchResults(string $searchId, bool $superOrderBy): array
     {
         $search = $this->getSearchArray($searchId);
         if (!isset($search['q'])) {
-            return $this->getRegularSearchResults($search, $imagesWhere);
+            return $this->getRegularSearchResults($search, '');
         } else {
             $searchQ = is_scalar($search['q']) ? (string) $search['q'] : '';
-            return $this->getQuickSearchResults($searchQ, ['super_order_by' => $superOrderBy, 'images_where' => $imagesWhere]) ?? [];
+            return $this->getQuickSearchResults($searchQ, ['super_order_by' => $superOrderBy, 'images_where' => '']) ?? [];
         }
     }
 

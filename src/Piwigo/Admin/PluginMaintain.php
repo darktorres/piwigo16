@@ -25,14 +25,14 @@ class PluginMaintain
 
     /** @param string $plugin_version
      *  @param array<mixed> $errors */
-    public function install($plugin_version, &$errors = []): null
+    public function install(string $plugin_version, array &$errors = []): null
     {
         return null;
     }
 
     /** @param string $plugin_version
      *  @param array<mixed> $errors */
-    public function activate($plugin_version, &$errors = []): null
+    public function activate(string $plugin_version, array &$errors = []): null
     {
         return null;
     }

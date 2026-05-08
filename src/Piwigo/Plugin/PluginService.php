@@ -27,9 +27,9 @@ final readonly class PluginService
     }
 
     /** @return array<array<string,mixed>> */
-    public function getDbPlugins(?string $state = '', ?string $id = ''): array
+    public function getDbPlugins(string $state = ''): array
     {
-        return $this->repo->findAll($state, $id);
+        return $this->repo->findAll($state);
     }
 
     /** @param array<string,mixed> $plugin */

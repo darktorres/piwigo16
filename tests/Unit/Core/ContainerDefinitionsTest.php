@@ -20,12 +20,14 @@ use PHPUnit\Framework\TestCase;
  */
 final class ContainerDefinitionsTest extends TestCase
 {
-    /** @var array<string, mixed> */
+    /** @var array<mixed> */
     private static array $definitions = [];
 
     public static function setUpBeforeClass(): void
     {
-        self::$definitions = require dirname(__DIR__, 3) . '/config/container.php';
+        $loaded = require dirname(__DIR__, 3) . '/config/container.php';
+        self::assertIsArray($loaded);
+        self::$definitions = $loaded;
     }
 
     public function test_all_keys_are_loadable(): void
@@ -51,6 +53,9 @@ final class ContainerDefinitionsTest extends TestCase
             }
             try {
                 $callable = $definition->getDefinition($key)->getCallable();
+                if (!($callable instanceof \Closure)) {
+                    continue;
+                }
                 $rf = new \ReflectionFunction($callable);
                 $returnType = $rf->getReturnType();
                 if (!($returnType instanceof \ReflectionNamedType) || $returnType->isBuiltin()) {

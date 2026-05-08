@@ -40,7 +40,7 @@ abstract class CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      * @return string
      */
-    abstract public function getDateWhere($max_levels = 3);
+    abstract public function getDateWhere(int $max_levels = 3): string;
 
     /**
      * Initialize the calendar.

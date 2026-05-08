@@ -23,8 +23,9 @@ final class ConfigTest extends TestCase
 
     public function test_raw_returns_default_when_key_missing(): void
     {
-        self::assertNull(Config::raw('nonexistent'));
-        self::assertSame('fallback', Config::raw('nonexistent', 'fallback'));
+        $key = 'nonexistent';
+        self::assertNull(Config::raw($key));
+        self::assertSame('fallback', Config::raw($key, 'fallback'));
     }
 
     public function test_raw_returns_value_after_loadArray(): void

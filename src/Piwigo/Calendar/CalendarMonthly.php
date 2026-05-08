@@ -132,7 +132,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
-    public function getDateWhere($max_levels = 3): string
+    public function getDateWhere(int $max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
         $pageArr = is_array($page) ? $page : [];

@@ -162,11 +162,10 @@ final readonly class AdminService
         return $keys;
     }
 
-    public function numberFormatHumanReadable(mixed $numbers): string
+    public function numberFormatHumanReadable(float $numbers): string
     {
         $readable = ['', 'k', 'M'];
         $index    = 0;
-        $numbers  = empty($numbers) ? 0 : (is_numeric($numbers) ? (float) $numbers : 0);
         while ($numbers >= 1000) {
             $numbers /= 1000;
             $index++;

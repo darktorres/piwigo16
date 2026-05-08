@@ -53,9 +53,9 @@ final readonly class PermissionService
         return ($this->getAccessTypeStatus($userStatus) >= $accessType);
     }
 
-    public function checkStatus(int $accessType, string $userStatus = ''): void
+    public function checkStatus(int $accessType): void
     {
-        if (!$this->isAutorizeStatus($accessType, $userStatus)) {
+        if (!$this->isAutorizeStatus($accessType)) {
             ServiceLocator::get(HtmlService::class)->accessDenied();
         }
     }

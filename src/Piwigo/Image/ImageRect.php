@@ -44,9 +44,9 @@ final class ImageRect
      * Crops horizontally this rectangle by increasing left side and/or reducing the right side.
      *
      * @param int $pixels - the amount to substract from the width
-     * @param string $coi - a 4 character string (or null) containing the center of interest
+     * @param string|null $coi - a 4 character string (or null) containing the center of interest
      */
-    public function cropH(int|float $pixels, $coi): void
+    public function cropH(int|float $pixels, ?string $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -74,9 +74,9 @@ final class ImageRect
      * Crops vertically this rectangle by increasing top side and/or reducing the bottom side.
      *
      * @param int $pixels - the amount to substract from the height
-     * @param string $coi - a 4 character string (or null) containing the center of interest
+     * @param string|null $coi - a 4 character string (or null) containing the center of interest
      */
-    public function cropV(int|float $pixels, $coi): void
+    public function cropV(int|float $pixels, ?string $coi): void
     {
         if ($this->height() <= $pixels) {
             return;

@@ -277,7 +277,7 @@ class Template
      *
      * @param string $val
      */
-    public function getThemeconf($val): mixed
+    public function getThemeconf(string $val): mixed
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
         return is_array($tc) ? ($tc[$val] ?? '') : '';
@@ -396,7 +396,7 @@ class Template
      * @param string $handle
      * @return true
      */
-    public function assignVarFromHandle(string $varname, $handle): bool
+    public function assignVarFromHandle(string $varname, string $handle): bool
     {
         $this->assign($varname, $this->parse($handle, true));
         return true;
@@ -410,7 +410,7 @@ class Template
      * @param mixed $value
      * @param bool $merge
      */
-    public function append($tpl_var, $value = null, $merge = false): void
+    public function append(string $tpl_var, mixed $value = null, bool $merge = false): void
     {
         $this->smarty->append($tpl_var, $value, $merge);
     }
@@ -420,7 +420,7 @@ class Template
      *
      * @param string $tpl_var
      */
-    public function concat($tpl_var, string $value): void
+    public function concat(string $tpl_var, string $value): void
     {
         $existing = $this->smarty->getTemplateVars($tpl_var);
         $existingStr = is_string($existing) ? $existing : '';
@@ -436,7 +436,7 @@ class Template
      *
      * @param string $tpl_var
      */
-    public function clearAssign($tpl_var): void
+    public function clearAssign(string $tpl_var): void
     {
         $this->smarty->clearAssign($tpl_var);
     }
@@ -448,7 +448,7 @@ class Template
      * @param string $tpl_var
      */
     /** @return array<mixed>|mixed */
-    public function getTemplateVars(?string $tpl_var = null): mixed
+    public function getTemplateVars(string $tpl_var): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
     }
@@ -498,7 +498,7 @@ class Template
      *
      * @param string $handle
      */
-    public function pparse($handle): void
+    public function pparse(string $handle): void
     {
         $this->parse($handle, false);
         $this->flush();
@@ -1011,11 +1011,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * They will be processed by weight ascending.
      * @see http://www.smarty.net/manual/en/advanced.features.prefilters.php
      *
-     * @param Callable $callback
+     * @param array<mixed> $callback
      */
-    public function setPrefilter(string $handle, mixed $callback, int $weight = 50): void
+    public function setPrefilter(string $handle, array $callback): void
     {
-        $this->external_filters[$handle][$weight][] = ['pre', $callback];
+        $this->external_filters[$handle][50][] = ['pre', $callback];
         ksort($this->external_filters[$handle]);
     }
 

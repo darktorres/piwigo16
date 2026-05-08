@@ -23,7 +23,9 @@ final class RouteDefinitionsTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$routes = require dirname(__DIR__, 3) . '/config/routes.php';
+        $loaded = require dirname(__DIR__, 3) . '/config/routes.php';
+        self::assertInstanceOf(RouteCollection::class, $loaded);
+        self::$routes = $loaded;
 
         self::$controllers = [];
         foreach (self::$routes->all() as $name => $route) {

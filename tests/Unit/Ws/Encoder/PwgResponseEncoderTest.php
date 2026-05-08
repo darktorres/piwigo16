@@ -50,6 +50,7 @@ final class PwgResponseEncoderTest extends TestCase
         $content = ['x', 'y'];
         $value = ['key' => new PwgNamedArray($content, 'x')];
         PwgResponseEncoder::flattenResponse($value);
+        self::assertIsArray($value);
         self::assertSame($content, $value['key']);
     }
 

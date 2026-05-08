@@ -76,7 +76,7 @@ final readonly class RateService
      *
      * @return array<mixed>
      */
-    public function updateRatingScore(int|false $elementId = false): array
+    public function updateRatingScore(?int $elementId = null): array
     {
         $_ = EventDispatcher::dispatch('update_rating_score', false, $elementId);
 
@@ -123,7 +123,7 @@ final readonly class RateService
             $updates
         );
 
-        if (!isset($byItem[$elementId])) {
+        if ($elementId === null || !isset($byItem[$elementId])) {
             $toUpdate = $this->rateRepo->findImageIdsWithNoRates();
             if (!empty($toUpdate)) {
                 $this->imageRepo->clearRatingScoreByIds($toUpdate);

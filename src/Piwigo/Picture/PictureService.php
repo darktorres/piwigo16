@@ -43,7 +43,7 @@ final readonly class PictureService
     }
 
     /** @return array<string, mixed> */
-    public function decodeSlideshowParams(?string $encoded = null): array
+    public function decodeSlideshowParams(string $encoded = ''): array
     {
         $result = $this->getDefaultSlideshowParams();
 

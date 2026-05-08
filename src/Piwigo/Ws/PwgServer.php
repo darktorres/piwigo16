@@ -92,7 +92,7 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setHandler(string $requestFormat, ?PwgRequestHandler $requestHandler): void
+    public function setHandler(string $requestFormat, PwgRestRequestHandler $requestHandler): void
     {
         $this->_requestHandler = $requestHandler;
         $this->_requestFormat = $requestFormat;
@@ -491,13 +491,11 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         PwgServerRegistry::set($server);
         $GLOBALS['service'] = $server;
 
-        $handler = null;
         switch ($requestFormat) {
             case 'rest':
-                $handler = new PwgRestRequestHandler();
+                $server->setHandler($requestFormat, new PwgRestRequestHandler());
                 break;
         }
-        $server->setHandler($requestFormat, $handler);
 
         $encoder = null;
         switch ($responseFormat) {

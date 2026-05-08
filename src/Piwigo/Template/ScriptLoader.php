@@ -48,7 +48,7 @@ class ScriptLoader
     }
 
     /**
-     * @return Script[]
+     * @return array<string, Script>
      */
     public function getAll(): array
     {

@@ -218,7 +218,7 @@ final readonly class NotificationService
     /**
      * @param array<mixed> $news
      */
-    public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, ?string $url = '', bool $addUrl = false): void
+    public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, string $url = '', bool $addUrl = false): void
     {
         if ($count > 0) {
             $line = Translator::get()->plural($singularKey, $pluralKey, $count);

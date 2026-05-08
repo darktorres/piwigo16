@@ -96,6 +96,7 @@ abstract class IntegrationTestCase extends TestCase
         $row = $result->fetch_row();
         $db->close();
         self::assertIsArray($row);
-        return (string) $row[0];
+        self::assertIsString($row[0]);
+        return $row[0];
     }
 }

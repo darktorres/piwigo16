@@ -363,16 +363,15 @@ final class ImageAdminService
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
     }
 
-    /** @param int[]|string $ids */
-    public function addMd5sum(array|string $ids): int
+    /** @param int[] $ids */
+    public function addMd5sum(array $ids): int
     {
-        $idsArray  = is_array($ids) ? $ids : explode(',', $ids);
         $pathForId = array_column(DbConnection::get()->executeQuery(
-            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $idsArray) . ')'
+            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', array_map(strval(...), $ids)) . ')'
         )->fetchAllAssociative(), 'path', 'id');
         $updates = [];
         foreach ($pathForId as $id => $path) {
-            $updates[] = ['id' => $id, 'md5sum' => md5_file(PHPWG_ROOT_PATH . (is_scalar($path) ? (string) $path : ''))];
+            $updates[] = ['id' => $id, 'md5sum' => md5_file(PHPWG_ROOT_PATH . (is_string($path) ? $path : ''))];
         }
         Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['md5sum']], $updates);
         return count($pathForId);

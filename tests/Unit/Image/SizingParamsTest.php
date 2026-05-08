@@ -21,6 +21,9 @@ final class SizingParamsTest extends TestCase
     {
         SizingParams::classic(400, 300)->compute([800, 600], null, $crop, $scale);
         self::assertNull($crop);
+        self::assertNotNull($scale);
+        self::assertArrayHasKey(0, $scale);
+        self::assertArrayHasKey(1, $scale);
         // compute() uses floor() which produces floats; compare as integers.
         self::assertSame(400, (int) $scale[0]);
         self::assertSame(300, (int) $scale[1]);
@@ -39,6 +42,8 @@ final class SizingParamsTest extends TestCase
         SizingParams::classic(400, 300)->compute([800, 300], null, $crop, $scale);
         self::assertNull($crop);
         self::assertNotNull($scale);
+        self::assertArrayHasKey(0, $scale);
+        self::assertArrayHasKey(1, $scale);
         self::assertSame(400, (int) $scale[0]);
         self::assertSame(150, (int) $scale[1]);
     }
@@ -49,6 +54,7 @@ final class SizingParamsTest extends TestCase
         SizingParams::classic(400, 300)->compute([400, 900], null, $crop, $scale);
         self::assertNull($crop);
         self::assertNotNull($scale);
+        self::assertArrayHasKey(1, $scale);
         self::assertSame(300, (int) $scale[1]);
     }
 
@@ -56,6 +62,9 @@ final class SizingParamsTest extends TestCase
     {
         SizingParams::square(200)->compute([800, 600], null, $crop, $scale);
         self::assertInstanceOf(ImageRect::class, $crop, 'square sizing must crop non-square input');
+        self::assertNotNull($scale);
+        self::assertArrayHasKey(0, $scale);
+        self::assertArrayHasKey(1, $scale);
         self::assertSame(200, (int) $scale[0]);
         self::assertSame(200, (int) $scale[1]);
     }
@@ -71,6 +80,9 @@ final class SizingParamsTest extends TestCase
     {
         SizingParams::square(200)->compute([800, 800], null, $crop, $scale);
         self::assertNull($crop, 'already square — no crop');
+        self::assertNotNull($scale);
+        self::assertArrayHasKey(0, $scale);
+        self::assertArrayHasKey(1, $scale);
         self::assertSame(200, (int) $scale[0]);
         self::assertSame(200, (int) $scale[1]);
     }

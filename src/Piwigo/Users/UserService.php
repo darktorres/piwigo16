@@ -418,20 +418,20 @@ SELECT DISTINCT f.image_id
         }
     }
 
-    public function getDefaultUserValue(mixed $valueName, mixed $default): mixed
+    public function getDefaultUserValue(string $valueName, string $default): string
     {
         $defaultUser = $this->getDefaultUserInfo(true);
-        $key         = is_scalar($valueName) ? (string) $valueName : '';
+        $key         = $valueName;
         if ($defaultUser === null or empty($defaultUser[$key])) {
             return $default;
         }
-        return $defaultUser[$key];
+        return is_string($defaultUser[$key]) ? $defaultUser[$key] : '';
     }
 
     public function getDefaultTheme(): string
     {
         $themeRaw = $this->getDefaultUserValue('theme', AppInfo::DEFAULT_TEMPLATE);
-        $theme    = is_scalar($themeRaw) ? (string) $themeRaw : AppInfo::DEFAULT_TEMPLATE;
+        $theme    = $themeRaw !== '' ? $themeRaw : AppInfo::DEFAULT_TEMPLATE;
         if (ServiceLocator::get(Util::class)->checkThemeInstalled($theme)) {
             return $theme;
         }
@@ -442,7 +442,7 @@ SELECT DISTINCT f.image_id
     public function getDefaultLanguage(): string
     {
         $langRaw = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
-        return is_scalar($langRaw) ? (string) $langRaw : AppInfo::DEFAULT_LANGUAGE;
+        return $langRaw !== '' ? $langRaw : AppInfo::DEFAULT_LANGUAGE;
     }
 
     /**
@@ -482,9 +482,9 @@ SELECT DISTINCT f.image_id
         }
     }
 
-    public function getUserLastVisitFromHistory(mixed $userId, bool $saveInUserInfos = false): ?string
+    public function getUserLastVisitFromHistory(int $userId, bool $saveInUserInfos = false): ?string
     {
-        $uid       = is_numeric($userId) ? (int) $userId : 0;
+        $uid       = $userId;
         $lastVisit = null;
         $histRow   = $this->histRepo->findLastVisitByUserId($uid);
         if ($histRow !== null) {
@@ -496,9 +496,9 @@ SELECT DISTINCT f.image_id
         return $lastVisit;
     }
 
-    public function hasAlreadyLoggedIn(mixed $userId): bool
+    public function hasAlreadyLoggedIn(int $userId): bool
     {
-        return $this->actRepo->hasLoggedIn(is_numeric($userId) ? (int) $userId : 0);
+        return $this->actRepo->hasLoggedIn($userId);
     }
 
     /**
@@ -678,9 +678,9 @@ SELECT DISTINCT f.image_id
         return $key;
     }
 
-    public function revokeApiKey(mixed $userId, string $pkid): string|bool
+    public function revokeApiKey(int $userId, string $pkid): string|bool
     {
-        $uid = is_numeric($userId) ? (int) $userId : 0;
+        $uid = $userId;
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
             return Lang::t('API Key not found');
         }
@@ -794,9 +794,9 @@ SELECT DISTINCT f.image_id
         $_SESSION['edit_context'] = array_slice([$imageId => $sectionUrl] + $existingContext, 0, 10, true);
     }
 
-    public function getEditContext(mixed $imageId): false|string|null
+    public function getEditContext(int $imageId): false|string|null
     {
-        $imageIdStr  = is_scalar($imageId) ? (string) $imageId : '';
+        $imageIdStr  = (string) $imageId;
         $editContext = is_array($_SESSION['edit_context'] ?? null) ? $_SESSION['edit_context'] : [];
         if (!isset($editContext[$imageIdStr])) {
             return false;

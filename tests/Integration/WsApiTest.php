@@ -17,6 +17,7 @@ final class WsApiTest extends IntegrationTestCase
 {
     private const FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
 
+    /** @var non-empty-string */
     private string $cookieJar;
 
     protected function setUp(): void
@@ -41,7 +42,8 @@ final class WsApiTest extends IntegrationTestCase
     {
         $data = $this->apiGet('pwg.getVersion');
         self::assertSame('ok', $data['stat'], 'pwg.getVersion must return stat=ok');
-        self::assertMatchesRegularExpression('/^\d+\.\d+/', (string) $data['result']);
+        self::assertIsString($data['result']);
+        self::assertMatchesRegularExpression('/^\d+\.\d+/', $data['result']);
     }
 
     public function test_session_login_with_valid_credentials(): void
@@ -59,14 +61,18 @@ final class WsApiTest extends IntegrationTestCase
         $this->loginAsAdmin();
         $data = $this->apiGet('pwg.session.getStatus');
         self::assertSame('ok', $data['stat']);
-        self::assertSame('fixture_admin', $data['result']['username'] ?? null);
+        $result = $data['result'];
+        self::assertIsArray($result);
+        self::assertSame('fixture_admin', $result['username'] ?? null);
     }
 
     public function test_categories_get_list_returns_albums(): void
     {
         $data = $this->apiGet('pwg.categories.getList');
         self::assertSame('ok', $data['stat']);
-        $cats = $data['result']['categories']['_content'] ?? $data['result']['categories'] ?? [];
+        $result = $data['result'];
+        self::assertIsArray($result);
+        $cats = (is_array($result['categories'] ?? null) ? $result['categories'] : [])['_content'] ?? $result['categories'] ?? [];
         self::assertIsArray($cats);
         self::assertGreaterThan(0, count($cats), 'fixture must have at least one album');
     }
@@ -75,7 +81,9 @@ final class WsApiTest extends IntegrationTestCase
     {
         $data = $this->apiGet('pwg.tags.getList');
         self::assertSame('ok', $data['stat']);
-        $tags = $data['result']['tags']['_content'] ?? $data['result']['tags'] ?? [];
+        $result = $data['result'];
+        self::assertIsArray($result);
+        $tags = (is_array($result['tags'] ?? null) ? $result['tags'] : [])['_content'] ?? $result['tags'] ?? [];
         self::assertIsArray($tags);
         self::assertGreaterThan(0, count($tags), 'fixture must have at least one tag');
     }
@@ -84,7 +92,9 @@ final class WsApiTest extends IntegrationTestCase
     {
         $data = $this->apiGet('pwg.images.search', ['query' => 'a', 'per_page' => 100]);
         self::assertSame('ok', $data['stat']);
-        $images = $data['result']['images']['_content'] ?? $data['result']['images'] ?? [];
+        $result = $data['result'];
+        self::assertIsArray($result);
+        $images = (is_array($result['images'] ?? null) ? $result['images'] : [])['_content'] ?? $result['images'] ?? [];
         self::assertIsArray($images);
     }
 
@@ -102,7 +112,7 @@ final class WsApiTest extends IntegrationTestCase
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
         $decoded = json_decode($body, true);
-        $stat = is_array($decoded) ? ($decoded['stat'] ?? null) : null;
+        $stat = is_array($decoded) ? (is_string($decoded['stat'] ?? null) ? $decoded['stat'] : null) : null;
         self::assertTrue(
             $status === 401 || $stat === 'fail',
             "users.getList must require authentication (HTTP $status, stat=" . ($stat ?? 'N/A') . ')'
@@ -114,7 +124,9 @@ final class WsApiTest extends IntegrationTestCase
         $this->loginAsAdmin();
         $data = $this->apiGet('pwg.users.getList');
         self::assertSame('ok', $data['stat']);
-        $users = $data['result']['users']['_content'] ?? $data['result']['users'] ?? [];
+        $result = $data['result'];
+        self::assertIsArray($result);
+        $users = (is_array($result['users'] ?? null) ? $result['users'] : [])['_content'] ?? $result['users'] ?? [];
         self::assertIsArray($users);
         $usernames = array_column($users, 'username');
         self::assertContains('fixture_admin', $usernames, 'admin user must appear in list');
@@ -126,7 +138,10 @@ final class WsApiTest extends IntegrationTestCase
 
         $create = $this->apiPost('pwg.categories.add', ['name' => 'WS API Test Album']);
         self::assertSame('ok', $create['stat']);
-        $id = (int) ($create['result']['id'] ?? 0);
+        $createResult = $create['result'];
+        self::assertIsArray($createResult);
+        $idRaw = $createResult['id'] ?? 0;
+        $id = is_int($idRaw) ? $idRaw : 0;
         self::assertGreaterThan(0, $id);
 
         $list = $this->apiGet('pwg.categories.getAdminList');
@@ -135,7 +150,9 @@ final class WsApiTest extends IntegrationTestCase
         // pwg.categories.delete requires the per-session pwg_token to defeat
         // CSRF on destructive admin ops.
         $status = $this->apiGet('pwg.session.getStatus');
-        $pwg_token = is_array($status['result']) ? (string) ($status['result']['pwg_token'] ?? '') : '';
+        $statusResult = $status['result'];
+        $rawToken = is_array($statusResult) ? ($statusResult['pwg_token'] ?? '') : '';
+        $pwg_token = is_string($rawToken) ? $rawToken : '';
         self::assertNotSame('', $pwg_token, 'session must expose pwg_token');
 
         $delete = $this->apiPost('pwg.categories.delete', [

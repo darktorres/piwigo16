@@ -94,7 +94,8 @@ final class PwgServerTest extends TestCase
 
         self::assertArrayHasKey('limit', $sig);
         self::assertTrue((bool) ($sig['limit']['flags'] & WS_PARAM_OPTIONAL));
-        self::assertSame(100, $sig['limit']['default']);
+        self::assertArrayHasKey('default', $sig['limit']);
+        self::assertSame(100, $sig['limit']['default'] ?? null);
     }
 
     public function test_register_optionalflag_param_sets_optional_without_default(): void

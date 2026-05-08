@@ -49,7 +49,7 @@ class DisplayBlock
     /**
      * @param int $position
      */
-    public function setPosition($position): void
+    public function setPosition(int $position): void
     {
         $this->_position = $position;
     }
@@ -69,7 +69,7 @@ class DisplayBlock
     /**
      * @param string $title
      */
-    public function setTitle($title): void
+    public function setTitle(string $title): void
     {
         $this->_title = $title;
     }

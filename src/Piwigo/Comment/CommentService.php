@@ -348,18 +348,12 @@ final readonly class CommentService
         );
     }
 
-    public function getCommentAuthorId(int $commentId, bool $dieOnError = true): int|false
+    public function getCommentAuthorId(int $commentId): int
     {
         $authorId = $this->repo->getAuthorId($commentId);
-
         if ($authorId === null) {
-            if ($dieOnError) {
-                HtmlService::fatalError('Unknown comment identifier');
-            } else {
-                return false;
-            }
+            HtmlService::fatalError('Unknown comment identifier');
         }
-
         return $authorId;
     }
 

@@ -58,7 +58,7 @@ class BlockManager
      *
      * @param RegisteredBlock $block
      */
-    public function registerBlock($block): bool
+    public function registerBlock(RegisteredBlock $block): bool
     {
         if (isset($this->registered_blocks[$block->getId()])) {
             return false;
@@ -104,7 +104,7 @@ class BlockManager
      *
      * @param string $block_id
      */
-    public function isHidden($block_id): bool
+    public function isHidden(string $block_id): bool
     {
         return !isset($this->display_blocks[$block_id]);
     }
@@ -125,7 +125,7 @@ class BlockManager
      * @param string $block_id
      * @return DisplayBlock|null
      */
-    public function getBlock($block_id)
+    public function getBlock(string $block_id): ?DisplayBlock
     {
         return $this->display_blocks[$block_id] ?? null;
     }
@@ -136,7 +136,7 @@ class BlockManager
      * @param string $block_id
      * @param int $position
      */
-    public function setBlockPosition($block_id, $position): void
+    public function setBlockPosition(string $block_id, int $position): void
     {
         if (isset($this->display_blocks[$block_id])) {
             $this->display_blocks[$block_id]->setPosition($position);

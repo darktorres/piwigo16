@@ -66,7 +66,7 @@ final class CookieService
         }
     }
 
-    public function getCookieVar(string $var, mixed $default = null): mixed
+    public function getCookieVar(string $var, string $default = ''): mixed
     {
         if (isset($_COOKIE['pwg_' . $var])) {
             return $_COOKIE['pwg_' . $var];

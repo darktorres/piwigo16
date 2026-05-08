@@ -71,7 +71,7 @@ class PwgImage
      * @return mixed[]
      */
     /** @return array<mixed> */
-    public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
+    public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false): array
     {
         $starttime = StringUtil::get()->getMoment();
 
@@ -86,7 +86,7 @@ class PwgImage
         if ($automatic_rotation) {
             $rotation = self::getRotationAngle($this->source_filepath);
         }
-        $resize_dimensions = self::getResizeDimensions($source_width, $source_height, $max_width, $max_height, $rotation, $crop, $follow_orientation);
+        $resize_dimensions = self::getResizeDimensions($source_width, $source_height, $max_width, $max_height, $rotation, false, true);
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.

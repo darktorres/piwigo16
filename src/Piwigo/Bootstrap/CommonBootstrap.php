@@ -27,6 +27,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Menu\BlockManager;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Migrations\MigrationRunner;
@@ -326,7 +327,14 @@ final class CommonBootstrap
         EventDispatcher::addListener('render_comment_content', 'render_comment_content');
         EventDispatcher::addListener('render_comment_author', 'strip_tags');
         EventDispatcher::addListener('render_tag_url', 'str2url');
-        EventDispatcher::addListener('blockmanager_register_blocks', static fn (array $menuRefArr) => ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menuRefArr), EventDispatcher::NEUTRAL_PRIORITY - 1);
+        EventDispatcher::addListener(
+            'blockmanager_register_blocks',
+            /** @param array<BlockManager> $menuRefArr */
+            static function (array $menuRefArr): void {
+                ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menuRefArr);
+            },
+            EventDispatcher::NEUTRAL_PRIORITY - 1
+        );
         if (!empty(Config::originalUrlProtection())) {
             EventDispatcher::addListener('UrlService::get()->getElementUrl', 'get_element_url_protection_handler');
             EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');

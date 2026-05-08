@@ -68,7 +68,10 @@ final class KernelBootTest extends TestCase
 
         PageState::current()->addError('typed error');
 
-        self::assertContains('typed error', $GLOBALS['page']['errors']);
+        $page = $GLOBALS['page'];
+        self::assertIsArray($page);
+        self::assertIsArray($page['errors']);
+        self::assertContains('typed error', $page['errors']);
     }
 
     public function test_page_global_push_visible_via_PageState_after_boot(): void
@@ -76,7 +79,10 @@ final class KernelBootTest extends TestCase
         $this->simulateGlobals();
         Kernel::boot();
 
-        $GLOBALS['page']['errors'][] = 'global error';
+        $pageRef = &$GLOBALS['page'];
+        self::assertIsArray($pageRef);
+        self::assertIsArray($pageRef['errors']);
+        $pageRef['errors'][] = 'global error';
 
         self::assertContains('global error', PageState::current()->errors);
     }
@@ -106,7 +112,9 @@ final class KernelBootTest extends TestCase
         $this->simulateGlobals(['user' => ['id' => 7, 'username' => 'bob', 'email' => '', 'language' => 'fr_FR', 'theme' => 'elegant', 'status' => 'normal', 'enabled_high' => false]]);
         Kernel::boot();
 
-        self::assertSame($GLOBALS['user']['username'], CurrentUser::get()->username);
+        $user = $GLOBALS['user'];
+        self::assertIsArray($user);
+        self::assertSame($user['username'], CurrentUser::get()->username);
     }
 
     public function test_Lang_t_reads_from_globals_after_boot(): void
@@ -122,7 +130,9 @@ final class KernelBootTest extends TestCase
         $this->simulateGlobals(['lang' => ['key' => 'Value']]);
         Kernel::boot();
 
-        $GLOBALS['lang']['new_key'] = 'New Value';
+        $langRef = &$GLOBALS['lang'];
+        self::assertIsArray($langRef);
+        $langRef['new_key'] = 'New Value';
         self::assertSame('New Value', Lang::t('new_key'));
     }
 
@@ -194,7 +204,9 @@ final class KernelBootTest extends TestCase
 
     // ---- helpers ---------------------------------------------------------
 
-    /** @param array<string,mixed> $overrides */
+    /**
+     * @param array{conf?: array<string, mixed>, page?: array<string, mixed>, lang?: array<string, mixed>, user?: array<string, mixed>} $overrides
+     */
     private function simulateGlobals(array $overrides = []): void
     {
         // Config is the source of truth — seed it directly via loadArray.

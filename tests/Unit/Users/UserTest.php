@@ -9,6 +9,7 @@ use Piwigo\Users\User;
 
 final class UserTest extends TestCase
 {
+    /** @return array<string, mixed> */
     private function baseRow(): array
     {
         return [

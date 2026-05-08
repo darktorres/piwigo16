@@ -48,6 +48,7 @@ final class AdminPagesDispatchTest extends TestCase
     public function test_every_page_is_handled(string $controllerClass, array $pages): void
     {
         $src = file_get_contents((new \ReflectionClass($controllerClass))->getFileName() ?: '');
+        self::assertIsString($src, "Could not read $controllerClass source");
         self::assertNotEmpty($src, "Could not read $controllerClass source");
 
         $missing = [];
@@ -70,6 +71,7 @@ final class AdminPagesDispatchTest extends TestCase
         $adminSrc = file_get_contents(
             (new \ReflectionClass(\Piwigo\Controller\Admin\AdminController::class))->getFileName() ?: ''
         );
+        self::assertIsString($adminSrc);
         self::assertNotEmpty($adminSrc);
 
         $allSubControllers = [

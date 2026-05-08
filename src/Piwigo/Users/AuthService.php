@@ -64,13 +64,13 @@ final readonly class AuthService
         return null;
     }
 
-    public function validateLoginCase(mixed $login): string|null
+    public function validateLoginCase(string $login): string|null
     {
         if (InstallSentinel::isInstalled()) {
             $count = $this->userRepo->countByUsernameInsensitive(
                 Config::userFields()['username'],
                 Tables::users(),
-                is_scalar($login) ? (string) $login : ''
+                $login
             );
             if ($count > 0) {
                 return Lang::t('this login is already used');
@@ -79,10 +79,9 @@ final readonly class AuthService
         return null;
     }
 
-    public function searchCaseUsername(mixed $username): string
+    public function searchCaseUsername(string $username): string
     {
-        $usernameStr = is_scalar($username) ? (string) $username : '';
-        $usernameLo  = strtolower($usernameStr);
+        $usernameLo  = strtolower($username);
         $allUsernames = $this->userRepo->findAllUsernames(Config::userFields()['username'], Tables::users());
         $scuUsers = [];
         foreach ($allUsernames as $u) {
@@ -90,7 +89,7 @@ final readonly class AuthService
         }
         $usersFound = array_keys($scuUsers, $usernameLo);
         if (count($usersFound) != 1) {
-            return $usernameStr;
+            return $username;
         }
         return (string) $usersFound[0];
     }
@@ -115,7 +114,7 @@ final readonly class AuthService
         return false;
     }
 
-    public function logUser(mixed $userId, mixed $rememberMe): void
+    public function logUser(int $userId, bool $rememberMe): void
     {
         $cookieLang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
         if ($cookieLang !== '' and CurrentUser::get()->language != $cookieLang) {
@@ -130,7 +129,7 @@ final readonly class AuthService
             $now = time();
             $key = $this->calculateAutoLoginKey($userId, $now, $username);
             if ($key !== false) {
-                $cookie = (is_scalar($userId) ? (string) $userId : '') . '-' . $now . '-' . $key;
+                $cookie = $userId . '-' . $now . '-' . $key;
                 setcookie(Config::rememberMeName(), $cookie, [
                     'expires'  => time() + Config::rememberMeLength(),
                     'path'     => (string) CookieService::cookiePath(),
@@ -148,11 +147,10 @@ final readonly class AuthService
         } else {
             session_start();
         }
-        $uid = is_numeric($userId) ? (int) $userId : 0;
-        $_SESSION['pwg_uid'] = $uid;
+        $_SESSION['pwg_uid'] = $userId;
 
-        EventDispatcher::notify('user_login', $uid);
-        ServiceLocator::get(Util::class)->pwgActivity('user', $uid, 'login');
+        EventDispatcher::notify('user_login', $userId);
+        ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'login');
     }
 
     public function autoLogin(): bool
@@ -180,7 +178,7 @@ final readonly class AuthService
         return false;
     }
 
-    public function tryLogUser(mixed $username, mixed $password, mixed $rememberMe): bool
+    public function tryLogUser(string $username, string $password, bool $rememberMe): bool
     {
         return (bool) EventDispatcher::dispatch('try_log_user', false, $username, $password, $rememberMe);
     }
@@ -412,12 +410,12 @@ SELECT
         }
     }
 
-    public function deactivateUserAuthKeys(mixed $userId): void
+    public function deactivateUserAuthKeys(int $userId): void
     {
-        $this->authKeyRepo->deactivateForUser(is_numeric($userId) ? (int) $userId : 0);
+        $this->authKeyRepo->deactivateForUser($userId);
     }
 
-    public function deactivatePasswordResetKey(mixed $userId): void
+    public function deactivatePasswordResetKey(int $userId): void
     {
         Dml::singleUpdate(Tables::userInfos(), ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
     }

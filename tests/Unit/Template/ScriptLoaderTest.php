@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Template;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
 use ReflectionClass;
 
@@ -52,7 +53,9 @@ final class ScriptLoaderTest extends TestCase
         $result = $this->callManifest();
         self::assertIsArray($result);
         self::assertArrayHasKey('core.scripts', $result);
-        self::assertSame('assets/scripts-abc.js', $result['core.scripts']['file']);
+        $entry = $result['core.scripts'];
+        self::assertIsArray($entry);
+        self::assertSame('assets/scripts-abc.js', $entry['file']);
     }
 
     public function test_manifest_is_cached_after_first_call(): void
@@ -65,7 +68,10 @@ final class ScriptLoaderTest extends TestCase
         $second = $this->callManifest();
 
         self::assertSame($first, $second);
-        self::assertSame('assets/common-abc.js', $second['common']['file']);
+        self::assertIsArray($second);
+        $commonEntry = $second['common'];
+        self::assertIsArray($commonEntry);
+        self::assertSame('assets/common-abc.js', $commonEntry['file']);
     }
 
     // ── add() + manifest path resolution ────────────────────────────────────
@@ -122,18 +128,22 @@ final class ScriptLoaderTest extends TestCase
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 
+    /** @return array<string, mixed>|null */
     private function callManifest(): ?array
     {
         $ref = new ReflectionClass(ScriptLoader::class);
         $method = $ref->getMethod('manifest');
-        return $method->invoke(null);
+        $raw = $method->invoke(null);
+        if (!is_array($raw)) {
+            return null;
+        }
+        return array_combine(array_map('strval', array_keys($raw)), array_values($raw)) ?: [];
     }
 
+    /** @return array<string, Script> */
     private function getRegisteredScripts(ScriptLoader $loader): array
     {
-        $ref = new ReflectionClass($loader);
-        $prop = $ref->getProperty('registered_scripts');
-        return $prop->getValue($loader);
+        return $loader->getAll();
     }
 
     private function resetManifestCache(): void
@@ -143,6 +153,7 @@ final class ScriptLoaderTest extends TestCase
         $prop->setValue(null, null);
     }
 
+    /** @param array<mixed> $data */
     private function writeManifest(array $data, bool $resetCache = true): void
     {
         $distDir = PHPWG_ROOT_PATH . 'dist/';

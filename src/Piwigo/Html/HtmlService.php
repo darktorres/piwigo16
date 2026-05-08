@@ -215,10 +215,10 @@ SELECT id, name, permalink
         Util::get()->redirectHttp(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
-    public function pageForbidden(string $msg, ?string $alternateUrl = null): void
+    public function pageForbidden(string $msg): void
     {
         $this->setStatusHeader(403);
-        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
+        $redirectUrl = UrlService::get()->makeIndexUrl();
         Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
@@ -227,10 +227,10 @@ SELECT id, name, permalink
         );
     }
 
-    public function badRequest(string $msg, ?string $alternateUrl = null): void
+    public function badRequest(string $msg): void
     {
         $this->setStatusHeader(400);
-        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
+        $redirectUrl = UrlService::get()->makeIndexUrl();
         Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">

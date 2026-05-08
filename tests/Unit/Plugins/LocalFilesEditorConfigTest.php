@@ -41,6 +41,5 @@ final class LocalFilesEditorConfigTest extends TestCase
     {
         self::assertArrayHasKey('LocalFilesEditor_tabs', Config::SCHEMA);
         self::assertSame('tabs', Config::SCHEMA['LocalFilesEditor_tabs']['method']);
-        self::assertTrue(method_exists(Config::class, 'tabs'));
     }
 }

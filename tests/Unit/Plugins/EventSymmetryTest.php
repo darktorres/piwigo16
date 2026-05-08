@@ -93,7 +93,7 @@ final class EventSymmetryTest extends TestCase
         }
         $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
         foreach ($it as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
+            if (!($file instanceof \SplFileInfo) || !$file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }
             $content = file_get_contents($file->getPathname()) ?: '';

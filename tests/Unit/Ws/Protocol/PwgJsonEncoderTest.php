@@ -27,6 +27,7 @@ final class PwgJsonEncoderTest extends TestCase
         $err = new PwgError(404, 'not found');
         $json = $this->encoder->encodeResponse($err);
         $decoded = json_decode((string) $json, true);
+        self::assertIsArray($decoded);
         self::assertSame('fail', $decoded['stat']);
         self::assertSame(404, $decoded['err']);
         self::assertSame('not found', $decoded['message']);
@@ -36,6 +37,7 @@ final class PwgJsonEncoderTest extends TestCase
     {
         $json = $this->encoder->encodeResponse('hello');
         $decoded = json_decode((string) $json, true);
+        self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         self::assertSame('hello', $decoded['result']);
     }
@@ -44,14 +46,18 @@ final class PwgJsonEncoderTest extends TestCase
     {
         $json = $this->encoder->encodeResponse(['a' => 1, 'b' => 2]);
         $decoded = json_decode((string) $json, true);
+        self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
-        self::assertSame(1, $decoded['result']['a']);
+        $result = $decoded['result'];
+        self::assertIsArray($result);
+        self::assertSame(1, $result['a']);
     }
 
     public function testEncodeNullResponse(): void
     {
         $json = $this->encoder->encodeResponse(null);
         $decoded = json_decode((string) $json, true);
+        self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         self::assertNull($decoded['result']);
     }

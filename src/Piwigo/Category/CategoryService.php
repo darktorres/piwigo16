@@ -494,7 +494,7 @@ SELECT id
      * @param int[]         $excludedCatIds
      * @return array<string, array<string, mixed>>
      */
-    public function getCommonCategories(array $items, ?int $max = null, array $excludedCatIds = [], bool $usePermissions = true): array
+    public function getCommonCategories(array $items, ?int $max = null, array $excludedCatIds = []): array
     {
         if (empty($items)) {
             return [];
@@ -509,9 +509,7 @@ SELECT
     INNER JOIN ' . Tables::categories() . ' c ON category_id = id
   WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)) . ')';
 
-        if ($usePermissions) {
-            $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
-        }
+        $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
 
         if (!empty($excludedCatIds)) {
             $query .= '

@@ -352,7 +352,7 @@ class Plugins
     /**
      * @return string[]
      */
-    public function getVersionsToCheck(bool $beta_test = false, string $version = AppInfo::VERSION): array
+    public function getVersionsToCheck(bool $beta_test = false): array
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
@@ -365,7 +365,7 @@ class Plugins
                     $i++;
                     continue;
                 }
-                if (AppInfo::branchFromVersion(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == AppInfo::branchFromVersion($version)) {
+                if (AppInfo::branchFromVersion(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == AppInfo::branchFromVersion(AppInfo::VERSION)) {
                     $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
                 }
                 $i++;

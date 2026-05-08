@@ -9,12 +9,12 @@ namespace Piwigo\Ws\OpenApi;
  */
 final readonly class OpenApiDocument
 {
-    /** @param array<mixed> $spec */
+    /** @param array<string, mixed> $spec */
     public function __construct(private array $spec)
     {
     }
 
-    /** @return array<mixed> */
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return $this->spec;

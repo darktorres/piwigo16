@@ -66,13 +66,12 @@ class PwgXmlWriter
         $this->_output(htmlspecialchars($str));
     }
 
-    public function writeCdata(mixed $value): void
+    public function writeCdata(string $value): void
     {
         $this->_end_prev(false);
-        $str = is_scalar($value) || $value === null ? (string) $value : '';
         $this->_output(
             '<![CDATA['
-      . str_replace(']]>', ']]&gt;', $str)
+      . str_replace(']]>', ']]&gt;', $value)
       . ']]>'
         );
     }

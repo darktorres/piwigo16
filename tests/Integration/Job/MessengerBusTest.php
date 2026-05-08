@@ -63,9 +63,11 @@ final class MessengerBusTest extends IntegrationTestCase
         $bus = MessengerFactory::build($this->conn);
         $bus->dispatch(new GenerateDerivativeJob(1, 'thumb'));
 
-        $count = (int) $this->conn
+        $countRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async'")
             ->fetchOne();
+        self::assertIsString($countRaw);
+        $count = (int) $countRaw;
 
         self::assertSame(1, $count, 'One row should be pending in piwigo_async after dispatch');
     }
@@ -84,9 +86,11 @@ final class MessengerBusTest extends IntegrationTestCase
         // this test is about transport ack semantics, not handler logic).
         $transport->ack($envelopes[0]);
 
-        $pending = (int) $this->conn
+        $pendingRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async' AND delivered_at IS NULL")
             ->fetchOne();
+        self::assertIsString($pendingRaw);
+        $pending = (int) $pendingRaw;
 
         self::assertSame(0, $pending, 'No pending rows should remain after ack');
     }
@@ -103,9 +107,11 @@ final class MessengerBusTest extends IntegrationTestCase
 
         $transport->reject($envelopes[0]);
 
-        $pendingAsync = (int) $this->conn
+        $pendingAsyncRaw = $this->conn
             ->executeQuery("SELECT COUNT(*) FROM {$this->tableName} WHERE queue_name = 'piwigo_async' AND delivered_at IS NULL")
             ->fetchOne();
+        self::assertIsString($pendingAsyncRaw);
+        $pendingAsync = (int) $pendingAsyncRaw;
 
         self::assertSame(0, $pendingAsync, 'Rejected message must not remain in async queue');
     }

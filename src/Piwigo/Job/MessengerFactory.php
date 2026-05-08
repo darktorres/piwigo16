@@ -24,7 +24,7 @@ use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 
 final class MessengerFactory
 {
-    public static function build(Connection $dbalConn): MessageBusInterface
+    public static function build(Connection $dbalConn): MessageBus
     {
         $serializer = new PhpSerializer();
         $tableName  = Config::dbPrefix() . 'messenger_messages';

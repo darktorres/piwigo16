@@ -494,7 +494,7 @@ final class UploadService
         ServiceLocator::get(StringUtil::class)->secureDirectory($directory);
     }
 
-    public function needResize(string $imageFilepath, int|string $maxWidth, int|string $maxHeight): bool
+    public function needResize(string $imageFilepath, int $maxWidth, int $maxHeight): bool
     {
         if (!in_array(strtolower(ServiceLocator::get(StringUtil::class)->getExtension($imageFilepath)), Config::pictureExtensions())) {
             return false;
@@ -546,7 +546,7 @@ final class UploadService
         return $inBytes ? $this->convertShorthandNotationToBytes($size) : $size;
     }
 
-    public function convertShorthandNotationToBytes(int|string $value): int
+    public function convertShorthandNotationToBytes(string $value): int
     {
         $suffix = substr((string) $value, -1);
         $multiplyBy = match ($suffix) {

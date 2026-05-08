@@ -42,15 +42,16 @@ final class TemplateFilesExistTest extends TestCase
             }
             $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
             foreach ($it as $file) {
-                if ($file->isFile() && $file->getExtension() === 'tpl') {
-                    // Key by bare filename AND by relative path from the theme root.
-                    $bare = $file->getFilename();
-                    $rel  = ltrim(str_replace($dir, '', $file->getPathname()), '/\\');
-                    self::$tplIndex[$bare]  = $file->getPathname();
-                    self::$tplIndex[$rel]   = $file->getPathname();
-                    // Also with forward slashes for cross-platform references.
-                    self::$tplIndex[str_replace('\\', '/', $rel)] = $file->getPathname();
+                if (!($file instanceof \SplFileInfo) || !$file->isFile() || $file->getExtension() !== 'tpl') {
+                    continue;
                 }
+                // Key by bare filename AND by relative path from the theme root.
+                $bare = $file->getFilename();
+                $rel  = ltrim(str_replace($dir, '', $file->getPathname()), '/\\');
+                self::$tplIndex[$bare]  = $file->getPathname();
+                self::$tplIndex[$rel]   = $file->getPathname();
+                // Also with forward slashes for cross-platform references.
+                self::$tplIndex[str_replace('\\', '/', $rel)] = $file->getPathname();
             }
         }
     }
@@ -62,7 +63,7 @@ final class TemplateFilesExistTest extends TestCase
 
         $phpFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($srcDir));
         foreach ($phpFiles as $phpFile) {
-            if (!$phpFile->isFile() || $phpFile->getExtension() !== 'php') {
+            if (!($phpFile instanceof \SplFileInfo) || !$phpFile->isFile() || $phpFile->getExtension() !== 'php') {
                 continue;
             }
 

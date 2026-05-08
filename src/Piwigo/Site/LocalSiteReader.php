@@ -106,17 +106,10 @@ class LocalSiteReader
         return ['representative_ext'];
     }
 
-    /**
-     * @param array<mixed>|string $file
-     * @return array<mixed>
-     */
-    public function getElementUpdateAttributes(mixed $file): array
+    /** @return array<mixed> */
+    public function getElementUpdateAttributes(string $file): array
     {
         $data = [];
-        if (!is_string($file)) {
-            return $data;
-        }
-
         $filename = basename($file);
         $extension = ServiceLocator::get(StringUtil::class)->getExtension($filename);
 

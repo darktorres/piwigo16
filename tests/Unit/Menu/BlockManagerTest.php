@@ -91,6 +91,8 @@ final class BlockManagerTest extends TestCase
         Config::loadArray(['blk_menubar' => []]);
         $this->mgr->prepareDisplay();
         $this->mgr->setBlockPosition('nav', 999);
-        self::assertSame(999, $this->mgr->getBlock('nav')->getPosition());
+        $block = $this->mgr->getBlock('nav');
+        self::assertNotNull($block);
+        self::assertSame(999, $block->getPosition());
     }
 }

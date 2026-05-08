@@ -23,15 +23,14 @@ use Piwigo\Users\UserService;
 
 final class UserAdminService
 {
-    public function deleteUser(mixed $userId): void
+    public function deleteUser(int $userId): void
     {
-        $uid   = is_numeric($userId) ? (int) $userId : 0;
         $uRepo = ServiceLocator::get(UserRepository::class);
-        $uRepo->deleteAllRelatedData($uid);
-        ServiceLocator::get(SessionService::class)->deleteUserSessions($uid);
-        $uRepo->deleteByUserId($uid, Tables::users(), Config::userFields()['id']);
+        $uRepo->deleteAllRelatedData($userId);
+        ServiceLocator::get(SessionService::class)->deleteUserSessions($userId);
+        $uRepo->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
         EventDispatcher::notify('delete_user', $userId);
-        ServiceLocator::get(Util::class)->pwgActivity('user', is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0), 'delete');
+        ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'delete');
     }
 
     public function syncUsers(): void
@@ -97,9 +96,9 @@ final class UserAdminService
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
     }
 
-    public function getGroupname(mixed $groupId): string|false
+    public function getGroupname(int $groupId): string|false
     {
-        $name = ServiceLocator::get(GroupRepository::class)->findNameById(is_numeric($groupId) ? (int) $groupId : 0);
+        $name = ServiceLocator::get(GroupRepository::class)->findNameById($groupId);
         return $name ?? false;
     }
 
@@ -176,7 +175,7 @@ final class UserAdminService
         ServiceLocator::get(UserRepository::class)->clearNbAvailableTags();
     }
 
-    public function catAdminAccess(mixed $categoryId): bool
+    public function catAdminAccess(int $categoryId): bool
     {
         $user      = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';

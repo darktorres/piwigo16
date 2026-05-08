@@ -9,24 +9,20 @@ use Piwigo\Ws\PwgError;
 
 class PwgJsonEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse(mixed $response): mixed
+    public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
-            return json_encode(
-                [
+            return (string) json_encode([
                 'stat' => 'fail',
                 'err' => $response->code(),
                 'message' => $response->message(),
-                ]
-            );
+            ]);
         }
         parent::flattenResponse($response);
-        return json_encode(
-            [
-              'stat' => 'ok',
-              'result' => $response,
-      ]
-        );
+        return (string) json_encode([
+            'stat' => 'ok',
+            'result' => $response,
+        ]);
     }
 
     public function getContentType(): string

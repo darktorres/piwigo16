@@ -11,28 +11,28 @@
 
 | § | Section | Status | Effort | TL;DR |
 |---|---|---|---|---|
-| 1.1 | Concrete bugs | **Not started** | S | 8 individual fixes (6 DEFERRED + 2 PERF) |
-| 1.2 | Templates pipeline | **Not started** | XL | wave 1 hygiene → wave 2 Latte → wave 3 precompile |
-| 1.3 | Plugin / theme + WS | **Not started** | XL | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups |
-| 1.4 | Security hardening | **Active** ▸ 1 / 5 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
-| 1.5 | Type correctness | **Not started** | M | mixed-types · globals · schema metadata |
-| 1.6 | Test infrastructure | **Not started** | M + L + S | Pest → coverage → Infection (chained) |
-| 1.7 | Deferred / on-demand | **On-demand** | — | Monolog · S3/SFTP · supervisor · Renovate |
-| 2.1 | TS `any` reduction | **Not started** | M | 478 → ≤250 patterns |
-| 2.2 | Vitest unit tests | **Not started** | M | TS unit-test runner + first wave |
-| 2.3 | Bundle size budgets | **Not started** | S | per-entrypoint gzip limits in CI |
-| 2.4 | Vendored library migration | **Active** ▸ 1 / 5 | L | Tiers 1, 3, 4, 5 (Tier 2 shipped) |
-| 3.1 | CSS design tokens + Stylelint | **Active** ▸ 3 / 13 | M | 10 live steps remaining |
-| 3.2 | A11y audit (axe-core) | **Not started** | M | WCAG 2.1 AA gating |
+| 1.1 | Concrete bugs | 🟡 **Not started** | S | 8 individual fixes (6 DEFERRED + 2 PERF) |
+| 1.2 | Templates pipeline | 🟡 **Not started** | XL | wave 1 hygiene → wave 2 Latte → wave 3 precompile |
+| 1.3 | Plugin / theme + WS | 🟡 **Not started** | XL | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups |
+| 1.4 | Security hardening | 🟢 **Active** ▸ 1 / 5 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
+| 1.5 | Type correctness | 🟡 **Not started** | M | mixed-types · globals · schema metadata |
+| 1.6 | Test infrastructure | 🟡 **Not started** | M + L + S | Pest → coverage → Infection (chained) |
+| 1.7 | Deferred / on-demand | 🟠 **On-demand** | — | Monolog · S3/SFTP · supervisor · Renovate |
+| 2.1 | TS `any` reduction | 🟡 **Not started** | M | 478 → ≤250 patterns |
+| 2.2 | Vitest unit tests | 🟡 **Not started** | M | TS unit-test runner + first wave |
+| 2.3 | Bundle size budgets | 🟡 **Not started** | S | per-entrypoint gzip limits in CI |
+| 2.4 | Vendored library migration | 🟢 **Active** ▸ 1 / 5 | L | Tiers 1, 3, 4, 5 (Tier 2 shipped) |
+| 3.1 | CSS design tokens + Stylelint | 🟢 **Active** ▸ 3 / 13 | M | 10 live steps remaining |
+| 3.2 | A11y audit (axe-core) | 🟡 **Not started** | M | WCAG 2.1 AA gating |
 
 ## Legend
 
 | Tag | Meaning |
 |---|---|
-| **Not started** | Scheduled, no commits yet. |
-| **Active** | Work in progress; one or more sub-tasks already shipped. The `▸ N / M` count shows shipped vs total sub-tasks. |
-| **Continuous** | Opportunistic; no single checkpoint date. Applied as files are touched. |
-| **On-demand** | Passive backlog; trigger when a deployment, audit, or external need calls for it. |
+| 🟡 **Not started** | Scheduled, no commits yet. |
+| 🟢 **Active** | Work in progress; one or more sub-tasks already shipped. The `▸ N / M` count shows shipped vs total sub-tasks. |
+| 🔵 **Continuous** | Opportunistic; no single checkpoint date. Applied as files are touched. |
+| 🟠 **On-demand** | Passive backlog; trigger when a deployment, audit, or external need calls for it. |
 
 Effort tags: **S** ≤ 1 day · **M** 2–7 days · **L** 1–3 weeks · **XL** > 3 weeks.
 
@@ -71,7 +71,7 @@ Most sections are independent. The chains that aren't:
 
 ### 1.1 Concrete bugs
 
-**Status:** Not started · **Effort:** S · 8 items
+**Status:** 🟡 Not started · **Effort:** S · 8 items
 
 8 individual bugs and perf notes from the codebase audit (`#7` backlog).
 Each is small enough to land as its own commit; ordering is opportunistic.
@@ -94,14 +94,14 @@ Source: `docs/ROADMAP-PHP.md` `#7`.
 
 ### 1.2 Templates: hygiene → Latte → precompile
 
-**Status:** Not started · **Effort:** XL · 3 sequential waves
+**Status:** 🟡 Not started · **Effort:** XL · 3 sequential waves
 
 One pipeline, three sequential waves. Each wave runs after the previous
 lands — can't reorder.
 
 #### Wave 1 — Smarty hygiene on existing `.tpl` (NOW)
 
-**Status:** Not started · **Effort:** M · 8 actions
+**Status:** 🟡 Not started · **Effort:** M · 8 actions
 
 Eight TEMPLATE-REVIEW NOW items, ordered low-risk first. These run **before**
 the Latte conversion so the converter sees correct source. If skipped, the
@@ -122,7 +122,7 @@ Source: `docs/TEMPLATE-REVIEW.md`.
 
 #### Wave 2 — Smarty → Latte conversion (`#23`, XL)
 
-**Status:** Not started · **Effort:** XL · depends on Wave 1
+**Status:** 🟡 Not started · **Effort:** XL · depends on Wave 1
 
 Latte engine (`latte/latte`) wired alongside Smarty; templates converted
 in waves: admin (~55 files) → public (`_base`, ~50) → `standard_pages` (~7) →
@@ -165,7 +165,7 @@ Source: `docs/ROADMAP-PHP.md` `#23`, `docs/TEMPLATE-REVIEW.md`.
 
 #### Wave 3 — Precompile at deploy (`#25`, S)
 
-**Status:** Not started · **Effort:** S · depends on Wave 2
+**Status:** 🟡 Not started · **Effort:** S · depends on Wave 2
 
 Once Latte is the primary engine, ship `tools/precompile_templates.php` —
 boots Piwigo in CLI, walks every active theme + admin context, calls
@@ -187,13 +187,13 @@ Source: `docs/ROADMAP-PHP.md` `#25`.
 
 ### 1.3 Plugin / theme system + WS plugin surface (`#26` + `#21` backlog, XL)
 
-**Status:** Not started · **Effort:** XL · 4 sub-items
+**Status:** 🟡 Not started · **Effort:** XL · 4 sub-items
 
 One section because the same plugin contract drives all four sub-items.
 
 #### Phase 1 — Plugins (`#26`)
 
-**Status:** Not started
+**Status:** 🟡 Not started
 
 - `Piwigo\Plugin\PluginInterface` with `getId/getVersion/getName/boot/shutdown/install/activate/deactivate/uninstall/subscribedEvents`.
 - PSR-14 events (`composer require psr/event-dispatcher symfony/event-dispatcher`)
@@ -213,7 +213,7 @@ One section because the same plugin contract drives all four sub-items.
 
 #### Phase 2 — Themes (`#26`)
 
-**Status:** Not started · depends on Phase 1
+**Status:** 🟡 Not started · depends on Phase 1
 
 - `Piwigo\Theme\ThemeInterface` mirroring `PluginInterface` plus
   `getParentId/loadParentCss/getAssetDir/getLocalHeadTemplate`.
@@ -234,7 +234,7 @@ One section because the same plugin contract drives all four sub-items.
 
 #### Migrate plugins off `PwgServer::addMethod()`
 
-**Status:** Not started · folded into Phase 1 work
+**Status:** 🟡 Not started · folded into Phase 1 work
 
 `PwgServer::addMethod()` was removed during `#21`; `register(MethodDefinition)`
 is the only registration path. Plugins still calling `addMethod` need to
@@ -245,7 +245,7 @@ Source: `docs/ROADMAP-PHP.md` `#21` backlog.
 
 #### OpenAPI follow-ups
 
-**Status:** Not started · depends on Phase 1
+**Status:** 🟡 Not started · depends on Phase 1
 
 Once plugin handlers are reflection-accessible controller classes:
 
@@ -262,7 +262,7 @@ Source: `docs/ROADMAP-PHP.md` `#21` backlog.
 
 ### 1.4 Security hardening (`#24`)
 
-**Status:** Active ▸ 1 of 5 sub-tasks done · **Effort:** M
+**Status:** 🟢 Active ▸ 1 of 5 sub-tasks done · **Effort:** M
 
 CSRF middleware (Step 4) shipped in `#22` — drop. The remaining hardening:
 
@@ -288,7 +288,7 @@ Source: `docs/ROADMAP-PHP.md` `#24`.
 
 ### 1.5 Type correctness — three converging streams
 
-**Status:** Not started · **Effort:** M · 3 streams (7 + 2 + 5 items)
+**Status:** 🟡 Not started · **Effort:** M · 3 streams (7 + 2 + 5 items)
 
 Post-`#27` PHPStan level 10, three audits/backlogs describe the remaining
 type-tightening surface. Same gating constraint, same review effort —
@@ -296,7 +296,7 @@ tackle as one section, work the streams in parallel where possible.
 
 #### 1.5a Mixed-type fixes
 
-**Status:** Not started · 7 items
+**Status:** 🟡 Not started · 7 items
 
 Seven high-ROI items from the MIXED-TYPES audit, ordered by effort:
 
@@ -318,7 +318,7 @@ Source: `docs/MIXED-TYPES.md` "Recommended Next Steps".
 
 #### 1.5b Globals cleanup
 
-**Status:** Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
+**Status:** 🟡 Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
 
 Both items below are gated by the same precondition — direct `$GLOBALS[...]`
 reads in `src/` being eliminated first — so tackle them together.
@@ -340,7 +340,7 @@ Source: `docs/ROADMAP-PHP.md` `#6` backlog, `docs/MODERNIZATION-PLAN.md` Phase 5
 
 #### 1.5c Config schema metadata
 
-**Status:** Not started · 5 items
+**Status:** 🟡 Not started · 5 items
 
 Five `Config::SCHEMA` enhancements that landed as deferred design surface
 during `#5`:
@@ -362,13 +362,13 @@ Source: `docs/ROADMAP-PHP.md` `#5` backlog.
 
 ### 1.6 Test infrastructure
 
-**Status:** Not started · **Effort:** M + L + S · 3 chained items
+**Status:** 🟡 Not started · **Effort:** M + L + S · 3 chained items
 
 Three coupled items, sequenced because each enables the next.
 
 #### 1.6.1 Pest (`#29`, M) — first
 
-**Status:** Not started · **Effort:** M
+**Status:** 🟡 Not started · **Effort:** M
 
 `composer require pestphp/pest pestphp/pest-plugin-browser --dev`. Pest
 wraps PHPUnit so the existing 378 unit tests run unchanged. The browser
@@ -382,7 +382,7 @@ Source: `docs/ROADMAP-PHP.md` `#29`.
 
 #### 1.6.2 Unit-test coverage 13% → ≥40% (`#30`, L, continuous)
 
-**Status:** Continuous · **Effort:** L · depends on Pest landing
+**Status:** 🔵 Continuous · **Effort:** L · depends on Pest landing
 
 Coverage baseline; priority order:
 
@@ -401,7 +401,7 @@ Source: `docs/ROADMAP-PHP.md` `#30`.
 
 #### 1.6.3 Mutation testing — Infection (`#28`, S) — last
 
-**Status:** Not started · **Effort:** S · depends on coverage from 1.6.2
+**Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.6.2
 
 `composer require infection/infection --dev`. `infection.json5` at repo
 root: `minMsi: 60`, `minCoveredMsi: 75`. CI job runs on `main` push only
@@ -414,7 +414,7 @@ Source: `docs/ROADMAP-PHP.md` `#28`.
 
 ### 1.7 Deferred / on-demand
 
-**Status:** On-demand · 4 items · no scheduled effort
+**Status:** 🟠 On-demand · 4 items · no scheduled effort
 
 Real backlog — passive, executed only when a deployment or audit demands.
 
@@ -439,7 +439,7 @@ Real backlog — passive, executed only when a deployment or audit demands.
 
 ### 2.1 `any` reduction 478 → ≤250 (`#2`)
 
-**Status:** Not started · **Effort:** M · 3 tiers
+**Status:** 🟡 Not started · **Effort:** M · 3 tiers
 
 ESLint `@typescript-eslint/no-explicit-any: error` is configured but
 undermined by the existing 478 `any` patterns. Three tiers, largest files
@@ -465,7 +465,7 @@ Source: `docs/ROADMAP-TS.md` `#2`.
 
 ### 2.2 Vitest unit tests (`#4`)
 
-**Status:** Not started · **Effort:** M
+**Status:** 🟡 Not started · **Effort:** M
 
 Today the only JS test infrastructure is Playwright E2E — useful for
 end-to-end flows, slow and high-friction for testing pure functions.
@@ -489,7 +489,7 @@ Source: `docs/ROADMAP-TS.md` `#4`.
 
 ### 2.3 Bundle size budgets (`#5`)
 
-**Status:** Not started · **Effort:** S
+**Status:** 🟡 Not started · **Effort:** S
 
 `npm i -D size-limit @size-limit/file vite-bundle-visualizer`. `.size-limit.json`
 sets per-entrypoint gzip budgets ~5–10% above today's measured baseline:
@@ -512,7 +512,7 @@ Source: `docs/ROADMAP-TS.md` `#5`.
 
 ### 2.4 Vendored library migration (`#6`)
 
-**Status:** Active ▸ 1 of 5 tiers done · **Effort:** L · 4 tiers remain
+**Status:** 🟢 Active ▸ 1 of 5 tiers done · **Effort:** L · 4 tiers remain
 
 Tier 2 (Stylelint/ESLint scope cleanup) is done — drop. Remaining four tiers:
 
@@ -556,7 +556,7 @@ Source: `docs/ROADMAP-TS.md` `#6`.
 
 ### 3.1 Design tokens + Stylelint (`#1`)
 
-**Status:** Active ▸ 3 of 13 steps done · **Effort:** M · 10 live steps remain
+**Status:** 🟢 Active ▸ 3 of 13 steps done · **Effort:** M · 10 live steps remain
 
 `themes/admin/_base/theme.css` is 9,561 lines monolithic; `themes/_base/theme.css`
 is 1,241 lines. ~689 `!important` declarations across first-party CSS. Zero
@@ -582,7 +582,7 @@ Source: `docs/ROADMAP-CSS.md` `#1`.
 
 ### 3.2 A11y audit — axe-core in Playwright (`#2`)
 
-**Status:** Not started · **Effort:** M · soft dep on 3.1
+**Status:** 🟡 Not started · **Effort:** M · soft dep on 3.1
 
 `npm i -D @axe-core/playwright axe-core`. Helper at `tests/e2e/utils/a11y.ts`:
 

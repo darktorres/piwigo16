@@ -131,7 +131,7 @@ function add_related_category({
     addSelectedAlbum,
     getSelectedAlbum,
 }: {
-    album: { id: number | string; full_name_with_admin_links: string };
+    album: { id: number | string; full_name_with_admin_links?: string };
     addSelectedAlbum: () => void;
     getSelectedAlbum: () => (string | number)[];
 }): void {
@@ -140,7 +140,7 @@ function add_related_category({
             .querySelector('.related-categories-container')
             ?.insertAdjacentHTML(
                 'beforeend',
-                `<div class="breadcrumb-item"><span class="link-path">${album.full_name_with_admin_links}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span></div>`
+                `<div class="breadcrumb-item"><span class="link-path">${album.full_name_with_admin_links ?? ''}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span></div>`
             );
         document
             .querySelector<HTMLElement>(`.search-result-item #${album.id}`)

@@ -133,17 +133,54 @@ interface UserActivityCacheData {
 
 const cacheData = getPageData<UserActivityCacheData>('pwg-user-activity-data');
 
-// Initialize UsersCache
-const usersCache = new UsersCache({
+// Initialize UsersCache (instantiated for its side effects on
+// localStorage; the cache is consumed by other admin scripts).
+const _usersCache = new UsersCache({
     serverKey: cacheData.CACHE_KEYS.users,
     serverId: cacheData.CACHE_KEYS._hash,
     rootUrl: cacheData.ROOT_URL,
 });
+void _usersCache;
+
+interface ActivityLine {
+    id: number | string;
+    action: string;
+    object: string;
+    counter: number;
+    user_id: number;
+    object_id?: number[];
+    date: string;
+    hour: string;
+    username: string;
+    ip_address: string;
+    detailsType?: 'script' | 'method';
+    details: {
+        script?: string;
+        method?: string;
+        agent?: string;
+        connected_with?: string | boolean;
+        users?: unknown[];
+        [key: string]: unknown;
+    };
+}
+
+interface ActivityListResult {
+    result_lines: ActivityLine[];
+    end_page: boolean;
+    page_offset: number;
+}
+
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
 
 // Mutable state
 let action: string | null = null;
 let activity_page = 1;
-let current_page_offset = 0;
+let _current_page_offset = 0;
 let page_offsets: number[] = [0];
 let actual_page = 1;
 let end_page = false;
@@ -153,7 +190,7 @@ let object_filter: string | undefined;
 let date_min_filter: string = date_min;
 let date_max_filter: string = date_max;
 
-if (additional_filt_type) object_filter = additional_filt_type;
+if (additional_filt_type !== null) object_filter = additional_filt_type;
 
 get_user_activity(
     activity_page,
@@ -164,7 +201,14 @@ get_user_activity(
     additional_filt_value
 );
 
-function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, id: any) {
+function get_user_activity(
+    page: number,
+    uid: string | undefined,
+    act: string | null | undefined,
+    obj: string | undefined,
+    date: [string, string],
+    _id: number | null
+) {
     // beforeSend equivalent
     document
         .querySelectorAll<HTMLElement>('.tab > *:not([id="-1"]):not(.loading)')
@@ -182,7 +226,7 @@ function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, i
         .forEach((el) => el.classList.add('icon-spin6'));
 
     const body = new URLSearchParams();
-    const params: Record<string, any> = {
+    const params: Record<string, unknown> = {
         page: page - 1,
         uid,
         action: act,
@@ -193,31 +237,35 @@ function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, i
         id: additional_filt_value,
     };
     Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) body.append(k, String(v));
+        if (v === undefined || v === null) return;
+        if (typeof v === 'string') body.append(k, v);
+        else if (typeof v === 'number' || typeof v === 'boolean') body.append(k, String(v));
+        else body.append(k, JSON.stringify(v));
     });
 
-    fetch(config.wsUrl + 'format=json&method=pwg.activity.getList', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((data: any) => {
+    void fetch(config.wsUrl + 'format=json&method=pwg.activity.getList', { method: 'POST', body })
+        .then((r) => r.json() as Promise<WsResponse<ActivityListResult>>)
+        .then((data) => {
             uid_filter = uid;
-            action_filter = act;
+            action_filter = act ?? undefined;
             object_filter = obj;
             date_min_filter = date[0];
             date_max_filter = date[1];
             document.querySelectorAll<HTMLElement>('.loading').forEach((el) => {
                 el.style.display = 'none';
             });
+            if (data.result === undefined) return;
 
-            if (data.result['result_lines'].length > 0) {
-                data.result['result_lines'].forEach((line: any) => lineConstructor(line));
+            if (data.result.result_lines.length > 0) {
+                data.result.result_lines.forEach((line) => lineConstructor(line));
             } else {
                 emptyLine();
             }
 
-            current_page_offset = page_offsets[page - 1];
-            end_page = data.result['end_page'];
-            if (!page_offsets.includes(data.result['page_offset']))
-                page_offsets.push(data.result['page_offset']);
+            _current_page_offset = page_offsets[page - 1];
+            end_page = data.result.end_page;
+            if (!page_offsets.includes(data.result.page_offset))
+                page_offsets.push(data.result.page_offset);
             document
                 .querySelectorAll<HTMLElement>('.user-update-spinner')
                 .forEach((el) => el.classList.remove('icon-spin6'));
@@ -226,13 +274,12 @@ function get_user_activity(page: any, uid: any, act: any, obj: any, date: any, i
             });
             update_pagination_menu(activity_page);
         })
-        .catch((e) => {
-            console.log('ajax call failed');
-            console.log(e);
+        .catch((e: unknown) => {
+            console.error('ajax call failed:', e);
         });
 }
 
-function lineConstructor(line: any) {
+function lineConstructor(line: ActivityLine) {
     const template = document.getElementById('-1');
     if (!template) return;
     const newLine = template.cloneNode(true) as HTMLElement;
@@ -254,7 +301,7 @@ function lineConstructor(line: any) {
     let final_albumInfos = '';
 
     const p = line.counter > 1;
-    const c = line.counter;
+    const c = String(line.counter);
     const addActionBase = (typeClass: string, icon: string, nameHtml: string) => {
         qs('.action-type')?.classList.add(typeClass);
         qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
@@ -457,10 +504,11 @@ function lineConstructor(line: any) {
                 p ? actionInfos_users_logged_in : actionInfos_user_logged_in
             ).replace('%d', c);
             break;
-        case 'logout':
+        case 'logout': {
             qs('.action-type')?.classList.add('icon-purple');
+            const altId = line.object_id?.[0] ?? line.user_id;
             qs('.user-pic')?.classList.add(
-                color_icons[(line.user_id === 2 ? line.object_id[0] : line.user_id) % 5]
+                color_icons[(line.user_id === 2 ? altId : line.user_id) % 5]
             );
             qs('.action-icon')?.classList.add('icon-logout');
             qs('.action-section')?.classList.add('icon-user-1');
@@ -469,6 +517,7 @@ function lineConstructor(line: any) {
                 p ? actionInfos_users_logged_out : actionInfos_user_logged_out
             ).replace('%d', c);
             break;
+        }
         default:
             qs('.action-type')?.classList.add('icon-purple');
             qs('.user-pic')?.classList.add(color_icons[line.user_id % 5]);
@@ -478,7 +527,7 @@ function lineConstructor(line: any) {
     }
 
     set('.action-infos-test', final_albumInfos);
-    set('.nb_items', line.counter);
+    set('.nb_items', String(line.counter));
     set('.date-day', line.date);
     set('.date-hour', line.hour);
     set('.user-name', line.username);
@@ -492,25 +541,32 @@ function lineConstructor(line: any) {
     const d2 = qs('.detail-item-2');
     if (d2) {
         if (line.detailsType === 'script') {
-            d2.innerHTML = line.details.script;
+            d2.innerHTML = line.details.script ?? '';
             d2.title = 'Script';
         } else if (line.detailsType === 'method') {
-            d2.innerHTML = line.details.method;
+            d2.innerHTML = line.details.method ?? '';
             d2.title = 'API Method';
         }
     }
 
     const d3 = qs('.detail-item-3');
-    if (line.details.agent) {
+    if (line.details.agent !== undefined && line.details.agent !== '') {
         if (d3) {
-            const api_key = line.details.connected_with ? 'API Key, ' : '';
-            d3.innerHTML = line.details.connected_with
+            const hasKey =
+                line.details.connected_with !== undefined && line.details.connected_with !== false;
+            const api_key = hasKey ? 'API Key, ' : '';
+            d3.innerHTML = hasKey
                 ? '<i class="icon-key"></i>' + line.details.agent
                 : line.details.agent;
             d3.title = api_key + 'User-Agent: ' + line.details.agent;
         }
-    } else if (line.details.users && line.action !== 'logout' && line.action !== 'login') {
-        const user_string = [...new Set<unknown>(line.details.users)].toString();
+    } else if (
+        Array.isArray(line.details.users) &&
+        line.details.users.length > 0 &&
+        line.action !== 'logout' &&
+        line.action !== 'login'
+    ) {
+        const user_string = [...new Set<unknown>(line.details.users)].join(', ');
         if (d3) {
             d3.innerHTML = user_string;
             d3.title = users_key + ': ' + user_string;
@@ -519,7 +575,7 @@ function lineConstructor(line: any) {
         d3?.remove();
     }
 
-    newLine.classList.add('uid-' + line.user_id);
+    newLine.classList.add('uid-' + String(line.user_id));
     document.querySelector<HTMLElement>('.tab')?.appendChild(newLine);
 }
 
@@ -532,14 +588,14 @@ function emptyLine() {
     });
 }
 
-function get_initials(username: any) {
+function get_initials(username: string): string {
     const words = username.toUpperCase().split(' ');
     let res = words[0][0];
-    if (words.length > 1 && words[1][0] !== undefined) res += words[1][0];
+    if (words.length > 1 && words[1][0] !== '') res += words[1][0];
     return res;
 }
 
-function move_to_page(page: any) {
+function move_to_page(page: number) {
     if (page < 0) return;
     actual_page = page;
     update_pagination_menu(page);
@@ -560,7 +616,7 @@ document
     .querySelector('.pagination-arrow.left')
     ?.addEventListener('click', () => move_to_page(actual_page - 1));
 
-function update_pagination_menu(page: any) {
+function update_pagination_menu(_page: number) {
     updateArrows();
     update_pagination_items();
     document.querySelectorAll<HTMLElement>('.pagination-container').forEach((el) => {
@@ -587,11 +643,11 @@ function update_pagination_items() {
     if (!end_page) append_pagination_item();
 }
 
-function append_pagination_item(page: any = null) {
+function append_pagination_item(page: number | null = null) {
     const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
     if (page !== null) {
         const div = document.createElement('div');
-        div.innerHTML = page_item.replace(/%d/g, page);
+        div.innerHTML = page_item.replace(/%d/g, String(page));
         const el = div.firstElementChild as HTMLElement;
         if (actual_page === page) el.classList.add('actual');
         el.addEventListener('click', () => move_to_page(Number(el.dataset['page'])));
@@ -605,7 +661,7 @@ function append_pagination_item(page: any = null) {
 
 function page_reset() {
     activity_page = 1;
-    current_page_offset = 0;
+    _current_page_offset = 0;
     page_offsets = [0];
     actual_page = 1;
     end_page = false;
@@ -620,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userTs = new TomSelect(userSelectEl, {
             onChange(value: string) {
                 page_reset();
-                if (!value || value === 'none') {
+                if (value === '' || value === 'none') {
                     get_user_activity(
                         1,
                         undefined,
@@ -649,12 +705,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionTs = new TomSelect(actionSelectEl, {
             onChange(value: string) {
                 page_reset();
-                if (!value || value === 'none') {
+                if (value === '' || value === 'none') {
                     get_user_activity(
                         1,
                         uid_filter,
                         undefined,
-                        additional_filt_type ? object_filter : undefined,
+                        additional_filt_type !== null ? object_filter : undefined,
                         [date_min_filter, date_max_filter],
                         additional_filt_value
                     );
@@ -675,13 +731,13 @@ document.addEventListener('DOMContentLoaded', () => {
         actionTs.setValue('');
     }
 
-    const dateMin = document.getElementById('date_min_activity') as HTMLInputElement;
-    const dateMax = document.getElementById('date_max_activity') as HTMLInputElement;
+    const dateMin = document.getElementById('date_min_activity') as HTMLInputElement | null;
+    const dateMax = document.getElementById('date_max_activity') as HTMLInputElement | null;
     dateMin?.addEventListener('change', () => {
         page_reset();
         document
             .getElementById('date_max_activity')!
-            .setAttribute('min', dateMin.value || date_min);
+            .setAttribute('min', dateMin.value !== '' ? dateMin.value : date_min);
         get_user_activity(
             activity_page,
             uid_filter,
@@ -695,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         page_reset();
         document
             .getElementById('date_min_activity')!
-            .setAttribute('max', dateMax.value || date_max);
+            .setAttribute('max', dateMax.value !== '' ? dateMax.value : date_max);
         get_user_activity(
             activity_page,
             uid_filter,
@@ -708,12 +764,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const moreFilters = document.getElementById('activityMoreFilters');
     const moreFiltersContent = document.getElementById('activityMoreFiltersContent');
-    if (additional_filt_type) moreFilters?.classList.add('extend-padding');
+    if (additional_filt_type !== null) moreFilters?.classList.add('extend-padding');
     else if (moreFiltersContent) moreFiltersContent.style.display = 'none';
 
     let toggleTriggered = false;
     moreFilters?.addEventListener('click', () => {
-        if (toggleTriggered || !moreFiltersContent) return;
+        if (toggleTriggered || moreFiltersContent === null) return;
         toggleTriggered = true;
         const isHidden =
             moreFiltersContent.style.display === 'none' ||

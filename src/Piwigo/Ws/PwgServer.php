@@ -6,7 +6,6 @@ namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
-use Piwigo\Core\StringUtil;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -167,11 +166,19 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if ($this->_responseEncoder === null) {
             return;
         }
+
+        if ($response instanceof PwgError && !headers_sent()) {
+            $code = $response->code();
+            if ($code !== null && $code >= 400 && $code < 600) {
+                ServiceLocator::get(HtmlService::class)->setStatusHeader($code, $response->message());
+            }
+        }
+
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
 
         if (!headers_sent()) {
-            header('Content-Type: '.$contentType.'; charset='.ServiceLocator::get(StringUtil::class)->getPwgCharset());
+            header('Content-Type: '.$contentType.'; charset=utf-8');
         }
         print_r($encodedResponse);
         EventDispatcher::notify('sendResponse', $encodedResponse);

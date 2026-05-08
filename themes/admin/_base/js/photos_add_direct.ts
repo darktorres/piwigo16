@@ -28,7 +28,7 @@ interface PhotosAddDirectPageData {
     originalImageId: number | string;
     photosAdded_label: string;
     photosUpdated_label: string;
-    related_categories_ids: any[];
+    related_categories_ids: Array<string | number>;
     str_and_X_others: string;
     str_drop_album_ab: string;
     str_format_warning: string;
@@ -37,17 +37,51 @@ interface PhotosAddDirectPageData {
     str_upload_in_progress: string;
 }
 
+interface AlbumLike {
+    id: string | number;
+    name?: string;
+    full_name_with_admin_links?: string;
+}
+
+interface UploadCategory {
+    id: string | number;
+    label?: string;
+    nb_photos?: string | number;
+}
+
+interface UploadResult {
+    image_id: string | number;
+    square_src: string;
+    name: string;
+    add_status?: string;
+    category?: UploadCategory;
+}
+
+interface ImageSearchEntry {
+    status: string;
+    image_id: string | number;
+    format_exist?: boolean | number | string;
+}
+
+interface CategoryAddResult {
+    id: string | number;
+}
+
+interface WsResponse<T> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
 const {
     pwg_token,
-    chunk_size,
     max_file_size,
     albumSummary_label,
     batch_Label,
     file_ext,
     formatMode,
     format_ext,
-    format_remove,
-    format_update_warning,
     formatsAdded_label,
     formatsUpdated_label,
     haveFormatsOriginal,
@@ -65,13 +99,13 @@ const {
     str_upload_in_progress,
 } = getPageData<PhotosAddDirectPageData>();
 
-const addedPhotos: any[] = [];
-let exts: any = {};
-let fileNames: any = {};
+const addedPhotos: number[] = [];
+let exts: Record<string, string> = {};
+let fileNames: Record<string, string> = {};
 let html: string = '';
-const updatedPhotos: any[] = [];
-let uploadCategory: any = null;
-const uploadedPhotos: any[] = [];
+const updatedPhotos: number[] = [];
+let uploadCategory: UploadCategory | null = null;
+const uploadedPhotos: number[] = [];
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
@@ -99,16 +133,16 @@ const btnAddFiles = qs<HTMLButtonElement>('#addFiles');
 const chooseAlbumFirst = qs('#chooseAlbumFirst');
 const uploaderPhotos = qs('#uploader');
 const formatsUpdated: string[] = [];
-const formats: any[] = [];
-let ab: any = null;
+const formats: Array<[string, string | number]> = [];
+let ab: AlbumSelector | null = null;
 
 /*---- DOMContentLoaded ----*/
 document.addEventListener('DOMContentLoaded', () => {
-    if (!nb_albums) {
+    if (nb_albums === 0) {
         btnFirstAlbum?.addEventListener('click', () => open_new_album_modal());
         closeModalFirstAlbum?.addEventListener('click', () => close_new_album_modal());
         btnAddFirstAlbum?.addEventListener('click', () =>
-            add_first_album((id: any) => ab?.select_album(id))
+            add_first_album((id: string | number) => ab?.select_album(id))
         );
         inputFirstAlbum?.addEventListener('keyup', (e: KeyboardEvent) => {
             if (e.key === 'Enter') btnAddFirstAlbum?.click();
@@ -122,8 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle: str_drop_album_ab,
     });
 
-    btnPhotosAS?.addEventListener('click', () => ab.open());
-    selectedAlbumEdit?.addEventListener('click', () => ab.open());
+    btnPhotosAS?.addEventListener('click', () => ab?.open());
+    selectedAlbumEdit?.addEventListener('click', () => ab?.open());
 
     qs('.dont-show-again')?.addEventListener('click', () => {
         void fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
@@ -161,21 +195,22 @@ function initUppy() {
     const uppyContainer = qs('#uploader');
     if (!uppyContainer) return;
 
-    const allowedTypes =
-        (formatMode ? format_ext : file_ext)?.split(',').map((e: string) => '.' + e.trim()) ?? [];
+    const allowedTypes = (formatMode ? format_ext : file_ext)
+        .split(',')
+        .map((e: string) => '.' + e.trim());
 
     const uppy = new Uppy({
         autoProceed: false,
         restrictions: {
             maxFileSize: parseInt(String(max_file_size)) || undefined,
-            allowedFileTypes: allowedTypes.length ? allowedTypes : undefined,
+            allowedFileTypes: allowedTypes.length > 0 ? allowedTypes : undefined,
         },
     })
         .use(Dashboard, {
             target: '#uploadForm',
             inline: true,
             proudlyDisplayPoweredByUppy: false,
-        } as any)
+        })
         .use(XHRUpload, {
             endpoint: config.wsUrl + 'method=pwg.images.upload&format=json',
             formData: true,
@@ -193,62 +228,70 @@ function initUppy() {
         uppy.cancelAll();
     });
 
-    uppy.on('files-added', async (files) => {
-        fileNames = {};
-        exts = {};
-        files.forEach((file) => {
-            fileNames[file.id] = file.name;
-            exts[file.id] = file.name.slice(file.name.lastIndexOf('.') + 1);
-        });
+    uppy.on('files-added', (files) => {
+        void (async () => {
+            fileNames = {};
+            exts = {};
+            files.forEach((file) => {
+                fileNames[file.id] = file.name;
+                const fname = file.name;
+                exts[file.id] = fname.slice(fname.lastIndexOf('.') + 1);
+            });
 
-        if (formatMode) {
+            if (!formatMode) return;
+
             if (!haveFormatsOriginal) {
-                // Search for original images
                 const body = new URLSearchParams({ filename_list: JSON.stringify(fileNames) });
                 const result = await fetch(
                     config.wsUrl + 'format=json&method=pwg.images.formats.searchImage',
                     { method: 'POST', body }
                 )
-                    .then((r) => r.json())
+                    .then((r) => r.json() as Promise<WsResponse<Record<string, ImageSearchEntry>>>)
                     .catch(() => ({ result: {} }));
-                const images_search = result.result ?? {};
+                const images_search: Record<string, ImageSearchEntry> = result.result ?? {};
 
                 const notFound: string[] = [],
                     multiple: string[] = [];
                 files.forEach((f) => {
                     const search = images_search[f.id];
-                    if (search?.status === 'found') {
+                    if (search.status === 'found') {
                         uppy.setFileMeta(f.id, { format_of: search.image_id });
                         formats.push([f.id, search.image_id]);
-                        if (search.format_exist) formatsUpdated.push(f.id);
+                        if (
+                            search.format_exist !== undefined &&
+                            search.format_exist !== false &&
+                            search.format_exist !== 0 &&
+                            search.format_exist !== ''
+                        )
+                            formatsUpdated.push(f.id);
                     } else {
-                        if (search?.status === 'multiple') multiple.push(f.name);
+                        if (search.status === 'multiple') multiple.push(f.name);
                         else notFound.push(f.name);
                         uppy.removeFile(f.id);
                     }
                 });
 
-                if (notFound.length || multiple.length) {
+                if (notFound.length > 0 || multiple.length > 0) {
                     const fmt = (tab: string[]) => {
-                        tab = tab
+                        let out = tab
                             .map((f) => f.slice(0, f.indexOf('.')))
                             .filter((f, i, a) => i === a.indexOf(f));
-                        if (tab.length > 5) {
-                            tab[5] = str_and_X_others.replace('%d', String(tab.length - 5));
-                            tab = tab.slice(0, 6);
+                        if (out.length > 5) {
+                            out[5] = str_and_X_others.replace('%d', String(out.length - 5));
+                            out = out.slice(0, 6);
                         }
-                        return tab;
+                        return out;
                     };
                     window.alert(
                         str_format_warning +
                             '\n' +
-                            (notFound.length
+                            (notFound.length > 0
                                 ? str_format_warning_notFound.replace(
                                       '%s',
                                       fmt(notFound).join(', ')
                                   )
                                 : '') +
-                            (multiple.length
+                            (multiple.length > 0
                                 ? '\n' +
                                   str_format_warning_multiple.replace(
                                       '%s',
@@ -258,14 +301,17 @@ function initUppy() {
                     );
                 }
             } else {
-                const forms_exts = imageFormatsExtensions ? JSON.parse(imageFormatsExtensions) : [];
+                const forms_exts: string[] =
+                    imageFormatsExtensions !== ''
+                        ? (JSON.parse(imageFormatsExtensions) as string[])
+                        : [];
                 files.forEach((f) => {
                     uppy.setFileMeta(f.id, { format_of: originalImageId });
                     formats.push([f.id, originalImageId]);
                     if (forms_exts.includes(exts[f.id])) formatsUpdated.push(f.id);
                 });
             }
-        }
+        })();
     });
 
     uppy.on('upload-progress', (_file, progress) => {
@@ -286,7 +332,9 @@ function initUppy() {
 
     uppy.on('upload-success', (file, response) => {
         if (!file) return;
-        const data = response.body as any;
+        const data = response.body as WsResponse<UploadResult>;
+        if (data.result === undefined) return;
+        const result = data.result;
         hide(document.getElementById(file.id));
         show(qs('#uploadedPhotos')?.closest('fieldset'));
 
@@ -294,34 +342,32 @@ function initUppy() {
             '<a href="' +
             config.adminUrl +
             'page=photo-' +
-            data.result.image_id +
+            String(result.image_id) +
             '" style="position:relative" target="_blank">';
         html +=
-            '<img src="' +
-            data.result.square_src +
-            '" class="thumbnail" title="' +
-            data.result.name +
-            '">';
+            '<img src="' + result.square_src + '" class="thumbnail" title="' + result.name + '">';
+        const fname = file.name;
         if (formatMode)
             html +=
                 '<div class="format-ext-name" title="' +
-                file.name +
+                fname +
                 '"><span>' +
-                file.name.slice(file.name.indexOf('.')) +
+                fname.slice(fname.indexOf('.')) +
                 '</span></div>';
         html += '</a> ';
         qs('#uploadedPhotos')?.insertAdjacentHTML('afterbegin', html);
 
-        uploadedPhotos.push(parseInt(data.result.image_id));
-        if (data.result.add_status === 'add') addedPhotos.push(parseInt(data.result.image_id));
-        else updatedPhotos.push(parseInt(data.result.image_id));
-        if (!formatMode) uploadCategory = data.result.category;
+        uploadedPhotos.push(parseInt(String(result.image_id)));
+        if (result.add_status === 'add') addedPhotos.push(parseInt(String(result.image_id)));
+        else updatedPhotos.push(parseInt(String(result.image_id)));
+        if (!formatMode) uploadCategory = result.category ?? null;
     });
 
     uppy.on('upload-error', (_file, _error, response) => {
         let msg = 'Upload error';
         try {
-            msg = (response as any)?.body?.message ?? msg;
+            const body = (response as { body?: { message?: string } } | undefined)?.body;
+            msg = body?.message ?? msg;
         } catch {
             /* noop */
         }
@@ -364,17 +410,17 @@ function initUppy() {
                   : infoTextUpdate;
         qs('.infos')?.insertAdjacentHTML('beforeend', '<ul><li>' + infoText + '</li></ul>');
 
-        if (!formatMode) {
+        if (!formatMode && uploadCategory !== null) {
             html = sprintf(
                 albumSummary_label,
                 '<a href="' +
                     config.adminUrl +
                     'page=album-' +
-                    uploadCategory.id +
+                    String(uploadCategory.id) +
                     '">' +
-                    uploadCategory.label +
+                    (uploadCategory.label ?? '') +
                     '</a>',
-                parseInt(uploadCategory.nb_photos)
+                parseInt(String(uploadCategory.nb_photos ?? '0'))
             );
             qs('.infos ul')?.insertAdjacentHTML('beforeend', '<li>' + html + '</li>');
         }
@@ -394,20 +440,19 @@ function initUppy() {
     });
 
     // Set per-file metadata before upload
-    uppy.on('upload', (data: any) => {
-        (data.fileIDs ?? []).forEach((fileId: string) => {
-            const file = uppy.getFile(fileId);
-            const opts: Record<string, any> = {
+    uppy.on('upload', (_uploadID, files) => {
+        files.forEach((file) => {
+            const opts: Record<string, unknown> = {
                 pwg_token,
                 update_mode: String(qs<HTMLInputElement>('#toggleUpdateMode')?.checked ?? false),
             };
             if (formatMode) {
-                opts.format_of = file.meta.format_of ?? '';
+                opts['format_of'] = file.meta['format_of'] ?? '';
             } else {
-                opts.category = ab?.get_selected_albums()[0] ?? '';
-                opts.name = file.name;
+                opts['category'] = ab?.get_selected_albums()[0] ?? '';
+                opts['name'] = file.name;
             }
-            uppy.setFileMeta(fileId, opts);
+            uppy.setFileMeta(file.id, opts);
         });
     });
 }
@@ -418,14 +463,22 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 /*---- General functions ----*/
-function add_related_category({ album, newSelectedAlbum }: { album: any; newSelectedAlbum: any }) {
+function add_related_category({
+    album,
+    newSelectedAlbum,
+}: {
+    album: AlbumLike;
+    newSelectedAlbum: () => void;
+    addSelectedAlbum: () => void;
+    getSelectedAlbum: () => Array<string | number>;
+}) {
     const div = document.createElement('div');
     div.innerHTML = album.full_name_with_admin_links ?? '';
     let text = '';
     Array.from(div.children).forEach((s) => {
-        if ((s as HTMLElement).innerHTML) text += (s as HTMLElement).innerHTML;
+        if ((s as HTMLElement).innerHTML !== '') text += (s as HTMLElement).innerHTML;
     });
-    if (!text) text = album.full_name_with_admin_links ?? album.name ?? '';
+    if (text === '') text = album.full_name_with_admin_links ?? album.name ?? '';
     newSelectedAlbum();
     if (selectedAlbumName) {
         selectedAlbumName.innerHTML = text;
@@ -464,15 +517,15 @@ function hide_first_album(cat_name: string) {
     show(uploadForm);
 }
 
-function add_first_album(add_cat: any) {
+function add_first_album(add_cat: (id: string | number) => void) {
     const name = inputFirstAlbum?.value ?? '';
-    fetch(config.wsUrl + 'format=json&method=pwg.categories.add', {
+    void fetch(config.wsUrl + 'format=json&method=pwg.categories.add', {
         method: 'POST',
         body: new URLSearchParams({ name, pwg_token }),
     })
-        .then((r) => r.json())
+        .then((r) => r.json() as Promise<WsResponse<CategoryAddResult>>)
         .then((res) => {
-            if (res.stat === 'ok') {
+            if (res.stat === 'ok' && res.result !== undefined) {
                 add_cat(res.result.id);
                 hide_first_album(name);
             } else console.error('An error has occurred');

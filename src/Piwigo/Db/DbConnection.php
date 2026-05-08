@@ -36,14 +36,23 @@ final class DbConnection
 
     public static function build(): Connection
     {
-        $conn = DriverManager::getConnection([
-            'driver'   => 'mysqli',
-            'host'     => Config::dbHost(),
-            'user'     => Config::dbUser(),
+        $host   = Config::dbHost();
+        $params = [
+            'driver'  => 'mysqli',
+            'user'    => Config::dbUser(),
             'password' => Config::dbPassword(),
-            'dbname'   => Config::dbName(),
-            'charset'  => 'utf8mb4',
-        ]);
+            'dbname'  => Config::dbName(),
+            'charset' => 'utf8mb4',
+        ];
+
+        // A host starting with '/' is treated as a Unix socket path.
+        if (str_starts_with($host, '/')) {
+            $params['unix_socket'] = $host;
+        } else {
+            $params['host'] = $host;
+        }
+
+        $conn = DriverManager::getConnection($params);
 
         // Remove ONLY_FULL_GROUP_BY so queries that
         // use SELECT t.*, COUNT(*) … GROUP BY t.id work without errors.

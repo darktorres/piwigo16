@@ -51,7 +51,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function resetDatabase(): void
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, '', $this->dbPort);
+        $db = $this->newMysqli('');
         $db->query("DROP DATABASE IF EXISTS `{$this->dbName}`");
         $db->query("CREATE DATABASE `{$this->dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         $db->close();
@@ -61,14 +61,20 @@ abstract class IntegrationTestCase extends TestCase
     {
         self::assertFileExists($path, 'Fixture file must exist');
 
-        $proc = new Process([
-            'mysql',
-            "-h{$this->dbHost}",
-            "-P{$this->dbPort}",
-            "-u{$this->dbUser}",
-            "-p{$this->dbPass}",
-            $this->dbName,
-        ]);
+        $isSocket = str_starts_with($this->dbHost, '/');
+        $args = ['mysql', "-u{$this->dbUser}"];
+        if ($this->dbPass !== '') {
+            $args[] = "-p{$this->dbPass}";
+        }
+        if ($isSocket) {
+            $args[] = "--socket={$this->dbHost}";
+        } else {
+            $args[] = "-h{$this->dbHost}";
+            $args[] = "-P{$this->dbPort}";
+        }
+        $args[] = $this->dbName;
+
+        $proc = new Process($args);
         $proc->setInput((string) file_get_contents($path));
         $proc->mustRun();
     }
@@ -88,9 +94,17 @@ abstract class IntegrationTestCase extends TestCase
         InstallSentinel::markInstalled();
     }
 
+    private function newMysqli(string $dbName): \mysqli
+    {
+        if (str_starts_with($this->dbHost, '/')) {
+            return new \mysqli('localhost', $this->dbUser, $this->dbPass, $dbName, 0, $this->dbHost);
+        }
+        return new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $dbName, $this->dbPort);
+    }
+
     protected function queryScalar(string $sql): string
     {
-        $db = new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPort);
+        $db = $this->newMysqli($this->dbName);
         $result = $db->query($sql);
         self::assertInstanceOf(\mysqli_result::class, $result);
         $row = $result->fetch_row();

@@ -138,7 +138,7 @@ final class InstallController implements ControllerInterface
             InstallService::installDbConnect($infos, $errors);
 
             if (count($errors) > 0) {
-                print_r($errors);
+                $step = 1;
             }
 
             if (

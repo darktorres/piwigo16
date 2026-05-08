@@ -39,15 +39,20 @@ final class MessengerBusTest extends IntegrationTestCase
         // Seed Config with the test DB prefix so MessengerFactory reads the right table name.
         Config::loadArray(['db_prefix' => 'piwigo_']);
 
-        $this->conn = DriverManager::getConnection([
+        $connParams = [
             'driver'   => 'mysqli',
-            'host'     => $this->dbHost,
-            'port'     => $this->dbPort,
             'user'     => $this->dbUser,
             'password' => $this->dbPass,
             'dbname'   => $this->dbName,
             'charset'  => 'utf8mb4',
-        ]);
+        ];
+        if (str_starts_with($this->dbHost, '/')) {
+            $connParams['unix_socket'] = $this->dbHost;
+        } else {
+            $connParams['host'] = $this->dbHost;
+            $connParams['port'] = $this->dbPort;
+        }
+        $this->conn = DriverManager::getConnection($connParams);
 
         $this->tableName = Config::dbPrefix() . 'messenger_messages';
     }

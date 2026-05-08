@@ -621,6 +621,29 @@ final class LegacyEvents
 }
 ```
 
+##### Fork identity
+
+`AppInfo` carries a `FORK_VERSION` constant alongside the upstream
+`VERSION`. Its presence is the signal that this is the rewrite fork;
+stock Piwigo 16 does not define it.
+
+```php
+// src/Piwigo/Core/AppInfo.php
+public const string VERSION       = '16.3.0';  // upstream traceability
+public const string FORK_VERSION  = '1.0.0';   // rewrite fork's own release line
+```
+
+Plugins and themes detect the fork with:
+
+```php
+if (!defined('Piwigo\Core\AppInfo::FORK_VERSION')) {
+    // running on stock Piwigo — bail or degrade gracefully
+}
+```
+
+No name constant is needed — there is only one fork, so the presence of
+`FORK_VERSION` is sufficient.
+
 ##### Declarative `plugin.json`
 
 ```json
@@ -629,10 +652,17 @@ final class LegacyEvents
   "version": "1.4.0",
   "name": "OpenStreetMap",
   "minPiwigo": "16.0",
+  "minForkVersion": "1.0",
   "main": "Piwigo\\Plugin\\OpenStreetMap\\Plugin",
   "autoload": { "psr-4": { "Piwigo\\Plugin\\OpenStreetMap\\": "src/" } }
 }
 ```
+
+`minForkVersion` is optional. Omitting it means the plugin targets stock
+Piwigo and will be rejected by `PluginRegistry` on the rewrite. During
+the migration window the legacy bridge loads old plugins that have no
+`plugin.json` at all; once the bridge is removed, `plugin.json` with
+`minForkVersion` is required.
 
 `Piwigo\Plugin\PluginRegistry` reads the manifest, registers PSR-4
 autoload, instantiates the main class, and calls `boot()`. The plugin

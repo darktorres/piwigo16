@@ -5,6 +5,7 @@
 /themes/*
 !/themes/index.php
 !/themes/_base
+!/themes/admin
 !/themes/standard_pages
 /upload
 /galleries/*

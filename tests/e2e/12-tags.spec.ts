@@ -1,14 +1,12 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto, getPwgToken } from './helpers/upload-photo';
 import { wsUrl, adminUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/006.jpg');
+const IMAGE = TEST_PHOTOS[5];
 
 test.describe('tag management', () => {
     test('create tag, assign to photo, delete tag', async ({ page, request }) => {

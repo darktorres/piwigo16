@@ -1,13 +1,11 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
 import { wsUrl } from './helpers/url';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IMAGE_1 = path.join(__dirname, '../../galleries/Wallpapers/002.jpg');
-const IMAGE_2 = path.join(__dirname, '../../galleries/Wallpapers/003.jpg');
+const IMAGE_1 = TEST_PHOTOS[1];
+const IMAGE_2 = TEST_PHOTOS[2];
 
 test('upload photo via API returns image_id', async ({ page, request }) => {
     await loginAsAdmin(page);

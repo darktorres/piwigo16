@@ -5,17 +5,15 @@
  * valid ID to load.
  */
 
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { test } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
 import { adminUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/007.jpg');
+const IMAGE = TEST_PHOTOS[6];
 
 let sharedPhotoId = 0;
 

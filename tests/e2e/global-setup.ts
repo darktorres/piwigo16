@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import * as fs from 'fs';
 import * as path from 'path';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -85,6 +86,24 @@ async function globalSetup(): Promise<void> {
         `mysql -h${host} -P${port} -u${user} -p${pass} ${db} < "${FIXTURE.replace(/\\/g, '/')}"`,
         { maxBuffer: 64 * 1024 * 1024 }
     );
+
+    // Generate test images in galleries/Wallpapers/ using PHP GD.
+    const wallpapersDir = path.join(REPO_ROOT, 'galleries', 'Wallpapers');
+    fs.mkdirSync(wallpapersDir, { recursive: true });
+    const colors = ['220,50,50', '50,180,80', '50,100,220', '230,200,50', '150,60,200', '200,120,50', '50,180,180', '180,50,180', '100,180,50', '50,50,180'];
+    const phpScript = '<?php\n' + TEST_PHOTOS.map((p, i) => {
+        const [r, g, b] = colors[i % colors.length].split(',');
+        const label = path.basename(p, '.jpg');
+        return `$img = imagecreatetruecolor(800, 600);
+imagefill($img, 0, 0, imagecolorallocate($img, ${r}, ${g}, ${b}));
+imagestring($img, 5, 350, 280, "${label}", imagecolorallocate($img, 255, 255, 255));
+imagejpeg($img, "${p.replace(/\\/g, '/')}", 90);
+imagedestroy($img);`;
+    }).join('\n');
+    const tmpScript = path.join(REPO_ROOT, '_data', 'gen-test-images.php');
+    fs.writeFileSync(tmpScript, phpScript);
+    await execAsync(`php ${tmpScript}`);
+    fs.unlinkSync(tmpScript);
 
     // Mark the test install as installed. InstallSentinel checks
     // local/.installed.test in test mode (TestMode); without this the

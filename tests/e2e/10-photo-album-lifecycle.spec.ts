@@ -1,12 +1,10 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto, getPwgToken } from './helpers/upload-photo';
 import { wsUrl } from './helpers/url';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/004.jpg');
+const IMAGE = TEST_PHOTOS[3];
 
 test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     await loginAsAdmin(page);

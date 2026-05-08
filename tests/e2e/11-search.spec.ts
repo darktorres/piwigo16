@@ -1,14 +1,12 @@
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-photo';
 import { pwgUrl, wsUrl } from './helpers/url';
 import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
+import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const IMAGE = path.join(__dirname, '../../galleries/Wallpapers/005.jpg');
+const IMAGE = TEST_PHOTOS[4];
 
 test.describe('search functionality', () => {
     test('API search finds photo by name', async ({ page, request }) => {

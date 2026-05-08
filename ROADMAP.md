@@ -1,9 +1,8 @@
 # Piwigo 16.x — Active Roadmap
 
-> Open work only. Completed phases live in git history and in the per-track
-> docs (`docs/ROADMAP-{PHP,TS,CSS}.md`, `docs/MODERNIZATION-PLAN.md`).
-> Reference docs in `docs/` remain canonical for their topics — see the
-> Pointers section at the bottom of this file.
+> Open work only. Completed phases live in git history. The repository
+> restructure plan is held out separately while its design decisions
+> settle.
 
 ---
 
@@ -11,10 +10,10 @@
 
 | § | Section | Status | Effort | TL;DR |
 |---|---|---|---|---|
-| 1.1 | Concrete bugs | 🟡 **Not started** | S | 8 individual fixes (6 DEFERRED + 2 PERF) |
+| 1.1 | Concrete bugs | 🟡 **Not started** | S | 8 individual fixes (6 deferred markers + 2 perf notes) |
 | 1.2 | Templates pipeline | 🟡 **Not started** | XL | wave 1 hygiene → wave 2 Latte → wave 3 precompile |
 | 1.3 | Plugin / theme + WS | 🟡 **Not started** | XL | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups |
-| 1.4 | Security hardening | 🟢 **Active** ▸ 1 / 5 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
+| 1.4 | Security hardening | 🟢 **Active** ▸ 1 / 6 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
 | 1.5 | Type correctness | 🟡 **Not started** | M | mixed-types · globals · schema metadata |
 | 1.6 | Test infrastructure | 🟡 **Not started** | M + L + S | Pest → coverage → Infection (chained) |
 | 1.7 | Deferred / on-demand | 🟠 **On-demand** | — | Monolog · S3/SFTP · supervisor · Renovate |
@@ -42,41 +41,41 @@ Effort tags: **S** ≤ 1 day · **M** 2–7 days · **L** 1–3 weeks · **XL** 
 
 Most sections are independent. The chains that aren't:
 
-- **1.2 templates pipeline.** Wave 1 hygiene → Wave 2 Latte → Wave 3 precompile.
-  Strict order; can't reorder. If hygiene is skipped, its bugs propagate verbatim
-  into `.latte`.
+- **1.2 templates pipeline.** Wave 1 hygiene → Wave 2 Latte → Wave 3
+  precompile. Strict order; can't reorder. If hygiene is skipped, its bugs
+  propagate verbatim into `.latte`.
 - **1.5b globals cleanup.** Gated by direct `$GLOBALS[...]` reads in `src/`
-  being eliminated first. Both halves (bridge cleanup + PageRenderer residuals)
+  being eliminated first. Both halves (bridge cleanup + renderer residuals)
   land together.
-- **1.6 test infrastructure.** Pest (1.6.1) lands first because it changes the
-  runner #30/#28 measure. #30 coverage feeds #28 Infection (mutation testing's
-  MSI is meaningful only once enough tests exist to mutate).
-- **3.1 → 3.2.** CSS design tokens before a11y audit — color-contrast violations
-  resolve when tokens land, so most of the violation list dissolves on its own.
-- **1.2 wave 1 §B ↔ §2 TS event binding.** Replacing `javascript:` URLs and
-  inline `onclick` touches both `.tpl` and the receiving TypeScript handlers;
-  coordinate the commit across tracks.
-- **1.3 phase 2 themes ↔ 3.1 step 8.** ROADMAP-CSS Step 8 "skin refactor"
-  presumes the `theme.json` layout that lands in 1.3. Soft dependency, not
-  blocking.
+- **1.6 test infrastructure.** Pest (1.6.1) lands first because it changes
+  the runner that 1.6.2 and 1.6.3 measure. Coverage (1.6.2) feeds Infection
+  (1.6.3) — mutation testing's MSI is meaningful only once enough tests
+  exist to mutate.
+- **3.1 → 3.2.** CSS design tokens before a11y audit — color-contrast
+  violations dissolve when tokens land, so most of the violation list
+  resolves on its own.
+- **1.2 wave 1 javascript-URL fix ↔ §2 TS event binding.** Replacing
+  `javascript:` URLs and inline `onclick` touches both `.tpl` and the
+  receiving TypeScript handlers; coordinate the commit across tracks.
+- **1.3 phase 2 themes ↔ 3.1 step 8.** The skin refactor in 3.1 presumes
+  the `theme.json` layout that lands in 1.3. Soft dependency, not blocking.
 
 ---
 
 ## 1. PHP backend
 
-> Working principle (continuous, no checkpoint): when touching a service that
-> still resolves dependencies via `ServiceLocator::get(...)`, migrate to
-> constructor injection in the same commit. From the `#12` backlog. Not a
-> discrete item.
+> Working principle (continuous, no checkpoint): when touching a service
+> that still resolves dependencies via `ServiceLocator::get(...)`, migrate
+> to constructor injection in the same commit. Not a discrete item.
 
 ### 1.1 Concrete bugs
 
 **Status:** 🟡 Not started · **Effort:** S · 8 items
 
-8 individual bugs and perf notes from the codebase audit (`#7` backlog).
-Each is small enough to land as its own commit; ordering is opportunistic.
+8 individual bugs and perf notes from the in-code audit. Each is small
+enough to land as its own commit; ordering is opportunistic.
 
-**6 DEFERRED markers** (real bugs with no current owner):
+**6 deferred markers** (real bugs with no current owner):
 
 - `Updates.php` plugin-era redirect target.
 - Search cat-id access gap.
@@ -85,12 +84,10 @@ Each is small enough to land as its own commit; ordering is opportunistic.
 - Stub `cache_size` returning a placeholder.
 - Image-id / filename precedence ambiguity.
 
-**2 PERF notes:**
+**2 perf notes:**
 
 - Redundant `get_available_tags()` call.
 - All-rows-before-PHP-count in WS history pagination.
-
-Source: `docs/ROADMAP-PHP.md` `#7`.
 
 ### 1.2 Templates: hygiene → Latte → precompile
 
@@ -99,99 +96,93 @@ Source: `docs/ROADMAP-PHP.md` `#7`.
 One pipeline, three sequential waves. Each wave runs after the previous
 lands — can't reorder.
 
-#### Wave 1 — Smarty hygiene on existing `.tpl` (NOW)
+#### Wave 1 — Smarty hygiene on existing `.tpl`
 
 **Status:** 🟡 Not started · **Effort:** M · 8 actions
 
-Eight TEMPLATE-REVIEW NOW items, ordered low-risk first. These run **before**
-the Latte conversion so the converter sees correct source. If skipped, the
-bugs propagate verbatim into `.latte`.
+Eight ordered hygiene actions on the existing `.tpl` files, low-risk first.
+These run **before** the Latte conversion so the converter sees correct
+source — if skipped, the bugs propagate verbatim into `.latte`.
 
-| Order | Item | Source |
-|---|---|---|
-| 1 | Personal email leak in `install.tpl` (this fork) — replace `torres.dark@gmail.com` fallback with empty string or `$DEFAULT_ADMIN_EMAIL` | §I |
-| 2 | Translation order bug — `'Level %d'\|@sprintf:$lvl\|@translate` becomes `'Level %d'\|translate\|sprintf:$lvl` (current order calls `sprintf` first, then translates a non-existent key) | §C |
-| 3 | Plural via `translate_dec` — 6 entries in `intro.tpl` and similar use the singular string for both 1 and N (`'%s editions'\|translate:$n`) → `$n\|translate_dec:'%s edition':'%s editions'` | §E |
-| 4 | Invalid HTML — 4 sites: `<input>...</input>`, `<div>` inside `<p>`, unquoted `id={$key}` attribute. `picture_modify.tpl`, `batch_manager_global.tpl`, `user_list.tpl` | §J |
-| 5 | `http://` → `https://` — 4 links in `photos_add_applications.tpl` to `piwigo.org/ext/extension_view.php` | §K |
-| 6 | Delete dead browser code — IE5/6/7 conditional comments in `header.tpl`, `local_head.tpl`, `install.tpl`, `upgrade.tpl`; stale `mail-css.tpl` overlays under `themes/admin/{dark,light}/` (broken paths since 2008) | §G + §H |
-| 7 | `\|@translate` → `\|translate` mechanical sweep across `themes/` (1203 occurrences). Same for `\|@sprintf`, `\|@escape`, `\|@count`, `\|@json_encode`, `\|@urlencode`, `\|@in_array`, `\|@nl2br`, `\|@htmlspecialchars` | §D |
-| 8 | `javascript:` URLs and inline `onclick` → `data-*` attributes + delegated handlers. 5 sites in `picture.tpl`, `batch_manager_global.tpl` (4 places), `queue.tpl`. **Touches TS event binding — coordinate with §2** | §B |
+| Order | Item |
+|---|---|
+| 1 | Personal email leak in `install.tpl` (this fork) — replace `torres.dark@gmail.com` fallback with empty string or `$DEFAULT_ADMIN_EMAIL`. |
+| 2 | Translation order bug — `'Level %d'\|@sprintf:$lvl\|@translate` becomes `'Level %d'\|translate\|sprintf:$lvl` (current order calls `sprintf` first, then translates a non-existent key). |
+| 3 | Plural via `translate_dec` — 6 entries in `intro.tpl` and similar use the singular string for both 1 and N (`'%s editions'\|translate:$n`) → `$n\|translate_dec:'%s edition':'%s editions'`. |
+| 4 | Invalid HTML — 4 sites: `<input>...</input>`, `<div>` inside `<p>`, unquoted `id={$key}` attribute. `picture_modify.tpl`, `batch_manager_global.tpl`, `user_list.tpl`. |
+| 5 | `http://` → `https://` — 4 links in `photos_add_applications.tpl` to `piwigo.org/ext/extension_view.php`. |
+| 6 | Delete dead browser code — IE5/6/7 conditional comments in `header.tpl`, `local_head.tpl`, `install.tpl`, `upgrade.tpl`; stale `mail-css.tpl` overlays under `themes/admin/{dark,light}/` (broken paths since 2008). |
+| 7 | `\|@translate` → `\|translate` mechanical sweep across `themes/` (1203 occurrences). Same for `\|@sprintf`, `\|@escape`, `\|@count`, `\|@json_encode`, `\|@urlencode`, `\|@in_array`, `\|@nl2br`, `\|@htmlspecialchars`. |
+| 8 | `javascript:` URLs and inline `onclick` → `data-*` attributes + delegated handlers. 5 sites in `picture.tpl`, `batch_manager_global.tpl` (4 places), `queue.tpl`. **Touches TS event binding — coordinate with section 2.** |
 
-Source: `docs/TEMPLATE-REVIEW.md`.
-
-#### Wave 2 — Smarty → Latte conversion (`#23`, XL)
+#### Wave 2 — Smarty → Latte conversion
 
 **Status:** 🟡 Not started · **Effort:** XL · depends on Wave 1
 
 Latte engine (`latte/latte`) wired alongside Smarty; templates converted
 in waves: admin (~55 files) → public (`_base`, ~50) → `standard_pages` (~7) →
-plugins (~31). Smarty kept during the transition; engine selection per file
-extension.
+plugins (~31). Smarty kept during the transition; engine selection per
+file extension.
 
-Absorbs three deferred backlog items:
+Three large pieces fold into this wave:
 
-- **From `#18` backlog**: wire the `|translate` filter at the engine level
-  (Latte filter backed by `Piwigo\Lang\Translator`).
-- **From `#19` backlog**: convert pure rendering includes — `PageHeaderRenderer`,
+- Wire the `|translate` filter at the engine level (Latte filter backed
+  by `Piwigo\Lang\Translator`).
+- Convert pure rendering includes — `PageHeaderRenderer`,
   `PageTailRenderer`, `PictureCommentRenderer`, `PictureMetadataRenderer`,
   `PictureRateRenderer`, `NoPhotoYetRenderer`, `SearchFilterRenderer`,
   `SelectedTagsRenderer`, `CategoryCatsRenderer`, `CategoryDefaultRenderer`
   (already typed PHP services) — to Latte partials.
-- **From `#19` backlog**: populate the five page-context DTOs
-  (`AlbumPageContext`, `PicturePageContext`, `SearchPageContext`,
-  `TagsPageContext`, `AdminPageContext`) from controllers as each `.latte`
-  partial is written.
+- Populate the five page-context DTOs (`AlbumPageContext`,
+  `PicturePageContext`, `SearchPageContext`, `TagsPageContext`,
+  `AdminPageContext`) from controllers as each `.latte` partial is written.
 
-Absorbs deferred TEMPLATE-REVIEW items as DESIGN notes — Latte's escape-by-
-default and sandbox solve these systemically; no Smarty-side fix needed:
+Several findings from earlier hygiene auditing are folded in here as design
+notes — Latte's escape-by-default and sandbox solve them systemically, so
+no Smarty-side fix is needed:
 
-| Item | DESIGN approach |
+| Concern | Approach |
 |---|---|
-| §A escape audit (XSS surface, dominant risk) | Latte's context-aware escape-by-default; sandbox + `PiwigoPolicy` for plugin-supplied templates |
-| §F markup-in-translation strings | Handled at conversion — split markup out of `.po` keys via `{capture}` patterns |
-| §L `{section name=…}` (search.tpl) | Mechanical converter rewrite to `{foreach}` |
-| §M dynamic `{include file=$var}` | `TemplateExtensionRegistry` whitelist + Latte sandbox compile-time check |
-| §N inline mail-CSS pipeline | Keep email CSS as a *static* asset, not a runtime template |
+| XSS surface from inconsistent manual escaping (the dominant security risk in the current `.tpl` set) | Latte's context-aware escape-by-default; sandbox + `PiwigoPolicy` for plugin-supplied templates |
+| Markup-in-translation strings (e.g. `'Return to <a href="…">Sign in</a>'`) | Handled at conversion — split markup out of `.po` keys via `{capture}` patterns |
+| `{section name=…}` legacy loop in `search.tpl` | Mechanical converter rewrite to `{foreach}` |
+| Dynamic `{include file=$var}` (plugin extension hook) | `TemplateExtensionRegistry` whitelist + Latte sandbox compile-time check |
+| Inline mail-CSS rendered through Smarty-in-Smarty (`mail/text/html/header.tpl`) | Keep email CSS as a *static* asset, not a runtime template |
 
-Out of scope (informational — leave alone): §O HTML4 mail attributes
-(`cellspacing`, `cellpadding` — still acceptable for Outlook), §P mixed
-tab/space indentation (`.editorconfig` covers new edits).
+Out of scope (informational — leave alone): HTML4 mail attributes
+(`cellspacing`, `cellpadding` — still acceptable for Outlook), mixed
+tab/space indentation in template files (`.editorconfig` covers new edits).
 
 Drop `smarty/smarty` from `composer.json` once all bundled `.tpl` are
 converted and the top-3 plugins ship Latte versions.
 
-Source: `docs/ROADMAP-PHP.md` `#23`, `docs/TEMPLATE-REVIEW.md`.
-
-#### Wave 3 — Precompile at deploy (`#25`, S)
+#### Wave 3 — Precompile at deploy
 
 **Status:** 🟡 Not started · **Effort:** S · depends on Wave 2
 
 Once Latte is the primary engine, ship `tools/precompile_templates.php` —
 boots Piwigo in CLI, walks every active theme + admin context, calls
-Latte's compile-only API per `.latte`, and Smarty's `compileAllTemplates(.tpl, force: true)`
-for the transition window.
+Latte's compile-only API per `.latte`, and Smarty's
+`compileAllTemplates(.tpl, force: true)` for the transition window.
 
 Outcome:
 
-- First-request compile latency disappears; `_data/templates_c/` is warm at
-  deploy time.
-- Enables flipping `template_compile_check = 0` in production (the per-render
-  `stat()` is wasted work once compile-on-first-hit is gone).
+- First-request compile latency disappears; `_data/templates_c/` is warm
+  at deploy time.
+- Enables flipping `template_compile_check = 0` in production (the
+  per-render `stat()` is wasted work once compile-on-first-hit is gone).
 - CI hook catches Latte syntax regressions in plugin templates that lack
   unit-test coverage.
 - Iterate per-theme (push/pop the dir stack) and per-plugin-set (boot-time
   prefilters/extensions alter compiled output).
 
-Source: `docs/ROADMAP-PHP.md` `#25`.
-
-### 1.3 Plugin / theme system + WS plugin surface (`#26` + `#21` backlog, XL)
+### 1.3 Plugin / theme system + WS plugin surface
 
 **Status:** 🟡 Not started · **Effort:** XL · 4 sub-items
 
 One section because the same plugin contract drives all four sub-items.
 
-#### Phase 1 — Plugins (`#26`)
+#### Phase 1 — Plugins
 
 **Status:** 🟡 Not started
 
@@ -209,19 +200,23 @@ One section because the same plugin contract drives all four sub-items.
 - Migrate the 5 bundled plugins (`LocalFilesEditor`, `nbc_ThemeChanger`,
   `piwigo-openstreetmap`, `piwigo-videojs`, `user_tags`) — one commit each;
   source moves to `plugins/<id>/src/`, templates convert to Latte under 1.2.
-- Plugin admin UI reads `plugin.json` instead of parsing `main.inc.php` headers.
+- Plugin admin UI reads `plugin.json` instead of parsing `main.inc.php`
+  headers.
 
-#### Phase 2 — Themes (`#26`)
+#### Phase 2 — Themes
 
 **Status:** 🟡 Not started · depends on Phase 1
 
 - `Piwigo\Theme\ThemeInterface` mirroring `PluginInterface` plus
   `getParentId/loadParentCss/getAssetDir/getLocalHeadTemplate`.
-- Declarative `theme.json` (parent chain, asset directories, localHead, main FQCN).
-- Side-effect code from `themeconf.inc.php` (`$this->assign(...)`, `ConfigService::confGetParam(...)`)
-  moves into `Theme::boot()` where it has DI access.
+- Declarative `theme.json` (parent chain, asset directories, localHead,
+  main FQCN).
+- Side-effect code from `themeconf.inc.php` (`$this->assign(...)`,
+  `ConfigService::confGetParam(...)`) moves into `Theme::boot()` where it
+  has DI access.
 - Inheritance via composition — `?ThemeInterface $parent`; `getAssetDir()`
-  walks up the chain. Mirrors how `themeconf.inc.php` array merge already works.
+  walks up the chain. Mirrors how `themeconf.inc.php` array merge already
+  works.
 - Legacy `themeconf.inc.php` shim — registry detects missing `theme.json`,
   synthesizes a `LegacyTheme` from the `$themeconf` array.
 - `Piwigo\Theme\ThemeChanged` event so plugins (notably `nbc_ThemeChanger`)
@@ -229,19 +224,18 @@ One section because the same plugin contract drives all four sub-items.
 - Migrate the 5 bundled themes (`themes/_base`, `themes/standard_pages`,
   `themes/admin/_base`, `themes/admin/light`, `themes/admin/dark`) — one
   commit each.
-- **Soft dependency:** ROADMAP-CSS Step 8 "skin refactor" presumes the
-  `theme.json` layout. Whichever lands first sets the layout the other adopts.
+- **Soft dependency:** the skin refactor in 3.1 presumes the `theme.json`
+  layout. Whichever lands first sets the layout the other adopts.
 
 #### Migrate plugins off `PwgServer::addMethod()`
 
 **Status:** 🟡 Not started · folded into Phase 1 work
 
-`PwgServer::addMethod()` was removed during `#21`; `register(MethodDefinition)`
-is the only registration path. Plugins still calling `addMethod` need to
-migrate. Same work as Phase 1 — the `register()` migration happens inside
-each plugin's PluginInterface conversion.
-
-Source: `docs/ROADMAP-PHP.md` `#21` backlog.
+`PwgServer::addMethod()` was retired during the front-controller migration;
+`register(MethodDefinition)` is the only registration path. Plugins still
+calling `addMethod` need to migrate. Same work as Phase 1 — the
+`register()` migration happens inside each plugin's PluginInterface
+conversion.
 
 #### OpenAPI follow-ups
 
@@ -258,39 +252,40 @@ Once plugin handlers are reflection-accessible controller classes:
     resolution; callable from a test.
   - External: `openapi-spec-validator` (Python) or `redocly lint` in CI.
 
-Source: `docs/ROADMAP-PHP.md` `#21` backlog.
+### 1.4 Security hardening
 
-### 1.4 Security hardening (`#24`)
+**Status:** 🟢 Active ▸ 1 of 6 sub-tasks done · **Effort:** M
 
-**Status:** 🟢 Active ▸ 1 of 5 sub-tasks done · **Effort:** M
-
-CSRF middleware (Step 4) shipped in `#22` — drop. The remaining hardening:
+CSRF middleware is already in place (centralized in `CsrfMiddleware`
+during the front-controller work). The remaining hardening:
 
 - **`SecurityHeadersMiddleware`** — adds CSP (with per-request nonce wired
-  into `Template`/Latte), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`,
-  `Referrer-Policy: strict-origin-when-cross-origin`, HSTS, `Permissions-Policy`.
-  CSP `style-src-attr 'unsafe-inline'` covers the 13 surviving CSS-custom-property
-  attrs; if a stricter policy is needed later, resurrect `{html_style}` to emit
-  a single nonce'd `<style>` per request (implementation in `Template.php` is
-  intact, callers were removed).
+  into `Template`/Latte), `X-Frame-Options: SAMEORIGIN`,
+  `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, HSTS,
+  `Permissions-Policy`. CSP `style-src-attr 'unsafe-inline'` covers the 13
+  surviving CSS-custom-property attrs; if a stricter policy is needed
+  later, resurrect `{html_style}` to emit a single nonce'd `<style>` per
+  request (implementation in `Template.php` is intact, callers were
+  removed).
 - **Login rate limiting** — `composer require symfony/rate-limiter`; token
   bucket: 5 failed attempts / minute / IP → 429; 10 failed / 10 min /
   IP+username → 15-min account lockout + email.
-- **Brute-force lockout** — `phpwg_user_failed_logins` table, `AuthService::login()`
-  rejects with `AuthException::accountLocked()` even for correct password
-  while locked. Admin "Unlock account" action clears the counter.
-- **Session hardening** — `samesite: 'Strict'`, `secure: true`, `httponly: true`
-  cookie params; `session_regenerate_id(true)` on successful login.
+- **Brute-force lockout** — `phpwg_user_failed_logins` table,
+  `AuthService::login()` rejects with `AuthException::accountLocked()`
+  even for correct password while locked. Admin "Unlock account" action
+  clears the counter.
+- **Session hardening** — `samesite: 'Strict'`, `secure: true`,
+  `httponly: true` cookie params; `session_regenerate_id(true)` on
+  successful login.
 - **Document threat model** in `docs/SECURITY.md` — CSP override procedure,
   account-lockout admin actions, vulnerability reporting.
-
-Source: `docs/ROADMAP-PHP.md` `#24`.
 
 ### 1.5 Type correctness — three converging streams
 
 **Status:** 🟡 Not started · **Effort:** M · 3 streams (7 + 2 + 5 items)
 
-Post-`#27` PHPStan level 10, three audits/backlogs describe the remaining
+After PHPStan level 10 landed, three threads describe the remaining
 type-tightening surface. Same gating constraint, same review effort —
 tackle as one section, work the streams in parallel where possible.
 
@@ -298,7 +293,8 @@ tackle as one section, work the streams in parallel where possible.
 
 **Status:** 🟡 Not started · 7 items
 
-Seven high-ROI items from the MIXED-TYPES audit, ordered by effort:
+Seven high-ROI items from the codebase mixed-type audit, ordered by
+effort:
 
 | Item | Files | Effort |
 |---|---:|---|
@@ -314,51 +310,47 @@ Estimated reduction: ~880 / ~1272 mixed occurrences become typed; the
 remaining ~880 are legitimate (DB row results, event payloads, generic
 cache get/put).
 
-Source: `docs/MIXED-TYPES.md` "Recommended Next Steps".
-
 #### 1.5b Globals cleanup
 
 **Status:** 🟡 Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
 
-Both items below are gated by the same precondition — direct `$GLOBALS[...]`
-reads in `src/` being eliminated first — so tackle them together.
+Both items below are gated by the same precondition — direct
+`$GLOBALS[...]` reads in `src/` being eliminated first — so tackle them
+together.
 
-- **Drop `$GLOBALS` reference bridges in `phpstan-bootstrap.php`** (from `#6`
-  backlog). The bridges for `$page`, `$user`, `$lang`, `$template`, etc.
-  exist only because `src/` still does direct `$GLOBALS[...]` reads.
-- **Retire `$GLOBALS` reads in renderers** (Phase 5 residuals, source
-  `docs/MODERNIZATION-PLAN.md`):
+- **Drop `$GLOBALS` reference bridges in `phpstan-bootstrap.php`.** The
+  bridges for `$page`, `$user`, `$lang`, `$template`, etc. exist only
+  because `src/` still does direct `$GLOBALS[...]` reads.
+- **Retire `$GLOBALS` reads in renderers** (residuals from earlier
+  modernization passes):
   - `PageHeaderRenderer.php:25,59` reads/writes `$GLOBALS['page']`.
-  - `PageTailRenderer.php:56,62` reads `$GLOBALS['debug']` and `$GLOBALS['t2']`.
+  - `PageTailRenderer.php:56,62` reads `$GLOBALS['debug']` and
+    `$GLOBALS['t2']`.
   - `NoPhotoYetRenderer.php:26` reads `$GLOBALS['user']`.
 
 These are cheap to retire if the value-object design is later adopted, but
 they're harmless given the reference-bridge model in `Kernel::boot()`. Low
 priority.
 
-Source: `docs/ROADMAP-PHP.md` `#6` backlog, `docs/MODERNIZATION-PLAN.md` Phase 5.
-
 #### 1.5c Config schema metadata
 
 **Status:** 🟡 Not started · 5 items
 
-Five `Config::SCHEMA` enhancements that landed as deferred design surface
-during `#5`:
+Five `Config::SCHEMA` enhancements that are still deferred design surface:
 
 - `'required' => true` field + `MissingRequiredConfigException`, validated
   in `ConfigLoader::applyDefaults()`. Throws if any required key is unset.
-- `'description'` field → populate `docs/CONFIG-REFERENCE.md` per-key
-  descriptions (currently the column is empty for all 287 keys).
+- `'description'` field → populate the generated config-reference doc with
+  per-key descriptions (currently the description column is empty for all
+  287 keys).
 - `'sensitive'` field + `Config::dumpForLog(): array` returning a
   sensitive-masked snapshot for log output.
 - Namespace-prefix support in `ConfigStorage` for plugin keys — lets a
   per-plugin Config class store `<plugin>.key_name` cleanly.
 - `--target=<path>` flag on `tools/build-config-accessors.php` so per-plugin
-  `Config` classes (`LocalFilesEditor`, `NbcThemeChanger`, `PiwigoOpenstreetmap`,
-  `PiwigoVideojs`) regenerate from the same generator instead of staying
-  hand-written.
-
-Source: `docs/ROADMAP-PHP.md` `#5` backlog.
+  `Config` classes (`LocalFilesEditor`, `NbcThemeChanger`,
+  `PiwigoOpenstreetmap`, `PiwigoVideojs`) regenerate from the same
+  generator instead of staying hand-written.
 
 ### 1.6 Test infrastructure
 
@@ -366,7 +358,7 @@ Source: `docs/ROADMAP-PHP.md` `#5` backlog.
 
 Three coupled items, sequenced because each enables the next.
 
-#### 1.6.1 Pest (`#29`, M) — first
+#### 1.6.1 Pest — first
 
 **Status:** 🟡 Not started · **Effort:** M
 
@@ -378,9 +370,7 @@ to `tests/Browser/*.php` using the `browser()` helper. End state: single
 
 Lands first because it changes the runner that 1.6.2 and 1.6.3 measure.
 
-Source: `docs/ROADMAP-PHP.md` `#29`.
-
-#### 1.6.2 Unit-test coverage 13% → ≥40% (`#30`, L, continuous)
+#### 1.6.2 Unit-test coverage 13% → ≥40%
 
 **Status:** 🔵 Continuous · **Effort:** L · depends on Pest landing
 
@@ -390,16 +380,15 @@ Coverage baseline; priority order:
    `Kernel`, `ServiceLocator`) → 90%+ each.
 2. WS encoders (`PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`,
    `PwgServer::register/verifyParams`) → 85%+.
-3. Search Q-classes + Calendar (needs `AbstractDbStub` in `tests/Unit/stubs/`).
+3. Search Q-classes + Calendar (needs `AbstractDbStub` in
+   `tests/Unit/stubs/`).
 4. `ScriptLoader` with/without `dist/manifest.json` (temp-dir fixture).
 5. `Admin/Image/ImageGd` against `dev/fixtures/sample.jpg` (Imagick is
    integration-only).
 
 Continuous — does not gate later items.
 
-Source: `docs/ROADMAP-PHP.md` `#30`.
-
-#### 1.6.3 Mutation testing — Infection (`#28`, S) — last
+#### 1.6.3 Mutation testing — Infection — last
 
 **Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.6.2
 
@@ -407,10 +396,8 @@ Source: `docs/ROADMAP-PHP.md` `#30`.
 root: `minMsi: 60`, `minCoveredMsi: 75`. CI job runs on `main` push only
 (slow); raise thresholds 60 → 70 → 80 over time as test quality improves.
 
-Lands last because the MSI signal is meaningful only once 1.6.2 has produced
-enough coverage to mutate.
-
-Source: `docs/ROADMAP-PHP.md` `#28`.
+Lands last because the MSI signal is meaningful only once 1.6.2 has
+produced enough coverage to mutate.
 
 ### 1.7 Deferred / on-demand
 
@@ -418,26 +405,25 @@ Source: `docs/ROADMAP-PHP.md` `#28`.
 
 Real backlog — passive, executed only when a deployment or audit demands.
 
-- **Logger backend swap to Monolog** (from `#11` backlog). `LoggerInterface`
-  is the contract today; the file/DB backend keeps working. Swap when demand
-  surfaces.
-- **File storage S3/SFTP adapters** (from `#16` backlog).
+- **Logger backend swap to Monolog.** `LoggerInterface` is the contract
+  today; the file/DB backend keeps working. Swap when demand surfaces.
+- **File storage S3/SFTP adapters.**
   `composer require league/flysystem-aws-s3-v3` (or `-sftp-v3`); edit the
   closure in `config/storage.php` for the disk that needs offloading
   (`derivatives`, `uploads`, etc.). Plugin code does not change.
-- **Worker daemon ops config** (from `#20` backlog). Package supervisor /
-  systemd unit files alongside the documented
+- **Worker daemon ops config.** Package supervisor / systemd unit files
+  alongside the documented
   `bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M`
   flow. Currently ops-by-doc only.
-- **Renovate dev-dep auto-merge workflow** (from `#4` backlog). Dependabot
-  ships no built-in auto-merge; add a small workflow only if dependency
-  churn warrants it. Manual review is fine for current cadence.
+- **Renovate dev-dep auto-merge workflow.** Dependabot ships no built-in
+  auto-merge; add a small workflow only if dependency churn warrants it.
+  Manual review is fine for current cadence.
 
 ---
 
 ## 2. TypeScript / frontend glue
 
-### 2.1 `any` reduction 478 → ≤250 (`#2`)
+### 2.1 `any` reduction 478 → ≤250
 
 **Status:** 🟡 Not started · **Effort:** M · 3 tiers
 
@@ -461,21 +447,19 @@ first (`tags.ts` 80, `user_list.ts` 58, `albums.ts` 52, `group_list.ts` 45):
 Closing this item is what unlocks a clean `npm run lint` exit — currently
 the rule is enforced for new code via review only.
 
-Source: `docs/ROADMAP-TS.md` `#2`.
-
-### 2.2 Vitest unit tests (`#4`)
+### 2.2 Vitest unit tests
 
 **Status:** 🟡 Not started · **Effort:** M
 
 Today the only JS test infrastructure is Playwright E2E — useful for
 end-to-end flows, slow and high-friction for testing pure functions.
 
-`npm i -D vitest @vitest/coverage-v8 happy-dom`. `vitest.config.ts` includes
-`themes/{_base,admin/_base}/js/**/*.test.ts`; environment matches `*.dom.test.ts`
-to happy-dom. Initial waves:
+`npm i -D vitest @vitest/coverage-v8 happy-dom`. `vitest.config.ts`
+includes `themes/{_base,admin/_base}/js/**/*.test.ts`; environment matches
+`*.dom.test.ts` to happy-dom. Initial waves:
 
-1. Pure-utility tests: `common.test.ts` (format/parse), `urls.test.ts` (URL
-   builders), `getPageData.test.ts` (uses happy-dom).
+1. Pure-utility tests: `common.test.ts` (format/parse), `urls.test.ts`
+   (URL builders), `getPageData.test.ts` (uses happy-dom).
 2. State reducers: `batchManagerGlobal.test.ts` for selection/filter logic.
 
 Threshold: lines 50% / functions 50% / branches 40%, raised to 70% after
@@ -485,14 +469,13 @@ the first wave. CI: `npm run test:unit -- --coverage` appended to
 Boundary note: 1.6.1 Pest absorbs the *browser* tests (Playwright →
 `pest-plugin-browser`); Vitest stays for TS unit tests. Non-overlapping.
 
-Source: `docs/ROADMAP-TS.md` `#4`.
-
-### 2.3 Bundle size budgets (`#5`)
+### 2.3 Bundle size budgets
 
 **Status:** 🟡 Not started · **Effort:** S
 
-`npm i -D size-limit @size-limit/file vite-bundle-visualizer`. `.size-limit.json`
-sets per-entrypoint gzip budgets ~5–10% above today's measured baseline:
+`npm i -D size-limit @size-limit/file vite-bundle-visualizer`.
+`.size-limit.json` sets per-entrypoint gzip budgets ~5–10% above today's
+measured baseline:
 
 ```json
 [
@@ -508,25 +491,25 @@ must be raised in `.size-limit.json` with a one-line rationale, or the
 change reworked. Optional `vite-bundle-visualizer` HTML uploaded as a
 workflow artifact on `main` push.
 
-Source: `docs/ROADMAP-TS.md` `#5`.
-
-### 2.4 Vendored library migration (`#6`)
+### 2.4 Vendored library migration
 
 **Status:** 🟢 Active ▸ 1 of 5 tiers done · **Effort:** L · 4 tiers remain
 
-Tier 2 (Stylelint/ESLint scope cleanup) is done — drop. Remaining four tiers:
+Stylelint/ESLint scope cleanup (Tier 2) is already in place. Remaining
+four tiers:
 
 - **Tier 1 — Quick wins (S each).** `@fontsource/open-sans` replaces
   `themes/admin/_base/fonts/open-sans/`; `@fontsource-variable/open-sans`
   replaces `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf`;
-  `tablesorter` npm replaces `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`;
-  `tom-select` (already a Piwigo dep) replaces `plugins/user_tags/js/jquery.addtags.js`
+  `tablesorter` npm replaces
+  `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`; `tom-select`
+  (already a Piwigo dep) replaces `plugins/user_tags/js/jquery.addtags.js`
   — also drops the jQuery dependency for that plugin.
-- **Tier 3 — video.js consolidation (M).** Drop `video-js-4` and `video-js-5`
-  outright (vintage admins unlikely on 16.x). Pin `video.js@7` or `@8` via
-  npm. Port `videojs.thumbnails` / `videojs.watermark` / `videojs.zoomrotate` /
-  `videojs-resolution-switcher` to npm equivalents. Net: ~12 MB removed
-  from the repo.
+- **Tier 3 — video.js consolidation (M).** Drop `video-js-4` and
+  `video-js-5` outright (vintage admins unlikely on 16.x). Pin `video.js@7`
+  or `@8` via npm. Port `videojs.thumbnails` / `videojs.watermark` /
+  `videojs.zoomrotate` / `videojs-resolution-switcher` to npm equivalents.
+  Net: ~12 MB removed from the repo.
 - **Tier 4 — Leaflet 0.7 → 1.9 (L, highest blast radius).** Audit which
   plugins `osmmap.php`/`osmmap2.php`/`osmmap3.php`/`osmmap4.php` actually
   call; some bundled plugins may be dead weight. Stand up `leaflet@1.9` +
@@ -535,35 +518,35 @@ Tier 2 (Stylelint/ESLint scope cleanup) is done — drop. Remaining four tiers:
   `Control.MiniMap.js` → `leaflet-control-minimap`,
   `leaflet-omnivore.min.js` → `leaflet-omnivore`. Drop or rewrite
   `qleaflet.jquery.js` (jQuery wrapper).
-- **Tier 5 — CodeMirror (M).** Two paths: `codemirror@5` (low risk, drop-in
-  close to v2 — `LocalFilesEditor` wiring needs minor edits), or `codemirror@6`
-  (long term — different module shape, `@codemirror/lang-php` etc., full
-  editor re-init). Default to v5 unless there's appetite to invest.
+- **Tier 5 — CodeMirror (M).** Two paths: `codemirror@5` (low risk,
+  drop-in close to v2 — `LocalFilesEditor` wiring needs minor edits), or
+  `codemirror@6` (long term — different module shape, `@codemirror/lang-php`
+  etc., full editor re-init). Default to v5 unless there's appetite to
+  invest.
 
 Stays as static asset (cannot move to npm): Fontello custom-glyph subsets,
 bundled themes (out of 16.x core scope), `themes/_base/js/plugins/piecon.ts`
 (authored TS, ~100 LOC).
 
 Each tier produces two commits: add the npm dep + glue, then delete the
-vendor dir. Two commits make the actual replacement reviewable; the deletion
-commit is otherwise a 12 MB diff that hides the real change.
-
-Source: `docs/ROADMAP-TS.md` `#6`.
+vendor dir. Two commits make the actual replacement reviewable; the
+deletion commit is otherwise a 12 MB diff that hides the real change.
 
 ---
 
 ## 3. CSS / themes
 
-### 3.1 Design tokens + Stylelint (`#1`)
+### 3.1 Design tokens + Stylelint
 
 **Status:** 🟢 Active ▸ 3 of 13 steps done · **Effort:** M · 10 live steps remain
 
-`themes/admin/_base/theme.css` is 9,561 lines monolithic; `themes/_base/theme.css`
-is 1,241 lines. ~689 `!important` declarations across first-party CSS. Zero
-CSS custom properties; breakpoints inconsistent (`576/640/800/1100`).
+`themes/admin/_base/theme.css` is 9,561 lines monolithic;
+`themes/_base/theme.css` is 1,241 lines. ~689 `!important` declarations
+across first-party CSS. Zero CSS custom properties; breakpoints
+inconsistent (`576/640/800/1100`).
 
-Steps 1, 2, 16 are done; Step 9 is "deleted" (modus theme gone); Steps 13/14
-were tied to plugins now out of tree. Remaining 10 live steps:
+Stylelint rule set, mechanical auto-fix, and inline-`<style>` extraction
+are already in place. The 10 live steps:
 
 | Step | What |
 |---|---|
@@ -578,13 +561,12 @@ were tied to plugins now out of tree. Remaining 10 live steps:
 | 12 | Slim admin child themes — `themes/admin/{light,dark}/theme.css` reduce to `:root {}` variable override blocks. Structural rules currently duplicated (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. |
 | 15 | `!important` final elimination pass. Tier 2 (tom-select redundant `!important` — our specificity already wins): `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`. Then Tier 3 file-by-file from largest to smallest. Reinstate `declaration-no-important` Stylelint warning once count is low. |
 
-Source: `docs/ROADMAP-CSS.md` `#1`.
-
-### 3.2 A11y audit — axe-core in Playwright (`#2`)
+### 3.2 A11y audit — axe-core in Playwright
 
 **Status:** 🟡 Not started · **Effort:** M · soft dep on 3.1
 
-`npm i -D @axe-core/playwright axe-core`. Helper at `tests/e2e/utils/a11y.ts`:
+`npm i -D @axe-core/playwright axe-core`. Helper at
+`tests/e2e/utils/a11y.ts`:
 
 ```typescript
 import AxeBuilder from '@axe-core/playwright';
@@ -613,39 +595,3 @@ come from `--color-*` variables — so 3.1 first means a smaller triage.
 
 Document in `CONTRIBUTING.md`: rationale-on-disable rule, workflow for
 adding new pages to the audit.
-
-Source: `docs/ROADMAP-CSS.md` `#2`.
-
----
-
-## Pointers — historical, reference, and WIP docs
-
-WIP (held out from this roadmap by user request):
-
-- `docs/STRUCTURE-PLAN.md` — webroot isolation + originals served via PHP.
-  Open design decisions; will be folded into this file once decided.
-
-Done modernization phases (kept for historical context):
-
-- `docs/MODERNIZATION-PLAN.md` — 7 phases all done (Trivial fixes,
-  LocalSiteReader move, Template typed callables, LanguageStack, PageRenderer,
-  Tier 3a admin/include, Tier 3b include/).
-- `docs/ROADMAP-PHP.md` — items #1–#22, #27, #31 done.
-- `docs/ROADMAP-TS.md` — #1 ESLint+Prettier, #3 `window.*` data-bridge globals,
-  #6 Tier 2 (Stylelint scope) done.
-- `docs/ROADMAP-CSS.md` — #1 Steps 1, 2, 16 done.
-
-Reference (canonical for their topics):
-
-- `docs/MODERNIZATION.md` — architecture overview (boot path, autoload,
-  typed services, JS/TS pipeline, WS authoring, plugin author guide).
-- `docs/STRUCTURE.md` — current repository layout snapshot.
-- `docs/CONFIG-REFERENCE.md` — generated 287-key SCHEMA reference.
-- `docs/DEFAULT-PLUGINS.md` — 5 bundled-plugin inventory.
-- `docs/EXTENSIONS.md` — sibling-repo inventory (~636 entries across plugins,
-  themes, languages, tools).
-- `docs/I18N.md` — gettext PO architecture, plural forms, conversion tools.
-- `docs/MIXED-TYPES.md` — full mixed-type audit (873 occurrences across 6
-  categories).
-- `docs/TEMPLATE-REVIEW.md` — full Smarty template review (sections A–P
-  with code samples).

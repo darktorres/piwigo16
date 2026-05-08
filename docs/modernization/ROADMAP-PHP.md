@@ -939,7 +939,7 @@ Replace the 22 hand-written `install/upgrade_*.php` scripts with versioned migra
    }
    ```
 
-4. **`Piwigo\Migrations\MigrationRunner`.** `run()` method calls `DependencyFactory::getMigrator()->migrate()`. Hooked into `Kernel::boot()` — auto-applies pending migrations on first request after upgrade (only if `Config::get('auto_migrate', true)`).
+4. **`Piwigo\Migrations\MigrationRunner`.** `migrate()` static method calls Doctrine's migrator. Hooked into `CommonBootstrap::run()` — auto-applies pending migrations on first request after upgrade (only if `Config::autoMigrate()` is true; `UpgradeController` overrides it to false to prevent loops).
 
 5. **CLI entrypoint.** `bin/piwigo` is a Symfony Console application registering the standard Doctrine Migrations commands (`migrations:migrate`, `migrations:status`, `migrations:rollback`, `migrations:diff`).
 

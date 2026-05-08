@@ -6,7 +6,6 @@ namespace Piwigo\Http\Middleware;
 
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Html\HtmlService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;

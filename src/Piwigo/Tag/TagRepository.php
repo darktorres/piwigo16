@@ -6,7 +6,6 @@ namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
-use Piwigo\Plugins\EventDispatcher;
 
 /**
  * Persistence layer for the tag domain.

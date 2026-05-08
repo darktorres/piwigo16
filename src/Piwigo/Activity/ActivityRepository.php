@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Piwigo\Db\AbstractRepository;
-use Piwigo\Users\UserService;
 
 /** Persistence layer for the activity-log domain. */
 final class ActivityRepository extends AbstractRepository

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the photo-rating domain. */

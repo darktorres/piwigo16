@@ -13,7 +13,7 @@ input[type="radio"] {
 
 .btn-main {
   background-color: #b0b0b0 !important;
-  color: black !important;
+  color: #000 !important;
 }
 
 .btn-secondary {
@@ -61,7 +61,7 @@ input[type="radio"] {
 }
 
 .slider::before {
-  background-color: white;
+  background-color: #fff;
 }
 
 /* Light */
@@ -295,7 +295,7 @@ input[type="radio"] {
 
 .dark .btn-secondary {
   background-color: #202020 !important;
-  color: white !important;
+  color: #fff !important;
 }
 
 .dark input:checked + .slider {
@@ -317,7 +317,7 @@ input[type="radio"] {
 }
 
 .dark .icon-collapse {
-  color: white !important;
+  color: #fff !important;
 }
 
 .dark .close-modal {

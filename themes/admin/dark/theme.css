@@ -9,12 +9,6 @@ legend {
   color: #777;
 }
 
-input,
-select,
-textarea {
-  color: #999;
-  background-color: #444;
-}
 option[disabled] {
   background-color: #999;
   color: #444;
@@ -24,11 +18,6 @@ input[type="checkbox"] {
   background-color: transparent;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  outline: #ffa646 solid 1px;
-}
 
 .showInfo {
   color: #666;
@@ -150,11 +139,14 @@ fieldset {
 input,
 select,
 textarea {
+  color: #999;
+  background-color: #444;
   border: 1px solid #666;
 }
 input:focus,
 select:focus,
 textarea:focus {
+  outline: #ffa646 solid 1px;
   background-color: #444;
   color: #999;
 }
@@ -449,9 +441,6 @@ a.stat-box:hover {
   margin-right: 300px;
 }
 
-.themeBox {
-  background-color: #232323;
-}
 .themeName {
   color: #ccc;
 }
@@ -563,7 +552,7 @@ a.stat-box:hover {
 }
 
 #batchManagerGlobal ul.thumbnails li:hover .wrap2 {
-  color: white;
+  color: #fff;
 }
 
 #batchManagerGlobal .thumbSelected {
@@ -673,7 +662,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 }
 
 .disabledToggle .move-cat-toogler {
-  color: gray !important;
+  color: #808080 !important;
   opacity: 0.5;
   pointer-events: none;
 }
@@ -742,17 +731,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   background-color: #111;
 }
 
-label > p.group_select {
-  color: #d5d5d5;
-  background-color: #555;
-}
 
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock {
-  font-size: 1.2em;
-  background-color: #333;
-}
 
 .groups .Group-name > p,
 .addGroupForm .addGroupFormTitle {
@@ -763,6 +742,8 @@ label > p.group_select {
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock {
+  font-size: 1.2em;
+  background-color: #333;
   box-shadow: -1px 1px 2px #1a1a1a;
 }
 
@@ -862,19 +843,9 @@ label > p.group_select {
   background-color: transparent;
 }
 
-.groups .manage-users:hover,
-.groups .manage-permissions:hover {
-  background-color: #ffa744;
-  border: 1px solid #ffa744;
-  cursor: pointer;
-}
 
 /* UserList Pop in */
 
-.UserListPopInContainer {
-  background-color: #444;
-  border-radius: 10px;
-}
 
 #UserList .AddUserBlock button {
   background-color: #ffa744;
@@ -959,7 +930,7 @@ input:focus + .slider {
 }
 
 .BlackFont {
-  color: black !important;
+  color: #000 !important;
 }
 
 #checkActions a:hover {
@@ -1049,6 +1020,9 @@ input:focus + .slider {
 
 .groups .manage-users:hover,
 .groups .manage-permissions:hover {
+  background-color: #ffa744;
+  border: 1px solid #ffa744;
+  cursor: pointer;
   color: #3c3c3c;
 }
 
@@ -1097,12 +1071,6 @@ input:focus + .slider {
   color: #1b3a33 !important;
 }
 
-.groups .showCreateGroup .icon-plus-circled,
-#UserList .group-name-block span,
-.groups .showCreateGroup .icon-plus-circled {
-  color: #a0c0f1;
-  background-color: #4e71a5;
-}
 
 #UserList .group-name-block .UserNumberBadge {
   background-color: #777;
@@ -1363,7 +1331,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
-  color: white !important;
+  color: #fff !important;
 }
 
 .cat-modify-actions a::after,
@@ -1457,9 +1425,6 @@ li.plupload_delete a.remove-format:hover {
   color: #c1c1c1;
 }
 
-.pageNumberSelected {
-  background-color: #b4b4b4;
-}
 #action_title .large,
 #action_author .large {
   background-color: #333;
@@ -1473,6 +1438,7 @@ li.plupload_delete a.remove-format:hover {
   background-color: #555 !important;
 }
 .pageNumberSelected {
+  background-color: #b4b4b4;
   color: #777 !important;
   font-weight: bold;
 }
@@ -1670,7 +1636,7 @@ li.plupload_delete a.remove-format:hover {
 
 .tag-container .tag-box .tag-rename .tag-name-editable {
   background-color: #666;
-  color: white;
+  color: #fff;
   border-color: #333;
 }
 
@@ -1696,7 +1662,7 @@ li.plupload_delete a.remove-format:hover {
 .info-warning a,
 .info-message a,
 .info-error a {
-  color: white;
+  color: #fff;
 }
 
 .info-error {
@@ -1718,11 +1684,11 @@ li.plupload_delete a.remove-format:hover {
 
 .cat-move-order-popin .order-popin-container {
   background-color: #444;
-  color: white;
+  color: #fff;
 }
 
 .cat-move-order-popin .album-name {
-  color: white;
+  color: #fff;
 }
 
 .cat-move-order-popin input[name="recursiveAutoOrder"] {
@@ -1787,6 +1753,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .themeBox {
+  background-color: #232323;
   box-shadow: 0 0 5px #333;
 }
 
@@ -1985,7 +1952,7 @@ li.plupload_delete a.remove-format:hover {
 .AlbumViewSelector input:checked + label,
 .UserViewSelector input:checked + label {
   background: transparent;
-  color: white;
+  color: #fff;
 }
 
 .AlbumViewSelector input:checked + label span,
@@ -2120,6 +2087,7 @@ li.plupload_delete a.remove-format:hover {
 
 .UserListPopInContainer {
   background-color: #444;
+  border-radius: 10px;
 }
 
 .user-property-column-title,

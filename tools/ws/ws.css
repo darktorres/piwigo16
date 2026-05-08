@@ -135,7 +135,7 @@ body {
   --color-action-secondary-hover: #ddd;
   --color-bg-nuance: #f7f7f7;
   --border-radius: 5px;
-  --box-shadow: 0px 0px 4px rgb(0, 0, 0, 0.25);
+  --box-shadow: 0 0 4px rgb(0, 0, 0, 0.25);
   --header-heigth: 50px;
   --footer-heigth: 20px;
   --container-heigth: calc(100vh - var(--header-heigth) - var(--footer-heigth));
@@ -478,7 +478,7 @@ input[type="text"] {
 
 .header-warning {
   margin: 0;
-  color: red;
+  color: #f00;
   font-size: 10px;
   font-style: italic;
 }
@@ -630,8 +630,8 @@ select {
 #testForm .select {
   width: 100%;
   outline: none;
-  min-width: 15ch;
-  max-width: 30ch;
+  min-width: 7.5em;
+  max-width: 15em;
   border: 2px solid var(--color-action-secondary);
   border-radius: var(--border-radius);
   padding: 5px;
@@ -682,9 +682,6 @@ a.button:hover {
   background-color: var(--color-action-hover);
 }
 
-#tiptip_content {
-  font-size: 12px;
-}
 
 #resultWrapper {
   width: 100%;
@@ -695,7 +692,7 @@ a.button:hover {
 iframe {
   width: 100%;
   height: 100%;
-  background-color: white;
+  background-color: #fff;
 }
 
 #iframeAction {
@@ -736,6 +733,7 @@ div.onlys {
 
 /* -- Tiptip customization -- */
 #tiptip_content {
+  font-size: 12px;
   color: var(--color-action-text) !important;
   background: var(--color-action) !important;
   text-shadow: none;

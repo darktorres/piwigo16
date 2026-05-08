@@ -2,7 +2,7 @@
 
 .flatpickr-calendar {
   box-shadow: 0 3px 13px rgb(0, 0, 0, 0.08);
-  background: white;
+  background: #fff;
   border-radius: 5px;
   max-width: 307.875px;
 }
@@ -11,7 +11,7 @@
 .flatpickr-calendar.arrowTop::after {
   border-left: 12px solid transparent;
   border-right: 12px solid transparent;
-  border-top: 12px solid white;
+  border-top: 12px solid #fff;
   border-bottom: 0;
   content: "";
   display: block;
@@ -171,7 +171,7 @@
 .flatpickr-day.selected {
   background: #ffa646;
   border-color: #ffa646;
-  color: white;
+  color: #fff;
 }
 
 .flatpickr-day.selected:focus {

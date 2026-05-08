@@ -636,9 +636,6 @@ p.error-message,
   overflow: hidden;
 }
 
-.profile-section #show_expired_list {
-  display: none;
-}
 
 .profile-section #api_key_list_expired .api_expiration {
   text-overflow: unset;
@@ -677,6 +674,7 @@ p.error-message,
 }
 
 .profile-section #show_expired_list {
+  display: none;
   margin: 15px 0;
 }
 

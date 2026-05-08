@@ -12,13 +12,13 @@
 .filter-manager-popin-container,
 .tags-found-popin-container,
 .albums-found-popin-container {
-  background: white;
+  background: #fff;
 }
 
 .filter-manager-close,
 .tags-found-close,
 .albums-found-close {
-  color: white;
+  color: #fff;
 }
 
 .filter-manager-popin .mcs-popin-title,
@@ -50,13 +50,13 @@
 .filter-manager-popin :checked + span {
   border: 1px solid #777;
   background: #777;
-  color: white;
+  color: #fff;
 }
 
 .filter-manager,
 .filter-validate {
   background: #f70b;
-  color: white;
+  color: #fff;
 }
 
 .filter-manager:hover,
@@ -78,9 +78,9 @@
 }
 
 .filter-form {
-  background: white;
+  background: #fff;
   box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.2);
-  color: black;
+  color: #000;
 }
 
 .filter-actions {
@@ -116,12 +116,12 @@
 }
 
 .date_posted-option label {
-  background-color: white;
+  background-color: #fff;
   border-bottom: 1px solid #f3f3f3;
 }
 
 .date_posted-option i {
-  background-color: white;
+  background-color: #fff;
 }
 
 .filetypes-option:nth-child(odd),
@@ -168,7 +168,7 @@
 .ratios-option label .ratio-badge,
 .ratings-option label .ratings-badge {
   background: #f70;
-  color: white;
+  color: #fff;
 }
 
 .ratios-option.disabled label .ratio-badge,
@@ -195,11 +195,9 @@
   background: #fff5e8;
 }
 
-.head-button-2 {
-  color: #777;
-}
 
 .head-button-2 {
+  color: #777;
   background: #fafafa;
   box-shadow: 0 2px #00000024;
 }
@@ -214,7 +212,7 @@
 }
 
 .breadcrumb-item:hover .icon-cancel-circled {
-  color: black;
+  color: #000;
 }
 
 .breadcrumb-item.add-item {
@@ -231,15 +229,15 @@
 }
 
 .linkedAlbumPopInContainer {
-  background-color: white;
+  background-color: #fff;
 }
 
 .ClosePopIn {
-  color: white;
+  color: #fff;
 }
 
 .ClosePopIn:hover {
-  color: white;
+  color: #fff;
 }
 
 .search-result-item {
@@ -294,7 +292,7 @@
 .filter-added_by-form .selectize-control.multi .selectize-input > div,
 .filter-added_by-form .selectize-control.multi .selectize-input [data-value].active {
   background: #ffa835;
-  color: black;
+  color: #000;
 }
 
 .filter-tag-form .selectize-dropdown,
@@ -341,6 +339,6 @@
   }
 
   .arrow-fill {
-    fill: white;
+    fill: #fff;
   }
 }

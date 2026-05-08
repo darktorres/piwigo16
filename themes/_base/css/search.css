@@ -940,7 +940,7 @@
 }
 
 .close-modal {
-  color: white;
+  color: #fff;
   position: absolute;
   right: -40px;
   top: -40px;
@@ -949,14 +949,14 @@
 }
 
 .close-modal:hover {
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
 .modal-content {
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background-color: #fff;
   position: absolute;
   border-radius: 10px;
   left: 50%;

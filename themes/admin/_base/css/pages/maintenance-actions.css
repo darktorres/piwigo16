@@ -52,13 +52,11 @@
   display: inline-block;
 }
 
+
 .delete-sizes {
   display: block;
   width: max-content;
   text-align: left;
-}
-
-.delete-sizes {
   cursor: pointer;
   padding: 8px 10px;
   font-weight: bold;

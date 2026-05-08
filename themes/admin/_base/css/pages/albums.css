@@ -84,11 +84,6 @@
   max-width: 700px;
 }
 
-.AddIconContainer,
-.DeleteIconContainer,
-.AddIconContainer {
-  margin-top: 10px;
-}
 
 .AddIcon {
   border-radius: 50%;
@@ -112,16 +107,6 @@
   text-align: center;
 }
 
-.AddAlbumSubmit,
-.DeleteAlbumSubmit,
-.RenameAlbumSubmit {
-  cursor: pointer;
-  font-weight: bold;
-  padding: 10px;
-  margin: 20px;
-  font-size: 1em;
-  margin-bottom: 0;
-}
 
 .DeleteAlbumSubmit {
   border-radius: 4px;
@@ -206,8 +191,13 @@ input[name="position"] {
 .AddAlbumSubmit,
 .DeleteAlbumSubmit,
 .RenameAlbumSubmit {
-  margin-right: 10px;
+  cursor: pointer;
+  font-weight: bold;
   padding: 10px 20px;
+  margin: 20px;
+  font-size: 1em;
+  margin-bottom: 0;
+  margin-right: 10px;
 }
 .DeleteAlbumSubmit:hover {
   background: #c0392b;

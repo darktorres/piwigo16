@@ -22,7 +22,7 @@
 .comment-option a {
   padding: 5px 10px;
   text-decoration: none;
-  color: white;
+  color: #fff;
   font-weight: 600;
   text-align: initial;
 }
@@ -43,14 +43,14 @@
 }
 
 .comment-option span:hover:first-child {
-  color: white;
+  color: #fff;
   background-color: #00000012;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
 
 .comment-option span:hover:last-child {
-  color: white;
+  color: #fff;
   background-color: #00000012;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;

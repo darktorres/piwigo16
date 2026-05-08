@@ -87,9 +87,6 @@
   top: -20000px;
 }
 
-.advanced-filter-date {
-  width: auto;
-}
 
 /* Pagination */
 .user-pagination {
@@ -515,7 +512,7 @@
   top: 65px;
   right: 20px;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
-  color: white;
+  color: #fff;
   border-radius: 10px;
 }
 
@@ -543,7 +540,7 @@
 #dropdown_mores_plugins .edit-user-tabsheet {
   padding: 5px 0;
   font-size: 13px;
-  color: white;
+  color: #fff;
 }
 
 #dropdown_mores_plugins .edit-user-tabsheet::before {
@@ -657,11 +654,9 @@
   position: relative;
 }
 
-.user-list-checkbox {
-  margin-bottom: 15px;
-}
 
 .user-list-checkbox {
+  margin-bottom: 15px;
   user-select: none;
 }
 
@@ -968,7 +963,7 @@
 .EditUserErrors {
   opacity: 0;
   padding: 7px 0;
-  border-left: solid 3px red;
+  border-left: solid 3px #f00;
   margin: 10px 0;
   font-weight: bold;
 }
@@ -1068,13 +1063,10 @@
   flex-direction: column;
 }
 
-.user-property-register,
-.user-property-last-visit {
-  font-size: 11px !important;
-}
 
 .user-property-register,
 .user-property-last-visit {
+  font-size: 11px !important;
   min-width: 80px;
 }
 
@@ -1280,7 +1272,7 @@
 
 .update-user-button.can-update {
   background-color: #ffc275;
-  color: white;
+  color: #fff;
 }
 
 .close-update-button {
@@ -1334,7 +1326,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  background-color: white;
+  background-color: #fff;
   padding: 30px;
   width: 745px;
   height: 635px;
@@ -1448,7 +1440,7 @@
 .AddUserErrors {
   visibility: hidden;
   padding: 5px;
-  border-left: solid 3px red;
+  border-left: solid 3px #f00;
 }
 
 .AddUserSubmit {
@@ -1611,21 +1603,7 @@ Advanced filter
   width: 20%;
 }
 
-.advanced-filter-date {
-  width: 52%;
-  min-width: 330px;
-  margin: 0 auto;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.advanced-filter-date-title {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-}
 
 .slider-bar-wrapper {
   margin-top: 12px;
@@ -1638,6 +1616,12 @@ Advanced filter
 }
 
 .advanced-filter-date {
+  width: 52%;
+  min-width: 330px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding-right: 15px;
 }
 
@@ -1774,16 +1758,6 @@ Advanced filter
   max-height: 18px;
 }
 
-.tileView .user-container-username {
-  margin-top: 10px;
-  margin-bottom: 5px;
-  font-size: 13px;
-
-  height: 15px;
-
-  width: 140px;
-  overflow: hidden;
-}
 
 .tileView .user-container-username span {
   max-width: 140px;
@@ -1861,6 +1835,12 @@ Advanced filter
 }
 
 .tileView .user-container-username {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  height: 15px;
+  width: 140px;
+  overflow: hidden;
   padding-right: 0;
 }
 
@@ -1893,12 +1873,6 @@ Advanced filter
   display: none !important;
 }
 
-.compactView .user-container-username {
-  width: max-content;
-  min-width: auto;
-
-  margin-right: 10px;
-}
 
 .compactView .user-container-initials-wrapper {
   padding-left: 0;
@@ -1931,6 +1905,9 @@ Advanced filter
 }
 
 .compactView .user-container-username {
+  width: max-content;
+  min-width: auto;
+  margin-right: 10px;
   padding-right: 0;
 }
 
@@ -1991,7 +1968,7 @@ Advanced filter
 }
 
 .selectable .select-checkbox i {
-  color: white;
+  color: #fff;
   margin: 5px 0 0 13px;
 }
 
@@ -2045,7 +2022,7 @@ Advanced filter
 
   font-size: 10px;
   padding: 2px 6px;
-  color: black;
+  color: #000;
 
   margin: 0 4px 0 7px;
   display: none;
@@ -2106,7 +2083,9 @@ Advanced filter
   height: 2px;
 }
 .advanced-filter-date-title {
+  width: 100%;
   display: flex;
+  flex-direction: row;
 }
 
 #selection-mode-block {

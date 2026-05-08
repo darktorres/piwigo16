@@ -30,12 +30,6 @@ legend {
 th {
   color: #888;
 }
-input,
-select,
-textarea {
-  color: #666;
-  background-color: #ccc;
-}
 option[disabled] {
   background-color: #ccc;
 }
@@ -64,6 +58,8 @@ textarea:focus {
 input,
 select,
 textarea {
+  color: #666;
+  background-color: #ccc;
   border: 1px solid #999;
 }
 
@@ -160,7 +156,7 @@ textarea {
   background-color: #dbe8f3;
 }
 .tagSelected label {
-  color: black;
+  color: #000;
 }
 
 ul.thumbnails input {
@@ -275,7 +271,7 @@ input[type="text"].large {
   box-shadow: 0 0 5px #acacac;
 }
 .themeName {
-  color: black;
+  color: #000;
 }
 .themeActions span {
   background-color: #ddd;
@@ -306,7 +302,7 @@ input[type="text"].large {
 }
 #pwgHead a:hover,
 #footer a:hover {
-  color: white;
+  color: #fff;
 }
 
 .AlbumViewSelector {
@@ -323,7 +319,7 @@ input[type="text"].large {
   background-color: #ddd;
 }
 .languageName {
-  color: black;
+  color: #000;
 }
 .languageDefault {
   background-color: #dbe8f3;
@@ -339,7 +335,7 @@ ul.thumbnails li.rank-of-image {
 }
 
 #batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  color: white;
+  color: #fff;
   display: block;
 }
 
@@ -386,7 +382,7 @@ ul.thumbnails li.rank-of-image {
 
 #batchManagerGlobal .addFilter-button.highlight:hover {
   background-color: #f70;
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -436,12 +432,6 @@ p.albumTitle img {
   margin-bottom: -3px;
 }
 
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock {
-  font-size: 1.2em;
-  background-color: #fafafa;
-}
 
 .groups .Group-name > p,
 .addGroupForm .addGroupFormTitle {
@@ -452,6 +442,8 @@ p.albumTitle img {
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock {
+  font-size: 1.2em;
+  background-color: #fafafa;
   box-shadow: 0 2px 5px #00000024;
 }
 
@@ -489,7 +481,7 @@ label > p.group_select {
 }
 
 .groups input[type="text"] {
-  background-color: white;
+  background-color: #fff;
   border: 1px solid #d5d5d5;
 }
 
@@ -506,7 +498,7 @@ label > p.group_select {
 
 .groups .Group-name .Group-name-container p:focus {
   border: 1px solid #3c3c3c !important;
-  background-color: white;
+  background-color: #fff;
 }
 
 /* Add Group */
@@ -542,7 +534,7 @@ label > p.group_select {
 /* UserList Pop in */
 
 .UserListPopInContainer {
-  background-color: white;
+  background-color: #fff;
   border-radius: 10px;
 }
 
@@ -557,7 +549,7 @@ label > p.group_select {
 
 #UserList .AddUserBlock input,
 #UserList .FilterUserBlock input {
-  background-color: white;
+  background-color: #fff;
 }
 
 #UserList .AddUserBlock p,
@@ -602,11 +594,11 @@ label > p.group_select {
 }
 
 .slider::before {
-  background-color: white;
+  background-color: #fff;
 }
 
 .slider::after {
-  color: white;
+  color: #fff;
 }
 
 input:checked + .slider {
@@ -682,7 +674,7 @@ input:focus + .slider {
 }
 
 .MergeOptionsContainer select {
-  background-color: white;
+  background-color: #fff;
   box-shadow: 0 0 2px #c5c5c5;
 }
 
@@ -715,7 +707,7 @@ input:focus + .slider {
 .CloseAddAlbum,
 .CloseDeleteAlbum,
 .CloseRenameAlbum {
-  color: white;
+  color: #fff;
 }
 
 #UserList .group-name-block p {
@@ -1021,7 +1013,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .addAlbum form input {
-  background-color: white;
+  background-color: #fff;
   border: 1px solid #d5d5d5;
 }
 
@@ -1081,7 +1073,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .applicationCard .applicationName {
-  color: black;
+  color: #000;
 }
 
 .linked-albums-badge {
@@ -1100,7 +1092,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .linkedAlbumPopInContainer {
-  background-color: white;
+  background-color: #fff;
 }
 .AddIconTitle {
   color: #000;
@@ -1113,7 +1105,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .search-result-item .icon-plus-circled {
-  color: black;
+  color: #000;
 }
 
 .search-result-item .icon-plus-circled:hover {
@@ -1123,7 +1115,7 @@ li.plupload_delete a.remove-format:hover {
 .breadcrumb-item.add-item.highlight {
   background: #ffa646;
   box-shadow: 0 2px #af7200;
-  color: white !important;
+  color: #fff !important;
 }
 
 .move-cat-container:hover .badge-container i,
@@ -1151,11 +1143,11 @@ li.plupload_delete a.remove-format:hover {
 }
 
 #whats_new_popin {
-  background-color: white;
+  background-color: #fff;
 }
 
 .close_whats_new {
-  color: white;
+  color: #fff;
 }
 
 #whats_new h3 {
@@ -1174,7 +1166,7 @@ li.plupload_delete a.remove-format:hover {
 .cat-modify-footer,
 .savebar-footer {
   border-color: #ececec;
-  background: white;
+  background: #fff;
 }
 
 .cat-modify-footer-see-out,

@@ -8,23 +8,9 @@
   background-image: none;
   background-color: #ffa646;
   border-color: transparent;
-  color: black;
+  color: #000;
 
   border-radius: 20px;
-}
-
-#action_add_tags .item .remove,
-#action_add_tags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: black;
-
-  border-left: 1px solid transparent;
-}
-#action_add_tags .item .remove:hover,
-#action_add_tags .item .remove:hover {
-  background-color: #f70;
 }
 
 ul.thumbnails span.wrap2 {

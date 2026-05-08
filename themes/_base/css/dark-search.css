@@ -139,7 +139,7 @@
 .date_posted-option label .checked-icon,
 .ratios-option label .checked-icon,
 .ratings-option label .checked-icon {
-  color: white;
+  color: #fff;
 }
 
 .filetypes-option label .ext-badge,
@@ -148,7 +148,7 @@
 .ratios-option label .ratio-badge,
 .ratings-option label .ratings-badge {
   background: #f70b;
-  color: white;
+  color: #fff;
 }
 
 .ratios-option.disabled label .ratio-badge,
@@ -190,7 +190,7 @@
 }
 
 .breadcrumb-item:hover .icon-cancel-circled {
-  color: black;
+  color: #000;
 }
 
 .breadcrumb-item.add-item {
@@ -228,7 +228,7 @@
 }
 
 .ClosePopIn:hover {
-  color: white;
+  color: #fff;
 }
 
 .mcs-no-result .text span:first-child {
@@ -269,7 +269,7 @@
 .filter-added_by-form .selectize-control.multi .selectize-input > div,
 .filter-added_by-form .selectize-control.multi .selectize-input [data-value].active {
   background: #ffa835;
-  color: black;
+  color: #000;
 }
 
 .filter-tag-form .selectize-dropdown,
@@ -304,7 +304,7 @@
 
 .breadcrumb-item .link-path,
 .pwg-icon-cancel::before {
-  color: black;
+  color: #000;
 }
 
 .and-more {

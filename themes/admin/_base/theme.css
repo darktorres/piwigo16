@@ -198,7 +198,7 @@ ul.thumbnails .levelIndicatorF {
   bottom: 0;
   text-shadow: 0 0 1px #000;
   padding: 0 0 2px 5px;
-  color: white;
+  color: #fff;
   font-weight: bold;
   z-index: 10;
 }
@@ -226,11 +226,6 @@ table.table2 thead td {
 }
 table.table2 tr.throw {
   text-align: center;
-}
-.sort {
-  display: block;
-  padding: 1em 2em 0;
-  text-align: left;
 }
 
 .sort .icon-sort-number-up {
@@ -387,9 +382,6 @@ table.languages tr td {
   cursor: auto;
 }
 
-.addAlbum.input-mode form {
-  display: flex;
-}
 
 .addAlbum label {
   border-radius: 5px 5px 0 0;
@@ -412,10 +404,6 @@ table.languages tr td {
   padding: 110px 0;
 }
 
-.addAlbum.input-mode .addAlbumHead {
-  transition-delay: 0s;
-  padding: 0;
-}
 
 .addAlbumHead span {
   font-size: 19px;
@@ -462,11 +450,14 @@ table.languages tr td {
 }
 
 .addAlbum.input-mode .addAlbumHead {
+  transition-delay: 0s;
+  padding: 0;
   transform: translateY(0) !important;
   margin-top: 0;
 }
 
 .addAlbum.input-mode form {
+  display: flex;
   opacity: 1;
   pointer-events: all;
   transition-delay: 0.4s;
@@ -970,7 +961,7 @@ li.menuLi {
   padding: 5px 0;
   border-radius: 10px;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
-  color: white;
+  color: #fff;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -1001,33 +992,11 @@ li.menuLi {
   position: relative;
 }
 
-.dropdown-option {
-  white-space: nowrap;
-  display: block;
-  text-align: initial;
-  padding: 5px 10px;
-  font-size: 13px;
-  padding-right: 15px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
 
-.dropdown-option-content {
-  white-space: nowrap;
-  display: block;
-  text-align: initial;
-  padding: 5px 10px;
-  font-size: 13px;
-  padding-right: 15px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
 
 .dropdown-option:hover {
   text-decoration: none;
-  color: white;
+  color: #fff;
   background-color: #00000012;
 }
 
@@ -1151,7 +1120,7 @@ li.menuLi {
   margin: 10px;
   z-index: 1000;
   background-color: #ffbd4d;
-  color: white;
+  color: #fff;
   padding: 20px;
   font-weight: bold;
   border-radius: 34px;
@@ -1177,14 +1146,14 @@ li.menuLi {
 }
 
 .stat-data-selector label {
-  color: black;
+  color: #000;
   padding: 10px;
   background-color: #eee;
   transition: 0.2s ease;
 }
 
 .stat-data-selector label.unavailable {
-  color: gray;
+  color: #808080;
   background-color: #aaa;
   cursor: default;
   pointer-events: none;
@@ -1196,7 +1165,7 @@ li.menuLi {
 
 .stat-data-selector input:checked + label {
   background-color: #ffa646;
-  color: white;
+  color: #fff;
   pointer-events: none;
 }
 
@@ -1236,7 +1205,7 @@ li.menuLi {
   left: -1000px;
   border: 1px solid #ff3363;
   visibility: hidden;
-  color: black;
+  color: #000;
   text-decoration: none;
 }
 
@@ -1577,7 +1546,7 @@ a.stat-box:hover {
 
 .activity-chart .row-legend::after {
   content: "";
-  border-top: 2px solid black;
+  border-top: 2px solid #000;
   opacity: 0.05;
   position: absolute;
   width: 700%;
@@ -1585,7 +1554,7 @@ a.stat-box:hover {
 }
 
 .activity-chart .col-legend .line-vertical {
-  border-left: 2px solid black;
+  border-left: 2px solid #000;
   opacity: 0.05;
   position: absolute;
   height: 250%;
@@ -1620,7 +1589,7 @@ a.stat-box:hover {
   z-index: 102;
   font-size: 12px;
   font-weight: normal;
-  background-color: white;
+  background-color: #fff;
   padding: 10px;
   box-shadow: 0 0 5px #acacac;
   border-radius: 10px;
@@ -1745,12 +1714,12 @@ a.stat-box:hover {
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent white;
+  border-color: transparent transparent #fff;
 }
 
 .storage-tooltips .tooltip-arrow.bottom {
   top: 100%;
-  border-color: white transparent transparent;
+  border-color: #fff transparent transparent;
 }
 
 .storage-tooltips .separated {
@@ -1828,7 +1797,7 @@ a.stat-box:hover {
 .storage-chart span p {
   font-weight: bold;
   font-size: 16px;
-  color: black;
+  color: #000;
   opacity: 0;
   line-height: 0;
   transition: ease 0.2s;
@@ -2136,16 +2105,6 @@ a.admin-main:hover {
 }
 
 /* Set the width of the menubar for the galery */
-#menubar {
-  width: 205px;
-  margin: 0;
-  display: inline;
-  position: fixed;
-  top: 50px;
-  bottom: 0;
-  left: 0;
-  background-color: #3c3c3c;
-}
 
 #menubar i {
   font-size: 20px;
@@ -2161,11 +2120,17 @@ a.admin-main:hover {
 
 /* menubar is on all admin pages => No specific css file */
 #menubar {
-  padding: 0;
   width: 205px;
+  margin: 0;
+  display: inline;
+  position: fixed;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  background-color: #3c3c3c;
+  padding: 0;
   z-index: 99;
   text-align: left;
-  margin-left: 0;
 }
 
 #menubar ul.scroll {
@@ -2322,9 +2287,6 @@ a.admin-main:hover {
   padding: 0 3px 0 1px;
 }
 
-.sort {
-  clear: none;
-}
 
 .content {
   padding: 0;
@@ -2416,7 +2378,7 @@ a.admin-main:hover {
   font-size: 12px;
 }
 .showInfo-dropdown-header a:hover {
-  color: white;
+  color: #fff;
 }
 .showInfo-dropdown-content {
   padding: 5px 10px;
@@ -2425,7 +2387,7 @@ a.admin-main:hover {
 .showInfo-dropdown-action {
   padding: 8px 10px;
   border-top: 1px solid #ffffff45;
-  color: white;
+  color: #fff;
   text-decoration: none !important;
   display: block;
   margin-top: 5px;
@@ -2434,7 +2396,7 @@ a.admin-main:hover {
 }
 .showInfo-dropdown-action:hover {
   background-color: rgb(0, 0, 0, 0.192);
-  color: white;
+  color: #fff;
 }
 .themeActions {
   display: flex;
@@ -2696,7 +2658,7 @@ div.jGrowl div.jGrowl-notification {
 
 .badge {
   background-color: #0a0;
-  color: white;
+  color: #fff;
   padding: 1px 5px;
   border-radius: 10px;
   margin-left: 5px;
@@ -2753,6 +2715,9 @@ div.jGrowl div.jGrowl-notification {
 
 .sort {
   display: flex;
+  padding: 1em 2em 0;
+  text-align: left;
+  clear: none;
   flex-direction: column;
   margin-bottom: 15px;
 }
@@ -2839,13 +2804,6 @@ div.jGrowl div.jGrowl-notification {
   margin-left: auto;
 }
 
-.pluginBox {
-  display: flex;
-  margin: 0 15px 15px 0;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  box-shadow: 1px 1px 0 1px #e0e0e0;
-}
 
 .pluginMiniBox {
   width: 260px;
@@ -2994,7 +2952,7 @@ div.jGrowl div.jGrowl-notification {
 
 .plugin-version {
   border-radius: 5px;
-  color: white;
+  color: #fff;
   padding: 0 5px;
   background: #f70;
   font-weight: bold;
@@ -3034,7 +2992,7 @@ div.jGrowl div.jGrowl-notification {
 }
 
 .PluginOptionsBlock a:hover {
-  color: white;
+  color: #fff;
 }
 .pluginContent {
   width: 100%;
@@ -3072,7 +3030,7 @@ div.jGrowl div.jGrowl-notification {
 
 .pluginDesc {
   font-size: 12px;
-  color: grey;
+  color: #808080;
   line-height: 1.5em;
   position: relative;
   overflow: hidden;
@@ -3261,7 +3219,7 @@ div.jGrowl div.jGrowl-notification {
 .tab-filters input:checked + label,
 .pluginTypeFilter input:checked + label {
   background: #ffa500;
-  color: white;
+  color: #fff;
   box-shadow: 0 2px #d18800;
 }
 
@@ -3324,27 +3282,9 @@ div.jGrowl div.jGrowl-notification {
   opacity: 0.5;
 }
 
-.AddPluginSuccess span,
-.RestorePluginSuccess span,
-.DeactivatePluginSuccess span {
-  color: #0a0;
-}
 
-.AddPluginSuccess label,
-.DeactivatePluginSuccess label,
-.RestorePluginSuccess label {
-  background-color: #c2f5c2;
-  color: #0a0;
-}
 
-.PluginActionError span {
-  color: rgb(170, 0, 0);
-}
 
-.PluginActionError label {
-  background-color: #f5c2c2;
-  color: rgb(170, 0, 0);
-}
 
 .PluginOptionsBlock {
   display: none;
@@ -3437,26 +3377,18 @@ div.jGrowl div.jGrowl-notification {
   font-size: 22px;
 }
 
-legend {
-  text-align: left;
-}
 
 /* Plugin page multiple views */
 
+
 .AlbumViewSelector {
   position: absolute;
-
   right: 20px;
   z-index: 2;
-
   height: 43px;
   display: flex;
   align-items: center;
-
   transform: translateY(6px);
-}
-
-.AlbumViewSelector {
   padding: 0;
   margin-right: 0;
   border-radius: 7px;
@@ -3553,6 +3485,11 @@ legend {
 }
 
 .pluginBox {
+  display: flex;
+  margin: 0 15px 15px 0;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  box-shadow: 1px 1px 0 1px #e0e0e0;
   transition: 0.5s;
   position: relative;
 }
@@ -3574,7 +3511,15 @@ legend {
 }
 
 .dropdown-option-content {
+  white-space: nowrap;
+  display: block;
+  text-align: initial;
+  padding: 5px 10px;
+  font-size: 13px;
+  padding-right: 15px;
+  color: #fff;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .separator-top {
@@ -3586,7 +3531,15 @@ legend {
 }
 
 .dropdown-option {
+  white-space: nowrap;
+  display: block;
+  text-align: initial;
+  padding: 5px 10px;
+  font-size: 13px;
+  padding-right: 15px;
+  color: #fff;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .pluginContainer {
@@ -3595,9 +3548,6 @@ legend {
   margin-top: 95px;
 }
 
-.switch {
-  margin: 0 10px 0 0;
-}
 
 .plugin-inactive .pluginActions a {
   pointer-events: none;
@@ -3643,10 +3593,10 @@ legend {
 .AddPluginSuccess label,
 .DeactivatePluginSuccess label,
 .RestorePluginSuccess label {
-  padding: 10px;
   background-color: #c2f5c2;
-  cursor: default;
   color: #0a0;
+  padding: 10px;
+  cursor: default;
   border-radius: 30px;
 }
 
@@ -3655,10 +3605,10 @@ legend {
 }
 
 .PluginActionError label {
-  padding: 10px;
   background-color: #f5c2c2;
-  cursor: default;
   color: rgb(170, 0, 0);
+  padding: 10px;
+  cursor: default;
   border-radius: 30px;
 }
 
@@ -3863,11 +3813,11 @@ input[type="checkbox"] {
 }
 .header_msgs a {
   background-color: #ff5252;
-  color: white;
+  color: #fff;
   padding: 8px 20px;
 }
 .header_msgs a:hover {
-  color: white;
+  color: #fff;
   text-decoration: underline;
 }
 
@@ -3886,6 +3836,7 @@ input[type="checkbox"] {
 }
 
 legend {
+  text-align: left;
   font-weight: bold;
   font-size: 14px;
   margin: 10px 0;
@@ -4317,14 +4268,14 @@ legend span {
   margin-right: 0;
   content: "\e822";
   margin-left: 6px;
-  font-size: 12pt;
+  font-size: 16px;
   color: #777;
 }
 #batchManagerGlobal a.removeFilter:hover::before {
   color: #ffa646;
 }
 #batchManagerGlobal a.removeFilter:hover {
-  color: red;
+  color: #f00;
 }
 #batchManagerGlobal .removeFilter span {
   display: none;
@@ -4383,7 +4334,7 @@ legend span {
   padding: 5px 0;
   border-radius: 10px 10px 0 0;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
-  color: white;
+  color: #fff;
   position: absolute;
   bottom: 100%;
   overflow: hidden;
@@ -4397,14 +4348,14 @@ legend span {
   padding: 5px 10px;
   font-size: 12px;
   padding-right: 15px;
-  color: white;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
 
 .addFilter-dropdown a:hover {
   text-decoration: none;
-  color: white;
+  color: #fff;
   background-color: rgb(0, 0, 0, 0.123);
 }
 
@@ -4814,7 +4765,7 @@ a#showPermissions:hover {
   display: flex;
   margin: auto;
   justify-content: space-between;
-  color: white;
+  color: #fff;
   border-bottom: solid 1px #ffffff3d;
   padding: 5px 10px;
   min-width: 150px;
@@ -4912,7 +4863,7 @@ a#showPermissions:hover {
   color: #3c3c3c;
   font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
   margin: 0;
-  background-color: white;
+  background-color: #fff;
   border: 1px solid #d5d5d5;
   padding-left: 6px;
 }
@@ -4923,7 +4874,7 @@ a#showPermissions:hover {
 
 .tag-pagination .selected {
   background: #ffa646;
-  color: black;
+  color: #000;
 }
 
 .tag-container .tag-box .tag-rename span {
@@ -4989,12 +4940,12 @@ a#showPermissions:hover {
   font-weight: bold;
   margin-left: 6px;
   background-color: #0051a5;
-  color: white;
+  color: #fff;
   padding: 0 4px;
 }
 
 .tag-select-message a:hover {
-  color: white;
+  color: #fff;
   text-decoration: none;
   background-color: #002e5f;
 }
@@ -5100,7 +5051,7 @@ a#showPermissions:hover {
   visibility: hidden;
   width: 100%;
   padding: 5px;
-  border-left: solid 3px red;
+  border-left: solid 3px #f00;
 }
 
 .TagSubmitOptions {
@@ -5319,7 +5270,7 @@ a#showPermissions:hover {
 }
 
 .format-card-ext {
-  color: white;
+  color: #fff;
   font-weight: bolder;
   font-size: 50px;
   z-index: 2;
@@ -5336,13 +5287,13 @@ a#showPermissions:hover {
 }
 
 .format-card-actions a {
-  color: white;
+  color: #fff;
   font-size: 24px;
   margin: 0 10px;
 }
 
 .format-card-size {
-  color: white;
+  color: #fff;
   margin-top: 5px;
   z-index: 2;
   font-size: 20px;
@@ -5373,7 +5324,7 @@ a#showPermissions:hover {
 .comments {
   display: grid;
   grid-template-rows: auto 1fr;
-  min-height: calc(100svh - 169px);
+  min-height: calc(100vh - 169px);
   padding-left: 20px;
 }
 
@@ -5416,12 +5367,10 @@ a#showPermissions:hover {
   width: 100%;
 }
 
+
 .comments-filters {
   display: grid;
   grid-template-columns: 1fr 250px;
-}
-
-.comments-filters {
   align-items: center;
 }
 
@@ -5796,15 +5745,13 @@ form#categoryOrdering p.albumTitle a {
 form#categoryOrdering p.albumTitle i {
   display: none;
 }
-form#categoryOrdering p.albumActions {
-  visibility: hidden;
-  margin: 0;
-  height: 40px;
-}
 form#categoryOrdering .categoryLi:hover p.albumActions {
   visibility: visible;
 }
 form#categoryOrdering p.albumActions {
+  visibility: hidden;
+  margin: 0;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -5846,7 +5793,7 @@ form#categoryOrdering p.albumActions .userSeparator {
 }
 
 .cat-move-header .cat-move-info::before {
-  color: grey;
+  color: #808080;
   font-size: 20px;
 }
 
@@ -5922,21 +5869,18 @@ form#categoryOrdering p.albumActions .userSeparator {
   display: flex !important;
 }
 
-.move-cat-container .move-cat-toogler {
-  display: flex;
-  color: #ffbd4d;
-  margin-left: 5px;
-  align-items: center;
-  cursor: pointer;
-  z-index: 2;
-  font-weight: 600;
-}
 
 .move-cat-container .move-cat-toogler .icon-left-open {
   transform: rotate(180deg);
 }
 .move-cat-container .move-cat-toogler {
+  display: flex;
   color: #f70;
+  margin-left: 5px;
+  align-items: center;
+  cursor: pointer;
+  z-index: 2;
+  font-weight: 600;
   transform: scale(1.4);
 }
 
@@ -6048,7 +5992,7 @@ form#categoryOrdering p.albumActions .userSeparator {
   right: -40px;
   top: -40px;
   font-size: 30px;
-  color: white;
+  color: #fff;
 }
 
 .cat-move-order-popin .close-popin:hover {
@@ -6177,8 +6121,8 @@ input[type="text"].dError {
   background-color: #ffe5e5;
 }
 .dErrorDesc {
-  background-color: red;
-  color: white;
+  background-color: #f00;
+  color: #fff;
   padding: 0 5px;
   border-radius: 10px;
   font-weight: bold;
@@ -6196,7 +6140,7 @@ input[type="text"].dError {
 
 .adminMenubarCounter {
   background-color: #666;
-  color: white;
+  color: #fff;
   padding: 1px 5px;
   border-radius: 10px;
   margin-left: 5px;
@@ -6324,10 +6268,6 @@ input[type="text"].dError {
   margin: 12px;
 }
 
-.groups .addGroupFormTitle {
-  font-size: 1.2em;
-  font-weight: 700;
-}
 
 .groups input[type="text"] {
   padding: 5px;
@@ -6387,6 +6327,8 @@ input[type="text"].dError {
 }
 
 .groups .addGroupFormTitle {
+  font-size: 1.2em;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -6408,6 +6350,7 @@ form.properties .groups .GroupContainer,
 }
 
 .switch {
+  margin: 0 10px 0 0;
   position: relative;
   display: inline-block;
   width: 60px;
@@ -6664,10 +6607,6 @@ input:checked + .slider.small::after {
 
 /* Merge options Radio buttons */
 
-.MergeOptionsContainer {
-  display: block;
-  position: relative;
-}
 
 .MergeOptionsContainer input {
   position: absolute;
@@ -6686,6 +6625,8 @@ input:checked + .slider.small::after {
 }
 
 .MergeOptionsContainer {
+  display: block;
+  position: relative;
   font-size: 15px;
 }
 .MergeOptionsContainer label,
@@ -6702,7 +6643,7 @@ input:checked + .slider.small::after {
 .MergeOptionsContainer select {
   padding: 10px 5px;
   border: none;
-  background-color: white;
+  background-color: #fff;
   box-shadow: 0 0 2px #c5c5c5;
   border-radius: 5px;
 }
@@ -6795,11 +6736,6 @@ input:checked + .slider.small::after {
   text-transform: none !important;
 }
 
-.jconfirmAlert .jconfirm-icon-c i {
-  border-radius: 60px;
-  padding: 2px;
-  font-size: 45px;
-}
 
 .jconfirmAlert .jconfirm-icon-c {
   margin-bottom: 25px !important;
@@ -6810,6 +6746,9 @@ input:checked + .slider.small::after {
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
+  border-radius: 60px;
+  padding: 2px;
+  font-size: 45px;
   color: #0a0 !important;
   background-color: #c2f5c2 !important;
 }
@@ -6893,7 +6832,7 @@ input:checked + .slider.small::after {
   top: 5px;
   width: 5px;
   height: 10px;
-  border: solid white;
+  border: solid #fff;
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
@@ -7045,16 +6984,6 @@ input:checked + .slider.small::after {
   background-color: rgb(0, 0, 0, 0.7);
 }
 
-.UserListPopInContainer {
-  display: block;
-  width: 1100px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -48%);
-  text-align: left;
-  padding: 30px;
-}
 
 .group-name-block {
   margin-bottom: 20px;
@@ -7121,7 +7050,7 @@ input:checked + .slider.small::after {
 .icon-red-error {
   background-color: #ffcfcf;
   color: #ff5252;
-  border-left: solid 3px red;
+  border-left: solid 3px #f00;
 }
 
 #AddUserSuccess span {
@@ -7393,7 +7322,7 @@ a.group_users {
   left: 50%;
   font-size: 50px;
   line-height: 50px;
-  color: white;
+  color: #fff;
   z-index: 100;
   text-shadow: 0 0 20px rgb(0, 0, 0, 0.4);
   transition: opacity 200ms ease;
@@ -7497,11 +7426,11 @@ table.qsearch_help_table q {
 }
 table.qsearch_help_table q::before {
   content: "'";
-  color: green;
+  color: #008000;
 }
 table.qsearch_help_table q::after {
   content: "'";
-  color: green;
+  color: #008000;
 }
 table.qsearch_help_table td {
   border: 1px solid #ccc;
@@ -7583,8 +7512,6 @@ input[type="reset"]:hover {
 }
 #permissions {
   display: none !important;
-}
-#permissions {
   margin-top: 35px;
   margin-bottom: 20px;
 }
@@ -7718,7 +7645,7 @@ li.plupload_delete a:hover {
   background: linear-gradient(#0000, #000000b8);
 }
 #photosAddContent .Addedphotos .format-ext-name span {
-  color: white;
+  color: #fff;
   font-size: 16px;
   font-weight: bold;
   text-transform: uppercase;
@@ -7967,12 +7894,6 @@ li.plupload_delete a:hover {
 #action_associate .head-button-2 p {
   margin-left: 5px;
   background: transparent;
-}
-#action_delete_derivatives,
-#action_generate_derivatives {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 0;
 }
 .deleteDerivButtons a {
   border-radius: 4px;
@@ -8288,12 +8209,11 @@ li.plupload_delete a:hover {
 #batchManagerGlobal .font-checkbox.selected span:first-child::before {
   content: "\f192";
 }
-#action_delete_derivatives .font-checkbox span,
-#action_delete_derivatives .font-checkbox span {
-  margin-right: 5px;
-}
 #action_generate_derivatives,
 #action_delete_derivatives {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0;
   width: 320px;
 }
 #associate_as {
@@ -8334,7 +8254,7 @@ li.plupload_delete a:hover {
 }
 
 .disabledToggle .move-cat-toogler {
-  color: gray;
+  color: #808080;
   opacity: 0.5;
   pointer-events: none;
 }
@@ -8372,13 +8292,11 @@ li.plupload_delete a:hover {
   font-size: 20px;
 }
 
+
 .search-album-help {
   display: none;
   cursor: help;
   font-size: 20px;
-}
-
-.search-album-help {
   position: absolute;
   right: 0;
   transform: translateX(calc(100% + 10px));
@@ -8404,7 +8322,7 @@ li.plupload_delete a:hover {
 
 .search-album-ghost div {
   background: #f3f3f3;
-  background-image: linear-gradient(0.25turn, #eee, rgb(250, 250, 250));
+  background-image: linear-gradient(90deg, #eee, rgb(250, 250, 250));
   background-attachment: fixed;
 }
 .search-album-ghost span {
@@ -8514,7 +8432,7 @@ li.plupload_delete a:hover {
 
 #cancelUpload:hover {
   background-color: #ff9b32;
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -8533,7 +8451,7 @@ li.plupload_delete a:hover {
 .AlbumViewSelector input:checked + label,
 .UserViewSelector input:checked + label {
   background: transparent;
-  color: white;
+  color: #fff;
 }
 
 .AlbumViewSelector input:checked + label span,
@@ -8589,7 +8507,7 @@ li.plupload_delete a:hover {
 }
 
 .user-action-select {
-  background: white;
+  background: #fff;
 }
 
 .user-property-select {
@@ -8603,7 +8521,7 @@ li.plupload_delete a:hover {
 }
 
 #categoryNameError {
-  color: red;
+  color: #f00;
 }
 
 #up_to_date {
@@ -8621,7 +8539,15 @@ li.plupload_delete a:hover {
 }
 
 .UserListPopInContainer {
-  background-color: white;
+  display: block;
+  width: 1100px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%);
+  text-align: left;
+  padding: 30px;
+  background-color: #fff;
 }
 
 .user-property-column-title,
@@ -8703,7 +8629,7 @@ li.plupload_delete a:hover {
 .user-property-username-change-content,
 .user-property-password-change-content,
 .user-property-main-user-content {
-  background-color: white;
+  background-color: #fff;
 }
 
 .update-container {
@@ -8781,7 +8707,7 @@ li.plupload_delete a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: black;
+  color: #000;
   cursor: pointer;
   border-radius: 5px;
   font-size: 15px;
@@ -8790,14 +8716,14 @@ li.plupload_delete a:hover {
 
 .download_csv:hover {
   background: #aaa;
-  color: black;
+  color: #000;
 }
 
 .AddUserPopInContainer,
 .AddAlbumPopInContainer,
 .DeleteAlbumPopInContainer,
 .RenameAlbumPopInContainer {
-  background-color: white;
+  background-color: #fff;
 }
 
 .AddUserPopInContainer .AddIconTitle,
@@ -8817,7 +8743,7 @@ li.plupload_delete a:hover {
 .AddAlbumPopInContainer .AddAlbumInput,
 .DeleteAlbumPopInContainer .DeleteAlbumInput,
 .RenameAlbumPopInContainer .RenameAlbumInput {
-  background-color: white;
+  background-color: #fff;
   border: solid 2px #d4d4d4;
 }
 
@@ -8869,8 +8795,8 @@ li.plupload_delete a:hover {
 }
 
 .linked-albums-badge.badge-red {
-  background: red;
-  color: white;
+  background: #f00;
+  color: #fff;
 }
 
 .breadcrumb-item {
@@ -8886,7 +8812,7 @@ li.plupload_delete a:hover {
   margin-right: 15px;
 }
 .breadcrumb-item:hover .icon-cancel-circled {
-  color: black;
+  color: #000;
 }
 
 .breadcrumb-item a {
@@ -8947,7 +8873,7 @@ li.plupload_delete a:hover {
 
 .hasDatepicker,
 .elem-type-select {
-  background: white !important;
+  background: #fff !important;
 }
 
 .selectable-filter label {
@@ -8974,7 +8900,7 @@ li.plupload_delete a:hover {
 
 .search-result-item .notClickable {
   opacity: 0.3;
-  color: black !important;
+  color: #000 !important;
 }
 
 .promote-apps {
@@ -9153,11 +9079,11 @@ li.plupload_delete a:hover {
 }
 
 .badge-dropdown {
-  background: linear-gradient(130deg, white 0%, white 100%);
+  background: linear-gradient(130deg, #fff 0%, #fff 100%);
 }
 
 .badge-dropdown::after {
-  border-color: transparent transparent white;
+  border-color: transparent transparent #fff;
 }
 
 #usr-list-user,
@@ -9195,7 +9121,7 @@ li.plupload_delete a:hover {
 .desc-modal-content {
   position: absolute;
   border-radius: 10px;
-  background-color: white;
+  background-color: #fff;
   margin: auto;
   width: 75vw;
   height: 75vh;
@@ -9254,7 +9180,7 @@ li.plupload_delete a:hover {
 }
 
 .close-modal {
-  color: white;
+  color: #fff;
   position: absolute;
   right: -40px;
   top: -40px;
@@ -9265,7 +9191,7 @@ li.plupload_delete a:hover {
 .new-album-modal-content {
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background-color: #fff;
   position: absolute;
   border-radius: 10px;
   left: 50%;

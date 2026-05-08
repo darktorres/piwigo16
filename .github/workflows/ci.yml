@@ -130,8 +130,14 @@ jobs:
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
           PIWIGO_DB_PREFIX=piwigo_
-          PIWIGO_BASE_URL=http://localhost/piwigo16
+          PIWIGO_BASE_URL=http://localhost:8080
           EOF
+      - name: Create writable app directories
+        run: mkdir -p _data/templates_c _data/combined _data/upload local
+      - name: Start PHP built-in server
+        run: php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+      - name: Wait for PHP server
+        run: until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - run: vendor/bin/phpunit --testsuite Integration
 
   e2e:

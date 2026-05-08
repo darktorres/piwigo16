@@ -136,12 +136,11 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
 
             if (options.default !== undefined) {
                 if (ts.getValue() === '') ts.addItem(String(options.default), true);
-                const tsOn = ts.on as (name: string, cb: (...args: unknown[]) => void) => void;
                 if (target.multiple) {
                     const defaultItem = ts.getItem(String(options.default));
                     if (defaultItem)
                         defaultItem.querySelector<HTMLElement>('.remove')!.style.display = 'none';
-                    tsOn('item_remove', (...args: unknown[]) => {
+                    ts.on('item_remove', (...args: unknown[]) => {
                         const id = String(args[0]);
                         if (id === String(options.default)) {
                             ts.addItem(id, true);
@@ -151,7 +150,7 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
                         }
                     });
                 } else {
-                    tsOn('dropdown_close', () => {
+                    ts.on('dropdown_close', () => {
                         if (ts.getValue() === '') ts.addItem(String(options.default!), true);
                     });
                 }

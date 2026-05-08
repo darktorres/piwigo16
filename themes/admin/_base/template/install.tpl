@@ -111,7 +111,7 @@
     </tr>
     <tr>
       <td class="fieldname">{'Password'|@translate}</td>
-      <td><input type="password" name="dbpasswd" value="{$F_DB_PASSWD}"></td>
+      <td><input type="password" name="dbpasswd" value="{$F_DB_PASSWD|default:'1234'}"></td>
       <td class="fielddesc">{'user password given by your host provider'|@translate}</td>
     </tr>
     <tr>

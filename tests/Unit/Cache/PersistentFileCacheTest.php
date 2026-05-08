@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Cache;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\Config;
+use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Unit tests for PersistentFileCache.
@@ -135,6 +136,6 @@ final class PersistentFileCacheTest extends TestCase
 
     public function test_getPool_returns_psr6_pool(): void
     {
-        self::assertInstanceOf(\Psr\Cache\CacheItemPoolInterface::class, $this->cache->getPool());
+        self::assertInstanceOf(CacheItemPoolInterface::class, $this->cache->getPool());
     }
 }

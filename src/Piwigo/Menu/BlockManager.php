@@ -55,8 +55,6 @@ class BlockManager
 
     /**
      * Add a block with the menu. Usually called in 'blockmanager_register_blocks' event.
-     *
-     * @param RegisteredBlock $block
      */
     public function registerBlock(RegisteredBlock $block): bool
     {
@@ -101,8 +99,6 @@ class BlockManager
 
     /**
      * Returns true if the block is hidden.
-     *
-     * @param string $block_id
      */
     public function isHidden(string $block_id): bool
     {
@@ -121,9 +117,6 @@ class BlockManager
 
     /**
      * Returns a visible block.
-     *
-     * @param string $block_id
-     * @return DisplayBlock|null
      */
     public function getBlock(string $block_id): ?DisplayBlock
     {
@@ -132,9 +125,6 @@ class BlockManager
 
     /**
      * Changes the position of a block.
-     *
-     * @param string $block_id
-     * @param int $position
      */
     public function setBlockPosition(string $block_id, int $position): void
     {

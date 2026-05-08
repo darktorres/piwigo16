@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Core;
 
+use DI\Definition\Helper\FactoryDefinitionHelper;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,7 +49,7 @@ final class ContainerDefinitionsTest extends TestCase
     {
         $missing = [];
         foreach (self::$definitions as $key => $definition) {
-            if (!($definition instanceof \DI\Definition\Helper\FactoryDefinitionHelper)) {
+            if (!($definition instanceof FactoryDefinitionHelper)) {
                 continue;
             }
             try {

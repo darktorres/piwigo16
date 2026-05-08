@@ -22,7 +22,7 @@ use Symfony\Component\Process\Process;
  */
 final class SchemaIntegrityTest extends TestCase
 {
-    private const ALLOW_LIST = [
+    private const array ALLOW_LIST = [
         // Preamble / framework
         'instance',
         // Bulk reader

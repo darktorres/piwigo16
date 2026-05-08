@@ -11,13 +11,8 @@ namespace Piwigo\Ws;
  */
 class PwgError
 {
-    private readonly int|null $_code;
-    private readonly string $_codeText;
-
-    public function __construct(int|null $code, string $codeText)
+    public function __construct(private readonly int|null $_code, private readonly string $_codeText)
     {
-        $this->_code = $code;
-        $this->_codeText = $codeText;
     }
 
     public function code(): int|null

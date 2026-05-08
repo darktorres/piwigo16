@@ -18,7 +18,7 @@ use Piwigo\Tag\TagRepository;
  */
 final class TagRepositoryTest extends TestCase
 {
-    private const PREFIX = 'piwigo_';
+    private const string PREFIX = 'piwigo_';
 
     private function makeRepo(): TagRepository
     {

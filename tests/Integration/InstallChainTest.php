@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Integration;
 final class InstallChainTest extends IntegrationTestCase
 {
     /** Absolute path to the test sentinel file (matches TestMode logic). */
-    private const INSTALLED_STAMP = __DIR__ . '/../../local/.installed.test';
+    private const string INSTALLED_STAMP = __DIR__ . '/../../local/.installed.test';
 
     protected function setUp(): void
     {

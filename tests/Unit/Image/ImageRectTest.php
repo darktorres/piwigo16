@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Image;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\ImageRect;
 
 final class ImageRectTest extends TestCase

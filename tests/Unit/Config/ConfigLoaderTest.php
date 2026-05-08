@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Config;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\Filesystem;
 
 final class ConfigLoaderTest extends TestCase
 {
@@ -14,7 +16,7 @@ final class ConfigLoaderTest extends TestCase
     /** @var array<string, string|false> */
     private array $envBackup = [];
 
-    private const TOUCHED_VARS = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'];
+    private const array TOUCHED_VARS = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'];
 
     protected function setUp(): void
     {
@@ -40,7 +42,7 @@ final class ConfigLoaderTest extends TestCase
                 unlink($this->tmpDir . DIRECTORY_SEPARATOR . $f);
             }
         }
-        \Piwigo\Core\Filesystem::tryRmdir($this->tmpDir);
+        Filesystem::tryRmdir($this->tmpDir);
 
         // Restore env vars to their pre-test values.
         foreach (self::TOUCHED_VARS as $k) {
@@ -94,25 +96,25 @@ final class ConfigLoaderTest extends TestCase
         putenv('PIWIGO_DB_HOST=mysql.local');
         putenv('PIWIGO_DB_USER=piwigouser');
 
-        \Piwigo\Config\Config::reset();
-        \Piwigo\Config\Config::override('db_host', 'old.localhost');
-        \Piwigo\Config\Config::override('db_user', 'olduser');
-        \Piwigo\Config\Config::override('db_password', 'keepme');
+        Config::reset();
+        Config::override('db_host', 'old.localhost');
+        Config::override('db_user', 'olduser');
+        Config::override('db_password', 'keepme');
         ConfigLoader::applyEnvOverrides();
 
-        self::assertSame('mysql.local', \Piwigo\Config\Config::dbHost());
-        self::assertSame('piwigouser', \Piwigo\Config\Config::dbUser());
-        self::assertSame('keepme', \Piwigo\Config\Config::dbPassword()); // untouched, env var unset
+        self::assertSame('mysql.local', Config::dbHost());
+        self::assertSame('piwigouser', Config::dbUser());
+        self::assertSame('keepme', Config::dbPassword()); // untouched, env var unset
     }
 
     public function test_applyEnvOverrides_skips_empty_env_vars(): void
     {
         putenv('PIWIGO_DB_PASSWORD=');
 
-        \Piwigo\Config\Config::reset();
-        \Piwigo\Config\Config::override('db_password', 'existing');
+        Config::reset();
+        Config::override('db_password', 'existing');
         ConfigLoader::applyEnvOverrides();
 
-        self::assertSame('existing', \Piwigo\Config\Config::dbPassword());
+        self::assertSame('existing', Config::dbPassword());
     }
 }

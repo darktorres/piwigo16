@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Plugins;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Plugins\EventDispatcher;
 
 /**
  * Validates event hook symmetry in core code.

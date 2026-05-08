@@ -137,7 +137,7 @@ final class ScriptLoaderTest extends TestCase
         if (!is_array($raw)) {
             return null;
         }
-        return array_combine(array_map('strval', array_keys($raw)), array_values($raw)) ?: [];
+        return array_combine(array_map(strval(...), array_keys($raw)), array_values($raw)) ?: [];
     }
 
     /** @return array<string, Script> */

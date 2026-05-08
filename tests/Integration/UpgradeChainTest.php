@@ -6,8 +6,8 @@ namespace Piwigo\Tests\Integration;
 
 final class UpgradeChainTest extends IntegrationTestCase
 {
-    private const FIXTURE       = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
-    private const FIXTURE_PRE15 = __DIR__ . '/../../dev/fixtures/piwigo-15.x.sql';
+    private const string FIXTURE       = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
+    private const string FIXTURE_PRE15 = __DIR__ . '/../../dev/fixtures/piwigo-15.x.sql';
 
     protected function setUp(): void
     {

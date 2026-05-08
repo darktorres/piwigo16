@@ -34,7 +34,6 @@ class Languages
 
     /**
      * Perform requested actions
-     * @param string $action
      * @return list<('CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE' | 'CANNOT DELETE - LANGUAGE DOES NOT EXIST' | 'CANNOT DELETE - LANGUAGE IS ACTIVATED')>
      */
     public function performAction(string $action, string $language_id): array

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-
 class ImageGd implements ImageInterface
 {
     public \GdImage $image;

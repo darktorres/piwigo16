@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Controller\Admin;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Piwigo\Controller\Admin\AdminController;
 use Piwigo\Controller\Admin\AlbumController;
 use Piwigo\Controller\Admin\BatchManagerController;
 use Piwigo\Controller\Admin\ConfigurationController;
@@ -44,10 +46,10 @@ final class AdminPagesDispatchTest extends TestCase
      * @param class-string  $controllerClass
      * @param list<string>  $pages
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('subControllerProvider')]
+    #[DataProvider('subControllerProvider')]
     public function test_every_page_is_handled(string $controllerClass, array $pages): void
     {
-        $src = file_get_contents((new \ReflectionClass($controllerClass))->getFileName() ?: '');
+        $src = file_get_contents(new \ReflectionClass($controllerClass)->getFileName() ?: '');
         self::assertIsString($src, "Could not read $controllerClass source");
         self::assertNotEmpty($src, "Could not read $controllerClass source");
 
@@ -69,7 +71,7 @@ final class AdminPagesDispatchTest extends TestCase
     public function test_AdminController_dispatches_all_sub_controller_PAGES(): void
     {
         $adminSrc = file_get_contents(
-            (new \ReflectionClass(\Piwigo\Controller\Admin\AdminController::class))->getFileName() ?: ''
+            new \ReflectionClass(AdminController::class)->getFileName() ?: ''
         );
         self::assertIsString($adminSrc);
         self::assertNotEmpty($adminSrc);
@@ -83,7 +85,7 @@ final class AdminPagesDispatchTest extends TestCase
 
         $missing = [];
         foreach ($allSubControllers as $fqcn) {
-            $short = (new \ReflectionClass($fqcn))->getShortName();
+            $short = new \ReflectionClass($fqcn)->getShortName();
             if (!str_contains($adminSrc, $short . '::PAGES')) {
                 $missing[] = $short;
             }

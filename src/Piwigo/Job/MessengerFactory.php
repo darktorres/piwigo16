@@ -16,7 +16,6 @@ use Symfony\Component\Messenger\Bridge\Doctrine\Transport\Connection as Doctrine
 use Symfony\Component\Messenger\Bridge\Doctrine\Transport\DoctrineTransport;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\SendMessageMiddleware;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;

@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Log;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Logger;
+use Psr\Log\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
@@ -93,7 +94,7 @@ final class LoggerTest extends TestCase
 
     public function test_invalid_level_throws(): void
     {
-        $this->expectException(\Psr\Log\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->makeLogger()->log('bogus_level', 'msg');
     }
 

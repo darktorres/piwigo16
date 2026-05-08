@@ -274,8 +274,6 @@ class Template
 
     /**
      * Returns theme's parameter.
-     *
-     * @param string $val
      */
     public function getThemeconf(string $val): mixed
     {
@@ -393,7 +391,6 @@ class Template
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
-     * @param string $handle
      * @return true
      */
     public function assignVarFromHandle(string $varname, string $handle): bool
@@ -405,10 +402,6 @@ class Template
     /**
      * Appends a new value in a template array variable, the variable is created if needed.
      * @see http://www.smarty.net/manual/en/api.append.php
-     *
-     * @param string $tpl_var
-     * @param mixed $value
-     * @param bool $merge
      */
     public function append(string $tpl_var, mixed $value = null, bool $merge = false): void
     {
@@ -417,8 +410,6 @@ class Template
 
     /**
      * Performs a string concatenation.
-     *
-     * @param string $tpl_var
      */
     public function concat(string $tpl_var, string $value): void
     {
@@ -433,8 +424,6 @@ class Template
     /**
      * Removes an assigned template variable.
      * @see http://www.smarty.net/manual/en/api.clear_assign.php
-     *
-     * @param string $tpl_var
      */
     public function clearAssign(string $tpl_var): void
     {
@@ -495,8 +484,6 @@ class Template
     /**
      * Loads the template file of the handle, compiles it and appends the result to the output,
      * then sends the output to the browser.
-     *
-     * @param string $handle
      */
     public function pparse(string $handle): void
     {

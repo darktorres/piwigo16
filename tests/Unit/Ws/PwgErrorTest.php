@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Ws;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Html\HtmlService;
 use Piwigo\Ws\PwgError;
 
 final class PwgErrorTest extends TestCase

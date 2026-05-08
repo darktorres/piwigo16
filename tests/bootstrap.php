@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\ConfigLoader;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -22,7 +23,7 @@ if (!is_file($envTestPath)) {
     fwrite(STDERR, "Create it from .env.example and fill in test DB credentials.\n");
     exit(1);
 }
-\Piwigo\Config\ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
+ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
 
 // PHPWG_VERSION migrated to AppInfo::VERSION — no PHP define needed.
 

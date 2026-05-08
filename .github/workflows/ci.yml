@@ -42,6 +42,17 @@ jobs:
           php-version: '8.5'
           coverage: none
       - uses: ramsey/composer-install@v4
+      - name: Create .env.test
+        run: |
+          cat > .env.test <<EOF
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost/piwigo16
+          EOF
       - run: vendor/bin/phpunit --testsuite Unit
 
   audit:

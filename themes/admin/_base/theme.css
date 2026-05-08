@@ -382,7 +382,6 @@ table.languages tr td {
   cursor: auto;
 }
 
-
 .addAlbum label {
   border-radius: 5px 5px 0 0;
   padding: 2px;
@@ -403,7 +402,6 @@ table.languages tr td {
   transition-delay: 0.4s;
   padding: 110px 0;
 }
-
 
 .addAlbumHead span {
   font-size: 19px;
@@ -991,8 +989,6 @@ li.menuLi {
 .dropdown-content {
   position: relative;
 }
-
-
 
 .dropdown-option:hover {
   text-decoration: none;
@@ -2287,7 +2283,6 @@ a.admin-main:hover {
   padding: 0 3px 0 1px;
 }
 
-
 .content {
   padding: 0;
   margin: 0 0 0 205px;
@@ -2804,7 +2799,6 @@ div.jGrowl div.jGrowl-notification {
   margin-left: auto;
 }
 
-
 .pluginMiniBox {
   width: 260px;
 }
@@ -3282,10 +3276,6 @@ div.jGrowl div.jGrowl-notification {
   opacity: 0.5;
 }
 
-
-
-
-
 .PluginOptionsBlock {
   display: none;
   position: absolute;
@@ -3377,9 +3367,7 @@ div.jGrowl div.jGrowl-notification {
   font-size: 22px;
 }
 
-
 /* Plugin page multiple views */
-
 
 .AlbumViewSelector {
   position: absolute;
@@ -3547,7 +3535,6 @@ div.jGrowl div.jGrowl-notification {
   margin: 0;
   margin-top: 95px;
 }
-
 
 .plugin-inactive .pluginActions a {
   pointer-events: none;
@@ -5367,7 +5354,6 @@ a#showPermissions:hover {
   width: 100%;
 }
 
-
 .comments-filters {
   display: grid;
   grid-template-columns: 1fr 250px;
@@ -5869,7 +5855,6 @@ form#categoryOrdering p.albumActions .userSeparator {
   display: flex !important;
 }
 
-
 .move-cat-container .move-cat-toogler .icon-left-open {
   transform: rotate(180deg);
 }
@@ -6268,7 +6253,6 @@ input[type="text"].dError {
   margin: 12px;
 }
 
-
 .groups input[type="text"] {
   padding: 5px;
 }
@@ -6607,7 +6591,6 @@ input:checked + .slider.small::after {
 
 /* Merge options Radio buttons */
 
-
 .MergeOptionsContainer input {
   position: absolute;
   opacity: 0;
@@ -6735,7 +6718,6 @@ input:checked + .slider.small::after {
 .jconfirmDeleteConfirm ~ .jconfirm-buttons button {
   text-transform: none !important;
 }
-
 
 .jconfirmAlert .jconfirm-icon-c {
   margin-bottom: 25px !important;
@@ -6983,7 +6965,6 @@ input:checked + .slider.small::after {
   overflow: auto;
   background-color: rgb(0, 0, 0, 0.7);
 }
-
 
 .group-name-block {
   margin-bottom: 20px;
@@ -8291,7 +8272,6 @@ li.plupload_delete a:hover {
 .search-album-input-container .search-icon {
   font-size: 20px;
 }
-
 
 .search-album-help {
   display: none;

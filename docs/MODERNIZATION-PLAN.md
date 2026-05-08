@@ -42,14 +42,14 @@ populated $GLOBALS['user']…"
 
 `src/Piwigo/Template/Template.php:90–156` now registers:
 
-| Modifier              | Bound to                                                                    |
-| --------------------- | --------------------------------------------------------------------------- |
-| `l10n`                | `Lang::t(...)`                                                              |
-| `is_admin`            | `fn (string $s = '') => PermissionService::get()->isAdmin($s)`              |
-| `is_classic_user`     | `fn (string $s = '') => PermissionService::get()->isClassicUser($s)`        |
-| `get_device`          | `fn () => Util::get()->getDevice()`                                         |
-| `get_gallery_home_url`| `fn (...) => ServiceLocator::get(UrlGenerator::class)->gallery()`           |
-| `url_is_remote`       | `UrlService::urlIsRemote(...)`                                              |
+| Modifier               | Bound to                                                             |
+| ---------------------- | -------------------------------------------------------------------- |
+| `l10n`                 | `Lang::t(...)`                                                       |
+| `is_admin`             | `fn (string $s = '') => PermissionService::get()->isAdmin($s)`       |
+| `is_classic_user`      | `fn (string $s = '') => PermissionService::get()->isClassicUser($s)` |
+| `get_device`           | `fn () => Util::get()->getDevice()`                                  |
+| `get_gallery_home_url` | `fn (...) => ServiceLocator::get(UrlGenerator::class)->gallery()`    |
+| `url_is_remote`        | `UrlService::urlIsRemote(...)`                                       |
 
 Built-in PHP functions (`sprintf`, `json_encode`, `trim`, `htmlspecialchars`, …)
 remain as string callables — they were always native, no change needed.
@@ -93,6 +93,7 @@ Tier 3; Tier 3 retired them.
   controller side instead.
 
 **Remaining seams (low priority):**
+
 - `PageHeaderRenderer.php:25` reads `$GLOBALS['page']` and writes back at line 59.
 - `PageTailRenderer.php:56,62` reads `$GLOBALS['debug']` and `$GLOBALS['t2']`.
 - `NoPhotoYetRenderer.php:26` reads `$GLOBALS['user']`.
@@ -104,14 +105,14 @@ are harmless given the reference-bridge model in `Kernel::boot()`.
 
 ## Phase 6 — Tier 3a: `admin/include/*.inc.php` → typed services — **Done**
 
-| Original file                                       | Landed at                                          |
-| --------------------------------------------------- | -------------------------------------------------- |
-| `admin/include/albums_tab.inc.php`                  | `src/Piwigo/Admin/Album/AlbumsTabRenderer.php`     |
-| `admin/include/batch_manager_filters.inc.php`       | `src/Piwigo/Admin/BatchManager/FilterResolver.php` |
-| `admin/include/configuration_sizes_process.inc.php` | `src/Piwigo/Admin/Config/SizesProcessor.php`       |
-| `admin/include/configuration_watermark_process.inc.php` | `src/Piwigo/Admin/Config/WatermarkProcessor.php` |
-| `admin/include/photos_add_direct_prepare.inc.php`   | `src/Piwigo/Admin/Upload/DirectPreparer.php`       |
-| `admin/include/user_tabs.inc.php`                   | `src/Piwigo/Admin/Users/UserTabRenderer.php`       |
+| Original file                                           | Landed at                                          |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| `admin/include/albums_tab.inc.php`                      | `src/Piwigo/Admin/Album/AlbumsTabRenderer.php`     |
+| `admin/include/batch_manager_filters.inc.php`           | `src/Piwigo/Admin/BatchManager/FilterResolver.php` |
+| `admin/include/configuration_sizes_process.inc.php`     | `src/Piwigo/Admin/Config/SizesProcessor.php`       |
+| `admin/include/configuration_watermark_process.inc.php` | `src/Piwigo/Admin/Config/WatermarkProcessor.php`   |
+| `admin/include/photos_add_direct_prepare.inc.php`       | `src/Piwigo/Admin/Upload/DirectPreparer.php`       |
+| `admin/include/user_tabs.inc.php`                       | `src/Piwigo/Admin/Users/UserTabRenderer.php`       |
 
 The whole `admin/include/` directory is gone (and `admin/` itself has been
 collapsed into `src/`).
@@ -120,22 +121,22 @@ collapsed into `src/`).
 
 ## Phase 7 — Tier 3b: `include/*.inc.php` page-components → renderers — **Done**
 
-| Original file                       | Landed at                                            |
-| ----------------------------------- | ---------------------------------------------------- |
-| `include/ws_core.inc.php`           | merged into `src/Piwigo/Ws/PwgServer.php`            |
-| `include/ws_init.inc.php`           | merged into `PwgServer::boot()`                      |
-| `include/ws_functions/pwg.*.php`    | `src/Piwigo/Ws/Method/{Categories,Comments,Extensions,General,Groups,Images,Permissions,Tags,Users}Endpoints.php` |
-| `include/selected_tags.inc.php`     | `src/Piwigo/Tag/SelectedTagsRenderer.php`            |
-| `include/no_photo_yet.inc.php`      | `src/Piwigo/Page/NoPhotoYetRenderer.php`             |
-| `include/category_cats.inc.php`     | `src/Piwigo/Category/CategoryCatsRenderer.php`       |
-| `include/category_default.inc.php`  | `src/Piwigo/Category/CategoryDefaultRenderer.php`    |
-| `include/search_filters.inc.php`    | `src/Piwigo/Search/SearchFilterRenderer.php`         |
-| `include/picture_comment.inc.php`   | `src/Piwigo/Picture/PictureCommentRenderer.php`      |
-| `include/picture_metadata.inc.php`  | `src/Piwigo/Picture/PictureMetadataRenderer.php`     |
-| `include/picture_rate.inc.php`      | `src/Piwigo/Picture/PictureRateRenderer.php`         |
-| `include/menubar.inc.php`           | `src/Piwigo/Menu/MenubarRenderer.php`                |
-| `include/page_header.php`           | `src/Piwigo/Page/PageHeaderRenderer.php` (Phase 5)   |
-| `include/page_tail.php`             | `src/Piwigo/Page/PageTailRenderer.php` (Phase 5)     |
+| Original file                      | Landed at                                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `include/ws_core.inc.php`          | merged into `src/Piwigo/Ws/PwgServer.php`                                                                         |
+| `include/ws_init.inc.php`          | merged into `PwgServer::boot()`                                                                                   |
+| `include/ws_functions/pwg.*.php`   | `src/Piwigo/Ws/Method/{Categories,Comments,Extensions,General,Groups,Images,Permissions,Tags,Users}Endpoints.php` |
+| `include/selected_tags.inc.php`    | `src/Piwigo/Tag/SelectedTagsRenderer.php`                                                                         |
+| `include/no_photo_yet.inc.php`     | `src/Piwigo/Page/NoPhotoYetRenderer.php`                                                                          |
+| `include/category_cats.inc.php`    | `src/Piwigo/Category/CategoryCatsRenderer.php`                                                                    |
+| `include/category_default.inc.php` | `src/Piwigo/Category/CategoryDefaultRenderer.php`                                                                 |
+| `include/search_filters.inc.php`   | `src/Piwigo/Search/SearchFilterRenderer.php`                                                                      |
+| `include/picture_comment.inc.php`  | `src/Piwigo/Picture/PictureCommentRenderer.php`                                                                   |
+| `include/picture_metadata.inc.php` | `src/Piwigo/Picture/PictureMetadataRenderer.php`                                                                  |
+| `include/picture_rate.inc.php`     | `src/Piwigo/Picture/PictureRateRenderer.php`                                                                      |
+| `include/menubar.inc.php`          | `src/Piwigo/Menu/MenubarRenderer.php`                                                                             |
+| `include/page_header.php`          | `src/Piwigo/Page/PageHeaderRenderer.php` (Phase 5)                                                                |
+| `include/page_tail.php`            | `src/Piwigo/Page/PageTailRenderer.php` (Phase 5)                                                                  |
 
 The whole `include/` directory is gone.
 

@@ -56,118 +56,118 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 
 **Gallery / public pages (21 controllers)**
 
-| Class                       | Notes                                                                |
-| --------------------------- | -------------------------------------------------------------------- |
+| Class                       | Notes                                                                                                                                                                                                    |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GalleryController`         | Main gallery; `/`, `/category/{rest}`, `/favorites`, `/recent`, `/best-rated`, `/most-visited`, `/recent-albums`, `/random`, `/search/{id}`, `/search/{id}/{rest}` — dispatches via `SectionInitializer` |
-| `PictureController`         | `/picture/{rest}` — single-image page                               |
-| `SearchController`          | `/search` — builds query, redirects to results                       |
-| `QSearchController`         | `/qsearch` — quick-search redirect (former `qsearch.php`)           |
-| `TagsController`            | `/tags`, `/tags/{rest}` — tag cloud + filtered gallery               |
-| `CommentsController`        | `/comments` — paginated comment list                                 |
-| `FeedController`            | `/feed` — RSS 2.0 feed                                               |
-| `NotificationController`    | `/notification` — RSS subscription page                              |
-| `IdentificationController`  | `/identification` — login                                            |
-| `RegisterController`        | `/register` — user registration                                      |
-| `PasswordController`        | `/password` — password reset                                         |
-| `ProfileController`         | `/profile` — user preferences                                        |
-| `AboutController`           | `/about` — gallery about page                                        |
-| `NbmController`             | `/nbm` — notification-by-mail subscribe/unsubscribe                  |
-| `PopuphelpController`       | `/popuphelp` — gallery-side help popup                               |
-| `ActionController`          | `/action` — binary file-server (downloads, format variants); former `action.php` |
-| `WsController`              | `/ws{rest}` — web services API + OpenAPI spec/UI                     |
-| `ImageDerivativeController` | `/i/{rest}` — derivative serving via the `?/i/` fast path           |
-| `InstallController`         | `/install` — installer; `?/install` fast path                       |
-| `UpgradeController`         | `/upgrade` — upgrader; `?/upgrade` fast path                        |
-| `UpgradeFeedController`     | `/upgrade_feed` — feed-based DB upgrade runner                       |
+| `PictureController`         | `/picture/{rest}` — single-image page                                                                                                                                                                    |
+| `SearchController`          | `/search` — builds query, redirects to results                                                                                                                                                           |
+| `QSearchController`         | `/qsearch` — quick-search redirect (former `qsearch.php`)                                                                                                                                                |
+| `TagsController`            | `/tags`, `/tags/{rest}` — tag cloud + filtered gallery                                                                                                                                                   |
+| `CommentsController`        | `/comments` — paginated comment list                                                                                                                                                                     |
+| `FeedController`            | `/feed` — RSS 2.0 feed                                                                                                                                                                                   |
+| `NotificationController`    | `/notification` — RSS subscription page                                                                                                                                                                  |
+| `IdentificationController`  | `/identification` — login                                                                                                                                                                                |
+| `RegisterController`        | `/register` — user registration                                                                                                                                                                          |
+| `PasswordController`        | `/password` — password reset                                                                                                                                                                             |
+| `ProfileController`         | `/profile` — user preferences                                                                                                                                                                            |
+| `AboutController`           | `/about` — gallery about page                                                                                                                                                                            |
+| `NbmController`             | `/nbm` — notification-by-mail subscribe/unsubscribe                                                                                                                                                      |
+| `PopuphelpController`       | `/popuphelp` — gallery-side help popup                                                                                                                                                                   |
+| `ActionController`          | `/action` — binary file-server (downloads, format variants); former `action.php`                                                                                                                         |
+| `WsController`              | `/ws{rest}` — web services API + OpenAPI spec/UI                                                                                                                                                         |
+| `ImageDerivativeController` | `/i/{rest}` — derivative serving via the `?/i/` fast path                                                                                                                                                |
+| `InstallController`         | `/install` — installer; `?/install` fast path                                                                                                                                                            |
+| `UpgradeController`         | `/upgrade` — upgrader; `?/upgrade` fast path                                                                                                                                                             |
+| `UpgradeFeedController`     | `/upgrade_feed` — feed-based DB upgrade runner                                                                                                                                                           |
 
 **Admin (`src/Piwigo/Controller/Admin/`, 10 controllers)**
 
-| Class                      | Pages handled                                                                                                                     |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `AdminController`          | Dispatcher; renders admin shell; `/admin{rest}`                                                                                   |
-| `AlbumController`          | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks                                 |
-| `BatchManagerController`   | batch_manager, batch_manager_global, batch_manager_unit, queue                                                                    |
-| `ConfigurationController`  | configuration                                                                                                                     |
-| `ExtensionsController`     | plugins/installed/new, plugin, themes/installed/new/standard_pages, theme, languages/installed/new, updates/pwg/ext, extend_for_templates |
-| `GroupsController`         | group_list, group_perm                                                                                                            |
-| `MaintenanceController`    | maintenance/actions/env/sys, history, stats, site_manager, site_reader_local, site_update                                         |
-| `MiscController`           | comments, menubar, notification_by_mail, permalinks, popuphelp, rating, rating_user, tags, profile, help, intro                   |
-| `PhotoController`          | photo, picture_modify/coi/formats, photos_add, photos_add_direct/ftp/applications                                                 |
-| `UsersController`          | user_list, user_perm, user_activity                                                                                               |
+| Class                     | Pages handled                                                                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `AdminController`         | Dispatcher; renders admin shell; `/admin{rest}`                                                                                           |
+| `AlbumController`         | album, albums, album_notification, cat_list, cat_modify, cat_options, cat_perm, element_set_ranks                                         |
+| `BatchManagerController`  | batch_manager, batch_manager_global, batch_manager_unit, queue                                                                            |
+| `ConfigurationController` | configuration                                                                                                                             |
+| `ExtensionsController`    | plugins/installed/new, plugin, themes/installed/new/standard_pages, theme, languages/installed/new, updates/pwg/ext, extend_for_templates |
+| `GroupsController`        | group_list, group_perm                                                                                                                    |
+| `MaintenanceController`   | maintenance/actions/env/sys, history, stats, site_manager, site_reader_local, site_update                                                 |
+| `MiscController`          | comments, menubar, notification_by_mail, permalinks, popuphelp, rating, rating_user, tags, profile, help, intro                           |
+| `PhotoController`         | photo, picture_modify/coi/formats, photos_add, photos_add_direct/ftp/applications                                                         |
+| `UsersController`         | user_list, user_perm, user_activity                                                                                                       |
 
 ### Domain namespaces (`src/Piwigo/<Domain>/`)
 
-| Namespace          | Contents                                                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `Activity`         | `ActivityRepository`                                                                                                            |
-| `Admin`            | `AdminService`, `InstallService`, `UpgradeService`, `MaintenanceService`, `Plugins`, `Themes`, `Languages`, `Updates`, `PluginMaintain`, `ThemeMaintain`, `Tabsheet`, `CoreTabsRegistrar` plus per-domain admin sub-namespaces (see below) |
-| `Auth`             | `AuthKeyRepository`, `CookieService`, `PasswordService`, `PwgBase32`, `PwgTOTP`                                                 |
-| `Bootstrap`        | `CommonBootstrap`, `Container` (PHP-DI builder), `ExceptionHandler`                                                             |
-| `Cache`            | `CacheFactory`, `PersistentCache`, `PersistentCacheRegistry`, `PersistentFileCache`, `RequestCache`, `Simple`                   |
-| `Calendar`         | `CalendarBase`, `CalendarMonthly`, `CalendarWeekly`, `CalendarService`, `CalendarConstants` (autoload-files)                    |
-| `Category`         | `CategoryRepository`, `CategoryService`, `CategoryCatsRenderer`, `CategoryDefaultRenderer`                                      |
-| `Comment`          | `CommentRepository`, `CommentService`                                                                                           |
-| `Config`           | `Config` (typed accessor facade), `ConfigLoader`, `ConfigService`, `ConfigStorage`, `TestMode`, `UnknownConfigKeyException`     |
-| `Controller`       | See above                                                                                                                       |
-| `Core`             | `Kernel`, `ServiceLocator`, `PageState`, `Lang`, `LanguageStack`, `Util`, `BoolUtil`, `StringUtil`, `Filesystem`, `Logger`, `LoggerRegistry`, `InstallSentinel`, `AppInfo`, `DateService`, `ActivitySystem`, `AccessLevel`, `ErrorCollector`, `ValidationPattern` |
-| `Db`               | `DbConnection`, `Dml`, `DbInfo`, `SchemaHelper`, `SqlExpr`, `QueryHelper`, `Tables`, `AbstractRepository`                       |
-| `Exception`        | `AuthException`, `ConfigException`, `DbException`, `HttpException`, `NotFoundException`, `PiwigoException`, `ValidationException` |
-| `Feed`             | `FeedHelper`, `FeedRepository`, `PiwigoFeedCreator`                                                                             |
-| `Filter`           | `FilterService`                                                                                                                 |
-| `Group`            | `GroupRepository`                                                                                                               |
-| `History`          | `HistoryRepository`                                                                                                             |
-| `Html`             | `HtmlService` (HTML generation helpers)                                                                                         |
-| `Http`             | `RequestFactory`, `ResponseFactory`, `ResponseEmitter`, `PathExtractor`, `MiddlewarePipeline`                                   |
-| `Http/Middleware`  | `AuthMiddleware`, `ControllerInvokerMiddleware`, `CsrfMiddleware`, `ExceptionHandlerMiddleware`, `FilterMiddleware`, `RoutingMiddleware`, `SessionMiddleware` |
-| `Image`            | `ImageRepository`, `SrcImage`, `DerivativeImage`, `DerivativeService`, `DerivativePipeline`, `DerivativeEncoding`, `DerivativeParams`, `DerivativeSize`, `ImageDerivativeContext`, `ImageRect`, `ImageStdParams`, `SizingParams`, `WatermarkParams` |
-| `Job`              | `MessengerFactory` plus message + `Handler/` classes (`BatchUploadJob`, `GenerateDerivativeJob`, `RegenerateAllDerivativesJob`, `ReindexImagesJob`, `SendNotificationEmailJob` and matching handlers) |
-| `Lang`             | `LangService`, `Translator`                                                                                                     |
-| `Language`         | `LanguageRepository`                                                                                                            |
-| `Mail`             | `MailService`                                                                                                                   |
-| `Menu`             | `BlockManager`, `DisplayBlock`, `RegisteredBlock`, `MenubarRenderer`                                                            |
-| `Metadata`         | `MetadataService`                                                                                                               |
-| `Migrations`       | `MigrationRunner` (Doctrine Migrations wrapper)                                                                                 |
-| `Notification`     | `NotificationRepository`, `NotificationService`, `MailNotificationContext`                                                      |
-| `Page`             | `PageHeaderRenderer`, `PageTailRenderer`, `NoPhotoYetRenderer`, plus `Page/Context/` (`AdminPageContext`, `AlbumPageContext`, `PicturePageContext`, `SearchPageContext`, `TagsPageContext`) |
-| `Permalink`        | `PermalinkRepository`, `PermalinkService`                                                                                       |
-| `Permission`       | `PermissionRepository` (the `PermissionService` lives in `Piwigo\Users\`)                                                       |
-| `Picture`          | `PictureService`, `PictureCommentRenderer`, `PictureContentRenderer`, `PictureMetadataRenderer`, `PictureRateRenderer`          |
-| `Plugin`           | `PluginRepository`, `PluginService`                                                                                             |
-| `Plugins`          | Bundled plugin support: `EventDispatcher`, `LoadedPluginRegistry`, plus per-plugin `Config` classes under `LocalFilesEditor/`, `NbcThemeChanger/`, `PiwigoOpenstreetmap/`, `PiwigoVideojs/` |
-| `Rate`             | `RateRepository`, `RateService`                                                                                                 |
-| `Routing`          | `Router`, `RouteResult`                                                                                                         |
-| `Search`           | `SearchService`, `SearchRepository`, `SearchFilterRenderer`, `Q*` query AST classes (`QConstants`, `QExpression`, `QSearchScope`, `QSingleToken`, `QMultiToken`, `QDateRangeScope`, `QNumericRangeScope`, `QResults`), plus `Inflector/` |
-| `Section`          | `SectionInitializer` (parses `/category/12-foo/start-24` etc.)                                                                  |
-| `Session`          | `PwgSession`, `SessionRepository`, `SessionService`                                                                             |
-| `Site`             | `LocalSiteReader`, `SiteRepository`                                                                                             |
-| `Storage`          | `StorageRegistry` (Flysystem disk registry)                                                                                     |
-| `Tag`              | `TagRepository`, `TagService`, `SelectedTagsRenderer`                                                                           |
-| `Template`         | `Template` (Smarty 5 wrapper), `TemplateRegistry`, `ScriptLoader`, `CssLoader`, `FileCombiner`, `Combinable`, `Script`, `Css`, `PwgTemplateAdapter` |
-| `Theme`            | `ThemeRepository` (the theme manager class is `Piwigo\Admin\Themes`)                                                            |
-| `Url`              | `UrlGenerator`, `UrlService`                                                                                                    |
-| `Users`            | `User`, `CurrentUser`, `UserService`, `UserRepository`, `UserBootstrap`, `AuthService`, `PermissionService`, `PreferencesService`, `ProfileService` |
-| `Ws`               | `PwgServer`, `PwgServerRegistry`, `PwgRequestHandler`, `WsHelper`, `WsMethodRegistrar`, `MethodDefinition`, `ParamDefinition`, `WsParam`, `WsType`, `PwgError`, `PwgNamedArray`, `PwgNamedStruct` |
-| `Ws/Encoder`       | `PwgResponseEncoder` base                                                                                                       |
-| `Ws/Method`        | WS method endpoint classes (`CategoriesEndpoints`, `CommentsEndpoints`, `ExtensionsEndpoints`, `GeneralEndpoints`, `GroupsEndpoints`, `ImagesEndpoints`, `PermissionsEndpoints`, `TagsEndpoints`, `UsersEndpoints`) |
-| `Ws/OpenApi`       | `SpecBuilder` (OpenAPI JSON generation), `OpenApiDocument`, `ApiMethod` attribute                                               |
-| `Ws/Protocol`      | `PwgJsonEncoder`, `PwgRestEncoder`, `PwgRestRequestHandler`, `PwgSerialPhpEncoder`, `PwgXmlRpcEncoder`, `PwgXmlWriter`           |
+| Namespace         | Contents                                                                                                                                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Activity`        | `ActivityRepository`                                                                                                                                                                                                                                              |
+| `Admin`           | `AdminService`, `InstallService`, `UpgradeService`, `MaintenanceService`, `Plugins`, `Themes`, `Languages`, `Updates`, `PluginMaintain`, `ThemeMaintain`, `Tabsheet`, `CoreTabsRegistrar` plus per-domain admin sub-namespaces (see below)                        |
+| `Auth`            | `AuthKeyRepository`, `CookieService`, `PasswordService`, `PwgBase32`, `PwgTOTP`                                                                                                                                                                                   |
+| `Bootstrap`       | `CommonBootstrap`, `Container` (PHP-DI builder), `ExceptionHandler`                                                                                                                                                                                               |
+| `Cache`           | `CacheFactory`, `PersistentCache`, `PersistentCacheRegistry`, `PersistentFileCache`, `RequestCache`, `Simple`                                                                                                                                                     |
+| `Calendar`        | `CalendarBase`, `CalendarMonthly`, `CalendarWeekly`, `CalendarService`, `CalendarConstants` (autoload-files)                                                                                                                                                      |
+| `Category`        | `CategoryRepository`, `CategoryService`, `CategoryCatsRenderer`, `CategoryDefaultRenderer`                                                                                                                                                                        |
+| `Comment`         | `CommentRepository`, `CommentService`                                                                                                                                                                                                                             |
+| `Config`          | `Config` (typed accessor facade), `ConfigLoader`, `ConfigService`, `ConfigStorage`, `TestMode`, `UnknownConfigKeyException`                                                                                                                                       |
+| `Controller`      | See above                                                                                                                                                                                                                                                         |
+| `Core`            | `Kernel`, `ServiceLocator`, `PageState`, `Lang`, `LanguageStack`, `Util`, `BoolUtil`, `StringUtil`, `Filesystem`, `Logger`, `LoggerRegistry`, `InstallSentinel`, `AppInfo`, `DateService`, `ActivitySystem`, `AccessLevel`, `ErrorCollector`, `ValidationPattern` |
+| `Db`              | `DbConnection`, `Dml`, `DbInfo`, `SchemaHelper`, `SqlExpr`, `QueryHelper`, `Tables`, `AbstractRepository`                                                                                                                                                         |
+| `Exception`       | `AuthException`, `ConfigException`, `DbException`, `HttpException`, `NotFoundException`, `PiwigoException`, `ValidationException`                                                                                                                                 |
+| `Feed`            | `FeedHelper`, `FeedRepository`, `PiwigoFeedCreator`                                                                                                                                                                                                               |
+| `Filter`          | `FilterService`                                                                                                                                                                                                                                                   |
+| `Group`           | `GroupRepository`                                                                                                                                                                                                                                                 |
+| `History`         | `HistoryRepository`                                                                                                                                                                                                                                               |
+| `Html`            | `HtmlService` (HTML generation helpers)                                                                                                                                                                                                                           |
+| `Http`            | `RequestFactory`, `ResponseFactory`, `ResponseEmitter`, `PathExtractor`, `MiddlewarePipeline`                                                                                                                                                                     |
+| `Http/Middleware` | `AuthMiddleware`, `ControllerInvokerMiddleware`, `CsrfMiddleware`, `ExceptionHandlerMiddleware`, `FilterMiddleware`, `RoutingMiddleware`, `SessionMiddleware`                                                                                                     |
+| `Image`           | `ImageRepository`, `SrcImage`, `DerivativeImage`, `DerivativeService`, `DerivativePipeline`, `DerivativeEncoding`, `DerivativeParams`, `DerivativeSize`, `ImageDerivativeContext`, `ImageRect`, `ImageStdParams`, `SizingParams`, `WatermarkParams`               |
+| `Job`             | `MessengerFactory` plus message + `Handler/` classes (`BatchUploadJob`, `GenerateDerivativeJob`, `RegenerateAllDerivativesJob`, `ReindexImagesJob`, `SendNotificationEmailJob` and matching handlers)                                                             |
+| `Lang`            | `LangService`, `Translator`                                                                                                                                                                                                                                       |
+| `Language`        | `LanguageRepository`                                                                                                                                                                                                                                              |
+| `Mail`            | `MailService`                                                                                                                                                                                                                                                     |
+| `Menu`            | `BlockManager`, `DisplayBlock`, `RegisteredBlock`, `MenubarRenderer`                                                                                                                                                                                              |
+| `Metadata`        | `MetadataService`                                                                                                                                                                                                                                                 |
+| `Migrations`      | `MigrationRunner` (Doctrine Migrations wrapper)                                                                                                                                                                                                                   |
+| `Notification`    | `NotificationRepository`, `NotificationService`, `MailNotificationContext`                                                                                                                                                                                        |
+| `Page`            | `PageHeaderRenderer`, `PageTailRenderer`, `NoPhotoYetRenderer`, plus `Page/Context/` (`AdminPageContext`, `AlbumPageContext`, `PicturePageContext`, `SearchPageContext`, `TagsPageContext`)                                                                       |
+| `Permalink`       | `PermalinkRepository`, `PermalinkService`                                                                                                                                                                                                                         |
+| `Permission`      | `PermissionRepository` (the `PermissionService` lives in `Piwigo\Users\`)                                                                                                                                                                                         |
+| `Picture`         | `PictureService`, `PictureCommentRenderer`, `PictureContentRenderer`, `PictureMetadataRenderer`, `PictureRateRenderer`                                                                                                                                            |
+| `Plugin`          | `PluginRepository`, `PluginService`                                                                                                                                                                                                                               |
+| `Plugins`         | Bundled plugin support: `EventDispatcher`, `LoadedPluginRegistry`, plus per-plugin `Config` classes under `LocalFilesEditor/`, `NbcThemeChanger/`, `PiwigoOpenstreetmap/`, `PiwigoVideojs/`                                                                       |
+| `Rate`            | `RateRepository`, `RateService`                                                                                                                                                                                                                                   |
+| `Routing`         | `Router`, `RouteResult`                                                                                                                                                                                                                                           |
+| `Search`          | `SearchService`, `SearchRepository`, `SearchFilterRenderer`, `Q*` query AST classes (`QConstants`, `QExpression`, `QSearchScope`, `QSingleToken`, `QMultiToken`, `QDateRangeScope`, `QNumericRangeScope`, `QResults`), plus `Inflector/`                          |
+| `Section`         | `SectionInitializer` (parses `/category/12-foo/start-24` etc.)                                                                                                                                                                                                    |
+| `Session`         | `PwgSession`, `SessionRepository`, `SessionService`                                                                                                                                                                                                               |
+| `Site`            | `LocalSiteReader`, `SiteRepository`                                                                                                                                                                                                                               |
+| `Storage`         | `StorageRegistry` (Flysystem disk registry)                                                                                                                                                                                                                       |
+| `Tag`             | `TagRepository`, `TagService`, `SelectedTagsRenderer`                                                                                                                                                                                                             |
+| `Template`        | `Template` (Smarty 5 wrapper), `TemplateRegistry`, `ScriptLoader`, `CssLoader`, `FileCombiner`, `Combinable`, `Script`, `Css`, `PwgTemplateAdapter`                                                                                                               |
+| `Theme`           | `ThemeRepository` (the theme manager class is `Piwigo\Admin\Themes`)                                                                                                                                                                                              |
+| `Url`             | `UrlGenerator`, `UrlService`                                                                                                                                                                                                                                      |
+| `Users`           | `User`, `CurrentUser`, `UserService`, `UserRepository`, `UserBootstrap`, `AuthService`, `PermissionService`, `PreferencesService`, `ProfileService`                                                                                                               |
+| `Ws`              | `PwgServer`, `PwgServerRegistry`, `PwgRequestHandler`, `WsHelper`, `WsMethodRegistrar`, `MethodDefinition`, `ParamDefinition`, `WsParam`, `WsType`, `PwgError`, `PwgNamedArray`, `PwgNamedStruct`                                                                 |
+| `Ws/Encoder`      | `PwgResponseEncoder` base                                                                                                                                                                                                                                         |
+| `Ws/Method`       | WS method endpoint classes (`CategoriesEndpoints`, `CommentsEndpoints`, `ExtensionsEndpoints`, `GeneralEndpoints`, `GroupsEndpoints`, `ImagesEndpoints`, `PermissionsEndpoints`, `TagsEndpoints`, `UsersEndpoints`)                                               |
+| `Ws/OpenApi`      | `SpecBuilder` (OpenAPI JSON generation), `OpenApiDocument`, `ApiMethod` attribute                                                                                                                                                                                 |
+| `Ws/Protocol`     | `PwgJsonEncoder`, `PwgRestEncoder`, `PwgRestRequestHandler`, `PwgSerialPhpEncoder`, `PwgXmlRpcEncoder`, `PwgXmlWriter`                                                                                                                                            |
 
 #### Admin sub-namespaces (`src/Piwigo/Admin/<Domain>/`)
 
-| Sub-namespace        | Contents                                                                          |
-| -------------------- | --------------------------------------------------------------------------------- |
-| `Album`              | `AlbumsTabRenderer`                                                               |
-| `BatchManager`       | `FilterResolver`                                                                  |
-| `Category`           | `CategoryAdminService`                                                            |
-| `Config`             | `SizesProcessor`, `WatermarkProcessor`                                            |
-| `History`            | `HistoryAdminService`                                                             |
-| `Image`              | `PwgImage`, `ImageAdminService`, `GraphicsLibrary`, `ImageInterface`, `ImageGd`, `ImageImagick`, `ImageExtImagick` |
-| `Integrity`          | `C13yInternal`, `CheckIntegrity`                                                  |
-| `Metadata`           | `MetadataAdminService`                                                            |
-| `Notification`       | `NotificationAdminService`                                                        |
-| `Tag`                | `TagAdminService`                                                                 |
-| `Upload`             | `UploadService`, `DirectPreparer`                                                 |
-| `Users`              | `UserAdminService`, `UserTabRenderer`                                             |
+| Sub-namespace  | Contents                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `Album`        | `AlbumsTabRenderer`                                                                                                |
+| `BatchManager` | `FilterResolver`                                                                                                   |
+| `Category`     | `CategoryAdminService`                                                                                             |
+| `Config`       | `SizesProcessor`, `WatermarkProcessor`                                                                             |
+| `History`      | `HistoryAdminService`                                                                                              |
+| `Image`        | `PwgImage`, `ImageAdminService`, `GraphicsLibrary`, `ImageInterface`, `ImageGd`, `ImageImagick`, `ImageExtImagick` |
+| `Integrity`    | `C13yInternal`, `CheckIntegrity`                                                                                   |
+| `Metadata`     | `MetadataAdminService`                                                                                             |
+| `Notification` | `NotificationAdminService`                                                                                         |
+| `Tag`          | `TagAdminService`                                                                                                  |
+| `Upload`       | `UploadService`, `DirectPreparer`                                                                                  |
+| `Users`        | `UserAdminService`, `UserTabRenderer`                                                                              |
 
 `src/types/` — TypeScript declarations for PHP-emitted globals (`globals.d.ts`,
 `css.d.ts`).
@@ -176,12 +176,12 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 
 ## `config/` — runtime wiring
 
-| File            | Purpose                                                                |
-| --------------- | ---------------------------------------------------------------------- |
-| `routes.php`    | `RouteCollection` with 32 named routes                                 |
-| `container.php` | DI container bindings (middleware, repositories, services)             |
-| `storage.php`   | Flysystem disk definitions (uploads, derivatives, watermarks, …)       |
-| `messenger.php` | Symfony Messenger transport / routing map                              |
+| File            | Purpose                                                          |
+| --------------- | ---------------------------------------------------------------- |
+| `routes.php`    | `RouteCollection` with 32 named routes                           |
+| `container.php` | DI container bindings (middleware, repositories, services)       |
+| `storage.php`   | Flysystem disk definitions (uploads, derivatives, watermarks, …) |
+| `messenger.php` | Symfony Messenger transport / routing map                        |
 
 The legacy `include/` and `admin/` directories are gone. Bootstrap responsibility
 is split between `index.php` (route detection + minimal bootstraps) and
@@ -288,23 +288,23 @@ bootstrap.php           PHPUnit bootstrap (env, autoload, ServiceLocator setup)
 
 ## `tools/` — development scripts
 
-| Path                                | Purpose                                                                                  |
-| ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| `tools/phpstan/`                    | PHPStan bootstrap and custom rules (`ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, dynamic-return-type extensions `TriggerChangeDynamicReturnType` + `PwgGetSessionVarDynamicReturnType`) |
-| `tools/i18n/`                       | Translation extraction and validation scripts                                            |
-| `tools/language/`                   | Language file management helpers                                                         |
-| `tools/ws/`                         | WS method documentation generators                                                       |
-| `tools/build-config-accessors.php`  | Generates typed `Config::*()` accessors from `Config::SCHEMA`                            |
-| `tools/build-config-reference.php`  | Generates `docs/CONFIG-REFERENCE.md` from `Config::SCHEMA`                               |
-| `tools/triggers_list.php`           | Documents all `trigger_notify`/`trigger_change` hooks                                    |
-| `tools/phpstan-bootstrap.php`       | PHPStan bootstrap (defines constants, `IN_ADMIN=false`, etc.)                            |
-| `tools/phpstan-types.php`           | PHPStan type stubs                                                                       |
-| `tools/analyze-mixed.py`            | One-shot: analyses remaining `mixed` types (output captured in `docs/MIXED-TYPES.md`)    |
-| `tools/migrate-free-functions.py`   | One-shot migration helper used during the `include/` retirement                          |
-| `tools/migrate-preboot-functions.py`| One-shot migration helper                                                                |
-| `tools/fix-remaining-free-calls.py` | One-shot                                                                                 |
-| `tools/fix-remaining-free-calls-2.py` | One-shot                                                                               |
-| `tools/ws.htm`                      | Static WS browser shell                                                                  |
+| Path                                  | Purpose                                                                                                                                                                                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tools/phpstan/`                      | PHPStan bootstrap and custom rules (`ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, dynamic-return-type extensions `TriggerChangeDynamicReturnType` + `PwgGetSessionVarDynamicReturnType`) |
+| `tools/i18n/`                         | Translation extraction and validation scripts                                                                                                                                                                                                                   |
+| `tools/language/`                     | Language file management helpers                                                                                                                                                                                                                                |
+| `tools/ws/`                           | WS method documentation generators                                                                                                                                                                                                                              |
+| `tools/build-config-accessors.php`    | Generates typed `Config::*()` accessors from `Config::SCHEMA`                                                                                                                                                                                                   |
+| `tools/build-config-reference.php`    | Generates `docs/CONFIG-REFERENCE.md` from `Config::SCHEMA`                                                                                                                                                                                                      |
+| `tools/triggers_list.php`             | Documents all `trigger_notify`/`trigger_change` hooks                                                                                                                                                                                                           |
+| `tools/phpstan-bootstrap.php`         | PHPStan bootstrap (defines constants, `IN_ADMIN=false`, etc.)                                                                                                                                                                                                   |
+| `tools/phpstan-types.php`             | PHPStan type stubs                                                                                                                                                                                                                                              |
+| `tools/analyze-mixed.py`              | One-shot: analyses remaining `mixed` types (output captured in `docs/MIXED-TYPES.md`)                                                                                                                                                                           |
+| `tools/migrate-free-functions.py`     | One-shot migration helper used during the `include/` retirement                                                                                                                                                                                                 |
+| `tools/migrate-preboot-functions.py`  | One-shot migration helper                                                                                                                                                                                                                                       |
+| `tools/fix-remaining-free-calls.py`   | One-shot                                                                                                                                                                                                                                                        |
+| `tools/fix-remaining-free-calls-2.py` | One-shot                                                                                                                                                                                                                                                        |
+| `tools/ws.htm`                        | Static WS browser shell                                                                                                                                                                                                                                         |
 
 The Python migration scripts are scheduled for deletion in STRUCTURE-PLAN.md
 Step 6 — already-executed; git history is canonical.
@@ -362,13 +362,13 @@ The legacy `*.lang.php` array files were converted to PO and removed
 
 Five plugins shipped with the repo:
 
-| Plugin                  | Description                                                |
-| ----------------------- | ---------------------------------------------------------- |
-| `LocalFilesEditor`      | In-admin CSS/template file editor                          |
-| `nbc_ThemeChanger`      | Per-user theme switcher                                    |
-| `piwigo-openstreetmap`  | OpenStreetMap integration for geotagged photos             |
-| `piwigo-videojs`        | Video.js player for video files                            |
-| `user_tags`             | User-submitted tag annotations                             |
+| Plugin                 | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `LocalFilesEditor`     | In-admin CSS/template file editor              |
+| `nbc_ThemeChanger`     | Per-user theme switcher                        |
+| `piwigo-openstreetmap` | OpenStreetMap integration for geotagged photos |
+| `piwigo-videojs`       | Video.js player for video files                |
+| `user_tags`            | User-submitted tag annotations                 |
 
 Mirrors of these exist as typed config stubs in `src/Piwigo/Plugins/`
 (scheduled rename to `src/Piwigo/PluginConfig/` in STRUCTURE-PLAN.md Step 8).
@@ -384,15 +384,15 @@ Step 9 folds this into `resources/templates/overrides/`.
 
 ## Runtime directories (not in git)
 
-| Directory          | Purpose                                                      |
-| ------------------ | ------------------------------------------------------------ |
-| `_data/i/`         | Derivative image cache (thumbnails, resized variants)        |
-| `_data/cache/`     | Generic persistent cache                                     |
-| `_data/combined/`  | Legacy JS/CSS combiner cache (used without Vite build)       |
-| `_data/logs/`      | Application logs                                             |
-| `_data/templates_c/` | Smarty compiled templates                                  |
-| `galleries/`       | Original uploaded photos (default path; configurable)        |
-| `upload/`          | Upload staging area                                          |
-| `local/`           | Site-local state — `.installed` / `.installed.test` install sentinels, watermarks, theme overrides. (DB credentials live in `.env` at the repo root, not here.) |
+| Directory            | Purpose                                                                                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `_data/i/`           | Derivative image cache (thumbnails, resized variants)                                                                                                           |
+| `_data/cache/`       | Generic persistent cache                                                                                                                                        |
+| `_data/combined/`    | Legacy JS/CSS combiner cache (used without Vite build)                                                                                                          |
+| `_data/logs/`        | Application logs                                                                                                                                                |
+| `_data/templates_c/` | Smarty compiled templates                                                                                                                                       |
+| `galleries/`         | Original uploaded photos (default path; configurable)                                                                                                           |
+| `upload/`            | Upload staging area                                                                                                                                             |
+| `local/`             | Site-local state — `.installed` / `.installed.test` install sentinels, watermarks, theme overrides. (DB credentials live in `.env` at the repo root, not here.) |
 
 These move under `var/` in STRUCTURE-PLAN.md Steps 1–2.

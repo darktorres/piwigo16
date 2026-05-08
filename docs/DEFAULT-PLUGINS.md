@@ -4,13 +4,13 @@ Snapshot of the plugins shipped under `plugins/` on `16.x-rewrite` before the di
 
 All five plugins live as untracked source trees alongside Piwigo core (none are PHP-Composer packages, none are git submodules). Each ships its own `main.inc.php` header and registers handlers through `EventDispatcher::addListener`. Where an upstream commit pin is recorded in `pem_metadata.txt`, that revision is the exact version present in this checkout.
 
-| Plugin dir                | Header version | Settings   | Has admin UI | Upstream pin                                                   |
-| ------------------------- | -------------- | ---------- | ------------ | -------------------------------------------------------------- |
-| `LocalFilesEditor`        | `16.3.0`       | webmaster  | yes          | github.com/Piwigo/LocalFilesEditor @ `24d9457d` (2026-01-31)   |
-| `nbc_ThemeChanger`        | `11.0.a`       | true       | yes          | piwigo.org SVN `extensions/nbc_ThemeChanger` @ rev `32434`     |
-| `piwigo-openstreetmap`    | `16.b`         | webmaster  | yes          | github.com/Piwigo/piwigo-openstreetmap @ `d218b73f` (2026-03-03) |
-| `piwigo-videojs`          | `16.b`         | true       | yes          | github.com/Piwigo/piwigo-videojs @ `38caa4f8` (2026-01-24)     |
-| `user_tags`               | `1.0.5`        | true       | yes          | github.com/nikrou/user_tags (extension eid=441)                |
+| Plugin dir             | Header version | Settings  | Has admin UI | Upstream pin                                                     |
+| ---------------------- | -------------- | --------- | ------------ | ---------------------------------------------------------------- |
+| `LocalFilesEditor`     | `16.3.0`       | webmaster | yes          | github.com/Piwigo/LocalFilesEditor @ `24d9457d` (2026-01-31)     |
+| `nbc_ThemeChanger`     | `11.0.a`       | true      | yes          | piwigo.org SVN `extensions/nbc_ThemeChanger` @ rev `32434`       |
+| `piwigo-openstreetmap` | `16.b`         | webmaster | yes          | github.com/Piwigo/piwigo-openstreetmap @ `d218b73f` (2026-03-03) |
+| `piwigo-videojs`       | `16.b`         | true      | yes          | github.com/Piwigo/piwigo-videojs @ `38caa4f8` (2026-01-24)       |
+| `user_tags`            | `1.0.5`        | true      | yes          | github.com/nikrou/user_tags (extension eid=441)                  |
 
 Also present at the top level:
 

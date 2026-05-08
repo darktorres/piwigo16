@@ -15,8 +15,7 @@ body {
 
 #theHeader {
   display: block;
-  background: url("../../images/piwigo-orange.svg") no-repeat scroll center 20px
-    transparent;
+  background: url("../../images/piwigo-orange.svg") no-repeat scroll center 20px transparent;
   height: 100px;
   background-size: 300px;
 }

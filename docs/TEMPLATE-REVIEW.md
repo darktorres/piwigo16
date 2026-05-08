@@ -28,21 +28,22 @@ waves. Findings below are flagged with one of:
 
 **Representative offenders:**
 
-| File:Line | Pattern | Risk |
-| --- | --- | --- |
-| `themes/admin/_base/template/picture_modify.tpl:68` | `value="{$AUTHOR}"` | attribute injection |
-| `themes/admin/_base/template/picture_modify.tpl:122` | `<textarea>{$DESCRIPTION}</textarea>` | textarea-context XSS |
-| `themes/admin/_base/template/picture_modify.tpl:97-100` | `<span id={$key} ...>` (unquoted attr) | attribute injection |
-| `themes/admin/_base/template/configuration_main.tpl:16` | `value="{$main.CONF_GALLERY_TITLE}"` | attribute injection |
-| `themes/admin/_base/template/configuration_main.tpl:169` | HTML stuffed into `title=` attribute (tiptip) | attribute parsing |
-| `themes/_base/template/header.tpl:15` | `<meta name="keywords" content="...{$tag.name}...">` | attribute injection |
-| `themes/_base/template/header.tpl:24` | `<title>{$PAGE_TITLE} | {$GALLERY_TITLE}</title>` | element-context XSS |
-| `themes/_base/template/header.tpl:69` | `<script type="application/json">{ "wsUrl":"{$WS_URL}" }</script>` | JSON+JS-string injection |
-| `themes/admin/_base/template/header.tpl:44` | same pattern (admin) | same |
-| `themes/_base/template/picture.tpl:138, 156, 162, 167-169, 175, 198` | `<dd>{$INFO_*}</dd>` raw | element-context XSS |
-| `themes/_base/template/thumbnails.tpl:18` | `alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}"` | attribute injection |
+| File:Line                                                            | Pattern                                                            | Risk                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------- | ------------------- |
+| `themes/admin/_base/template/picture_modify.tpl:68`                  | `value="{$AUTHOR}"`                                                | attribute injection       |
+| `themes/admin/_base/template/picture_modify.tpl:122`                 | `<textarea>{$DESCRIPTION}</textarea>`                              | textarea-context XSS      |
+| `themes/admin/_base/template/picture_modify.tpl:97-100`              | `<span id={$key} ...>` (unquoted attr)                             | attribute injection       |
+| `themes/admin/_base/template/configuration_main.tpl:16`              | `value="{$main.CONF_GALLERY_TITLE}"`                               | attribute injection       |
+| `themes/admin/_base/template/configuration_main.tpl:169`             | HTML stuffed into `title=` attribute (tiptip)                      | attribute parsing         |
+| `themes/_base/template/header.tpl:15`                                | `<meta name="keywords" content="...{$tag.name}...">`               | attribute injection       |
+| `themes/_base/template/header.tpl:24`                                | `<title>{$PAGE_TITLE}                                              | {$GALLERY_TITLE}</title>` | element-context XSS |
+| `themes/_base/template/header.tpl:69`                                | `<script type="application/json">{ "wsUrl":"{$WS_URL}" }</script>` | JSON+JS-string injection  |
+| `themes/admin/_base/template/header.tpl:44`                          | same pattern (admin)                                               | same                      |
+| `themes/_base/template/picture.tpl:138, 156, 162, 167-169, 175, 198` | `<dd>{$INFO_*}</dd>` raw                                           | element-context XSS       |
+| `themes/_base/template/thumbnails.tpl:18`                            | `alt="{$thumbnail.TN_ALT}" title="{$thumbnail.TN_TITLE}"`          | attribute injection       |
 
 **Fix snippet — element context:**
+
 ```smarty
 {* before *}
 <dd>{$INFO_AUTHOR}</dd>
@@ -51,6 +52,7 @@ waves. Findings below are flagged with one of:
 ```
 
 **Fix snippet — attribute context:**
+
 ```smarty
 {* before *}
 <input ... value="{$AUTHOR}">
@@ -60,12 +62,14 @@ waves. Findings below are flagged with one of:
 
 **Fix snippet — JSON in `<script>`:** stop hand-building the JSON. Assign a PHP
 array server-side, then:
+
 ```smarty
 {* before *}
 <script id="pwg-config" type="application/json">{ "wsUrl":"{$WS_URL}","adminUrl":"{$ADMIN_URL}" }</script>
 {* after — server assigns $pwg_config = ['wsUrl'=>..., 'adminUrl'=>...] *}
 <script id="pwg-config" type="application/json">{$pwg_config|json_encode}</script>
 ```
+
 `json_encode` produces JS-safe output and `<script type="application/json">`
 content is parsed as text, not HTML — no further escape needed for `<` etc. when
 the assigned strings cannot contain `</script>`. (For total safety, pass
@@ -91,23 +95,26 @@ the assigned strings cannot contain `</script>`. (For total safety, pass
 5 occurrences of `href="javascript:..."` and 1 inline `onclick`. CSP-incompatible,
 hard to escape correctly when the URI carries a template variable.
 
-| File:Line | Pattern |
-| --- | --- |
-| `themes/_base/template/picture.tpl:36` | `<a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}', ...)">` |
+| File:Line                                                               | Pattern                                                          |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `themes/_base/template/picture.tpl:36`                                  | `<a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}', ...)">`    |
 | `themes/admin/_base/template/batch_manager_global.tpl:222-223, 234-235` | `<a href="javascript:selectGenerateDerivAll()">` etc. (4 places) |
-| `themes/admin/_base/template/queue.tpl:59` | `onclick="return confirm('{'"…"|translate}')"` — also malformed (the `{'` opens a Smarty literal that the inner `"…"` doesn't terminate cleanly) |
+| `themes/admin/_base/template/queue.tpl:59`                              | `onclick="return confirm('{'"…"                                  | translate}')"`— also malformed (the`{'`opens a Smarty literal that the inner`"…"` doesn't terminate cleanly) |
 
 **Fix snippet — `picture.tpl:36`:** replace with a normal anchor + a click
 handler in `themes/_base/js/scripts.js`:
+
 ```smarty
 {* before *}
 <a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,...')" rel="nofollow">{'Original'|translate}</a>
 {* after *}
 <a href="{$U_ORIGINAL|escape:'html'}" data-popup="original" rel="nofollow noopener">{'Original'|translate}</a>
 ```
+
 Then in `scripts.js`:
+
 ```js
-document.addEventListener('click', e => {
+document.addEventListener('click', (e) => {
   const a = e.target.closest('a[data-popup="original"]');
   if (!a) return;
   e.preventDefault();
@@ -122,12 +129,14 @@ calls already have IDs nearby. Drop the `href="javascript:…"`, add
 
 **Fix snippet — `queue.tpl:59`:** the current source is also broken Smarty.
 Replace with a `data-confirm` handler:
+
 ```smarty
 <a href="{$U_PURGE_FAILED|escape:'html'}" class="icon-trash-1"
    data-confirm="{'Are you sure you want to delete all failed jobs?'|translate|escape:'html'}">
   {'Purge Failed Queue'|translate}
 </a>
 ```
+
 And bind once globally for `[data-confirm]`.
 
 ---
@@ -135,21 +144,24 @@ And bind once globally for `[data-confirm]`.
 ## C. Translation-order bug (NOW, easy)
 
 `themes/admin/_base/template/batch_manager_global.tpl:55`:
+
 ```smarty
 {'Level %d'|@sprintf:$thumbnail.level|@translate}
 ```
+
 This calls `sprintf('Level %d', 5)` → `"Level 5"`, then translates `"Level 5"` —
 a key that doesn't exist in any catalog, so the level indicator stays in
 English. Order is reversed.
 
 **Fix:**
+
 ```smarty
 {'Level %d'|translate|sprintf:$thumbnail.level}
 ```
 
 (`sprintf` is registered as a normal modifier at `Template.php:114`, so the chain
 order matters. The `translate` modifier compiles to `Lang::t(...)` which expects
-the *raw* English key.)
+the _raw_ English key.)
 
 ---
 
@@ -163,6 +175,7 @@ The `@` prefix has historically meant "do not auto-escape", but with
 inconsistently.
 
 **Recommendation (NOW):** drop the `@` everywhere. Single `sed`:
+
 ```bash
 git grep -lF '|@translate' themes/ | xargs sed -i 's/|@translate/|translate/g'
 git grep -lF '|@sprintf'   themes/ | xargs sed -i 's/|@sprintf/|sprintf/g'
@@ -175,6 +188,7 @@ git grep -lF '|@get_extent' themes/ | xargs sed -i 's/|@get_extent/|get_extent/g
 git grep -lF '|@nl2br'     themes/ | xargs sed -i 's/|@nl2br/|nl2br/g'
 git grep -lF '|@htmlspecialchars' themes/ | xargs sed -i 's/|@htmlspecialchars/|htmlspecialchars/g'
 ```
+
 Then run the existing PHPUnit + a quick browser pass (gallery + admin home).
 
 ---
@@ -182,19 +196,23 @@ Then run the existing PHPUnit + a quick browser pass (gallery + admin home).
 ## E. Plural with `%s` instead of `translate_dec` (NOW)
 
 `themes/admin/_base/template/intro.tpl:112-117` has 6 entries like:
+
 ```smarty
 <span class="icon-pencil tooltip-detail" title="{"%s editions"|@translate:$number}">{$number}</span>
 ```
+
 Same string for "1 edition" and "5 editions". The `translate_dec` modifier is
 already registered (`Template.php:113`).
 
 **Fix snippet:**
+
 ```smarty
 {* before *}
 title="{'%s editions'|translate:$number}"
 {* after *}
 title="{$number|translate_dec:'%s edition':'%s editions'}"
 ```
+
 Apply to lines 112-117 (Edit/Add/Delete/Login/Logout/Move) and any similar place
 the audit turns up.
 
@@ -203,17 +221,21 @@ the audit turns up.
 ## F. Translation strings containing markup (NOW)
 
 `themes/standard_pages/template/password.tpl:134, 151`:
+
 ```smarty
 {'Return to <a href="identification.php" title="Sign in">Sign in</a>'|translate|replace:'identification.php':$U_IDENTIFICATION}
 ```
+
 Translators must preserve HTML and a magic placeholder filename. Brittle (every
 existing language `.po` has this duplicated, see `language/*/common.po`).
 
 **Fix snippet:** split into discrete fragments + composite:
+
 ```smarty
 {$msg = 'Return to %s'|translate|sprintf:"<a href=\"`$U_IDENTIFICATION|escape:'html'`\" title=\"`'Sign in'|translate|escape:'html'`\">`'Sign in'|translate|escape:'html'`</a>"}
 {$msg nofilter}
 ```
+
 Or, more readably, use Smarty `{capture}` to assemble the link, then translate a
 single `%s` string. Avoid embedding markup in source strings.
 
@@ -221,15 +243,15 @@ single `%s` string. Avoid embedding markup in source strings.
 
 ## G. Dead browser-support code (DELETE)
 
-| File:Line | What | Action |
-| --- | --- | --- |
-| `themes/_base/template/header.tpl:60-62` | `<!--[if lt IE 7]>` + `pngfix.js` | Delete the 3 lines |
-| `themes/_base/local_head.tpl:1-8` | IE5/6/7 `fix-ie*-css` conditionals | Delete file or its IE block |
-| `themes/admin/_base/template/install.tpl:5-6` | `<meta http-equiv="Content-script-type">`, `Content-Style-Type` | Delete (HTML5 obsolete) |
-| `themes/admin/_base/template/install.tpl:4` | `<meta http-equiv="Content-Type" content="text/html; charset=...">` | Replace with `<meta charset="…">` |
-| `themes/admin/_base/template/install.tpl:16-18` | IE7 conditional comment | Delete |
-| `themes/admin/_base/template/upgrade.tpl:6-7, 17-19` | same as install.tpl | Delete |
-| `themes/_base/template/mail/text/html/header.tpl:1` | XHTML 1.0 Transitional doctype | Replace with `<!DOCTYPE html>` (mail clients accept either, modernize) |
+| File:Line                                            | What                                                                | Action                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `themes/_base/template/header.tpl:60-62`             | `<!--[if lt IE 7]>` + `pngfix.js`                                   | Delete the 3 lines                                                     |
+| `themes/_base/local_head.tpl:1-8`                    | IE5/6/7 `fix-ie*-css` conditionals                                  | Delete file or its IE block                                            |
+| `themes/admin/_base/template/install.tpl:5-6`        | `<meta http-equiv="Content-script-type">`, `Content-Style-Type`     | Delete (HTML5 obsolete)                                                |
+| `themes/admin/_base/template/install.tpl:4`          | `<meta http-equiv="Content-Type" content="text/html; charset=...">` | Replace with `<meta charset="…">`                                      |
+| `themes/admin/_base/template/install.tpl:16-18`      | IE7 conditional comment                                             | Delete                                                                 |
+| `themes/admin/_base/template/upgrade.tpl:6-7, 17-19` | same as install.tpl                                                 | Delete                                                                 |
+| `themes/_base/template/mail/text/html/header.tpl:1`  | XHTML 1.0 Transitional doctype                                      | Replace with `<!DOCTYPE html>` (mail clients accept either, modernize) |
 
 Conditional comments stopped doing anything in IE10 (2012) and don't exist in
 any modern browser. The `pngfix.js` and `fix-ie*.css` referenced files may
@@ -254,9 +276,11 @@ delete both files.
 ## I. Personal-data leak in installer (NOW, this fork)
 
 `themes/admin/_base/template/install.tpl:151`:
+
 ```smarty
 value="{if $F_ADMIN_EMAIL}{$F_ADMIN_EMAIL}{else}torres.dark@gmail.com{/if}"
 ```
+
 A hardcoded fallback to your personal email. Per memory this is a personal fork
 so it's intentional, but the value will surface in any zip/build artifact.
 Suggested replacement: `{else}{/if}` (empty fallback) or `{$DEFAULT_ADMIN_EMAIL}`
@@ -266,12 +290,12 @@ assigned by the installer controller.
 
 ## J. Invalid HTML (NOW, easy)
 
-| File:Line | What | Fix |
-| --- | --- | --- |
-| `themes/admin/_base/template/batch_manager_global.tpl:127` | `<input ...>...</input>` | Drop `</input>` |
-| `themes/admin/_base/template/user_list.tpl:384` | `<input ...>...</input>` (with `<span>` between) | Move the span outside, drop `</input>` |
-| `themes/admin/_base/template/picture_modify.tpl:97-101` | `<div>` block inside `<p>` (auto-closes the `<p>`) | Replace outer `<p>` with `<div>` |
-| `themes/admin/_base/template/picture_modify.tpl:97` | `id={$key} class="…"` (unquoted attr value) | Quote the attribute |
+| File:Line                                                  | What                                               | Fix                                    |
+| ---------------------------------------------------------- | -------------------------------------------------- | -------------------------------------- |
+| `themes/admin/_base/template/batch_manager_global.tpl:127` | `<input ...>...</input>`                           | Drop `</input>`                        |
+| `themes/admin/_base/template/user_list.tpl:384`            | `<input ...>...</input>` (with `<span>` between)   | Move the span outside, drop `</input>` |
+| `themes/admin/_base/template/picture_modify.tpl:97-101`    | `<div>` block inside `<p>` (auto-closes the `<p>`) | Replace outer `<p>` with `<div>`       |
+| `themes/admin/_base/template/picture_modify.tpl:97`        | `id={$key} class="…"` (unquoted attr value)        | Quote the attribute                    |
 
 ---
 
@@ -315,6 +339,7 @@ plugin/theme registered one. Today this trusts the plugin layer not to register
 a path outside the project.
 
 **DESIGN recommendation for #23 (Latte migration):**
+
 - Keep extension paths registered through a typed `TemplateExtensionRegistry`
   (replacement for `setExtents`) that whitelists a directory root and rejects
   `..`/absolute paths.
@@ -326,16 +351,18 @@ a path outside the project.
 ## N. Inline `<style>` and runtime CSS-in-template (DESIGN)
 
 `themes/_base/template/mail/text/html/header.tpl:7-10`:
+
 ```smarty
 <style type="text/css">
 {if isset($GLOBAL_MAIL_CSS)}{$GLOBAL_MAIL_CSS}{/if}
 {if isset($MAIL_CSS)}{$MAIL_CSS}{/if}
 </style>
 ```
+
 Mail HTML must inline styles, so this is correct for the email use case — but
 note the styles are themselves rendered from `.tpl` (mail-css.tpl, see §H) so
 this is a Smarty-in-Smarty pipeline. When migrating, keep the email-CSS file as
-a *static* asset (pre-rendered) rather than a runtime template — there is no
+a _static_ asset (pre-rendered) rather than a runtime template — there is no
 plugin extension point for mail CSS today that justifies the runtime path.
 
 ---
@@ -343,11 +370,13 @@ plugin extension point for mail CSS today that justifies the runtime path.
 ## O. Old HTML4 attributes (cosmetic, NOW)
 
 `themes/_base/template/mail/text/html/header.tpl:14, 17`:
+
 ```html
-<table id="bodyTable" cellspacing="0" cellpadding="10" border="0">
+<table id="bodyTable" cellspacing="0" cellpadding="10" border="0"></table>
 ```
+
 `cellspacing`/`cellpadding`/`border="0"` are obsolete in HTML5. For email
-clients this is *still acceptable* (Outlook in particular) — leave as-is for
+clients this is _still acceptable_ (Outlook in particular) — leave as-is for
 the mail template specifically. Flag here only so it doesn't get carried into
 the new admin templates.
 

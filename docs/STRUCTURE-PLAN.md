@@ -210,6 +210,7 @@ setup.sh --webroot /var/www/html --name piwigo    # non-interactive
 ```
 
 Setup:
+
 1. Prompts for web root path (validates exists + writable).
 2. Prompts for public-folder name (validates target doesn't exist).
 3. Creates `<webroot>/<name>/`, copies `public-template/index.php` into it,
@@ -237,17 +238,20 @@ If any of these defaults are wrong I'd rather know now than after the migration 
 ## Migration steps (one commit each, tree runnable after each)
 
 ### Step 1 — Move runtime data: `_data/` → `var/`
+
 - Rename directory.
 - Update `Config::dataLocation()` in `src/Piwigo/Config/Config.php` and any callers
   hard-coding `_data/`. Update `.gitignore`.
 
 ### Step 2 — Fold `galleries/` and `upload/` into `var/`
+
 - `galleries/` → `var/galleries/`. `upload/` → `var/upload/`.
 - Update `Config::galleriesPath()`, `Config::uploadPath()`, plus any hard-coded
   references in `src/Piwigo/Admin/Upload/`, `src/Piwigo/Image/`, controllers.
 - Update default site URL roots in `Config::SCHEMA`.
 
 ### Step 3 — New original-file controller
+
 - Add `Piwigo\Controller\OriginalImageController` (or extend
   `ImageDerivativeController`).
 - Wire route `?/p/<id>` (or chosen scheme) in `config/routes.php`.
@@ -256,28 +260,34 @@ If any of these defaults are wrong I'd rather know now than after the migration 
 - Add tests in `tests/Integration/Controller/`.
 
 ### Step 4 — Rewrite all originals URLs
+
 - `Piwigo\Url\UrlGenerator::originalUrl()` (new or existing) emits `?/p/...` URLs.
 - Sweep templates (`{$src}` references) and any hard-coded `galleries/...` paths.
 
 ### Step 5 — Move tests fixtures + delete `dev/`
+
 - `dev/fixtures/` → `tests/fixtures/`.
 - Update `tests/bootstrap.php` and `playwright.config.ts`.
 
 ### Step 6 — Move build/ + delete one-shot scripts
+
 - `build/piwigo-manifest-plugin.ts` → `tools/vite/piwigo-manifest-plugin.ts`.
 - Delete `tools/*.py` and `tools/build-config-*.php`, `tools/migrate-*.php`,
   `tools/analyze-*.py`, `tools/fix-*.py`. Keep `tools/triggers_list.php` (still useful).
 
 ### Step 7 — Consolidate docs
+
 - Move `INSTALL.md`, `plugins_list.md`, `plugins_mgmt.md`, `e2e.txt` (rename `.md`),
   `phpstan-l10.txt` (rename `.md` or delete) → `docs/`.
 
 ### Step 8 — Rename plugin-config namespace
+
 - `src/Piwigo/Plugins/` → `src/Piwigo/PluginConfig/`.
 - Sweep `use Piwigo\Plugins\…\Config;` → `use Piwigo\PluginConfig\…\Config;`.
 - Update PHPStan paths.
 
 ### Step 9 — Split themes/ into resources/
+
 The biggest single change.
 
 - `themes/_base/template/` → `resources/templates/gallery/`
@@ -292,6 +302,7 @@ The biggest single change.
 - `template-extension/{yoga,distributed}/` → `resources/templates/overrides/`
 
 Files updated:
+
 - `vite.config.ts` — every input path; `outDir` becomes absolute (read from
   `local/config/paths.json`).
 - `src/Piwigo/Template/Template.php` — Smarty template-dir search list.
@@ -301,20 +312,24 @@ Files updated:
 - Every `themeconf.inc.php` referencing `template/` paths.
 
 ### Step 10 — Move TS types out of src/
+
 - `src/types/*.d.ts` → `resources/frontend/types/`.
 - Update `tsconfig.json`.
 
 ### Step 11 — Move install SQL
+
 - `install/{config.sql,piwigo_structure-mysql.sql,db/*,obsolete*.list}` →
   `resources/install-sql/`.
 - Update `InstallController`, `UpgradeController`, `Admin/InstallService`.
 
 ### Step 12 — Move language/ to resources/
+
 - `language/` → `resources/lang/`.
 - Update `Piwigo\Lang\LangLoader`, `Piwigo\Admin\Languages`, `LANGUAGE_PATH`
   constants.
 
 ### Step 13 — Public shim + setup script extension
+
 - Add `src/Piwigo/Bootstrap/HttpEntry.php` — entry called from generated
   `public/index.php`. Rolls up what current root `index.php` does (ConfigLoader,
   early-route detection for `?/i`, `?/install`, `?/upgrade`, `?/p`).
@@ -326,6 +341,7 @@ Files updated:
 - `vite.config.ts` reads `local/config/paths.json` for `outDir`.
 
 ### Step 14 — Update meta files + STRUCTURE.md
+
 - `composer.json` (PSR-4 paths, `Piwigo\PluginConfig\` rename, autoload `files`).
 - `phpstan.neon` (paths, excludePaths, bootstrapFiles).
 - `phpunit.xml.dist` (testsuite directories).
@@ -337,35 +353,36 @@ Files updated:
 
 ## Critical files modified
 
-| File | Why |
-|---|---|
-| `composer.json` | PSR-4 root, autoload files, `Piwigo\PluginConfig\` rename |
-| `phpstan.neon` | paths, excludePaths, bootstrapFiles |
-| `phpunit.xml.dist` | testsuite directories, env vars |
-| `rector.php` | `withPaths()` |
-| `vite.config.ts` | every entry path; `outDir` reads from `local/config/paths.json` |
-| `tsconfig.json` | include + paths for `resources/frontend/types/` |
-| `playwright.config.ts` | base URL, fixture paths |
-| `src/Piwigo/Config/Config.php` | `dataLocation()`, `galleriesPath()`, `uploadPath()`, `publicPath()`, `sourcePath()` |
-| `src/Piwigo/Bootstrap/HttpEntry.php` (new) | replaces logic in root `index.php` |
-| `src/Piwigo/Template/{Template,ScriptLoader,CssLoader}.php` | template + asset roots |
-| `src/Piwigo/Theme/Themes.php` | theme discovery roots |
-| `src/Piwigo/Lang/LangLoader.php`, `Admin/Languages.php` | `resources/lang/` |
-| `src/Piwigo/Controller/{InstallController,UpgradeController}.php` | `resources/install-sql/` |
-| `src/Piwigo/Controller/OriginalImageController.php` (new) | permission-checked originals |
-| `src/Piwigo/Controller/ImageDerivativeController.php` | reads from `var/derivatives/` |
-| `src/Piwigo/Url/UrlGenerator.php` | emits `?/p/...` for originals |
-| `setup.ps1`, `setup.sh` | webroot prompt, public-shim generation |
-| `public-template/index.php` (new) | minimal generated entry |
-| `bin/piwigo` | already uses `realpath(__DIR__ . '/..')` — safe |
-| `tests/bootstrap.php` | fixture path, paths.json read |
-| `docs/STRUCTURE.md` | full rewrite |
+| File                                                              | Why                                                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `composer.json`                                                   | PSR-4 root, autoload files, `Piwigo\PluginConfig\` rename                           |
+| `phpstan.neon`                                                    | paths, excludePaths, bootstrapFiles                                                 |
+| `phpunit.xml.dist`                                                | testsuite directories, env vars                                                     |
+| `rector.php`                                                      | `withPaths()`                                                                       |
+| `vite.config.ts`                                                  | every entry path; `outDir` reads from `local/config/paths.json`                     |
+| `tsconfig.json`                                                   | include + paths for `resources/frontend/types/`                                     |
+| `playwright.config.ts`                                            | base URL, fixture paths                                                             |
+| `src/Piwigo/Config/Config.php`                                    | `dataLocation()`, `galleriesPath()`, `uploadPath()`, `publicPath()`, `sourcePath()` |
+| `src/Piwigo/Bootstrap/HttpEntry.php` (new)                        | replaces logic in root `index.php`                                                  |
+| `src/Piwigo/Template/{Template,ScriptLoader,CssLoader}.php`       | template + asset roots                                                              |
+| `src/Piwigo/Theme/Themes.php`                                     | theme discovery roots                                                               |
+| `src/Piwigo/Lang/LangLoader.php`, `Admin/Languages.php`           | `resources/lang/`                                                                   |
+| `src/Piwigo/Controller/{InstallController,UpgradeController}.php` | `resources/install-sql/`                                                            |
+| `src/Piwigo/Controller/OriginalImageController.php` (new)         | permission-checked originals                                                        |
+| `src/Piwigo/Controller/ImageDerivativeController.php`             | reads from `var/derivatives/`                                                       |
+| `src/Piwigo/Url/UrlGenerator.php`                                 | emits `?/p/...` for originals                                                       |
+| `setup.ps1`, `setup.sh`                                           | webroot prompt, public-shim generation                                              |
+| `public-template/index.php` (new)                                 | minimal generated entry                                                             |
+| `bin/piwigo`                                                      | already uses `realpath(__DIR__ . '/..')` — safe                                     |
+| `tests/bootstrap.php`                                             | fixture path, paths.json read                                                       |
+| `docs/STRUCTURE.md`                                               | full rewrite                                                                        |
 
 ---
 
 ## Verification
 
 After each step:
+
 - `composer dump-autoload && composer check-platform-reqs`
 - `vendor/bin/phpstan analyse` — must remain at level 10 / zero errors.
 - `vendor/bin/phpunit` — Unit + Integration suites pass.
@@ -374,6 +391,7 @@ After each step:
 - `npm run test:e2e` — Playwright e2e passes.
 
 End-to-end smoke test after Step 13 (full migration):
+
 - Run `setup.ps1 --webroot C:\Apache24\htdocs --name piwigo`.
 - `http://localhost/piwigo/` → gallery loads, thumbnails render.
 - `http://localhost/piwigo/?/install` → installer flow (proves `resources/install-sql/`

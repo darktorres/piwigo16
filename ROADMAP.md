@@ -8,30 +8,30 @@
 
 ## At a glance (2026-05-08)
 
-| § | Section | Status | Effort | TL;DR |
-|---|---|---|---|---|
-| 1.1 | Concrete bugs | 🟡 **Not started** | S | 8 individual fixes (6 deferred markers + 2 perf notes) |
-| 1.2 | Templates pipeline | 🟡 **Not started** | XL | wave 1 hygiene → wave 2 Latte → wave 3 precompile |
-| 1.3 | Plugin / theme + WS | 🟡 **Not started** | XL | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups |
-| 1.4 | Security hardening | 🟢 **Active** ▸ 1 / 6 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
-| 1.5 | Type correctness | 🟡 **Not started** | M–L | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
-| 1.6 | Test infrastructure | 🟡 **Not started** | M + L + S | Pest → coverage → Infection (chained) |
-| 1.7 | Deferred / on-demand | 🟠 **On-demand** | — | Monolog · S3/SFTP · supervisor · Renovate |
-| 2.1 | TS `any` reduction | 🟡 **Not started** | M | 478 → ≤250 patterns |
-| 2.2 | Vitest unit tests | 🟡 **Not started** | M | TS unit-test runner + first wave |
-| 2.3 | Bundle size budgets | 🟡 **Not started** | S | per-entrypoint gzip limits in CI |
-| 2.4 | Vendored library migration | 🟢 **Active** ▸ 1 / 5 | L | Tiers 1, 3, 4, 5 (Tier 2 shipped) |
-| 3.1 | CSS design tokens + Stylelint | 🟢 **Active** ▸ 3 / 13 | M | 10 live steps remaining |
-| 3.2 | A11y audit (axe-core) | 🟡 **Not started** | M | WCAG 2.1 AA gating |
+| §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
+| --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
+| 1.1 | Concrete bugs                 | 🟡 **Not started**     | S         | 8 individual fixes (6 deferred markers + 2 perf notes)                 |
+| 1.2 | Templates pipeline            | 🟡 **Not started**     | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
+| 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
+| 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
+| 1.5 | Type correctness              | 🟡 **Not started**     | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
+| 1.6 | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                  |
+| 1.7 | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate                              |
+| 2.1 | TS `any` reduction            | 🟡 **Not started**     | M         | 478 → ≤250 patterns                                                    |
+| 2.2 | Vitest unit tests             | 🟡 **Not started**     | M         | TS unit-test runner + first wave                                       |
+| 2.3 | Bundle size budgets           | 🟡 **Not started**     | S         | per-entrypoint gzip limits in CI                                       |
+| 2.4 | Vendored library migration    | 🟢 **Active** ▸ 1 / 5  | L         | Tiers 1, 3, 4, 5 (Tier 2 shipped)                                      |
+| 3.1 | CSS design tokens + Stylelint | 🟢 **Active** ▸ 3 / 13 | M         | 10 live steps remaining                                                |
+| 3.2 | A11y audit (axe-core)         | 🟡 **Not started**     | M         | WCAG 2.1 AA gating                                                     |
 
 ## Legend
 
-| Tag | Meaning |
-|---|---|
-| 🟡 **Not started** | Scheduled, no commits yet. |
-| 🟢 **Active** | Work in progress; one or more sub-tasks already shipped. The `▸ N / M` count shows shipped vs total sub-tasks. |
-| 🔵 **Continuous** | Opportunistic; no single checkpoint date. Applied as files are touched. |
-| 🟠 **On-demand** | Passive backlog; trigger when a deployment, audit, or external need calls for it. |
+| Tag                | Meaning                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| 🟡 **Not started** | Scheduled, no commits yet.                                                                                     |
+| 🟢 **Active**      | Work in progress; one or more sub-tasks already shipped. The `▸ N / M` count shows shipped vs total sub-tasks. |
+| 🔵 **Continuous**  | Opportunistic; no single checkpoint date. Applied as files are touched.                                        |
+| 🟠 **On-demand**   | Passive backlog; trigger when a deployment, audit, or external need calls for it.                              |
 
 Effort tags: **S** ≤ 1 day · **M** 2–7 days · **L** 1–3 weeks · **XL** > 3 weeks.
 
@@ -161,16 +161,16 @@ correct source — if skipped, the bugs propagate verbatim into `.latte`.
 
 Suggested execution order (each row a separate commit):
 
-| # | Action | Files | Risk |
-|---|---|---|---|
-| 1 | Personal email leak in installer (this fork) | `themes/admin/_base/template/install.tpl:151` | trivial |
-| 2 | Translation order bug | `themes/admin/_base/template/batch_manager_global.tpl:55` | trivial |
-| 3 | Plural via `translate_dec` | `themes/admin/_base/template/intro.tpl:112-117` and similar | low |
-| 4 | Invalid HTML | `picture_modify.tpl`, `batch_manager_global.tpl`, `user_list.tpl` | low |
-| 5 | `http://` → `https://` | `photos_add_applications.tpl` (4 links) | trivial |
-| 6 | Delete dead browser code | IE conditional `<link>` blocks; stale mail-css overlays | low |
-| 7 | `\|@translate` → `\|translate` mechanical sweep | ~1203 occurrences across `themes/` | low |
-| 8 | `javascript:` URLs and inline `onclick` → data-attribute handlers | 5 sites; touches TS event binding | medium |
+| #   | Action                                                            | Files                                                             | Risk    |
+| --- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ------- |
+| 1   | Personal email leak in installer (this fork)                      | `themes/admin/_base/template/install.tpl:151`                     | trivial |
+| 2   | Translation order bug                                             | `themes/admin/_base/template/batch_manager_global.tpl:55`         | trivial |
+| 3   | Plural via `translate_dec`                                        | `themes/admin/_base/template/intro.tpl:112-117` and similar       | low     |
+| 4   | Invalid HTML                                                      | `picture_modify.tpl`, `batch_manager_global.tpl`, `user_list.tpl` | low     |
+| 5   | `http://` → `https://`                                            | `photos_add_applications.tpl` (4 links)                           | trivial |
+| 6   | Delete dead browser code                                          | IE conditional `<link>` blocks; stale mail-css overlays           | low     |
+| 7   | `\|@translate` → `\|translate` mechanical sweep                   | ~1203 occurrences across `themes/`                                | low     |
+| 8   | `javascript:` URLs and inline `onclick` → data-attribute handlers | 5 sites; touches TS event binding                                 | medium  |
 
 Concrete patterns for the trickier rows:
 
@@ -272,15 +272,15 @@ $engine->setPolicy(new Piwigo\Template\Latte\PiwigoPolicy());
 
 Map each registered Smarty plugin to a Latte filter/function/extension:
 
-| Smarty | Latte equivalent | Notes |
-|---|---|---|
-| `\|translate`, `\|translate_dec` | filters in `Latte\Extension` backed by `Piwigo\Lang\Translator` | The `\|translate` deferral lands here |
-| `\|l10n` | alias for `\|translate` | |
-| `\|sprintf`, `\|urlencode`, `\|intval`, `\|htmlspecialchars`, `\|trim`, `\|md5`, `\|stripslashes`, `\|ternary`, … | built-in Latte filters or one-line aliases | About 25 of the registered Smarty modifiers are already Latte built-ins |
-| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}` | function tags in `AssetExtension` and `DerivativeExtension` | |
-| `{html_head}` block | Latte block-extension; only `themes/_base/template/notification.tpl` uses it | |
-| `{html_style}`, `{footer_script}` blocks | zero in-scope callers post-extraction; defer port until the `{html_style}` + nonce path materializes | |
-| `prefilter_white_space` filter | Latte template-loader wrapper run before compile | |
+| Smarty                                                                                                            | Latte equivalent                                                                                     | Notes                                                                   |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `\|translate`, `\|translate_dec`                                                                                  | filters in `Latte\Extension` backed by `Piwigo\Lang\Translator`                                      | The `\|translate` deferral lands here                                   |
+| `\|l10n`                                                                                                          | alias for `\|translate`                                                                              |                                                                         |
+| `\|sprintf`, `\|urlencode`, `\|intval`, `\|htmlspecialchars`, `\|trim`, `\|md5`, `\|stripslashes`, `\|ternary`, … | built-in Latte filters or one-line aliases                                                           | About 25 of the registered Smarty modifiers are already Latte built-ins |
+| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}`        | function tags in `AssetExtension` and `DerivativeExtension`                                          |                                                                         |
+| `{html_head}` block                                                                                               | Latte block-extension; only `themes/_base/template/notification.tpl` uses it                         |                                                                         |
+| `{html_style}`, `{footer_script}` blocks                                                                          | zero in-scope callers post-extraction; defer port until the `{html_style}` + nonce path materializes |                                                                         |
+| `prefilter_white_space` filter                                                                                    | Latte template-loader wrapper run before compile                                                     |                                                                         |
 
 ##### Latte partials and page-context DTOs
 
@@ -297,13 +297,13 @@ The DTOs (under `src/Piwigo/Page/Context/`) already exist as `readonly`
 value objects — no controllers populate them yet, but the type contracts
 are ready:
 
-| DTO | Properties |
-|---|---|
-| `AlbumPageContext` | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl`, `section` |
-| `PicturePageContext` | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
-| `SearchPageContext` | `query`, `filters`, `results`, `pagination` |
-| `TagsPageContext` | `tags`, `selectedTags`, `photos`, `displayMode` |
-| `AdminPageContext` *(base, non-final)* | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages` |
+| DTO                                    | Properties                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------- |
+| `AlbumPageContext`                     | `category`, `subAlbums`, `photos`, `pagination`, `baseUrl`, `section`           |
+| `PicturePageContext`                   | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
+| `SearchPageContext`                    | `query`, `filters`, `results`, `pagination`                                     |
+| `TagsPageContext`                      | `tags`, `selectedTags`, `photos`, `displayMode`                                 |
+| `AdminPageContext` _(base, non-final)_ | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
 
 Controllers populate the relevant DTO and pass it to the partial:
 
@@ -341,17 +341,17 @@ Templates convert in waves, low-risk first:
 Most Smarty syntax is regex-replaceable. Build
 `tools/smarty-to-latte/convert.php`:
 
-| Smarty | Latte |
-|---|---|
-| `{if $foo}` | `{if $foo}` (compatible) |
-| `{foreach from=$arr item=x}` | `{foreach $arr as $x}` |
-| `{$x\|escape}` | `{$x}` (Latte escapes by default) |
-| `{$x\|escape:'none'}` | `{$x\|noescape}` |
-| `{include file=foo.tpl}` | `{include 'foo.latte'}` |
-| `{$x\|@count}` | `{count($x)}` |
-| `{section name=i loop=$arr}…{/section}` | `{foreach $arr as $i => $val}…{/foreach}` |
-| `{capture name=foo}…{/capture}…{$smarty.capture.foo}` | `{capture $foo}…{/capture}…{$foo}` |
-| `{literal}…{/literal}` | `{syntax off}…{syntax on}` |
+| Smarty                                                | Latte                                     |
+| ----------------------------------------------------- | ----------------------------------------- |
+| `{if $foo}`                                           | `{if $foo}` (compatible)                  |
+| `{foreach from=$arr item=x}`                          | `{foreach $arr as $x}`                    |
+| `{$x\|escape}`                                        | `{$x}` (Latte escapes by default)         |
+| `{$x\|escape:'none'}`                                 | `{$x\|noescape}`                          |
+| `{include file=foo.tpl}`                              | `{include 'foo.latte'}`                   |
+| `{$x\|@count}`                                        | `{count($x)}`                             |
+| `{section name=i loop=$arr}…{/section}`               | `{foreach $arr as $i => $val}…{/foreach}` |
+| `{capture name=foo}…{/capture}…{$smarty.capture.foo}` | `{capture $foo}…{/capture}…{$foo}`        |
+| `{literal}…{/literal}`                                | `{syntax off}…{syntax on}`                |
 
 The converter applies the rewrites file-by-file; hand-fix the residue
 (custom modifiers, complex assignments, broken-on-purpose constructs).
@@ -363,13 +363,13 @@ Several issues from the earlier `.tpl` audit are folded into Latte rather
 than fixed in Smarty — Latte's escape-by-default and sandbox solve them
 systemically:
 
-| Concern | Latte approach |
-|---|---|
+| Concern                                                                                                                                                                                                                                                             | Latte approach                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **XSS surface from inconsistent manual escaping** (the dominant security risk in the current `.tpl` set — every `{$var}` outside a `<script>`/`<style>` block missing an explicit `escape`/`translate`/`json_encode`/`urlencode` modifier is a potential injection) | Context-aware escape-by-default; sandbox + `PiwigoPolicy` for plugin-supplied templates. The audit reduces to "remove redundant escapes" rather than "find missed escapes." |
-| **Markup in translation strings** (e.g. `'Return to <a href="…">Sign in</a>'\|translate\|replace:…` — translators must preserve HTML and a magic placeholder filename) | Handled at conversion: split markup out of `.po` keys via `{capture}` patterns; translation strings carry only `%s` placeholders that controllers fill with HTML. |
-| **`{section name=…}` legacy loop** in `search.tpl` (Smarty 5 still supports it but flags for removal) | Mechanical converter rewrite to `{foreach}` |
-| **Dynamic `{include file=$var}`** (plugin extension hook backed by `get_extent()`) | `TemplateExtensionRegistry` whitelist + Latte sandbox compile-time check; a path outside the project root or containing `..` rejects at compile time. |
-| **Inline mail-CSS rendered through Smarty-in-Smarty** (`mail/text/html/header.tpl` includes `mail-css.tpl` whose body is itself templated) | Pre-render the mail CSS at deploy time; load as a static asset in mail templates. There's no plugin extension point that justifies the runtime path. |
+| **Markup in translation strings** (e.g. `'Return to <a href="…">Sign in</a>'\|translate\|replace:…` — translators must preserve HTML and a magic placeholder filename)                                                                                              | Handled at conversion: split markup out of `.po` keys via `{capture}` patterns; translation strings carry only `%s` placeholders that controllers fill with HTML.           |
+| **`{section name=…}` legacy loop** in `search.tpl` (Smarty 5 still supports it but flags for removal)                                                                                                                                                               | Mechanical converter rewrite to `{foreach}`                                                                                                                                 |
+| **Dynamic `{include file=$var}`** (plugin extension hook backed by `get_extent()`)                                                                                                                                                                                  | `TemplateExtensionRegistry` whitelist + Latte sandbox compile-time check; a path outside the project root or containing `..` rejects at compile time.                       |
+| **Inline mail-CSS rendered through Smarty-in-Smarty** (`mail/text/html/header.tpl` includes `mail-css.tpl` whose body is itself templated)                                                                                                                          | Pre-render the mail CSS at deploy time; load as a static asset in mail templates. There's no plugin extension point that justifies the runtime path.                        |
 
 Out of scope (informational — leave alone): HTML4 mail attributes
 (`cellspacing`, `cellpadding` — still acceptable for Outlook), mixed
@@ -1176,17 +1176,17 @@ occurrences; items 8–9 address the three remaining boundary categories
 (DB rows, HTTP input, global state) that the original audit deferred as
 "architectural decisions".
 
-| Item | Files | Effort |
-|---|---:|---|
-| `ImageInterface::compose(mixed $overlay)` → `ImageInterface $overlay` | 4 | trivial |
-| `CookieService::getCookieVar()` → `string\|null` (cookies are always strings) | 1 | low |
-| ID parameters `mixed $id` / `$userId` → `int\|string` | ~25 methods | low |
-| `Config::raw()` typed return — `string\|int\|bool\|array<mixed>\|null` | 1 | low (annotation) |
-| `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s | 1 | medium |
-| Typed DB query helpers (`DbConnection::fetchIntColumn`, `fetchStringColumn`) — removes ~100 `fn (mixed $v)` lambdas | several | medium |
-| `RequestCache` / `PersistentCache` → `@template T` generic — typed cache reads | 2 | medium |
-| **Repository entity layer** — repositories return typed `*Entity` objects instead of `array<string, mixed>`; `fromRow()` is the single cast boundary | 20 repos + callers | high |
-| **HTTP input boundary** — route all remaining raw `$_POST`/`$_GET` reads through `StringUtil::input*`; no raw superglobal access outside that helper | ~30 sites | medium |
+| Item                                                                                                                                                 |              Files | Effort           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | -----------------: | ---------------- |
+| `ImageInterface::compose(mixed $overlay)` → `ImageInterface $overlay`                                                                                |                  4 | trivial          |
+| `CookieService::getCookieVar()` → `string\|null` (cookies are always strings)                                                                        |                  1 | low              |
+| ID parameters `mixed $id` / `$userId` → `int\|string`                                                                                                |        ~25 methods | low              |
+| `Config::raw()` typed return — `string\|int\|bool\|array<mixed>\|null`                                                                               |                  1 | low (annotation) |
+| `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s                                                          |                  1 | medium           |
+| Typed DB query helpers (`DbConnection::fetchIntColumn`, `fetchStringColumn`) — removes ~100 `fn (mixed $v)` lambdas                                  |            several | medium           |
+| `RequestCache` / `PersistentCache` → `@template T` generic — typed cache reads                                                                       |                  2 | medium           |
+| **Repository entity layer** — repositories return typed `*Entity` objects instead of `array<string, mixed>`; `fromRow()` is the single cast boundary | 20 repos + callers | high             |
+| **HTTP input boundary** — route all remaining raw `$_POST`/`$_GET` reads through `StringUtil::input*`; no raw superglobal access outside that helper |          ~30 sites | medium           |
 
 ##### Concrete examples
 
@@ -1563,8 +1563,8 @@ uses()->browser(baseUrl: 'http://localhost')->in('tests/Browser');
 ```typescript
 // before — tests/e2e/gallery-home.spec.ts
 test('gallery home loads', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('h1')).toBeVisible();
+  await page.goto('/');
+  await expect(page.locator('h1')).toBeVisible();
 });
 ```
 
@@ -1593,9 +1593,9 @@ unit and browser into separate Pest groups so each can run in isolation
 during debugging:
 
 ```yaml
-- run: vendor/bin/pest                       # all
-- run: vendor/bin/pest --group=unit          # unit only
-- run: vendor/bin/pest --group=browser       # browser only
+- run: vendor/bin/pest # all
+- run: vendor/bin/pest --group=unit # unit only
+- run: vendor/bin/pest --group=browser # browser only
 ```
 
 ##### Drop TypeScript test infrastructure
@@ -1824,16 +1824,16 @@ new code via review only.
 
 Ordered for "biggest files first" attack:
 
-| File | Count |
-|---|---:|
-| `tags.ts` | 80 |
-| `user_list.ts` | 58 |
-| `albums.ts` | 52 |
-| `group_list.ts` | 45 |
-| `album_selector.ts` | 35 |
-| `batchManagerUnit.ts` | 31 |
-| `batchManagerGlobal.ts` | 27 |
-| (other ~24 files) | ~150 |
+| File                    | Count |
+| ----------------------- | ----: |
+| `tags.ts`               |    80 |
+| `user_list.ts`          |    58 |
+| `albums.ts`             |    52 |
+| `group_list.ts`         |    45 |
+| `album_selector.ts`     |    35 |
+| `batchManagerUnit.ts`   |    31 |
+| `batchManagerGlobal.ts` |    27 |
+| (other ~24 files)       |  ~150 |
 
 #### Tier 1 (~130 instances) — window globals for plugin interop
 
@@ -1894,13 +1894,13 @@ export interface ImageSearchResponse {
 ```typescript
 // before
 fetch('/ws.php?method=pwg.images.search&format=json')
-  .then(r => r.json())
+  .then((r) => r.json())
   .then((data: any) => render(data.result.images));
 
 // after
 fetch('/ws.php?method=pwg.images.search&format=json')
-  .then(r => r.json() as Promise<{ stat: 'ok'; result: ImageSearchResponse }>)
-  .then(data => render(data.result.images));
+  .then((r) => r.json() as Promise<{ stat: 'ok'; result: ImageSearchResponse }>)
+  .then((data) => render(data.result.images));
 ```
 
 Start with the most-used responses: `pwg.images.search`,
@@ -1947,10 +1947,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: [
-      'themes/_base/js/**/*.test.ts',
-      'themes/admin/_base/js/**/*.test.ts',
-    ],
+    include: ['themes/_base/js/**/*.test.ts', 'themes/admin/_base/js/**/*.test.ts'],
     environmentMatchGlobs: [['**/*.dom.test.ts', 'happy-dom']],
     coverage: {
       provider: 'v8',
@@ -2002,7 +1999,7 @@ first wave. Track in `vitest.config.ts` so CI fails on regression.
 
 ##### Boundary with PHP test infra
 
-1.6.1 Pest absorbs the *browser* tests (Playwright →
+1.6.1 Pest absorbs the _browser_ tests (Playwright →
 `pest-plugin-browser`); Vitest stays for TS unit tests. Non-overlapping —
 no item to merge across tracks.
 
@@ -2040,10 +2037,10 @@ Set budgets ~5–10% above today's measured numbers to allow normal drift.
 
 ```json
 [
-  { "name": "admin/admin",          "path": "dist/assets/admin-*.js",          "limit": "85 kB" },
-  { "name": "admin/batchManager*",  "path": "dist/assets/batchManager*-*.js",  "limit": "60 kB" },
+  { "name": "admin/admin", "path": "dist/assets/admin-*.js", "limit": "85 kB" },
+  { "name": "admin/batchManager*", "path": "dist/assets/batchManager*-*.js", "limit": "60 kB" },
   { "name": "admin/picture_modify", "path": "dist/assets/picture_modify-*.js", "limit": "55 kB" },
-  { "name": "themes/_base/script",  "path": "dist/assets/script-*.js",         "limit": "45 kB" }
+  { "name": "themes/_base/script", "path": "dist/assets/script-*.js", "limit": "45 kB" }
 ]
 ```
 
@@ -2087,16 +2084,16 @@ of being in `node_modules/`).
 
 ##### Inventory
 
-| Lib | Location | Pinned version | Approx size | npm package |
-|---|---|---|---:|---|
-| video.js (×4 mirrors) | `plugins/piwigo-videojs/video-js-{4,5,6,7}/` | 4.12.15 / 5.x / 6.12.1 / 7.21.5 | ~12 MB | `video.js` |
-| Leaflet | `plugins/piwigo-openstreetmap/leaflet/leaflet.js` | **0.7.7** (2015) | ~135 KB | `leaflet` |
-| Leaflet plugins (×8) | `plugins/piwigo-openstreetmap/leaflet/*` | all 0.7-era | ~500 KB | `leaflet.markercluster`, `leaflet-search`, `leaflet.contextmenu`, `leaflet-providers`, `leaflet.elevation`, `leaflet-control-minimap`, `leaflet-omnivore` |
-| CodeMirror | `plugins/LocalFilesEditor/codemirror/` | ~v2 (1915 LOC) | ~70 KB | `codemirror` |
-| Open Sans webfont | `themes/admin/_base/fonts/open-sans/` | locally generated subset | ~250 KB | `@fontsource/open-sans` |
-| Open Sans variable font | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf` | Google Fonts dump | ~340 KB | `@fontsource-variable/open-sans` |
-| jQuery tablesorter | `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js` | ancient | ~15 KB | `tablesorter` |
-| jquery.addtags | `plugins/user_tags/js/jquery.addtags.js` | packed/obfuscated | ~3 KB | replace with `tom-select` (drops jQuery dep) |
+| Lib                     | Location                                                          | Pinned version                  | Approx size | npm package                                                                                                                                               |
+| ----------------------- | ----------------------------------------------------------------- | ------------------------------- | ----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| video.js (×4 mirrors)   | `plugins/piwigo-videojs/video-js-{4,5,6,7}/`                      | 4.12.15 / 5.x / 6.12.1 / 7.21.5 |      ~12 MB | `video.js`                                                                                                                                                |
+| Leaflet                 | `plugins/piwigo-openstreetmap/leaflet/leaflet.js`                 | **0.7.7** (2015)                |     ~135 KB | `leaflet`                                                                                                                                                 |
+| Leaflet plugins (×8)    | `plugins/piwigo-openstreetmap/leaflet/*`                          | all 0.7-era                     |     ~500 KB | `leaflet.markercluster`, `leaflet-search`, `leaflet.contextmenu`, `leaflet-providers`, `leaflet.elevation`, `leaflet-control-minimap`, `leaflet-omnivore` |
+| CodeMirror              | `plugins/LocalFilesEditor/codemirror/`                            | ~v2 (1915 LOC)                  |      ~70 KB | `codemirror`                                                                                                                                              |
+| Open Sans webfont       | `themes/admin/_base/fonts/open-sans/`                             | locally generated subset        |     ~250 KB | `@fontsource/open-sans`                                                                                                                                   |
+| Open Sans variable font | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf` | Google Fonts dump               |     ~340 KB | `@fontsource-variable/open-sans`                                                                                                                          |
+| jQuery tablesorter      | `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`          | ancient                         |      ~15 KB | `tablesorter`                                                                                                                                             |
+| jquery.addtags          | `plugins/user_tags/js/jquery.addtags.js`                          | packed/obfuscated               |       ~3 KB | replace with `tom-select` (drops jQuery dep)                                                                                                              |
 
 Stays as static asset (cannot move to npm):
 
@@ -2273,18 +2270,18 @@ are already in place. The remaining 10 live steps:
 
 ##### Steps
 
-| Step | What |
-|---|---|
-| 3 | Delete orphans: `themes/_base/fix-{khtml,ie5-ie6,ie7}.css`; broken `admin/_base/fix-ie7.css` `<link>` in `install.tpl` / `upgrade.tpl`. IE conditional comments are inert in modern browsers. |
-| 4 | Split `themes/_base/theme.css` (1,305 lines) along section markers into per-concern files (`menubar.css`, `content.css`, `picture.css`, `layout.css`, `colors.css`, `forms.css`, `calendar.css`, `comments.css`, `popup.css`). `theme.css` becomes an `@import` list. |
-| 5 | Collapse search CSS variants. Replace `search.css` + `clear-search.css` + `dark-search.css` with a single variable-driven `search.css` using `--search-*` tokens. Net savings: ~500 lines. |
-| 6 | Non-color design tokens at theme root — `:root {}` block with `--space-*`, `--font-size-*`, `--line-height-*`, `--radius-*`, `--z-*`, `--bp-*` (canonical breakpoints `sm=576 md=800 lg=1100`). Replace hardcoded values throughout. |
-| 7 | Color tokens for `themes/standard_pages/`. Emit `:root {}` color block in parent; replace direct color literals with `var(--color-*)`. |
-| 8 | Refactor `themes/standard_pages/skins/*.css` (11 skins × ~337 lines × 20 `!important` ≈ 220 instances). With tokens in place, each skin reduces to a single `:root {}` override block (~30 lines, 0 `!important`). **Soft dep on 1.3 phase 2** — `theme.json` layout. |
-| 10 | Admin-parent CSS design tokens via `base.css.tpl` — Smarty-templated `:root {}` block emitting `--admin-{bg,fg,accent,border}` from `$admin_skin` in each child theme's `themeconf.inc.php`. Removes the `{combine_css path="…/$theme.id/css/components/general.css" order=-9}` `{* Temporary solution *}` workaround. |
-| 11 | Split `themes/admin/_base/theme.css` (9,635 lines) along its 60+ `/* name.css */` section markers into base/components/pages/features. `theme.css` becomes an `@import` list. Utility classes `.u-*` (added by inline-style extraction) land in `base/utilities.css`. |
-| 12 | Slim admin child themes — `themes/admin/{light,dark}/theme.css` reduce to `:root {}` variable override blocks. Structural rules currently duplicated (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. |
-| 15 | `!important` final elimination pass. Tier 2 (tom-select redundant `!important` — our specificity already wins): `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`. Then Tier 3 file-by-file from largest to smallest. Reinstate `declaration-no-important` Stylelint warning once count is low. |
+| Step | What                                                                                                                                                                                                                                                                                                                        |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3    | Delete orphans: `themes/_base/fix-{khtml,ie5-ie6,ie7}.css`; broken `admin/_base/fix-ie7.css` `<link>` in `install.tpl` / `upgrade.tpl`. IE conditional comments are inert in modern browsers.                                                                                                                               |
+| 4    | Split `themes/_base/theme.css` (1,305 lines) along section markers into per-concern files (`menubar.css`, `content.css`, `picture.css`, `layout.css`, `colors.css`, `forms.css`, `calendar.css`, `comments.css`, `popup.css`). `theme.css` becomes an `@import` list.                                                       |
+| 5    | Collapse search CSS variants. Replace `search.css` + `clear-search.css` + `dark-search.css` with a single variable-driven `search.css` using `--search-*` tokens. Net savings: ~500 lines.                                                                                                                                  |
+| 6    | Non-color design tokens at theme root — `:root {}` block with `--space-*`, `--font-size-*`, `--line-height-*`, `--radius-*`, `--z-*`, `--bp-*` (canonical breakpoints `sm=576 md=800 lg=1100`). Replace hardcoded values throughout.                                                                                        |
+| 7    | Color tokens for `themes/standard_pages/`. Emit `:root {}` color block in parent; replace direct color literals with `var(--color-*)`.                                                                                                                                                                                      |
+| 8    | Refactor `themes/standard_pages/skins/*.css` (11 skins × ~337 lines × 20 `!important` ≈ 220 instances). With tokens in place, each skin reduces to a single `:root {}` override block (~30 lines, 0 `!important`). **Soft dep on 1.3 phase 2** — `theme.json` layout.                                                       |
+| 10   | Admin-parent CSS design tokens via `base.css.tpl` — Smarty-templated `:root {}` block emitting `--admin-{bg,fg,accent,border}` from `$admin_skin` in each child theme's `themeconf.inc.php`. Removes the `{combine_css path="…/$theme.id/css/components/general.css" order=-9}` `{* Temporary solution *}` workaround.      |
+| 11   | Split `themes/admin/_base/theme.css` (9,635 lines) along its 60+ `/* name.css */` section markers into base/components/pages/features. `theme.css` becomes an `@import` list. Utility classes `.u-*` (added by inline-style extraction) land in `base/utilities.css`.                                                       |
+| 12   | Slim admin child themes — `themes/admin/{light,dark}/theme.css` reduce to `:root {}` variable override blocks. Structural rules currently duplicated (borders, padding, grid, `@keyframes`) move up into the parent's split CSS.                                                                                            |
+| 15   | `!important` final elimination pass. Tier 2 (tom-select redundant `!important` — our specificity already wins): `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`. Then Tier 3 file-by-file from largest to smallest. Reinstate `declaration-no-important` Stylelint warning once count is low. |
 
 ##### Concrete examples
 
@@ -2324,8 +2321,13 @@ file that uses media queries.
 ```css
 /* default.css — before: 333 lines, 20× !important */
 .button.primary,
-button.primary { background: #f70 !important; color: white !important; }
-.divider { border-color: #d8d8d8 !important; }
+button.primary {
+  background: #f70 !important;
+  color: white !important;
+}
+.divider {
+  border-color: #d8d8d8 !important;
+}
 /* … 330 more lines fighting specificity … */
 
 /* default.css — after: ~30 lines, 0× !important */
@@ -2425,12 +2427,12 @@ theme.css                   ← thin entry: @import the above in order
 
 **Tier 1 — Keep permanently.** Add `/* reason */` comment where missing:
 
-| Reason | Files | Count |
-|---|---|---:|
-| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css` | ~150 |
-| Third-party CSS override (search popin / mcs-search injects its own CSS) | `themes/_base/css/search.css`, `clear-search.css`, `dark-search.css` | ~30 |
-| `[hidden]` HTML5 attribute beating `display: flex/block` class rules | `themes/admin/_base/theme.css`, `themes/_base/theme.css` | 2 |
-| JS-toggled visibility (`display: none/flex/block`) | `themes/admin/_base/css/pages/user-list.css`, `user-activity.css`, etc. | ~10 |
+| Reason                                                                                                                       | Files                                                                   | Count |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----: |
+| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css`           |  ~150 |
+| Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/_base/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
+| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/_base/theme.css`                |     2 |
+| JS-toggled visibility (`display: none/flex/block`)                                                                           | `themes/admin/_base/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
 
 **Tier 2 — Fix with higher specificity (tom-select overrides).**
 `batch_manager_unit.css` and `picture_modify.css` carry tom-select
@@ -2446,17 +2448,17 @@ These exist because rules that used to live in cascade order inside the
 monolithic `theme.css` were extracted to per-page files (during inline-
 style extraction) and lost their position advantage. Concrete hot spots:
 
-| File | Count | Notes |
-|---|---:|---|
-| `themes/admin/_base/css/pages/user-list.css` | 20 | Mixed: tom-select items + layout + a few JS-toggled (keep) |
-| `themes/admin/_base/css/pages/picture_modify.css` | 11 | Tom-select `.item` (Tier 2) |
-| `themes/admin/_base/css/components/general.css` | 9 | Buttons, head-buttons fighting parent specificity |
-| `themes/admin/_base/css/pages/albums.css` | 6 | Tom-select `.item` + margin |
-| `themes/admin/_base/css/pages/maintenance-sys.css` | 4 | |
-| `themes/admin/_base/css/pages/user-activity.css` | 3 | Excluding JS-toggled |
-| `themes/admin/_base/css/pages/history.css` | 3 | |
-| `themes/admin/_base/css/pages/{batch_manager_unit,cat-list,intro}.css` | 2 each | |
-| `themes/admin/_base/css/components/{album_selector}.css` | 2 | |
+| File                                                                   |  Count | Notes                                                      |
+| ---------------------------------------------------------------------- | -----: | ---------------------------------------------------------- |
+| `themes/admin/_base/css/pages/user-list.css`                           |     20 | Mixed: tom-select items + layout + a few JS-toggled (keep) |
+| `themes/admin/_base/css/pages/picture_modify.css`                      |     11 | Tom-select `.item` (Tier 2)                                |
+| `themes/admin/_base/css/components/general.css`                        |      9 | Buttons, head-buttons fighting parent specificity          |
+| `themes/admin/_base/css/pages/albums.css`                              |      6 | Tom-select `.item` + margin                                |
+| `themes/admin/_base/css/pages/maintenance-sys.css`                     |      4 |                                                            |
+| `themes/admin/_base/css/pages/user-activity.css`                       |      3 | Excluding JS-toggled                                       |
+| `themes/admin/_base/css/pages/history.css`                             |      3 |                                                            |
+| `themes/admin/_base/css/pages/{batch_manager_unit,cat-list,intro}.css` | 2 each |                                                            |
+| `themes/admin/_base/css/components/{album_selector}.css`               |      2 |                                                            |
 
 Approach per instance: (1) note the property + selector, (2) grep for
 conflicting rule, (3) fix by raising specificity, lowering source rule
@@ -2494,7 +2496,7 @@ index/category/picture, search popin (light + dark), at least 3
 ##### Goal
 
 Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1
-AA violations of severity *moderate* and above fail CI. Existing
+AA violations of severity _moderate_ and above fail CI. Existing
 violations are triaged: fixable ones get fixed, justified exemptions go
 into a documented allowlist.
 
@@ -2525,7 +2527,7 @@ export async function runA11y(page: Page, opts: { disable?: string[] } = {}) {
     .withTags(['wcag21aa', 'wcag2aa'])
     .disableRules(opts.disable ?? [])
     .analyze();
-  const blocking = results.violations.filter(v =>
+  const blocking = results.violations.filter((v) =>
     ['critical', 'serious', 'moderate'].includes(v.impact ?? '')
   );
   expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);

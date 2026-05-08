@@ -12,12 +12,12 @@ Audience: contributors and plugin authors working against the `16.x-rewrite` bra
 
 `index.php` inspects `$_SERVER['QUERY_STRING']` and routes four prefixes through minimal bootstraps that bypass the full PSR-15 pipeline (no DB-loaded config, no plugins, no session):
 
-| Prefix         | Controller                  | Why bypass                                        |
-| -------------- | --------------------------- | ------------------------------------------------- |
-| `i/`           | `ImageDerivativeController` | Hot path — derivative serving must stay fast      |
-| `install`      | `InstallController`         | No DB exists yet                                  |
-| `upgrade`      | `UpgradeController`         | DB schema may be mid-migration                    |
-| `upgrade_feed` | `UpgradeFeedController`     | DB schema may be mid-migration                    |
+| Prefix         | Controller                  | Why bypass                                   |
+| -------------- | --------------------------- | -------------------------------------------- |
+| `i/`           | `ImageDerivativeController` | Hot path — derivative serving must stay fast |
+| `install`      | `InstallController`         | No DB exists yet                             |
+| `upgrade`      | `UpgradeController`         | DB schema may be mid-migration               |
+| `upgrade_feed` | `UpgradeFeedController`     | DB schema may be mid-migration               |
 
 Every other request falls through to the full boot:
 
@@ -235,16 +235,16 @@ is always `{"stat":"ok","result":...}` or `{"stat":"fail","err":N,"message":"...
 This is a personal fork. CI runs in `.github/workflows/ci.yml` (Pint, PHPStan, audit jobs)
 on push/PR; the same checks below should pass locally before landing significant changes:
 
-| Check                | Command                                                                    |
-| -------------------- | -------------------------------------------------------------------------- |
-| PHP format           | `vendor/bin/pint --test`                                                   |
-| Static analysis      | `vendor/bin/phpstan analyse --no-progress`                                 |
-| Config accessor sync | `php tools/build-config-accessors.php --check`                             |
-| TypeScript check     | `npm run typecheck`                                                        |
-| JS build             | `npm run build`                                                            |
-| Unit tests           | `vendor/bin/phpunit --testsuite Unit`                                      |
-| Integration tests    | `vendor/bin/phpunit --testsuite Integration` (needs `.env.local`)          |
-| E2E tests            | `npm run test:e2e` (needs `.env.local` + local Apache up)                  |
+| Check                | Command                                                           |
+| -------------------- | ----------------------------------------------------------------- |
+| PHP format           | `vendor/bin/pint --test`                                          |
+| Static analysis      | `vendor/bin/phpstan analyse --no-progress`                        |
+| Config accessor sync | `php tools/build-config-accessors.php --check`                    |
+| TypeScript check     | `npm run typecheck`                                               |
+| JS build             | `npm run build`                                                   |
+| Unit tests           | `vendor/bin/phpunit --testsuite Unit`                             |
+| Integration tests    | `vendor/bin/phpunit --testsuite Integration` (needs `.env.local`) |
+| E2E tests            | `npm run test:e2e` (needs `.env.local` + local Apache up)         |
 
 ---
 
@@ -278,12 +278,12 @@ causing an immediate fatal error.
 
 The `$GLOBALS['conf']` reference bridge has been **retired**. Plugins that read or write `$conf` directly will see stale data (or no data) and must migrate to the typed facade. Use FQN to avoid alias dependency:
 
-| Was                       | Now                                                                              |
-| ------------------------- | -------------------------------------------------------------------------------- |
-| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                                             |
-| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`                                 |
-| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                                      |
-| `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request)                       |
+| Was                       | Now                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                                                          |
+| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`                                              |
+| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                                                   |
+| `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request)                                    |
 | `conf_update_param(...)`  | `\Piwigo\Core\ServiceLocator::get(\Piwigo\Config\ConfigService::class)->confUpdateParam(...)` |
 
 The free function `conf_update_param()` no longer exists. Plugins that still call it

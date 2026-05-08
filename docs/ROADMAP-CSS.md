@@ -67,11 +67,11 @@ Counts re-measured against the current tree; the modus-skin tier from the origin
 
 **Tier 1 — Keep permanently.** Add `/* reason */` comment where missing.
 
-| Reason                                                                                                                       | Files                                                                     | Count |
-| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----: |
-| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css`             |  ~150 |
+| Reason                                                                                                                       | Files                                                                   | Count |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----: |
+| Child-theme load-order (child CSS loads before parent; overrides need `!important` until CSS variable migration is complete) | `themes/admin/dark/theme.css`, `themes/admin/light/theme.css`           |  ~150 |
 | Third-party CSS override (search popin / mcs-search injects its own CSS)                                                     | `themes/_base/css/search.css`, `clear-search.css`, `dark-search.css`    |   ~30 |
-| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/_base/theme.css`              |     2 |
+| `[hidden]` HTML5 attribute beating `display: flex/block` class rules                                                         | `themes/admin/_base/theme.css`, `themes/_base/theme.css`                |     2 |
 | JS-toggled visibility (`display: none/flex/block`)                                                                           | `themes/admin/_base/css/pages/user-list.css`, `user-activity.css`, etc. |   ~10 |
 
 **Tier 2 — Fix with higher specificity: tom-select overrides.**
@@ -80,8 +80,8 @@ Counts re-measured against the current tree; the modus-skin tier from the origin
 **Tier 3 — Fix internal specificity battles.**
 These exist because rules that used to live in cascade order inside the monolithic `theme.css` were extracted to per-page files (Step 16) and lost their position advantage. Concrete hot spots in the current tree:
 
-| File                                                                     |  Count | Notes                                                      |
-| ------------------------------------------------------------------------ | -----: | ---------------------------------------------------------- |
+| File                                                                   |  Count | Notes                                                      |
+| ---------------------------------------------------------------------- | -----: | ---------------------------------------------------------- |
 | `themes/admin/_base/css/pages/user-list.css`                           |     20 | Mixed: tom-select items + layout + a few JS-toggled (keep) |
 | `themes/admin/_base/css/pages/picture_modify.css`                      |     11 | Tom-select `.item` (Tier 2)                                |
 | `themes/admin/_base/css/components/general.css`                        |      9 | Buttons, head-buttons fighting parent specificity          |

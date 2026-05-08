@@ -636,7 +636,6 @@ p.error-message,
   overflow: hidden;
 }
 
-
 .profile-section #api_key_list_expired .api_expiration {
   text-overflow: unset;
   max-width: unset;

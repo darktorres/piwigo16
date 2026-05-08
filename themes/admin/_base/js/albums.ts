@@ -8,7 +8,7 @@ import { config } from './config';
 // Page-data interface — values injected by PHP via #pwg-page-data JSON block
 // ---------------------------------------------------------------------------
 interface AlbumsPageData {
-    data: any[];
+    data: NodeData[];
     pwg_token: string;
     openCat: number;
     nb_albums: number;
@@ -48,13 +48,13 @@ const {
     pwg_token,
     openCat,
     light_album_manager,
-    delay_autoOpen,
+    delay_autoOpen: _delay_autoOpen,
     x_nb_subcats,
     x_nb_images,
     x_nb_sub_photos,
     str_are_you_sure,
     str_yes_change_parent,
-    str_no_change_parent,
+    str_no_change_parent: _str_no_change_parent,
     str_albs_drag_drop,
     delete_album_with_name,
     delete_album_with_subs,
@@ -81,34 +81,31 @@ let nb_albums = pageData.nb_albums;
 // ---------------------------------------------------------------------------
 // Module-level mutable state (was global via declare var)
 // ---------------------------------------------------------------------------
-let actions: any;
-let catToEdit: any;
-let cont: any;
-let icon: any;
-let id: any;
-let moveParent: any;
-let moveRank: any;
-let nb_sub_cats: any;
-let newAlbumName: any;
-let newAlbumParent: any;
-let newAlbumPosition: any;
-let node: any;
-let nodeToGo: any;
-let oldParent: any;
-let open_nodes: any;
-let parentIsPrivate: any;
-let parentOfDeletedNode: any;
-let previous_parent: any;
-let target: any;
-let title: any;
-let tmp: any;
-let toggler: any;
-let toggler_close: any;
-let toggler_cont: any;
-let toggler_open: any;
-let waitingTimeout: any;
-
-declare function sprintf(fmt: string, ...args: unknown[]): string;
+let actions: string;
+let catToEdit: string | undefined;
+let _cont: HTMLElement;
+let icon: string;
+let id: string | number | undefined;
+let moveParent: number | string | null;
+let moveRank: number | null;
+let nb_sub_cats: number;
+let newAlbumName: string;
+let newAlbumParent: string | undefined;
+let newAlbumPosition: string | undefined;
+let node: TreeNode | null | undefined;
+let nodeToGo: TreeNode | null;
+let _oldParent: TreeNode | null;
+let _parentIsPrivate: boolean;
+let parentOfDeletedNode: TreeNode | null;
+let previous_parent: TreeNode | null;
+let target: TreeNode;
+let title: string;
+let tmp: number;
+let toggler: string;
+let toggler_close: string;
+let toggler_cont: string;
+let toggler_open: string;
+let waitingTimeout: ReturnType<typeof setTimeout>;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
@@ -128,11 +125,17 @@ function pwgPost<T = unknown>(
     method: string,
     data: Record<string, unknown>
 ): Promise<WsResponse<T>> {
+    const stringify = (val: unknown): string => {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+        return JSON.stringify(val);
+    };
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v))
-            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item)));
-        else body.append(k, String(v ?? ''));
+            (v as unknown[]).forEach((item) => body.append(k + '[]', stringify(item)));
+        else body.append(k, stringify(v));
     }
     return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then(
         (r) => r.json() as Promise<WsResponse<T>>
@@ -144,23 +147,27 @@ function refreshTipTip() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const openUppercats = openCat === -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
+    const openCatNode = openCat === -1 ? null : findAlbumById(data, openCat);
+    const openUppercats: string[] =
+        openCatNode !== null && typeof openCatNode.uppercats === 'string'
+            ? openCatNode.uppercats.split(',')
+            : [];
     // Honour persisted-open ids so that nodes the user previously expanded
     // come back with their children already rendered (otherwise the saved
     // pwgtree-open class on the LI would have nothing inside it to show).
     const savedOpen: string[] = (() => {
         try {
-            const raw = window.localStorage?.getItem('pwg_album_tree_open_admin_albums');
-            return raw ? (JSON.parse(raw) as string[]) : [];
+            const raw = window.localStorage.getItem('pwg_album_tree_open_admin_albums');
+            return raw !== null && raw !== '' ? (JSON.parse(raw) as string[]) : [];
         } catch {
             return [];
         }
     })();
-    const expandedIds = new Set<string>([...openUppercats.map(String), ...savedOpen.map(String)]);
-    const new_data = data.map((a: any) => {
+    const expandedIds = new Set<string>([...openUppercats, ...savedOpen]);
+    const new_data: NodeData[] = data.map((a) => {
         const isExpanded = expandedIds.has(String(a.id));
-        const al = { ...a, children: isExpanded ? a.children : [] };
-        if (a.children) {
+        const al: NodeData = { ...a, children: isExpanded ? a.children : [] };
+        if (a.children !== undefined) {
             al.load_on_demand = !isExpanded;
             al.haveChildren = a.children;
         }
@@ -193,12 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
         onMove: (moveInfo: MoveInfo, ev) => {
             ev.preventDefault();
             if (moveInfo.moved_node.status !== 'private') {
-                parentIsPrivate = false;
+                let parentPrivate = false;
                 if (moveInfo.position === 'after')
-                    parentIsPrivate = moveInfo.target_node.parent?.status === 'private';
+                    parentPrivate = moveInfo.target_node.parent?.status === 'private';
                 else if (moveInfo.position === 'inside')
-                    parentIsPrivate = moveInfo.target_node.status === 'private';
-                if (parentIsPrivate) {
+                    parentPrivate = moveInfo.target_node.status === 'private';
+                _parentIsPrivate = parentPrivate;
+                if (parentPrivate) {
                     if (
                         window.confirm(
                             str_are_you_sure.replace(/%s/g, String(moveInfo.moved_node.name)) +
@@ -233,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const n = tree.getNodeById(node_id ?? null);
             if (!n) return;
 
-            if (n.load_on_demand && Array.isArray(n.haveChildren)) loadOnDemand(n);
+            if (n.load_on_demand === true && Array.isArray(n.haveChildren)) loadOnDemand(n);
 
             if (tree.isNodeOpen(n)) tree.closeNode(n);
             else tree.openNode(n);
@@ -262,8 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const addEl = target.closest<HTMLElement>('.move-cat-add');
         if (addEl) {
             e.preventDefault();
-            openAddAlbumPopIn(addEl.dataset['aid']);
-            (qs<HTMLElement>('.AddAlbumSubmit') as any)['data-a-parent'] = addEl.dataset['aid'];
+            openAddAlbumPopIn(addEl.dataset['aid'] ?? '');
             qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'] = addEl.dataset['aid'] ?? '0';
             return;
         }
@@ -271,14 +278,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // .move-cat-delete
         const deleteEl = target.closest<HTMLElement>('.move-cat-delete');
         if (deleteEl) {
-            triggerDeleteAlbum(deleteEl.dataset['id']);
+            triggerDeleteAlbum(deleteEl.dataset['id'] ?? '');
             return;
         }
 
         // .move-cat-title-container
         const titleEl = target.closest<HTMLElement>('.move-cat-title-container');
         if (titleEl) {
-            openRenameAlbumPopIn(titleEl.querySelector<HTMLElement>('.move-cat-title')?.title);
+            openRenameAlbumPopIn(
+                titleEl.querySelector<HTMLElement>('.move-cat-title')?.title ?? ''
+            );
             const submitBtn = qs<HTMLElement>('.RenameAlbumSubmit')!;
             submitBtn.dataset['catId'] = titleEl.dataset['id'];
             return;
@@ -289,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('.order-root')?.addEventListener('click', () => {
         qs<HTMLElement>('.cat-move-order-popin')!.style.display = '';
         qs<HTMLElement>('.cat-move-order-popin .album-name')!.innerHTML =
-            (window as any).str_root ?? 'root';
+            (window as Window & { str_root?: string }).str_root ?? 'root';
         qs<HTMLInputElement>('.cat-move-order-popin input[name=id]')!.value = '-1';
         qs<HTMLInputElement>('input[name=simpleAutoOrder]')?.setAttribute('value', str_root_order);
     });
@@ -301,21 +310,21 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('.CloseRenameAlbum')?.addEventListener('click', closeRenameAlbumPopIn);
     qs('.RenameAlbumCancel')?.addEventListener('click', closeRenameAlbumPopIn);
     qs('.RenameAlbumSubmit')?.addEventListener('click', () => {
-        catToEdit = (qs<HTMLElement>('.RenameAlbumSubmit') as any).dataset['catId'];
-        pwgPost('pwg.categories.setInfo', {
+        catToEdit = qs<HTMLElement>('.RenameAlbumSubmit')?.dataset['catId'];
+        void pwgPost('pwg.categories.setInfo', {
             category_id: catToEdit,
             name: qs<HTMLInputElement>('.RenameAlbumLabelUsername input')?.value ?? '',
         })
             .then(() => {
-                const node_id = qs<HTMLElement>('#cat-' + catToEdit + ' .move-cat-toogler')
+                const node_id = qs<HTMLElement>('#cat-' + (catToEdit ?? '') + ' .move-cat-toogler')
                     ?.dataset['id'];
                 const n = tree?.getNodeById(node_id ?? null);
                 const newName =
                     qs<HTMLInputElement>('.RenameAlbumLabelUsername input')?.value ?? '';
-                if (n && tree) tree.updateNode(n, newName);
+                if (n !== null && n !== undefined && tree !== null) tree.updateNode(n, newName);
                 closeRenameAlbumPopIn();
             })
-            .catch(console.log);
+            .catch((e: unknown) => console.error(e));
     });
 
     // AddAlbum
@@ -327,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     qs('.add-album-button')?.addEventListener('click', () => {
-        openAddAlbumPopIn(0);
+        openAddAlbumPopIn('0');
         qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'] = '0';
     });
     qs('.CloseAddAlbum')?.addEventListener('click', closeAddAlbumPopIn);
@@ -340,14 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
         newAlbumParent = qs<HTMLElement>('.AddAlbumSubmit')!.dataset['aParent'];
         newAlbumPosition = qs<HTMLInputElement>('input[name=position]:checked')?.value;
 
-        pwgPost('pwg.categories.add', {
+        void pwgPost<{ id: number }>('pwg.categories.add', {
             name: newAlbumName,
             parent: newAlbumParent,
             position: newAlbumPosition,
         })
-            .then((raw) => {
-                const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                if (d.stat !== 'ok') {
+            .then((d) => {
+                if (d.stat !== 'ok' || d.result === undefined) {
                     qsa<HTMLElement>('.AddAlbumErrors').forEach((el) => {
                         el.textContent = str_album_name_empty;
                         el.style.display = '';
@@ -358,11 +366,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeAddAlbumPopIn();
                 updateTitleBadge(nb_albums + 1);
                 qs<HTMLElement>('.AddAlbumSubmit')!.classList.remove('notClickable');
-                if (!tree) return;
+                if (tree === null) return;
                 const parent_node = tree.getNodeById(newAlbumParent);
-                if (parent_node?.load_on_demand && Array.isArray(parent_node.haveChildren))
+                if (parent_node?.load_on_demand === true && Array.isArray(parent_node.haveChildren))
                     loadOnDemand(parent_node);
-                if (parent_node) openNodeOnDemand(parent_node);
+                if (parent_node !== null) openNodeOnDemand(parent_node);
                 const newData: NodeData = {
                     id: d.result.id,
                     isEmptyFolder: true,
@@ -370,11 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 if (newAlbumPosition === 'last') tree.appendNode(newData, parent_node);
                 else tree.prependNode(newData, parent_node);
-                if (parent_node) setSubcatsBadge(parent_node);
+                if (parent_node !== null) setSubcatsBadge(parent_node);
                 const newNode = tree.getNodeById(d.result.id);
-                if (newNode) goToNode(newNode, newNode);
-                const newNodeEl = document.getElementById('cat-' + d.result.id);
-                if (newNodeEl) {
+                if (newNode !== null) goToNode(newNode, newNode);
+                const newNodeEl = document.getElementById('cat-' + String(d.result.id));
+                if (newNodeEl !== null) {
                     window.scrollTo({
                         top:
                             newNodeEl.getBoundingClientRect().top +
@@ -391,21 +399,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete Album
     qs('.DeleteAlbumSubmit')?.addEventListener('click', () => {
         const deletionMode = qs<HTMLInputElement>('input[name=photo_deletion_mode]:checked')?.value;
-        pwgPost('pwg.categories.delete', {
+        void pwgPost('pwg.categories.delete', {
             category_id: id,
             photo_deletion_mode: deletionMode,
             pwg_token,
         })
             .then(() => {
+                if (node === null || node === undefined) return;
                 parentOfDeletedNode = node.parent;
                 tree?.removeNode(node);
                 updateTitleBadge(nb_albums - 1);
                 // Root-level deletes have no parent in the new tree model.
-                if (parentOfDeletedNode) setSubcatsBadge(parentOfDeletedNode);
+                if (parentOfDeletedNode !== null) setSubcatsBadge(parentOfDeletedNode);
                 closeDeleteAlbumPopIn();
                 refreshTipTip();
             })
-            .catch(console.log);
+            .catch((e: unknown) => console.error(e));
     });
 
     // Selection checkboxes
@@ -414,11 +423,13 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('click', checkbox_click.bind(el));
     });
 
-    if (openCat !== -1 && tree) {
+    if (openCat !== -1) {
         nodeToGo = tree.getNodeById(openCat);
-        if (nodeToGo) goToNode(nodeToGo, nodeToGo);
-        if (nodeToGo?.children?.length) tree.openNode(nodeToGo);
-        const catEl = document.getElementById('cat-' + openCat);
+        if (nodeToGo !== null) {
+            goToNode(nodeToGo, nodeToGo);
+            if (nodeToGo.children.length > 0) tree.openNode(nodeToGo);
+        }
+        const catEl = document.getElementById('cat-' + String(openCat));
         if (catEl) {
             const top =
                 catEl.getBoundingClientRect().top +
@@ -429,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (!light_album_manager) refreshTipTip();
+    if (light_album_manager !== true) refreshTipTip();
 });
 
 function mouseState(e: Event) {
@@ -508,9 +519,12 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
     contEl.id = 'cat-' + node.id;
     contEl.innerHTML = '';
     contEl.insertAdjacentHTML('beforeend', actions);
-    cont = contEl; // keep global for compatibility
+    _cont = contEl; // keep global for compatibility
 
-    if (node.haveChildren || node.children.length !== 0) {
+    const hasChildren =
+        (Array.isArray(node.haveChildren) && node.haveChildren.length > 0) ||
+        node.children.length !== 0;
+    if (hasChildren) {
         // The album-tree adds pwgtree-open / pwgtree-closed to the LI before
         // calling onCreateLi, so the open state is readable from the class.
         const isOpen = liEl.classList.contains('pwgtree-open');
@@ -531,7 +545,7 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
     contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-grip-vertical-solid'));
     contEl.querySelector<HTMLElement>('.icon-grip-vertical-solid')!.title = str_albs_drag_drop;
 
-    if (node.haveChildren || node.children.length !== 0)
+    if (hasChildren)
         contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-sitemap'));
     else contEl.insertAdjacentHTML('beforeend', icon.replace(/%icon%/g, 'icon-folder-open'));
 
@@ -571,13 +585,13 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
                 '</div></div>'
         );
 
-    if (!node.nb_subcats)
+    if (Number(node.nb_subcats ?? 0) === 0)
         contEl.querySelector<HTMLElement>('.nb-subcats')?.style.setProperty('display', 'none');
-    if (!node.nb_images)
+    if (Number(node.nb_images ?? 0) === 0)
         contEl.querySelector<HTMLElement>('.nb-images')?.style.setProperty('display', 'none');
-    if (!node.nb_sub_photos)
+    if (Number(node.nb_sub_photos ?? 0) === 0)
         contEl.querySelector<HTMLElement>('.nb-sub-photos')?.style.setProperty('display', 'none');
-    if (node.has_not_access)
+    if (node.has_not_access === true)
         contEl.querySelector<HTMLElement>('.move-cat-see')?.classList.add('notClickable');
 }
 
@@ -601,13 +615,9 @@ function hide(el: Element | null | undefined) {
     if (el) (el as HTMLElement).style.display = 'none';
 }
 
-function isNumeric(num: any) {
-    return !isNaN(num);
-}
-
-function openAddAlbumPopIn(parentAlbumId: any) {
+function openAddAlbumPopIn(parentAlbumId: string | number) {
     const popin = document.getElementById('AddAlbum')!;
-    if (parentAlbumId !== 0) {
+    if (parentAlbumId !== 0 && parentAlbumId !== '0') {
         const parentName = String(tree?.getNodeById(parentAlbumId)?.name ?? '');
         qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_sub_album_of.replace(
             '%s',
@@ -651,7 +661,7 @@ function closeAddAlbumPopIn() {
     }
 }
 
-function openRenameAlbumPopIn(replacedAlbumName: any) {
+function openRenameAlbumPopIn(replacedAlbumName: string) {
     const popin = document.getElementById('RenameAlbum')!;
     // Inline 'block' overrides the #RenameAlbum { display: none } CSS rule.
     popin.style.display = 'block';
@@ -675,12 +685,21 @@ function closeRenameAlbumPopIn() {
     if (popin) popin.style.display = 'none';
 }
 
-function triggerDeleteAlbum(cat_id: any) {
-    pwgPost('pwg.categories.calculateOrphans', { category_id: cat_id })
+interface OrphanInfo {
+    nb_images_recursive: number;
+    nb_images_associated_outside: number;
+    nb_images_becoming_orphan: number;
+}
+
+function triggerDeleteAlbum(cat_id: string | number) {
+    void pwgPost<OrphanInfo[]>('pwg.categories.calculateOrphans', { category_id: cat_id })
         .then((raw) => {
-            const orphanData = (typeof raw === 'string' ? JSON.parse(raw) : raw).result[0];
+            if (raw.result === undefined) return;
+            const orphanData = raw.result[0];
             if (orphanData.nb_images_recursive === 0) {
-                qsa('.deleteAlbumOptions').forEach((el) => (el.style.display = 'none'));
+                qsa<HTMLElement>('.deleteAlbumOptions').forEach((el) => {
+                    el.style.display = 'none';
+                });
             } else {
                 qsa<HTMLElement>('.deleteAlbumOptions').forEach((el) => {
                     el.style.display = '';
@@ -690,8 +709,8 @@ function triggerDeleteAlbum(cat_id: any) {
                 } else {
                     const el = qs<HTMLElement>('#IMAGES_ASSOCIATED_OUTSIDE .innerText')!;
                     el.innerHTML = has_images_associated_outside
-                        .replace('%d', orphanData.nb_images_recursive)
-                        .replace('%d', orphanData.nb_images_associated_outside);
+                        .replace('%d', String(orphanData.nb_images_recursive))
+                        .replace('%d', String(orphanData.nb_images_associated_outside));
                 }
                 if (orphanData.nb_images_becoming_orphan === 0) {
                     hide(document.getElementById('IMAGES_BECOMING_ORPHAN'));
@@ -699,29 +718,29 @@ function triggerDeleteAlbum(cat_id: any) {
                     const el = qs<HTMLElement>('#IMAGES_BECOMING_ORPHAN .innerText')!;
                     el.innerHTML = has_images_becomming_orphans.replace(
                         '%d',
-                        orphanData.nb_images_becoming_orphan
+                        String(orphanData.nb_images_becoming_orphan)
                     );
                 }
             }
             openDeleteAlbumPopIn(cat_id);
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 }
 
-function openDeleteAlbumPopIn(cat_to_delete: any) {
+function openDeleteAlbumPopIn(cat_to_delete: string | number) {
     const popin = document.getElementById('DeleteAlbum')!;
     // Inline 'block' overrides the #DeleteAlbum { display: none } CSS rule.
     popin.style.display = 'block';
-    node = tree?.getNodeById(cat_to_delete);
+    node = tree?.getNodeById(cat_to_delete) ?? null;
     const iconTitle = qs<HTMLElement>('.DeleteIconTitle span')!;
-    if (!node) return;
+    if (node === null) return;
     if (node.children.length === 0) {
         iconTitle.innerHTML = delete_album_with_name.replace('%s', node.name);
     } else {
         nb_sub_cats = 0;
         iconTitle.innerHTML = delete_album_with_subs
             .replace('%s', node.name)
-            .replace('%d', getAllSubAlbumsFromNode(node, nb_sub_cats));
+            .replace('%d', String(getAllSubAlbumsFromNode(node, nb_sub_cats)));
     }
     id = cat_to_delete;
 }
@@ -731,10 +750,10 @@ function closeDeleteAlbumPopIn() {
     if (popin) popin.style.display = 'none';
 }
 
-function getAllSubAlbumsFromNode(n: any, nb: any) {
-    nb = 0;
-    if (n.children !== 0) {
-        n.children.forEach((child: any) => {
+function getAllSubAlbumsFromNode(n: TreeNode, _nb: number): number {
+    let nb = 0;
+    if (n.children.length !== 0) {
+        n.children.forEach((child) => {
             nb++;
             tmp = getAllSubAlbumsFromNode(child, nb);
             nb += tmp;
@@ -745,9 +764,9 @@ function getAllSubAlbumsFromNode(n: any, nb: any) {
     return nb;
 }
 
-function setSubcatsBadge(n: any) {
-    const catEl = document.getElementById('cat-' + n.id);
-    if (!catEl) return;
+function setSubcatsBadge(n: TreeNode) {
+    const catEl = document.getElementById('cat-' + String(n.id));
+    if (catEl === null) return;
     const nbSubcats = catEl.querySelector<HTMLElement>('.nb-subcats');
     const badgeSubcats = catEl.querySelector<HTMLElement>('.badge-dropdown .nb-subcats');
     if (n.children.length !== 0) {
@@ -755,44 +774,43 @@ function setSubcatsBadge(n: any) {
             nbSubcats.textContent = String(n.children.length);
             nbSubcats.style.display = '';
         }
-        if (badgeSubcats) badgeSubcats.textContent = x_nb_subcats.replace('%d', n.children.length);
+        if (badgeSubcats)
+            badgeSubcats.textContent = x_nb_subcats.replace('%d', String(n.children.length));
     } else {
         if (nbSubcats) nbSubcats.style.display = 'none';
     }
 }
 
-function updateTitleBadge(new_nb_albums: any) {
+function updateTitleBadge(new_nb_albums: number) {
     nb_albums = new_nb_albums;
     qs('.badge-number')!.textContent = String(new_nb_albums);
 }
 
-function goToNode(n: any, firstNode: any) {
-    if (n.parent) {
+function goToNode(n: TreeNode, firstNode: TreeNode) {
+    if (n.parent !== null) {
         goToNode(n.parent, firstNode);
         if (n !== firstNode) {
             tree?.openNode(n);
-            const parentCatEl = document.getElementById('cat-' + n.parent.id);
-            if (parentCatEl) {
+            const parentCatEl = document.getElementById('cat-' + String(n.parent.id));
+            if (parentCatEl !== null) {
                 parentCatEl.style.display = '';
                 parentCatEl.classList.add('imune');
             }
         }
     } else {
         tree?.openNode(n);
-        const catEl = document.getElementById('cat-' + firstNode.id);
-        if (catEl) catEl.classList.add('animateFocus');
+        const catEl = document.getElementById('cat-' + String(firstNode.id));
+        if (catEl !== null) catEl.classList.add('animateFocus');
         showNodeChildrens(firstNode);
     }
 }
 
-function showNodeChildrens(n: any) {
-    if (n.children) {
-        n.children.forEach((child: any) => {
-            const childEl = document.getElementById('cat-' + child.id);
-            if (childEl) childEl.classList.add('imune');
-            showNodeChildrens(child);
-        });
-    }
+function showNodeChildrens(n: TreeNode) {
+    n.children.forEach((child) => {
+        const childEl = document.getElementById('cat-' + String(child.id));
+        if (childEl !== null) childEl.classList.add('imune');
+        showNodeChildrens(child);
+    });
 }
 
 // closeTree() helper removed — was unreferenced.
@@ -801,14 +819,15 @@ function getId(parent: TreeNode | null | undefined): number | string {
     // Root-level nodes have no parent in the new tree; jqtree had a synthetic
     // level-0 container with id 0 — surface the same value to keep API parity
     // with the existing PHP "parent=0 means root" convention.
-    if (!parent) return 0;
+    if (parent === null || parent === undefined) return 0;
     return parent.id;
 }
 
-function getRank(n: any, ignoreId: any = null): any {
-    if (n.getPreviousSibling() !== null) {
-        if (n.id !== ignoreId) return 1 + getRank(n.getPreviousSibling(), ignoreId);
-        else return getRank(n.getPreviousSibling(), ignoreId);
+function getRank(n: TreeNode, ignoreId: string | number | undefined = undefined): number {
+    const prev = n.getPreviousSibling();
+    if (prev !== null) {
+        if (n.id !== ignoreId) return 1 + getRank(prev, ignoreId);
+        else return getRank(prev, ignoreId);
     } else {
         return n.id !== ignoreId ? 1 : 0;
     }
@@ -830,11 +849,12 @@ function applyMove(event: MoveInfo) {
         if (getId(previous_parent) !== getId(target)) {
             moveParent = getId(target);
             const currentNode = tree?.getNodeById(moveParent);
-            if (currentNode?.load_on_demand && Array.isArray(currentNode.haveChildren))
+            if (currentNode?.load_on_demand === true && Array.isArray(currentNode.haveChildren))
                 loadOnDemand(currentNode);
         }
         moveRank = 1;
-    } else if (event.position === 'before') {
+    } else {
+        // 'before'
         if (getId(previous_parent) !== getId(target.parent)) moveParent = getId(target.parent);
         moveRank = 1;
     }
@@ -843,18 +863,22 @@ function applyMove(event: MoveInfo) {
             event.do_move();
             clearTimeout(waitingTimeout);
             qs<HTMLElement>('.waiting-message')!.classList.remove('visible');
-            if (previous_parent) setSubcatsBadge(previous_parent);
-            const newParent = tree?.getNodeById(moveParent);
-            if (newParent) setSubcatsBadge(newParent);
+            if (previous_parent !== null) setSubcatsBadge(previous_parent);
+            const newParent = moveParent !== null ? (tree?.getNodeById(moveParent) ?? null) : null;
+            if (newParent !== null) setSubcatsBadge(newParent);
             refreshTipTip();
         })
-        .catch((msg) => {
-            console.log('An error has occurred: ' + msg);
+        .catch((msg: unknown) => {
+            console.error('An error has occurred:', msg);
             refreshTipTip();
         });
 }
 
-function moveNode(n: any, rank: any, parent: any): Promise<void> {
+function moveNode(
+    n: string | number,
+    rank: number | null,
+    parent: string | number | null
+): Promise<void> {
     return new Promise<void>((res, rej) => {
         if (parent !== null) changeParent(n, parent, rank).then(res).catch(rej);
         else if (rank !== null) changeRank(n, rank).then(res).catch(rej);
@@ -862,63 +886,77 @@ function moveNode(n: any, rank: any, parent: any): Promise<void> {
     });
 }
 
-function changeParent(n: any, parent: any, rank: any): Promise<void> {
-    oldParent = n.parent;
-    return pwgPost('pwg.categories.move', { category_id: n, parent, pwg_token }).then((raw) => {
-        const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        if (d.stat === 'ok') {
-            void changeRank(n, rank);
-            (d.result.updated_cats ?? []).forEach((cat: any) => {
+interface MoveResult {
+    updated_cats?: Array<{ cat_id: number | string; nb_sub_photos: number }>;
+}
+
+function changeParent(
+    n: string | number,
+    parent: string | number,
+    rank: number | null
+): Promise<void> {
+    _oldParent = null;
+    return pwgPost<MoveResult>('pwg.categories.move', {
+        category_id: n,
+        parent,
+        pwg_token,
+    }).then((d) => {
+        if (d.stat === 'ok' && d.result !== undefined) {
+            if (rank !== null) void changeRank(n, rank);
+            (d.result.updated_cats ?? []).forEach((cat) => {
                 const treeNode = tree?.getNodeById(cat.cat_id);
-                if (treeNode) {
+                if (treeNode !== null && treeNode !== undefined) {
                     treeNode.nb_sub_photos = cat.nb_sub_photos;
                     tree?.updateNode(treeNode, String(treeNode.name));
                 }
             });
         } else {
-            throw raw;
+            throw new Error(d.message ?? 'move failed');
         }
     });
 }
 
-function changeRank(n: any, rank: any): Promise<void> {
-    return pwgPost('pwg.categories.setRank', { category_id: n, rank }).then((raw) => {
-        const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        if (d.stat !== 'ok') throw raw;
+function changeRank(n: string | number, rank: number): Promise<void> {
+    return pwgPost('pwg.categories.setRank', { category_id: n, rank }).then((d) => {
+        if (d.stat !== 'ok') throw new Error(d.message ?? 'setRank failed');
     });
 }
 
-function makePrivateHierarchy(n: any) {
+function makePrivateHierarchy(n: TreeNode) {
     n.status = 'private';
-    n.children.forEach((child: any) => makePrivateHierarchy(child));
+    n.children.forEach((child) => makePrivateHierarchy(child));
 }
 
-function getPathNode(n: any): any {
-    return n.parent.getLevel() !== 0 ? getPathNode(n.parent) + ' / ' + n.name : n.name;
+function getPathNode(n: TreeNode): string {
+    return n.parent !== null && n.parent.getLevel() !== 0
+        ? getPathNode(n.parent) + ' / ' + n.name
+        : n.name;
 }
 
-function findAlbumById(a: any, id: any): any {
+function findAlbumById(a: NodeData[], id: number | string): NodeData | null {
     for (const album of a) {
         if (album.id === id) return album;
-        if (album.haveChildren?.length || album.children?.length) {
-            const al = findAlbumById(album.haveChildren ?? album.children, id);
-            if (al) return al;
+        const haveLen = Array.isArray(album.haveChildren) ? album.haveChildren.length : 0;
+        const childrenLen = album.children?.length ?? 0;
+        if (haveLen > 0 || childrenLen > 0) {
+            const sublist =
+                (Array.isArray(album.haveChildren) ? album.haveChildren : album.children) ?? [];
+            const al = findAlbumById(sublist, id);
+            if (al !== null) return al;
         }
     }
     return null;
 }
 
 function loadOnDemand(n: TreeNode) {
-    const formated: NodeData[] = (Array.isArray(n.haveChildren) ? n.haveChildren : []).map(
-        (a: NodeData) => {
-            const al: NodeData = { ...a, children: [] };
-            if (a.children) {
-                al.load_on_demand = true;
-                al.haveChildren = a.children;
-            }
-            return al;
+    const formated: NodeData[] = (Array.isArray(n.haveChildren) ? n.haveChildren : []).map((a) => {
+        const al: NodeData = { ...a, children: [] };
+        if (a.children !== undefined) {
+            al.load_on_demand = true;
+            al.haveChildren = a.children;
         }
-    );
+        return al;
+    });
     tree?.loadData(formated, n);
     n.load_on_demand = false;
 }

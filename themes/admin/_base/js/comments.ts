@@ -647,7 +647,7 @@ function commentsUpdateSelection() {
             'click',
             function (this: HTMLElement) {
                 const id = this.id.split('_')[1];
-                if (!id) return;
+                if (id === undefined || id === '') return;
                 document
                     .getElementById(id)
                     ?.querySelector<HTMLElement>('.comment-content')

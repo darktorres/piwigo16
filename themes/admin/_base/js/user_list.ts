@@ -290,7 +290,7 @@ const tsOptions = {
     plugins: { remove_button: {} },
 };
 function makeGroupTs(idx: number): TomSelect | null {
-    const el = groupSelectEls[idx] as HTMLSelectElement | undefined;
+    const el = groupSelectEls[idx];
     return el !== undefined ? new TomSelect(el, tsOptions) : null;
 }
 const groupTs = makeGroupTs(0);
@@ -822,7 +822,10 @@ function generate_random_string() {
 }
 function get_initials(username: string) {
     const words = username.toUpperCase().split(' ');
-    return (words[0]?.[0] ?? '') + (words.length > 1 && (words[1]?.[0] ?? '') !== '' ? words[1]![0]! : '');
+    return (
+        (words[0]?.[0] ?? '') +
+        (words.length > 1 && (words[1]?.[0] ?? '') !== '' ? words[1]![0]! : '')
+    );
 }
 function get_status_index(status: string) {
     const i = status_arr.indexOf(status);

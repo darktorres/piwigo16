@@ -71,8 +71,14 @@ function sprintf(format: string, ...args: unknown[]): string {
         } else if (
             (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))
         ) {
-            const m1 = m[1], m2 = m[2] ?? '', m3 = m[3] ?? '', m4 = m[4] ?? '', m5 = m[5] ?? '', m6 = m[6] ?? '', m7 = m[7]!;
-            const argRaw: unknown = args[m1 ? parseInt(m1) - 1 : i++];
+            const m1 = m[1];
+            const m2 = m[2] ?? '';
+            const m3 = m[3] ?? '';
+            const m4 = m[4] ?? '';
+            const m5 = m[5] ?? '';
+            const m6 = m[6] ?? '';
+            const m7 = m[7]!;
+            const argRaw: unknown = args[m1 !== undefined ? parseInt(m1) - 1 : i++];
             if (argRaw === null || argRaw === undefined) throw new Error('Too few arguments.');
             if (/[^s]/.test(m7) && typeof argRaw !== 'number')
                 throw new Error('Expecting number but found ' + typeof argRaw);

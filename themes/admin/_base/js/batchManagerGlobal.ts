@@ -170,7 +170,10 @@ function enableShiftClick(container: HTMLElement) {
                 for (let idx = first; idx <= last; idx++) {
                     inputs[idx]!.checked = lastClickedStatus;
                     inputs[idx]!.dispatchEvent(new Event('change'));
-                    inputs[idx]!.closest('li')?.classList.toggle('thumbSelected', lastClickedStatus);
+                    inputs[idx]!.closest('li')?.classList.toggle(
+                        'thumbSelected',
+                        lastClickedStatus
+                    );
                 }
             } else {
                 lastClicked = pos;

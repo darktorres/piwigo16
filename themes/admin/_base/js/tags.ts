@@ -36,7 +36,7 @@ interface TagsPageData {
 
 const {
     pwg_token,
-    total,
+    total: _total,
     orphan_tag_names,
     str_already_exist,
     str_and_others_tags,
@@ -45,10 +45,10 @@ const {
     str_delete,
     str_delete_orphan_tags,
     str_delete_tags,
-    str_delete_them,
-    str_keep_them,
+    str_delete_them: _str_delete_them,
+    str_keep_them: _str_keep_them,
     str_merged_into,
-    str_no_delete_confirmation,
+    str_no_delete_confirmation: _str_no_delete_confirmation,
     str_no_photos,
     str_number_photos,
     str_orphan_tags,
@@ -62,33 +62,42 @@ const {
     str_tag_selected,
     str_tags_deleted,
     str_tags_found,
-    str_yes_delete_confirmation,
+    str_yes_delete_confirmation: _str_yes_delete_confirmation,
     str_yes_rename_confirmation,
 } = getPageData<TagsPageData>();
 
-// mutable state
-let number: any;
-let $tagboxid: any;
-let boxToRecycle: any;
-let copy_name: any;
-let data: any;
-let dataToDisplay: any;
-let dataVisible: any;
-let dest_id: any;
-let destination_name: any;
-let index: any;
-let indexOfTag: any;
-let isNotCreate: any;
-let loadState: any;
+interface Tag {
+    id: number | string;
+    name: string;
+    raw_name?: string;
+    url_name: string;
+    counter?: number;
+}
+
+type TagId = number | string;
+
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+interface TemporaryStateLike {
+    changeHTML(el: HTMLElement, html: string): void;
+    changeAttribute(el: HTMLElement, attr: string, val: string): void;
+    addClass(el: HTMLElement, cls: string): void;
+    removeClass(el: HTMLElement, cls: string): void;
+    reverse(): void;
+}
+function newTemporaryState(): TemporaryStateLike {
+    return new (
+        window as unknown as { TemporaryState: new () => TemporaryStateLike }
+    ).TemporaryState();
+}
+
 const maxItemDisplayed = 5;
-let mergeOption: any = false;
-let merge_name: any;
-let nbPage: any;
-let newPage: any;
-let newTag: any;
-let promises: any;
-let str_message: any;
-let tagBox: any;
+let mergeOption = false;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) =>
     ctx.querySelector<T>(sel);
@@ -103,7 +112,7 @@ const hide = (el: HTMLElement | null | undefined) => {
     if (el) el.style.display = 'none';
 };
 
-let dataTags: any[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]');
+let dataTags: Tag[] = JSON.parse(qs('.tag-container')?.dataset['tags'] ?? '[]') as Tag[];
 
 /*------- init select -------*/
 const sel100 = document.getElementById('select-100') as HTMLInputElement | null;
@@ -126,21 +135,21 @@ qs('.info-warning p a')?.addEventListener('click', () => {
 /*------- Tag box creation / recycling -------*/
 
 function createTagBox(
-    id: any,
-    name: any,
-    url_name: any,
-    count: any,
-    raw_name: any = null
+    id: TagId,
+    name: string,
+    url_name: string,
+    count: number,
+    raw_name: string | null = null
 ): HTMLElement {
-    if (raw_name === null) raw_name = name;
-    const u_edit = config.adminUrl + 'page=batch_manager&filter=tag-' + id;
-    const u_view = 'index.php?/tags/' + id + '-' + url_name;
+    const rawName = raw_name ?? name;
+    const u_edit = config.adminUrl + 'page=batch_manager&filter=tag-' + String(id);
+    const u_view = 'index.php?/tags/' + String(id) + '-' + url_name;
     let html = qs('.tag-template')!
-        .innerHTML.replace(/%name%/g, unescape(String(name)))
+        .innerHTML.replace(/%name%/g, unescape(name))
         .replace('%U_VIEW%', u_view)
         .replace('%U_EDIT%', u_edit)
-        .replace('%raw_name%', raw_name);
-    if (name === raw_name) html = html.replace('icon-globe', '');
+        .replace('%raw_name%', rawName);
+    if (name === rawName) html = html.replace('icon-globe', '');
 
     const div = document.createElement('div');
     div.className = 'tag-box test';
@@ -148,7 +157,10 @@ function createTagBox(
     div.dataset['selected'] = '0';
     div.innerHTML = html;
 
-    if ((document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked) {
+    if (
+        (document.getElementById('toggleSelectionMode') as HTMLInputElement | null)?.checked ===
+        true
+    ) {
         div.classList.add('selection');
         qsa('.in-selection-mode', div).forEach((el) => {
             el.style.display = '';
@@ -159,7 +171,7 @@ function createTagBox(
         qsa('.dropdown-option.view, .dropdown-option.manage', div).forEach((el) => {
             el.style.display = 'block';
         });
-        if (headerI) headerI.innerHTML = str_number_photos.replace('%d', count);
+        if (headerI) headerI.innerHTML = str_number_photos.replace('%d', String(count));
     } else {
         if (headerI) headerI.innerHTML = str_no_photos;
     }
@@ -168,13 +180,13 @@ function createTagBox(
 
 function recycleTagBox(
     tagBox: HTMLElement,
-    id: any,
-    name: any,
-    url_name: any,
-    count: any,
-    raw_name: any = null
+    id: TagId,
+    name: string,
+    url_name: string,
+    count: number,
+    raw_name: string | null = null
 ) {
-    if (raw_name === null) raw_name = name;
+    const rawName = raw_name ?? name;
     tagBox.dataset['id'] = String(id);
     qsa('.tag-name, .tag-dropdown-header b', tagBox).forEach((el) => {
         el.innerHTML = name;
@@ -183,17 +195,17 @@ function recycleTagBox(
     if (editable) editable.value = name;
     tagBox.dataset['selected'] = '0';
     const nameEl = qs('.tag-name', tagBox);
-    if (nameEl) nameEl.dataset['rawname'] = raw_name;
+    if (nameEl) nameEl.dataset['rawname'] = rawName;
     const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view', tagBox);
-    if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + url_name;
+    if (viewEl) viewEl.href = 'index.php?/tags/' + String(id) + '-' + url_name;
     const manageEl = qs<HTMLAnchorElement>('.dropdown-option.manage', tagBox);
-    if (manageEl) manageEl.href = config.adminUrl + 'page=batch_manager&filter=tag-' + id;
+    if (manageEl) manageEl.href = config.adminUrl + 'page=batch_manager&filter=tag-' + String(id);
     if (count > 0) {
         qsa('.dropdown-option.view, .dropdown-option.manage', tagBox).forEach((el) => {
             el.style.display = 'block';
         });
         const hi = qs('.tag-dropdown-header i', tagBox);
-        if (hi) hi.innerHTML = str_number_photos.replace('%d', count);
+        if (hi) hi.innerHTML = str_number_photos.replace('%d', String(count));
     } else {
         const hi = qs('.tag-dropdown-header i', tagBox);
         if (hi) hi.innerHTML = str_no_photos;
@@ -228,9 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingBtn = qs<HTMLElement>('.TagLoading');
         if (submitBtn) hide(submitBtn);
         if (loadingBtn) show(loadingBtn);
-        $tagboxid = qs<HTMLElement>('.RenameTagPopInContainer .tag-property-input')!.id;
-        renameTag(
-            $tagboxid,
+        const tagboxid = qs<HTMLElement>('.RenameTagPopInContainer .tag-property-input')!.id;
+        void renameTag(
+            tagboxid,
             qs<HTMLInputElement>('.RenameTagPopInContainer .tag-property-input')!.value
         )
             .then(() => {
@@ -238,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (loadingBtn) hide(loadingBtn);
                 rename_tag_close();
                 cleanCheckmark();
-                const el = qs(`[data-id="${$tagboxid}"]`)!;
+                const el = qs(`[data-id="${tagboxid}"]`)!;
                 const wrapper = document.createElement('div');
                 wrapper.className = 'tag-changed';
                 el.parentNode?.insertBefore(wrapper, el);
@@ -247,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkmark.className = 'icon-ok tag-checkmark';
                 wrapper.prepend(checkmark);
             })
-            .catch((message: any) => {
+            .catch((message: unknown) => {
                 if (submitBtn) show(submitBtn);
                 if (loadingBtn) hide(loadingBtn);
                 console.error(message);
@@ -259,12 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const input = document.getElementById('add-tag-input') as HTMLInputElement;
     if (input.value === '') return;
-    loadState = new (window as any).TemporaryState();
+    const loadState = newTemporaryState();
     const iconValidate = qs<HTMLElement>('#add-tag .icon-validate')!;
     loadState.removeClass(iconValidate, 'icon-plus');
     loadState.changeHTML(iconValidate, "<i class='icon-spin6 animate-spin'> </i>");
     loadState.changeAttribute(iconValidate, 'style', 'pointer-event:none');
-    addTag(input.value)
+    void addTag(input.value)
         .then(() => {
             showMessage(str_tag_created.replace('%s', input.value));
             input.value = '';
@@ -272,29 +284,28 @@ document.addEventListener('DOMContentLoaded', () => {
             qs<HTMLInputElement>('#search-tag .search-input')?.dispatchEvent(new Event('input'));
             loadState.reverse();
         })
-        .catch((message: any) => {
+        .catch((message: unknown) => {
             loadState.reverse();
-            showError(message);
+            showError(message instanceof Error ? message.message : String(message));
         });
 });
 
 qs('#add-tag .icon-validate')?.addEventListener('click', () => {
-    if (document.getElementById('add-tag')?.classList.contains('input-mode')) {
-        (document.getElementById('add-tag') as HTMLFormElement)?.dispatchEvent(
+    if (document.getElementById('add-tag')?.classList.contains('input-mode') === true) {
+        (document.getElementById('add-tag') as HTMLFormElement | null)?.dispatchEvent(
             new Event('submit', { bubbles: true, cancelable: true })
         );
     }
 });
 
-function addTag(name: any): Promise<any> {
+function addTag(name: string): Promise<void> {
     return fetch(config.wsUrl + 'format=json&method=pwg.tags.add', {
         method: 'POST',
         body: new URLSearchParams({ name }),
     })
-        .then((r) => r.json())
-        .then((rawData) => {
-            data = rawData;
-            if (data.stat === 'ok') {
+        .then((r) => r.json() as Promise<WsResponse<Tag>>)
+        .then((data) => {
+            if (data.stat === 'ok' && data.result !== undefined) {
                 const tag = createTagBox(data.result.id, data.result.name, data.result.url_name, 0);
                 qs('.tag-container')?.prepend(tag);
                 setupTagbox(tag);
@@ -307,7 +318,7 @@ function addTag(name: any): Promise<any> {
                 });
                 updateBadge();
             } else {
-                throw str_already_exist.replace('%s', name);
+                throw new Error(str_already_exist.replace('%s', name));
             }
         });
 }
@@ -330,8 +341,8 @@ function setupTagbox(tagBox: HTMLElement) {
     });
 
     tagBox.addEventListener('click', () => {
-        if (qs('.tag-container')?.classList.contains('selection')) {
-            const id = tagBox.dataset['id'];
+        if (qs('.tag-container')?.classList.contains('selection') === true) {
+            const id = tagBox.dataset['id'] ?? '';
             if (tagBox.dataset['selected'] === '1') {
                 tagBox.dataset['selected'] = '0';
                 removeSelectedItem(id);
@@ -344,31 +355,33 @@ function setupTagbox(tagBox: HTMLElement) {
     });
 
     q('.dropdown-option.edit')?.addEventListener('click', (e: Event) => {
-        const id = (e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box')?.dataset['id'];
-        const tagIndex = dataTags.findIndex((tag: any) => tag.id === id);
-        const tagRawName = dataTags[tagIndex].raw_name ?? q('.tag-name')?.dataset['rawname'];
-        const tagName = dataTags[tagIndex].name ?? q('.tag-name')?.innerHTML;
-        set_up_popin(tagBox.dataset['id'], tagRawName, tagName);
+        const id =
+            (e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box')?.dataset['id'] ?? '';
+        const tagIndex = dataTags.findIndex((tag) => String(tag.id) === id);
+        const tagRawName = dataTags[tagIndex].raw_name ?? q('.tag-name')?.dataset['rawname'] ?? '';
+        const tagName = dataTags[tagIndex].name;
+        set_up_popin(tagBox.dataset['id'] ?? '', tagRawName, tagName);
         rename_tag_open();
     });
 
     q('.dropdown-option.delete')?.addEventListener('click', () => {
         const tagName = q('.tag-name')?.innerHTML ?? '';
         if (window.confirm(str_delete.replace('%s', tagName))) {
-            removeTag(tagBox.dataset['id'], tagName);
+            removeTag(tagBox.dataset['id'] ?? '', tagName);
         }
     });
 
     q('.dropdown-option.duplicate')?.addEventListener('click', () => {
-        void duplicateTag(tagBox.dataset['id'], q('.tag-name')?.dataset['rawname']).then(
-            (d: any) => {
-                showMessage(str_tag_created.replace('%s', d.result.name));
-            }
-        );
+        void duplicateTag(
+            tagBox.dataset['id'] ?? '',
+            q('.tag-name')?.dataset['rawname'] ?? ''
+        ).then((d) => {
+            if (d !== undefined) showMessage(str_tag_created.replace('%s', d.name));
+        });
     });
 }
 
-function set_up_popin(id: any, tagRawName: any, tagName: any) {
+function set_up_popin(id: TagId, tagRawName: string, tagName: string) {
     qs<HTMLElement>('.RenameTagPopInContainer .tag-property-input')!.id = String(id);
     qs('.AddIconTitle span')!.innerHTML = str_tag_rename.replace('%s', tagName);
     qsa('.ClosePopIn, .TagCancel').forEach((el) => {
@@ -391,15 +404,14 @@ function cleanCheckmark() {
     qsa('.tag-checkmark').forEach((el) => el.remove());
 }
 
-function removeTag(id: any, name: any) {
-    const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: id, pwg_token });
+function removeTag(id: TagId, name: string) {
+    const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: String(id), pwg_token });
     void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((rawData) => {
-            data = rawData;
+        .then((r) => r.json() as Promise<WsResponse>)
+        .then((data) => {
             if (data.stat === 'ok') {
-                qs(`.tag-box[data-id="${id}"]`)?.remove();
-                dataTags = dataTags.filter((tag: any) => tag.id !== id);
+                qs(`.tag-box[data-id="${String(id)}"]`)?.remove();
+                dataTags = dataTags.filter((tag) => tag.id !== id);
                 showMessage(str_tag_deleted.replace('%s', name));
                 updateBadge();
                 updateSearchInfo();
@@ -410,85 +422,86 @@ function removeTag(id: any, name: any) {
         });
 }
 
-function renameTag(id: any, new_name: any): Promise<any> {
+function renameTag(id: TagId, new_name: string): Promise<Tag | void> {
     const body = new URLSearchParams({
         method: 'pwg.tags.rename',
-        tag_id: id,
+        tag_id: String(id),
         new_name,
         pwg_token,
     });
     return fetch(config.wsUrl + 'format=json', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((rawData) => {
-            data = rawData;
-            if (data.stat === 'ok') {
+        .then((r) => r.json() as Promise<WsResponse<Tag>>)
+        .then((data) => {
+            if (data.stat === 'ok' && data.result !== undefined) {
+                const result = data.result;
                 qsa(
-                    `.tag-box[data-id="${id}"] p, .tag-box[data-id="${id}"] .tag-dropdown-header b`
+                    `.tag-box[data-id="${String(id)}"] p, .tag-box[data-id="${String(id)}"] .tag-dropdown-header b`
                 ).forEach((el) => {
-                    el.innerHTML = data.result.name;
+                    el.innerHTML = result.name;
                 });
                 const editable = qs<HTMLInputElement>(
-                    `.tag-box[data-id="${id}"] .tag-name-editable`
+                    `.tag-box[data-id="${String(id)}"] .tag-name-editable`
                 );
-                if (editable) editable.value = data.result.name;
-                const nameEl = qs(`.tag-box[data-id="${id}"] .tag-name`);
-                if (nameEl) nameEl.dataset['rawname'] = data.result.raw_name;
+                if (editable) editable.value = result.name;
+                const nameEl = qs(`.tag-box[data-id="${String(id)}"] .tag-name`);
+                if (nameEl) nameEl.dataset['rawname'] = result.raw_name ?? result.name;
                 const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view');
-                if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
-                index = dataTags.findIndex((tag: any) => tag.id === id);
-                dataTags[index].name = data.result.name;
-                dataTags[index].raw_name = data.result.raw_name;
-                dataTags[index].url_name = data.result.url_name;
-                return data;
+                if (viewEl) viewEl.href = 'index.php?/tags/' + String(id) + '-' + result.url_name;
+                const idx = dataTags.findIndex((tag) => tag.id === id);
+                dataTags[idx].name = result.name;
+                dataTags[idx].raw_name = result.raw_name;
+                dataTags[idx].url_name = result.url_name;
+                return result;
             } else {
-                throw str_already_exist.replace('%s', new_name);
+                throw new Error(str_already_exist.replace('%s', new_name));
             }
         });
 }
 
-function duplicateTag(id: any, name: any): Promise<any> {
-    copy_name = name + str_copy;
+function duplicateTag(id: TagId, name: string): Promise<Tag | undefined> {
+    let copy_name = name + str_copy;
     const name_exist = (n: string) => qsa('.tag-box .tag-name').some((el) => el.innerHTML === n);
     let i = 1;
     while (name_exist(copy_name)) copy_name = name + str_other_copy.replace('%s', String(i++));
 
     const body = new URLSearchParams({
         method: 'pwg.tags.duplicate',
-        tag_id: id,
+        tag_id: String(id),
         copy_name,
         pwg_token,
     });
     return fetch(config.wsUrl + 'format=json', { method: 'POST', body })
-        .then((r) => r.json())
-        .then((rawData) => {
-            data = rawData;
-            if (data.stat === 'ok') {
+        .then((r) => r.json() as Promise<WsResponse<Tag & { count?: number }>>)
+        .then((data) => {
+            if (data.stat === 'ok' && data.result !== undefined) {
+                const result = data.result;
                 const tag = createTagBox(
-                    data.result.id,
-                    data.result.name,
-                    data.result.url_name,
-                    data.result.count
+                    result.id,
+                    result.name,
+                    result.url_name,
+                    result.count ?? 0
                 );
-                const orig = qs(`.tag-box[data-id="${id}"]`);
+                const orig = qs(`.tag-box[data-id="${String(id)}"]`);
                 orig?.after(tag);
                 setupTagbox(tag);
-                index = dataTags.findIndex((t: any) => t.id === id);
-                dataTags.splice(index + 1, 0, {
-                    name: data.result.name,
-                    id: data.result.id,
-                    url_name: data.result.url_name,
-                    counter: data.result.count,
+                const idx = dataTags.findIndex((t) => t.id === id);
+                dataTags.splice(idx + 1, 0, {
+                    name: result.name,
+                    id: result.id,
+                    url_name: result.url_name,
+                    counter: result.count,
                 });
                 updateBadge();
                 updateSearchInfo();
-                return data;
+                return result;
             }
+            return undefined;
         });
 }
 
 /*------- Selection mode -------*/
 
-let selected: any[] = [];
+let selected: TagId[] = [];
 
 (document.getElementById('toggleSelectionMode') as HTMLInputElement).checked = false;
 document
@@ -522,7 +535,7 @@ function clearSelection() {
     updateSelectionContent();
 }
 
-function addSelectedItem(id: any) {
+function addSelectedItem(id: TagId) {
     if (selected.includes(id)) return;
     selected.push(id);
     if (selected.length > maxItemDisplayed) {
@@ -536,12 +549,12 @@ function addSelectedItem(id: any) {
             );
     } else {
         hide(qs('.selection-other-tags'));
-        const found = dataTags.find((tag: any) => tag.id === id);
+        const found = dataTags.find((tag) => String(tag.id) === String(id));
         if (found) createSelectionItem(id, found.name);
     }
 }
 
-function createSelectionItem(id: any, name: any) {
+function createSelectionItem(id: TagId, name: string) {
     const div = document.createElement('div');
     div.dataset['id'] = String(id);
     div.innerHTML = `<a class="icon-cancel"></a><p>${name}</p>`;
@@ -549,22 +562,25 @@ function createSelectionItem(id: any, name: any) {
     div.querySelector('a')?.addEventListener('click', () => removeSelectedItem(id));
 }
 
-function removeSelectedItem(id: any) {
-    if (!selected.find((tag: any) => tag === id)) return;
-    selected = selected.filter((tag: any) => parseInt(tag) !== parseInt(id));
-    const tagEl = qs<HTMLElement>(`.tag-box[data-id="${id}"]`);
+function removeSelectedItem(id: TagId) {
+    if (!selected.includes(id)) return;
+    selected = selected.filter((tag) => parseInt(String(tag)) !== parseInt(String(id)));
+    const tagEl = qs<HTMLElement>(`.tag-box[data-id="${String(id)}"]`);
     if (tagEl) tagEl.dataset['selected'] = '0';
 
-    const selItem = qs(`.selection-mode-tag .tag-list div[data-id="${id}"]`);
+    const selItem = qs(`.selection-mode-tag .tag-list div[data-id="${String(id)}"]`);
     if (selItem) {
         selItem.remove();
         if (selected.length >= maxItemDisplayed) {
             let i = 0;
-            isNotCreate = true;
+            let isNotCreate = true;
             while (i < selected.length && isNotCreate) {
-                if (!qs(`.selection-mode-tag .tag-list div[data-id="${selected[i]}"]`)) {
+                if (
+                    qs(`.selection-mode-tag .tag-list div[data-id="${String(selected[i])}"]`) ===
+                    null
+                ) {
                     isNotCreate = false;
-                    indexOfTag = dataTags.findIndex((tag: any) => tag.id === selected[i]);
+                    const indexOfTag = dataTags.findIndex((tag) => tag.id === selected[i]);
                     createSelectionItem(selected[i], dataTags[indexOfTag].name);
                 }
                 i++;
@@ -585,8 +601,8 @@ function removeSelectedItem(id: any) {
 function updateMergeItems() {
     const opts = qs('#MergeOptionsChoices');
     if (opts) opts.innerHTML = '';
-    selected.forEach((id: any) => {
-        const found = dataTags.find((tag: any) => tag.id === id);
+    selected.forEach((id) => {
+        const found = dataTags.find((tag) => tag.id === id);
         const opt = document.createElement('option');
         opt.value = String(id);
         opt.textContent = found?.name ?? '';
@@ -595,7 +611,7 @@ function updateMergeItems() {
 }
 
 function updateSelectionContent() {
-    number = selected.length;
+    const number = selected.length;
     const nothingSelected = document.getElementById('nothing-selected');
     const selectionMode_tag = qs('.selection-mode-tag');
     const mergeOpts = document.getElementById('MergeOptionsBlock');
@@ -665,22 +681,22 @@ document.getElementById('selectAll')?.addEventListener('click', () => {
     }
 });
 
-function selectAll(dataArr: any[]): Promise<any> {
-    promises = [];
-    dataArr.forEach((tag: any) => {
+function selectAll(dataArr: Tag[]): Promise<unknown[]> {
+    const promises: Promise<void>[] = [];
+    dataArr.forEach((tag) => {
         promises.push(
-            new Promise<any>((res) => {
-                const el = qs<HTMLElement>(`.tag-box[data-id="${tag.id}"]`);
+            new Promise<void>((res) => {
+                const el = qs<HTMLElement>(`.tag-box[data-id="${String(tag.id)}"]`);
                 if (el) el.dataset['selected'] = '1';
                 addSelectedItem(tag.id);
-                res(undefined);
+                res();
             })
         );
     });
     return Promise.all(promises);
 }
 
-function showSelectMessage(str1: any, str2: any, callback: any) {
+function showSelectMessage(str1: string, str2: string, callback: () => void) {
     const msg = qs<HTMLElement>('.tag-select-message')!;
     show(msg);
     const div = qs('.tag-select-message div');
@@ -709,10 +725,11 @@ document.getElementById('selectInvert')?.addEventListener('click', () => {
     hide(qs<HTMLElement>('.tag-select-message'));
     selectInvert(tagToDisplay());
 });
-function selectInvert(dataArr: any[]) {
-    dataArr.forEach((tag: any) => {
-        tagBox = qs(`.tag-box[data-id="${tag.id}"]`);
-        if (tagBox?.dataset['selected'] === '1') {
+function selectInvert(dataArr: Tag[]) {
+    dataArr.forEach((tag) => {
+        const tagBox = qs<HTMLElement>(`.tag-box[data-id="${String(tag.id)}"]`);
+        if (tagBox === null) return;
+        if (tagBox.dataset['selected'] === '1') {
             tagBox.dataset['selected'] = '0';
             removeSelectedItem(tag.id);
         } else {
@@ -727,8 +744,8 @@ function selectInvert(dataArr: any[]) {
 
 document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => {
     const names: string[] = [];
-    selected.forEach((id: any) => {
-        const found = dataTags.find((t: any) => t.id === id);
+    selected.forEach((id) => {
+        const found = dataTags.find((t) => t.id === id);
         if (found) names.push(found.name);
     });
     if (!window.confirm(str_delete_tags.replace('%s', tagListToString(names)))) return;
@@ -737,20 +754,20 @@ document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => 
 
 function removeSelectedTags() {
     const names: string[] = [];
-    selected.forEach((id: any) => {
-        const f = dataTags.find((t: any) => t.id === id);
+    selected.forEach((id) => {
+        const f = dataTags.find((t) => t.id === id);
         if (f) names.push(f.name);
     });
     const body = new URLSearchParams({ pwg_token });
-    selected.forEach((id: any) => body.append('tag_id[]', id));
+    selected.forEach((id) => body.append('tag_id[]', String(id)));
     body.append('method', 'pwg.tags.delete');
     void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
-            if (JSON.parse(raw_data).stat === 'ok') {
-                selected.forEach((id: any) => qs(`.tag-box[data-id="${id}"]`)?.remove());
-                dataTags = dataTags.filter((tag: any) => !selected.includes(tag.id));
+            if ((JSON.parse(raw_data) as WsResponse).stat === 'ok') {
+                selected.forEach((id) => qs(`.tag-box[data-id="${String(id)}"]`)?.remove());
+                dataTags = dataTags.filter((tag) => !selected.includes(tag.id));
                 clearSelection();
                 updatePaginationMenu();
                 updateBadge();
@@ -761,52 +778,61 @@ function removeSelectedTags() {
 }
 
 qs('.ConfirmMergeButton')?.addEventListener('click', () => {
-    dest_id = qs<HTMLSelectElement>('#MergeOptionsChoices')?.value;
+    const dest_id = qs<HTMLSelectElement>('#MergeOptionsChoices')?.value ?? '';
     mergeGroups(dest_id, selected);
 });
 
-function mergeGroups(destination_id: any, merge_ids: any[]) {
-    destination_name =
-        qs<HTMLElement>(`.tag-box[data-id="${destination_id}"] .tag-name`)?.innerHTML ?? '';
-    merge_name = merge_ids.map(
-        (id: any) => qs<HTMLElement>(`.tag-box[data-id="${id}"] .tag-name`)?.innerHTML ?? ''
+interface MergeResult {
+    deleted_tag: TagId[];
+    destination_tag: TagId;
+    images_in_merged_tag: unknown[];
+}
+
+function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
+    const destination_name =
+        qs<HTMLElement>(`.tag-box[data-id="${String(destination_id)}"] .tag-name`)?.innerHTML ?? '';
+    const merge_name = merge_ids.map(
+        (id) => qs<HTMLElement>(`.tag-box[data-id="${String(id)}"] .tag-name`)?.innerHTML ?? ''
     );
-    str_message = str_merged_into
+    const str_message = str_merged_into
         .replace('%s1', tagListToString(merge_name))
         .replace('%s2', destination_name);
 
     const body = new URLSearchParams({
         pwg_token,
-        destination_tag_id: destination_id,
+        destination_tag_id: String(destination_id),
         method: 'pwg.tags.merge',
     });
-    merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
+    merge_ids.forEach((id) => body.append('merge_tag_id[]', String(id)));
     void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
-            data = JSON.parse(raw_data);
-            if (data.stat === 'ok') {
-                data.result.deleted_tag.forEach((id: any) => {
-                    if (data.result.destination_tag !== id) {
-                        qs(`.tag-box[data-id="${id}"]`)?.remove();
-                        dataTags = dataTags.filter((t: any) => id !== t.id);
+            const data = JSON.parse(raw_data) as WsResponse<MergeResult>;
+            if (data.stat === 'ok' && data.result !== undefined) {
+                const result = data.result;
+                result.deleted_tag.forEach((id) => {
+                    if (result.destination_tag !== id) {
+                        qs(`.tag-box[data-id="${String(id)}"]`)?.remove();
+                        dataTags = dataTags.filter((t) => id !== t.id);
                     }
                 });
-                if (data.result.images_in_merged_tag.length > 0) {
-                    tagBox = qs(`.tag-box[data-id="${data.result.destination_tag}"]`);
-                    qsa(
-                        '.dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i',
-                        tagBox
-                    ).forEach((el) => show(el));
-                    const hi = qs('.tag-dropdown-header i', tagBox);
-                    if (hi)
-                        hi.innerHTML = str_number_photos.replace(
-                            '%d',
-                            data.result.images_in_merged_tag.length
-                        );
-                    index = dataTags.findIndex((t: any) => t.id === data.result.destination_tag);
-                    dataTags[index].counter = data.result.images_in_merged_tag.length;
+                if (result.images_in_merged_tag.length > 0) {
+                    const tagBox = qs(`.tag-box[data-id="${String(result.destination_tag)}"]`);
+                    if (tagBox !== null) {
+                        qsa(
+                            '.dropdown-option.view, .dropdown-option.manage, .tag-dropdown-header i',
+                            tagBox
+                        ).forEach((el) => show(el));
+                        const hi = qs('.tag-dropdown-header i', tagBox);
+                        if (hi)
+                            hi.innerHTML = str_number_photos.replace(
+                                '%d',
+                                String(result.images_in_merged_tag.length)
+                            );
+                    }
+                    const idx = dataTags.findIndex((t) => t.id === result.destination_tag);
+                    if (idx !== -1) dataTags[idx].counter = result.images_in_merged_tag.length;
                 }
                 qsa('.tag-box').forEach((el) => {
                     el.dataset['selected'] = '0';
@@ -820,7 +846,7 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
         });
 }
 
-function tagListToString(list: any[]) {
+function tagListToString(list: string[]) {
     if (list.length > 5)
         return (
             list.slice(0, 5).join(', ') +
@@ -832,7 +858,6 @@ function tagListToString(list: any[]) {
 
 /*------- Filter research -------*/
 
-const maxShown = 100;
 let searchTimeOut: ReturnType<typeof setTimeout> | null = null;
 const delaySearchInput = 300;
 
@@ -849,14 +874,14 @@ qs<HTMLInputElement>('#search-tag .search-input')?.addEventListener(
     }
 );
 
-function isDataSearched(tagObj: any): boolean {
-    const name = tagObj.raw_name.toLowerCase();
+function isDataSearched(tagObj: Tag): boolean {
+    const name = (tagObj.raw_name ?? tagObj.name).toLowerCase();
     const searchStr = qs<HTMLInputElement>('#search-tag .search-input')?.value ?? '';
     return name.includes(searchStr.toLowerCase());
 }
 
 /*------- Show Info -------*/
-function showError(message: any) {
+function showError(message: string) {
     const errEl = qs<HTMLElement>('.info-error');
     if (errEl) {
         errEl.querySelector('p')!.innerHTML = message;
@@ -865,7 +890,7 @@ function showError(message: any) {
     }
     hide(qs('.info-info'));
 }
-function showMessage(message: any) {
+function showMessage(message: string) {
     const msgEl = qs<HTMLElement>('.info-message');
     if (msgEl) {
         msgEl.querySelector('p')!.innerHTML = message;
@@ -912,7 +937,7 @@ function updatePaginationMenu() {
 }
 
 function createPaginationMenu() {
-    nbPage = getNumberPages();
+    const nbPage = getNumberPages();
     appendPaginationItem(1);
     if (actualPage > 2) appendPaginationItem();
     if (actualPage !== 1 && actualPage !== nbPage) appendPaginationItem(actualPage);
@@ -920,7 +945,7 @@ function createPaginationMenu() {
     appendPaginationItem(nbPage);
 }
 
-function appendPaginationItem(page: any = null) {
+function appendPaginationItem(page: number | null = null) {
     const container = qs('.pagination-item-container')!;
     if (page !== null) {
         const div = document.createElement('div');
@@ -943,7 +968,7 @@ function updateArrows() {
 }
 
 function getNumberPages(): number {
-    dataVisible = dataTags.filter(isDataSearched).length;
+    const dataVisible = dataTags.filter(isDataSearched).length;
     return Math.max(1, Math.floor((dataVisible - 1) / per_page) + 1);
 }
 
@@ -959,8 +984,7 @@ function movePage(toRight = true) {
 }
 
 async function updatePage(): Promise<void> {
-    newPage = actualPage;
-    dataToDisplay = tagToDisplay();
+    const dataToDisplay = tagToDisplay();
     const tagBoxEls = qsa('.tag-box');
     cleanCheckmark();
 
@@ -971,24 +995,37 @@ async function updatePage(): Promise<void> {
     });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    boxToRecycle = Math.min(dataToDisplay.length, tagBoxEls.length);
+    const boxToRecycle = Math.min(dataToDisplay.length, tagBoxEls.length);
     for (let i = 0; i < boxToRecycle; i++) {
         const tag = dataToDisplay[i];
-        recycleTagBox(tagBoxEls[i], tag.id, tag.name, tag.url_name, tag.counter, tag.raw_name);
+        recycleTagBox(
+            tagBoxEls[i],
+            tag.id,
+            tag.name,
+            tag.url_name,
+            tag.counter ?? 0,
+            tag.raw_name ?? null
+        );
     }
     if (dataToDisplay.length < tagBoxEls.length) {
         for (let j = boxToRecycle; j < tagBoxEls.length; j++) tagBoxEls[j].remove();
     } else if (dataToDisplay.length > tagBoxEls.length) {
         for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
             const tag = dataToDisplay[j];
-            newTag = createTagBox(tag.id, tag.name, tag.url_name, tag.counter, tag.raw_name);
+            const newTag = createTagBox(
+                tag.id,
+                tag.name,
+                tag.url_name,
+                tag.counter ?? 0,
+                tag.raw_name ?? null
+            );
             newTag.style.opacity = '0';
             qs('.tag-container')?.appendChild(newTag);
             setupTagbox(newTag);
         }
     }
-    selected.forEach((id: any) => {
-        const el = qs<HTMLElement>(`.tag-box[data-id="${id}"]`);
+    selected.forEach((id) => {
+        const el = qs<HTMLElement>(`.tag-box[data-id="${String(id)}"]`);
         if (el) el.dataset['selected'] = '1';
     });
 
@@ -1005,7 +1042,7 @@ async function updatePage(): Promise<void> {
     updateSearchInfo();
 }
 
-function tagToDisplay(): any[] {
+function tagToDisplay(): Tag[] {
     return dataTags
         .filter(isDataSearched)
         .slice((actualPage - 1) * per_page, actualPage * per_page);
@@ -1034,7 +1071,7 @@ function updateSearchInfo() {
     const searchEl = qs<HTMLInputElement>('.search-input');
     const infoEl = qs('.search-info');
     if (!infoEl) return;
-    if (searchEl?.value) {
+    if (searchEl?.value !== undefined && searchEl.value !== '') {
         const n = dataTags.filter(isDataSearched).length;
         infoEl.innerHTML =
             n > 1
@@ -1048,7 +1085,8 @@ function updateSearchInfo() {
 document.addEventListener('DOMContentLoaded', () => {
     const savedPerPage = Cookies.get('pwg_tags_per_page');
     qsa('.pagination-per-page .selected').forEach((el) => el.classList.remove('selected'));
-    if (savedPerPage) document.getElementById(savedPerPage)?.click();
+    if (savedPerPage !== undefined && savedPerPage !== '')
+        document.getElementById(savedPerPage)?.click();
 });
 
 export {};

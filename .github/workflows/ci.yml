@@ -85,6 +85,55 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  rector:
+    name: Rector (dry-run)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - uses: ramsey/composer-install@v4
+      - run: vendor/bin/rector --dry-run --no-progress
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          extensions: mysqli
+      - uses: ramsey/composer-install@v4
+      - name: Create .env.test
+        run: |
+          cat > .env.test <<EOF
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost/piwigo16
+          EOF
+      - run: vendor/bin/phpunit --testsuite Integration
+
   ts:
     name: TypeScript + ESLint
     runs-on: ubuntu-latest

@@ -4,7 +4,7 @@ import { getPageData } from './page-data';
 import { pwgDoubleSlider } from './doubleSlider';
 import { config } from './config';
 
-declare let sprintf: (fmt: string, ...args: any[]) => string;
+declare let sprintf: (fmt: string, ...args: unknown[]) => string;
 
 interface SliderConfig {
     values: number[];
@@ -12,8 +12,41 @@ interface SliderConfig {
     text: string;
 }
 
+interface DateField {
+    preset?: string;
+    custom?: string[];
+}
+
+interface McsFields {
+    allwords?: { words?: string | string[] | null; fields?: string[]; mode?: string };
+    search_in_tags?: boolean | { value?: unknown };
+    tags?: { mode?: string; words?: Array<string | number> };
+    date_posted?: DateField;
+    date_created?: DateField;
+    author?: { mode?: string; words?: string[] };
+    added_by?: number[] | { mode?: string; words?: string[] };
+    filetypes?: string[];
+    ratios?: string[];
+    ratings?: Array<number | string>;
+    cat?: { sub_inc?: boolean; words?: Array<string | number> };
+    expert?: string | { string?: string };
+    filesize_min?: number | string;
+    filesize_max?: number | string;
+    height_min?: number | string;
+    height_max?: number | string;
+    width_min?: number | string;
+    width_max?: number | string;
+    [key: string]: unknown;
+}
+
+interface GlobalParams {
+    search_id?: string;
+    fields: McsFields;
+    [key: string]: unknown;
+}
+
 interface McsPageData {
-    global_params: any;
+    global_params: GlobalParams;
     search_id: string;
     show_filter_ratings: boolean;
     sliders: {
@@ -65,14 +98,14 @@ const {
 const prefix_icon = 'gallery-icon-';
 
 // Script-level mutable globals (populated inside DOMContentLoaded)
-let PS_params: Record<string, any> = {};
-let empty_filters_list: any[] = [];
-let filters_to_remove: any[] = [];
+let PS_params: Record<string, unknown> = {};
+let empty_filters_list: unknown[] = [];
+let filters_to_remove: string[] = [];
 
 // Per-filter string accumulators
 let word_search_str: string;
 let word_search_words: string[];
-let word_search_fields: any;
+let word_search_fields: string[];
 let word_search_mode: string;
 let tag_search_str: string;
 let date_posted_str: string;
@@ -149,9 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     global_params.search_id = search_id;
 
-    if (!global_params.fields) {
-        global_params.fields = {};
-    }
+    // Server may omit `fields` entirely; treat that as no filters configured.
+    (global_params as { fields?: McsFields }).fields ??= {} as McsFields;
 
     // Declare params sent to pwg.images.filteredSearch.update
     // PS for performSearch()
@@ -173,15 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         word_search_str = '';
-        word_search_words =
-            global_params.fields.allwords.words !== null ? global_params.fields.allwords.words : [];
+        const rawWords = global_params.fields.allwords.words;
+        word_search_words = Array.isArray(rawWords)
+            ? rawWords
+            : rawWords !== null && rawWords !== undefined && rawWords !== ''
+              ? [rawWords]
+              : [];
         word_search_words.forEach((word: string) => {
             word_search_str += word + ' ';
         });
         const wordSearchInput = document.querySelector<HTMLInputElement>('#word-search');
         if (wordSearchInput) wordSearchInput.value = word_search_str.slice(0, -1);
 
-        if (global_params.fields.allwords.words && global_params.fields.allwords.words.length > 0) {
+        if (word_search_words.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-word')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -194,15 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        word_search_fields = global_params.fields.allwords.fields;
-        Object.keys(word_search_fields).forEach((field_key: string) => {
-            const inp = document.querySelector<HTMLInputElement>(
-                '#' + word_search_fields[field_key]
-            );
+        word_search_fields = global_params.fields.allwords.fields ?? [];
+        word_search_fields.forEach((fieldName) => {
+            const inp = document.querySelector<HTMLInputElement>('#' + fieldName);
             if (inp) inp.checked = true;
         });
 
-        word_search_mode = global_params.fields.allwords.mode;
+        word_search_mode = global_params.fields.allwords.mode ?? '';
         document
             .querySelectorAll<HTMLInputElement>(
                 '.word-search-options input[value="' + word_search_mode + '"]'
@@ -211,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.checked = true;
             });
 
-        if (global_params.fields.search_in_tags) {
+        if (global_params.fields.search_in_tags !== undefined) {
             const tagsInp = document.querySelector<HTMLInputElement>('#tags');
             if (tagsInp) tagsInp.checked = true;
         }
@@ -257,9 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tagSelectTs = new TomSelect(tagSearchEl, {
             plugins: ['remove_button'],
             maxOptions: tagSearchEl.querySelectorAll('option').length,
-            items: global_params.fields.tags ? global_params.fields.tags.words : null,
+            items: global_params.fields.tags?.words?.map(String),
         });
-        (tagSearchEl as any)._ts = tagSelectTs;
+        (tagSearchEl as HTMLSelectElement & { _ts?: TomSelect })._ts = tagSelectTs;
     }
 
     if (global_params.fields.tags) {
@@ -287,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemText =
                     tagSelectTs!
                         .getItem(id)
-                        ?.textContent?.replace(/\(\d+ \w+\)×/, '')
+                        ?.textContent.replace(/\(\d+ \w+\)×/, '')
                         .trim() ?? '';
                 tag_search_str += itemText + ', ';
             });
         }
-        if (global_params.fields.tags.words && global_params.fields.tags.words.length > 0) {
+        if ((global_params.fields.tags.words?.length ?? 0) > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-tag')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -324,9 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.tags =
-            global_params.fields.tags.words.length > 0 ? global_params.fields.tags.words : '';
-        PS_params.tags_mode = global_params.fields.tags.mode;
+        const tagsWords = global_params.fields.tags.words ?? [];
+        PS_params.tags = tagsWords.length > 0 ? tagsWords : '';
+        PS_params.tags_mode = global_params.fields.tags.mode ?? '';
 
         empty_filters_list.push(PS_params.tags);
     }
@@ -342,10 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.checked = true;
             });
 
-        if (
-            global_params.fields.date_posted.preset !== null &&
-            global_params.fields.date_posted.preset !== ''
-        ) {
+        if (global_params.fields.date_posted.preset !== '') {
             // If filter is used and not empty check preset date option
             const presetInp = document.querySelector<HTMLInputElement>(
                 '#date_posted-' + global_params.fields.date_posted.preset
@@ -356,15 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     global_params.fields.date_posted.preset +
                     ' .date-period'
             );
-            date_posted_str = datePeriodEl ? (datePeriodEl.textContent ?? '') : '';
+            date_posted_str = datePeriodEl?.textContent ?? '';
 
             // if option is custom check custom dates
-            if (
-                'custom' === global_params.fields.date_posted.preset &&
-                global_params.fields.date_posted.custom !== null
-            ) {
+            if ('custom' === global_params.fields.date_posted.preset) {
                 date_posted_str = '';
-                const customArray: string[] = global_params.fields.date_posted.custom;
+                const customArray: string[] = global_params.fields.date_posted.custom ?? [];
 
                 customArray.forEach((item: string, index: number) => {
                     const customValue = item.substring(1, item.length);
@@ -386,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const periodEl = document.querySelector<HTMLElement>(
                         '.date_posted-option label#' + customValue + ' .date-period'
                     );
-                    date_posted_str += periodEl ? (periodEl.textContent ?? '') : '';
+                    date_posted_str += periodEl !== null ? periodEl.textContent : '';
 
                     if (customArray.length > 1 && index !== customArray.length - 1) {
                         date_posted_str += ', ';
@@ -511,14 +539,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         }
 
-        PS_params.date_posted_preset =
-            global_params.fields.date_posted.preset !== ''
-                ? global_params.fields.date_posted.preset
-                : '';
+        PS_params.date_posted_preset = global_params.fields.date_posted.preset ?? '';
+        const datePostedCustomValues = global_params.fields.date_posted.custom ?? [];
         PS_params.date_posted_custom =
-            global_params.fields.date_posted.custom !== ''
-                ? global_params.fields.date_posted.custom
-                : '';
+            datePostedCustomValues.length > 0 ? datePostedCustomValues : '';
 
         empty_filters_list.push(PS_params.date_posted_preset);
         empty_filters_list.push(PS_params.date_posted_custom);
@@ -536,10 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.checked = true;
             });
 
-        if (
-            global_params.fields.date_created.preset !== null &&
-            global_params.fields.date_created.preset !== ''
-        ) {
+        if (global_params.fields.date_created.preset !== '') {
             // If filter is used and not empty check preset date option
             const presetInp = document.querySelector<HTMLInputElement>(
                 '#date_created-' + global_params.fields.date_created.preset
@@ -550,15 +571,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     global_params.fields.date_created.preset +
                     ' .date-period'
             );
-            date_created_str = datePeriodEl ? (datePeriodEl.textContent ?? '') : '';
+            date_created_str = datePeriodEl?.textContent ?? '';
 
             // if option is custom check custom dates
-            if (
-                'custom' === global_params.fields.date_created.preset &&
-                global_params.fields.date_created.custom !== null
-            ) {
+            if ('custom' === global_params.fields.date_created.preset) {
                 date_created_str = '';
-                const customArray: string[] = global_params.fields.date_created.custom;
+                const customArray: string[] = global_params.fields.date_created.custom ?? [];
 
                 customArray.forEach((item: string, index: number) => {
                     const customValue = item.substring(1, item.length);
@@ -579,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const periodEl = document.querySelector<HTMLElement>(
                         '.date_created-option label#' + customValue + ' .date-period'
                     );
-                    date_created_str += periodEl ? (periodEl.textContent ?? '') : '';
+                    date_created_str += periodEl !== null ? periodEl.textContent : '';
 
                     if (customArray.length > 1 && index !== customArray.length - 1) {
                         date_created_str += ', ';
@@ -708,14 +726,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         }
 
-        PS_params.date_created_preset =
-            global_params.fields.date_created.preset !== ''
-                ? global_params.fields.date_created.preset
-                : '';
+        PS_params.date_created_preset = global_params.fields.date_created.preset ?? '';
+        const dateCreatedCustomValues = global_params.fields.date_created.custom ?? [];
         PS_params.date_created_custom =
-            global_params.fields.date_created.custom !== ''
-                ? global_params.fields.date_created.custom
-                : '';
+            dateCreatedCustomValues.length > 0 ? dateCreatedCustomValues : '';
 
         empty_filters_list.push(PS_params.date_created_preset);
         empty_filters_list.push(PS_params.date_created_custom);
@@ -725,8 +739,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // forward to PS_params so subsequent searches keep the category filter.
     // The filter-album dropdown UI is not rendered by any public-theme template.
     if (global_params.fields.cat) {
-        PS_params.categories =
-            global_params.fields.cat.words.length > 0 ? global_params.fields.cat.words : '';
+        const catWords = global_params.fields.cat.words ?? [];
+        PS_params.categories = catWords.length > 0 ? catWords : '';
         PS_params.categories_withsubs = global_params.fields.cat.sub_inc;
 
         empty_filters_list.push(PS_params.categories);
@@ -738,9 +752,9 @@ document.addEventListener('DOMContentLoaded', () => {
         authorSelectTs = new TomSelect(authorsEl, {
             plugins: ['remove_button'],
             maxOptions: authorsEl.querySelectorAll('option').length,
-            items: global_params.fields.author ? global_params.fields.author.words : null,
+            items: global_params.fields.author?.words,
         });
-        (authorsEl as any)._ts = authorSelectTs;
+        (authorsEl as HTMLSelectElement & { _ts?: TomSelect })._ts = authorSelectTs;
 
         if (global_params.fields.author) {
             document.querySelectorAll<HTMLElement>('.filter-authors').forEach((el) => {
@@ -757,12 +771,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemText =
                     authorSelectTs!
                         .getItem(id)
-                        ?.textContent?.replace(/\(\d+ \w+\)×/, '')
+                        ?.textContent.replace(/\(\d+ \w+\)×/, '')
                         .trim() ?? '';
                 author_search_str += itemText + ', ';
             });
 
-            if (global_params.fields.author.words && global_params.fields.author.words.length > 0) {
+            const authorWords = global_params.fields.author.words ?? [];
+            if (authorWords.length > 0) {
                 document
                     .querySelectorAll<HTMLElement>('.filter-authors')
                     .forEach((el) => el.classList.add('filter-filled'));
@@ -787,10 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-            PS_params.authors =
-                global_params.fields.author.words.length > 0
-                    ? global_params.fields.author.words
-                    : '';
+            PS_params.authors = authorWords.length > 0 ? authorWords : '';
 
             empty_filters_list.push(PS_params.authors);
         }
@@ -807,7 +819,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.checked = true;
             });
 
-        if (global_params.fields.added_by && global_params.fields.added_by.length > 0) {
+        const addedByIds: number[] = Array.isArray(global_params.fields.added_by)
+            ? global_params.fields.added_by
+            : (global_params.fields.added_by.words?.map((w) => parseInt(w)) ?? []);
+        if (addedByIds.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-added_by')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -819,10 +834,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!input) return;
                 const added_by_id = parseInt(input.getAttribute('name') ?? '');
 
-                if (global_params.fields.added_by.indexOf(added_by_id) >= 0) {
+                if (addedByIds.indexOf(added_by_id) >= 0) {
                     input.checked = true;
                     const nameEl = optionEl.querySelector<HTMLElement>('.added_by-name');
-                    if (nameEl) added_by_names.push(nameEl.textContent ?? '');
+                    if (nameEl) added_by_names.push(nameEl.textContent);
                 }
             });
 
@@ -853,8 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.added_by =
-            global_params.fields.added_by.length > 0 ? global_params.fields.added_by : '';
+        PS_params.added_by = addedByIds.length > 0 ? addedByIds : '';
 
         empty_filters_list.push(PS_params.added_by);
     }
@@ -875,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filetypes_search_str += ft + ', ';
         });
 
-        if (global_params.fields.filetypes && global_params.fields.filetypes.length > 0) {
+        if (global_params.fields.filetypes.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-filetypes')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -888,7 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document
                 .querySelectorAll<HTMLInputElement>('.filetypes-option input')
                 .forEach((inp) => {
-                    if (global_params.fields.filetypes.includes(inp.getAttribute('name'))) {
+                    if (global_params.fields.filetypes!.includes(inp.getAttribute('name') ?? '')) {
                         inp.checked = true;
                     }
                 });
@@ -936,7 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ratios_search_str += str_ratios_label[ft] + ', ';
         });
 
-        if (global_params.fields.ratios && global_params.fields.ratios.length > 0) {
+        if (global_params.fields.ratios.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-ratios')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -947,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             document.querySelectorAll<HTMLInputElement>('.ratios-option input').forEach((inp) => {
-                if (global_params.fields.ratios.includes(inp.getAttribute('name'))) {
+                if (global_params.fields.ratios!.includes(inp.getAttribute('name') ?? '')) {
                     inp.checked = true;
                 }
             });
@@ -989,23 +1003,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         ratings_search_str = '';
-        global_params.fields.ratings.forEach((ft: number, i: number) => {
+        const ratings = global_params.fields.ratings;
+        ratings.forEach((raw, i) => {
+            const ft = Number(raw);
             if (0 === ft) {
                 ratings_search_str += str_no_rating;
-                if (global_params.fields.ratings.length > 1) {
+                if (ratings.length > 1) {
                     ratings_search_str += ', ';
                 }
             } else {
                 const str_between = str_between_rating.split('%d');
                 ratings_search_str +=
                     str_between[0] + (ft - 1) + str_between[1] + ft + str_between[2];
-                if (global_params.fields.ratings.length - 1 !== i) {
+                if (ratings.length - 1 !== i) {
                     ratings_search_str += ', ';
                 }
             }
         });
 
-        if (global_params.fields.ratings && global_params.fields.ratings.length > 0) {
+        if (ratings.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-ratings')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1016,7 +1032,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             document.querySelectorAll<HTMLInputElement>('.ratings-option input').forEach((inp) => {
-                if (global_params.fields.ratings.includes(inp.getAttribute('name'))) {
+                const name = inp.getAttribute('name') ?? '';
+                if (ratings.some((r) => String(r) === name)) {
                     inp.checked = true;
                 }
             });
@@ -1040,17 +1057,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.ratings =
-            global_params.fields.ratings.length > 0 ? global_params.fields.ratings : '';
+        PS_params.ratings = ratings.length > 0 ? ratings : '';
 
         empty_filters_list.push(PS_params.ratings);
     }
 
     // Setup filesize filter
     if (
-        global_params.fields.filesize_min !== null &&
-        global_params.fields.filesize_max !== null &&
-        sliders.filesizes
+        global_params.fields.filesize_min !== undefined &&
+        global_params.fields.filesize_max !== undefined &&
+        sliders.filesizes !== undefined
     ) {
         const filesizesSlider = sliders.filesizes;
 
@@ -1100,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        if (global_params.fields.filesize_min !== null && global_params.fields.filesize_max > 0) {
+        if (Number(global_params.fields.filesize_max) > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-filesize')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1134,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .forEach((sliderEl) => {
                             pwgDoubleSlider(sliderEl, filesizesSlider);
                         });
-                    if (filterFilesizeEl && filterFilesizeEl.classList.contains('filter-filled')) {
+                    if (filterFilesizeEl?.classList.contains('filter-filled') === true) {
                         filterFilesizeEl.classList.remove('filter-filled');
                         document
                             .querySelectorAll<HTMLElement>('.filter.filter-filesize .search-words')
@@ -1145,10 +1161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.filesize_min =
-            global_params.fields.filesize_min !== null ? global_params.fields.filesize_min : '';
-        PS_params.filesize_max =
-            global_params.fields.filesize_max !== null ? global_params.fields.filesize_max : '';
+        PS_params.filesize_min = global_params.fields.filesize_min;
+        PS_params.filesize_max = global_params.fields.filesize_max;
 
         empty_filters_list.push(PS_params.filesize_min);
         empty_filters_list.push(PS_params.filesize_max);
@@ -1156,9 +1170,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Height filter
     if (
-        global_params.fields.height_min !== null &&
-        global_params.fields.height_max !== null &&
-        sliders.heights
+        global_params.fields.height_min !== undefined &&
+        global_params.fields.height_max !== undefined &&
+        sliders.heights !== undefined
     ) {
         const heightsSlider = sliders.heights;
         document.querySelectorAll<HTMLElement>('.filter-height').forEach((el) => {
@@ -1183,7 +1197,10 @@ document.addEventListener('DOMContentLoaded', () => {
             pwgDoubleSlider(el, heightsSlider);
         });
 
-        if (global_params.fields.height_min > 0 && global_params.fields.height_max > 0) {
+        if (
+            Number(global_params.fields.height_min) > 0 &&
+            Number(global_params.fields.height_max) > 0
+        ) {
             document
                 .querySelectorAll<HTMLElement>('.filter-height')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1216,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .forEach((sliderEl) => {
                             pwgDoubleSlider(sliderEl, heightsSlider);
                         });
-                    if (filterHeightEl && filterHeightEl.classList.contains('filter-filled')) {
+                    if (filterHeightEl?.classList.contains('filter-filled') === true) {
                         filterHeightEl.classList.remove('filter-filled');
                         document
                             .querySelectorAll<HTMLElement>('.filter.filter-height .search-words')
@@ -1227,10 +1244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.height_min =
-            global_params.fields.height_min !== null ? global_params.fields.height_min : '';
-        PS_params.height_max =
-            global_params.fields.height_max !== null ? global_params.fields.height_max : '';
+        PS_params.height_min = global_params.fields.height_min;
+        PS_params.height_max = global_params.fields.height_max;
 
         empty_filters_list.push(PS_params.height_min);
         empty_filters_list.push(PS_params.height_max);
@@ -1238,9 +1253,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Width filter
     if (
-        global_params.fields.width_min !== null &&
-        global_params.fields.width_max !== null &&
-        sliders.widths
+        global_params.fields.width_min !== undefined &&
+        global_params.fields.width_max !== undefined &&
+        sliders.widths !== undefined
     ) {
         const widthsSlider = sliders.widths;
         document.querySelectorAll<HTMLElement>('.filter-width').forEach((el) => {
@@ -1265,7 +1280,10 @@ document.addEventListener('DOMContentLoaded', () => {
             pwgDoubleSlider(el, widthsSlider);
         });
 
-        if (global_params.fields.width_min > 0 && global_params.fields.width_max > 0) {
+        if (
+            Number(global_params.fields.width_min) > 0 &&
+            Number(global_params.fields.width_max) > 0
+        ) {
             document
                 .querySelectorAll<HTMLElement>('.filter-width')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1298,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .forEach((sliderEl) => {
                             pwgDoubleSlider(sliderEl, widthsSlider);
                         });
-                    if (filterWidthEl && filterWidthEl.classList.contains('filter-filled')) {
+                    if (filterWidthEl?.classList.contains('filter-filled') === true) {
                         filterWidthEl.classList.remove('filter-filled');
                         document
                             .querySelectorAll<HTMLElement>('.filter.filter-width .search-words')
@@ -1309,17 +1327,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.width_min =
-            global_params.fields.width_min !== null ? global_params.fields.width_min : '';
-        PS_params.width_max =
-            global_params.fields.width_max !== null ? global_params.fields.width_max : '';
+        PS_params.width_min = global_params.fields.width_min;
+        PS_params.width_max = global_params.fields.width_max;
 
         empty_filters_list.push(PS_params.width_min);
         empty_filters_list.push(PS_params.width_max);
     }
 
     // Setup Expert filter
-    if (global_params.fields.expert) {
+    if (global_params.fields.expert !== undefined) {
         document.querySelectorAll<HTMLElement>('.filter-expert').forEach((el) => {
             el.style.display = 'flex';
         });
@@ -1329,11 +1345,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.checked = true;
             });
 
-        expert_search_str = global_params.fields.expert.string;
+        expert_search_str =
+            typeof global_params.fields.expert === 'string'
+                ? global_params.fields.expert
+                : (global_params.fields.expert.string ?? '');
         const expertSearchInp = document.querySelector<HTMLInputElement>('#expert-search');
         if (expertSearchInp) expertSearchInp.value = expert_search_str;
 
-        if (global_params.fields.expert.string && global_params.fields.expert.string.length > 0) {
+        if (expert_search_str.length > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-expert')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1361,8 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-        PS_params.expert =
-            global_params.fields.expert.string.length > 0 ? global_params.fields.expert.string : '';
+        PS_params.expert = expert_search_str.length > 0 ? expert_search_str : '';
 
         empty_filters_list.push(PS_params.expert);
     }
@@ -1384,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (
         !empty_filters_list.every(
-            (param: any) => param === '' || param === null || typeof param === 'undefined'
+            (param) => param === '' || param === null || typeof param === 'undefined'
         )
     ) {
         document
@@ -1593,10 +1611,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterWordEl.addEventListener('click', (e: Event) => {
             const filterForm = filterWordEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
-            if (
-                (filterForm && filterForm.contains(target)) ||
-                target.classList.contains('filter-form')
-            ) {
+            if (filterForm?.contains(target) === true || target.classList.contains('filter-form')) {
                 return;
             }
             const filterWordForm = document.querySelector<HTMLElement>('.filter-word-form');
@@ -1683,7 +1698,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterTagEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -1747,10 +1762,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterDatePostedEl.addEventListener('click', (e: Event) => {
             const filterForm = filterDatePostedEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
-            if (
-                (filterForm && filterForm.contains(target)) ||
-                target.classList.contains('filter-form')
-            ) {
+            if (filterForm?.contains(target) === true || target.classList.contains('filter-form')) {
                 return;
             }
             const filterDatePostedForm = document.querySelector<HTMLElement>(
@@ -1772,8 +1784,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     '.preset_posted_date .date_posted-option input:checked'
                 )?.value;
 
-                global_params.fields.date_posted.preset = presetValue;
-                PS_params.date_posted_preset = presetValue !== null ? presetValue : '';
+                global_params.fields.date_posted!.preset = presetValue ?? '';
+                PS_params.date_posted_preset = presetValue ?? '';
 
                 if ('custom' === presetValue) {
                     const customDates: string[] = [];
@@ -1786,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             customDates.push(inp.value);
                         });
 
-                    global_params.fields.date_posted.custom = customDates;
+                    global_params.fields.date_posted!.custom = customDates;
                     PS_params.date_posted_custom = customDates.length > 0 ? customDates : '';
                 }
             }
@@ -1825,10 +1837,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterDateCreatedEl.addEventListener('click', (e: Event) => {
             const filterForm = filterDateCreatedEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
-            if (
-                (filterForm && filterForm.contains(target)) ||
-                target.classList.contains('filter-form')
-            ) {
+            if (filterForm?.contains(target) === true || target.classList.contains('filter-form')) {
                 return;
             }
             const filterDateCreatedForm = document.querySelector<HTMLElement>(
@@ -1850,8 +1859,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     '.preset_created_date .date_created-option input:checked'
                 )?.value;
 
-                global_params.fields.date_created.preset = presetValue;
-                PS_params.date_created_preset = presetValue !== null ? presetValue : '';
+                global_params.fields.date_created!.preset = presetValue ?? '';
+                PS_params.date_created_preset = presetValue ?? '';
 
                 if ('custom' === presetValue) {
                     const customDates: string[] = [];
@@ -1864,7 +1873,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             customDates.push(inp.value);
                         });
 
-                    global_params.fields.date_created.custom = customDates;
+                    global_params.fields.date_created!.custom = customDates;
                     PS_params.date_created_custom = customDates.length > 0 ? customDates : '';
                 }
             }
@@ -1909,7 +1918,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterAuthorsEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -1969,7 +1978,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterAddedByEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2035,7 +2044,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterFiletypesEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2101,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterRatiosEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2165,7 +2174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterRatingsEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2229,7 +2238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterFilesizeEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2302,7 +2311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterHeightEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2368,7 +2377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterWidthEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2434,7 +2443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterForm = filterExpertEl.querySelector('.filter-form');
             const target = e.target as HTMLElement;
             if (
-                (filterForm && filterForm.contains(target)) ||
+                filterForm?.contains(target) === true ||
                 target.classList.contains('filter-form') ||
                 target.classList.contains('remove')
             ) {
@@ -2487,27 +2496,33 @@ document.addEventListener('DOMContentLoaded', () => {
     tippy('.tiptip');
 });
 
-function performSearch(params: Record<string, any>, reload: boolean = false): void {
-    fetch(config.wsUrl + 'format=json&method=pwg.images.filteredSearch.create', {
+function performSearch(params: Record<string, unknown>, reload: boolean = false): void {
+    const stringify = (val: unknown): string => {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+        return JSON.stringify(val);
+    };
+    void fetch(config.wsUrl + 'format=json&method=pwg.images.filteredSearch.create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams(
             Object.fromEntries(
                 Object.entries(params).map(([k, v]) => [
                     k,
-                    Array.isArray(v) ? v.join(',') : String(v ?? ''),
+                    Array.isArray(v) ? (v as unknown[]).map(stringify).join(',') : stringify(v),
                 ])
             )
         ),
     })
-        .then((res) => res.json())
-        .then((data: any) => {
-            if (reload && typeof data.result.search_url !== 'undefined') {
+        .then((res) => res.json() as Promise<{ result?: { search_url?: string } }>)
+        .then((data) => {
+            if (reload && data.result?.search_url !== undefined) {
                 reloadPage(data.result.search_url);
             }
         })
-        .catch((e: any) => {
-            console.log(e);
+        .catch((e: unknown) => {
+            console.error(e);
             document.querySelectorAll<HTMLElement>('.filter-form').forEach((el) => {
                 el.insertAdjacentHTML('beforeend', '<p class="error">Error</p>');
             });
@@ -2574,15 +2589,12 @@ function updateFilters(filterName: string, mode: string): void {
 
         case 'date_posted':
             if (mode === 'add') {
-                global_params.fields['date_posted'] = {};
-                global_params.fields.date_posted.preset = '';
-                global_params.fields.date_posted.custom = [];
+                global_params.fields.date_posted = { preset: '', custom: [] };
 
                 PS_params.date_posted_preset = '';
                 PS_params.date_posted_custom = [];
             } else if (mode === 'del') {
-                delete global_params.fields.date_posted.preset;
-                delete global_params.fields.date_posted.custom;
+                delete global_params.fields.date_posted;
 
                 delete PS_params.date_posted_preset;
                 delete PS_params.date_posted_custom;
@@ -2591,15 +2603,12 @@ function updateFilters(filterName: string, mode: string): void {
 
         case 'date_created':
             if (mode === 'add') {
-                global_params.fields['date_created'] = {};
-                global_params.fields.date_created.preset = '';
-                global_params.fields.date_created.custom = [];
+                global_params.fields.date_created = { preset: '', custom: [] };
 
                 PS_params.date_created_preset = '';
                 PS_params.date_created_custom = [];
             } else if (mode === 'del') {
-                delete global_params.fields.date_created.preset;
-                delete global_params.fields.date_created.custom;
+                delete global_params.fields.date_created;
 
                 delete PS_params.date_created_preset;
                 delete PS_params.date_created_custom;
@@ -2686,8 +2695,7 @@ function updateDateFilters(selector: string): void {
     // check => check mark
     // uncheck with children checked => outline check mark
     // uncheck without children checked => hide
-    if (inputYear && inputYear.checked) {
-        console.log('state : Year is check');
+    if (inputYear?.checked === true) {
         yearIsCheck = true;
         ctx.querySelectorAll<HTMLInputElement>(':not(:checked)').forEach((inp) =>
             inp.setAttribute('disabled', 'true')
@@ -2697,8 +2705,7 @@ function updateDateFilters(selector: string): void {
             iconYear.classList.add('gallery-icon-checkmark');
             iconYear.style.display = '';
         }
-    } else if (ctx.querySelectorAll(':checked').length) {
-        console.log('state :  Year is uncheck but have children', ctx.querySelectorAll(':checked'));
+    } else if (ctx.querySelectorAll(':checked').length > 0) {
         ctx.querySelectorAll<HTMLInputElement>(':is(input)').forEach((inp) =>
             inp.setAttribute('disabled', 'false')
         );
@@ -2708,7 +2715,6 @@ function updateDateFilters(selector: string): void {
             iconYear.style.display = '';
         }
     } else {
-        console.log('state: Year is uncheck and doesnt have children');
         ctx.querySelectorAll<HTMLInputElement>(':is(input)').forEach((inp) =>
             inp.setAttribute('disabled', 'false')
         );
@@ -2730,7 +2736,7 @@ function updateDateFilters(selector: string): void {
         const allDays = monthEl.querySelectorAll<HTMLElement>('.days_container > *');
         let monthIsChecked = false;
 
-        if (monthInput && monthInput.checked) {
+        if (monthInput?.checked === true) {
             monthIsChecked = true;
             allDays.forEach((dayEl) => {
                 dayEl
@@ -2771,7 +2777,7 @@ function updateDateFilters(selector: string): void {
             const inputDay = dayEl.querySelector<HTMLInputElement>('input');
             const iconDay = dayEl.querySelector<HTMLElement>('.mcs-icon');
 
-            if (inputDay && inputDay.checked) {
+            if (inputDay?.checked === true) {
                 if (iconDay) {
                     iconDay.classList.remove('grey-icon');
                     iconDay.style.display = '';

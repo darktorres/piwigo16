@@ -14,7 +14,7 @@
 | 1.2 | Templates pipeline | 🟡 **Not started** | XL | wave 1 hygiene → wave 2 Latte → wave 3 precompile |
 | 1.3 | Plugin / theme + WS | 🟡 **Not started** | XL | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups |
 | 1.4 | Security hardening | 🟢 **Active** ▸ 1 / 6 | M | CSP, rate limit, lockout, sessions, `SECURITY.md` |
-| 1.5 | Type correctness | 🟡 **Not started** | M | mixed-types · globals · schema metadata |
+| 1.5 | Type correctness | 🟡 **Not started** | M–L | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
 | 1.6 | Test infrastructure | 🟡 **Not started** | M + L + S | Pest → coverage → Infection (chained) |
 | 1.7 | Deferred / on-demand | 🟠 **On-demand** | — | Monolog · S3/SFTP · supervisor · Renovate |
 | 2.1 | TS `any` reduction | 🟡 **Not started** | M | 478 → ≤250 patterns |
@@ -1138,12 +1138,13 @@ the streams in parallel where possible.
 
 #### 1.5a Mixed-type fixes
 
-**Status:** 🟡 Not started · 7 items
+**Status:** 🟡 Not started · 9 items
 
-Seven high-ROI items from the codebase mixed-type audit, ordered by
-effort. Estimated reduction: ~880 of ~1272 mixed occurrences become
-typed; the remaining ~880 are legitimate (DB row results, event payloads,
-generic cache get/put, magic methods).
+Nine items from the codebase mixed-type audit, ordered by effort.
+Estimated reduction: the first 7 eliminate ~880 of ~1272 mixed
+occurrences; items 8–9 address the three remaining boundary categories
+(DB rows, HTTP input, global state) that the original audit deferred as
+"architectural decisions".
 
 | Item | Files | Effort |
 |---|---:|---|
@@ -1154,6 +1155,8 @@ generic cache get/put, magic methods).
 | `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s | 1 | medium |
 | Typed DB query helpers (`DbConnection::fetchIntColumn`, `fetchStringColumn`) — removes ~100 `fn (mixed $v)` lambdas | several | medium |
 | `RequestCache` / `PersistentCache` → `@template T` generic — typed cache reads | 2 | medium |
+| **Repository entity layer** — repositories return typed `*Entity` objects instead of `array<string, mixed>`; `fromRow()` is the single cast boundary | 20 repos + callers | high |
+| **HTTP input boundary** — route all remaining raw `$_POST`/`$_GET` reads through `StringUtil::input*`; no raw superglobal access outside that helper | ~30 sites | medium |
 
 ##### Concrete examples
 
@@ -1223,6 +1226,100 @@ $result = $dispatcher->dispatch('foo_event', ['k' => 1]);
 // $result is array{k: int}
 ```
 
+**Repository entity layer**
+
+The goal: every repository method returns a typed object, never a raw
+`array<string, mixed>`. The `fromRow()` static constructor is the **one**
+place in the codebase where `is_scalar`/`is_numeric` guards appear — at
+the DB boundary — and nowhere else.
+
+```php
+// Entity definition
+final readonly class ImageEntity
+{
+    public function __construct(
+        public int     $id,
+        public string  $file,
+        public int     $hit,
+        public ?float  $ratingScore,
+        public ?string $dateAvailable,
+        public int     $width,
+        public int     $height,
+        public int     $filesize,
+        // … all columns
+    ) {}
+
+    /** @param array<string, mixed> $row */
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            id:            (int)   ($row['id']            ?? 0),
+            file:          is_string($row['file']   ?? null) ? $row['file']   : '',
+            hit:           is_numeric($row['hit']   ?? null) ? (int) $row['hit']   : 0,
+            ratingScore:   is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
+            dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
+            width:         is_numeric($row['width']  ?? null) ? (int) $row['width']  : 0,
+            height:        is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0,
+            filesize:      is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+        );
+    }
+}
+
+// Repository — returns typed object, not array
+final class ImageRepository extends AbstractRepository
+{
+    public function findById(int $id): ?ImageEntity
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')->from($this->table('images'))
+            ->where('id = :id')->setParameter('id', $id)
+            ->executeQuery()->fetchAssociative();
+        return $row !== false ? ImageEntity::fromRow($row) : null;
+    }
+
+    /** @return list<ImageEntity> */
+    public function findByIds(array $ids): array
+    {
+        // …
+        return array_map(ImageEntity::fromRow(...), $rows);
+    }
+}
+
+// Caller — accesses typed properties, no guards needed
+$image = ServiceLocator::get(ImageRepository::class)->findById($id);
+if ($image === null) { /* not found */ }
+Lang::t('Visited %d times', $image->hit);          // int, no is_numeric guard
+Lang::t('%s', $image->file);                        // string, no is_string guard
+Lang::t('%d Kb', $image->filesize);                 // int, no is_numeric guard
+```
+
+One entity class per table (20 repositories → 20 entities). The migration
+can be done repository-by-repository: start with `ImageRepository` since
+its row shape touches the most callers (`CategoryDefaultRenderer`,
+`PictureController`, `BatchManagerController`, photo-admin pages).
+
+**HTTP input boundary**
+
+No raw `$_POST`/`$_GET` access outside `StringUtil::input*`. The helpers
+already exist and are used in many places; the work is eliminating the
+remaining ~30 sites that still reach into the superglobals directly:
+
+```php
+// before — type is mixed, no length/pattern validation
+$action   = $_POST['action'] ?? '';
+$imageId  = $_GET['image_id'] ?? 0;
+$count    = $_POST['regenerateSuccess'] ?? '0';
+
+// after — typed at the boundary, validated by the helper
+$action   = StringUtil::get()->inputString('action',   '',  $_POST);
+$imageId  = StringUtil::get()->inputInt(   'image_id', 0,   $_GET);
+$count    = StringUtil::get()->inputString('regenerateSuccess', '0', $_POST);
+```
+
+After this, every value that crosses the HTTP boundary is a `string`,
+`int`, `float`, or `bool` — never `mixed` — before it reaches any service
+or controller logic.
+
 #### 1.5b Globals cleanup
 
 **Status:** 🟡 Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
@@ -1230,6 +1327,15 @@ $result = $dispatcher->dispatch('foo_event', ['k' => 1]);
 Both items below are gated by the same precondition — direct
 `$GLOBALS[...]` reads in `src/` being eliminated first — so tackle them
 together as one closing pass.
+
+**Relationship to the entity layer (1.5a item 8).** The `$user` global is
+itself a raw DB row (`array<string, mixed>`). Once `UserRepository` returns
+a typed `UserEntity`, `CurrentUser::get()` can expose typed properties
+(`->id`, `->username`, `->status`) instead of routing through
+`rawAttributes`. The globals cleanup and the entity layer are therefore
+the same work seen from two angles: entities eliminate the need for
+`$GLOBALS['user']`; retiring `$GLOBALS['user']` motivates finishing the
+`UserEntity`.
 
 ##### Drop `$GLOBALS` reference bridges in `phpstan-bootstrap.php`
 

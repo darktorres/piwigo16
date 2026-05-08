@@ -30,7 +30,7 @@ function sbFunc(link: string, box: string): void {
 
 // Process the legacy queue any caller may have populated before this module loaded.
 type SwitchBoxQueue = string[] | { push: typeof sbFunc };
-const existing = (window as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox;
+const existing = (window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox;
 if (Array.isArray(existing)) {
     for (let i = 0; i < existing.length; i += 2) {
         sbFunc(existing[i], existing[i + 1]);
@@ -52,6 +52,6 @@ document.querySelectorAll<HTMLElement>('[data-switchbox]').forEach((triggerEl) =
 });
 
 // Keep the queue interface around for any caller still pushing.
-(window as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox = { push: sbFunc };
+(window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox = { push: sbFunc };
 
 export {};

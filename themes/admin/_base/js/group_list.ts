@@ -1,5 +1,4 @@
 import TomSelect from 'tom-select';
-import Cookies from 'js-cookie';
 import { getPageData } from './page-data';
 import { UsersCache } from './LocalStorageCache';
 import { config } from './config';
@@ -33,9 +32,9 @@ interface GroupListPageData {
 
 const {
     pwg_token,
-    rootUrl,
-    serverId,
-    serverKey,
+    rootUrl: _rootUrl,
+    serverId: _serverId,
+    serverKey: _serverKey,
     str_copy,
     str_delete,
     str_group_created,
@@ -46,7 +45,7 @@ const {
     str_merged_into,
     str_name_not_empty,
     str_name_taken,
-    str_no_delete_confirmation,
+    str_no_delete_confirmation: _str_no_delete_confirmation,
     str_other_copy,
     str_renaming_done,
     str_set_default,
@@ -55,7 +54,7 @@ const {
     str_user_dissociate,
     str_user_dissociated,
     str_user_list,
-    str_yes_delete_confirmation,
+    str_yes_delete_confirmation: _str_yes_delete_confirmation,
 } = getPageData<GroupListPageData>();
 
 interface GroupListCacheData {
@@ -66,23 +65,15 @@ interface GroupListCacheData {
 
 const cacheData = getPageData<GroupListCacheData>('pwg-group-list-data');
 
-let complete: any;
-let copy_name: any;
-let data: any;
-let dest_grp: any;
-let exist: any;
-let group: any;
-let groupBox: any;
-let grp_id: any;
-let item: any;
-let merge_group: any;
-let name_dest: any;
-let name_merge: any;
-let newgroup: any;
-let option: any;
-let searchString: any;
-let str_merge_group: any;
-let updateUserSearch: any;
+interface Group {
+    id: number | string;
+    name: string;
+    is_default?: boolean | string;
+    nb_users?: number;
+    lastmodified?: string;
+}
+
+type GroupId = number | string;
 
 const DELAY_FEEDBACK = 3000;
 
@@ -120,7 +111,7 @@ function show(el: HTMLElement | null | undefined) {
 function hide(el: HTMLElement | null | undefined) {
     if (el) el.style.display = 'none';
 }
-function fadeIn(el: HTMLElement | null | undefined) {
+function _fadeIn(el: HTMLElement | null | undefined) {
     if (el) el.style.display = '';
 }
 function fadeOut(el: HTMLElement | null | undefined, delay = 0) {
@@ -143,16 +134,29 @@ function showMessage(el: HTMLElement | null | undefined, msg: string) {
 }
 
 // TemporaryState helpers that handle multiple elements
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TS = any;
-function tsChangeHTML(ts: TS, sel: string, html: string) {
+interface TemporaryStateLike {
+    changeHTML(el: HTMLElement, html: string): void;
+    changeAttribute(el: HTMLElement, attr: string, val: string): void;
+    addClass(el: HTMLElement, cls: string): void;
+    removeClass(el: HTMLElement, cls: string): void;
+    reverse(): void;
+}
+type TS = TemporaryStateLike;
+function _tsChangeHTML(ts: TS, sel: string, html: string) {
     qsa(sel).forEach((el) => ts.changeHTML(el, html));
 }
-function tsChangeAttr(ts: TS, sel: string, attr: string, val: string) {
+function _tsChangeAttr(ts: TS, sel: string, attr: string, val: string) {
     qsa(sel).forEach((el) => ts.changeAttribute(el, attr, val));
 }
-function tsRemoveClass(ts: TS, sel: string, cls: string) {
+function _tsRemoveClass(ts: TS, sel: string, cls: string) {
     qsa(sel).forEach((el) => ts.removeClass(el, cls));
+}
+
+interface GlobalsWithTemporaryState {
+    TemporaryState: new () => TemporaryStateLike;
+}
+function newTemporaryState(): TS {
+    return new (window as unknown as GlobalsWithTemporaryState).TemporaryState();
 }
 
 /*------- Group Popin -------*/
@@ -239,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs<HTMLFormElement>('#addGroupForm form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = qs<HTMLInputElement>('#addGroupForm input[type=text]')?.value ?? '';
-        const ts: TS = new (window as any).TemporaryState();
+        const ts: TS = newTemporaryState();
         qsa('.actionButtons button').forEach((el) => {
             ts.changeHTML(el, "<i class='icon-spin6 animate-spin'> </i>");
             ts.changeAttribute(el, 'style', 'pointer-events: none');
@@ -249,23 +253,24 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         if (name.replace(/\s/g, '').length !== 0) {
-            pwgPost('pwg.groups.add', new URLSearchParams({ name, pwg_token }))
-                .then((raw_data) => {
+            void pwgPost<{ groups: Group[] }>(
+                'pwg.groups.add',
+                new URLSearchParams({ name, pwg_token })
+            )
+                .then((data) => {
                     ts.reverse();
-                    data = raw_data;
-                    if (data.stat === 'ok') {
+                    if (data.stat === 'ok' && data.result !== undefined) {
                         const inp = qs<HTMLInputElement>('.addGroupFormLabelAndInput input');
                         if (inp) inp.value = '';
-                        group = data.result.groups[0];
-                        newgroup = createGroup(group);
-                        qs('#addGroupForm')?.after(newgroup);
-                        setupGroupBox(newgroup);
+                        const newGroupEl = createGroup(data.result.groups[0]);
+                        qs('#addGroupForm')?.after(newGroupEl);
+                        setupGroupBox(newGroupEl);
                         updateBadge();
                     } else {
                         showMessage(qs('#addGroupForm .groupError'), str_name_not_empty);
                     }
                 })
-                .catch(console.log);
+                .catch((e: unknown) => console.error(e));
         } else {
             ts.reverse();
             showMessage(qs('#addGroupForm .groupError'), str_name_not_empty);
@@ -277,9 +282,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function createGroup(group: any): HTMLElement {
+function createGroup(group: Group): HTMLElement {
     const newgroup = document.getElementById('group-template')!.cloneNode(true) as HTMLElement;
-    newgroup.id = 'group-' + group.id;
+    newgroup.id = 'group-' + String(group.id);
     newgroup.dataset['id'] = String(group.id);
     const q = (sel: string) => newgroup.querySelector<HTMLElement>(sel);
     const nameEl = q('#group_name');
@@ -290,17 +295,18 @@ function createGroup(group: any): HTMLElement {
         editable.innerHTML = group.name;
     }
     const cbLabel = q('.Group-checkbox label');
-    if (cbLabel) cbLabel.setAttribute('for', 'Group-Checkbox-selection-' + group.id);
+    if (cbLabel) cbLabel.setAttribute('for', 'Group-Checkbox-selection-' + String(group.id));
     const cbInput = q('.Group-checkbox input');
-    if (cbInput) cbInput.id = 'Group-Checkbox-selection-' + group.id;
+    if (cbInput) cbInput.id = 'Group-Checkbox-selection-' + String(group.id);
     const placeholder = q('.input-edit-group-name');
     if (placeholder) placeholder.setAttribute('placeholder', group.name);
     const nbUsers = q('.group_number_users');
+    const userCount = group.nb_users ?? 0;
     if (nbUsers)
         nbUsers.innerHTML =
-            group.nb_users + ' ' + (group.nb_users > 1 ? str_members_default : str_member_default);
+            userCount + ' ' + (userCount > 1 ? str_members_default : str_member_default);
     const perms = q('.manage-permissions') as HTMLAnchorElement | null;
-    if (perms) perms.href = config.adminUrl + 'page=group_perm&group_id=' + group.id;
+    if (perms) perms.href = config.adminUrl + 'page=group_perm&group_id=' + String(group.id);
     hideAddGroupForm();
     const colors = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
     q('.icon-users-1')?.classList.add(colors[Number(group.id) % 5]);
@@ -309,7 +315,7 @@ function createGroup(group: any): HTMLElement {
 }
 
 function setupGroupBox(groupBoxEl: HTMLElement) {
-    const id = groupBoxEl.dataset['id'];
+    const id = groupBoxEl.dataset['id'] ?? '';
     const q = (sel: string) => groupBoxEl.querySelector<HTMLElement>(sel);
 
     const cb = q('.Group-checkbox input[type="checkbox"]') as HTMLInputElement | null;
@@ -338,7 +344,8 @@ function setupGroupBox(groupBoxEl: HTMLElement) {
 
     (q('.group-rename form') as HTMLFormElement | null)?.addEventListener('submit', (e) => {
         e.preventDefault();
-        renameGroup(id, (q('.group_name-editable') as HTMLInputElement)?.value ?? '');
+        const editable = q('.group_name-editable') as HTMLInputElement | null;
+        renameGroup(id, editable?.value ?? '');
     });
 
     q('.group-rename .icon-cancel')?.addEventListener('click', () => {
@@ -364,12 +371,12 @@ function setupGroupBox(groupBoxEl: HTMLElement) {
     q('#GroupDuplicate')?.addEventListener('click', () => duplicateAction(id));
 }
 
-function toogleSelection(group_id: any, toggle: any) {
-    const box = document.getElementById('group-' + group_id);
+function toogleSelection(group_id: GroupId, toggle: boolean | undefined) {
+    const box = document.getElementById('group-' + String(group_id));
     if (!box) return;
     const q = (sel: string) => box.querySelector<HTMLElement>(sel);
 
-    if (toggle) {
+    if (toggle === true) {
         (q('.Group-checkbox input') as HTMLInputElement).checked = true;
         box.classList.add('GroupBackgroudSelected');
         q('.icon-users-1')?.classList.add('OrangeIcon');
@@ -395,35 +402,34 @@ function toogleSelection(group_id: any, toggle: any) {
         q('.icon-users-1')?.classList.remove('OrangeIcon');
         q('.group_number_users')?.classList.remove('OrangeFont');
         qsa<HTMLElement>('.DeleteGroupList div').forEach((el) => {
-            if (el.dataset['id'] === group_id) el.remove();
+            if (el.dataset['id'] === String(group_id)) el.remove();
         });
         updateSelectionPanel();
         qs<HTMLOptionElement>(`#MergeOptionsChoices option[value="${group_id}"]`)?.remove();
     }
 }
 
-function deleteGroup(id: any) {
+function deleteGroup(id: GroupId) {
     const name =
-        document.getElementById('group-' + id)?.querySelector<HTMLElement>('#group_name')
+        document.getElementById('group-' + String(id))?.querySelector<HTMLElement>('#group_name')
             ?.innerHTML ?? '';
     if (!window.confirm(str_delete.replace('%s', name))) return;
 
-    pwgPost('pwg.groups.delete', `group_id=${id}&pwg_token=${pwg_token}`)
-        .then((raw_data) => {
-            data = raw_data;
+    void pwgPost('pwg.groups.delete', `group_id=${String(id)}&pwg_token=${pwg_token}`)
+        .then((data) => {
             if (data.stat === 'ok') {
-                document.getElementById('group-' + id)?.remove();
-                qs(`.DeleteGroupList div[data-id="${id}"]`)?.remove();
-                qs(`#MergeOptionsChoices option[value="${id}"]`)?.remove();
+                document.getElementById('group-' + String(id))?.remove();
+                qs(`.DeleteGroupList div[data-id="${String(id)}"]`)?.remove();
+                qs(`#MergeOptionsChoices option[value="${String(id)}"]`)?.remove();
                 updateBadge();
                 window.alert(str_group_deleted.replace('%s', name));
             }
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 }
 
-function renameGroup(id: any, newName: any) {
-    const ts: TS = new (window as any).TemporaryState();
+function renameGroup(id: GroupId, newName: string) {
+    const ts: TS = newTemporaryState();
     const validateEl = grpQ(id, '.group-rename .validate');
     const spanEl = grpQ(id, '.group-rename span');
     if (validateEl) {
@@ -432,32 +438,31 @@ function renameGroup(id: any, newName: any) {
     }
     if (spanEl) ts.changeAttribute(spanEl, 'style', 'pointer-events: none');
 
-    if (String(newName).replace(/\s/g, '').length !== 0) {
-        pwgPost(
+    if (newName.replace(/\s/g, '').length !== 0) {
+        void pwgPost<{ groups: Group[] }>(
             'pwg.groups.setInfo',
-            `group_id=${id}&pwg_token=${pwg_token}&name=${encodeURIComponent(newName)}`
+            `group_id=${String(id)}&pwg_token=${pwg_token}&name=${encodeURIComponent(newName)}`
         )
-            .then((raw_data) => {
+            .then((data) => {
                 ts.reverse();
-                data = raw_data;
-                if (data.stat === 'ok') {
-                    newName = data.result.groups[0].name;
+                if (data.stat === 'ok' && data.result !== undefined) {
+                    const updatedName = data.result.groups[0].name;
                     showMessage(grpQ(id, '.groupMessage'), str_renaming_done);
                     const nameEl = grpQ(id, '#group_name');
-                    if (nameEl) nameEl.innerHTML = newName;
+                    if (nameEl) nameEl.innerHTML = updatedName;
                     displayRenameForm(false, id);
                 } else {
                     showMessage(grpQ(id, '.groupError'), str_name_taken);
                 }
             })
-            .catch(console.log);
+            .catch((e: unknown) => console.error(e));
     } else {
         ts.reverse();
         showMessage(grpQ(id, '.groupError'), str_name_not_empty);
     }
 }
 
-function displayRenameForm(doDisplay: boolean, grp_id: any) {
+function displayRenameForm(doDisplay: boolean, grp_id: GroupId) {
     const renameEl = grpQ(grp_id, '.group-rename');
     const pencil = grpQ(grp_id, '.Group-name-container .icon-pencil');
     const nameP = grpQ(grp_id, '.Group-name-container p');
@@ -472,7 +477,7 @@ function displayRenameForm(doDisplay: boolean, grp_id: any) {
     }
 }
 
-function setDefaultGroup(id: any, is_default: boolean) {
+function setDefaultGroup(id: GroupId, is_default: boolean) {
     const defaultBtn = grpQ(id, '#GroupDefault');
     const token = grpQ(id, '.is-default-token');
     if (defaultBtn) {
@@ -485,16 +490,18 @@ function setDefaultGroup(id: any, is_default: boolean) {
     token?.classList.add('icon-spin6', 'animate-spin');
     token?.classList.remove('icon-star');
 
-    pwgPost('pwg.groups.setInfo', `group_id=${id}&pwg_token=${pwg_token}&is_default=${is_default}`)
-        .then((raw_data) => {
-            data = raw_data;
+    void pwgPost(
+        'pwg.groups.setInfo',
+        `group_id=${String(id)}&pwg_token=${pwg_token}&is_default=${String(is_default)}`
+    )
+        .then((data) => {
             hide(grpQ(id, '#GroupOptions'));
             if (data.stat === 'ok') setupDefaultActions(id, is_default);
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 }
 
-function setupDefaultActions(id: any, is_default: boolean) {
+function setupDefaultActions(id: GroupId, is_default: boolean) {
     const defaultBtn = grpQ(id, '#GroupDefault');
     const token = grpQ(id, '.is-default-token');
     if (defaultBtn) {
@@ -504,22 +511,27 @@ function setupDefaultActions(id: any, is_default: boolean) {
     token?.classList.remove('icon-spin6', 'animate-spin');
     token?.classList.add('icon-star');
 
-    const newDefaultBtn = defaultBtn?.cloneNode(true) as HTMLElement;
-    const newToken = token?.cloneNode(true) as HTMLElement;
-    defaultBtn?.replaceWith(newDefaultBtn ?? defaultBtn);
-    token?.replaceWith(newToken ?? token);
+    const newDefaultBtn =
+        defaultBtn !== undefined && defaultBtn !== null
+            ? (defaultBtn.cloneNode(true) as HTMLElement)
+            : null;
+    const newToken =
+        token !== undefined && token !== null ? (token.cloneNode(true) as HTMLElement) : null;
+    if (defaultBtn !== undefined && defaultBtn !== null && newDefaultBtn !== null)
+        defaultBtn.replaceWith(newDefaultBtn);
+    if (token !== undefined && token !== null && newToken !== null) token.replaceWith(newToken);
 
     if (is_default) {
-        if (newDefaultBtn) newDefaultBtn.innerHTML = str_unset_default;
-        if (newToken) {
+        if (newDefaultBtn !== null) newDefaultBtn.innerHTML = str_unset_default;
+        if (newToken !== null) {
             newToken.title = str_unset_default;
             newToken.classList.remove('deactivate');
         }
         newDefaultBtn?.addEventListener('click', () => setDefaultGroup(id, false));
         newToken?.addEventListener('click', () => setDefaultGroup(id, false));
     } else {
-        if (newDefaultBtn) newDefaultBtn.innerHTML = str_set_default;
-        if (newToken) {
+        if (newDefaultBtn !== null) newDefaultBtn.innerHTML = str_set_default;
+        if (newToken !== null) {
             newToken.title = str_set_default;
             newToken.classList.add('deactivate');
         }
@@ -527,8 +539,8 @@ function setupDefaultActions(id: any, is_default: boolean) {
     }
 }
 
-function duplicateAction(id: any) {
-    const ts: TS = new (window as any).TemporaryState();
+function duplicateAction(id: GroupId) {
+    const ts: TS = newTemporaryState();
     const dupEl = grpQ(id, '#GroupDuplicate');
     if (dupEl) {
         ts.changeHTML(dupEl, "<i class='icon-spin6 animate-spin'> </i>");
@@ -536,7 +548,7 @@ function duplicateAction(id: any) {
         ts.changeAttribute(dupEl, 'style', 'pointer-events: none; text-align: center;');
     }
 
-    copy_name = (grpQ(id, '#group_name')?.innerHTML ?? '') + str_copy;
+    let copy_name = (grpQ(id, '#group_name')?.innerHTML ?? '') + str_copy;
     const name_exist = (name: string) =>
         qsa('.Group-name-container p').some((el) => el.innerHTML === name);
     let i = 1;
@@ -545,25 +557,24 @@ function duplicateAction(id: any) {
             (grpQ(id, '#group_name')?.innerHTML ?? '') + str_other_copy.replace('%s', String(i++));
     }
 
-    pwgPost(
+    void pwgPost<{ groups: Group[] }>(
         'pwg.groups.duplicate',
-        `group_id=${id}&pwg_token=${pwg_token}&copy_name=${encodeURIComponent(copy_name)}`
+        `group_id=${String(id)}&pwg_token=${pwg_token}&copy_name=${encodeURIComponent(copy_name)}`
     )
-        .then((raw_data) => {
+        .then((data) => {
             ts.reverse();
-            data = raw_data;
-            if (data.stat === 'ok') {
+            if (data.stat === 'ok' && data.result !== undefined) {
                 hide(grpQ(id, '#GroupOptions'));
-                group = data.result.groups[0];
-                const gb = createGroup(group);
+                const newGroup = data.result.groups[0];
+                const gb = createGroup(newGroup);
                 grp(id)?.after(gb);
                 setupGroupBox(gb);
                 updateBadge();
-                if (data.result.groups[0].is_default === 'true')
-                    setupDefaultActions(data.result.groups[0].id, true);
+                if (newGroup.is_default === 'true' || newGroup.is_default === true)
+                    setupDefaultActions(newGroup.id, true);
             }
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 }
 
 /*------- Selection mode -------*/
@@ -708,19 +719,19 @@ function buttonUnavailable(el: HTMLElement | null) {
 
 qs('.ConfirmMergeButton')?.addEventListener('click', () => {
     const mergeBtn = qs('.ConfirmMergeButton')!;
-    const ts: TS = new (window as any).TemporaryState();
+    const ts: TS = newTemporaryState();
     ts.changeAttribute(mergeBtn, 'style', 'pointer-events: none');
     ts.changeHTML(mergeBtn, "<i class='icon-spin6 animate-spin'> </i>");
     ts.removeClass(mergeBtn, 'icon-ok');
 
-    merge_group = [];
-    str_merge_group = '';
-    name_merge = [];
-    name_dest = [];
-    dest_grp = qs<HTMLSelectElement>('#MergeOptionsChoices')?.value ?? '';
+    const merge_group: string[] = [];
+    const name_merge: string[] = [];
+    let str_merge_group = '';
+    let name_dest = '';
+    const dest_grp = qs<HTMLSelectElement>('#MergeOptionsChoices')?.value ?? '';
 
     qsa('.DeleteGroupList div').forEach((el) => {
-        const eid = el.dataset['id'];
+        const eid = el.dataset['id'] ?? '';
         if (eid !== dest_grp) {
             str_merge_group += '&merge_group_id[]=' + eid;
             merge_group.push(eid);
@@ -730,18 +741,17 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
         }
     });
 
-    fetch(`${config.wsUrl}format=json&method=pwg.groups.merge`, {
+    void fetch(`${config.wsUrl}format=json&method=pwg.groups.merge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `destination_group_id=${dest_grp}${str_merge_group}&pwg_token=${pwg_token}`,
     })
-        .then((r) => r.json())
-        .then((raw_data) => {
+        .then((r) => r.json() as Promise<WsResponse>)
+        .then((data) => {
             ts.reverse();
-            data = raw_data;
             if (data.stat === 'ok') {
                 updateSelectionPanel('Selection');
-                merge_group.forEach((id: any) => {
+                merge_group.forEach((id) => {
                     const el = document.getElementById('group-' + id);
                     if (el) {
                         el.style.transition = 'opacity 0.4s';
@@ -761,8 +771,11 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
 
                 const numUsersEl = grpQ(dest_grp, '.group_number_users');
                 if (numUsersEl) numUsersEl.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
-                void pwgPost('pwg.users.getList', `group_id=${dest_grp}`).then((rd) => {
-                    const number = rd.result.users.length;
+                void pwgPost<{ users: unknown[] }>(
+                    'pwg.users.getList',
+                    `group_id=${String(dest_grp)}`
+                ).then((rd) => {
+                    const number = rd.result?.users.length ?? 0;
                     if (numUsersEl)
                         numUsersEl.innerHTML =
                             number + ' ' + (number > 1 ? str_members_default : str_member_default);
@@ -770,7 +783,7 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
                 });
             }
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 });
 
 /*------- Delete selection -------*/
@@ -785,23 +798,22 @@ qs('.ConfirmDeleteButton')?.addEventListener('click', () => {
     });
 
     const deleteBtn = qs('.ConfirmDeleteButton')!;
-    const ts: TS = new (window as any).TemporaryState();
+    const ts: TS = newTemporaryState();
     ts.changeAttribute(deleteBtn, 'style', 'pointer-events: none');
     ts.changeHTML(deleteBtn, "<i class='icon-spin6 animate-spin'> </i>");
     ts.removeClass(deleteBtn, 'icon-ok');
 
     const body = ids.map((id) => `group_id[]=${id}`).join('&') + `&pwg_token=${pwg_token}`;
-    fetch(config.wsUrl + 'format=json&method=pwg.groups.delete', {
+    void fetch(config.wsUrl + 'format=json&method=pwg.groups.delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
     })
-        .then((r) => r.json())
-        .then((raw_data) => {
-            data = raw_data;
+        .then((r) => r.json() as Promise<WsResponse>)
+        .then((data) => {
             if (data.stat === 'ok') {
                 qsa('.DeleteGroupList div').forEach((el) => {
-                    const id = el.dataset['id'];
+                    const id = el.dataset['id'] ?? '';
                     el.remove();
                     document.getElementById('group-' + id)?.remove();
                     qs(`#MergeOptionsChoices option[value="${id}"]`)?.remove();
@@ -812,15 +824,26 @@ qs('.ConfirmDeleteButton')?.addEventListener('click', () => {
                 updateBadge();
             }
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 });
 
 /*------- User Manager -------*/
 
+interface CachedUser {
+    id: number | string;
+    username: string;
+}
+
+interface UsersCacheLike {
+    key?: string;
+    storage: Record<string, string>;
+}
+
 let selectizeTs: TomSelect | null = null;
-let usersCache: any = {};
-let usersInGroup: any[] = [];
+let usersCache: UsersCacheLike | null = null;
+let usersInGroup: CachedUser[] = [];
 const maxOffsetUserCont = 322;
+let updateUserSearch: () => void = () => undefined;
 
 const dissociateUserInfoEl = document.createElement('div');
 dissociateUserInfoEl.className = 'ValidationUserDissociated';
@@ -846,44 +869,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateUserSearch = function () {
-        if (!selectizeTs) return;
+        if (selectizeTs === null) return;
         selectizeTs.clear();
-        if (!usersCache.key) {
+        if (usersCache?.key === undefined) {
             usersCache = new UsersCache({
                 serverKey: cacheData.CACHE_KEYS.users,
                 serverId: cacheData.CACHE_KEYS._hash,
                 rootUrl: cacheData.ROOT_URL,
-            });
+            }) as unknown as UsersCacheLike;
         }
-        const cachedData = JSON.parse(usersCache.storage[usersCache.key] ?? '{"data":[]}').data;
-        cachedData.forEach((u: any) =>
+        const raw = usersCache.storage[usersCache.key ?? ''] ?? '{"data":[]}';
+        const cachedData = (JSON.parse(raw) as { data: CachedUser[] }).data;
+        cachedData.forEach((u) =>
             selectizeTs!.addOption({ value: String(u.id), text: u.username })
         );
         idSearch = document.getElementById('UserList')?.dataset['groupId'] ?? '';
-        Object.values(selectizeTs.options as Record<string, any>).forEach((opt) => {
+        Object.values(
+            selectizeTs.options as Record<string, { value: string; text: string }>
+        ).forEach((opt) => {
             if (opt.text === 'guest') selectizeTs!.removeOption(opt.value);
         });
         qsa('.UsernameBlock').forEach((el) => {
             const uid = el.dataset['id'];
-            if (uid) selectizeTs!.removeOption(uid);
+            if (uid !== undefined && uid !== '') selectizeTs!.removeOption(uid);
         });
     };
 });
 
-function openUserManager(grp_id: any) {
+function openUserManager(grp_id: GroupId) {
     const triggerEl = grpQ(grp_id, '#UserListTrigger');
-    const ts: TS = new (window as any).TemporaryState();
+    const ts: TS = newTemporaryState();
     if (triggerEl) {
         ts.removeClass(triggerEl, 'icon-user-1');
         ts.changeAttribute(triggerEl, 'style', 'pointer-events: none');
         ts.changeHTML(triggerEl, "<i class='icon-spin6 animate-spin'> </i>");
     }
 
-    pwgPost('pwg.users.getList', `group_id=${grp_id}`)
-        .then((raw_data) => {
+    void pwgPost<{ users: CachedUser[] }>('pwg.users.getList', `group_id=${String(grp_id)}`)
+        .then((data) => {
             ts.reverse();
-            data = raw_data;
-            if (data.stat === 'ok') {
+            if (data.stat === 'ok' && data.result !== undefined) {
                 const nameEl = qs('.group-name-block p');
                 if (nameEl)
                     nameEl.innerHTML =
@@ -893,13 +918,13 @@ function openUserManager(grp_id: any) {
                 show(document.getElementById('UserList'));
 
                 usersInGroup = data.result.users;
-                usersInGroup.sort((a: any, b: any) =>
+                usersInGroup.sort((a, b) =>
                     a.username.toLowerCase() < b.username.toLowerCase() ? -1 : 1
                 );
 
                 const listContainer = qs('.UsersInGroupList')!;
                 let i = 0;
-                while (listContainer.offsetHeight <= maxOffsetUserCont && usersInGroup[i]) {
+                while (listContainer.offsetHeight <= maxOffsetUserCont && i < usersInGroup.length) {
                     listContainer.appendChild(
                         getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id)
                     );
@@ -913,13 +938,14 @@ function openUserManager(grp_id: any) {
                 if (document.getElementById('UserList'))
                     document.getElementById('UserList')!.dataset['groupId'] = String(grp_id);
                 const linkEl = qs<HTMLAnchorElement>('.LinkUserManager a');
-                if (linkEl) linkEl.href = config.adminUrl + 'page=user_list&group=' + grp_id;
+                if (linkEl)
+                    linkEl.href = config.adminUrl + 'page=user_list&group=' + String(grp_id);
             }
         })
-        .catch(console.log);
+        .catch((e: unknown) => console.error(e));
 }
 
-function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElement {
+function getUserDisplay(username: string, user_id: number | string, grp_id: GroupId): HTMLElement {
     const userBlock = document.createElement('div');
     userBlock.className = 'UsernameBlock';
     userBlock.dataset['id'] = String(user_id);
@@ -938,9 +964,8 @@ function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElemen
 
         void pwgPost(
             'pwg.groups.deleteUser',
-            `group_id=${grp_id}&user_id=${user_id}&pwg_token=${pwg_token}`
-        ).then((rd) => {
-            data = rd;
+            `group_id=${String(grp_id)}&user_id=${String(user_id)}&pwg_token=${pwg_token}`
+        ).then((data) => {
             if (data.stat === 'ok') {
                 fadeOut(associateUserInfoEl, 0);
                 dissociateUserInfoEl.querySelector('p')!.innerHTML = str_user_dissociated.replace(
@@ -954,7 +979,7 @@ function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElemen
                 });
                 userBlock.remove();
                 updateUserSearch();
-                usersInGroup = usersInGroup.filter((u: any) => u.id !== user_id);
+                usersInGroup = usersInGroup.filter((u) => u.id !== user_id);
                 const badge = qs('.UserNumberBadge');
                 updateMembernumber(parseInt(badge?.innerHTML ?? '0') - 1, grp_id);
             }
@@ -964,8 +989,8 @@ function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElemen
     return userBlock;
 }
 
-function updateMembernumber(number: number, grp_id: any) {
-    const groupUsersEl = qs(`.GroupContainer[data-id="${grp_id}"] .group_number_users`);
+function updateMembernumber(number: number, grp_id: GroupId) {
+    const groupUsersEl = qs(`.GroupContainer[data-id="${String(grp_id)}"] .group_number_users`);
     if (groupUsersEl)
         groupUsersEl.innerHTML =
             String(number) + ' ' + (number > 1 ? str_members_default : str_member_default);
@@ -982,9 +1007,9 @@ qs('.CloseUserList')?.addEventListener('click', () => hide(document.getElementBy
 qs('.AddUserBlock button')?.addEventListener('click', () => {
     const grp_id = document.getElementById('UserList')?.dataset['groupId'];
     const id = selectizeTs?.getValue() ?? '';
-    if (!id) return;
+    if (id === '' || grp_id === undefined) return;
 
-    const ts: TS = new (window as any).TemporaryState();
+    const ts: TS = newTemporaryState();
     const submitBtn = document.getElementById('UserSubmit');
     if (submitBtn) {
         ts.changeHTML(submitBtn, "<i class='icon-spin6 animate-spin'> </i>");
@@ -994,19 +1019,20 @@ qs('.AddUserBlock button')?.addEventListener('click', () => {
 
     void pwgPost(
         'pwg.groups.addUser',
-        `group_id=${grp_id}&user_id=${id}&pwg_token=${pwg_token}`
-    ).then((rd) => {
+        `group_id=${grp_id}&user_id=${String(id)}&pwg_token=${pwg_token}`
+    ).then((data) => {
         ts.reverse();
-        data = rd;
         if (data.stat === 'ok') {
-            const cached = JSON.parse(usersCache.storage[usersCache.key] ?? '{"data":[]}').data;
+            const raw = usersCache?.storage[usersCache.key ?? ''] ?? '{"data":[]}';
+            const cached = (JSON.parse(raw) as { data: CachedUser[] }).data;
             let username = 'undefined';
-            cached.forEach((u: any) => {
-                if (u.id === id) username = u.username;
+            cached.forEach((u) => {
+                if (String(u.id) === String(id)) username = u.username;
             });
 
             const listContainer = qs('.UsersInGroupList')!;
-            const userBlock = getUserDisplay(username, id, grp_id);
+            const idStr = Array.isArray(id) ? id[0] : id;
+            const userBlock = getUserDisplay(username, idStr, grp_id);
             listContainer.prepend(userBlock);
 
             fadeOut(dissociateUserInfoEl, 0);
@@ -1022,28 +1048,31 @@ qs('.AddUserBlock button')?.addEventListener('click', () => {
             show(associateUserInfoEl);
 
             updateUserSearch();
-            usersInGroup.push({ username, id });
+            usersInGroup.push({ username, id: idStr });
 
             while (listContainer.offsetHeight > maxOffsetUserCont)
                 qsa('.UsernameBlock', listContainer).pop()?.remove();
             const badge = qs('.UserNumberBadge');
-            updateMembernumber(parseInt(badge?.innerHTML ?? '0') + 1, grp_id!);
+            updateMembernumber(parseInt(badge?.innerHTML ?? '0') + 1, grp_id);
         }
     });
 });
 
 qs('.input-user-name')?.addEventListener('input', function (this: HTMLInputElement) {
-    searchString = this.value.toLowerCase();
-    grp_id = qs('.UserListPopIn')?.dataset['groupId'];
+    const searchString = this.value.toLowerCase();
+    const grp_id = qs('.UserListPopIn')?.dataset['groupId'] ?? '';
     const listContainer = qs('.UsersInGroupList')!;
     if (searchString !== '') {
         const container = qs<HTMLElement>('.UsersInGroupListContainer');
         if (container) container.style.minHeight = container.offsetHeight + 'px';
-        usersInGroup.forEach((u: any) => {
+        usersInGroup.forEach((u) => {
             const isSearched = u.username.toLowerCase().includes(searchString);
-            const existing = qs<HTMLElement>(`.UsernameBlock[data-id="${u.id}"]`, listContainer);
-            if (existing && !isSearched) existing.remove();
-            else if (!existing && isSearched)
+            const existing = qs<HTMLElement>(
+                `.UsernameBlock[data-id="${String(u.id)}"]`,
+                listContainer
+            );
+            if (existing !== null && !isSearched) existing.remove();
+            else if (existing === null && isSearched)
                 listContainer.prepend(getUserDisplay(u.username, u.id, grp_id));
         });
     } else {
@@ -1051,7 +1080,7 @@ qs('.input-user-name')?.addEventListener('input', function (this: HTMLInputEleme
         if (container) container.style.minHeight = '';
         listContainer.innerHTML = '';
         let i = 0;
-        while (listContainer.offsetHeight <= maxOffsetUserCont && usersInGroup[i]) {
+        while (listContainer.offsetHeight <= maxOffsetUserCont && i < usersInGroup.length) {
             listContainer.appendChild(
                 getUserDisplay(usersInGroup[i].username, usersInGroup[i].id, grp_id)
             );

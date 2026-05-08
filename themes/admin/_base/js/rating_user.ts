@@ -86,6 +86,6 @@ document.getElementById('rateTable')?.addEventListener('click', (e) => {
     );
 });
 
-(window as Window & { DataTable: typeof DataTable }).DataTable = DataTable;
+(window as unknown as Window & { DataTable: typeof DataTable }).DataTable = DataTable;
 
 export {};

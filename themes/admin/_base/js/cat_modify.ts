@@ -191,13 +191,22 @@ function delete_album(photo_deletion_mode: any): Promise<void> {
     });
 }
 
+interface OrphanInfo {
+    nb_images_recursive: number;
+    nb_images_associated_outside: number;
+    nb_images_becoming_orphan: number;
+}
+
 async function showDeleteAlbumDialog(): Promise<string | null> {
-    let orphanData: any;
+    let orphanData: OrphanInfo;
     try {
-        const r = await pwgGet('pwg.categories.calculateOrphans', { category_id: album_id });
+        const r = await pwgGet<OrphanInfo[]>('pwg.categories.calculateOrphans', {
+            category_id: album_id,
+        });
+        if (r.result === undefined) return null;
         orphanData = r.result[0];
-    } catch (e) {
-        console.log(e);
+    } catch (e: unknown) {
+        console.error(e);
         return null;
     }
 
@@ -206,15 +215,16 @@ async function showDeleteAlbumDialog(): Promise<string | null> {
             .replace('%s', `<strong>${album_name}</strong>`)
             .replace('%d', `<strong>${nb_sub_albums}</strong>`)}</p>`;
         message += `<div class="cat-delete-modes">`;
-        if (orphanData.nb_images_recursive) {
+        if (orphanData.nb_images_recursive > 0) {
             message += `<div><input type="radio" name="deletion-mode" value="no_delete" id="no_delete" checked>
                 <label for="no_delete">${str_dont_delete_photos}</label></div>`;
             let t = 0;
+            const nums = [orphanData.nb_images_recursive, orphanData.nb_images_associated_outside];
             message += `<div><input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll('%d', () => [orphanData.nb_images_recursive, orphanData.nb_images_associated_outside][t++])}</label></div>`;
-            if (orphanData.nb_images_becoming_orphan) {
+                <label for="force_delete">${str_delete_all_photos.replaceAll('%d', () => String(nums[t++]))}</label></div>`;
+            if (orphanData.nb_images_becoming_orphan > 0) {
                 message += `<div><input type="radio" name="deletion-mode" value="delete_orphans" id="delete_orphans">
-                    <label for="delete_orphans">${str_delete_orphans.replace('%d', orphanData.nb_images_becoming_orphan)}</label></div>`;
+                    <label for="delete_orphans">${str_delete_orphans.replace('%d', String(orphanData.nb_images_becoming_orphan))}</label></div>`;
             }
         }
         message += `</div>`;
@@ -326,19 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         if (parent_album !== default_parent_album) {
-            pwgPost('pwg.categories.move', {
+            void pwgPost<{ new_ariane_string: string }>('pwg.categories.move', {
                 category_id: album_id,
                 parent: parent_album,
                 pwg_token,
             })
                 .then((data) => {
-                    if (data.stat === 'ok') {
+                    if (data.stat === 'ok' && data.result !== undefined) {
                         document.querySelector<HTMLElement>('.cat-modify-ariane')!.innerHTML =
                             data.result.new_ariane_string;
                         default_parent_album = parent_album;
                     } else showError();
                 })
-                .catch((e) => console.log(e.message));
+                .catch((e: unknown) => console.error(e));
         }
     });
 
@@ -352,9 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = refreshBtn.querySelector('i')!;
         icon.classList.replace('icon-ccw', 'icon-spin6');
         icon.classList.add('animate-spin');
-        pwgPost('pwg.categories.refreshRepresentative', { category_id: album_id })
+        void pwgPost<{ src: string }>('pwg.categories.refreshRepresentative', {
+            category_id: album_id,
+        })
             .then((data) => {
-                if (data.stat === 'ok') {
+                if (data.stat === 'ok' && data.result !== undefined) {
                     document.getElementById('deleteRepresentative')!.style.display = '';
                     const rep = document.querySelector<HTMLElement>('.cat-modify-representative');
                     if (rep) {

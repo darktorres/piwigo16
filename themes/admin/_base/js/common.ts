@@ -306,7 +306,7 @@ interface CommonGlobals {
     jConfirm_confirm_with_content_options: typeof jConfirm_confirm_with_content_options;
 }
 
-const w = window as Window & Partial<CommonGlobals>;
+const w = window as unknown as Window & Partial<CommonGlobals>;
 w.applyFontCheckbox = applyFontCheckbox;
 w.pwg_jconfirm_follow_href_fn = pwg_jconfirm_follow_href_fn;
 w.array_delete = array_delete;

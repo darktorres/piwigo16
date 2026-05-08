@@ -119,7 +119,8 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     }
 }
 
-(window as Window & { pwgDatepicker: typeof pwgDatepicker }).pwgDatepicker = pwgDatepicker;
+(window as unknown as Window & { pwgDatepicker: typeof pwgDatepicker }).pwgDatepicker =
+    pwgDatepicker;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {

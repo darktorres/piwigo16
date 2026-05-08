@@ -19,7 +19,7 @@ function phpWGOpenWindow(theURL: string, winName: string, features: string): voi
         winName,
         features + ',left=2,top=1,width=' + width + ',height=' + height
     )!;
-    (window as Window & { newWin?: Window }).newWin = newWin;
+    (window as unknown as Window & { newWin?: Window }).newWin = newWin;
 }
 
 function popuphelp(url: string): void {
@@ -260,7 +260,7 @@ interface ScriptsGlobals {
     PwgWS: typeof PwgWS;
     pwgAddEventListener: typeof pwgAddEventListener;
 }
-const w = window as Window & Partial<ScriptsGlobals>;
+const w = window as unknown as Window & Partial<ScriptsGlobals>;
 w.phpWGOpenWindow = phpWGOpenWindow;
 w.popuphelp = popuphelp;
 w.pwgBind = pwgBind;

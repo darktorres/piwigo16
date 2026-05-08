@@ -27,6 +27,6 @@ function pwgToaster(info: ToasterInfo): void {
     }, time);
 }
 
-(window as Window & { pwgToaster: typeof pwgToaster }).pwgToaster = pwgToaster;
+(window as unknown as Window & { pwgToaster: typeof pwgToaster }).pwgToaster = pwgToaster;
 
 export {};

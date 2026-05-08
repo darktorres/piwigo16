@@ -123,11 +123,17 @@ interface PwgUser {
     id: number;
     username: string;
     status: string;
+    level: number;
     email?: string;
+    groups?: Array<number | string>;
     last_visit?: string;
     last_visit_string?: string;
+    last_visit_since?: string;
+    last_visit_what?: string;
+    registration_date?: string;
+    registration_date_string?: string;
+    registration_date_since?: string;
     nb_image_page?: number;
-    level?: number;
     enabled_high?: string | boolean;
     expand?: string | boolean;
     show_nb_comments?: string | boolean;
@@ -135,6 +141,10 @@ interface PwgUser {
     recent_period?: number;
     theme?: string;
     language?: string;
+    nb_total_photos?: number | string;
+    nb_added_photos?: number | string;
+    main_user?: boolean;
+    has_bookmark?: boolean;
     [key: string]: unknown;
 }
 
@@ -153,14 +163,22 @@ const groups_arr: [number, string][] = _groups_arr;
 let last_user_index: number = -1;
 let last_user_id = -1;
 const pwg_token = _pwg_token;
-let selection: number[] = [];
+interface SelectionItem {
+    id: number;
+    username?: string;
+}
+let selection: SelectionItem[] = [];
 let first_update = true;
 let total_users = 0;
 let filter_by = 'id DESC';
 const plugins_set_functions: Record<string, (popIn: HTMLElement, user: PwgUser) => void> = {};
-const plugins_get_functions: Record<string, (popIn: HTMLElement) => Record<string, unknown>> = {};
+const plugins_get_functions: Record<string, () => void> = {};
 const plugins_load: Array<() => void> = [];
-const plugins_users_infos_table: Array<(user: PwgUser, td: HTMLElement) => void> = [];
+interface UserInfoTableEntry {
+    content_id: string;
+    users_table: string;
+}
+const plugins_users_infos_table: UserInfoTableEntry[] = [];
 let owner_username = _owner_username;
 let owner_id = _owner_id;
 const connected_user_status = _connected_user_status;
@@ -184,10 +202,10 @@ const show = (el: HTMLElement | null | undefined) => {
 const hide = (el: HTMLElement | null | undefined) => {
     if (el) el.style.display = 'none';
 };
-function fadeInEl(el: HTMLElement | null | undefined) {
+function _fadeInEl(el: HTMLElement | null | undefined) {
     if (el) el.style.display = '';
 }
-function fadeOutEl(el: HTMLElement | null | undefined, delay = 0) {
+function _fadeOutEl(el: HTMLElement | null | undefined, delay = 0) {
     if (!el) return;
     setTimeout(() => {
         el.style.transition = 'opacity 0.4s';
@@ -225,11 +243,17 @@ function pwgPost<T = unknown>(
     method: string,
     params: Record<string, unknown>
 ): Promise<WsResponse<T>> {
+    const stringify = (val: unknown): string => {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+        return JSON.stringify(val);
+    };
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
         if (Array.isArray(v))
-            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item ?? '')));
-        else if (v !== undefined && v !== null) body.append(k, String(v));
+            (v as unknown[]).forEach((item) => body.append(k + '[]', stringify(item)));
+        else if (v !== undefined && v !== null) body.append(k, stringify(v));
     }
     return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then(
         (r) => r.json() as Promise<WsResponse<T>>
@@ -265,9 +289,13 @@ const tsOptions = {
     searchField: ['label'],
     plugins: { remove_button: {} },
 };
-const groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) : null;
-const groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
-const groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
+function makeGroupTs(idx: number): TomSelect | null {
+    const el = groupSelectEls[idx] as HTMLSelectElement | undefined;
+    return el !== undefined ? new TomSelect(el, tsOptions) : null;
+}
+const groupTs = makeGroupTs(0);
+const groupGuestTs = makeGroupTs(1);
+const groupAddUserTs = makeGroupTs(2);
 
 type TsSelect = HTMLElement & { tomselect?: TomSelect };
 function getPopInTs(popIn: HTMLElement): TomSelect | null {
@@ -301,8 +329,11 @@ function close_guest_user_list() {
     hide_temporary_messages();
     hide(document.getElementById('GuestUserList'));
 }
-function isSelectionMode() {
-    return (document.getElementById('toggleSelectionMode') as HTMLInputElement)?.checked;
+function isSelectionMode(): boolean {
+    return (
+        (document.getElementById('toggleSelectionMode') as HTMLInputElement | null)?.checked ===
+        true
+    );
 }
 
 /*---- Sliders ----*/
@@ -317,16 +348,16 @@ const recent_period_values = [
 const recent_period_init = 0;
 const nb_image_page_init = 0;
 
-function getSliderKeyFromValue(value: any, values: any[]) {
+function getSliderKeyFromValue(value: number, values: number[]): number {
     for (let key = 0; key < values.length; key++) {
         if (values[key] >= value) return key;
     }
     return 0;
 }
-function getNbImagePageInfoFromIdx(idx: any) {
+function getNbImagePageInfoFromIdx(idx: number): string {
     return String(nb_image_page_values[idx]);
 }
-function getRecentPeriodInfoFromIdx(idx: any) {
+function getRecentPeriodInfoFromIdx(idx: number): string {
     return sprintf(nb_days, recent_period_values[idx]);
 }
 
@@ -435,12 +466,13 @@ function update_pagination_menu() {
     const container = qs<HTMLElement>('.pagination-item-container');
     if (container) container.innerHTML = '';
     // pages are rendered server-side; just update arrows
-    qs('.pagination-arrow.left')?.classList.toggle('unavailable', actual_page <= 1);
+    qs('.pagination-arrow.left')?.classList.toggle('unavailable', true);
 }
 
 /*---- Advanced filter ----*/
 function advanced_filter_button_click() {
-    if (!qs('.advanced-filter')?.classList.contains('advanced-filter-open')) advanced_filter_show();
+    if (qs('.advanced-filter')?.classList.contains('advanced-filter-open') !== true)
+        advanced_filter_show();
     else advanced_filter_hide();
 }
 function advanced_filter_show() {
@@ -454,14 +486,14 @@ function advanced_filter_hide() {
     );
 }
 
-function getDateStr(date: any) {
+function getDateStr(date: string): string {
     const parts = date.split('-');
     return months[parseInt(parts[1]) - 1] + ' ' + parts[0];
 }
 
-function setupRegisterDates(register_dates: any) {
+function setupRegisterDates(register_dates: string[]) {
     const el = qs<HTMLElement>('.advanced-filter .dates-select-bar .slider-bar-container');
-    if (!el || !register_dates?.length) return;
+    if (!el || register_dates.length === 0) return;
     const slider = noUiSlider.create(el, {
         range: { min: 0, max: register_dates.length - 1 },
         start: [0, register_dates.length - 1],
@@ -519,9 +551,10 @@ function add_user_open() {
     qs<HTMLInputElement>('.AddUserLabelUsername input')?.focus();
 
     const statusSel = qs<HTMLSelectElement>('#AddUser .user-property-status .user-property-select');
-    const newSel = statusSel?.cloneNode(true) as HTMLSelectElement;
-    statusSel?.replaceWith(newSel);
-    newSel?.addEventListener('change', function (this: HTMLSelectElement) {
+    if (statusSel === null) return;
+    const newSel = statusSel.cloneNode(true) as HTMLSelectElement;
+    statusSel.replaceWith(newSel);
+    newSel.addEventListener('change', function (this: HTMLSelectElement) {
         const status = this.value;
         qs<HTMLInputElement>('#add_user_pass')!.value = '';
         qs<HTMLInputElement>('#add_user_confpass')!.value = '';
@@ -553,43 +586,44 @@ qsa('.user-list-checkbox').forEach((el) => {
 });
 
 /*---- Selection mode ----*/
-function checkbox_container_change(this: HTMLElement) {
+function _checkbox_container_change(this: HTMLElement) {
     const i = this.querySelector<HTMLElement>('i');
     if (this.dataset['selected'] === '1') hide(i);
     else show(i);
 }
-function checkbox_container_click(this: HTMLElement) {
+function _checkbox_container_click(this: HTMLElement) {
     const container = this.closest<HTMLElement>('.user-container');
-    const inContainer = Boolean(container);
-    const currUser = inContainer
-        ? current_users[parseInt(container.getAttribute('key') ?? '0')]
-        : { id: -1 };
+    const currUser: { id: number; username?: string } =
+        container !== null
+            ? (current_users[parseInt(container.getAttribute('key') ?? '0')] ?? { id: -1 })
+            : { id: -1 };
     if (this.dataset['selected'] === '1') {
         this.dataset['selected'] = '0';
         this.querySelector<HTMLElement>('i')!.style.display = 'none';
-        if (inContainer) {
+        if (container !== null) {
             container.classList.remove('container-selected');
             selection = selection.filter((e) => e.id !== currUser.id);
         }
     } else {
         this.dataset['selected'] = '1';
         this.querySelector<HTMLElement>('i')!.style.display = '';
-        if (inContainer) {
+        if (container !== null) {
             container.classList.add('container-selected');
             selection.push({ id: currUser.id, username: currUser.username });
         }
     }
-    if (inContainer) update_selection_content();
+    if (container !== null) update_selection_content();
 }
 
-function create_user_selected_item(user: any): HTMLElement {
-    const tmpl = document
+function create_user_selected_item(user: SelectionItem): HTMLElement {
+    const node = document
         .getElementById('template')
         ?.querySelector<HTMLElement>('.user-selected-item')
-        ?.cloneNode(true) as HTMLElement;
-    if (!tmpl) return document.createElement('div');
+        ?.cloneNode(true);
+    if (node === undefined) return document.createElement('div');
+    const tmpl = node as HTMLElement;
     tmpl.dataset['id'] = String(user.id);
-    tmpl.querySelector('p')!.innerHTML = user.username;
+    tmpl.querySelector('p')!.innerHTML = user.username ?? '';
     tmpl.querySelector('a')?.addEventListener('click', () => {
         selection.splice(
             selection.findIndex((i) => i.id === user.id),
@@ -630,9 +664,9 @@ function fill_user_selected_list() {
 }
 
 function update_selection_content() {
-    number = selection.length;
+    _number = selection.length;
     fill_user_selected_list();
-    if (number === 0) {
+    if (selection.length === 0) {
         show(document.getElementById('forbidAction'));
         qsa('.selection-mode-ul').forEach(hide);
         hide(document.getElementById('permitActionUserList'));
@@ -649,7 +683,8 @@ function set_selected_to_selection() {
     if (!isSelectionMode()) return;
     qsa('.user-container-wrapper .user-container').forEach((container, index) => {
         const selIds = selection.map((x) => x.id);
-        if (current_users[index] && selIds.includes(current_users[index].id)) {
+        const cu = current_users.at(index);
+        if (cu !== undefined && selIds.includes(cu.id)) {
             container.classList.add('container-selected');
             container.querySelector<HTMLElement>('.user-list-checkbox')!.dataset['selected'] = '1';
             show(container.querySelector<HTMLElement>('.user-list-checkbox i'));
@@ -702,11 +737,11 @@ function hide_temporary_messages() {
     qsa('.update-user-success,.error-msg,#AddUserSuccess').forEach(hide);
 }
 
-function get_group_name_from_id(id: any) {
+function get_group_name_from_id(id: number): string {
     const g = groups_arr.find((g) => g[0] === id);
-    return g ? g[1] : 'group_id error';
+    return g !== undefined ? g[1] : 'group_id error';
 }
-function get_container_index_from_uid(uid: any) {
+function get_container_index_from_uid(uid: number): number {
     return current_users.findIndex((u) => u.id === uid);
 }
 function hide_error_edit_user() {
@@ -787,7 +822,7 @@ function generate_random_string() {
 }
 function get_initials(username: string) {
     const words = username.toUpperCase().split(' ');
-    return words[0][0] + (words.length > 1 && words[1][0] ? words[1][0] : '');
+    return words[0][0] + (words.length > 1 && words[1][0] !== '' ? words[1][0] : '');
 }
 function get_status_index(status: string) {
     const i = status_arr.indexOf(status);
@@ -797,19 +832,19 @@ function get_level_index(level: string) {
     const i = level_arr.indexOf(level);
     return i >= 0 ? i : 0;
 }
-function is_owner(user_id: any) {
+function is_owner(user_id: number): boolean {
     return user_id === owner_id;
 }
 function copyToClipboard(text: string) {
-    void navigator.clipboard?.writeText(text);
+    void navigator.clipboard.writeText(text);
 }
 
-function set_selected_groups(groups: any[]) {
-    groupOptions.forEach((g: any) => (g.isSelected = groups.includes(g.value)));
+function set_selected_groups(groups: Array<number | string>) {
+    groupOptions.forEach((g) => (g.isSelected = groups.includes(g.value) ? 1 : 0));
 }
 
 /*---- Pop-in fill functions ----*/
-function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: boolean) {
+function fill_user_edit_summary(user_to_edit: PwgUser, popIn: HTMLElement, isGuest: boolean) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     if (!isGuest) {
         const initFill = get_initials(user_to_edit.username);
@@ -843,17 +878,17 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
     if (permsLink) permsLink.href = `${config.adminUrl}page=user_perm&user_id=${user_to_edit.id}`;
     const regEl = q('.user-property-register');
     if (regEl) {
-        regEl.innerHTML = user_to_edit.registration_date_string;
+        regEl.innerHTML = user_to_edit.registration_date_string ?? '';
         tippy(regEl, {
-            content: `${registered_str}<br />${user_to_edit.registration_date_since}`,
+            content: `${registered_str}<br />${user_to_edit.registration_date_since ?? ''}`,
             allowHTML: true,
         });
     }
     const lastEl = q('.user-property-last-visit');
     if (lastEl) {
-        lastEl.innerHTML = user_to_edit.last_visit_string;
+        lastEl.innerHTML = user_to_edit.last_visit_string ?? '';
         tippy(lastEl, {
-            content: `${last_visit_str}<br />${user_to_edit.last_visit_since}`,
+            content: `${last_visit_str}<br />${user_to_edit.last_visit_since ?? ''}`,
             allowHTML: true,
         });
     }
@@ -871,42 +906,42 @@ function fill_user_edit_summary(user_to_edit: any, popIn: HTMLElement, isGuest: 
 }
 
 function loadGroupOptions(ts: TomSelect | null) {
-    if (!ts) return;
+    if (ts === null) return;
     ts.clear();
     ts.clearOptions();
-    groupOptions.forEach((g: any) => ts.addOption({ value: g.value, text: g.label ?? g.value }));
-    groupOptions.filter((g: any) => g.isSelected).forEach((g: any) => ts.addItem(String(g.value)));
+    groupOptions.forEach((g) => ts.addOption({ value: String(g.value), text: g.label }));
+    groupOptions.filter((g) => g.isSelected !== 0).forEach((g) => ts.addItem(String(g.value)));
 }
 
-function fill_user_edit_properties(user_to_edit: any, popIn: HTMLElement) {
+function fill_user_edit_properties(user_to_edit: PwgUser, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     const currentGroupTs = user_to_edit.id === guest_id ? groupGuestTs : groupTs;
     const emailInput = q<HTMLInputElement>('.user-property-email input');
     if (emailInput) emailInput.value = user_to_edit.email ?? '';
     const statusSelect = q<HTMLSelectElement>('.user-property-status select');
     if (statusSelect) {
-        const o = Array.from(statusSelect.options)[get_status_index(user_to_edit.status)];
-        if (o) o.selected = true;
+        const o = Array.from(statusSelect.options).at(get_status_index(user_to_edit.status));
+        if (o !== undefined) o.selected = true;
     }
     const levelSelect = q<HTMLSelectElement>('.user-property-level select');
     if (levelSelect) {
-        const o = Array.from(levelSelect.options)[get_level_index(user_to_edit.level)];
-        if (o) o.selected = true;
+        const o = Array.from(levelSelect.options).at(get_level_index(String(user_to_edit.level)));
+        if (o !== undefined) o.selected = true;
     }
-    set_selected_groups(user_to_edit.groups);
+    set_selected_groups(user_to_edit.groups ?? []);
     loadGroupOptions(currentGroupTs);
     const hdCb = q('.user-list-checkbox[name="hd_enabled"]');
     if (hdCb) hdCb.dataset['selected'] = user_to_edit.enabled_high === 'true' ? '1' : '0';
 }
 
-function fill_user_edit_preferences(user_to_edit: any, popIn: HTMLElement) {
+function fill_user_edit_preferences(user_to_edit: PwgUser, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     const photosKey = getSliderKeyFromValue(
-        parseInt(user_to_edit.nb_image_page),
+        parseInt(String(user_to_edit.nb_image_page ?? 0)),
         nb_image_page_values
     );
     const periodKey = getSliderKeyFromValue(
-        parseInt(user_to_edit.recent_period),
+        parseInt(String(user_to_edit.recent_period ?? 0)),
         recent_period_values
     );
     setSliderValue(q('.photos-select-bar .slider-bar-container'), photosKey);
@@ -930,7 +965,7 @@ function fill_user_edit_preferences(user_to_edit: any, popIn: HTMLElement) {
     if (hitsCb) hitsCb.dataset['selected'] = user_to_edit.show_nb_hits === 'true' ? '1' : '0';
 }
 
-function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
+function fill_user_edit_update(user_to_edit: PwgUser, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     const updateBtn = q('.update-user-button');
     if (updateBtn) {
@@ -960,11 +995,16 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
     if (sendPwdLink) {
         const nb = sendPwdLink.cloneNode(true) as HTMLElement;
         sendPwdLink.replaceWith(nb);
-        if (user_to_edit.email) {
+        if (user_to_edit.email !== undefined && user_to_edit.email !== '') {
             nb.classList.remove('unavailable', 'tiptip');
             nb.title = '';
             nb.addEventListener('click', () =>
-                send_link_password(user_to_edit.email, user_to_edit.username, user_to_edit.id, true)
+                send_link_password(
+                    user_to_edit.email ?? '',
+                    user_to_edit.username,
+                    user_to_edit.id,
+                    true
+                )
             );
         } else {
             nb.classList.add('unavailable', 'tiptip');
@@ -978,14 +1018,14 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         copyPwdLink.replaceWith(nb);
         nb.addEventListener('click', () => {
             const inputValue = qs<HTMLInputElement>('#result_send_mail_copy_input')?.value ?? '';
-            if (!inputValue)
+            if (inputValue === '')
                 send_link_password(
-                    user_to_edit.email,
+                    user_to_edit.email ?? '',
                     user_to_edit.username,
                     user_to_edit.id,
                     false
                 );
-            else if (window.isSecureContext && navigator.clipboard) copyToClipboard(inputValue);
+            else if (window.isSecureContext) copyToClipboard(inputValue);
             hide(qs('.user-property-password-choice'));
             show(qs('#edit_password_result_mail_copy'));
             qs<HTMLInputElement>('#result_send_mail_copy_input')?.focus();
@@ -997,9 +1037,9 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
         validatePwdBtn.replaceWith(nb);
         nb.addEventListener('click', () => {
             const errDiv = qs<HTMLElement>('#UserList .EditUserErrors');
-            const pwd = qs<HTMLInputElement>('#edit_user_password')?.value;
-            const conf = qs<HTMLInputElement>('#edit_user_conf_password')?.value;
-            if (!pwd || !conf) {
+            const pwd = qs<HTMLInputElement>('#edit_user_password')?.value ?? '';
+            const conf = qs<HTMLInputElement>('#edit_user_conf_password')?.value ?? '';
+            if (pwd === '' || conf === '') {
                 if (errDiv) errDiv.innerHTML = missingField;
                 show_error_edit_user();
             } else if (pwd !== conf) {
@@ -1019,7 +1059,7 @@ function fill_user_edit_update(user_to_edit: any, popIn: HTMLElement) {
     }
 }
 
-function fill_user_edit_permissions(user_to_edit: any, popIn: HTMLElement) {
+function fill_user_edit_permissions(user_to_edit: PwgUser, popIn: HTMLElement) {
     const q = <T extends HTMLElement = HTMLElement>(sel: string) => popIn.querySelector<T>(sel);
     const setPerms = (
         canDelete: boolean,
@@ -1082,7 +1122,7 @@ function fill_user_edit_permissions(user_to_edit: any, popIn: HTMLElement) {
     qsa('.notClickable').forEach((el) => el.parentElement?.classList.add('notClickableBefore'));
 }
 
-function fill_who_is_the_king(user_to_edit: any, popIn: HTMLElement) {
+function fill_who_is_the_king(user_to_edit: PwgUser, popIn: HTMLElement) {
     const king = popIn.querySelector<HTMLElement>('#who_is_the_king');
     if (!king) return;
     const setKingClass = (cls: string, title: string, clickable: boolean) => {
@@ -1116,7 +1156,7 @@ function fill_who_is_the_king(user_to_edit: any, popIn: HTMLElement) {
     }
 }
 
-function fill_user_edit(user_to_edit: any) {
+function fill_user_edit(user_to_edit: PwgUser) {
     const popIn = document.getElementById('UserList')!;
     fill_user_edit_summary(user_to_edit, popIn, false);
     fill_user_edit_properties(user_to_edit, popIn);
@@ -1125,18 +1165,30 @@ function fill_user_edit(user_to_edit: any) {
     fill_user_edit_permissions(user_to_edit, popIn);
     fill_who_is_the_king(user_to_edit, popIn);
     if (Object.keys(plugins_get_functions).length > 0) {
-        Object.values(plugins_get_functions).forEach((f: any) => f());
+        Object.values(plugins_get_functions).forEach((f) => f());
     }
     const keyUser = Object.keys(user_to_edit);
     plugins_users_infos_table.forEach((i) => {
         const el = qs<HTMLInputElement>('#' + i.content_id);
-        if (!el) return;
-        el.value = keyUser.includes(i.users_table) ? user_to_edit[i.users_table] : '';
+        if (el === null) return;
+        if (!keyUser.includes(i.users_table)) {
+            el.value = '';
+            return;
+        }
+        const raw = user_to_edit[i.users_table];
+        el.value =
+            raw === undefined || raw === null
+                ? ''
+                : typeof raw === 'string'
+                  ? raw
+                  : typeof raw === 'number' || typeof raw === 'boolean'
+                    ? String(raw)
+                    : JSON.stringify(raw);
     });
 }
 
 function fill_guest_edit() {
-    const user_to_edit = guest_user;
+    const user_to_edit = guest_user as PwgUser;
     const popIn = qs<HTMLElement>('.GuestUserListPopInContainer')!;
     fill_user_edit_summary(user_to_edit, popIn, true);
     fill_user_edit_properties(user_to_edit, popIn);
@@ -1147,33 +1199,36 @@ function fill_guest_edit() {
 function fill_new_user() {
     const popIn = document.getElementById('AddUser')!;
     const statusIdx = get_status_index('normal');
-    const levelIdx = get_level_index(guest_user.level ?? '0');
-    set_selected_groups(guest_user.groups ?? []);
+    const guest = guest_user as Partial<PwgUser>;
+    const levelIdx = get_level_index(String(guest.level ?? '0'));
+    set_selected_groups(guest.groups ?? []);
     loadGroupOptions(groupAddUserTs);
     const statusSelect = qs<HTMLSelectElement>(
         `.AddUserInputContainer .user-property-status select`,
         popIn
     );
     if (statusSelect) {
-        const o = Array.from(statusSelect.options)[statusIdx];
-        if (o) o.selected = true;
+        const o = Array.from(statusSelect.options).at(statusIdx);
+        if (o !== undefined) o.selected = true;
     }
     const levelSelect = qs<HTMLSelectElement>(
         `.AddUserInputContainer .user-property-level select`,
         popIn
     );
     if (levelSelect) {
-        const o = Array.from(levelSelect.options)[levelIdx];
-        if (o) o.selected = true;
+        const o = Array.from(levelSelect.options).at(levelIdx);
+        if (o !== undefined) o.selected = true;
     }
     const hdCb = qs('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]', popIn);
-    if (hdCb) hdCb.dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
+    if (hdCb) hdCb.dataset['selected'] = guest.enabled_high === 'true' ? '1' : '0';
 }
 
 /*---- Ajax data helpers ----*/
-function fill_ajax_data_from_properties(ajax_data: any, popIn: HTMLElement) {
+type AjaxData = Record<string, unknown>;
+
+function fill_ajax_data_from_properties(ajax_data: AjaxData, popIn: HTMLElement): AjaxData {
     const ts = getPopInTs(popIn);
-    const groups_selected = ts ? ts.items.map((id: string) => parseInt(id)) : [];
+    const groups_selected = ts !== null ? ts.items.map((id) => parseInt(id)) : [];
     const emailInput = qs<HTMLInputElement>('.user-property-email input', popIn);
     ajax_data['email'] = emailInput?.value;
     const statusSelect = qs<HTMLSelectElement>('.user-property-status select', popIn);
@@ -1189,7 +1244,7 @@ function fill_ajax_data_from_properties(ajax_data: any, popIn: HTMLElement) {
     return ajax_data;
 }
 
-function fill_ajax_data_from_preferences(ajax_data: any, popIn: HTMLElement) {
+function fill_ajax_data_from_preferences(ajax_data: AjaxData, popIn: HTMLElement): AjaxData {
     ajax_data['theme'] = qs<HTMLSelectElement>('.user-property-theme select', popIn)?.value;
     ajax_data['language'] = qs<HTMLSelectElement>('.user-property-lang select', popIn)?.value;
     const photosIdx = getSliderValue(qs('.photos-select-bar .slider-bar-container', popIn));
@@ -1210,22 +1265,22 @@ function fill_ajax_data_from_preferences(ajax_data: any, popIn: HTMLElement) {
     return ajax_data;
 }
 
-function fill_ajax_data_from_container(ajax_data: any, popIn: HTMLElement) {
-    ajax_data = fill_ajax_data_from_properties(ajax_data, popIn);
-    ajax_data = fill_ajax_data_from_preferences(ajax_data, popIn);
-    return ajax_data;
+function fill_ajax_data_from_container(ajax_data: AjaxData, popIn: HTMLElement): AjaxData {
+    let data = fill_ajax_data_from_properties(ajax_data, popIn);
+    data = fill_ajax_data_from_preferences(data, popIn);
+    return data;
 }
 
 /*---- Ajax requests ----*/
-function get_first_selection_usernames(callback: any) {
+function get_first_selection_usernames(callback: () => void) {
     const ids = selection.slice(0, 50).map((x) => x.id);
     const body = new URLSearchParams({ display: 'username', order: 'id' });
-    ids.forEach((id) => body.append('user_id[]', id));
+    ids.forEach((id) => body.append('user_id[]', String(id)));
     body.append('exclude[]', String(guest_id));
     void fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
-        .then((r) => r.json())
+        .then((r) => r.json() as Promise<{ result: { users: PwgUser[] } }>)
         .then((d) => {
-            d.result.users.forEach((u: any) => {
+            d.result.users.forEach((u) => {
                 const idx = selection.findIndex((x) => x.id === u.id);
                 if (idx !== -1) selection[idx].username = u.username;
             });
@@ -1251,9 +1306,9 @@ function select_whole_set() {
     body.append('exclude[]', String(guest_id));
     show(qs('#checkActions .loading'));
     fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
-        .then((r) => r.json())
+        .then((r) => r.json() as Promise<{ result: number[] }>)
         .then((d) => {
-            selection = d.result.map((x: any) => ({ id: x }));
+            selection = d.result.map((x) => ({ id: x }));
             hide(qs('#checkActions .loading'));
             update_selection_content();
         })
@@ -1263,7 +1318,7 @@ function select_whole_set() {
 function update_user_username() {
     const popIn = document.getElementById('UserList')!;
     const username = qs<HTMLInputElement>('.user-property-input-username', popIn)?.value ?? '';
-    if (!username.replace(/\s/g, '')) {
+    if (username.replace(/\s/g, '') === '') {
         const failEl = qs<HTMLElement>('.update-user-fail');
         if (failEl) {
             failEl.innerHTML = fieldNotEmpty;
@@ -1271,8 +1326,12 @@ function update_user_username() {
         }
         return;
     }
-    void pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then((d) => {
-        if (d.stat === 'ok' && last_user_index !== -1) {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.setInfo', {
+        pwg_token,
+        user_id: last_user_id,
+        username,
+    }).then((d) => {
+        if (d.stat === 'ok' && last_user_index !== -1 && d.result !== undefined) {
             current_users[last_user_index].username = d.result.users[0].username;
             qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML =
                 current_users[last_user_index].username;
@@ -1296,7 +1355,7 @@ function update_user_password() {
         if (d.stat === 'ok') {
             hide(qs('.user-property-password-change-inputs'));
             show(document.getElementById('edit_password_success_change'));
-            if (window.isSecureContext && navigator.clipboard) {
+            if (window.isSecureContext) {
                 qs('#copy_password')?.addEventListener('click', () => {
                     copyToClipboard(password);
                     qs<HTMLElement>('#password_msg_success')!.innerHTML = passwordCopied;
@@ -1313,7 +1372,7 @@ function update_user_info() {
     });
     qsa('.update-user-button').forEach((el) => el.classList.add('unclickable'));
     const popIn = qs<HTMLElement>('.UserListPopInContainer')!;
-    let ajax_data: Record<string, any> = { pwg_token, user_id: last_user_id };
+    let ajax_data: AjaxData = { pwg_token, user_id: last_user_id };
     plugins_users_infos_table.forEach((i) => {
         const el = qs<HTMLInputElement>('#' + i.content_id);
         if (el && Object.keys(current_users[last_user_index] ?? {}).includes(i.users_table))
@@ -1325,8 +1384,8 @@ function update_user_info() {
             el.style.display = 'none';
         }
     );
-    void pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
-        if (d.stat === 'ok') {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.setInfo', ajax_data).then((d) => {
+        if (d.stat === 'ok' && d.result !== undefined) {
             const result = d.result.users[0];
             if (last_user_index !== -1) {
                 current_users[last_user_index] = { ...current_users[last_user_index], ...result };
@@ -1342,12 +1401,12 @@ function update_user_info() {
             });
             qsa('.update-user-button').forEach((el) => el.classList.remove('unclickable'));
             if (Object.keys(plugins_set_functions).length > 0)
-                Object.values(plugins_set_functions).forEach((f: any) => f());
+                Object.values(plugins_set_functions).forEach((f) => f(popIn, result));
             fill_who_is_the_king(result, document.getElementById('UserList')!);
         } else if (d.stat === 'fail') {
             const failEl = qs<HTMLElement>('#UserList .update-user-fail');
             if (failEl) {
-                failEl.innerHTML = d.message;
+                failEl.innerHTML = d.message ?? '';
                 failEl.style.display = '';
             }
             qsa('.update-user-button i').forEach((el) => {
@@ -1361,21 +1420,26 @@ function update_user_info() {
 }
 
 function get_guest_info() {
-    void pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then((d) => {
-        if (d.stat === 'ok') {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.getList', {
+        display: 'all',
+        user_id: guest_id,
+    }).then((d) => {
+        if (d.stat === 'ok' && d.result !== undefined) {
             guest_user = d.result.users[0];
             fill_guest_edit();
         }
     });
 }
 
-function get_user_info(uid: any, callback: any = null) {
-    void pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then((d) => {
-        if (d.stat === 'ok') {
-            fill_user_edit(d.result.users[0]);
-            if (callback) callback();
+function get_user_info(uid: number, callback: (() => void) | null = null) {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.getList', { display: 'all', user_id: uid }).then(
+        (d) => {
+            if (d.stat === 'ok' && d.result !== undefined) {
+                fill_user_edit(d.result.users[0]);
+                if (callback !== null) callback();
+            }
         }
-    });
+    );
 }
 
 function update_guest_info() {
@@ -1385,10 +1449,10 @@ function update_guest_info() {
     });
     qsa('.update-user-button').forEach((el) => el.classList.add('unclickable'));
     const popIn = qs<HTMLElement>('.GuestUserListPopInContainer')!;
-    let ajax_data: Record<string, any> = { pwg_token, user_id: guest_id };
+    let ajax_data: AjaxData = { pwg_token, user_id: guest_id };
     ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
-    delete ajax_data.email;
-    delete ajax_data.status;
+    delete ajax_data['email'];
+    delete ajax_data['status'];
     void pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok') fadeInThenOut(qs('#GuestUserList .update-user-success'), 0, 2500);
         qsa('.update-user-button i').forEach((el) => {
@@ -1400,7 +1464,7 @@ function update_guest_info() {
 }
 
 function update_user_list() {
-    const update_data: Record<string, any> = {
+    const update_data: AjaxData = {
         display: 'all',
         order: filter_by,
         page: actual_page - 1,
@@ -1408,11 +1472,11 @@ function update_user_list() {
         exclude: [guest_id],
     };
     const searchVal = qs<HTMLInputElement>('#user_search')?.value ?? '';
-    if (searchVal) {
-        const m = searchVal.match(/^id:(\d+)$/);
-        update_data[m ? 'user_id' : 'filter'] = m ? m[1] : searchVal;
+    if (searchVal !== '') {
+        const m = /^id:(\d+)$/.exec(searchVal);
+        update_data[m !== null ? 'user_id' : 'filter'] = m !== null ? m[1] : searchVal;
     }
-    if (qs('.advanced-filter')?.classList.contains('advanced-filter-open')) {
+    if (qs('.advanced-filter')?.classList.contains('advanced-filter-open') === true) {
         update_data['status'] = qs<HTMLSelectElement>(
             '.advanced-filter-select[name=filter_status]'
         )?.value;
@@ -1428,9 +1492,12 @@ function update_user_list() {
         update_data['max_register'] = register_dates[maxIdx] ?? '';
     }
     show(qs('.user-update-spinner'));
-    pwgPost('pwg.users.getList', update_data)
+    void pwgPost<{ users: PwgUser[]; paging: { total_count: number } }>(
+        'pwg.users.getList',
+        update_data
+    )
         .then((d) => {
-            if (d.stat === 'fail') return;
+            if (d.stat === 'fail' || d.result === undefined) return;
             total_users = d.result.paging.total_count;
             if (first_update) {
                 document
@@ -1441,7 +1508,7 @@ function update_user_list() {
                     );
                 first_update = false;
             }
-            nb_filtered_users = d.result.paging.total_count;
+            _nb_filtered_users = d.result.paging.total_count;
             update_pagination_menu();
             current_users = d.result.users;
             generate_user_list();
@@ -1472,12 +1539,12 @@ function update_user_list() {
             const filterLevel = qs<HTMLSelectElement>(
                 '.advanced-filter-select[name=filter_level]'
             )?.value;
-            if (filterStatus) nb_filters++;
-            if (filterGroup) nb_filters++;
-            if (filterLevel) nb_filters++;
+            if (filterStatus !== undefined && filterStatus !== '') nb_filters++;
+            if (filterGroup !== undefined && filterGroup !== '') nb_filters++;
+            if (filterLevel !== undefined && filterLevel !== '') nb_filters++;
             const [minIdx, maxIdx] = getSliderValues(qs('.dates-select-bar .slider-bar-container'));
             if (minIdx !== 0) nb_filters++;
-            if (register_dates && maxIdx !== register_dates.length - 1) nb_filters++;
+            if (register_dates.length > 0 && maxIdx !== register_dates.length - 1) nb_filters++;
             show_filter_infos(nb_filters);
         })
         .catch(() => hide(qs('.user-update-spinner')));
@@ -1485,7 +1552,7 @@ function update_user_list() {
 
 function add_user() {
     const addUserTs = groupAddUserTs;
-    const groups_selected = addUserTs ? addUserTs.items.map((id: string) => parseInt(id)) : [];
+    const groups_selected = addUserTs !== null ? addUserTs.items.map((id) => parseInt(id)) : [];
     const username =
         qs<HTMLInputElement>('.AddUserLabelUsername .user-property-input')?.value ?? '';
     const email = qs<HTMLInputElement>('.AddUserLabelEmail .user-property-input')?.value ?? '';
@@ -1506,18 +1573,18 @@ function add_user() {
         }
     };
     if (errEl) errEl.style.visibility = 'hidden';
-    if (!username) {
+    if (username === '') {
         showErr(missingUsername);
         return;
     }
     if (status === 'generic') {
         const pass = qs<HTMLInputElement>('#add_user_pass')?.value ?? '';
         const conf = qs<HTMLInputElement>('#add_user_confpass')?.value ?? '';
-        if (!pass) {
+        if (pass === '') {
             showErr(missingPassword);
             return;
         }
-        if (!conf) {
+        if (conf === '') {
             showErr(missingConfPassword);
             return;
         }
@@ -1527,16 +1594,16 @@ function add_user() {
         }
     }
 
-    const params: Record<string, any> = { username, email, pwg_token };
+    const params: AjaxData = { username, email, pwg_token };
     if (status === 'generic') {
-        params.password = qs<HTMLInputElement>('#add_user_pass')?.value;
-        params.password_confirm = qs<HTMLInputElement>('#add_user_confpass')?.value;
+        params['password'] = qs<HTMLInputElement>('#add_user_pass')?.value;
+        params['password_confirm'] = qs<HTMLInputElement>('#add_user_confpass')?.value;
     } else {
-        params.auto_password = true;
+        params['auto_password'] = true;
     }
 
-    void pwgPost('pwg.users.add', params).then((d) => {
-        if (d.stat === 'ok') {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.add', params).then((d) => {
+        if (d.stat === 'ok' && d.result !== undefined) {
             const new_user_id = d.result.users[0].id;
             const default_group = d.result.users[0].groups ?? [];
             add_infos_to_new_user(new_user_id, {
@@ -1544,17 +1611,26 @@ function add_user() {
                 email,
                 status,
                 level,
-                group_id: groups_selected.concat(default_group),
+                group_id: groups_selected.concat(default_group.map(Number)),
                 enabled_high,
             });
         } else {
-            showErr(d.message);
+            showErr(d.message ?? '');
         }
     });
 }
 
-function add_infos_to_new_user(user_id: any, ajax_data: any) {
-    void pwgPost('pwg.users.setInfo', {
+interface AddUserInfo {
+    username: string;
+    email: string;
+    status: string;
+    level: string;
+    group_id: number[];
+    enabled_high: boolean;
+}
+
+function add_infos_to_new_user(user_id: number, ajax_data: AddUserInfo) {
+    void pwgPost<{ users: PwgUser[] }>('pwg.users.setInfo', {
         user_id,
         status: ajax_data.status,
         level: ajax_data.level,
@@ -1562,7 +1638,7 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
         enabled_high: ajax_data.enabled_high,
         pwg_token,
     }).then((d) => {
-        if (d.stat === 'ok') {
+        if (d.stat === 'ok' && d.result !== undefined) {
             const new_user_id = d.result.users[0].id;
             update_user_list();
             qs('#AddUserUpdated')?.classList.replace('icon-red', 'icon-green');
@@ -1597,45 +1673,53 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
             if (badge) badge.innerHTML = String(parseInt(badge.innerHTML) + 1);
         } else {
             qs<HTMLElement>('#AddUser .AddUserErrors')!.style.visibility = 'visible';
-            qs<HTMLElement>('#AddUser .AddUserErrors')!.innerHTML = d.message;
+            qs<HTMLElement>('#AddUser .AddUserErrors')!.innerHTML = d.message ?? '';
         }
     });
 }
 
-function send_new_user_password(user_id: any, mail: any) {
-    const send_by_mail = mail !== '';
-    void pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then(
-        (res) => {
-            if (res.stat === 'ok') {
-                const password_container = document.getElementById('AddUserPasswordInputContainer');
-                show(password_container);
-                hide(document.getElementById('AddUserFieldContainer'));
-                show(document.getElementById('AddUserSuccessContainer'));
-                const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink');
-                if (pwdLink) {
-                    pwdLink.value = res.result.generated_link;
-                    pwdLink.focus();
-                }
-                const textEl = qs<HTMLElement>('#AddUserTextField');
-                if (textEl)
-                    textEl.innerHTML = send_by_mail
-                        ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`)
-                        : sprintf(validLinkWithoutMail, res.result.time_validation);
-                if (send_by_mail && !res.result.send_by_mail) {
-                    qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
-                    const ut = qs<HTMLElement>('#AddUserUpdatedText');
-                    if (ut) ut.innerHTML = errorMailSent;
-                    if (textEl)
-                        textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
-                } else if (send_by_mail && res.result.send_by_mail) {
-                    hide(password_container);
-                }
-            }
-        }
-    );
+interface PasswordLinkResult {
+    generated_link: string;
+    time_validation: string;
+    send_by_mail: boolean;
 }
 
-function delete_user(uid: any) {
+function send_new_user_password(user_id: number, mail: string) {
+    const send_by_mail = mail !== '';
+    void pwgPost<PasswordLinkResult>('pwg.users.generatePasswordLink', {
+        user_id,
+        send_by_mail,
+        pwg_token,
+    }).then((res) => {
+        if (res.stat === 'ok' && res.result !== undefined) {
+            const password_container = document.getElementById('AddUserPasswordInputContainer');
+            show(password_container);
+            hide(document.getElementById('AddUserFieldContainer'));
+            show(document.getElementById('AddUserSuccessContainer'));
+            const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink');
+            if (pwdLink) {
+                pwdLink.value = res.result.generated_link;
+                pwdLink.focus();
+            }
+            const textEl = qs<HTMLElement>('#AddUserTextField');
+            if (textEl)
+                textEl.innerHTML = send_by_mail
+                    ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`)
+                    : sprintf(validLinkWithoutMail, res.result.time_validation);
+            if (send_by_mail && !res.result.send_by_mail) {
+                qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
+                const ut = qs<HTMLElement>('#AddUserUpdatedText');
+                if (ut) ut.innerHTML = errorMailSent;
+                if (textEl)
+                    textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
+            } else if (send_by_mail && res.result.send_by_mail) {
+                hide(password_container);
+            }
+        }
+    });
+}
+
+function delete_user(uid: number) {
     void pwgPost('pwg.users.delete', { user_id: uid, pwg_token }).then(() => {
         close_user_list();
         update_user_list();
@@ -1644,7 +1728,7 @@ function delete_user(uid: any) {
     });
 }
 
-function show_filter_infos(nb_filters: any) {
+function show_filter_infos(nb_filters: number) {
     const filteredEl = qs('.filtered-users');
     const searchVal = qs<HTMLInputElement>('#user_search')?.value ?? '';
     if (filteredEl) {
@@ -1672,14 +1756,19 @@ function show_filter_infos(nb_filters: any) {
     }
 }
 
-function send_link_password(email: any, username: any, user_id: any, send_by_mail: boolean) {
-    pwgPost('pwg.users.generatePasswordLink', {
+function send_link_password(
+    email: string,
+    username: string,
+    user_id: number,
+    send_by_mail: boolean
+) {
+    void pwgPost<PasswordLinkResult>('pwg.users.generatePasswordLink', {
         user_id,
         send_by_mail: String(send_by_mail),
         pwg_token,
     })
         .then((res) => {
-            if (res.stat === 'ok') {
+            if (res.stat === 'ok' && res.result !== undefined) {
                 const copyInput = qs<HTMLInputElement>('#result_send_mail_copy_input');
                 if (copyInput) copyInput.value = res.result.generated_link;
                 if (send_by_mail) {
@@ -1691,9 +1780,13 @@ function send_link_password(email: any, username: any, user_id: any, send_by_mai
                             'icon-cancel',
                             'icon-ok'
                         );
+                        const fallbackMail = qs<HTMLInputElement>(
+                            '.user-property-email .user-property-input'
+                        )?.value;
                         const curr_mail =
-                            qs<HTMLInputElement>('.user-property-email .user-property-input')
-                                ?.value || email;
+                            fallbackMail !== undefined && fallbackMail !== ''
+                                ? fallbackMail
+                                : email;
                         qs<HTMLElement>('#password_msg_result_mail')!.innerHTML = sprintf(
                             mailSentAt,
                             username,
@@ -1711,15 +1804,14 @@ function send_link_password(email: any, username: any, user_id: any, send_by_mai
                     hide(qs('.user-property-password-choice'));
                     show(qs('#edit_password_result_mail'));
                 } else {
-                    if (window.isSecureContext && navigator.clipboard)
-                        copyToClipboard(res.result.generated_link);
+                    if (window.isSecureContext) copyToClipboard(res.result.generated_link);
                 }
             }
         })
-        .catch((err) => console.log('Error send_link_password:', err));
+        .catch((err: unknown) => console.error('Error send_link_password:', err));
 }
 
-function set_main_user(user_id: any, new_username: any) {
+function set_main_user(user_id: number, new_username: string) {
     void pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then((res) => {
         if (res.stat === 'ok') {
             const king = qs('#who_is_the_king');
@@ -1741,7 +1833,7 @@ function set_main_user(user_id: any, new_username: any) {
 }
 
 /*---- Main user (king) ----*/
-function open_main_user_modal(user_to_edit: any) {
+function open_main_user_modal(user_to_edit: PwgUser) {
     const modal = qs<HTMLElement>('.user-property-main-user-change')!;
     reset_main_user_modals();
     qs<HTMLElement>('.main-user-proceed-desc')!.innerHTML = sprintf(
@@ -1787,7 +1879,7 @@ function set_main_user_success() {
 
 function event_check_string_main_user(
     new_main_username: string,
-    new_main_id: any,
+    new_main_id: number,
     stringToCheck: string
 ) {
     const input = qs<HTMLInputElement>('#main_user_rewrite')!;
@@ -1816,7 +1908,7 @@ function event_check_string_main_user(
     });
 }
 
-function event_validate_main_user(new_main_username: string, user_id: any) {
+function event_validate_main_user(new_main_username: string, user_id: number) {
     const btn = qs('.main-user-btn-validate')!;
     const nb = btn.cloneNode(true) as HTMLElement;
     btn.replaceWith(nb);
@@ -1881,41 +1973,39 @@ function user_container_click(this: HTMLElement) {
     update_selection_content();
 }
 
-function generate_groups(container: HTMLElement, groups: any[]) {
+function generate_groups(container: HTMLElement, groups: Array<number | string>) {
     const groupsContainer = container.querySelector<HTMLElement>('.user-container-groups');
     if (!groupsContainer) return;
     groupsContainer.innerHTML = '';
     const tmpl = document.getElementById('template');
+    const cloneByClass = (cls: string): HTMLElement | null => {
+        const node = tmpl?.querySelector<HTMLElement>(cls)?.cloneNode(true);
+        return node === undefined ? null : (node as HTMLElement);
+    };
     if (groups.length >= 1) {
-        const pg = tmpl
-            ?.querySelector<HTMLElement>('.group-primary')
-            ?.cloneNode(true) as HTMLElement;
-        if (pg) {
-            pg.innerHTML = get_group_name_from_id(groups[0]);
-            pg.classList.add(color_icons[groups[0] % 5]);
+        const pg = cloneByClass('.group-primary');
+        if (pg !== null) {
+            pg.innerHTML = get_group_name_from_id(Number(groups[0]));
+            pg.classList.add(color_icons[Number(groups[0]) % 5]);
             groupsContainer.appendChild(pg);
         }
     }
     if (groups.length >= 2) {
-        const pg2 = tmpl
-            ?.querySelector<HTMLElement>('.group-primary')
-            ?.cloneNode(true) as HTMLElement;
-        if (pg2) {
-            pg2.innerHTML = get_group_name_from_id(groups[1]);
-            pg2.classList.add(color_icons[groups[1] % 5]);
+        const pg2 = cloneByClass('.group-primary');
+        if (pg2 !== null) {
+            pg2.innerHTML = get_group_name_from_id(Number(groups[1]));
+            pg2.classList.add(color_icons[Number(groups[1]) % 5]);
             groupsContainer.appendChild(pg2);
         }
     }
     if (groups.length >= 3) {
-        const bonus = tmpl
-            ?.querySelector<HTMLElement>('.group-bonus')
-            ?.cloneNode(true) as HTMLElement;
-        if (bonus) {
+        const bonus = cloneByClass('.group-bonus');
+        if (bonus !== null) {
             bonus.innerHTML = '...';
-            bonus.classList.add(color_icons[groups[2] % 5], 'tiptip');
+            bonus.classList.add(color_icons[Number(groups[2]) % 5], 'tiptip');
             const title = groups
                 .slice(2)
-                .map((id) => get_group_name_from_id(id))
+                .map((id) => get_group_name_from_id(Number(id)))
                 .join(', ');
             bonus.title = title;
             tippy(bonus, { content: title });
@@ -1925,13 +2015,13 @@ function generate_groups(container: HTMLElement, groups: any[]) {
 }
 
 function fill_container_user_info(container: HTMLElement, user_index: number) {
-    const user = current_users[user_index];
-    if (!user || !container) return;
+    const user = current_users.at(user_index);
+    if (user === undefined) return;
     const regParts = user.registration_date?.split(' ') ?? [];
     container.setAttribute('key', String(user_index));
     const usernameSpan = container.querySelector<HTMLElement>('.user-container-username span');
     if (usernameSpan) usernameSpan.innerHTML = user.username;
-    if (user.id === owner_id && !document.getElementById('the_king')) {
+    if (user.id === owner_id && document.getElementById('the_king') === null) {
         const div = document.createElement('div');
         div.innerHTML = king_template;
         const king = div.firstElementChild as HTMLElement;
@@ -1969,8 +2059,9 @@ function generate_user_list() {
         ?.querySelector<HTMLElement>('.user-container');
     const wrapper = qs('#user-table-content .user-container-wrapper');
     for (let i = 0; i < current_users.length; i++) {
-        const container = tmplContainer?.cloneNode(true) as HTMLElement;
-        if (!container || !wrapper) continue;
+        const node = tmplContainer?.cloneNode(true);
+        if (node === undefined || wrapper === null) continue;
+        const container = node as HTMLElement;
         fill_container_user_info(container, i);
         wrapper.appendChild(container);
     }
@@ -1983,31 +2074,32 @@ function generate_user_list() {
 }
 
 /*---- Plugin API ----*/
-(window as any).plugin_add_tab_in_user_modal = function (
-    tab_name: any,
-    content_id: any,
-    users_table: any = null,
-    set_data_function: any = null,
-    get_data_function: any = null
+type SetDataFn = (popIn: HTMLElement, user: PwgUser) => void;
+type GetDataFn = () => void;
+
+function plugin_add_tab_in_user_modal(
+    tab_name: string,
+    content_id: string,
+    users_table: string | null = null,
+    set_data_function: SetDataFn | null = null,
+    get_data_function: GetDataFn | null = null
 ) {
-    if (typeof tab_name !== 'string') throw new TypeError('tab_name must be a string.');
     const name = tab_name.replace(/ /g, '').toLowerCase();
-    if (document.getElementById('name_tab_' + name))
+    if (document.getElementById('name_tab_' + name) !== null)
         throw new TypeError('An element with this tab_name already exists.');
-    if (typeof content_id !== 'string') throw new TypeError('content_id must be a string.');
-    if (!document.getElementById(content_id))
+    if (document.getElementById(content_id) === null)
         throw new TypeError('HTML element "' + content_id + '" not found.');
-    if (document.querySelector('.edit-user-slides #' + content_id))
+    if (document.querySelector('.edit-user-slides #' + content_id) !== null)
         throw new TypeError('An element with this content_id already exists.');
-    if (users_table && (set_data_function || get_data_function))
+    if (users_table !== null && (set_data_function !== null || get_data_function !== null))
         throw new TypeError(
             'users_table must be null if set_data_function or get_data_function is used.'
         );
-    if (set_data_function && typeof set_data_function === 'function')
+    if (set_data_function !== null)
         plugins_set_functions[name + '_set_function'] = set_data_function;
-    if (get_data_function && typeof get_data_function === 'function')
+    if (get_data_function !== null)
         plugins_get_functions[name + '_get_function'] = get_data_function;
-    if (users_table) plugins_users_infos_table.push({ content_id, users_table });
+    if (users_table !== null) plugins_users_infos_table.push({ content_id, users_table });
 
     qs('.edit-user-tab-title')?.insertAdjacentHTML(
         'beforeend',
@@ -2022,9 +2114,15 @@ function generate_user_list() {
     show(content);
     editTabsBind();
     qsa('.edit-user-tabsheet').forEach((el) => el.classList.add('tab-with-plugin'));
-    plugins_load.push('name_tab_' + name);
+    plugins_load.push(() => undefined);
     check_tabs('name_tab_' + name);
-};
+}
+
+(
+    window as unknown as Window & {
+        plugin_add_tab_in_user_modal: typeof plugin_add_tab_in_user_modal;
+    }
+).plugin_add_tab_in_user_modal = plugin_add_tab_in_user_modal;
 
 /*---- DOMContentLoaded ----*/
 document.addEventListener('DOMContentLoaded', () => {
@@ -2072,8 +2170,8 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#UserList .close-update-button')?.addEventListener('click', close_user_list);
     qsa('.CloseUserList').forEach((el) => el.addEventListener('click', close_user_list));
 
-    const toggleSel = document.getElementById('toggleSelectionMode') as HTMLInputElement;
-    if (toggleSel) {
+    const toggleSel = document.getElementById('toggleSelectionMode') as HTMLInputElement | null;
+    if (toggleSel !== null) {
         toggleSel.checked = false;
         toggleSel.addEventListener('click', () => selectionMode(toggleSel.checked));
     }
@@ -2158,9 +2256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     qsa('.advanced-filter-select').forEach((el) => el.addEventListener('change', update_user_list));
     qs('#user_search')?.addEventListener('input', update_user_list);
 
-    if (qs<HTMLInputElement>('#displayCompact')?.checked) setDisplayCompact();
-    if (qs<HTMLInputElement>('#displayLine')?.checked) setDisplayLine();
-    if (qs<HTMLInputElement>('#displayTile')?.checked) setDisplayTile();
+    if (qs<HTMLInputElement>('#displayCompact')?.checked === true) setDisplayCompact();
+    if (qs<HTMLInputElement>('#displayLine')?.checked === true) setDisplayLine();
+    if (qs<HTMLInputElement>('#displayTile')?.checked === true) setDisplayTile();
     qs('#displayCompact')?.addEventListener('change', () => {
         setDisplayCompact();
         set_view_selector('compact');
@@ -2178,7 +2276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qsa('[id^=pagination-per-page-]').forEach((el) => el.classList.remove('selected-pagination'));
     qs(`#pagination-per-page-${per_page}`)?.classList.add('selected-pagination');
 
-    if (has_group) {
+    if (has_group !== '') {
         advanced_filter_button_click();
         qs<HTMLSelectElement>("select[name='filter_group']")!.value = has_group;
         update_user_list();
@@ -2237,8 +2335,8 @@ document.addEventListener('DOMContentLoaded', () => {
         slides.forEach((slide) => {
             const rect = slide.getBoundingClientRect();
             if (
-                +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-                +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+                Number(rect.left.toFixed(0)) >= Number(rectView.left.toFixed(0)) - 1 &&
+                Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
             ) {
                 qs('#name_' + slide.id)?.classList.add('selected');
             }
@@ -2260,8 +2358,8 @@ document.addEventListener('DOMContentLoaded', () => {
         slides.forEach((slide) => {
             const rect = slide.getBoundingClientRect();
             if (
-                +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-                +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+                Number(rect.left.toFixed(0)) >= Number(rectView.left.toFixed(0)) - 1 &&
+                Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
             ) {
                 qs('#name_' + slide.id)?.classList.add('selected');
             }
@@ -2282,21 +2380,23 @@ document.addEventListener('DOMContentLoaded', () => {
         applyActionBtn.addEventListener('click', function (e) {
             e.preventDefault();
             const action =
-                (document.querySelector('select[name=selectAction]') as HTMLSelectElement)?.value ??
-                '';
+                document.querySelector<HTMLSelectElement>('select[name=selectAction]')?.value ?? '';
             let method = 'pwg.users.setInfo';
-            const data: Record<string, any> = {
+            const data: AjaxData = {
                 pwg_token,
                 user_id: selection.map((x) => x.id),
             };
+            const sel = <T extends Element>(s: string): T | null => document.querySelector<T>(s);
+            const inputVal = (s: string): string => sel<HTMLInputElement>(s)?.value ?? '';
+            const selectVal = (s: string): string => sel<HTMLSelectElement>(s)?.value ?? '';
+            const dataSelected = (s: string): boolean =>
+                sel<HTMLElement>(s)?.getAttribute('data-selected') === '1';
             switch (action) {
                 case 'delete':
                     if (
-                        (
-                            document.querySelector(
-                                '#permitActionUserList .user-list-checkbox[name=confirm_deletion]'
-                            ) as HTMLElement
-                        )?.getAttribute('data-selected') !== '1'
+                        !dataSelected(
+                            '#permitActionUserList .user-list-checkbox[name=confirm_deletion]'
+                        )
                     ) {
                         alert(missingConfirm);
                         return false;
@@ -2305,111 +2405,80 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'group_associate':
                     method = 'pwg.groups.addUser';
-                    data['group_id'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=associate]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['group_id'] = selectVal('#permitActionUserList select[name=associate]');
                     break;
                 case 'group_dissociate':
                     method = 'pwg.groups.deleteUser';
-                    data['group_id'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=dissociate]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['group_id'] = selectVal('#permitActionUserList select[name=dissociate]');
                     break;
                 case 'status':
-                    data['status'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=status]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['status'] = selectVal('#permitActionUserList select[name=status]');
                     break;
                 case 'enabled_high':
-                    data['enabled_high'] =
-                        (
-                            document.querySelector(
-                                '#permitActionUserList .user-list-checkbox[name=enabled_high_yes]'
-                            ) as HTMLElement
-                        )?.getAttribute('data-selected') === '1';
+                    data['enabled_high'] = dataSelected(
+                        '#permitActionUserList .user-list-checkbox[name=enabled_high_yes]'
+                    );
                     break;
                 case 'level':
-                    data['level'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=level]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['level'] = selectVal('#permitActionUserList select[name=level]');
                     break;
                 case 'nb_image_page':
-                    data['nb_image_page'] = (
-                        document.querySelector(
-                            '#permitActionUserList input[name=nb_image_page]'
-                        ) as HTMLInputElement
-                    )?.value;
+                    data['nb_image_page'] = inputVal(
+                        '#permitActionUserList input[name=nb_image_page]'
+                    );
                     break;
                 case 'theme':
-                    data['theme'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=theme]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['theme'] = selectVal('#permitActionUserList select[name=theme]');
                     break;
                 case 'language':
-                    data['language'] = (
-                        document.querySelector(
-                            '#permitActionUserList select[name=language]'
-                        ) as HTMLSelectElement
-                    )?.value;
+                    data['language'] = selectVal('#permitActionUserList select[name=language]');
                     break;
-                case 'recent_period':
-                    data['recent_period'] =
-                        recent_period_values[
-                            (
-                                document.querySelector(
-                                    '#permitActionUserList .period-select-bar .slider-bar-container'
-                                ) as HTMLElement
-                            )?.dataset['sliderValue'] as any
-                        ];
+                case 'recent_period': {
+                    const sliderEl = sel<HTMLElement>(
+                        '#permitActionUserList .period-select-bar .slider-bar-container'
+                    );
+                    const sliderIdx = parseInt(sliderEl?.dataset['sliderValue'] ?? '0');
+                    data['recent_period'] = recent_period_values[sliderIdx];
                     break;
+                }
                 case 'expand':
-                    data['expand'] =
-                        (
-                            document.querySelector(
-                                '#permitActionUserList .user-list-checkbox[name=expand_yes]'
-                            ) as HTMLElement
-                        )?.getAttribute('data-selected') === '1';
+                    data['expand'] = dataSelected(
+                        '#permitActionUserList .user-list-checkbox[name=expand_yes]'
+                    );
                     break;
                 case 'show_nb_comments':
-                    data['show_nb_comments'] =
-                        (
-                            document.querySelector(
-                                '#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]'
-                            ) as HTMLElement
-                        )?.getAttribute('data-selected') === '1';
+                    data['show_nb_comments'] = dataSelected(
+                        '#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]'
+                    );
                     break;
                 case 'show_nb_hits':
-                    data['show_nb_hits'] =
-                        (
-                            document.querySelector(
-                                '#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]'
-                            ) as HTMLElement
-                        )?.getAttribute('data-selected') === '1';
+                    data['show_nb_hits'] = dataSelected(
+                        '#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]'
+                    );
                     break;
                 default:
                     alert('Unexpected action');
                     return false;
             }
             const applyActionLoading = document.getElementById('applyActionLoading');
-            const applyActionInfos = document.querySelector('#applyActionBlock .infos');
+            const applyActionInfos = document.querySelector<HTMLElement>(
+                '#applyActionBlock .infos'
+            );
             if (applyActionLoading) applyActionLoading.style.display = '';
             if (applyActionInfos) applyActionInfos.style.display = 'none';
 
             const formData = new FormData();
+            const stringifyVal = (val: unknown): string => {
+                if (val === null || val === undefined) return '';
+                if (typeof val === 'string') return val;
+                if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+                return JSON.stringify(val);
+            };
             Object.keys(data).forEach((key) => {
                 const val = data[key];
-                if (Array.isArray(val)) val.forEach((v: any) => formData.append(key + '[]', v));
-                else formData.append(key, val);
+                if (Array.isArray(val))
+                    (val as unknown[]).forEach((v) => formData.append(key + '[]', stringifyVal(v)));
+                else formData.append(key, stringifyVal(val));
             });
 
             fetch(config.wsUrl + 'format=json&method=' + method, { method: 'POST', body: formData })

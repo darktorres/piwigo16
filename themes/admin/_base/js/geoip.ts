@@ -77,7 +77,7 @@ const GeoIp = {
     },
 };
 
-(window as Window & { GeoIp: typeof GeoIp }).GeoIp = GeoIp;
+(window as unknown as Window & { GeoIp: typeof GeoIp }).GeoIp = GeoIp;
 
 export { GeoIp };
 export type { GeoIpData };

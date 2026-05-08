@@ -141,7 +141,7 @@ function pwgAddAlbum(
                     const parentTs = albumParentSel.tomselect!;
                     const targetTs = targetSel.tomselect!;
 
-                    if (parent_id !== 0 && parent_id !== '0') {
+                    if (parent_id !== '0') {
                         const parent = parentTs.options[String(parent_id)];
                         if (parent !== undefined) {
                             newAlbum.fullname = parent.fullname + ' / ' + newAlbum.fullname;
@@ -184,5 +184,5 @@ function pwgAddAlbum(
     buttonEl.addEventListener('click', openDialog);
 }
 
-(window as Window & { pwgAddAlbum: typeof pwgAddAlbum }).pwgAddAlbum = pwgAddAlbum;
+(window as unknown as Window & { pwgAddAlbum: typeof pwgAddAlbum }).pwgAddAlbum = pwgAddAlbum;
 export {};

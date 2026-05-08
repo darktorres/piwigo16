@@ -134,6 +134,60 @@ jobs:
           EOF
       - run: vendor/bin/phpunit --testsuite Integration
 
+  e2e:
+    name: E2E tests (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          extensions: mysqli, gd, mbstring, xml, intl, zip, exif
+      - uses: ramsey/composer-install@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright + Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Create .env.test
+        run: |
+          cat > .env.test <<EOF
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          EOF
+      - name: Create writable app directories
+        run: mkdir -p _data/templates_c _data/combined _data/upload local
+      - name: Start PHP built-in server
+        run: php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+      - name: Wait for PHP server
+        run: until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:8080
+          CI: 'true'
+
   ts:
     name: TypeScript + ESLint
     runs-on: ubuntu-latest

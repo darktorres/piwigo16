@@ -25,7 +25,7 @@ document.querySelectorAll<HTMLElement>('[data-c13y-check-auto]').forEach((link) 
         e.preventDefault();
         setAllCheckboxes(false);
 
-        const idsAttr = link.getAttribute('data-c13y-check-auto') || '[]';
+        const idsAttr = link.getAttribute('data-c13y-check-auto') ?? '[]';
         let ids: Array<number | string> = [];
         try {
             const parsed: unknown = JSON.parse(idsAttr);

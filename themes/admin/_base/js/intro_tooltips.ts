@@ -40,7 +40,7 @@ const { storage_details, str_gb, str_mb, translate_type, translate_files, dashbo
 const piwigo_need_update_msg = `<a href="${config.adminUrl}page=updates">${dashboard.str_piwigo_need_update} <i class="icon-right"></i></a>`;
 const ext_need_update_msg = `<a href="${config.adminUrl}page=updates&tab=ext">${dashboard.str_ext_need_update} <i class="icon-right"></i></a>`;
 
-if (dashboard.check_for_updates) {
+if (dashboard.check_for_updates === true) {
     fetch(config.wsUrl + 'format=json&method=pwg.extensions.checkUpdates', {
         signal: AbortSignal.timeout(5000),
     })
@@ -53,7 +53,10 @@ if (dashboard.check_for_updates) {
                 if (data.stat !== 'ok') return;
                 const piwigo_update = data.result?.piwigo_need_update;
                 const ext_update = data.result?.ext_need_update;
-                if ((piwigo_update || ext_update) && !document.querySelector('.warnings')) {
+                if (
+                    (piwigo_update === true || ext_update === true) &&
+                    document.querySelector('.warnings') === null
+                ) {
                     document
                         .querySelector('.eiw')
                         ?.insertAdjacentHTML(
@@ -61,7 +64,7 @@ if (dashboard.check_for_updates) {
                             '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>'
                         );
                 }
-                if (piwigo_update) {
+                if (piwigo_update === true) {
                     document
                         .querySelector('.warnings ul')
                         ?.insertAdjacentHTML(
@@ -69,7 +72,7 @@ if (dashboard.check_for_updates) {
                             '<li>' + piwigo_need_update_msg + '</li>'
                         );
                 }
-                if (ext_update) {
+                if (ext_update === true) {
                     document
                         .querySelector('.warnings ul')
                         ?.insertAdjacentHTML('beforeend', '<li>' + ext_need_update_msg + '</li>');

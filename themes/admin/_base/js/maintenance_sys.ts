@@ -26,7 +26,7 @@ function line_constructor(line: ActivityLine): void {
     const initial_user = line.username.charAt(0).toUpperCase();
 
     newLine.id = String(line.id);
-    if (line.major_infos) newLine.classList.add('major-infos');
+    if (line.major_infos === true) newLine.classList.add('major-infos');
 
     const qs = (sel: string): HTMLElement => newLine.querySelector<HTMLElement>(sel)!;
 
@@ -130,7 +130,7 @@ function get_system_activities(): void {
             });
             response.data.forEach((line) => line_constructor(line));
         })
-        .catch((e) => console.log(e));
+        .catch((e: unknown) => console.error(e));
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -65,9 +65,9 @@ tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
 
 categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
     filter: function (categories: any[], options: any) {
-        if (this.name == 'dissociate') {
+        if (this.name === 'dissociate') {
             const filtered = categories.filter(function (cat: any) {
-                return !!cacheData.associated_categories[cat.id];
+                return Boolean(cacheData.associated_categories[cat.id]);
             });
 
             if (filtered.length > 0) {
@@ -102,14 +102,27 @@ function fieldsetId(el: EventTarget | null): string {
     );
 }
 
-function pwgPost(method: string, data: Record<string, any>): Promise<any> {
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+function pwgPost<T = unknown>(
+    method: string,
+    data: Record<string, unknown>
+): Promise<WsResponse<T>> {
     const body = new URLSearchParams();
     body.append('method', method);
     for (const [k, v] of Object.entries(data)) {
-        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
+        if (Array.isArray(v))
+            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item ?? '')));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then((r) => r.json());
+    return fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then(
+        (r) => r.json() as Promise<WsResponse<T>>
+    );
 }
 
 function pwgGet(method: string, data: Record<string, any>): Promise<any> {
@@ -311,7 +324,7 @@ function add_related_category({
 function check_related_categories(pictureId: any, selectedAlbum: any) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .linked-albums-badge`);
     if (badge) badge.innerHTML = String(selectedAlbum.length);
-    if (selectedAlbum.length == 0) {
+    if (selectedAlbum.length === 0) {
         document
             .getElementById(pictureId)
             ?.querySelector('.linked-albums-badge')

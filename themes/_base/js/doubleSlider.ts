@@ -54,8 +54,8 @@ export function pwgDoubleSlider(container: HTMLElement, options: DoubleSliderOpt
 
     container.querySelectorAll<HTMLElement>('.slider-choice').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const minIdx = options.values.indexOf(btn.dataset['min'] as any);
-            const maxIdx = options.values.indexOf(btn.dataset['max'] as any);
+            const minIdx = options.values.indexOf(btn.dataset['min'] ?? '');
+            const maxIdx = options.values.indexOf(btn.dataset['max'] ?? '');
             slider.set([minIdx, maxIdx]);
         });
     });

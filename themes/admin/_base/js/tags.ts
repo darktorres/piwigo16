@@ -140,7 +140,7 @@ function createTagBox(
         .replace('%U_VIEW%', u_view)
         .replace('%U_EDIT%', u_edit)
         .replace('%raw_name%', raw_name);
-    if (name == raw_name) html = html.replace('icon-globe', '');
+    if (name === raw_name) html = html.replace('icon-globe', '');
 
     const div = document.createElement('div');
     div.className = 'tag-box test';
@@ -345,7 +345,7 @@ function setupTagbox(tagBox: HTMLElement) {
 
     q('.dropdown-option.edit')?.addEventListener('click', (e: Event) => {
         const id = (e.currentTarget as HTMLElement).closest<HTMLElement>('.tag-box')?.dataset['id'];
-        const tagIndex = dataTags.findIndex((tag: any) => tag.id == id);
+        const tagIndex = dataTags.findIndex((tag: any) => tag.id === id);
         const tagRawName = dataTags[tagIndex].raw_name ?? q('.tag-name')?.dataset['rawname'];
         const tagName = dataTags[tagIndex].name ?? q('.tag-name')?.innerHTML;
         set_up_popin(tagBox.dataset['id'], tagRawName, tagName);
@@ -360,9 +360,11 @@ function setupTagbox(tagBox: HTMLElement) {
     });
 
     q('.dropdown-option.duplicate')?.addEventListener('click', () => {
-        duplicateTag(tagBox.dataset['id'], q('.tag-name')?.dataset['rawname']).then((d: any) => {
-            showMessage(str_tag_created.replace('%s', d.result.name));
-        });
+        void duplicateTag(tagBox.dataset['id'], q('.tag-name')?.dataset['rawname']).then(
+            (d: any) => {
+                showMessage(str_tag_created.replace('%s', d.result.name));
+            }
+        );
     });
 }
 
@@ -391,13 +393,13 @@ function cleanCheckmark() {
 
 function removeTag(id: any, name: any) {
     const body = new URLSearchParams({ method: 'pwg.tags.delete', tag_id: id, pwg_token });
-    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
+    void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.json())
         .then((rawData) => {
             data = rawData;
             if (data.stat === 'ok') {
                 qs(`.tag-box[data-id="${id}"]`)?.remove();
-                dataTags = dataTags.filter((tag: any) => tag.id != id);
+                dataTags = dataTags.filter((tag: any) => tag.id !== id);
                 showMessage(str_tag_deleted.replace('%s', name));
                 updateBadge();
                 updateSearchInfo();
@@ -433,7 +435,7 @@ function renameTag(id: any, new_name: any): Promise<any> {
                 if (nameEl) nameEl.dataset['rawname'] = data.result.raw_name;
                 const viewEl = qs<HTMLAnchorElement>('.dropdown-option.view');
                 if (viewEl) viewEl.href = 'index.php?/tags/' + id + '-' + data.result.url_name;
-                index = dataTags.findIndex((tag: any) => tag.id == id);
+                index = dataTags.findIndex((tag: any) => tag.id === id);
                 dataTags[index].name = data.result.name;
                 dataTags[index].raw_name = data.result.raw_name;
                 dataTags[index].url_name = data.result.url_name;
@@ -470,7 +472,7 @@ function duplicateTag(id: any, name: any): Promise<any> {
                 const orig = qs(`.tag-box[data-id="${id}"]`);
                 orig?.after(tag);
                 setupTagbox(tag);
-                index = dataTags.findIndex((t: any) => t.id == id);
+                index = dataTags.findIndex((t: any) => t.id === id);
                 dataTags.splice(index + 1, 0, {
                     name: data.result.name,
                     id: data.result.id,
@@ -534,7 +536,7 @@ function addSelectedItem(id: any) {
             );
     } else {
         hide(qs('.selection-other-tags'));
-        const found = dataTags.find((tag: any) => tag.id == id);
+        const found = dataTags.find((tag: any) => tag.id === id);
         if (found) createSelectionItem(id, found.name);
     }
 }
@@ -548,7 +550,7 @@ function createSelectionItem(id: any, name: any) {
 }
 
 function removeSelectedItem(id: any) {
-    if (!selected.find((tag: any) => tag == id)) return;
+    if (!selected.find((tag: any) => tag === id)) return;
     selected = selected.filter((tag: any) => parseInt(tag) !== parseInt(id));
     const tagEl = qs<HTMLElement>(`.tag-box[data-id="${id}"]`);
     if (tagEl) tagEl.dataset['selected'] = '0';
@@ -562,7 +564,7 @@ function removeSelectedItem(id: any) {
             while (i < selected.length && isNotCreate) {
                 if (!qs(`.selection-mode-tag .tag-list div[data-id="${selected[i]}"]`)) {
                     isNotCreate = false;
-                    indexOfTag = dataTags.findIndex((tag: any) => tag.id == selected[i]);
+                    indexOfTag = dataTags.findIndex((tag: any) => tag.id === selected[i]);
                     createSelectionItem(selected[i], dataTags[indexOfTag].name);
                 }
                 i++;
@@ -584,7 +586,7 @@ function updateMergeItems() {
     const opts = qs('#MergeOptionsChoices');
     if (opts) opts.innerHTML = '';
     selected.forEach((id: any) => {
-        const found = dataTags.find((tag: any) => tag.id == id);
+        const found = dataTags.find((tag: any) => tag.id === id);
         const opt = document.createElement('option');
         opt.value = String(id);
         opt.textContent = found?.name ?? '';
@@ -634,7 +636,7 @@ document.getElementById('CancelMerge')?.addEventListener('click', () => {
 });
 
 document.getElementById('selectAll')?.addEventListener('click', () => {
-    selectAll(tagToDisplay());
+    void selectAll(tagToDisplay());
     updateSelectionContent();
     if (selected.length < dataTags.length) {
         showSelectMessage(
@@ -646,7 +648,7 @@ document.getElementById('selectAll')?.addEventListener('click', () => {
                 const msgDiv = qs('.tag-select-message div');
                 if (msgDiv) msgDiv.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
                 setTimeout(() => {
-                    selectAll(dataTags).then(() => {
+                    void selectAll(dataTags).then(() => {
                         updateSelectionContent();
                         showSelectMessage(
                             str_tag_selected.replace(/%d/g, String(selected.length)),
@@ -710,7 +712,7 @@ document.getElementById('selectInvert')?.addEventListener('click', () => {
 function selectInvert(dataArr: any[]) {
     dataArr.forEach((tag: any) => {
         tagBox = qs(`.tag-box[data-id="${tag.id}"]`);
-        if (tagBox?.dataset['selected'] == '1') {
+        if (tagBox?.dataset['selected'] === '1') {
             tagBox.dataset['selected'] = '0';
             removeSelectedItem(tag.id);
         } else {
@@ -726,7 +728,7 @@ function selectInvert(dataArr: any[]) {
 document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => {
     const names: string[] = [];
     selected.forEach((id: any) => {
-        const found = dataTags.find((t: any) => t.id == id);
+        const found = dataTags.find((t: any) => t.id === id);
         if (found) names.push(found.name);
     });
     if (!window.confirm(str_delete_tags.replace('%s', tagListToString(names)))) return;
@@ -736,13 +738,13 @@ document.getElementById('DeleteSelectionMode')?.addEventListener('click', () => 
 function removeSelectedTags() {
     const names: string[] = [];
     selected.forEach((id: any) => {
-        const f = dataTags.find((t: any) => t.id == id);
+        const f = dataTags.find((t: any) => t.id === id);
         if (f) names.push(f.name);
     });
     const body = new URLSearchParams({ pwg_token });
     selected.forEach((id: any) => body.append('tag_id[]', id));
     body.append('method', 'pwg.tags.delete');
-    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
+    void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
@@ -779,16 +781,16 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
         method: 'pwg.tags.merge',
     });
     merge_ids.forEach((id: any) => body.append('merge_tag_id[]', id));
-    fetch(config.wsUrl + 'format=json', { method: 'POST', body })
+    void fetch(config.wsUrl + 'format=json', { method: 'POST', body })
         .then((r) => r.text())
         .then((rawText) => {
             const raw_data = rawText.slice(rawText.search('{'));
             data = JSON.parse(raw_data);
             if (data.stat === 'ok') {
                 data.result.deleted_tag.forEach((id: any) => {
-                    if (data.result.destination_tag != id) {
+                    if (data.result.destination_tag !== id) {
                         qs(`.tag-box[data-id="${id}"]`)?.remove();
-                        dataTags = dataTags.filter((t: any) => id != t.id);
+                        dataTags = dataTags.filter((t: any) => id !== t.id);
                     }
                 });
                 if (data.result.images_in_merged_tag.length > 0) {
@@ -803,7 +805,7 @@ function mergeGroups(destination_id: any, merge_ids: any[]) {
                             '%d',
                             data.result.images_in_merged_tag.length
                         );
-                    index = dataTags.findIndex((t: any) => t.id == data.result.destination_tag);
+                    index = dataTags.findIndex((t: any) => t.id === data.result.destination_tag);
                     dataTags[index].counter = data.result.images_in_merged_tag.length;
                 }
                 qsa('.tag-box').forEach((el) => {
@@ -885,7 +887,7 @@ let actualPage = 1;
 function askUpdatePage() {
     if (!promisePending) {
         promisePending = true;
-        updatePage().then(promiseFinish);
+        void updatePage().then(promiseFinish);
     } else updateAsk = true;
 }
 function promiseFinish() {
@@ -913,18 +915,18 @@ function createPaginationMenu() {
     nbPage = getNumberPages();
     appendPaginationItem(1);
     if (actualPage > 2) appendPaginationItem();
-    if (actualPage != 1 && actualPage != nbPage) appendPaginationItem(actualPage);
+    if (actualPage !== 1 && actualPage !== nbPage) appendPaginationItem(actualPage);
     if (actualPage < nbPage - 1) appendPaginationItem();
     appendPaginationItem(nbPage);
 }
 
 function appendPaginationItem(page: any = null) {
     const container = qs('.pagination-item-container')!;
-    if (page != null) {
+    if (page !== null) {
         const div = document.createElement('div');
         div.innerHTML = pageItem.replace(/%d/g, String(page));
         const el = div.firstElementChild as HTMLElement;
-        if (actualPage == page) el.classList.add('actual');
+        if (actualPage === page) el.classList.add('actual');
         el.addEventListener('click', () => {
             actualPage = parseInt(el.dataset['page'] ?? '1');
             updatePaginationMenu();
@@ -936,8 +938,8 @@ function appendPaginationItem(page: any = null) {
 }
 
 function updateArrows() {
-    qs('.pagination-arrow.left')?.classList.toggle('unavailable', actualPage == 1);
-    qs('.pagination-arrow.rigth')?.classList.toggle('unavailable', actualPage == getNumberPages());
+    qs('.pagination-arrow.left')?.classList.toggle('unavailable', actualPage === 1);
+    qs('.pagination-arrow.rigth')?.classList.toggle('unavailable', actualPage === getNumberPages());
 }
 
 function getNumberPages(): number {

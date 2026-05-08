@@ -54,22 +54,35 @@ let parent_album = _parent_album;
 let default_parent_album = _default_parent_album;
 let temp_txt = '';
 
-function pwgPost(method: string, data: Record<string, any>): Promise<any> {
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+function pwgPost<T = unknown>(
+    method: string,
+    data: Record<string, unknown>
+): Promise<WsResponse<T>> {
     return fetch(`${config.wsUrl}format=json&method=${method}`, {
         method: 'POST',
         body: new URLSearchParams(
             Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
         ),
-    }).then((r) => r.json());
+    }).then((r) => r.json() as Promise<WsResponse<T>>);
 }
 
-function pwgGet(method: string, data: Record<string, any>): Promise<any> {
+function pwgGet<T = unknown>(
+    method: string,
+    data: Record<string, unknown>
+): Promise<WsResponse<T>> {
     return fetch(
         `${config.wsUrl}format=json&method=${method}&` +
             new URLSearchParams(
                 Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
             )
-    ).then((r) => r.json());
+    ).then((r) => r.json() as Promise<WsResponse<T>>);
 }
 
 function showInfo(show: boolean) {
@@ -112,7 +125,7 @@ function save_button_set_loading(state = true) {
 
 function checkAlbumLock() {
     document.querySelectorAll<HTMLElement>('.warnings').forEach((el) => {
-        el.style.display = is_visible == 'true' ? 'none' : 'flex';
+        el.style.display = is_visible === 'true' ? 'none' : 'flex';
     });
 }
 
@@ -125,7 +138,7 @@ function add_related_category({
     newSelectedAlbum: any;
     getSelectedAlbum: any;
 }) {
-    if (parent_album != album.id) {
+    if (parent_album !== album.id) {
         document.getElementById('cat-parent')!.innerHTML =
             album.full_name_with_admin_links ?? album.root;
         document
@@ -260,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.unlock-album')?.addEventListener('click', () => {
         pwgPost('pwg.categories.setInfo', { category_id: album_id, visible: 'true' })
             .then((data) => {
-                if (data.stat == 'ok') {
+                if (data.stat === 'ok') {
                     is_visible = 'true';
                     const catLocked = document.getElementById('cat-locked') as HTMLInputElement;
                     if (catLocked?.checked) catLocked.click();
@@ -292,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pwg_token,
         })
             .then((data) => {
-                if (data.stat == 'ok') {
+                if (data.stat === 'ok') {
                     save_button_set_loading(false);
                     document
                         .querySelectorAll<HTMLElement>(
@@ -312,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(err);
             });
 
-        if (parent_album != default_parent_album) {
+        if (parent_album !== default_parent_album) {
             pwgPost('pwg.categories.move', {
                 category_id: album_id,
                 parent: parent_album,
@@ -325,12 +338,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         default_parent_album = parent_album;
                     } else showError();
                 })
-                .catch((e) => console.log((e as any).message));
+                .catch((e) => console.log(e.message));
         }
     });
 
     document.querySelector('.deleteAlbum')?.addEventListener('click', () => {
-        showDeleteAlbumDialog();
+        void showDeleteAlbumDialog();
     });
 
     const refreshBtn = document.getElementById('refreshRepresentative');
@@ -341,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.classList.add('animate-spin');
         pwgPost('pwg.categories.refreshRepresentative', { category_id: album_id })
             .then((data) => {
-                if (data.stat == 'ok') {
+                if (data.stat === 'ok') {
                     document.getElementById('deleteRepresentative')!.style.display = '';
                     const rep = document.querySelector<HTMLElement>('.cat-modify-representative');
                     if (rep) {
@@ -367,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.classList.add('animate-spin');
         pwgPost('pwg.categories.deleteRepresentative', { category_id: album_id })
             .then((data) => {
-                if (data.stat == 'ok') {
+                if (data.stat === 'ok') {
                     deleteRepBtn.style.display = 'none';
                     const rep = document.querySelector<HTMLElement>('.cat-modify-representative');
                     if (rep) {
@@ -400,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             apply_commentable_to_subalbums: 'true',
         })
             .then((data) => {
-                if (data.stat == 'ok') {
+                if (data.stat === 'ok') {
                     save_button_set_loading(false);
                     const cb = document.getElementById('cat-commentable') as HTMLInputElement;
                     if (commentable !== cb.checked) cb.click();

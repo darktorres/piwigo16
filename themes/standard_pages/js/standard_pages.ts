@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const input = col.querySelector<HTMLInputElement>('input');
                 if (input?.dataset['required'] === 'true') {
                     const errorMessage = col.querySelector<HTMLElement>('.error-message');
-                    if (!String(input.value ?? '').trim()) {
+                    if (input.value.trim() === '') {
                         e.preventDefault();
                         input.setCustomValidity('');
                         if (errorMessage) errorMessage.style.display = '';
@@ -75,24 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLAnchorElement>('#other-languages a').forEach((a) => {
         a.addEventListener('click', () => {
             const href = a.getAttribute('href');
-            if (!href) return;
+            if (href === null || href === '') return;
             const clickedUrl = new URL(href, location.href);
             const selectedLang = clickedUrl.searchParams.get('lang');
-            if (selectedLang) setCookie('lang', selectedLang, 1);
+            if (selectedLang !== null && selectedLang !== '') setCookie('lang', selectedLang, 1);
         });
     });
 
     document.querySelectorAll<HTMLElement>('[data-toggle-mode]').forEach((el) => {
         el.addEventListener('click', () => {
-            const mode = el.getAttribute('data-toggle-mode') || '';
+            const mode = el.getAttribute('data-toggle-mode') ?? '';
             if (mode === 'dark' || mode === 'light') toggle_mode(mode);
         });
     });
 
     document.querySelectorAll<HTMLElement>('[data-set-lang]').forEach((el) => {
         el.addEventListener('click', () => {
-            const code = el.getAttribute('data-set-lang') || '';
-            if (code) setCookie('lang', code, 30);
+            const code = el.getAttribute('data-set-lang') ?? '';
+            if (code !== '') setCookie('lang', code, 30);
         });
     });
 });

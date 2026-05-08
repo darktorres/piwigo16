@@ -88,10 +88,10 @@ const Piecon: PieconInstance = (() => {
         return canvas;
     };
 
-    const drawFavicon = (percentage: number): void => {
+    const drawFavicon = (percentageIn: number): void => {
+        const percentage = percentageIn || 0;
         const cvs = getCanvas();
         const context = cvs.getContext('2d');
-        percentage = percentage || 0;
         if (!context) return;
 
         const cx = cvs.width / 2;
@@ -137,23 +137,24 @@ const Piecon: PieconInstance = (() => {
     };
 
     obj.setOptions = function (custom: Partial<PieconOptions>): PieconInstance {
-        options = { ...defaults, ...custom } as PieconOptions;
+        options = { ...defaults, ...custom };
         return this;
     };
 
     obj.setProgress = function (percentage: number): void {
-        if (!originalTitle) originalTitle = document.title;
-        if (!originalFavicon || !currentFavicon) {
+        originalTitle ??= document.title;
+        if (
+            originalFavicon === null ||
+            originalFavicon === '' ||
+            currentFavicon === null ||
+            currentFavicon === ''
+        ) {
             const tag = getFaviconTag();
-            originalFavicon = currentFavicon = tag ? tag.getAttribute('href') : '/favicon.ico';
+            originalFavicon = currentFavicon =
+                tag !== false ? tag.getAttribute('href') : '/favicon.ico';
         }
         if (!isNaN(parseFloat(String(percentage))) && isFinite(percentage)) {
-            if (
-                !getCanvas().getContext ||
-                browser.ie ||
-                browser.safari ||
-                options.fallback === true
-            ) {
+            if (browser.ie || browser.safari || options.fallback === true) {
                 updateTitle(percentage);
             } else {
                 if (options.fallback === 'force') updateTitle(percentage);
@@ -163,8 +164,8 @@ const Piecon: PieconInstance = (() => {
     };
 
     obj.reset = function (): void {
-        if (originalTitle) document.title = originalTitle;
-        if (originalFavicon) {
+        if (originalTitle !== null && originalTitle !== '') document.title = originalTitle;
+        if (originalFavicon !== null && originalFavicon !== '') {
             currentFavicon = originalFavicon;
             setFaviconTag(currentFavicon);
         }

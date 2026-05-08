@@ -102,7 +102,7 @@ export function attachMonitor(page: Page): PageMonitor {
             }
             if (parts.length > 0) {
                 throw new Error(
-                    (context ? `[${context}] ` : '') +
+                    (context !== undefined && context !== '' ? `[${context}] ` : '') +
                         'Page reported errors:\n  ' +
                         parts.join('\n  ')
                 );

@@ -6,11 +6,22 @@ declare let error_icon: string;
 const errorIconFromBody = document.body.dataset['errorIcon'];
 const maxRequestsFromBody = document.body.dataset['maxRequests'];
 
-if (errorIconFromBody && typeof error_icon === 'undefined') {
-    (window as any).error_icon = errorIconFromBody;
+interface ThumbnailsWindow extends Window {
+    error_icon?: string;
+    max_requests?: number;
+}
+if (
+    errorIconFromBody !== undefined &&
+    errorIconFromBody !== '' &&
+    typeof error_icon === 'undefined'
+) {
+    (window as ThumbnailsWindow).error_icon = errorIconFromBody;
 }
 if (typeof max_requests === 'undefined') {
-    (window as any).max_requests = maxRequestsFromBody ? Number(maxRequestsFromBody) : 3;
+    (window as ThumbnailsWindow).max_requests =
+        maxRequestsFromBody !== undefined && maxRequestsFromBody !== ''
+            ? Number(maxRequestsFromBody)
+            : 3;
 }
 
 class AjaxQueue {
@@ -31,7 +42,7 @@ class AjaxQueue {
         while (this.running < this.max && this.pending.length > 0) {
             const fn = this.pending.shift()!;
             this.running++;
-            fn().finally(() => {
+            void fn().finally(() => {
                 this.running--;
                 this.process();
             });

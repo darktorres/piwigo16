@@ -339,7 +339,8 @@ function AddHoverOnAlbumActions(signal: AbortSignal) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (!Cookies.get('pwg_album_manager_view')) {
+    const view = Cookies.get('pwg_album_manager_view');
+    if (view === undefined || view === '') {
         Cookies.set('pwg_album_manager_view', 'tile');
     }
 
@@ -369,17 +370,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const displayCompact = document.getElementById('displayCompact') as HTMLInputElement;
-    const displayLine = document.getElementById('displayLine') as HTMLInputElement;
-    const displayTile = document.getElementById('displayTile') as HTMLInputElement;
+    const displayCompact = document.getElementById('displayCompact') as HTMLInputElement | null;
+    const displayLine = document.getElementById('displayLine') as HTMLInputElement | null;
+    const displayTile = document.getElementById('displayTile') as HTMLInputElement | null;
 
-    if (displayCompact?.checked) setDisplayCompact();
-    if (displayLine?.checked) setDisplayLine();
-    if (displayTile?.checked) setDisplayTile();
+    if (displayCompact?.checked === true) setDisplayCompact();
+    if (displayLine?.checked === true) setDisplayLine();
+    if (displayTile?.checked === true) setDisplayTile();
 
     displayCompact?.addEventListener('change', () => {
         setDisplayCompact();
-        if (document.querySelector('.addAlbum.input-mode')) {
+        if (document.querySelector('.addAlbum.input-mode') !== null) {
             document.querySelectorAll<HTMLElement>('.addAlbum p').forEach((p) => {
                 p.style.display = 'none';
             });
@@ -389,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayLine?.addEventListener('change', () => {
         setDisplayLine();
-        if (document.querySelector('.addAlbum.input-mode')) {
+        if (document.querySelector('.addAlbum.input-mode') !== null) {
             document.querySelectorAll<HTMLElement>('.addAlbum p').forEach((p) => {
                 p.style.display = 'none';
             });
@@ -399,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayTile?.addEventListener('change', () => {
         setDisplayTile();
-        if (document.querySelector('.addAlbum.input-mode')) {
+        if (document.querySelector('.addAlbum.input-mode') !== null) {
             document.querySelectorAll<HTMLElement>('.addAlbum p').forEach((p) => {
                 p.style.display = '';
             });

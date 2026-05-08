@@ -13,7 +13,8 @@ function correctPNG(): void {
             if (img.align === 'left') imgStyle = 'float:left;' + imgStyle;
             if (img.align === 'right') imgStyle = 'float:right;' + imgStyle;
             const anchor = img.parentElement as HTMLAnchorElement | null;
-            if (anchor?.href) imgStyle = 'cursor:hand;' + imgStyle;
+            if (anchor?.href !== undefined && anchor.href !== '')
+                imgStyle = 'cursor:hand;' + imgStyle;
             const strNewHTML =
                 '<span ' +
                 imgID +

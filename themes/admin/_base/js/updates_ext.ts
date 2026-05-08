@@ -97,10 +97,7 @@ function checkFieldsets(): void {
         if (upToDate) upToDate.style.display = '';
     }
     if (ignored > 0) {
-        const resetEl = document.getElementById('reset_ignore') as
-            | HTMLInputElement
-            | HTMLElement
-            | null;
+        const resetEl = document.getElementById('reset_ignore');
         if (resetEl && resetEl instanceof HTMLInputElement) {
             resetEl.value = pageData.str_restore + ' (' + ignored + ')';
         } else if (resetEl) {
@@ -177,7 +174,7 @@ function ignoreAll(): void {
 }
 
 function resetIgnored(): void {
-    fetch(
+    void fetch(
         config.wsUrl +
             new URLSearchParams({
                 method: 'pwg.extensions.ignoreUpdate',

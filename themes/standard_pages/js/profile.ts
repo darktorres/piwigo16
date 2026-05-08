@@ -536,7 +536,7 @@ function unbindApiRevokeEvents(): void {
 
 function copyToClipboard(copy: string, message: string, selector: string | null = null): boolean {
     if (window.isSecureContext && navigator.clipboard) {
-        navigator.clipboard.writeText(copy);
+        void navigator.clipboard.writeText(copy);
         if (selector) qs(selector)?.classList.remove('api-hide');
         else pwgToaster({ text: message, icon: 'success' });
         return true;

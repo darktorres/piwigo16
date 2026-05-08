@@ -17,7 +17,7 @@ test('create album via web service API', async ({ page, request }) => {
     });
 
     expect(response.status(), 'pwg.categories.add HTTP status').toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as { stat: string; result: { id: number } };
     expect(body.stat, `pwg.categories.add stat (full body: ${JSON.stringify(body)})`).toBe('ok');
     expect(body.result.id, 'pwg.categories.add returned id').toBeGreaterThan(0);
 });

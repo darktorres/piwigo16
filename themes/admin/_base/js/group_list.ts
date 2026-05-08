@@ -92,16 +92,26 @@ const qsa = <T extends HTMLElement = HTMLElement>(
     sel: string,
     ctx: Element | Document = document
 ) => Array.from(ctx.querySelectorAll<T>(sel));
-const grp = (id: any) => document.getElementById('group-' + id);
-const grpQ = (id: any, sel: string) => grp(id)?.querySelector<HTMLElement>(sel);
+const grp = (id: number | string) => document.getElementById('group-' + String(id));
+const grpQ = (id: number | string, sel: string) => grp(id)?.querySelector<HTMLElement>(sel);
 
-function pwgPost(method: string, body: string | URLSearchParams): Promise<any> {
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+function pwgPost<T = unknown>(
+    method: string,
+    body: string | URLSearchParams
+): Promise<WsResponse<T>> {
     return fetch(`${config.wsUrl}format=json&method=${method}`, {
         method: 'POST',
         ...(typeof body === 'string'
             ? { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }
             : { body }),
-    }).then((r) => r.json());
+    }).then((r) => r.json() as Promise<WsResponse<T>>);
 }
 
 function show(el: HTMLElement | null | undefined) {
@@ -347,8 +357,8 @@ function setupGroupBox(groupBoxEl: HTMLElement) {
     });
 
     const isDefault = groupBoxEl.dataset['default'];
-    if (isDefault == '1') setupDefaultActions(id, true);
-    else if (isDefault == '0') setupDefaultActions(id, false);
+    if (isDefault === '1') setupDefaultActions(id, true);
+    else if (isDefault === '0') setupDefaultActions(id, false);
 
     q('.manage-users')?.addEventListener('click', () => openUserManager(id));
     q('#GroupDuplicate')?.addEventListener('click', () => duplicateAction(id));
@@ -360,7 +370,7 @@ function toogleSelection(group_id: any, toggle: any) {
     const q = (sel: string) => box.querySelector<HTMLElement>(sel);
 
     if (toggle) {
-        (q('.Group-checkbox input') as HTMLInputElement)!.checked = true;
+        (q('.Group-checkbox input') as HTMLInputElement).checked = true;
         box.classList.add('GroupBackgroudSelected');
         q('.icon-users-1')?.classList.add('OrangeIcon');
         q('.group_number_users')?.classList.add('OrangeFont');
@@ -370,7 +380,7 @@ function toogleSelection(group_id: any, toggle: any) {
         itemEl.innerHTML = `<a class='icon-cancel'></a><p>${q('#group_name')?.innerHTML ?? ''}</p>`;
         qs('.DeleteGroupList')?.appendChild(itemEl);
         itemEl.querySelector('a')?.addEventListener('click', () => {
-            (q('.Group-checkbox input') as HTMLInputElement)!.checked = false;
+            (q('.Group-checkbox input') as HTMLInputElement).checked = false;
             toogleSelection(group_id, undefined);
         });
         updateSelectionPanel();
@@ -380,12 +390,12 @@ function toogleSelection(group_id: any, toggle: any) {
         optEl.textContent = q('#group_name')?.innerHTML ?? '';
         qs('#MergeOptionsChoices')?.appendChild(optEl);
     } else {
-        (q('.Group-checkbox input') as HTMLInputElement)!.checked = false;
+        (q('.Group-checkbox input') as HTMLInputElement).checked = false;
         box.classList.remove('GroupBackgroudSelected');
         q('.icon-users-1')?.classList.remove('OrangeIcon');
         q('.group_number_users')?.classList.remove('OrangeFont');
         qsa<HTMLElement>('.DeleteGroupList div').forEach((el) => {
-            if (el.dataset['id'] == group_id) el.remove();
+            if (el.dataset['id'] === group_id) el.remove();
         });
         updateSelectionPanel();
         qs<HTMLOptionElement>(`#MergeOptionsChoices option[value="${group_id}"]`)?.remove();
@@ -549,7 +559,7 @@ function duplicateAction(id: any) {
                 grp(id)?.after(gb);
                 setupGroupBox(gb);
                 updateBadge();
-                if (data.result.groups[0].is_default == 'true')
+                if (data.result.groups[0].is_default === 'true')
                     setupDefaultActions(data.result.groups[0].id, true);
             }
         })
@@ -711,7 +721,7 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
 
     qsa('.DeleteGroupList div').forEach((el) => {
         const eid = el.dataset['id'];
-        if (eid != dest_grp) {
+        if (eid !== dest_grp) {
             str_merge_group += '&merge_group_id[]=' + eid;
             merge_group.push(eid);
             name_merge.push(el.querySelector('p')?.innerHTML ?? '');
@@ -751,7 +761,7 @@ qs('.ConfirmMergeButton')?.addEventListener('click', () => {
 
                 const numUsersEl = grpQ(dest_grp, '.group_number_users');
                 if (numUsersEl) numUsersEl.innerHTML = "<i class='icon-spin6 animate-spin'> </i>";
-                pwgPost('pwg.users.getList', `group_id=${dest_grp}`).then((rd) => {
+                void pwgPost('pwg.users.getList', `group_id=${dest_grp}`).then((rd) => {
                     const number = rd.result.users.length;
                     if (numUsersEl)
                         numUsersEl.innerHTML =
@@ -926,7 +936,7 @@ function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElemen
         cancelIcon.style.pointerEvents = 'none';
         cancelIcon.classList.remove('icon-cancel');
 
-        pwgPost(
+        void pwgPost(
             'pwg.groups.deleteUser',
             `group_id=${grp_id}&user_id=${user_id}&pwg_token=${pwg_token}`
         ).then((rd) => {
@@ -944,7 +954,7 @@ function getUserDisplay(username: string, user_id: any, grp_id: any): HTMLElemen
                 });
                 userBlock.remove();
                 updateUserSearch();
-                usersInGroup = usersInGroup.filter((u: any) => u.id != user_id);
+                usersInGroup = usersInGroup.filter((u: any) => u.id !== user_id);
                 const badge = qs('.UserNumberBadge');
                 updateMembernumber(parseInt(badge?.innerHTML ?? '0') - 1, grp_id);
             }
@@ -982,43 +992,44 @@ qs('.AddUserBlock button')?.addEventListener('click', () => {
         ts.changeAttribute(submitBtn, 'style', 'pointer-events:none');
     }
 
-    pwgPost('pwg.groups.addUser', `group_id=${grp_id}&user_id=${id}&pwg_token=${pwg_token}`).then(
-        (rd) => {
-            ts.reverse();
-            data = rd;
-            if (data.stat === 'ok') {
-                const cached = JSON.parse(usersCache.storage[usersCache.key] ?? '{"data":[]}').data;
-                let username = 'undefined';
-                cached.forEach((u: any) => {
-                    if (u.id == id) username = u.username;
+    void pwgPost(
+        'pwg.groups.addUser',
+        `group_id=${grp_id}&user_id=${id}&pwg_token=${pwg_token}`
+    ).then((rd) => {
+        ts.reverse();
+        data = rd;
+        if (data.stat === 'ok') {
+            const cached = JSON.parse(usersCache.storage[usersCache.key] ?? '{"data":[]}').data;
+            let username = 'undefined';
+            cached.forEach((u: any) => {
+                if (u.id === id) username = u.username;
+            });
+
+            const listContainer = qs('.UsersInGroupList')!;
+            const userBlock = getUserDisplay(username, id, grp_id);
+            listContainer.prepend(userBlock);
+
+            fadeOut(dissociateUserInfoEl, 0);
+            qsa<HTMLElement>('.UsernameBlock')
+                .slice(1)
+                .forEach((el) => {
+                    el.style.marginRight = '10px';
+                    el.style.border = 'none';
                 });
+            associateUserInfoEl.remove();
+            userBlock.after(associateUserInfoEl);
+            associateUserInfoEl.querySelector('p')!.innerHTML = str_user_associated;
+            show(associateUserInfoEl);
 
-                const listContainer = qs('.UsersInGroupList')!;
-                const userBlock = getUserDisplay(username, id, grp_id);
-                listContainer.prepend(userBlock);
+            updateUserSearch();
+            usersInGroup.push({ username, id });
 
-                fadeOut(dissociateUserInfoEl, 0);
-                qsa<HTMLElement>('.UsernameBlock')
-                    .slice(1)
-                    .forEach((el) => {
-                        el.style.marginRight = '10px';
-                        el.style.border = 'none';
-                    });
-                associateUserInfoEl.remove();
-                userBlock.after(associateUserInfoEl);
-                associateUserInfoEl.querySelector('p')!.innerHTML = str_user_associated;
-                show(associateUserInfoEl);
-
-                updateUserSearch();
-                usersInGroup.push({ username, id });
-
-                while (listContainer.offsetHeight > maxOffsetUserCont)
-                    qsa('.UsernameBlock', listContainer).pop()?.remove();
-                const badge = qs('.UserNumberBadge');
-                updateMembernumber(parseInt(badge?.innerHTML ?? '0') + 1, grp_id!);
-            }
+            while (listContainer.offsetHeight > maxOffsetUserCont)
+                qsa('.UsernameBlock', listContainer).pop()?.remove();
+            const badge = qs('.UserNumberBadge');
+            updateMembernumber(parseInt(badge?.innerHTML ?? '0') + 1, grp_id!);
         }
-    );
+    });
 });
 
 qs('.input-user-name')?.addEventListener('input', function (this: HTMLInputElement) {

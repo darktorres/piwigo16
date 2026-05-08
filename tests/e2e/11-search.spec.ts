@@ -24,13 +24,24 @@ test.describe('search functionality', () => {
             { headers: { Cookie: cookie } }
         );
         expect(searchRes.status(), 'pwg.images.search HTTP status').toBe(200);
-        const searchBody = await searchRes.json();
+        const searchBody = (await searchRes.json()) as {
+            stat: string;
+            result: {
+                images:
+                    | { _content?: Array<{ name: string }> }
+                    | Array<{ name: string }>
+                    | undefined;
+            };
+        };
         expect(
             searchBody.stat,
             `pwg.images.search stat (full body: ${JSON.stringify(searchBody).slice(0, 400)})`
         ).toBe('ok');
-        const found = searchBody.result.images._content ?? searchBody.result.images ?? [];
-        const names: string[] = found.map((img: { name: string }) => img.name);
+        const imagesField = searchBody.result.images;
+        const found: Array<{ name: string }> = Array.isArray(imagesField)
+            ? imagesField
+            : (imagesField?._content ?? []);
+        const names: string[] = found.map((img) => img.name);
         expect(names, 'searched names').toContain(uniqueName);
     });
 
@@ -43,7 +54,11 @@ test.describe('search functionality', () => {
 
     test('search with no results renders empty state without errors', async ({ page }) => {
         const monitor = attachMonitor(page);
-        await gotoOk(page, pwgUrl('/index.php?/search&q=zzznomatch99xqz'), 'gallery search (no match)');
+        await gotoOk(
+            page,
+            pwgUrl('/index.php?/search&q=zzznomatch99xqz'),
+            'gallery search (no match)'
+        );
         monitor.assertClean('gallery search (no match)');
     });
 });

@@ -4,7 +4,7 @@ import { config } from './config';
 document.querySelectorAll<HTMLAnchorElement>('a.externalLink').forEach((el) => {
     el.addEventListener('click', (e) => {
         e.preventDefault();
-        window.open(el.getAttribute('href') || '');
+        window.open(el.getAttribute('href') ?? '');
     });
 });
 

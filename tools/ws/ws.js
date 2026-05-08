@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── auto-detect ws_url ──────────────────────────────────────────────
     const urlMatch = document.location.toString().match(/^(https?.*\/)tools\/ws\.html?/);
-    if (urlMatch == null) {
+    if (urlMatch === null) {
         askForUrl();
     } else {
         ws_url = urlMatch[1] + 'ws.php';
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function parsePwgJSON(json) {
         try {
             const resp = JSON.parse(json);
-            if (resp == null || resp.result == null || resp.stat == null || resp.stat !== 'ok') {
+            if (resp === null || resp.result === null || resp.stat === null || resp.stat !== 'ok') {
                 throw new Error();
             }
             return resp.result;
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const result = parsePwgJSON(body);
-        if (result == null) return;
+        if (result === null) return;
 
         const methods = result.methods;
         const methodTree = {};
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const result = parsePwgJSON(body);
-        if (result == null) return;
+        if (result === null) return;
 
         const onlys = [];
         if (result.options.post_only) onlys.push('POST only');
@@ -351,10 +351,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const param = method.params[i];
                 const isOptional = param.optional;
                 const acceptArray = param.acceptArray;
-                let defaultValue = param.defaultValue == null ? '' : param.defaultValue;
+                let defaultValue = param.defaultValue === null ? '' : param.defaultValue;
                 if (typeof defaultValue === 'object') defaultValue = defaultValue.join('|');
                 const info =
-                    param.info == null
+                    param.info === null
                         ? ''
                         : `<i class="methodInfo icon-info-circled-1" title="${param.info.replace(/"/g, '&quot;')}"></i>`;
                 const optionalMark =

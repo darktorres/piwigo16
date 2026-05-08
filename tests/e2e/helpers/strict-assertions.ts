@@ -45,7 +45,7 @@ export async function assertNoServerErrors(page: Page, context?: string): Promis
               .trim()
         : '';
     throw new Error(
-        (context ? `[${context}] ` : '') +
+        (context !== undefined && context !== '' ? `[${context}] ` : '') +
             `Server error markers in response body: ${labels}\n` +
             `Snippet: …${snippet}…`
     );
@@ -92,5 +92,5 @@ export async function gotoOk(page: Page, url: string, context?: string): Promise
     const resp = await page.goto(url);
     assertHttpOk(resp, ctx);
     await assertNoServerErrors(page, ctx);
-    return resp!;
+    return resp;
 }

@@ -1,7 +1,7 @@
 document.querySelectorAll<HTMLImageElement>('img[data-fallback-src]').forEach((img) => {
     const applyFallback = (): void => {
         const fallback = img.getAttribute('data-fallback-src');
-        if (fallback && img.src !== fallback) {
+        if (fallback !== null && fallback !== '' && img.src !== fallback) {
             img.src = fallback;
         }
     };

@@ -29,7 +29,7 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
+categoriesCache.selectize(document.querySelector('[data-selectize=categories]'));
 
 /*---- Filter UI (migrated from {footer_script}) ----*/
 
@@ -76,8 +76,9 @@ document.addEventListener('click', (e) => {
         image_id: target.dataset['imageId'] ?? '',
         user_id: target.dataset['userId'] ?? '',
     };
-    if (target.dataset['anonymousId']) {
-        params['anonymous_id'] = target.dataset['anonymousId'];
+    const anonId = target.dataset['anonymousId'];
+    if (anonId !== undefined && anonId !== '') {
+        params['anonymous_id'] = anonId;
     }
 
     new PwgWS(pageData.ROOT_URL).callService('pwg.rates.delete', params, {
@@ -87,7 +88,7 @@ document.addEventListener('click', (e) => {
             alert(num + ' ' + text);
         },
         onSuccess: (result) => {
-            if (result) {
+            if (result !== null && result !== undefined && result !== false) {
                 tr?.remove();
             } else {
                 alert(String(result));

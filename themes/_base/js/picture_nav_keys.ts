@@ -42,7 +42,7 @@ if (nav) {
                 break;
         }
 
-        if (url) {
+        if (url !== undefined && url !== '') {
             e.preventDefault();
             window.location.href = url.replace(/&amp;/g, '&');
         }

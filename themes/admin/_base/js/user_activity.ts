@@ -460,7 +460,7 @@ function lineConstructor(line: any) {
         case 'logout':
             qs('.action-type')?.classList.add('icon-purple');
             qs('.user-pic')?.classList.add(
-                color_icons[(line.user_id == 2 ? line.object_id[0] : line.user_id) % 5]
+                color_icons[(line.user_id === 2 ? line.object_id[0] : line.user_id) % 5]
             );
             qs('.action-icon')?.classList.add('icon-logout');
             qs('.action-section')?.classList.add('icon-user-1');
@@ -564,15 +564,17 @@ function update_pagination_menu(page: any) {
     updateArrows();
     update_pagination_items();
     document.querySelectorAll<HTMLElement>('.pagination-container').forEach((el) => {
-        el.style.display = end_page && actual_page == 1 ? 'none' : '';
+        el.style.display = end_page && actual_page === 1 ? 'none' : '';
     });
 }
 
 function updateArrows() {
     document
         .querySelector('.pagination-arrow.left')
-        ?.classList.toggle('unavailable', actual_page == 1);
-    document.querySelector('.pagination-arrow.rigth')?.classList.toggle('unavailable', !!end_page);
+        ?.classList.toggle('unavailable', actual_page === 1);
+    document
+        .querySelector('.pagination-arrow.rigth')
+        ?.classList.toggle('unavailable', Boolean(end_page));
 }
 
 function update_pagination_items() {
@@ -581,17 +583,17 @@ function update_pagination_items() {
         .forEach((el) => el.remove());
     append_pagination_item(1);
     if (actual_page > 2) append_pagination_item();
-    if (actual_page != 1) append_pagination_item(actual_page);
+    if (actual_page !== 1) append_pagination_item(actual_page);
     if (!end_page) append_pagination_item();
 }
 
 function append_pagination_item(page: any = null) {
     const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
-    if (page != null) {
+    if (page !== null) {
         const div = document.createElement('div');
         div.innerHTML = page_item.replace(/%d/g, page);
         const el = div.firstElementChild as HTMLElement;
-        if (actual_page == page) el.classList.add('actual');
+        if (actual_page === page) el.classList.add('actual');
         el.addEventListener('click', () => move_to_page(Number(el.dataset['page'])));
         container.appendChild(el);
     } else {

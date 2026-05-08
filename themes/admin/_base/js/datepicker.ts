@@ -10,18 +10,17 @@ interface PwgDatepickerOptions {
 
 function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): void {
     const options = { showTimepicker: false, cancelButton: false, ...settings };
-    const targetName = (el as HTMLElement).dataset['datepicker'];
-    const targetEl = targetName
-        ? document.querySelector<HTMLInputElement>(`[name="${targetName}"]`)
-        : null;
-    const linked = !!targetEl;
+    const targetName = el.dataset['datepicker'];
+    const targetEl =
+        targetName !== undefined && targetName !== ''
+            ? document.querySelector<HTMLInputElement>(`[name="${targetName}"]`)
+            : null;
+    const linked = targetEl !== null;
 
-    let originalValue = String(
-        linked ? (targetEl!.value ?? '') : ((el as HTMLInputElement).value ?? '')
-    );
+    let originalValue = String(linked ? targetEl.value : (el as HTMLInputElement).value);
     // Normalize date values to match the configured format
     if (/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/.test(originalValue)) {
-        if (options.showTimepicker) {
+        if (options.showTimepicker === true) {
             // Ensure 'YYYY-MM-DD HH:MM' — append 00:00 if only date present
             originalValue =
                 originalValue.length === 10 ? originalValue + ' 00:00' : originalValue.slice(0, 16);
@@ -31,53 +30,59 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
         if (!linked) (el as HTMLInputElement).value = originalValue;
     }
 
+    const wantsTime = options.showTimepicker === true;
     const fpOptions: flatpickr.Options.Options = {
-        enableTime: !!options.showTimepicker,
+        enableTime: wantsTime,
         dateFormat: linked
-            ? 'l, j F Y' + (options.showTimepicker ? ' H:i' : '')
-            : 'Y-m-d' + (options.showTimepicker ? ' H:i' : ''),
+            ? 'l, j F Y' + (wantsTime ? ' H:i' : '')
+            : 'Y-m-d' + (wantsTime ? ' H:i' : ''),
         altInput: linked,
-        altFormat: 'Y-m-d' + (options.showTimepicker ? ' H:i:S' : ''),
+        altFormat: 'Y-m-d' + (wantsTime ? ' H:i:S' : ''),
         altInputClass: linked ? (el as HTMLInputElement).className : '',
         allowInput: true,
         onChange: linked
             ? [
-                  (selectedDates, dateStr) => {
-                      if (targetEl) targetEl.value = dateStr ? dateStr.split(' ')[0] : '';
+                  (_selectedDates, dateStr) => {
+                      if (targetEl !== null)
+                          targetEl.value = dateStr !== '' ? dateStr.split(' ')[0] : '';
                   },
               ]
             : [],
     };
 
     // Link start/end date pickers
-    const startName = (el as HTMLElement).dataset['datepickerStart'];
-    const endName = (el as HTMLElement).dataset['datepickerEnd'];
+    const startName = el.dataset['datepickerStart'];
+    const endName = el.dataset['datepickerEnd'];
 
-    if (startName) {
+    type FpHost = HTMLElement & { _flatpickr?: flatpickr.Instance };
+
+    if (startName !== undefined && startName !== '') {
         const startEl = document.querySelector<HTMLElement>(`[data-datepicker="${startName}"]`);
-        if (startEl) {
-            const startFp = (startEl as any)._flatpickr as flatpickr.Instance | undefined;
-            if (startFp) fpOptions.minDate = startFp.selectedDates[0] ?? undefined;
+        if (startEl !== null) {
+            const startFp = (startEl as FpHost)._flatpickr;
+            if (startFp !== undefined) fpOptions.minDate = startFp.selectedDates[0] ?? undefined;
             fpOptions.onClose = [
                 (_dates, dateStr) => {
-                    if (startFp) startFp.set('maxDate', dateStr || undefined);
+                    if (startFp !== undefined)
+                        startFp.set('maxDate', dateStr !== '' ? dateStr : undefined);
                 },
             ];
         }
-    } else if (endName) {
+    } else if (endName !== undefined && endName !== '') {
         const endEl = document.querySelector<HTMLElement>(`[data-datepicker="${endName}"]`);
-        if (endEl) {
-            const endFp = (endEl as any)._flatpickr as flatpickr.Instance | undefined;
+        if (endEl !== null) {
+            const endFp = (endEl as FpHost)._flatpickr;
             fpOptions.onClose = [
                 (_dates, dateStr) => {
-                    if (endFp) endFp.set('minDate', dateStr || undefined);
+                    if (endFp !== undefined)
+                        endFp.set('minDate', dateStr !== '' ? dateStr : undefined);
                 },
             ];
         }
     }
 
     const fp = flatpickr(el, fpOptions);
-    (el as any)._flatpickr = fp;
+    (el as FpHost)._flatpickr = fp;
 
     // Fix SVG arrow sizing - set width/height attributes on navigation SVGs
     const calendar = fp.calendarContainer;
@@ -90,31 +95,31 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
 
     // Set initial value — pass ISO format explicitly so Flatpickr doesn't try to parse
     // the ISO string with the human-readable display format
-    if (linked && originalValue) {
+    if (linked && originalValue !== '') {
         const parts = originalValue.split(' ');
         if (parts[0].length === 10) {
-            const isoFormat = 'Y-m-d' + (options.showTimepicker ? ' H:i' : '');
+            const isoFormat = 'Y-m-d' + (wantsTime ? ' H:i' : '');
             fp.setDate(originalValue, false, isoFormat);
         }
     }
 
     // Cancel button (unset button)
-    const unsetId = (el as HTMLElement).dataset['datepickerUnset'];
-    if (unsetId) {
+    const unsetId = el.dataset['datepickerUnset'];
+    if (unsetId !== undefined && unsetId !== '') {
         document.getElementById(unsetId)?.addEventListener('click', (e) => {
             e.preventDefault();
             fp.clear();
-            if (linked && targetEl) targetEl.value = '';
+            if (linked && targetEl !== null) targetEl.value = '';
         });
     }
 
-    if (options.showTimepicker) {
+    if (wantsTime) {
         const sizeAttr = (el as HTMLInputElement).size;
-        if (sizeAttr) (el as HTMLInputElement).size = sizeAttr + 6;
+        if (sizeAttr > 0) (el as HTMLInputElement).size = sizeAttr + 6;
     }
 }
 
-(window as any).pwgDatepicker = pwgDatepicker;
+(window as Window & { pwgDatepicker: typeof pwgDatepicker }).pwgDatepicker = pwgDatepicker;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {

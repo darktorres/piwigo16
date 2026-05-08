@@ -15,10 +15,10 @@ const GeoIp = {
     storageInit: false,
 
     get(ip: string, callback: (data: GeoIpData) => void): void {
-        if (!GeoIp.storageInit && window.localStorage) {
+        if (!GeoIp.storageInit) {
             GeoIp.storageInit = true;
             const cached = localStorage.getItem('freegeoip');
-            if (cached) {
+            if (cached !== null && cached !== '') {
                 const cacheObj = JSON.parse(cached) as Record<string, GeoIpData>;
                 for (const key in cacheObj) {
                     if (new Date().getTime() - cacheObj[key].reqTime > 96 * 3600000) {
@@ -34,7 +34,7 @@ const GeoIp = {
 
         if (Object.prototype.hasOwnProperty.call(GeoIp.cache, ip)) {
             callback(GeoIp.cache[ip]);
-        } else if (GeoIp.pending[ip]) {
+        } else if (ip in GeoIp.pending) {
             GeoIp.pending[ip].push(callback);
         } else {
             GeoIp.pending[ip] = [callback];
@@ -53,9 +53,11 @@ const GeoIp = {
                         clearTimeout(timeout);
                         data.reqTime = new Date().getTime();
                         const res: string[] = [];
-                        if (data.city) res.push(data.city);
-                        if (data.region_name) res.push(data.region_name);
-                        if (data.country_name) res.push(data.country_name);
+                        if (data.city !== undefined && data.city !== '') res.push(data.city);
+                        if (data.region_name !== undefined && data.region_name !== '')
+                            res.push(data.region_name);
+                        if (data.country_name !== undefined && data.country_name !== '')
+                            res.push(data.country_name);
                         data.fullName = res.join(', ');
                         GeoIp.cache[ip] = data;
                         const callbacks = GeoIp.pending[ip];
@@ -75,7 +77,7 @@ const GeoIp = {
     },
 };
 
-(window as any).GeoIp = GeoIp;
+(window as Window & { GeoIp: typeof GeoIp }).GeoIp = GeoIp;
 
 export { GeoIp };
 export type { GeoIpData };

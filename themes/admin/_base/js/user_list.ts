@@ -76,15 +76,15 @@ const {
     groups_arr: _groups_arr,
     months: _months,
     status_to_str,
-    cancel_msg,
+    cancel_msg: _cancel_msg,
     cannotSendMail,
     cantCopy,
-    confirm_msg,
-    copyLinkStr,
+    confirm_msg: _confirm_msg,
+    copyLinkStr: _copyLinkStr,
     dates_infos,
     errorMailSent,
     errorMailSentMsg,
-    errorStr,
+    errorStr: _errorStr,
     fieldNotEmpty,
     filtered_user,
     filtered_users,
@@ -105,7 +105,7 @@ const {
     missingUsername,
     noMatchPassword,
     nb_days,
-    nb_photos,
+    nb_photos: _nb_photos,
     passwordCopied,
     registered_str,
     str_and_others_tags,
@@ -118,29 +118,49 @@ const {
 declare function sprintf(fmt: string, ...args: unknown[]): string;
 declare function getRandomInt(min: number, max: number): number;
 
+// User shape returned by pwg.users.getList / pwg.users.getInfo (subset we read).
+interface PwgUser {
+    id: number;
+    username: string;
+    status: string;
+    email?: string;
+    last_visit?: string;
+    last_visit_string?: string;
+    nb_image_page?: number;
+    level?: number;
+    enabled_high?: string | boolean;
+    expand?: string | boolean;
+    show_nb_comments?: string | boolean;
+    show_nb_hits?: string | boolean;
+    recent_period?: number;
+    theme?: string;
+    language?: string;
+    [key: string]: unknown;
+}
+
 // mutable state
-let number: any;
+let _number: number | undefined;
 
 const color_icons = ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'];
 const status_arr = ['webmaster', 'admin', 'normal', 'generic', 'guest'];
 const level_arr = ['0', '1', '2', '4', '8'];
 const king_template = '<p class="icon-king" id="the_king"></p>';
-let current_users: any[] = [];
+let current_users: PwgUser[] = [];
 const guest_id = _guest_id;
-let guest_user: any = {};
+let guest_user: PwgUser | Record<string, never> = {};
 const connected_user = _connected_user;
 const groups_arr: [number, string][] = _groups_arr;
-let last_user_index: any = -1;
+let last_user_index: number = -1;
 let last_user_id = -1;
 const pwg_token = _pwg_token;
-let selection: any[] = [];
+let selection: number[] = [];
 let first_update = true;
 let total_users = 0;
 let filter_by = 'id DESC';
-const plugins_set_functions: Record<string, any> = {};
-const plugins_get_functions: Record<string, any> = {};
-const plugins_load: any[] = [];
-const plugins_users_infos_table: any[] = [];
+const plugins_set_functions: Record<string, (popIn: HTMLElement, user: PwgUser) => void> = {};
+const plugins_get_functions: Record<string, (popIn: HTMLElement) => Record<string, unknown>> = {};
+const plugins_load: Array<() => void> = [];
+const plugins_users_infos_table: Array<(user: PwgUser, td: HTMLElement) => void> = [];
 let owner_username = _owner_username;
 let owner_id = _owner_id;
 const connected_user_status = _connected_user_status;
@@ -149,7 +169,7 @@ const view_selector = _view_selector;
 const register_dates: string[] = _register_dates;
 const months: string[] = _months;
 const groupOptions = _groups_arr.map((x) => ({ value: x[0], label: x[1], isSelected: 0 }));
-let nb_filtered_users: number;
+let _nb_filtered_users: number;
 let per_page = _pagination;
 
 const qs = <T extends HTMLElement = HTMLElement>(sel: string, ctx: Element | Document = document) =>
@@ -194,29 +214,45 @@ function fadeInThenOut(el: HTMLElement | null | undefined, showMs = 0, fadeDurat
     }, showMs);
 }
 
-function pwgPost(method: string, params: Record<string, any>): Promise<any> {
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+function pwgPost<T = unknown>(
+    method: string,
+    params: Record<string, unknown>
+): Promise<WsResponse<T>> {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
-        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item ?? '')));
+        if (Array.isArray(v))
+            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item ?? '')));
         else if (v !== undefined && v !== null) body.append(k, String(v));
     }
-    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then((r) =>
-        r.json()
+    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then(
+        (r) => r.json() as Promise<WsResponse<T>>
     );
 }
 
+type SliderEl = HTMLElement & {
+    noUiSlider?: { get: () => string | string[]; set: (v: number | string) => void };
+};
+
 function getSliderValue(el: HTMLElement | null): number {
-    if (!el) return 0;
-    const val = (el as any).noUiSlider?.get();
+    if (el === null) return 0;
+    const val = (el as SliderEl).noUiSlider?.get();
     return Array.isArray(val) ? parseInt(String(val[0])) : parseInt(String(val ?? 0));
 }
 function getSliderValues(el: HTMLElement | null): [number, number] {
-    if (!el) return [0, 0];
-    const vals = (el as any).noUiSlider?.get() as string[] | undefined;
-    return [parseInt(vals?.[0] ?? '0'), parseInt(vals?.[1] ?? '0')];
+    if (el === null) return [0, 0];
+    const vals = (el as SliderEl).noUiSlider?.get();
+    if (!Array.isArray(vals)) return [0, 0];
+    return [parseInt(vals[0] ?? '0'), parseInt(vals[1] ?? '0')];
 }
 function setSliderValue(el: HTMLElement | null | undefined, val: number) {
-    if (el && (el as any).noUiSlider) (el as any).noUiSlider.set(val);
+    if (el && (el as SliderEl).noUiSlider) (el as SliderEl).noUiSlider!.set(val);
 }
 
 // Tom Select instances for groups
@@ -233,9 +269,10 @@ const groupTs = groupSelectEls[0] ? new TomSelect(groupSelectEls[0], tsOptions) 
 const groupGuestTs = groupSelectEls[1] ? new TomSelect(groupSelectEls[1], tsOptions) : null;
 const groupAddUserTs = groupSelectEls[2] ? new TomSelect(groupSelectEls[2], tsOptions) : null;
 
+type TsSelect = HTMLElement & { tomselect?: TomSelect };
 function getPopInTs(popIn: HTMLElement): TomSelect | null {
     const sel = popIn.querySelector<HTMLElement>('.user-property-group select');
-    return sel ? ((sel as any).tomselect ?? null) : null;
+    return sel !== null ? ((sel as TsSelect).tomselect ?? null) : null;
 }
 
 /*---- Escape popup ----*/
@@ -523,22 +560,22 @@ function checkbox_container_change(this: HTMLElement) {
 }
 function checkbox_container_click(this: HTMLElement) {
     const container = this.closest<HTMLElement>('.user-container');
-    const inContainer = !!container;
+    const inContainer = Boolean(container);
     const currUser = inContainer
-        ? current_users[parseInt(container!.getAttribute('key') ?? '0')]
+        ? current_users[parseInt(container.getAttribute('key') ?? '0')]
         : { id: -1 };
     if (this.dataset['selected'] === '1') {
         this.dataset['selected'] = '0';
         this.querySelector<HTMLElement>('i')!.style.display = 'none';
         if (inContainer) {
-            container!.classList.remove('container-selected');
+            container.classList.remove('container-selected');
             selection = selection.filter((e) => e.id !== currUser.id);
         }
     } else {
         this.dataset['selected'] = '1';
         this.querySelector<HTMLElement>('i')!.style.display = '';
         if (inContainer) {
-            container!.classList.add('container-selected');
+            container.classList.add('container-selected');
             selection.push({ id: currUser.id, username: currUser.username });
         }
     }
@@ -666,11 +703,11 @@ function hide_temporary_messages() {
 }
 
 function get_group_name_from_id(id: any) {
-    const g = groups_arr.find((g) => g[0] == id);
+    const g = groups_arr.find((g) => g[0] === id);
     return g ? g[1] : 'group_id error';
 }
 function get_container_index_from_uid(uid: any) {
-    return current_users.findIndex((u) => u.id == uid);
+    return current_users.findIndex((u) => u.id === uid);
 }
 function hide_error_edit_user() {
     const el = qs<HTMLElement>('#UserList .EditUserErrors');
@@ -764,7 +801,7 @@ function is_owner(user_id: any) {
     return user_id === owner_id;
 }
 function copyToClipboard(text: string) {
-    navigator.clipboard?.writeText(text);
+    void navigator.clipboard?.writeText(text);
 }
 
 function set_selected_groups(groups: any[]) {
@@ -1130,8 +1167,7 @@ function fill_new_user() {
         if (o) o.selected = true;
     }
     const hdCb = qs('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]', popIn);
-    if (hdCb)
-        (hdCb as HTMLElement).dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
+    if (hdCb) hdCb.dataset['selected'] = guest_user.enabled_high === 'true' ? '1' : '0';
 }
 
 /*---- Ajax data helpers ----*/
@@ -1186,7 +1222,7 @@ function get_first_selection_usernames(callback: any) {
     const body = new URLSearchParams({ display: 'username', order: 'id' });
     ids.forEach((id) => body.append('user_id[]', id));
     body.append('exclude[]', String(guest_id));
-    fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
+    void fetch(config.wsUrl + 'format=json&method=pwg.users.getList', { method: 'POST', body })
         .then((r) => r.json())
         .then((d) => {
             d.result.users.forEach((u: any) => {
@@ -1235,7 +1271,7 @@ function update_user_username() {
         }
         return;
     }
-    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then((d) => {
+    void pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, username }).then((d) => {
         if (d.stat === 'ok' && last_user_index !== -1) {
             current_users[last_user_index].username = d.result.users[0].username;
             qs<HTMLElement>('#UserList .user-property-username .edit-username-title')!.innerHTML =
@@ -1244,7 +1280,7 @@ function update_user_username() {
                 current_users[last_user_index].username
             );
             fill_container_user_info(
-                qsa('#user-table-content .user-container')[last_user_index] as HTMLElement,
+                qsa('#user-table-content .user-container')[last_user_index],
                 last_user_index
             );
             hide(qs('.user-property-username-change-input'));
@@ -1256,7 +1292,7 @@ function update_user_username() {
 function update_user_password() {
     const popIn = document.getElementById('UserList')!;
     const password = qs<HTMLInputElement>('.user-property-input-password', popIn)?.value ?? '';
-    pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, password }).then((d) => {
+    void pwgPost('pwg.users.setInfo', { pwg_token, user_id: last_user_id, password }).then((d) => {
         if (d.stat === 'ok') {
             hide(qs('.user-property-password-change-inputs'));
             show(document.getElementById('edit_password_success_change'));
@@ -1289,13 +1325,13 @@ function update_user_info() {
             el.style.display = 'none';
         }
     );
-    pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
+    void pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok') {
             const result = d.result.users[0];
             if (last_user_index !== -1) {
                 current_users[last_user_index] = { ...current_users[last_user_index], ...result };
                 fill_container_user_info(
-                    qsa('#user-table-content .user-container')[last_user_index] as HTMLElement,
+                    qsa('#user-table-content .user-container')[last_user_index],
                     last_user_index
                 );
             }
@@ -1325,7 +1361,7 @@ function update_user_info() {
 }
 
 function get_guest_info() {
-    pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then((d) => {
+    void pwgPost('pwg.users.getList', { display: 'all', user_id: guest_id }).then((d) => {
         if (d.stat === 'ok') {
             guest_user = d.result.users[0];
             fill_guest_edit();
@@ -1334,7 +1370,7 @@ function get_guest_info() {
 }
 
 function get_user_info(uid: any, callback: any = null) {
-    pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then((d) => {
+    void pwgPost('pwg.users.getList', { display: 'all', user_id: uid }).then((d) => {
         if (d.stat === 'ok') {
             fill_user_edit(d.result.users[0]);
             if (callback) callback();
@@ -1353,7 +1389,7 @@ function update_guest_info() {
     ajax_data = fill_ajax_data_from_container(ajax_data, popIn);
     delete ajax_data.email;
     delete ajax_data.status;
-    pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
+    void pwgPost('pwg.users.setInfo', ajax_data).then((d) => {
         if (d.stat === 'ok') fadeInThenOut(qs('#GuestUserList .update-user-success'), 0, 2500);
         qsa('.update-user-button i').forEach((el) => {
             el.classList.remove('icon-spin6', 'animate-spin');
@@ -1499,7 +1535,7 @@ function add_user() {
         params.auto_password = true;
     }
 
-    pwgPost('pwg.users.add', params).then((d) => {
+    void pwgPost('pwg.users.add', params).then((d) => {
         if (d.stat === 'ok') {
             const new_user_id = d.result.users[0].id;
             const default_group = d.result.users[0].groups ?? [];
@@ -1518,7 +1554,7 @@ function add_user() {
 }
 
 function add_infos_to_new_user(user_id: any, ajax_data: any) {
-    pwgPost('pwg.users.setInfo', {
+    void pwgPost('pwg.users.setInfo', {
         user_id,
         status: ajax_data.status,
         level: ajax_data.level,
@@ -1568,37 +1604,39 @@ function add_infos_to_new_user(user_id: any, ajax_data: any) {
 
 function send_new_user_password(user_id: any, mail: any) {
     const send_by_mail = mail !== '';
-    pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then((res) => {
-        if (res.stat === 'ok') {
-            const password_container = document.getElementById('AddUserPasswordInputContainer');
-            show(password_container);
-            hide(document.getElementById('AddUserFieldContainer'));
-            show(document.getElementById('AddUserSuccessContainer'));
-            const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink');
-            if (pwdLink) {
-                pwdLink.value = res.result.generated_link;
-                pwdLink.focus();
-            }
-            const textEl = qs<HTMLElement>('#AddUserTextField');
-            if (textEl)
-                textEl.innerHTML = send_by_mail
-                    ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`)
-                    : sprintf(validLinkWithoutMail, res.result.time_validation);
-            if (send_by_mail && !res.result.send_by_mail) {
-                qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
-                const ut = qs<HTMLElement>('#AddUserUpdatedText');
-                if (ut) ut.innerHTML = errorMailSent;
+    void pwgPost('pwg.users.generatePasswordLink', { user_id, send_by_mail, pwg_token }).then(
+        (res) => {
+            if (res.stat === 'ok') {
+                const password_container = document.getElementById('AddUserPasswordInputContainer');
+                show(password_container);
+                hide(document.getElementById('AddUserFieldContainer'));
+                show(document.getElementById('AddUserSuccessContainer'));
+                const pwdLink = qs<HTMLInputElement>('#AddUserPasswordLink');
+                if (pwdLink) {
+                    pwdLink.value = res.result.generated_link;
+                    pwdLink.focus();
+                }
+                const textEl = qs<HTMLElement>('#AddUserTextField');
                 if (textEl)
-                    textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
-            } else if (send_by_mail && res.result.send_by_mail) {
-                hide(password_container);
+                    textEl.innerHTML = send_by_mail
+                        ? sprintf(validLinkMail, res.result.time_validation, `<b>${mail}</b>`)
+                        : sprintf(validLinkWithoutMail, res.result.time_validation);
+                if (send_by_mail && !res.result.send_by_mail) {
+                    qs('#AddUserUpdated')?.classList.add('icon-red-error', 'icon-cancel');
+                    const ut = qs<HTMLElement>('#AddUserUpdatedText');
+                    if (ut) ut.innerHTML = errorMailSent;
+                    if (textEl)
+                        textEl.innerHTML = sprintf(errorMailSentMsg, res.result.time_validation);
+                } else if (send_by_mail && res.result.send_by_mail) {
+                    hide(password_container);
+                }
             }
         }
-    });
+    );
 }
 
 function delete_user(uid: any) {
-    pwgPost('pwg.users.delete', { user_id: uid, pwg_token }).then(() => {
+    void pwgPost('pwg.users.delete', { user_id: uid, pwg_token }).then(() => {
         close_user_list();
         update_user_list();
         const badge = qs('.badge-number');
@@ -1682,7 +1720,7 @@ function send_link_password(email: any, username: any, user_id: any, send_by_mai
 }
 
 function set_main_user(user_id: any, new_username: any) {
-    pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then((res) => {
+    void pwgPost('pwg.users.setMainUser', { user_id, pwg_token }).then((res) => {
         if (res.stat === 'ok') {
             const king = qs('#who_is_the_king');
             if (king) {
@@ -1733,7 +1771,7 @@ function open_main_user_modal(user_to_edit: any) {
 function set_main_user_success() {
     const indexKey = current_users.findIndex((u) => u.id === owner_id);
     const new_main = qs<HTMLElement>(`.user-container[key="${indexKey}"] .user-container-username`);
-    let king = document.getElementById('the_king') as HTMLElement | null;
+    let king = document.getElementById('the_king');
     if (!king) {
         const div = document.createElement('div');
         div.innerHTML = king_template;
@@ -1786,7 +1824,7 @@ function event_validate_main_user(new_main_username: string, user_id: any) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
+    void fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'user-manager-view', value: view_type }),
     });
@@ -2363,9 +2401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return false;
             }
             const applyActionLoading = document.getElementById('applyActionLoading');
-            const applyActionInfos = document.querySelector(
-                '#applyActionBlock .infos'
-            ) as HTMLElement | null;
+            const applyActionInfos = document.querySelector('#applyActionBlock .infos');
             if (applyActionLoading) applyActionLoading.style.display = '';
             if (applyActionInfos) applyActionInfos.style.display = 'none';
 

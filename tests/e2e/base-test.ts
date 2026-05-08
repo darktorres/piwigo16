@@ -17,7 +17,8 @@
  * @packageDocumentation
  */
 
-import { test as base, expect, Page, BrowserContext } from '@playwright/test';
+import type { Page, BrowserContext } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { TEST_CONFIG } from './config/test-timeouts';
 import {
     setupHttpLogging,
@@ -27,8 +28,6 @@ import {
 } from './helpers/debug-helpers';
 import { TEST_DATA } from './helpers/test-data';
 import { wsUrl } from './helpers/url';
-
-const baseUrl = process.env.PIWIGO_URL || 'http://localhost/piwigo16';
 
 /**
  * Get configured test timeout based on test title tags
@@ -81,9 +80,9 @@ async function authenticateContext(context: BrowserContext): Promise<void> {
         },
     });
 
-    const loginJson = await loginResp.json();
+    const loginJson = (await loginResp.json()) as { stat: string; message?: string };
     if (loginJson.stat !== 'ok') {
-        throw new Error(`API login failed: ${loginJson.message || 'unknown error'}`);
+        throw new Error(`API login failed: ${loginJson.message ?? 'unknown error'}`);
     }
 
     // The login response sets the pwg_id cookie automatically on the context
@@ -92,7 +91,10 @@ async function authenticateContext(context: BrowserContext): Promise<void> {
         form: { method: 'pwg.session.getStatus' },
     });
 
-    const statusJson = await statusResp.json();
+    const statusJson = (await statusResp.json()) as {
+        stat: string;
+        result?: { username?: string };
+    };
     if (statusJson.stat !== 'ok' || statusJson.result?.username !== TEST_DATA.admin.username) {
         throw new Error(`Session verification failed after login: ${JSON.stringify(statusJson)}`);
     }
@@ -142,11 +144,11 @@ export const test = base.extend<TestFixtures>({
         if (testInfo.status === 'failed' || testInfo.status === 'timedOut') {
             try {
                 const debugFile = await captureAndSaveDebugContext(page, testInfo.title);
-                if (debugFile) {
-                    console.log(`[DEBUG] Debug context saved on ${testInfo.status}: ${debugFile}`);
+                if (debugFile !== undefined && debugFile !== '') {
+                    console.warn(`[DEBUG] Debug context saved on ${testInfo.status}: ${debugFile}`);
                 }
             } catch (error) {
-                console.error(`[DEBUG] Failed to capture debug context: ${error}`);
+                console.error(`[DEBUG] Failed to capture debug context: ${String(error)}`);
             }
         }
 

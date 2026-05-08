@@ -77,9 +77,9 @@ let new_user_item: any = null;
 document.addEventListener('DOMContentLoaded', () => {
     activateLineOptions();
     checkFilters();
-    if (current_param.ip != '') addIpFilter(current_param.ip);
-    if (current_param.image_id != '') addImageFilter(current_param.image_id);
-    if (current_param.user_id != '-1') addUserFilter(filter_user_name);
+    if (current_param.ip !== '') addIpFilter(current_param.ip);
+    if (current_param.image_id !== '') addImageFilter(current_param.image_id);
+    if (current_param.user_id !== '-1') addUserFilter(filter_user_name);
 
     document.querySelectorAll<HTMLElement>('.elem-type-select').forEach((el) => {
         el.addEventListener('change', () => {
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = document
             .querySelector<HTMLInputElement>('.date-start input[name="start"]')
             ?.getAttribute('value');
-        if (current_param.start != val) {
+        if (current_param.start !== val) {
             current_param.start = val;
             current_param.pageNumber = 0;
             fillHistoryResult(current_param);
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = document
             .querySelector<HTMLInputElement>('.date-end input[name="end"]')
             ?.getAttribute('value');
-        if (current_param.end != newValue) {
+        if (current_param.end !== newValue) {
             current_param.end = newValue;
             current_param.pageNumber = 0;
             if (newValue !== '1899-12-31') fillHistoryResult(current_param);
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('start_unset')?.addEventListener('click', () => {
-        if (current_param.start != '') {
+        if (current_param.start !== '') {
             current_param.pageNumber = 0;
             current_param.start = '';
             fillHistoryResult(current_param);
@@ -184,11 +184,11 @@ function fillSummaryResult(summary: any) {
 
     const guestsData = document.querySelector<HTMLElement>('.summary-guests .summary-data')!;
     const guestsEl = document.querySelector<HTMLElement>('.summary-guests')!;
-    if (summary.GUESTS.split(' ')[0] != '0') {
+    if (summary.GUESTS.split(' ')[0] !== '0') {
         guestsData.classList.add('icon-plus-circled');
         guestsData.style.cursor = 'pointer';
         guestsData.addEventListener('click', () => {
-            if (current_param.user_id == '-1') {
+            if (current_param.user_id === '-1') {
                 current_param.user_id = guest_id;
                 addGuestFilter(str_guest);
                 fillHistoryResult(current_param);
@@ -220,10 +220,10 @@ function fillSummaryResult(summary: any) {
             const item = document.getElementById('-2')!.cloneNode(true) as HTMLElement;
             new_user_item = item;
             item.classList.remove('hide');
-            item.querySelector<HTMLElement>('.user-item-name')!.innerHTML = key as string;
-            item.dataset['userId'] = String(id_of[key as string]);
+            item.querySelector<HTMLElement>('.user-item-name')!.innerHTML = key;
+            item.dataset['userId'] = String(id_of[key]);
             item.addEventListener('click', () => {
-                if (current_param.user_id != id_of[key as string]) {
+                if (current_param.user_id !== id_of[key]) {
                     current_param.user_id = item.dataset['userId'];
                     addUserFilter(key);
                     fillHistoryResult(current_param);
@@ -324,7 +324,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
     find('.user-name').innerHTML = line.USERNAME + '<i class="add-filter icon-plus-circled"></i>';
     find('.user-name').id = String(line.USERID);
 
-    if (current_param.user_id == '-1') {
+    if (current_param.user_id === '-1') {
         find('.user-name').addEventListener('click', function (this: HTMLElement) {
             current_param.user_id = this.id + '';
             current_param.pageNumber = 0;
@@ -335,7 +335,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
 
     find('.user-ip').innerHTML = line.IP + '<i class="add-filter icon-plus-circled"></i>';
     find('.user-ip').dataset['ip'] = line.IP;
-    if (current_param.ip == '') {
+    if (current_param.ip === '') {
         find('.user-ip').addEventListener('click', function (this: HTMLElement) {
             current_param.ip = this.dataset['ip'];
             current_param.pageNumber = 0;
@@ -345,7 +345,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
     }
 
     find('.add-img-as-filter').dataset['imgId'] = String(line.IMAGEID);
-    if (current_param.image_id == '') {
+    if (current_param.image_id === '') {
         find('.add-img-as-filter').addEventListener('click', function (this: HTMLElement) {
             current_param.image_id = this.dataset['imgId'];
             current_param.pageNumber = 0;
@@ -354,7 +354,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
         });
     }
 
-    if (line.EDIT_IMAGE != '') {
+    if (line.EDIT_IMAGE !== '') {
         (find('.edit-img') as HTMLAnchorElement).href = line.EDIT_IMAGE;
     } else {
         const editImg = find('.edit-img') as HTMLAnchorElement;
@@ -463,7 +463,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
                         count_item,
                         cat,
                         search_icons.cat + ' tiptip',
-                        '<b>' + str_search_details['cat'] + ' :</b> ' + tmp.textContent!.trim(),
+                        '<b>' + str_search_details['cat'] + ' :</b> ' + tmp.textContent.trim(),
                         true
                     );
                     count_item++;
@@ -484,7 +484,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
                     active_more.push('tags');
                 }
                 if (count_item <= 2) {
-                    const badge_to_add = active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
+                    const badge_to_add = active_items.length === 1 ? 1 : count_item === 1 ? 2 : 1;
                     let badge_added = 0;
                     active_items.some((key) => {
                         if (['allwords', 'cat', 'tags'].includes(key)) return false;
@@ -522,7 +522,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
                         if (k === 'cat') {
                             const d = document.createElement('div');
                             d.innerHTML = vs;
-                            vs = d.textContent!.trim();
+                            vs = d.textContent.trim();
                         }
                         count_more++;
                         return `<b>${str_search_details[k]}</b> : ${vs}`;
@@ -556,7 +556,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
         case 'categories':
             find('.type-name').innerHTML = line.CATEGORY;
             setDetailItem(1, line.CATEGORY, 'icon-folder-open tiptip', line.FULL_CATEGORY_PATH);
-            if (line.IMAGE == '') find('.type-id').style.display = 'none';
+            if (line.IMAGE === '') find('.type-id').style.display = 'none';
             break;
         case 'memories-1-year-ago':
             find('.type-name').innerHTML = str_memories;
@@ -576,7 +576,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
             break;
     }
 
-    if (line.IMAGE != '') {
+    if (line.IMAGE !== '') {
         find('.type-name').innerHTML = line.IMAGENAME;
         find('.type-icon').innerHTML = line.IMAGE;
         find('.type-id').innerHTML = '#' + line.IMAGEID;
@@ -597,7 +597,7 @@ function lineConstructor(line: any, id: any, imageDisplay: any) {
     }
 
     find('.detail-item-1').classList.remove('hide');
-    if (line.TYPE == 'high') {
+    if (line.TYPE === 'high') {
         const di1 = find('.detail-item-1');
         di1.innerHTML = str_dwld;
         di1.classList.add('icon-blue');
@@ -669,10 +669,10 @@ function addImageFilter(img_id: any) {
 function updateArrows(actualPage: any, maxPage: any) {
     document
         .querySelector('.pagination-arrow.left')
-        ?.classList.toggle('unavailable', actualPage == 0);
+        ?.classList.toggle('unavailable', actualPage === 0);
     document
         .querySelector('.pagination-arrow.rigth')
-        ?.classList.toggle('unavailable', actualPage == maxPage - 1);
+        ?.classList.toggle('unavailable', actualPage === maxPage - 1);
 }
 
 function updatePagination(maxPage: any) {

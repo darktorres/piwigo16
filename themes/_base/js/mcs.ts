@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         word_search_str = '';
         word_search_words =
-            global_params.fields.allwords.words != null ? global_params.fields.allwords.words : [];
+            global_params.fields.allwords.words !== null ? global_params.fields.allwords.words : [];
         word_search_words.forEach((word: string) => {
             word_search_str += word + ' ';
         });
@@ -343,8 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         if (
-            global_params.fields.date_posted.preset != null &&
-            global_params.fields.date_posted.preset != ''
+            global_params.fields.date_posted.preset !== null &&
+            global_params.fields.date_posted.preset !== ''
         ) {
             // If filter is used and not empty check preset date option
             const presetInp = document.querySelector<HTMLInputElement>(
@@ -360,8 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // if option is custom check custom dates
             if (
-                'custom' == global_params.fields.date_posted.preset &&
-                global_params.fields.date_posted.custom != null
+                'custom' === global_params.fields.date_posted.preset &&
+                global_params.fields.date_posted.custom !== null
             ) {
                 date_posted_str = '';
                 const customArray: string[] = global_params.fields.date_posted.custom;
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     date_posted_str += periodEl ? (periodEl.textContent ?? '') : '';
 
-                    if (customArray.length > 1 && index != customArray.length - 1) {
+                    if (customArray.length > 1 && index !== customArray.length - 1) {
                         date_posted_str += ', ';
                     }
                 });
@@ -447,11 +447,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const clickedOption = el.parentElement;
                     if (clickedOption) {
                         clickedOption.classList.toggle('show-child');
-                        if ('year' == el.dataset['type']) {
+                        if ('year' === el.dataset['type']) {
                             clickedOption.parentElement
                                 ?.querySelectorAll<HTMLElement>('.date_posted-option.month')
                                 .forEach((m) => toggleDisplay(m));
-                        } else if ('month' == el.dataset['type']) {
+                        } else if ('month' === el.dataset['type']) {
                             clickedOption.parentElement
                                 ?.querySelectorAll<HTMLElement>('.date_posted-option.day')
                                 .forEach((d) => toggleDisplay(d));
@@ -512,11 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         PS_params.date_posted_preset =
-            global_params.fields.date_posted.preset != ''
+            global_params.fields.date_posted.preset !== ''
                 ? global_params.fields.date_posted.preset
                 : '';
         PS_params.date_posted_custom =
-            global_params.fields.date_posted.custom != ''
+            global_params.fields.date_posted.custom !== ''
                 ? global_params.fields.date_posted.custom
                 : '';
 
@@ -537,8 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         if (
-            global_params.fields.date_created.preset != null &&
-            global_params.fields.date_created.preset != ''
+            global_params.fields.date_created.preset !== null &&
+            global_params.fields.date_created.preset !== ''
         ) {
             // If filter is used and not empty check preset date option
             const presetInp = document.querySelector<HTMLInputElement>(
@@ -554,8 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // if option is custom check custom dates
             if (
-                'custom' == global_params.fields.date_created.preset &&
-                global_params.fields.date_created.custom != null
+                'custom' === global_params.fields.date_created.preset &&
+                global_params.fields.date_created.custom !== null
             ) {
                 date_created_str = '';
                 const customArray: string[] = global_params.fields.date_created.custom;
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
                     date_created_str += periodEl ? (periodEl.textContent ?? '') : '';
 
-                    if (customArray.length > 1 && index != customArray.length - 1) {
+                    if (customArray.length > 1 && index !== customArray.length - 1) {
                         date_created_str += ', ';
                     }
                 });
@@ -642,11 +642,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const clickedOption = el.parentElement;
                     if (clickedOption) {
                         clickedOption.classList.toggle('show-child');
-                        if ('year' == el.dataset['type']) {
+                        if ('year' === el.dataset['type']) {
                             clickedOption.parentElement
                                 ?.querySelectorAll<HTMLElement>('.date_created-option.month')
                                 .forEach((m) => toggleDisplay(m));
-                        } else if ('month' == el.dataset['type']) {
+                        } else if ('month' === el.dataset['type']) {
                             clickedOption.parentElement
                                 ?.querySelectorAll<HTMLElement>('.date_created-option.day')
                                 .forEach((d) => toggleDisplay(d));
@@ -709,11 +709,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         PS_params.date_created_preset =
-            global_params.fields.date_created.preset != ''
+            global_params.fields.date_created.preset !== ''
                 ? global_params.fields.date_created.preset
                 : '';
         PS_params.date_created_custom =
-            global_params.fields.date_created.custom != ''
+            global_params.fields.date_created.custom !== ''
                 ? global_params.fields.date_created.custom
                 : '';
 
@@ -990,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ratings_search_str = '';
         global_params.fields.ratings.forEach((ft: number, i: number) => {
-            if (0 == ft) {
+            if (0 === ft) {
                 ratings_search_str += str_no_rating;
                 if (global_params.fields.ratings.length > 1) {
                     ratings_search_str += ', ';
@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const str_between = str_between_rating.split('%d');
                 ratings_search_str +=
                     str_between[0] + (ft - 1) + str_between[1] + ft + str_between[2];
-                if (global_params.fields.ratings.length - 1 != i) {
+                if (global_params.fields.ratings.length - 1 !== i) {
                     ratings_search_str += ', ';
                 }
             }
@@ -1048,8 +1048,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup filesize filter
     if (
-        global_params.fields.filesize_min != null &&
-        global_params.fields.filesize_max != null &&
+        global_params.fields.filesize_min !== null &&
+        global_params.fields.filesize_max !== null &&
         sliders.filesizes
     ) {
         const filesizesSlider = sliders.filesizes;
@@ -1100,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        if (global_params.fields.filesize_min != null && global_params.fields.filesize_max > 0) {
+        if (global_params.fields.filesize_min !== null && global_params.fields.filesize_max > 0) {
             document
                 .querySelectorAll<HTMLElement>('.filter-filesize')
                 .forEach((el) => el.classList.add('filter-filled'));
@@ -1146,9 +1146,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         PS_params.filesize_min =
-            global_params.fields.filesize_min != null ? global_params.fields.filesize_min : '';
+            global_params.fields.filesize_min !== null ? global_params.fields.filesize_min : '';
         PS_params.filesize_max =
-            global_params.fields.filesize_max != null ? global_params.fields.filesize_max : '';
+            global_params.fields.filesize_max !== null ? global_params.fields.filesize_max : '';
 
         empty_filters_list.push(PS_params.filesize_min);
         empty_filters_list.push(PS_params.filesize_max);
@@ -1156,8 +1156,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Height filter
     if (
-        global_params.fields.height_min != null &&
-        global_params.fields.height_max != null &&
+        global_params.fields.height_min !== null &&
+        global_params.fields.height_max !== null &&
         sliders.heights
     ) {
         const heightsSlider = sliders.heights;
@@ -1228,9 +1228,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         PS_params.height_min =
-            global_params.fields.height_min != null ? global_params.fields.height_min : '';
+            global_params.fields.height_min !== null ? global_params.fields.height_min : '';
         PS_params.height_max =
-            global_params.fields.height_max != null ? global_params.fields.height_max : '';
+            global_params.fields.height_max !== null ? global_params.fields.height_max : '';
 
         empty_filters_list.push(PS_params.height_min);
         empty_filters_list.push(PS_params.height_max);
@@ -1238,8 +1238,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup Width filter
     if (
-        global_params.fields.width_min != null &&
-        global_params.fields.width_max != null &&
+        global_params.fields.width_min !== null &&
+        global_params.fields.width_max !== null &&
         sliders.widths
     ) {
         const widthsSlider = sliders.widths;
@@ -1310,9 +1310,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         PS_params.width_min =
-            global_params.fields.width_min != null ? global_params.fields.width_min : '';
+            global_params.fields.width_min !== null ? global_params.fields.width_min : '';
         PS_params.width_max =
-            global_params.fields.width_max != null ? global_params.fields.width_max : '';
+            global_params.fields.width_max !== null ? global_params.fields.width_max : '';
 
         empty_filters_list.push(PS_params.width_min);
         empty_filters_list.push(PS_params.width_max);
@@ -1384,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (
         !empty_filters_list.every(
-            (param: any) => param === '' || param === null || typeof param == 'undefined'
+            (param: any) => param === '' || param === null || typeof param === 'undefined'
         )
     ) {
         document
@@ -1401,7 +1401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ];
                 for (const key in PS_params) {
                     if (!exclude_params.includes(key)) {
-                        if ('date_posted_custom' == key || 'date_created_custom' == key) {
+                        if ('date_posted_custom' === key || 'date_created_custom' === key) {
                             PS_params[key] = [];
                         } else {
                             PS_params[key] = '';
@@ -1472,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const widFilter = document.querySelector<HTMLElement>(
                                 '.filter.filter-' + inp.dataset['wid']
                             );
-                            if (widFilter && widFilter.style.display === 'none') {
+                            if (widFilter?.style.display === 'none') {
                                 inp.checked = false;
                             }
                         } else {
@@ -1504,7 +1504,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const widFilter = document.querySelector<HTMLElement>(
                                 '.filter.filter-' + inp.dataset['wid']
                             );
-                            if (widFilter && widFilter.style.display === 'none') {
+                            if (widFilter?.style.display === 'none') {
                                 updateFilters(inp.dataset['wid']!, 'add');
                             }
                         } else {
@@ -1636,7 +1636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         '.filter-word-form .search-params input:checked'
                     )
                     .forEach((inp) => {
-                        if (inp.getAttribute('name') == 'tags') {
+                        if (inp.getAttribute('name') === 'tags') {
                             global_params.fields.search_in_tags = true;
                         }
                         new_fields.push(inp.getAttribute('name') ?? '');
@@ -1644,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (
                     document.querySelectorAll(
                         ".filter-word-form .search-params input[name='tags']:checked"
-                    ).length == 0
+                    ).length === 0
                 ) {
                     delete global_params.fields.search_in_tags;
                 }
@@ -1773,9 +1773,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 )?.value;
 
                 global_params.fields.date_posted.preset = presetValue;
-                PS_params.date_posted_preset = presetValue != null ? presetValue : '';
+                PS_params.date_posted_preset = presetValue !== null ? presetValue : '';
 
-                if ('custom' == presetValue) {
+                if ('custom' === presetValue) {
                     const customDates: string[] = [];
 
                     document
@@ -1851,9 +1851,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 )?.value;
 
                 global_params.fields.date_created.preset = presetValue;
-                PS_params.date_created_preset = presetValue != null ? presetValue : '';
+                PS_params.date_created_preset = presetValue !== null ? presetValue : '';
 
-                if ('custom' == presetValue) {
+                if ('custom' === presetValue) {
                     const customDates: string[] = [];
 
                     document
@@ -2529,13 +2529,13 @@ function performSearch(params: Record<string, any>, reload: boolean = false): vo
 function updateFilters(filterName: string, mode: string): void {
     switch (filterName) {
         case 'word':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.allwords = {};
 
                 PS_params.allwords = '';
                 PS_params.allwords_mode = 'AND';
                 PS_params.allwords_fields = [];
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.allwords;
 
                 delete PS_params.allwords;
@@ -2545,12 +2545,12 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'tag':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.tags = {};
 
                 PS_params.tags = '';
                 PS_params.tags_mode = 'AND';
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.tags;
 
                 delete PS_params.tags;
@@ -2559,12 +2559,12 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'album':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.cat = {};
 
                 PS_params.categories = '';
                 PS_params.categories_withsubs = false;
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.cat;
 
                 delete PS_params.categories;
@@ -2573,14 +2573,14 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'date_posted':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields['date_posted'] = {};
                 global_params.fields.date_posted.preset = '';
                 global_params.fields.date_posted.custom = [];
 
                 PS_params.date_posted_preset = '';
                 PS_params.date_posted_custom = [];
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.date_posted.preset;
                 delete global_params.fields.date_posted.custom;
 
@@ -2590,14 +2590,14 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'date_created':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields['date_created'] = {};
                 global_params.fields.date_created.preset = '';
                 global_params.fields.date_created.custom = [];
 
                 PS_params.date_created_preset = '';
                 PS_params.date_created_custom = [];
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.date_created.preset;
                 delete global_params.fields.date_created.custom;
 
@@ -2607,13 +2607,13 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'filesize':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.filesize_min = '';
                 global_params.fields.filesize_max = '';
 
                 PS_params.filesize_min = '';
                 PS_params.filesize_max = '';
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.filesize_min;
                 delete global_params.fields.filesize_max;
 
@@ -2623,13 +2623,13 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'height':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.height_min = '';
                 global_params.fields.height_max = '';
 
                 PS_params.height_min = '';
                 PS_params.height_max = '';
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.height_min;
                 delete global_params.fields.height_max;
 
@@ -2639,13 +2639,13 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         case 'width':
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields.width_min = '';
                 global_params.fields.width_max = '';
 
                 PS_params.width_min = '';
                 PS_params.width_max = '';
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields.width_min;
                 delete global_params.fields.width_max;
 
@@ -2655,11 +2655,11 @@ function updateFilters(filterName: string, mode: string): void {
             break;
 
         default:
-            if (mode == 'add') {
+            if (mode === 'add') {
                 global_params.fields[filterName] = {};
 
                 PS_params[filterName] = '';
-            } else if (mode == 'del') {
+            } else if (mode === 'del') {
                 delete global_params.fields[filterName];
 
                 delete PS_params[filterName];

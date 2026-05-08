@@ -16,13 +16,11 @@ import { identificationUrl } from './helpers/url';
 import { TEST_DATA } from './helpers/test-data';
 import { gotoOk, assertVisible } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
+import type { Page } from '@playwright/test';
 
 const REMEMBER_COOKIE = 'pwg_remember';
 
-async function fillLoginForm(
-    page: import('@playwright/test').Page,
-    rememberMe: boolean
-): Promise<void> {
+async function fillLoginForm(page: Page, rememberMe: boolean): Promise<void> {
     await gotoOk(page, identificationUrl(), 'identification');
     const usernameField = page.locator('input.login[name="username"]');
     const passwordField = page.locator('form[name="login_form"] input[name="password"]');

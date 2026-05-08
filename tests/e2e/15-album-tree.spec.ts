@@ -42,7 +42,7 @@ async function getToken(page: Page): Promise<string> {
 
 async function createAlbum(page: Page, name: string, parent?: number): Promise<number> {
     const params: Record<string, string | number> = { name };
-    if (parent != null) params['parent'] = parent;
+    if (parent !== undefined) params['parent'] = parent;
     const r = (await pwgApi(page, 'pwg.categories.add', params)) as {
         stat: string;
         result: { id: number };

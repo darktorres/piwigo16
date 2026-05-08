@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedAlbumEdit?.addEventListener('click', () => ab.open());
 
     qs('.dont-show-again')?.addEventListener('click', () => {
-        fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
+        void fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
             method: 'POST',
             body: new URLSearchParams({ param: 'promote-mobile-apps', value: 'false' }),
         }).then(() => {
@@ -181,12 +181,12 @@ function initUppy() {
             formData: true,
             fieldName: 'file',
             allowedMetaFields: ['pwg_token', 'category', 'name', 'format_of', 'update_mode'],
-        } as any);
+        });
 
     // Start/Cancel buttons
     qs('#startUpload')?.addEventListener('click', (e) => {
         e.preventDefault();
-        uppy.upload();
+        void uppy.upload();
     });
     qs('#cancelUpload')?.addEventListener('click', (e) => {
         e.preventDefault();
@@ -291,7 +291,9 @@ function initUppy() {
         show(qs('#uploadedPhotos')?.closest('fieldset'));
 
         html =
-            '<a href="' + config.adminUrl + 'page=photo-' +
+            '<a href="' +
+            config.adminUrl +
+            'page=photo-' +
             data.result.image_id +
             '" style="position:relative" target="_blank">';
         html +=
@@ -331,7 +333,7 @@ function initUppy() {
         Piecon.reset();
 
         if (!formatMode) {
-            fetch(config.wsUrl + 'format=json&method=pwg.images.uploadCompleted', {
+            void fetch(config.wsUrl + 'format=json&method=pwg.images.uploadCompleted', {
                 method: 'POST',
                 body: new URLSearchParams({
                     pwg_token,
@@ -365,7 +367,9 @@ function initUppy() {
         if (!formatMode) {
             html = sprintf(
                 albumSummary_label,
-                '<a href="' + config.adminUrl + 'page=album-' +
+                '<a href="' +
+                    config.adminUrl +
+                    'page=album-' +
                     uploadCategory.id +
                     '">' +
                     uploadCategory.label +
@@ -379,7 +383,8 @@ function initUppy() {
         const batchSet = [...new Set<number>(uploadedPhotos)];
         const batchLink = qs<HTMLAnchorElement>('.batchLink');
         if (batchLink) {
-            batchLink.href = config.adminUrl + 'page=photos_add&section=direct&batch=' + batchSet.join(',');
+            batchLink.href =
+                config.adminUrl + 'page=photos_add&section=direct&batch=' + batchSet.join(',');
             batchLink.innerHTML = sprintf(batch_Label, uploadedPhotos.length);
         }
         show(qs('.afterUploadActions'));

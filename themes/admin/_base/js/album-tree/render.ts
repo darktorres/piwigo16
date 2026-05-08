@@ -8,7 +8,7 @@ import type { TreeNode, RenderHook } from './types';
 export function isFolder(node: TreeNode): boolean {
     if (node.children.length > 0) return true;
     if (Array.isArray(node.haveChildren)) return node.haveChildren.length > 0;
-    return !!node.haveChildren;
+    return Boolean(node.haveChildren);
 }
 
 export function createNodeLi(

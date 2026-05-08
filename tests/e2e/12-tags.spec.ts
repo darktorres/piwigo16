@@ -28,12 +28,15 @@ test.describe('tag management', () => {
             form: { method: 'pwg.tags.add', name: tagName },
         });
         expect(tagCreate.status(), 'pwg.tags.add HTTP status').toBe(200);
-        const tagBody = await tagCreate.json();
+        const tagBody = (await tagCreate.json()) as {
+            stat: string;
+            result: { id?: number; info?: number };
+        };
         expect(
             tagBody.stat,
             `pwg.tags.add stat (body: ${JSON.stringify(tagBody).slice(0, 400)})`
         ).toBe('ok');
-        const tagId: number = tagBody.result.id ?? tagBody.result.info;
+        const tagId: number = tagBody.result.id ?? tagBody.result.info ?? 0;
         expect(tagId, 'pwg.tags.add returned tag id').toBeGreaterThan(0);
 
         // Assign tag to photo
@@ -46,7 +49,7 @@ test.describe('tag management', () => {
             },
         });
         expect(setInfo.status(), 'pwg.images.setInfo HTTP status').toBe(200);
-        const setInfoBody = await setInfo.json();
+        const setInfoBody = (await setInfo.json()) as { stat: string };
         expect(
             setInfoBody.stat,
             `pwg.images.setInfo stat (body: ${JSON.stringify(setInfoBody).slice(0, 400)})`
@@ -57,11 +60,19 @@ test.describe('tag management', () => {
             wsUrl({ format: 'json', method: 'pwg.tags.getImages', tag_id: String(tagId) }),
             { headers: { Cookie: cookie } }
         );
-        const tagImagesBody = await tagImages.json();
+        const tagImagesBody = (await tagImages.json()) as {
+            stat: string;
+            result: {
+                images: { _content?: Array<{ id: number }> } | Array<{ id: number }> | undefined;
+            };
+        };
         expect(tagImagesBody.stat, 'pwg.tags.getImages stat').toBe('ok');
-        const images = tagImagesBody.result.images._content ?? tagImagesBody.result.images ?? [];
+        const tagImagesField = tagImagesBody.result.images;
+        const images: Array<{ id: number }> = Array.isArray(tagImagesField)
+            ? tagImagesField
+            : (tagImagesField?._content ?? []);
         expect(
-            images.some((img: { id: number }) => img.id === imageId),
+            images.some((img) => img.id === imageId),
             `tag ${tagId} should contain photo ${imageId}`
         ).toBe(true);
 
@@ -70,15 +81,20 @@ test.describe('tag management', () => {
             headers: { Cookie: cookie },
             form: { method: 'pwg.tags.delete', tag_id: String(tagId), pwg_token: pwgToken },
         });
-        expect((await deleteTag.json()).stat, 'pwg.tags.delete stat').toBe('ok');
+        expect(((await deleteTag.json()) as { stat: string }).stat, 'pwg.tags.delete stat').toBe(
+            'ok'
+        );
 
         // Tag no longer in list
         const tagList = await request.get(wsUrl({ format: 'json', method: 'pwg.tags.getList' }), {
             headers: { Cookie: cookie },
         });
-        const tags = (await tagList.json()).result.tags._content ?? [];
+        const tagListBody = (await tagList.json()) as {
+            result: { tags: { _content?: Array<{ id: number }> } };
+        };
+        const tags = tagListBody.result.tags._content ?? [];
         expect(
-            tags.some((t: { id: number }) => t.id === tagId),
+            tags.some((t) => t.id === tagId),
             `deleted tag ${tagId} should not be in list`
         ).toBe(false);
     });

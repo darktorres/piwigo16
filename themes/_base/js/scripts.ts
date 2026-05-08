@@ -19,7 +19,7 @@ function phpWGOpenWindow(theURL: string, winName: string, features: string): voi
         winName,
         features + ',left=2,top=1,width=' + width + ',height=' + height
     )!;
-    (window as any).newWin = newWin;
+    (window as Window & { newWin?: Window }).newWin = newWin;
 }
 
 function popuphelp(url: string): void {
@@ -65,20 +65,18 @@ class PwgWS {
         parameters: Record<string, unknown> | null,
         options?: Partial<typeof this.options>
     ): void {
-        if (options) {
-            for (const prop in options) {
-                (this.options as any)[prop] = (options as any)[prop];
-            }
+        if (options !== undefined) {
+            Object.assign(this.options, options);
         }
         this.xhr = new XMLHttpRequest();
-        this.xhr.onreadystatechange = pwgBind(this, this.onStateChange) as () => void;
+        this.xhr.onreadystatechange = pwgBind(this, this.onStateChange);
 
         let url = config.wsUrl + 'format=json&method=' + method;
         let body = '';
-        if (parameters) {
+        if (parameters !== null) {
             for (const prop in parameters) {
                 const val = parameters[prop];
-                if (typeof val === 'object' && val && Array.isArray(val)) {
+                if (Array.isArray(val)) {
                     for (let i = 0; i < (val as unknown[]).length; i++) {
                         body +=
                             prop + '[]=' + encodeURIComponent(String((val as unknown[])[i])) + '&';
@@ -98,7 +96,7 @@ class PwgWS {
             this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         }
         try {
-            this.xhr.send(body || null);
+            this.xhr.send(body !== '' ? body : null);
         } catch (e: unknown) {
             this.error(0, (e as Error).message);
         }
@@ -123,20 +121,20 @@ class PwgWS {
     respondToReadyState(readyState: number): void {
         const xhr = this.xhr!;
         if (readyState === 4 && xhr.status === 200) {
-            let resp: any;
+            let resp: { stat?: string; result?: unknown; err?: string; message?: string } | null;
             try {
-                resp = JSON.parse(xhr.responseText);
+                resp = JSON.parse(xhr.responseText) as typeof resp;
             } catch (e: unknown) {
                 this.error(200, (e as Error).message + '\n' + xhr.responseText.substring(0, 512));
                 return;
             }
-            if (resp != null) {
-                if (resp.stat == null) {
+            if (resp !== null) {
+                if (resp.stat === undefined || resp.stat === null) {
                     this.error(200, 'Invalid response');
                 } else if (resp.stat === 'ok') {
                     this.options.onSuccess?.(resp.result);
                 } else {
-                    this.error(200, resp.err + ' ' + resp.message);
+                    this.error(200, String(resp.err) + ' ' + String(resp.message));
                 }
             }
         }
@@ -146,7 +144,7 @@ class PwgWS {
     }
 
     cleanup(): void {
-        if (this.xhr) this.xhr.onreadystatechange = null;
+        if (this.xhr !== null) this.xhr.onreadystatechange = null;
         this.xhr = null;
         this.options.onFailure = this.options.onSuccess = null;
     }
@@ -186,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Generic confirm-on-click: <a data-confirm="Are you sure?" href="...">
     document.querySelectorAll<HTMLElement>('[data-confirm]').forEach((el) => {
         el.addEventListener('click', (e) => {
-            const msg = el.getAttribute('data-confirm') || '';
+            const msg = el.getAttribute('data-confirm') ?? '';
             if (!confirm(msg)) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -198,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLAnchorElement>('a[data-window-open-name]').forEach((a) => {
         a.addEventListener('click', (e) => {
             e.preventDefault();
-            const name = a.getAttribute('data-window-open-name') || '';
-            const features = a.getAttribute('data-window-open-features') || '';
+            const name = a.getAttribute('data-window-open-name') ?? '';
+            const features = a.getAttribute('data-window-open-features') ?? '';
             window.open(a.href, name, features);
         });
     });
@@ -232,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (caddieBtn) {
         caddieBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (caddieBtn.dataset['loading']) return;
+            if (caddieBtn.dataset['loading'] !== undefined) return;
             caddieBtn.dataset['loading'] = '1';
             const rootUrl = caddieBtn.dataset['rootUrl']!;
             const imageId = Number(caddieBtn.dataset['imageId']!);
@@ -255,10 +253,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Expose to window for inline-script callers
-(window as any).phpWGOpenWindow = phpWGOpenWindow;
-(window as any).popuphelp = popuphelp;
-(window as any).pwgBind = pwgBind;
-(window as any).PwgWS = PwgWS;
-(window as any).pwgAddEventListener = pwgAddEventListener;
+interface ScriptsGlobals {
+    phpWGOpenWindow: typeof phpWGOpenWindow;
+    popuphelp: typeof popuphelp;
+    pwgBind: typeof pwgBind;
+    PwgWS: typeof PwgWS;
+    pwgAddEventListener: typeof pwgAddEventListener;
+}
+const w = window as Window & Partial<ScriptsGlobals>;
+w.phpWGOpenWindow = phpWGOpenWindow;
+w.popuphelp = popuphelp;
+w.pwgBind = pwgBind;
+w.PwgWS = PwgWS;
+w.pwgAddEventListener = pwgAddEventListener;
 
 export {};

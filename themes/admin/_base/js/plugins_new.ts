@@ -37,10 +37,26 @@ const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
     Array.from(document.querySelectorAll<T>(sel));
 
 let sortOrder = 'date';
-let filters: Record<string, any> = {};
+interface PluginFilters {
+    search: string;
+    author: string;
+    tag: string;
+    rating: number;
+    certification: number;
+    revision: number;
+    [key: string]: string | number;
+}
+let filters: PluginFilters = {
+    search: '',
+    author: '',
+    tag: '',
+    rating: 0,
+    certification: 0,
+    revision: 0,
+};
 let ratingValue = 0,
     certValue = 0,
-    revisionValue = 0;
+    _revisionValue = 0;
 
 function sortPlugins(a: HTMLElement, b: HTMLElement): number {
     if (sortOrder === 'downloads' || sortOrder === 'revision' || sortOrder === 'date') {
@@ -125,11 +141,10 @@ function updateRevisionFilterLabel(val: number) {
 }
 
 function checkPlugin(box: HTMLElement): boolean {
-    const pluginRating =
-        parseFloat(
-            (box.querySelector<HTMLElement>('.pluginRating') as HTMLElement)?.dataset['rating'] ??
-                '0'
-        ) || 0;
+    const pluginRatingRaw = parseFloat(
+        box.querySelector<HTMLElement>('.pluginRating')?.dataset['rating'] ?? '0'
+    );
+    const pluginRating = isNaN(pluginRatingRaw) ? 0 : pluginRatingRaw;
     const pluginCertification = parseInt(
         box.querySelector<HTMLElement>('.certification')?.dataset['certification'] ?? '0'
     );
@@ -149,7 +164,7 @@ function checkPlugin(box: HTMLElement): boolean {
     );
 }
 
-function applyFilter(changed: string, value: any) {
+function applyFilter(changed: string, value: string | number) {
     filters[changed] = value;
     const boxes = qsa('.pluginBox');
     boxes.forEach((box) => {
@@ -173,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 boxes.forEach((box) => fragment.appendChild(box));
                 container.appendChild(fragment);
             }
-            fetch(config.adminUrl + 'plugins_new_order=' + sortOrder);
+            void fetch(config.adminUrl + 'plugins_new_order=' + sortOrder);
         });
 
     document.getElementById('search')?.addEventListener('input', function (this: HTMLInputElement) {
@@ -185,7 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
     qsa('.buttonInstall').forEach((btn) => {
         const pluginBox = btn.closest<HTMLElement>('.pluginBox');
         const plugin_name = pluginBox?.dataset['name'] ?? '';
-        (window as any).pwg_jconfirm_follow_href_fn(btn, {
+        (
+            window as Window & {
+                pwg_jconfirm_follow_href_fn?: (
+                    el: HTMLElement,
+                    opts: { alert_title: string; alert_confirm: string; alert_cancel: string }
+                ) => void;
+            }
+        ).pwg_jconfirm_follow_href_fn?.(btn, {
             alert_title: str_install_title.replace('%s', plugin_name),
             alert_confirm: str_confirm_msg,
             alert_cancel: str_cancel_msg,
@@ -259,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     revSlider.on('update', ([val]) => {
         const intVal = parseInt(String(val));
         const [month] = value_to_month(intVal);
-        revisionValue = intVal;
+        _revisionValue = intVal;
         updateRevisionFilterLabel(intVal);
         applyFilter('revision', month);
     });
@@ -282,13 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRevisionFilterLabel(0);
 
     filters = {
-        search: (document.getElementById('search') as HTMLInputElement)?.value ?? '',
+        search: (document.getElementById('search') as HTMLInputElement | null)?.value ?? '',
         author: '',
         tag: '',
         rating: 0,
         certification: minCertification,
         revision: value_to_month(0)[0],
     };
+    void certValue;
+    void ratingValue;
 
     requestIdleCallback(() => {
         authorTs.setValue('');

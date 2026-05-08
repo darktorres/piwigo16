@@ -28,7 +28,10 @@ test.describe('user management', () => {
             },
         });
         expect(createRes.status(), 'pwg.users.add HTTP status').toBe(200);
-        const createBody = await createRes.json();
+        const createBody = (await createRes.json()) as {
+            stat: string;
+            result: { users?: Array<{ id: number }>; id?: number };
+        };
         expect(
             createBody.stat,
             `pwg.users.add stat (body: ${JSON.stringify(createBody).slice(0, 400)})`
@@ -40,10 +43,21 @@ test.describe('user management', () => {
         const listRes = await request.get(wsUrl({ format: 'json', method: 'pwg.users.getList' }), {
             headers: { Cookie: cookie },
         });
-        const listBody = await listRes.json();
+        const listBody = (await listRes.json()) as {
+            stat: string;
+            result: {
+                users:
+                    | { _content?: Array<{ username: string }> }
+                    | Array<{ username: string }>
+                    | undefined;
+            };
+        };
         expect(listBody.stat, 'pwg.users.getList stat').toBe('ok');
-        const users = listBody.result.users._content ?? listBody.result.users ?? [];
-        const usernames: string[] = users.map((u: { username: string }) => u.username);
+        const usersField = listBody.result.users;
+        const users: Array<{ username: string }> = Array.isArray(usersField)
+            ? usersField
+            : (usersField?._content ?? []);
+        const usernames: string[] = users.map((u) => u.username);
         expect(usernames, 'created user appears in list').toContain(username);
 
         // Delete user
@@ -51,7 +65,9 @@ test.describe('user management', () => {
             headers: { Cookie: cookie },
             form: { method: 'pwg.users.delete', user_id: String(userId), pwg_token: pwgToken },
         });
-        expect((await deleteRes.json()).stat, 'pwg.users.delete stat').toBe('ok');
+        expect(((await deleteRes.json()) as { stat: string }).stat, 'pwg.users.delete stat').toBe(
+            'ok'
+        );
 
         // User no longer in list
         const afterDelete = await request.get(
@@ -60,8 +76,11 @@ test.describe('user management', () => {
                 headers: { Cookie: cookie },
             }
         );
-        const afterUsers = (await afterDelete.json()).result.users._content ?? [];
-        const afterNames: string[] = afterUsers.map((u: { username: string }) => u.username);
+        const afterBody = (await afterDelete.json()) as {
+            result: { users: { _content?: Array<{ username: string }> } };
+        };
+        const afterUsers = afterBody.result.users._content ?? [];
+        const afterNames: string[] = afterUsers.map((u) => u.username);
         expect(afterNames, 'deleted user no longer in list').not.toContain(username);
     });
 

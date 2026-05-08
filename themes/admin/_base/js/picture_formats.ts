@@ -8,8 +8,12 @@ interface PictureFormatsPageData {
     str_cancel_msg: string;
 }
 
-const { pwg_token, str_confirm_delete_format, str_confirm_msg, str_cancel_msg } =
-    getPageData<PictureFormatsPageData>();
+const {
+    pwg_token,
+    str_confirm_delete_format,
+    str_confirm_msg: _str_confirm_msg,
+    str_cancel_msg: _str_cancel_msg,
+} = getPageData<PictureFormatsPageData>();
 
 function fitExtensions(): void {
     document.querySelectorAll<HTMLElement>('.format-card-ext span').forEach((el) => {
@@ -45,7 +49,7 @@ function deleteFormat(card: HTMLElement): void {
                 }
             }, 600);
         })
-        .catch((message) => console.log(message));
+        .catch((message: unknown) => console.error(message));
 }
 
 export {};

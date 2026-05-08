@@ -25,10 +25,16 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         wsUrl({ format: 'json', method: 'pwg.categories.getImages', cat_id: String(albumId) }),
         { headers: { Cookie: cookie } }
     );
-    const listBody = await listRes.json();
+    const listBody = (await listRes.json()) as {
+        stat: string;
+        result: { images: { _content?: Array<{ id: number }> } | Array<{ id: number }> };
+    };
     expect(listBody.stat).toBe('ok');
-    const images = listBody.result.images._content ?? listBody.result.images;
-    expect(images.some((img: { id: number }) => img.id === imageId)).toBe(true);
+    const imagesField = listBody.result.images;
+    const images: Array<{ id: number }> = Array.isArray(imagesField)
+        ? imagesField
+        : (imagesField._content ?? []);
+    expect(images.some((img) => img.id === imageId)).toBe(true);
 
     // --- Update photo name ---
     const updateRes = await request.post(wsUrl({ format: 'json' }), {
@@ -42,13 +48,13 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
             single_value_mode: 'replace',
         },
     });
-    expect((await updateRes.json()).stat).toBe('ok');
+    expect(((await updateRes.json()) as { stat: string }).stat).toBe('ok');
 
     const infoRes = await request.get(
         wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
-    const infoBody = await infoRes.json();
+    const infoBody = (await infoRes.json()) as { stat: string; result: { name: string } };
     expect(infoBody.stat).toBe('ok');
     expect(infoBody.result.name).toBe('Updated Name');
 
@@ -57,14 +63,14 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         headers: { Cookie: cookie },
         form: { method: 'pwg.images.delete', image_id: String(imageId), pwg_token: pwgToken },
     });
-    expect((await deletePhoto.json()).stat).toBe('ok');
+    expect(((await deletePhoto.json()) as { stat: string }).stat).toBe('ok');
 
     // Deleted photo getInfo must fail
     const afterDelete = await request.get(
         wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
-    expect((await afterDelete.json()).stat).toBe('fail');
+    expect(((await afterDelete.json()) as { stat: string }).stat).toBe('fail');
 
     // --- Delete album ---
     const deleteAlbum = await request.post(wsUrl({ format: 'json' }), {
@@ -76,14 +82,21 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
             pwg_token: pwgToken,
         },
     });
-    expect((await deleteAlbum.json()).stat).toBe('ok');
+    expect(((await deleteAlbum.json()) as { stat: string }).stat).toBe('ok');
 
     // Deleted album must not appear in admin list
     const catList = await request.get(
         wsUrl({ format: 'json', method: 'pwg.categories.getAdminList' }),
         { headers: { Cookie: cookie } }
     );
-    const catBody = await catList.json();
-    const cats = catBody.result.categories._content ?? catBody.result.categories ?? [];
-    expect(cats.some((c: { id: number }) => c.id === albumId)).toBe(false);
+    const catBody = (await catList.json()) as {
+        result: {
+            categories: { _content?: Array<{ id: number }> } | Array<{ id: number }> | undefined;
+        };
+    };
+    const catsField = catBody.result.categories;
+    const cats: Array<{ id: number }> = Array.isArray(catsField)
+        ? catsField
+        : (catsField?._content ?? []);
+    expect(cats.some((c) => c.id === albumId)).toBe(false);
 });

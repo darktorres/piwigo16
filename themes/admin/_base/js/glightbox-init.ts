@@ -1,6 +1,6 @@
 import GLightbox from 'glightbox';
 import 'glightbox/dist/css/glightbox.css';
 
-(window as any).GLightbox = GLightbox;
+(window as Window & { GLightbox: typeof GLightbox }).GLightbox = GLightbox;
 
 export {};

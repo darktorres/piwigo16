@@ -20,8 +20,8 @@ export async function getPwgToken(
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.session.getStatus' },
     });
-    const body = await res.json();
-    return body.result.pwg_token as string;
+    const body = (await res.json()) as { result: { pwg_token: string } };
+    return body.result.pwg_token;
 }
 
 export async function createAlbum(
@@ -33,8 +33,8 @@ export async function createAlbum(
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.categories.add', name },
     });
-    const body = await res.json();
-    return body.result.id as number;
+    const body = (await res.json()) as { result: { id: number } };
+    return body.result.id;
 }
 
 export async function uploadPhoto(
@@ -52,7 +52,7 @@ export async function uploadPhoto(
         category: String(albumId),
         image: { name: filename, mimeType: 'image/jpeg', buffer },
     };
-    if (photoName) {
+    if (photoName !== undefined && photoName !== '') {
         form['name'] = photoName;
     }
 
@@ -64,7 +64,7 @@ export async function uploadPhoto(
     const text = await response.text();
     let body: { stat?: string; result?: { image_id?: number }; err?: unknown; message?: unknown };
     try {
-        body = JSON.parse(text);
+        body = JSON.parse(text) as typeof body;
     } catch {
         throw new Error(
             `Photo upload returned non-JSON (HTTP ${response.status()}): ${text.slice(0, 600)}`

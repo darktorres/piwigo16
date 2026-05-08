@@ -51,9 +51,9 @@ function str_repeat(s: string, n: number): string {
     return n > 0 ? s.repeat(n) : '';
 }
 
-function getRandomInt(min: number, max: number): number {
-    min = Math.ceil(min);
-    max = Math.floor(max);
+function getRandomInt(minIn: number, maxIn: number): number {
+    const min = Math.ceil(minIn);
+    const max = Math.floor(maxIn);
     return Math.floor(Math.random() * (max - min)) + min;
 }
 
@@ -63,7 +63,7 @@ function sprintf(format: string, ...args: unknown[]): string {
     const o: string[] = [];
     let m: RegExpExecArray | null;
     const s = '';
-    while (f) {
+    while (f !== '') {
         if ((m = /^[^\x25]+/.exec(f))) {
             o.push(m[0]);
         } else if ((m = /^\x25{2}/.exec(f))) {
@@ -71,10 +71,11 @@ function sprintf(format: string, ...args: unknown[]): string {
         } else if (
             (m = /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(f))
         ) {
-            let a: any = args[m[1] ? parseInt(m[1]) - 1 : i++];
-            if (a == null) throw new Error('Too few arguments.');
-            if (/[^s]/.test(m[7]) && typeof a !== 'number')
-                throw new Error('Expecting number but found ' + typeof a);
+            const argRaw: unknown = args[m[1] !== '' ? parseInt(m[1]) - 1 : i++];
+            if (argRaw === null || argRaw === undefined) throw new Error('Too few arguments.');
+            if (/[^s]/.test(m[7]) && typeof argRaw !== 'number')
+                throw new Error('Expecting number but found ' + typeof argRaw);
+            let a: string | number = argRaw as string | number;
             switch (m[7]) {
                 case 'b':
                     a = Number(a).toString(2);
@@ -83,19 +84,25 @@ function sprintf(format: string, ...args: unknown[]): string {
                     a = String.fromCharCode(Number(a));
                     break;
                 case 'd':
-                    a = parseInt(a);
+                    a = parseInt(String(a));
                     break;
                 case 'e':
-                    a = m[6] ? Number(a).toExponential(parseInt(m[6])) : Number(a).toExponential();
+                    a =
+                        m[6] !== ''
+                            ? Number(a).toExponential(parseInt(m[6]))
+                            : Number(a).toExponential();
                     break;
                 case 'f':
-                    a = m[6] ? parseFloat(a).toFixed(parseInt(m[6])) : parseFloat(a);
+                    a =
+                        m[6] !== ''
+                            ? parseFloat(String(a)).toFixed(parseInt(m[6]))
+                            : parseFloat(String(a));
                     break;
                 case 'o':
                     a = Number(a).toString(8);
                     break;
                 case 's':
-                    a = m[6] ? String(a).substring(0, parseInt(m[6])) : String(a);
+                    a = m[6] !== '' ? String(a).substring(0, parseInt(m[6])) : String(a);
                     break;
                 case 'u':
                     a = Math.abs(Number(a));
@@ -107,15 +114,15 @@ function sprintf(format: string, ...args: unknown[]): string {
                     a = Number(a).toString(16).toUpperCase();
                     break;
             }
-            a = /[def]/.test(m[7]) && m[2] && Number(a) >= 0 ? '+' + a : a;
-            const c = m[3] ? (m[3] === '0' ? '0' : m[3].charAt(1)) : ' ';
-            const x = (m[5] ? parseInt(m[5]) : 0) - String(a).length - s.length;
-            const p = m[5] ? str_repeat(c, x) : '';
-            o.push(s + (m[4] ? a + p : p + a));
+            a = /[def]/.test(m[7]) && m[2] !== '' && Number(a) >= 0 ? '+' + String(a) : a;
+            const c = m[3] !== '' ? (m[3] === '0' ? '0' : m[3].charAt(1)) : ' ';
+            const x = (m[5] !== '' ? parseInt(m[5]) : 0) - String(a).length - s.length;
+            const p = m[5] !== '' ? str_repeat(c, x) : '';
+            o.push(s + (m[4] !== '' ? String(a) + p : p + String(a)));
         } else {
             throw new Error('Huh ?!');
         }
-        f = f.substring(m![0].length);
+        f = f.substring(m[0].length);
     }
     return o.join('');
 }
@@ -276,23 +283,40 @@ function pwg_jconfirm_follow_href_fn(
         e.preventDefault();
         const msg =
             (options.alert_title ?? 'TITLE') +
-            (options.alert_content ? '\n\n' + options.alert_content : '');
+            (options.alert_content !== undefined && options.alert_content !== ''
+                ? '\n\n' + options.alert_content
+                : '');
         if (window.confirm(msg)) window.location.href = href!;
     });
 }
 
 // ----- expose globals --------------------------------------------------------
 
-(window as any).applyFontCheckbox = applyFontCheckbox;
-(window as any).pwg_jconfirm_follow_href_fn = pwg_jconfirm_follow_href_fn;
-(window as any).array_delete = array_delete;
-(window as any).str_repeat = str_repeat;
-(window as any).getRandomInt = getRandomInt;
-(window as any).sprintf = sprintf;
-(window as any).TemporaryState = TemporaryState;
-(window as any).jConfirm_alert_options = jConfirm_alert_options;
-(window as any).jConfirm_confirm_options = jConfirm_confirm_options;
-(window as any).jConfirm_warning_options = jConfirm_warning_options;
-(window as any).jConfirm_confirm_with_content_options = jConfirm_confirm_with_content_options;
+interface CommonGlobals {
+    applyFontCheckbox: typeof applyFontCheckbox;
+    pwg_jconfirm_follow_href_fn: typeof pwg_jconfirm_follow_href_fn;
+    array_delete: typeof array_delete;
+    str_repeat: typeof str_repeat;
+    getRandomInt: typeof getRandomInt;
+    sprintf: typeof sprintf;
+    TemporaryState: typeof TemporaryState;
+    jConfirm_alert_options: typeof jConfirm_alert_options;
+    jConfirm_confirm_options: typeof jConfirm_confirm_options;
+    jConfirm_warning_options: typeof jConfirm_warning_options;
+    jConfirm_confirm_with_content_options: typeof jConfirm_confirm_with_content_options;
+}
+
+const w = window as Window & Partial<CommonGlobals>;
+w.applyFontCheckbox = applyFontCheckbox;
+w.pwg_jconfirm_follow_href_fn = pwg_jconfirm_follow_href_fn;
+w.array_delete = array_delete;
+w.str_repeat = str_repeat;
+w.getRandomInt = getRandomInt;
+w.sprintf = sprintf;
+w.TemporaryState = TemporaryState;
+w.jConfirm_alert_options = jConfirm_alert_options;
+w.jConfirm_confirm_options = jConfirm_confirm_options;
+w.jConfirm_warning_options = jConfirm_warning_options;
+w.jConfirm_confirm_with_content_options = jConfirm_confirm_with_content_options;
 
 export {};

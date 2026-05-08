@@ -50,16 +50,17 @@ export class LocalStorageCache<T = CacheItem[]> {
     constructor(options: CacheOptions<T>) {
         this.key = `${options.key}_${options.serverId}`;
         this.serverKey = options.serverKey;
-        this.lifetime = options.lifetime ? options.lifetime * 1000 : 3600 * 1000;
+        this.lifetime = options.lifetime !== undefined ? options.lifetime * 1000 : 3600 * 1000;
         this.loader = options.loader;
         this.storage = window.localStorage;
-        this.ready = !!this.storage;
+        this.ready = true;
     }
 
     get(callback: (data: T) => void): void {
         const now = new Date().getTime();
-        if (this.ready && this.storage[this.key] !== undefined) {
-            const cache = JSON.parse(this.storage[this.key]) as CacheEnvelope<T>;
+        const stored = this.storage.getItem(this.key);
+        if (this.ready && stored !== null) {
+            const cache = JSON.parse(stored) as CacheEnvelope<T>;
             if (now - cache.timestamp <= this.lifetime && cache.key === this.serverKey) {
                 callback(cache.data);
                 return;
@@ -74,14 +75,17 @@ export class LocalStorageCache<T = CacheItem[]> {
     set(data: T): void {
         try {
             if (this.ready) {
-                this.storage[this.key] = JSON.stringify({
-                    timestamp: new Date().getTime(),
-                    key: this.serverKey,
-                    data,
-                });
+                this.storage.setItem(
+                    this.key,
+                    JSON.stringify({
+                        timestamp: new Date().getTime(),
+                        key: this.serverKey,
+                        data,
+                    })
+                );
             }
         } catch (e) {
-            console.log('Local storage error:', e);
+            console.error('Local storage error:', e);
         }
     }
 
@@ -90,41 +94,47 @@ export class LocalStorageCache<T = CacheItem[]> {
     }
 }
 
+type CachedSelect = HTMLSelectElement & {
+    _cache?: AbstractSelectizer;
+    _tomSelect?: TomSelect;
+};
+
 export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> {
     protected _selectize(target: HTMLSelectElement | null, globalOptions: SelectizerOptions): void {
-        if (!target) return;
-        (target as any)['_cache'] = this;
+        if (target === null) return;
+        (target as CachedSelect)._cache = this;
         this.get((data) => {
             const options = { ...globalOptions };
-            const filtered = options.filter ? options.filter.call(target, data, options) : data;
-            const ts = (target as any)['_tomSelect'] as TomSelect | undefined;
-            if (!ts) return;
+            const filtered =
+                options.filter !== undefined ? options.filter.call(target, data, options) : data;
+            const ts = (target as CachedSelect)._tomSelect;
+            if (ts === undefined) return;
 
             ts.settings.maxOptions = filtered.length + 100;
             if (target.hasAttribute('data-create')) options.create = true;
-            ts.settings.create = !!options.create;
+            ts.settings.create = Boolean(options.create);
 
-            if (Object.keys(ts.options).length === 0) ts.addOptions(filtered as any[]);
+            if (Object.keys(ts.options).length === 0) ts.addOptions(filtered);
 
-            const dataValue = target.dataset['value']
-                ? JSON.parse(target.dataset['value'])
-                : undefined;
-            if (dataValue) options.value = dataValue;
+            const rawValue = target.dataset['value'];
+            const dataValue =
+                rawValue !== undefined && rawValue !== ''
+                    ? (JSON.parse(rawValue) as Array<number | string | CacheItem>)
+                    : undefined;
+            if (dataValue !== undefined) options.value = dataValue;
             if (options.value !== undefined) {
                 (Array.isArray(options.value) ? options.value : [options.value]).forEach((cat) => {
                     const id =
-                        typeof cat === 'object' && cat !== null && 'id' in cat
-                            ? (cat as CacheItem).id
-                            : cat;
+                        typeof cat === 'object' && cat !== null && 'id' in cat ? cat.id : cat;
                     if (!isNaN(Number(id))) ts.addItem(String(id), true);
                     else ts.addItem(String(id), true);
                 });
             }
 
-            const dataDefault = target.dataset['default'] ?? undefined;
-            if (dataDefault !== undefined) options.default = dataDefault as any;
+            const dataDefault = target.dataset['default'];
+            if (dataDefault !== undefined) options.default = dataDefault;
             if (options.default === 'first')
-                options.default = filtered[0] ? (filtered[0].id as any) : undefined;
+                options.default = filtered[0] !== undefined ? filtered[0].id : undefined;
 
             if (options.default !== undefined) {
                 if (ts.getValue() === '') ts.addItem(String(options.default), true);
@@ -162,11 +172,11 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
 
 function makeTomSelect(
     target: HTMLSelectElement | null,
-    options: Record<string, any>
+    options: Record<string, unknown>
 ): TomSelect | null {
-    if (!target) return null;
+    if (target === null) return null;
     const ts = new TomSelect(target, options);
-    (target as any)['_tomSelect'] = ts;
+    (target as CachedSelect)._tomSelect = ts;
     return ts;
 }
 
@@ -176,13 +186,15 @@ export class CategoriesCache extends AbstractSelectizer {
             ...options,
             key: 'categoriesAdminList',
             loader: (callback) => {
-                fetch(`${options.wsUrl ?? config.wsUrl}format=json&method=pwg.categories.getAdminList`)
+                void fetch(
+                    `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.categories.getAdminList`
+                )
                     .then((r) => r.json())
                     .then((data: { result: { categories: CacheItem[] } }) => {
                         const cats = data.result.categories.map((c, i) => {
-                            (c as any).pos = i;
-                            delete (c as any)['comment'];
-                            delete (c as any)['uppercats'];
+                            (c as CacheItem & { pos: number }).pos = i;
+                            delete c['comment'];
+                            delete c['uppercats'];
                             return c;
                         });
                         callback(cats);
@@ -192,7 +204,7 @@ export class CategoriesCache extends AbstractSelectizer {
     }
 
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
-        if (!target) return;
+        if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
             labelField: 'fullname',
@@ -211,13 +223,15 @@ export class TagsCache extends AbstractSelectizer {
             ...options,
             key: 'tagsAdminList',
             loader: (callback) => {
-                fetch(`${options.wsUrl ?? config.wsUrl}format=json&method=pwg.tags.getAdminList`)
+                void fetch(
+                    `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.tags.getAdminList`
+                )
                     .then((r) => r.json())
                     .then((data: { result: { tags: CacheItem[] } }) => {
                         const tags = data.result.tags.map((t) => {
-                            t.id = `~~${t.id}~~`;
-                            delete (t as any)['url_name'];
-                            delete (t as any)['lastmodified'];
+                            t.id = `~~${String(t.id)}~~`;
+                            delete t['url_name'];
+                            delete t['lastmodified'];
                             return t;
                         });
                         callback(tags);
@@ -227,7 +241,7 @@ export class TagsCache extends AbstractSelectizer {
     }
 
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
-        if (!target) return;
+        if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
             labelField: 'name',
@@ -246,13 +260,13 @@ export class GroupsCache extends AbstractSelectizer {
             ...options,
             key: 'groupsAdminList',
             loader: (callback) => {
-                fetch(
+                void fetch(
                     `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.groups.getList&per_page=9999`
                 )
                     .then((r) => r.json())
                     .then((data: { result: { groups: CacheItem[] } }) => {
                         const groups = data.result.groups.map((g) => {
-                            delete (g as any)['lastmodified'];
+                            delete g['lastmodified'];
                             return g;
                         });
                         callback(groups);
@@ -262,7 +276,7 @@ export class GroupsCache extends AbstractSelectizer {
     }
 
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
-        if (!target) return;
+        if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
             labelField: 'name',
@@ -283,7 +297,7 @@ export class UsersCache extends AbstractSelectizer {
             loader: (callback) => {
                 let users: CacheItem[] = [];
                 const load = (page: number): void => {
-                    fetch(
+                    void fetch(
                         `${options.wsUrl ?? config.wsUrl}format=json&method=pwg.users.getList&display=username&per_page=9999&page=${page}`
                     )
                         .then((r) => r.json())
@@ -307,7 +321,7 @@ export class UsersCache extends AbstractSelectizer {
     }
 
     selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
-        if (!target) return;
+        if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
             labelField: 'username',

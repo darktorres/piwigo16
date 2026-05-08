@@ -31,7 +31,7 @@ for (const filter_name of filters_names) {
         _hide(filter_name + 'AdminIcon');
     }
 
-    if (defaultCb?.checked && defaultCb.parentElement) {
+    if (defaultCb?.checked === true && defaultCb.parentElement !== null) {
         defaultCb.parentElement.classList.add('selected-filter-container');
     }
 
@@ -39,7 +39,7 @@ for (const filter_name of filters_names) {
         const cb = _el(filter_name + 'Filters') as HTMLInputElement | null;
         const sel = _el('f' + filter_name + 'Select') as HTMLSelectElement | null;
         const def = _el('default_' + filter_name) as HTMLInputElement | null;
-        if (cb?.checked) {
+        if (cb?.checked === true) {
             _show('f' + filter_name + 'Select');
             _show(filter_name + 'Arrow');
             if (def?.parentElement) def.parentElement.style.display = '';

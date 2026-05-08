@@ -117,14 +117,25 @@ const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
 // Set during DOMContentLoaded after the album-tree module mounts.
 let tree: AlbumTree | null = null;
 
-function pwgPost(method: string, data: Record<string, any>): Promise<any> {
+interface WsResponse<T = unknown> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+function pwgPost<T = unknown>(
+    method: string,
+    data: Record<string, unknown>
+): Promise<WsResponse<T>> {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(data)) {
-        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item)));
+        if (Array.isArray(v))
+            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item)));
         else body.append(k, String(v ?? ''));
     }
-    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then((r) =>
-        r.json()
+    return fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body }).then(
+        (r) => r.json() as Promise<WsResponse<T>>
     );
 }
 
@@ -133,7 +144,7 @@ function refreshTipTip() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const openUppercats = openCat == -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
+    const openUppercats = openCat === -1 ? [] : findAlbumById(data, openCat).uppercats.split(',');
     // Honour persisted-open ids so that nodes the user previously expanded
     // come back with their children already rendered (otherwise the saved
     // pwgtree-open class on the LI would have nothing inside it to show).
@@ -462,12 +473,16 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
         '"></a>' +
         '<a class="move-cat-edit icon-pencil tiptip" title="' +
         str_edit_album +
-        '" href="' + config.adminUrl + 'page=album-' +
+        '" href="' +
+        config.adminUrl +
+        'page=album-' +
         node.id +
         '"></a>' +
         '<a class="move-cat-upload icon-plus-circled tiptip" title="' +
         str_add_photo +
-        '" href="' + config.adminUrl + 'page=photos_add&album=' +
+        '" href="' +
+        config.adminUrl +
+        'page=photos_add&album=' +
         node.id +
         '"></a>' +
         '<a class="move-cat-see icon-eye tiptip" title="' +
@@ -592,7 +607,7 @@ function isNumeric(num: any) {
 
 function openAddAlbumPopIn(parentAlbumId: any) {
     const popin = document.getElementById('AddAlbum')!;
-    if (parentAlbumId != 0) {
+    if (parentAlbumId !== 0) {
         const parentName = String(tree?.getNodeById(parentAlbumId)?.name ?? '');
         qs<HTMLElement>('#AddAlbum .AddIconTitle span')!.innerHTML = add_sub_album_of.replace(
             '%s',
@@ -664,15 +679,13 @@ function triggerDeleteAlbum(cat_id: any) {
     pwgPost('pwg.categories.calculateOrphans', { category_id: cat_id })
         .then((raw) => {
             const orphanData = (typeof raw === 'string' ? JSON.parse(raw) : raw).result[0];
-            if (orphanData.nb_images_recursive == 0) {
-                qsa('.deleteAlbumOptions').forEach(
-                    (el) => ((el as HTMLElement).style.display = 'none')
-                );
+            if (orphanData.nb_images_recursive === 0) {
+                qsa('.deleteAlbumOptions').forEach((el) => (el.style.display = 'none'));
             } else {
                 qsa<HTMLElement>('.deleteAlbumOptions').forEach((el) => {
                     el.style.display = '';
                 });
-                if (orphanData.nb_images_associated_outside == 0) {
+                if (orphanData.nb_images_associated_outside === 0) {
                     hide(document.getElementById('IMAGES_ASSOCIATED_OUTSIDE'));
                 } else {
                     const el = qs<HTMLElement>('#IMAGES_ASSOCIATED_OUTSIDE .innerText')!;
@@ -680,7 +693,7 @@ function triggerDeleteAlbum(cat_id: any) {
                         .replace('%d', orphanData.nb_images_recursive)
                         .replace('%d', orphanData.nb_images_associated_outside);
                 }
-                if (orphanData.nb_images_becoming_orphan == 0) {
+                if (orphanData.nb_images_becoming_orphan === 0) {
                     hide(document.getElementById('IMAGES_BECOMING_ORPHAN'));
                 } else {
                     const el = qs<HTMLElement>('#IMAGES_BECOMING_ORPHAN .innerText')!;
@@ -702,7 +715,7 @@ function openDeleteAlbumPopIn(cat_to_delete: any) {
     node = tree?.getNodeById(cat_to_delete);
     const iconTitle = qs<HTMLElement>('.DeleteIconTitle span')!;
     if (!node) return;
-    if (node.children.length == 0) {
+    if (node.children.length === 0) {
         iconTitle.innerHTML = delete_album_with_name.replace('%s', node.name);
     } else {
         nb_sub_cats = 0;
@@ -720,7 +733,7 @@ function closeDeleteAlbumPopIn() {
 
 function getAllSubAlbumsFromNode(n: any, nb: any) {
     nb = 0;
-    if (n.children != 0) {
+    if (n.children !== 0) {
         n.children.forEach((child: any) => {
             nb++;
             tmp = getAllSubAlbumsFromNode(child, nb);
@@ -737,7 +750,7 @@ function setSubcatsBadge(n: any) {
     if (!catEl) return;
     const nbSubcats = catEl.querySelector<HTMLElement>('.nb-subcats');
     const badgeSubcats = catEl.querySelector<HTMLElement>('.badge-dropdown .nb-subcats');
-    if (n.children.length != 0) {
+    if (n.children.length !== 0) {
         if (nbSubcats) {
             nbSubcats.textContent = String(n.children.length);
             nbSubcats.style.display = '';
@@ -793,11 +806,11 @@ function getId(parent: TreeNode | null | undefined): number | string {
 }
 
 function getRank(n: any, ignoreId: any = null): any {
-    if (n.getPreviousSibling() != null) {
-        if (n.id != ignoreId) return 1 + getRank(n.getPreviousSibling(), ignoreId);
+    if (n.getPreviousSibling() !== null) {
+        if (n.id !== ignoreId) return 1 + getRank(n.getPreviousSibling(), ignoreId);
         else return getRank(n.getPreviousSibling(), ignoreId);
     } else {
-        return n.id != ignoreId ? 1 : 0;
+        return n.id !== ignoreId ? 1 : 0;
     }
 }
 
@@ -811,10 +824,10 @@ function applyMove(event: MoveInfo) {
     previous_parent = event.previous_parent;
     target = event.target_node;
     if (event.position === 'after') {
-        if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
+        if (getId(previous_parent) !== getId(target.parent)) moveParent = getId(target.parent);
         moveRank = getRank(target, id) + 1;
     } else if (event.position === 'inside') {
-        if (getId(previous_parent) != getId(target)) {
+        if (getId(previous_parent) !== getId(target)) {
             moveParent = getId(target);
             const currentNode = tree?.getNodeById(moveParent);
             if (currentNode?.load_on_demand && Array.isArray(currentNode.haveChildren))
@@ -822,7 +835,7 @@ function applyMove(event: MoveInfo) {
         }
         moveRank = 1;
     } else if (event.position === 'before') {
-        if (getId(previous_parent) != getId(target.parent)) moveParent = getId(target.parent);
+        if (getId(previous_parent) !== getId(target.parent)) moveParent = getId(target.parent);
         moveRank = 1;
     }
     moveNode(id, moveRank, moveParent)
@@ -843,8 +856,8 @@ function applyMove(event: MoveInfo) {
 
 function moveNode(n: any, rank: any, parent: any): Promise<void> {
     return new Promise<void>((res, rej) => {
-        if (parent != null) changeParent(n, parent, rank).then(res).catch(rej);
-        else if (rank != null) changeRank(n, rank).then(res).catch(rej);
+        if (parent !== null) changeParent(n, parent, rank).then(res).catch(rej);
+        else if (rank !== null) changeRank(n, rank).then(res).catch(rej);
         else res();
     });
 }
@@ -854,7 +867,7 @@ function changeParent(n: any, parent: any, rank: any): Promise<void> {
     return pwgPost('pwg.categories.move', { category_id: n, parent, pwg_token }).then((raw) => {
         const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (d.stat === 'ok') {
-            changeRank(n, rank);
+            void changeRank(n, rank);
             (d.result.updated_cats ?? []).forEach((cat: any) => {
                 const treeNode = tree?.getNodeById(cat.cat_id);
                 if (treeNode) {
@@ -881,12 +894,12 @@ function makePrivateHierarchy(n: any) {
 }
 
 function getPathNode(n: any): any {
-    return n.parent.getLevel() != 0 ? getPathNode(n.parent) + ' / ' + n.name : n.name;
+    return n.parent.getLevel() !== 0 ? getPathNode(n.parent) + ' / ' + n.name : n.name;
 }
 
 function findAlbumById(a: any, id: any): any {
     for (const album of a) {
-        if (album.id == id) return album;
+        if (album.id === id) return album;
         if (album.haveChildren?.length || album.children?.length) {
             const al = findAlbumById(album.haveChildren ?? album.children, id);
             if (al) return al;

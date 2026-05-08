@@ -24,7 +24,7 @@ GLightbox({ selector: 'a.preview-box' });
 document.addEventListener('mouseup', (e) => {
     e.stopPropagation();
     const target = e.target as HTMLElement | null;
-    if (!target?.classList.contains('showInfo')) {
+    if (target?.classList.contains('showInfo') !== true) {
         document.querySelectorAll<HTMLElement>('.showInfo-dropdown').forEach((el) => {
             el.style.display = 'none';
         });

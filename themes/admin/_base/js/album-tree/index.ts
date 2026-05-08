@@ -11,7 +11,7 @@
 import './tree.css';
 import type { NodeData, NodeId, TreeNode, TreeOptions, Position } from './types';
 import { TreeStateStore } from './state';
-import { createNodeLi, createChildrenUl, isFolder } from './render';
+import { createNodeLi, createChildrenUl } from './render';
 import { attachDnd, makeDraggable } from './dnd';
 
 class AlbumTreeImpl {
@@ -28,7 +28,10 @@ class AlbumTreeImpl {
     constructor(rootEl: HTMLElement, options: TreeOptions) {
         this.rootEl = rootEl;
         this.options = options;
-        this.store = options.saveStateKey ? new TreeStateStore(options.saveStateKey) : null;
+        this.store =
+            options.saveStateKey !== undefined && options.saveStateKey !== ''
+                ? new TreeStateStore(options.saveStateKey)
+                : null;
         if (this.store) this.openIds = this.store.load();
 
         this.rootEl.classList.add('pwgtree-tree');
@@ -40,7 +43,7 @@ class AlbumTreeImpl {
 
         this.loadInitial(options.data);
 
-        if (options.dragAndDrop) {
+        if (options.dragAndDrop === true) {
             this.detachDnd = attachDnd({
                 rootEl: this.rootEl,
                 nodeForLi: (li) => this.liToNode.get(li) ?? null,
@@ -83,12 +86,12 @@ class AlbumTreeImpl {
             getPreviousSibling: (): TreeNode | null => {
                 const siblings = node.parent ? node.parent.children : this.rootNodes;
                 const i = siblings.indexOf(node);
-                return i > 0 ? siblings[i - 1]! : null;
+                return i > 0 ? siblings[i - 1] : null;
             },
             getNextSibling: (): TreeNode | null => {
                 const siblings = node.parent ? node.parent.children : this.rootNodes;
                 const i = siblings.indexOf(node);
-                return i >= 0 && i < siblings.length - 1 ? siblings[i + 1]! : null;
+                return i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : null;
             },
         };
 
@@ -111,7 +114,7 @@ class AlbumTreeImpl {
         const open = this.openIds.has(String(node.id));
         const li = createNodeLi(node, open, this.options.onCreateLi);
         this.liToNode.set(li, node);
-        if (this.options.dragAndDrop) makeDraggable(li);
+        if (this.options.dragAndDrop === true) makeDraggable(li);
 
         if (node.children.length > 0) {
             const ul = createChildrenUl();
@@ -128,7 +131,7 @@ class AlbumTreeImpl {
     // ---------------------------------------------------------------------
 
     getNodeById(id: NodeId | null | undefined): TreeNode | null {
-        if (id == null) return null;
+        if (id === null) return null;
         return this.nodesById.get(String(id)) ?? null;
     }
 
@@ -213,7 +216,7 @@ class AlbumTreeImpl {
         node.element?.remove();
         if (parentEl) {
             const ul = parentEl.querySelector<HTMLElement>(':scope > ul.pwgtree-common');
-            if (ul && ul.children.length === 0) {
+            if (ul?.children.length === 0) {
                 ul.remove();
                 parentEl.classList.remove('pwgtree-folder', 'pwgtree-open', 'pwgtree-closed');
             }
@@ -346,7 +349,7 @@ class AlbumTreeImpl {
             ul.appendChild(movedLi);
         } else {
             const targetLi = target.element;
-            if (!targetLi || !targetLi.parentNode) return;
+            if (!targetLi?.parentNode) return;
             if (position === 'before') targetLi.parentNode.insertBefore(movedLi, targetLi);
             else targetLi.parentNode.insertBefore(movedLi, targetLi.nextSibling);
         }

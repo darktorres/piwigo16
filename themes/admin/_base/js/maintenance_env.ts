@@ -9,7 +9,7 @@ interface MaintenanceEnvPageData {
 const { no_active_plugin, error_occured } = getPageData<MaintenanceEnvPageData>();
 
 let plugins: Array<{ name: string; state: string }> = [];
-let hasActivePlugins = false;
+let hasActivePlugins: boolean = false;
 let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {

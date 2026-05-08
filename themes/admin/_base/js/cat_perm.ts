@@ -22,8 +22,8 @@ const usersCache = new UsersCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-groupsCache?.selectize(document.querySelector('[data-selectize=groups]'));
-usersCache?.selectize(document.querySelector('[data-selectize=users]'));
+groupsCache.selectize(document.querySelector('[data-selectize=groups]'));
+usersCache.selectize(document.querySelector('[data-selectize=users]'));
 
 /*---- Status / private-options + indirect-perm details (from {footer_script}) ----*/
 

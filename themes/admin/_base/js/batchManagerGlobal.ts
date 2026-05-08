@@ -53,9 +53,9 @@ tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
 
 categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
     filter: function (categories: any[], options: any) {
-        if (this.name == 'dissociate') {
+        if (this.name === 'dissociate') {
             const filtered = categories.filter(function (cat: any) {
-                return !!pageData.associated_categories[cat.id];
+                return Boolean(pageData.associated_categories[cat.id]);
             });
 
             if (filtered.length > 0) {
@@ -111,7 +111,7 @@ class AjaxQueue {
         while (this.running < this.max && this.pending.length > 0) {
             const fn = this.pending.shift()!;
             this.running++;
-            fn().finally(() => {
+            void fn().finally(() => {
                 this.running--;
                 this.process();
             });
@@ -236,7 +236,7 @@ const derivatives: { elements: any; done: number; total: number; finished: () =>
     done: 0,
     total: 0,
     finished() {
-        return this.done === this.total && this.elements && this.elements.length === 0;
+        return this.done === this.total && this.elements?.length === 0;
     },
 };
 
@@ -287,7 +287,10 @@ function getDerivativeUrls() {
 
     const body = new URLSearchParams({ max_urls: '100000', types: types.join(',') });
     ids.forEach((id: any) => body.append('ids[]', id));
-    fetch(config.wsUrl + 'format=json&method=pwg.getMissingDerivatives', { method: 'POST', body })
+    void fetch(config.wsUrl + 'format=json&method=pwg.getMissingDerivatives', {
+        method: 'POST',
+        body,
+    })
         .then((r) => r.json())
         .then((data: any) => {
             if (!data.stat || data.stat !== 'ok') return;
@@ -466,7 +469,9 @@ qs<HTMLElement>('#applyAction')?.addEventListener('click', (e: Event) => {
                     pwg_token,
                     image_id: ids.join(','),
                 });
-                await fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then((r) => r.json());
+                await fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then((r) =>
+                    r.json()
+                );
             } finally {
                 todo += thisBatchSize;
                 const badge = qs('#regenerationStatus .badge-number');
@@ -527,8 +532,7 @@ function add_md5sum_block(blockSize: any) {
             if (data.result.nb_no_md5sum > 0) {
                 add_md5sum_block(undefined);
             } else {
-                document.location =
-                    `${config.adminUrl}page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}` as any;
+                document.location = `${config.adminUrl}page=batch_manager&action=sync_md5sum&nb_md5sum_added=${origin}`;
             }
         })
         .catch((xhr: any) => {
@@ -563,8 +567,7 @@ function delete_orphans_block(blockSize: any) {
             if (data.result.nb_orphans > 0) {
                 delete_orphans_block(undefined);
             } else {
-                document.location =
-                    `${config.adminUrl}page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}` as any;
+                document.location = `${config.adminUrl}page=batch_manager&action=delete_orphans&nb_orphans_deleted=${origin}`;
             }
         })
         .catch((xhr: any) => {

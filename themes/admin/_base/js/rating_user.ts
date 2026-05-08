@@ -48,7 +48,10 @@ function uidFromCell(cell: HTMLElement): { uid: number; aid: string } {
     while (tr.nodeName !== 'TR') {
         tr = tr.parentNode as Node;
     }
-    return JSON.parse((tr as HTMLElement).getAttribute('data-usr') ?? 'null');
+    return JSON.parse((tr as HTMLElement).getAttribute('data-usr') ?? 'null') as {
+        uid: number;
+        aid: string;
+    };
 }
 
 document.getElementById('rateTable')?.addEventListener('click', (e) => {
@@ -56,7 +59,7 @@ document.getElementById('rateTable')?.addEventListener('click', (e) => {
     const delBtn = target?.closest('.del') as HTMLElement | null;
     if (!delBtn) return;
     e.preventDefault();
-    const tr = delBtn.closest('tr') as HTMLTableRowElement | null;
+    const tr = delBtn.closest('tr');
     if (!tr) return;
     const usrName = tr.querySelector('.usr')?.innerHTML ?? '';
     if (!window.confirm(pageData.str_delete_ratings_confirm.replace('%s', usrName))) return;
@@ -73,7 +76,7 @@ document.getElementById('rateTable')?.addEventListener('click', (e) => {
                 alert(num + ' ' + text);
             },
             onSuccess: (result) => {
-                if (result) {
+                if (result !== null && result !== undefined && result !== false) {
                     oTable.row(tr).remove().draw();
                 } else {
                     alert(String(result));
@@ -83,6 +86,6 @@ document.getElementById('rateTable')?.addEventListener('click', (e) => {
     );
 });
 
-(window as any).DataTable = DataTable;
+(window as Window & { DataTable: typeof DataTable }).DataTable = DataTable;
 
 export {};

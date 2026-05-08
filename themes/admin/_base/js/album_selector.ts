@@ -113,14 +113,14 @@ class AlbumSelector {
         this.#cats = {};
         this.#searchCat = {};
         this.#selectAlbum = (args: any) =>
-            (selectAlbum as any).call(null, {
+            selectAlbum.call(null, {
                 ...args,
                 newSelectedAlbum: this.#newSelectedAlbum.bind(this),
                 addSelectedAlbum: this.#addSelectedAlbum.bind(this),
                 getSelectedAlbum: this.get_selected_albums.bind(this),
             });
         this.#removeSelectedAlbum = (args: any) =>
-            (removeSelectedAlbum as any).call(null, {
+            removeSelectedAlbum.call(null, {
                 ...args,
                 getSelectedAlbum: this.get_selected_albums.bind(this),
             });
@@ -284,7 +284,7 @@ class AlbumSelector {
                             `<div id="subcat-${cat_id}" class="search-result-subcat-item"></div>`
                         );
                     }
-                    this.#prefill_search_subcats(cat_id).then(() => {
+                    void this.#prefill_search_subcats(cat_id).then(() => {
                         spinner?.classList.remove('gallery-icon-spin6', 'animate-spin');
                         spinner?.classList.add('gallery-icon-up-open');
                         curr.classList.add('open');
@@ -599,7 +599,7 @@ class AlbumSelector {
 
         return this.#apiPost(params)
             .then((data) => {
-                const cats = data.result.categories.filter((c: any) => c.id != cat_id);
+                const cats = data.result.categories.filter((c: any) => c.id !== cat_id);
                 this.#prefill_results(cat_id, cats, data.result.limit);
             })
             .catch((e) => console.log('prefill search error:', e));

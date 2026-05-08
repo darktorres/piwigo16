@@ -36,7 +36,10 @@ for (const route of ANON_ROUTES) {
 const ADMIN_ROUTES: ReadonlyArray<{ name: string; url: () => string }> = [
     { name: 'admin dashboard', url: () => adminUrl() },
     { name: 'admin albums', url: () => adminUrl('albums') },
-    { name: 'admin batch_manager (filter=all)', url: () => adminUrl('batch_manager') + '&filter=all' },
+    {
+        name: 'admin batch_manager (filter=all)',
+        url: () => adminUrl('batch_manager') + '&filter=all',
+    },
     { name: 'admin photos_add direct', url: () => adminUrl('photos_add') + '&section=direct' },
     { name: 'admin configuration', url: () => adminUrl('configuration') },
     { name: 'admin history', url: () => adminUrl('history') },

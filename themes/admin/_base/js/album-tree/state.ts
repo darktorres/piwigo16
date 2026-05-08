@@ -12,10 +12,10 @@ export class TreeStateStore {
 
     load(): Set<string> {
         try {
-            const raw = window.localStorage?.getItem(this.storageKey);
-            if (!raw) return new Set();
-            const arr = JSON.parse(raw);
-            return new Set(Array.isArray(arr) ? arr.map(String) : []);
+            const raw = window.localStorage.getItem(this.storageKey);
+            if (raw === null || raw === '') return new Set();
+            const arr: unknown = JSON.parse(raw);
+            return new Set(Array.isArray(arr) ? (arr as unknown[]).map(String) : []);
         } catch {
             return new Set();
         }
@@ -23,7 +23,7 @@ export class TreeStateStore {
 
     save(open: Iterable<string | NodeId>): void {
         try {
-            window.localStorage?.setItem(this.storageKey, JSON.stringify(Array.from(open, String)));
+            window.localStorage.setItem(this.storageKey, JSON.stringify(Array.from(open, String)));
         } catch {
             // Quota exceeded or storage disabled — silently degrade.
         }

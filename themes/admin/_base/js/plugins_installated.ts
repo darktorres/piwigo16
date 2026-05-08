@@ -53,8 +53,6 @@ const {
     x_plugins_found,
 } = getPageData<PluginsInstalledPageData>();
 
-const complete = false;
-const i = 0;
 const plugin_filter: string | null = new URLSearchParams(window.location.search).get('filter');
 
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
@@ -76,7 +74,7 @@ class AjaxQueue {
         while (this.running < this.max && this.pending.length > 0) {
             const fn = this.pending.shift()!;
             this.running++;
-            fn().finally(() => {
+            void fn().finally(() => {
                 this.running--;
                 this.process();
             });
@@ -149,7 +147,14 @@ function fadeOut(el: HTMLElement | null, durationMs: number) {
     }, durationMs);
 }
 
-function pluginAction(id: string, action: string): Promise<any> {
+interface PluginActionResponse {
+    stat?: string;
+    result?: unknown;
+    err?: string;
+    message?: string;
+}
+
+function pluginAction(id: string, action: string): Promise<PluginActionResponse> {
     const params = new URLSearchParams({
         method: 'pwg.plugins.performAction',
         action,
@@ -157,14 +162,16 @@ function pluginAction(id: string, action: string): Promise<any> {
         pwg_token,
         format: 'json',
     });
-    return fetch(config.wsUrl + params.toString()).then((r) => r.json());
+    return fetch(config.wsUrl + params.toString()).then(
+        (r) => r.json() as Promise<PluginActionResponse>
+    );
 }
 
 function activatePlugin(id: string) {
     document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = true;
     pluginAction(id, 'activate')
         .then((data) => {
-            if (data.stat == 'ok') {
+            if (data.stat === 'ok') {
                 const notif = document.querySelector<HTMLElement>(
                     `#${id} .AddPluginSuccess label span:first-child`
                 );
@@ -176,7 +183,7 @@ function activatePlugin(id: string) {
                 actualizeFilter();
             }
         })
-        .catch((e) => {
+        .catch(() => {
             document.querySelector<HTMLElement>(
                 `#${id} .PluginActionError label span:first-child`
             )!.innerHTML = plugin_action_error;
@@ -196,7 +203,7 @@ function disactivatePlugin(id: string) {
     document.querySelector<HTMLInputElement>(`#${id} .switch`)!.disabled = true;
     pluginAction(id, 'deactivate')
         .then((data) => {
-            if (data.stat == 'ok') {
+            if (data.stat === 'ok') {
                 const notif = document.querySelector<HTMLElement>(
                     `#${id} .DeactivatePluginSuccess label span:first-child`
                 );
@@ -210,7 +217,7 @@ function disactivatePlugin(id: string) {
                 actualizeFilter();
             }
         })
-        .catch((e) => {
+        .catch(() => {
             document.querySelector<HTMLElement>(
                 `#${id} .PluginActionError label span:first-child`
             )!.innerHTML = plugin_action_error;
@@ -240,7 +247,7 @@ function deletePlugin(id: string, name: string) {
                 window.alert(deleted_plugin_msg.replace('%s', name));
             }
         })
-        .catch((e) => {
+        .catch(() => {
             document.querySelector<HTMLElement>(
                 `#${id} .PluginActionError label span:first-child`
             )!.innerHTML = plugin_action_error;
@@ -251,7 +258,7 @@ function deletePlugin(id: string, name: string) {
 function restorePlugin(id: string) {
     pluginAction(id, 'restore')
         .then((data) => {
-            if (data.stat == 'ok') {
+            if (data.stat === 'ok') {
                 const notif = document.querySelector<HTMLElement>(
                     `#${id} .RestorePluginSuccess label span:first-child`
                 );
@@ -260,7 +267,7 @@ function restorePlugin(id: string) {
                 if (success) success.style.display = 'flex';
             }
         })
-        .catch((e) => {
+        .catch(() => {
             document.querySelector<HTMLElement>(
                 `#${id} .PluginActionError label span:first-child`
             )!.innerHTML = plugin_action_error;
@@ -286,7 +293,7 @@ function uninstallPlugin(id: string) {
             nb_plugin.all -= 1;
             actualizeFilter();
         })
-        .catch((e) => {
+        .catch(() => {
             document.querySelector<HTMLElement>(
                 `#${id} .PluginActionError label span:first-child`
             )!.innerHTML = plugin_action_error;
@@ -295,7 +302,7 @@ function uninstallPlugin(id: string) {
 }
 
 function set_view_selector(view_type: string) {
-    fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
+    void fetch(config.wsUrl + 'format=json&method=pwg.users.preferences.set', {
         method: 'POST',
         body: new URLSearchParams({ param: 'plugin-manager-view', value: view_type }),
     });
@@ -304,13 +311,13 @@ function set_view_selector(view_type: string) {
 function performPluginDeactivate(id: string) {
     queuedManager.add(() =>
         pluginAction(id, 'deactivate').then((data) => {
-            if (data.stat == 'ok') {
+            if (data.stat === 'ok') {
                 const el = document.getElementById(id);
                 el?.classList.remove('active');
                 el?.classList.add('inactive');
             }
             done++;
-            if (done == nb_plugins) location.reload();
+            if (done === nb_plugins) location.reload();
         })
     );
 }
@@ -325,7 +332,7 @@ function showInactivePlugins() {
 }
 
 function actualizeFilter() {
-    const setBadge = (sel: string, val: any) => {
+    const setBadge = (sel: string, val: number) => {
         const el = qs(sel);
         if (el) el.innerHTML = String(val);
     };
@@ -344,9 +351,9 @@ function actualizeFilter() {
 
     const checkAndReset = (count: number, labelFor: string, radio: HTMLInputElement | null) => {
         const label = qs<HTMLElement>(`label[for='${labelFor}']`);
-        if (count == 0) {
-            if (label) label.style.display = 'none';
-            if (radio?.checked) seeAll?.click();
+        if (count === 0) {
+            if (label !== null) label.style.display = 'none';
+            if (radio?.checked === true) seeAll?.click();
         }
     };
     checkAndReset(nb_plugin.active, 'seeActive', seeActive);
@@ -410,9 +417,9 @@ function filterPlugins(text: string, activeFilter: string) {
 document.addEventListener('DOMContentLoaded', () => {
     actualizeFilter();
 
-    if (qs<HTMLInputElement>('#displayClassic')?.checked) setDisplayClassic();
-    if (qs<HTMLInputElement>('#displayCompact')?.checked) setDisplayCompact();
-    if (qs<HTMLInputElement>('#displayLine')?.checked) setDisplayLine();
+    if (qs<HTMLInputElement>('#displayClassic')?.checked === true) setDisplayClassic();
+    if (qs<HTMLInputElement>('#displayCompact')?.checked === true) setDisplayCompact();
+    if (qs<HTMLInputElement>('#displayLine')?.checked === true) setDisplayLine();
 
     qs('#displayClassic')?.addEventListener('change', () => {
         setDisplayClassic();
@@ -450,21 +457,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    if (isWebmaster != 0) {
+    if (isWebmaster !== 0) {
         qsa<HTMLElement>('.switch').forEach((switchEl) => {
             switchEl.addEventListener('change', function (this: HTMLElement) {
                 qsa('.pluginMiniBox').forEach((el) => el.classList.add('usable'));
                 const pluginBox = this.parentElement?.parentElement as HTMLElement;
                 const pluginId = pluginBox?.id ?? '';
                 const toggleInput = this.querySelector<HTMLInputElement>('#toggleSelectionMode');
-                if (toggleInput?.checked) {
+                if (toggleInput?.checked === true) {
                     activatePlugin(pluginId);
                     pluginBox.classList.add('plugin-active');
                     pluginBox.classList.remove('plugin-inactive');
                     const unavail = pluginBox.querySelector<HTMLElement>(
                         '.pluginUnavailableAction'
                     );
-                    if (unavail?.getAttribute('href')) {
+                    const unavailHref = unavail?.getAttribute('href');
+                    if (
+                        unavailHref !== null &&
+                        unavailHref !== undefined &&
+                        unavailHref !== '' &&
+                        unavail !== null
+                    ) {
                         unavail.classList.remove('pluginUnavailableAction');
                         unavail.classList.add('pluginActionLevel1');
                     }
@@ -506,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    qsa('.pluginContent .dropdown-option.delete-plugin-button').forEach((btn) => {
+    qsa<HTMLElement>('.pluginContent .dropdown-option.delete-plugin-button').forEach((btn) => {
         btn.addEventListener('click', () => {
             const plugin_name =
                 btn
@@ -529,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const plugin_id = btn.closest<HTMLElement>('.pluginContent')?.parentElement?.id ?? '';
             const msg =
                 restore_plugin_msg.replace('%s', plugin_name) +
-                (str_restore_def ? '\n\n' + str_restore_def : '');
+                (str_restore_def !== '' ? '\n\n' + str_restore_def : '');
             if (window.confirm(msg)) restorePlugin(plugin_id);
         });
     });
@@ -554,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .forEach((el) => performPluginDeactivate(el.id));
     });
 
-    fetch(
+    void fetch(
         config.adminUrl +
             new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' })
     )
@@ -563,14 +576,26 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach((pluginId) => {
                 const nameEl = document.querySelector(`#${pluginId} .pluginName`);
                 if (nameEl) {
-                    const tag = show_details
-                        ? `<a class="warning" title="${incompatible_msg}"></a>`
-                        : `<span class="warning" title="${incompatible_msg}"></span>`;
+                    const tag =
+                        show_details === true
+                            ? `<a class="warning" title="${incompatible_msg}"></a>`
+                            : `<span class="warning" title="${incompatible_msg}"></span>`;
                     nameEl.insertAdjacentHTML('afterbegin', tag);
                 }
                 document.getElementById(pluginId)?.classList.add('incompatible');
                 document.querySelectorAll<HTMLElement>(`#${pluginId} .activate`).forEach((el) => {
-                    (window as any).pwg_jconfirm_follow_href_fn(el, {
+                    (
+                        window as Window & {
+                            pwg_jconfirm_follow_href_fn?: (
+                                el: HTMLElement,
+                                opts: {
+                                    alert_title: string;
+                                    alert_confirm: string;
+                                    alert_cancel: string;
+                                }
+                            ) => void;
+                        }
+                    ).pwg_jconfirm_follow_href_fn?.(el, {
                         alert_title: incompatible_msg + activate_msg,
                         alert_confirm: confirm_msg,
                         alert_cancel: cancel_msg,
@@ -583,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tippy('.fullInfo', { delay: [500, 0], duration: [200, 200], maxWidth: 300 });
 
     document.onkeydown = (e) => {
-        if (e.keyCode == 58) {
+        if (e.keyCode === 58) {
             qs<HTMLInputElement>('.pluginFilter input.search-input')?.focus();
             return false;
         }

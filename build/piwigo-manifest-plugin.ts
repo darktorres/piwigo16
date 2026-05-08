@@ -1,5 +1,4 @@
 import type { Plugin } from 'vite';
-import type { OutputChunk } from 'rolldown';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -23,13 +22,13 @@ export function piwigoManifestPlugin(): Plugin {
             chunkMap.clear();
             for (const [fileName, chunk] of Object.entries(bundle)) {
                 if (chunk.type !== 'chunk' || !chunk.isEntry) continue;
-                const cssFiles = [
-                    ...((chunk as any).viteMetadata?.importedCss ?? new Set<string>()),
-                ];
+                const meta = (chunk as { viteMetadata?: { importedCss?: Set<string> } })
+                    .viteMetadata;
+                const cssFiles = [...(meta?.importedCss ?? new Set<string>())];
                 chunkMap.set(fileName, {
                     name: chunk.name,
                     file: fileName,
-                    imports: (chunk as OutputChunk).imports.filter((f) => !f.endsWith('.css')),
+                    imports: chunk.imports.filter((f) => !f.endsWith('.css')),
                     css: cssFiles,
                 });
             }

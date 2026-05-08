@@ -44,39 +44,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: new URLSearchParams({ param: 'test_param', service: 'test_service' }),
             })
                 .then((r) => r.json())
-                .then((data: any) => {
-                    if (data.stat !== 'ok') return;
-                    const toMB = (v: unknown): string => {
-                        const n = Number(v);
-                        return Number.isFinite(n) ? (n / 1024 / 1024).toFixed(2) : '?';
-                    };
-                    const domPairs: Array<[HTMLElement | null, string]> = [
-                        [
-                            document.querySelector<HTMLElement>('.cache-size-value'),
-                            toMB(data.result.infos[0].value),
-                        ],
-                        [
-                            document.querySelector<HTMLElement>('.multiple-pictures-sizes'),
-                            toMB(data.result.infos[1].value.all),
-                        ],
-                        [
-                            document.querySelector<HTMLElement>('.multiple-compiledTemplate-sizes'),
-                            toMB(data.result.infos[2].value),
-                        ],
-                    ];
-                    const multipleSizes = document.querySelectorAll(
-                        '.delete-check-container .delete-size-check'
-                    );
-                    const multipleSizesValues: Record<string, string> = data.result.infos[1].value;
-                    for (const key of Object.keys(multipleSizesValues)) {
-                        (multipleSizesValues as any)[key] = toMB((multipleSizesValues as any)[key]);
+                .then(
+                    (data: {
+                        stat: string;
+                        result: {
+                            infos: Array<{ value: string | number | Record<string, string> }>;
+                        };
+                    }) => {
+                        if (data.stat !== 'ok') return;
+                        const toMB = (v: unknown): string => {
+                            const n = Number(v);
+                            return Number.isFinite(n) ? (n / 1024 / 1024).toFixed(2) : '?';
+                        };
+                        const v1 = data.result.infos[1].value as Record<string, string>;
+                        const domPairs: Array<[HTMLElement | null, string]> = [
+                            [
+                                document.querySelector<HTMLElement>('.cache-size-value'),
+                                toMB(data.result.infos[0].value),
+                            ],
+                            [
+                                document.querySelector<HTMLElement>('.multiple-pictures-sizes'),
+                                toMB(v1['all']),
+                            ],
+                            [
+                                document.querySelector<HTMLElement>(
+                                    '.multiple-compiledTemplate-sizes'
+                                ),
+                                toMB(data.result.infos[2].value),
+                            ],
+                        ];
+                        const multipleSizes = document.querySelectorAll(
+                            '.delete-check-container .delete-size-check'
+                        );
+                        const multipleSizesValues: Record<string, string> = v1;
+                        for (const key of Object.keys(multipleSizesValues)) {
+                            multipleSizesValues[key] = toMB(multipleSizesValues[key]);
+                        }
+                        displayResponse(domPairs, multipleSizes, multipleSizesValues);
+                        document
+                            .querySelectorAll('.animate-spin')
+                            .forEach((el) => el.classList.remove('animate-spin'));
                     }
-                    displayResponse(domPairs, multipleSizes, multipleSizesValues);
-                    document
-                        .querySelectorAll('.animate-spin')
-                        .forEach((el) => el.classList.remove('animate-spin'));
-                })
-                .catch((message) => console.log(message));
+                )
+                .catch((message: unknown) => console.error(message));
         });
     });
 });
@@ -94,9 +104,10 @@ function attachConfirm(selector: string, getTitle: (el: HTMLElement) => string):
     });
 }
 
-const lockTitle = pageData.gallery_locked
-    ? pageData.str_unlock_gallery_confirm
-    : pageData.str_lock_gallery_confirm;
+const lockTitle =
+    pageData.gallery_locked === true
+        ? pageData.str_unlock_gallery_confirm
+        : pageData.str_lock_gallery_confirm;
 attachConfirm('.lock-gallery-button', () => lockTitle + '\n' + pageData.str_lock_gallery_tip);
 attachConfirm('.purge-history-detail-button', () => pageData.str_purge_history_detail);
 attachConfirm('.purge-history-summary-button', () => pageData.str_purge_history_summary);
@@ -143,7 +154,7 @@ document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((el) => {
         document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((x) => {
             if (x.getAttribute('data-selected') === '1') {
                 const name = x.getAttribute('name');
-                if (name) selected.push(name);
+                if (name !== null) selected.push(name);
             }
         });
         const deleteSizes = document.querySelector<HTMLAnchorElement>('.delete-sizes');

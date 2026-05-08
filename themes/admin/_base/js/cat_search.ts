@@ -89,18 +89,19 @@ function updateSearch(): void {
 function searchAlbumByName(
     categories: typeof data,
     search: string,
-    nbResult: number,
+    nbResultIn: number,
     name = ''
 ): number {
+    let nbResult = nbResultIn;
     for (const c of categories) {
         if (nbResult >= RESULT_LIMIT) return nbResult;
         const currentName = name + `<a href="${editLink + String(c.id)}">${c.name}</a>` + ' / ';
         if (c.name.toString().toLowerCase().includes(search.toLowerCase())) {
-            const haveChild = !!(c.children && c.children.length);
+            const haveChild = c.children !== undefined && c.children.length > 0;
             nbResult++;
             addAlbumResult(c, nbResult, haveChild, currentName);
         }
-        if (c.children && c.children.length) {
+        if (c.children !== undefined && c.children.length > 0) {
             nbResult = searchAlbumByName(c.children, search, nbResult, currentName);
         }
     }
@@ -113,7 +114,7 @@ function addAlbumResult(
     haveChildren: boolean,
     name: string
 ): void {
-    const id = +cat.id;
+    const id = Number(cat.id);
     const templateEl = document.querySelector<HTMLElement>('.search-album-elem-template');
     if (!templateEl) return;
     const div = document.createElement('div');

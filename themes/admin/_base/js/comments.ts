@@ -259,7 +259,7 @@ function displayComments(comments: any) {
                 } else {
                     checkbox.classList.replace('icon-ok-circled', 'icon-circle-empty');
                     commentEl.classList.remove('comment-selected');
-                    commentsSelected = commentsSelected.filter((idx) => idx != id);
+                    commentsSelected = commentsSelected.filter((idx) => idx !== id);
                 }
                 commentsUpdateSelection();
                 return;
@@ -415,7 +415,7 @@ function updateNbComments(nb: any) {
 }
 
 function showModalViewComment(id: any) {
-    const comment = (commentsState as any).comments.find((c: any) => c.id == id) ?? null;
+    const comment = (commentsState as any).comments.find((c: any) => c.id === id) ?? null;
     if (!comment) return;
     const item = document.getElementById(id)!;
     modalViewComment.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
@@ -460,7 +460,10 @@ function closeModalViewComment() {
 
 function validateComment(id: any) {
     const idLength = id.length ?? 1;
-    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.validate', { comment_id: id, pwg_token })
+    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.validate', {
+        comment_id: id,
+        pwg_token,
+    })
         .then((res) => {
             if (res.stat === 'ok') {
                 window.alert(idLength > 1 ? str_comments_validated : str_comment_validated);
@@ -482,7 +485,10 @@ function deleteComment(id: any) {
             ? str_deletes.replace('%d', String(idLength))
             : str_delete.replace('%s', String(id));
     if (!window.confirm(msg)) return;
-    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.delete', { comment_id: id, pwg_token })
+    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.delete', {
+        comment_id: id,
+        pwg_token,
+    })
         .then((res) => {
             if (res.stat === 'ok') getComments(commentsParams);
         })

@@ -82,27 +82,27 @@ function piwigoToDayjsLocale(code: string): string {
         zh_CN: 'zh-cn',
         zh_TW: 'zh-tw',
     };
-    if (code in special) return special[code]!;
-    const lang = code.split('_')[0];
+    if (code in special) return special[code];
+    const lang: string | undefined = code.split('_')[0];
     return (lang ?? 'en').toLowerCase();
 }
 
 async function loadDayjsLocale(code: string): Promise<void> {
     if (code === 'en') return;
-    const loader = dayjsLocaleLoaders[code];
-    if (!loader) return;
+    const loader: (() => Promise<unknown>) | undefined = dayjsLocaleLoaders[code];
+    if (loader === undefined) return;
     await loader();
     dayjs.locale(code);
 }
 
 const dataEl = document.getElementById('data')!;
 const data: PageDataset = {
-    hours: JSON.parse(dataEl.dataset['hours'] ?? '{}'),
-    days: JSON.parse(dataEl.dataset['days'] ?? '{}'),
-    months: JSON.parse(dataEl.dataset['months'] ?? '{}'),
-    years: JSON.parse(dataEl.dataset['years'] ?? '{}'),
-    'compare-years': JSON.parse(dataEl.dataset['compareYears'] ?? '{}'),
-    'month-stats': JSON.parse(dataEl.dataset['monthStats'] ?? '{}'),
+    hours: JSON.parse(dataEl.dataset['hours'] ?? '{}') as Record<string, number>,
+    days: JSON.parse(dataEl.dataset['days'] ?? '{}') as Record<string, number>,
+    months: JSON.parse(dataEl.dataset['months'] ?? '{}') as Record<string, number>,
+    years: JSON.parse(dataEl.dataset['years'] ?? '{}') as Record<string, number>,
+    'compare-years': JSON.parse(dataEl.dataset['compareYears'] ?? '{}') as Record<string, number>,
+    'month-stats': JSON.parse(dataEl.dataset['monthStats'] ?? '{}') as MonthStats,
 };
 
 const data_unit: Record<DataType, 'day' | 'month' | 'year'> = {
@@ -143,7 +143,7 @@ const displayOptions = {
 };
 
 function getValues(d: Record<string, number>): Array<{ x: Date; y: number }> {
-    return Object.keys(d).map((key) => ({ x: new Date(key), y: d[key]! }));
+    return Object.keys(d).map((key) => ({ x: new Date(key), y: d[key] }));
 }
 
 function getComparedYearDataset(): ChartDataset<'line'>[] {
@@ -153,11 +153,11 @@ function getComparedYearDataset(): ChartDataset<'line'>[] {
         const d = new Date(key);
         const year = d.getFullYear();
         valuesByYear[year] ??= [];
-        valuesByYear[year]![d.getMonth()] = data['compare-years'][key]!;
+        valuesByYear[year][d.getMonth()] = data['compare-years'][key]!;
     });
     return Object.keys(valuesByYear).map((key, i) => ({
         label: key,
-        data: valuesByYear[Number(key)]!,
+        data: valuesByYear[Number(key)],
         tension: 0.2,
         borderColor: colors[i % colors.length],
         backgroundColor: 'rgba(0,0,0,0)',
@@ -175,7 +175,7 @@ function getMonthStatsDataset(): ChartDataset<'line'>[] {
             days_data[lastDate.getUTCDate() - 1] = vals[key]!;
         });
         datasets.push({
-            label: `${str_months[lastDate.getMonth()]!} ${lastDate.getFullYear()}`,
+            label: `${str_months[lastDate.getMonth()]} ${lastDate.getFullYear()}`,
             data: days_data,
             tension: 0.2,
             borderColor: colors[i % colors.length],
@@ -259,7 +259,7 @@ function changeData(dataType: DataType, options = displayOptions): void {
 
 // Locale loads async; once ready, attach listeners and render the initial chart.
 // The data-type labels begin disabled-ish (no chart yet) but typical render is sub-100ms.
-loadDayjsLocale(piwigoToDayjsLocale(lang_code)).then(() => {
+void loadDayjsLocale(piwigoToDayjsLocale(lang_code)).then(() => {
     document.querySelectorAll<HTMLElement>('.stat-data-selector label').forEach((el) => {
         el.addEventListener('click', function (this: HTMLElement) {
             const value = this.dataset['value'] as DataType | undefined;

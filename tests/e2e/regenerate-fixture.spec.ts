@@ -16,7 +16,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { pwgUrl, wsUrl } from './helpers/url';
-import { createAlbum, getCookieHeader, getPwgToken, uploadPhoto } from './helpers/upload-photo';
+import { createAlbum, getPwgToken, uploadPhoto } from './helpers/upload-photo';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -49,7 +49,12 @@ async function callWs(
         headers: { Cookie: cookieHeader },
         form: { method, ...params },
     });
-    return res.json();
+    return res.json() as Promise<{
+        stat?: string;
+        result?: unknown;
+        err?: unknown;
+        message?: unknown;
+    }>;
 }
 
 test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
@@ -116,7 +121,10 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
         const loginRes = await request.post(wsUrl({ format: 'json' }), {
             form: { method: 'pwg.session.login', username: ADMIN_USER, password: ADMIN_PASS },
         });
-        expect((await loginRes.json()).stat, 'fixture_admin login must succeed').toBe('ok');
+        expect(
+            ((await loginRes.json()) as { stat?: string }).stat,
+            'fixture_admin login must succeed'
+        ).toBe('ok');
         const cookieHeader = (await request.storageState()).cookies
             .map((c) => `${c.name}=${c.value}`)
             .join('; ');

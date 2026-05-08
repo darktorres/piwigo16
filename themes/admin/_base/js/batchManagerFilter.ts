@@ -61,7 +61,7 @@ function select_album_filter({
     newSelectedAlbum,
     getSelectedAlbum,
 }: {
-    album: any;
+    album: { name: string };
     newSelectedAlbum: () => void;
     getSelectedAlbum: () => (string | number)[];
 }): void {
@@ -70,7 +70,7 @@ function select_album_filter({
     newSelectedAlbum();
     hide_filters_error(str_select_album);
     const valInput = document.getElementById('filterCategoryValue') as HTMLInputElement | null;
-    if (valInput) valInput.value = String(+getSelectedAlbum()[0]);
+    if (valInput) valInput.value = String(Number(getSelectedAlbum()[0]));
     const selectEl = document.getElementById('selectAlbumFilter');
     if (selectEl) selectEl.style.display = 'none';
     const selectedArea = document.getElementById('selectedAlbumFilterArea');
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
 
             sel.addEventListener('change', () => {
-                if (sel.value) hide_filters_error(str_select_tag);
+                if (sel.value !== '') hide_filters_error(str_select_tag);
             });
         });
 

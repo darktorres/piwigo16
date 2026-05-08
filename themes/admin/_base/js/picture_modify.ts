@@ -7,7 +7,7 @@ import 'glightbox/dist/css/glightbox.css';
 interface PictureModifyPageData {
     CACHE_KEYS: { tags: string; categories: string; _hash: string };
     ROOT_URL: string;
-    associated_albums: Record<string, any>;
+    associated_albums: Record<string, unknown>;
     str_create: string;
     str_assoc_album_ab: string;
     related_categories_ids: (string | number)[];
@@ -34,9 +34,9 @@ const tagsCache = new TagsCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'));
+categoriesCache.selectize(document.querySelector('[data-selectize=categories]'));
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+tagsCache.selectize(document.querySelector('[data-selectize=tags]'), {
     lang: {
         Add: pageData.str_create,
     },
@@ -131,7 +131,7 @@ function add_related_category({
     addSelectedAlbum,
     getSelectedAlbum,
 }: {
-    album: any;
+    album: { id: number | string; full_name_with_admin_links: string };
     addSelectedAlbum: () => void;
     getSelectedAlbum: () => (string | number)[];
 }): void {

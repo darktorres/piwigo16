@@ -5,16 +5,8 @@ interface ToasterInfo {
 }
 
 function pwgToaster(info: ToasterInfo): void {
-    if (!info.text || !info.icon) {
-        console.log('set info.text or info.icon');
-        return;
-    }
-    if (typeof info.text !== 'string') {
-        console.log('info.text is not a string');
-        return;
-    }
-    if (info.icon !== 'success' && info.icon !== 'error') {
-        console.log('info.icon must be success or error');
+    if (info.text === '') {
+        console.error('set info.text');
         return;
     }
 
@@ -35,6 +27,6 @@ function pwgToaster(info: ToasterInfo): void {
     }, time);
 }
 
-(window as any).pwgToaster = pwgToaster;
+(window as Window & { pwgToaster: typeof pwgToaster }).pwgToaster = pwgToaster;
 
 export {};

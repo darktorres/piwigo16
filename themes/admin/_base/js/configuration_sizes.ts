@@ -23,7 +23,7 @@ function toggleResizeFields(): void {
     const checkbox = document.querySelector<HTMLInputElement>('[name=original_resize]');
     const needToggle = document.getElementById('sizeEdit-original');
     if (!needToggle) return;
-    needToggle.style.display = checkbox?.checked ? '' : 'none';
+    needToggle.style.display = checkbox?.checked === true ? '' : 'none';
 }
 
 toggleResizeFields();

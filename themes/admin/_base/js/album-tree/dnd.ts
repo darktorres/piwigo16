@@ -154,7 +154,7 @@ export function attachDnd(ctx: DndContext): () => void {
         if (!targetNode) return;
         e.preventDefault();
 
-        let prevented = false;
+        let prevented: boolean = false;
         const event = {
             preventDefault: () => {
                 prevented = true;

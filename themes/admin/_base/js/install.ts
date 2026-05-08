@@ -1,7 +1,7 @@
 document.querySelectorAll<HTMLAnchorElement>('a.externalLink').forEach((el) => {
     el.addEventListener('click', (e) => {
         e.preventDefault();
-        window.open(el.getAttribute('href') || '');
+        window.open(el.getAttribute('href') ?? '');
     });
 });
 
@@ -17,8 +17,8 @@ if (adminMail) {
 document
     .querySelectorAll<HTMLSelectElement>('select[data-language-select-redirect]')
     .forEach((sel) => {
-        const target = sel.getAttribute('data-language-select-redirect') || '';
-        if (!target) return;
+        const target = sel.getAttribute('data-language-select-redirect') ?? '';
+        if (target === '') return;
         sel.addEventListener('change', () => {
             document.location.href = target + '?language=' + sel.value;
         });
@@ -26,8 +26,8 @@ document
 
 document.querySelectorAll<HTMLElement>('[data-install-download-config]').forEach((btn) => {
     btn.addEventListener('click', () => {
-        const url = btn.getAttribute('data-install-download-config') || '';
-        if (url) {
+        const url = btn.getAttribute('data-install-download-config') ?? '';
+        if (url !== '') {
             window.open(url);
         }
     });

@@ -5,8 +5,24 @@ import { config } from './config';
 
 // Plugin scripts push their per-element field descriptors into this array before save.
 // Initialised here so plugins can push before DOMContentLoaded.
-(window as any).pluginValues = (window as any).pluginValues || [];
-const pluginValues: Array<{ selector: string; api_key: string }> = (window as any).pluginValues;
+type WindowWithPluginValues = Window & {
+    pluginValues?: PluginValue[];
+    GLightbox?: (opts: { selector: string }) => void;
+    pwgDatepicker?: (
+        el: HTMLElement,
+        opts: { showTimepicker: boolean; cancelButton: string }
+    ) => void;
+    [pluginKey: string]: unknown;
+};
+
+interface PluginValue {
+    selector: string;
+    api_key: string;
+}
+
+const winRef = window as unknown as WindowWithPluginValues;
+winRef.pluginValues ??= [];
+const pluginValues: PluginValue[] = winRef.pluginValues;
 
 interface BatchUnitPageData {
     str_are_you_sure: string;
@@ -22,18 +38,30 @@ interface BatchUnitPageData {
 interface BatchManagerUnitCacheData {
     CACHE_KEYS: { tags: string; categories: string; _hash: string };
     ROOT_URL: string;
-    associated_categories: Record<string, any>;
+    associated_categories: Record<string, unknown>;
     str_create: string;
     active_plugins: string[];
 }
 
+interface PwgImageInfo {
+    name?: string;
+    author?: string;
+    date_creation?: string;
+    comment?: string;
+    level?: string;
+    file?: string;
+    filesize?: string | number;
+    width?: number;
+    height?: number;
+}
+
 const {
     str_are_you_sure,
-    str_yes,
-    str_no,
+    str_yes: _str_yes,
+    str_no: _str_no,
     str_orphan,
     str_meta_warning,
-    str_meta_yes,
+    str_meta_yes: _str_meta_yes,
     str_title_ab,
     str_cancel,
 } = getPageData<BatchUnitPageData>();
@@ -41,8 +69,10 @@ const {
 const cacheData = getPageData<BatchManagerUnitCacheData>('pwg-batch-manager-unit-data');
 
 // Map from element ID → related category ID array; built from DOM data-attrs in DOMContentLoaded.
-// Typed as any to accommodate the .cat_ids property that AlbumSelector attaches after add.
-const allRelatedCategoryIds: Record<string, any> = {};
+// AlbumSelector also attaches `cat_ids` directly on the array, so the array
+// shape carries an optional sidecar property.
+type CategoryIdsArray = Array<string | number> & { cat_ids?: Array<string | number> };
+const allRelatedCategoryIds: Record<string, CategoryIdsArray | undefined> = {};
 
 // Initialize caches
 const tagsCache = new TagsCache({
@@ -57,18 +87,18 @@ const categoriesCache = new CategoriesCache({
     rootUrl: cacheData.ROOT_URL,
 });
 
-tagsCache?.selectize(document.querySelector('[data-selectize=tags]'), {
+tagsCache.selectize(document.querySelector('[data-selectize=tags]'), {
     lang: {
         Add: cacheData.str_create,
     },
 });
 
-categoriesCache?.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function (categories: any[], options: any) {
+categoriesCache.selectize(document.querySelector('[data-selectize=categories]'), {
+    filter: function (categories, options) {
         if (this.name === 'dissociate') {
-            const filtered = categories.filter(function (cat: any) {
-                return Boolean(cacheData.associated_categories[cat.id]);
-            });
+            const filtered = categories.filter((cat) =>
+                Boolean(cacheData.associated_categories[String(cat.id)])
+            );
 
             if (filtered.length > 0) {
                 options.default = filtered[0].id;
@@ -83,20 +113,20 @@ categoriesCache?.selectize(document.querySelector('[data-selectize=categories]')
 
 let b_current_picture_id: string | undefined = undefined;
 
-function pid(pictureId: any, sel: string): HTMLElement {
-    return document.querySelector<HTMLElement>('#picture-' + pictureId + ' ' + sel)!;
+function pid(pictureId: string | undefined, sel: string): HTMLElement | null {
+    return document.querySelector<HTMLElement>('#picture-' + (pictureId ?? '') + ' ' + sel);
 }
 
 function pidInput(
-    pictureId: any,
+    pictureId: string | undefined,
     sel: string
 ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
     return document.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-        '#picture-' + pictureId + ' ' + sel
+        '#picture-' + (pictureId ?? '') + ' ' + sel
     )!;
 }
 
-function fieldsetId(el: EventTarget | null): string {
+function _fieldsetId(el: EventTarget | null): string {
     return (
         ((el as HTMLElement).closest('fieldset') as HTMLElement | null)?.dataset['imageId'] ?? ''
     );
@@ -109,6 +139,13 @@ interface WsResponse<T = unknown> {
     message?: string;
 }
 
+function stringify(val: unknown): string {
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+    return JSON.stringify(val);
+}
+
 function pwgPost<T = unknown>(
     method: string,
     data: Record<string, unknown>
@@ -117,18 +154,23 @@ function pwgPost<T = unknown>(
     body.append('method', method);
     for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v))
-            (v as unknown[]).forEach((item) => body.append(k + '[]', String(item ?? '')));
-        else body.append(k, String(v ?? ''));
+            (v as unknown[]).forEach((item) => body.append(k + '[]', stringify(item)));
+        else body.append(k, stringify(v));
     }
     return fetch(config.wsUrl + 'format=json', { method: 'POST', body }).then(
         (r) => r.json() as Promise<WsResponse<T>>
     );
 }
 
-function pwgGet(method: string, data: Record<string, any>): Promise<any> {
+function _pwgGet<T = unknown>(
+    method: string,
+    data: Record<string, unknown>
+): Promise<WsResponse<T>> {
     const params = new URLSearchParams({ method });
-    for (const [k, v] of Object.entries(data)) params.append(k, String(v ?? ''));
-    return fetch(config.wsUrl + 'format=json&' + params).then((r) => r.json());
+    for (const [k, v] of Object.entries(data)) params.append(k, stringify(v));
+    return fetch(config.wsUrl + 'format=json&' + params.toString()).then(
+        (r) => r.json() as Promise<WsResponse<T>>
+    );
 }
 
 function pwgToken(): string {
@@ -140,18 +182,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('fieldset.elementEdit').forEach((fs) => {
         const id = fs.dataset['imageId']!;
         try {
-            allRelatedCategoryIds[id] = JSON.parse(fs.dataset['relatedCategoryIds'] ?? '[]');
+            allRelatedCategoryIds[id] = JSON.parse(
+                fs.dataset['relatedCategoryIds'] ?? '[]'
+            ) as CategoryIdsArray;
         } catch {
-            allRelatedCategoryIds[id] = [];
+            allRelatedCategoryIds[id] = [] as CategoryIdsArray;
         }
     });
 
     // GLightbox for preview thumbnails.
-    (window as any).GLightbox({ selector: 'a.preview-box' });
+    winRef.GLightbox?.({ selector: 'a.preview-box' });
 
     // Datepicker with timepicker for date_creation fields.
     document.querySelectorAll<HTMLElement>('[data-datepicker]').forEach((el) => {
-        (window as any).pwgDatepicker(el, { showTimepicker: true, cancelButton: str_cancel });
+        winRef.pwgDatepicker?.(el, { showTimepicker: true, cancelButton: str_cancel });
     });
 
     let user_interacted = false;
@@ -200,7 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
             if (!window.confirm(str_meta_warning)) return;
             disableLocalButton(pictureId);
-            pwgPost('pwg.images.syncMetadata', { pwg_token: pwgToken(), image_id: pictureId })
+            void pwgPost('pwg.images.syncMetadata', {
+                pwg_token: pwgToken(),
+                image_id: pictureId,
+            })
                 .then((data) => {
                     if (data.stat === 'ok') updateBlock(pictureId);
                     else {
@@ -220,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fieldset = el.closest<HTMLElement>('fieldset')!;
             const pictureId = fieldset.dataset['imageId'];
             if (!window.confirm(str_are_you_sure)) return;
-            pwgPost('pwg.images.delete', { pwg_token: pwgToken(), image_id: pictureId })
+            void pwgPost('pwg.images.delete', { pwg_token: pwgToken(), image_id: pictureId })
                 .then((data) => {
                     if (data.stat === 'ok') {
                         fieldset.remove();
@@ -234,7 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             b.style.display = 'block';
                         });
                         document
-                            .querySelectorAll<HTMLElement>(`div[data-image_id="${pictureId}"]`)
+                            .querySelectorAll<HTMLElement>(
+                                `div[data-image_id="${pictureId ?? ''}"]`
+                            )
                             .forEach((d) => {
                                 d.style.display = 'flex';
                             });
@@ -245,15 +294,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll<HTMLElement>('.action-save-picture').forEach((el) => {
-        el.addEventListener('click', async () => {
+        el.addEventListener('click', () => {
             const pictureId = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
-            await saveChanges(pictureId);
+            void saveChanges(pictureId);
         });
     });
 
-    document
-        .querySelector('.action-save-global')
-        ?.addEventListener('click', () => saveAllChanges());
+    document.querySelector('.action-save-global')?.addEventListener('click', () => {
+        void saveAllChanges();
+    });
 
     const ab = new AlbumSelector({
         selectedCategoriesIds: [],
@@ -265,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll<HTMLElement>('.linked-albums.add-item').forEach((el) => {
         el.addEventListener('click', () => {
             b_current_picture_id = el.closest<HTMLElement>('fieldset')?.dataset['imageId'];
-            ab.hardUpdate(allRelatedCategoryIds[b_current_picture_id!]);
+            ab.hardUpdate(allRelatedCategoryIds[b_current_picture_id ?? ''] ?? []);
             ab.open();
         });
     });
@@ -278,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const picture_id =
                     target.closest<HTMLElement>('fieldset')?.dataset['imageId'] ?? '';
                 remove_selected_category(cat_id, picture_id);
-                check_related_categories(picture_id, allRelatedCategoryIds[picture_id]);
+                check_related_categories(picture_id, allRelatedCategoryIds[picture_id] ?? []);
             }
         });
     });
@@ -286,10 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pluginFunctionMapInit(cacheData.active_plugins);
 });
 
-function remove_selected_category(cat_id: any, picture_id: any) {
-    const idx = allRelatedCategoryIds[picture_id].indexOf(cat_id);
+function remove_selected_category(cat_id: string, picture_id: string) {
+    const arr = allRelatedCategoryIds[picture_id];
+    if (arr === undefined) return;
+    const idx = arr.indexOf(cat_id);
     if (idx > -1) {
-        allRelatedCategoryIds[picture_id].splice(idx, 1);
+        arr.splice(idx, 1);
         showUnsavedLocalBadge(picture_id);
     }
     document.getElementById(cat_id)?.parentElement?.remove();
@@ -300,28 +351,35 @@ function add_related_category({
     getSelectedAlbum,
     addSelectedAlbum,
 }: {
-    album: any;
-    getSelectedAlbum: any;
-    addSelectedAlbum: any;
+    album: { id: string | number; full_name_with_admin_links?: string };
+    getSelectedAlbum: () => Array<string | number>;
+    addSelectedAlbum: () => void;
 }) {
     if (!getSelectedAlbum().includes(album.id)) {
         document
-            .querySelector(`#${b_current_picture_id} .related-categories-container`)
+            .querySelector(`#${String(b_current_picture_id)} .related-categories-container`)
             ?.insertAdjacentHTML(
                 'beforeend',
                 `<div class="breadcrumb-item album-listed">
-                <span class="link-path">${album.full_name_with_admin_links}</span>
-                <span id="${album.id}" class="icon-cancel-circled remove-item"></span>
+                <span class="link-path">${album.full_name_with_admin_links ?? ''}</span>
+                <span id="${String(album.id)}" class="icon-cancel-circled remove-item"></span>
             </div>`
             );
         showUnsavedLocalBadge(b_current_picture_id);
         addSelectedAlbum();
-        allRelatedCategoryIds[b_current_picture_id!].cat_ids = getSelectedAlbum();
+        if (b_current_picture_id !== undefined) {
+            const arr = allRelatedCategoryIds[b_current_picture_id];
+            if (arr !== undefined) arr.cat_ids = getSelectedAlbum();
+        }
     }
     check_related_categories(b_current_picture_id, getSelectedAlbum());
 }
 
-function check_related_categories(pictureId: any, selectedAlbum: any) {
+function check_related_categories(
+    pictureId: string | undefined,
+    selectedAlbum: Array<string | number>
+) {
+    if (pictureId === undefined) return;
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .linked-albums-badge`);
     if (badge) badge.innerHTML = String(selectedAlbum.length);
     if (selectedAlbum.length === 0) {
@@ -364,7 +422,7 @@ function updateUnsavedGlobalBadge() {
     }
 }
 
-function showUnsavedLocalBadge(pictureId: any) {
+function showUnsavedLocalBadge(pictureId: string | undefined) {
     hideSuccesLocalBadge(pictureId);
     hideErrorLocalBadge(pictureId);
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-unsaved-badge`);
@@ -372,18 +430,18 @@ function showUnsavedLocalBadge(pictureId: any) {
     updateUnsavedGlobalBadge();
 }
 
-function hideUnsavedLocalBadge(pictureId: any) {
+function hideUnsavedLocalBadge(pictureId: string | undefined) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-unsaved-badge`);
     if (badge) badge.style.display = 'none';
     updateUnsavedGlobalBadge();
 }
 
-function showErrorLocalBadge(pictureId: any) {
+function showErrorLocalBadge(pictureId: string | undefined) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-error-badge`);
     if (badge) badge.style.display = 'block';
 }
 
-function hideErrorLocalBadge(pictureId: any) {
+function hideErrorLocalBadge(pictureId: string | undefined) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-error-badge`);
     if (badge) badge.style.display = 'none';
 }
@@ -411,11 +469,11 @@ function updateSuccessGlobalBadge() {
     else hideSuccesGlobalBadge();
 }
 
-function showSuccessLocalBadge(pictureId: any) {
+function showSuccessLocalBadge(pictureId: string | undefined) {
     fadeBadge(document.querySelector<HTMLElement>(`#picture-${pictureId} .local-success-badge`));
 }
 
-function hideSuccesLocalBadge(pictureId: any) {
+function hideSuccesLocalBadge(pictureId: string | undefined) {
     const badge = document.querySelector<HTMLElement>(`#picture-${pictureId} .local-success-badge`);
     if (badge) badge.style.display = 'none';
 }
@@ -429,11 +487,11 @@ function hideSuccesGlobalBadge() {
     if (badge) badge.style.display = 'none';
 }
 
-function showMetasyncSuccesBadge(pictureId: any) {
+function showMetasyncSuccesBadge(pictureId: string | undefined) {
     fadeBadge(document.querySelector<HTMLElement>(`#picture-${pictureId} .metasync-success`));
 }
 
-function disableLocalButton(pictureId: any) {
+function disableLocalButton(pictureId: string | undefined) {
     pid(pictureId, '.action-save-picture')?.classList.add('disabled');
     const i = pid(pictureId, '.action-save-picture i');
     if (i) {
@@ -443,7 +501,7 @@ function disableLocalButton(pictureId: any) {
     disableGlobalButton();
 }
 
-function enableLocalButton(pictureId: any) {
+function enableLocalButton(pictureId: string | undefined) {
     pid(pictureId, '.action-save-picture')?.classList.remove('disabled');
     const i = pid(pictureId, '.action-save-picture i');
     if (i) {
@@ -470,7 +528,8 @@ function enableGlobalButton() {
     });
 }
 
-async function saveChanges(pictureId: any) {
+async function saveChanges(pictureId: string | undefined) {
+    if (pictureId === undefined) return;
     const unsavedBadge = document.querySelector<HTMLElement>(
         `#picture-${pictureId} .local-unsaved-badge`
     );
@@ -482,12 +541,12 @@ async function saveChanges(pictureId: any) {
         .querySelectorAll<HTMLOptionElement>(`#picture-${pictureId} #tags option`)
         .forEach((opt) => tags.push(opt.value));
 
-    const ajax_data: Record<string, any> = {
+    const ajax_data: Record<string, unknown> = {
         image_id: pictureId,
-        name: (pidInput(pictureId, '#name') as HTMLInputElement)?.value,
-        author: (pidInput(pictureId, '#author') as HTMLInputElement)?.value,
-        date_creation: (pidInput(pictureId, '#date_creation') as HTMLInputElement)?.value,
-        comment: (pidInput(pictureId, '#description') as HTMLTextAreaElement)?.value,
+        name: (pidInput(pictureId, '#name') as HTMLInputElement | null)?.value,
+        author: (pidInput(pictureId, '#author') as HTMLInputElement | null)?.value,
+        date_creation: (pidInput(pictureId, '#date_creation') as HTMLInputElement | null)?.value,
+        comment: (pidInput(pictureId, '#description') as HTMLTextAreaElement | null)?.value,
         categories: (allRelatedCategoryIds[pictureId] ?? []).join(';'),
         tag_list: tags,
         level: document.querySelector<HTMLOptionElement>(
@@ -498,12 +557,12 @@ async function saveChanges(pictureId: any) {
         pwg_token: pwgToken(),
     };
 
-    for (const key_index in pluginValues) {
-        const sel = pluginValues[key_index].selector;
+    for (const plugin of pluginValues) {
+        const sel = plugin.selector;
         const el = document.querySelector<HTMLInputElement | HTMLSelectElement>(
             `#picture-${pictureId} ${sel}`
         );
-        ajax_data[pluginValues[key_index].api_key] = el?.value;
+        ajax_data[plugin.api_key] = el?.value;
     }
 
     try {
@@ -539,47 +598,46 @@ async function saveAllChanges() {
     }
 }
 
-const pluginFunctionMap: Record<string, any> = {};
+const pluginFunctionMap: Record<string, (pictureId: string | undefined) => void> = {};
 
-function pluginFunctionMapInit(activePlugins: any) {
-    activePlugins.forEach((pluginId: any) => {
-        const fn = (window as any)[pluginId + '_batchManagerSave'];
-        if (typeof fn === 'function') pluginFunctionMap[pluginId] = fn;
+function pluginFunctionMapInit(activePlugins: string[]) {
+    activePlugins.forEach((pluginId) => {
+        const fn = winRef[pluginId + '_batchManagerSave'];
+        if (typeof fn === 'function')
+            pluginFunctionMap[pluginId] = fn as (pictureId: string | undefined) => void;
     });
 }
 
-function pluginSaveLoop(activePlugins: any, pictureId: any) {
-    activePlugins.forEach((pluginId: any) => {
+function pluginSaveLoop(activePlugins: string[], pictureId: string | undefined) {
+    activePlugins.forEach((pluginId) => {
         const fn = pluginFunctionMap[pluginId];
         if (typeof fn === 'function') fn(pictureId);
     });
 }
 
-function updateBlock(pictureId: any) {
+function updateBlock(pictureId: string | undefined) {
     const params = new URLSearchParams({
         method: 'pwg.images.getInfo',
         image_id: String(pictureId),
     });
-    fetch(config.wsUrl + 'format=json&' + params)
-        .then((r) => r.json())
-        .then((response: any) => {
-            if (response.stat === 'ok') {
-                (pidInput(pictureId, '#name') as HTMLInputElement).value =
-                    response.result.name ?? '';
-                (pidInput(pictureId, '#author') as HTMLInputElement).value =
-                    response.result.author ?? '';
+    void fetch(config.wsUrl + 'format=json&' + params.toString())
+        .then((r) => r.json() as Promise<WsResponse<PwgImageInfo>>)
+        .then((response) => {
+            if (response.stat === 'ok' && response.result !== undefined) {
+                const r = response.result;
+                (pidInput(pictureId, '#name') as HTMLInputElement).value = r.name ?? '';
+                (pidInput(pictureId, '#author') as HTMLInputElement).value = r.author ?? '';
                 (pidInput(pictureId, '#date_creation') as HTMLInputElement).value =
-                    response.result.date_creation ?? '';
+                    r.date_creation ?? '';
                 (pidInput(pictureId, '#description') as HTMLTextAreaElement).value =
-                    response.result.comment ?? '';
-                (pidInput(pictureId, '#level') as HTMLSelectElement).value =
-                    response.result.level ?? '';
+                    r.comment ?? '';
+                (pidInput(pictureId, '#level') as HTMLSelectElement).value = r.level ?? '';
                 const fn = pid(pictureId, '#filename');
-                if (fn) fn.textContent = response.result.file;
+                if (fn) fn.textContent = r.file ?? '';
                 const fs = pid(pictureId, '#filesize');
-                if (fs) fs.textContent = response.result.filesize;
+                if (fs) fs.textContent = String(r.filesize ?? '');
                 const dm = pid(pictureId, '#dimensions');
-                if (dm) dm.textContent = response.result.width + 'x' + response.result.height;
+                if (dm) dm.textContent = String(r.width ?? '') + 'x' + String(r.height ?? '');
                 showMetasyncSuccesBadge(pictureId);
                 enableLocalButton(pictureId);
                 enableGlobalButton();
@@ -590,7 +648,7 @@ function updateBlock(pictureId: any) {
                 enableGlobalButton();
             }
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
             console.error('Error:', e);
             showErrorLocalBadge(pictureId);
             enableLocalButton(pictureId);

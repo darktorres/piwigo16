@@ -101,12 +101,12 @@
   <table class="table2">
     <tr>
       <td class="fieldname u-w-30p">{'Host'|@translate}</td>
-      <td><input type="text" name="dbhost" value="{$F_DB_HOST}" required></td>
+      <td><input type="text" name="dbhost" value="{$F_DB_HOST|default:'localhost'}" required></td>
       <td class="fielddesc">{'localhost or other, supplied by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'User'|@translate}</td>
-      <td><input type="text" name="dbuser" value="{$F_DB_USER}" required></td>
+      <td><input type="text" name="dbuser" value="{$F_DB_USER|default:'root'}" required></td>
       <td class="fielddesc">{'user login given by your host provider'|@translate}</td>
     </tr>
     <tr>
@@ -116,12 +116,12 @@
     </tr>
     <tr>
       <td class="fieldname">{'Database name'|@translate}</td>
-      <td><input type="text" name="dbname" value="{$F_DB_NAME}" required></td>
+      <td><input type="text" name="dbname" value="{$F_DB_NAME|default:'piwigo'}" required></td>
       <td class="fielddesc">{'also given by your host provider'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Database table prefix'|@translate}</td>
-      <td><input type="text" name="prefix" value="{$F_DB_PREFIX}"></td>
+      <td><input type="text" name="prefix" value="{$F_DB_PREFIX|default:'piwigo_'}"></td>
       <td class="fielddesc">{'database tables names will be prefixed with it (enables you to manage better your tables)'|@translate}</td>
     </tr>
   </table>
@@ -133,22 +133,22 @@
   <table class="table2">
     <tr>
       <td class="fieldname u-w-30p">{'Username'|@translate}</td>
-      <td><input type="text" name="admin_name" value="{$F_ADMIN}" required></td>
+      <td><input type="text" name="admin_name" value="{$F_ADMIN|default:'darktorres'}" required></td>
       <td class="fielddesc">{'It will be shown to the visitors. It is necessary for website administration'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Password'|@translate}</td>
-      <td><input type="password" name="admin_pass1" value="{$F_ADMIN_PASS}" required></td>
+      <td><input type="password" name="admin_pass1" value="{$F_ADMIN_PASS|default:'1234'}" required></td>
       <td class="fielddesc">{'Keep it confidential, it enables you to access administration panel'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Password [confirm]'|@translate}</td>
-      <td><input type="password" name="admin_pass2" value="{$F_ADMIN_PASS}" required></td>
+      <td><input type="password" name="admin_pass2" value="{$F_ADMIN_PASS|default:'1234'}" required></td>
       <td class="fielddesc">{'verification'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'Email address'|@translate}</td>
-      <td><input type="text" name="admin_mail" id="admin_mail" value="{if $F_ADMIN_EMAIL}{$F_ADMIN_EMAIL}{else}torres.dark@gmail.com{/if}" required></td>
+      <td><input type="text" name="admin_mail" id="admin_mail" value="{$F_ADMIN_EMAIL}" required></td>
       <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|@translate}</td>
     </tr>
     <tr>

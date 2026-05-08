@@ -53,15 +53,15 @@ final class InstallController implements ControllerInterface
             : DEFAULT_PREFIX_TABLE;
         $GLOBALS['prefixeTable'] = $prefixeTable;
 
-        $dbhost   = is_scalar($_POST['dbhost'] ?? null)  && !empty($_POST['dbhost']) ? (string) $_POST['dbhost'] : 'localhost';
-        $dbuser   = is_scalar($_POST['dbuser'] ?? null)  && !empty($_POST['dbuser']) ? (string) $_POST['dbuser'] : 'root';
-        $dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) && !empty($_POST['dbpasswd']) ? (string) $_POST['dbpasswd'] : '1234';
-        $dbname   = is_scalar($_POST['dbname'] ?? null)  && !empty($_POST['dbname']) ? (string) $_POST['dbname'] : 'piwigo';
+        $dbhost   = is_scalar($_POST['dbhost']   ?? null) ? (string) $_POST['dbhost'] : '';
+        $dbuser   = is_scalar($_POST['dbuser']   ?? null) ? (string) $_POST['dbuser'] : '';
+        $dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) ? (string) $_POST['dbpasswd'] : '';
+        $dbname   = is_scalar($_POST['dbname']   ?? null) ? (string) $_POST['dbname'] : '';
         $dblayer  = 'mysqli';
 
-        $admin_name  = is_scalar($_POST['admin_name']  ?? null) && !empty($_POST['admin_name']) ? (string) $_POST['admin_name'] : 'darktorres';
-        $admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) && !empty($_POST['admin_pass1']) ? (string) $_POST['admin_pass1'] : '1234';
-        $admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) && !empty($_POST['admin_pass2']) ? (string) $_POST['admin_pass2'] : '1234';
+        $admin_name  = is_scalar($_POST['admin_name']  ?? null) ? (string) $_POST['admin_name'] : '';
+        $admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) ? (string) $_POST['admin_pass1'] : '';
+        $admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) ? (string) $_POST['admin_pass2'] : '';
         $admin_mail  = is_scalar($_POST['admin_mail']  ?? null) && !empty($_POST['admin_mail']) ? (string) $_POST['admin_mail'] : '';
 
         $is_newsletter_subscribe = isset($_POST['install']) && isset($_POST['newsletter_subscribe']);

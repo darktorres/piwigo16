@@ -14,6 +14,7 @@ use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src',
+        __DIR__ . '/tests',
     ])
     ->withRootFiles()
     ->withSkip([
@@ -29,6 +30,7 @@ return RectorConfig::configure()
         ],
     ])
     ->withPhpSets(php85: true)
+    ->withComposerBased(doctrine: true, phpunit: true, symfony: true)
     ->withSets([SetList::TYPE_DECLARATION])
     ->withRules([
         DeclareStrictTypesRector::class,

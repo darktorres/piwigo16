@@ -2,6 +2,7 @@ parameters:
     level: 10
     paths:
         - src
+        - tests
         - tools/phpstan
         - index.php
     excludePaths:
@@ -12,6 +13,11 @@ parameters:
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
         - tools/phpstan-types.php
+    type_perfect:
+        narrow_param: true
+        narrow_return: true
+        no_mixed: true
+        null_over_false: true
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
@@ -27,3 +33,5 @@ services:
         tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - vendor/rector/type-perfect/config/extension.neon
+    - vendor/rector/mockstan/config/phpunit-mocks-rules.neon

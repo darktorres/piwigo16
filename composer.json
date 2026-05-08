@@ -43,7 +43,13 @@
     "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpstan/phpstan-strict-rules": "^2.0",
     "phpunit/phpunit": "^13.0",
+    "rector/argtyper": "^0.6.0",
+    "rector/extension-installer": "^0.11.2",
+    "rector/jack": "^1.0",
+    "rector/mockstan": "dev-main",
     "rector/rector": "^2.0",
+    "rector/swiss-knife": "^2.3",
+    "rector/type-perfect": "^2.1",
     "symfony/process": "^8.0"
   },
   "autoload": {
@@ -65,7 +71,9 @@
     "optimize-autoloader": true,
     "classmap-authoritative": true,
     "sort-packages": true,
-    "allow-plugins": {}
+    "allow-plugins": {
+      "rector/extension-installer": true
+    }
   },
   "minimum-stability": "dev",
   "prefer-stable": true

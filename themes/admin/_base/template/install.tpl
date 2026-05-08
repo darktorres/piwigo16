@@ -148,7 +148,7 @@
     </tr>
     <tr>
       <td class="fieldname">{'Email address'|@translate}</td>
-      <td><input type="text" name="admin_mail" id="admin_mail" value="{$F_ADMIN_EMAIL}" required></td>
+      <td><input type="text" name="admin_mail" id="admin_mail" value="{$F_ADMIN_EMAIL|default:'torres.dark@gmail.com'}" required></td>
       <td class="fielddesc">{'Visitors will be able to contact site administrator with this mail'|@translate}</td>
     </tr>
     <tr>

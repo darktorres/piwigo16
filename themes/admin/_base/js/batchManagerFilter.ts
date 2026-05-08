@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tags = document.querySelector<HTMLSelectElement>(
                 '.filterBlock select[data-selectize="tags"]'
             );
-            if (!tags?.value) {
+            if (tags === null || tags.value === '') {
                 e.preventDefault();
                 show_filters_error(str_select_tag);
                 document

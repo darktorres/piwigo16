@@ -9,7 +9,6 @@ interface MaintenanceEnvPageData {
 const { no_active_plugin, error_occured } = getPageData<MaintenanceEnvPageData>();
 
 let plugins: Array<{ name: string; state: string }> = [];
-let hasActivePlugins: boolean = false;
 let nbActivatedPlugins = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,12 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .then((r) => r.json())
         .then((data: { result: Array<{ name: string; state: string }> }) => {
             plugins = data.result;
-            hasActivePlugins = false;
             nbActivatedPlugins = 0;
             const pluginList = document.querySelector<HTMLUListElement>('#pluginList ul')!;
             plugins.forEach((plugin) => {
                 if (plugin.state === 'active') {
-                    hasActivePlugins = true;
                     pluginList.insertAdjacentHTML('beforeend', '<li>' + plugin.name + '</li>');
                     pluginList.querySelectorAll('i').forEach((i) => {
                         i.style.display = 'none';
@@ -30,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nbActivatedPlugins++;
                 }
             });
-            if (!hasActivePlugins) {
+            if (nbActivatedPlugins === 0) {
                 pluginList.querySelectorAll('i').forEach((i) => {
                     i.style.display = 'none';
                 });

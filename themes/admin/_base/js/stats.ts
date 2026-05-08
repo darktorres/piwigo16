@@ -83,14 +83,13 @@ function piwigoToDayjsLocale(code: string): string {
         zh_TW: 'zh-tw',
     };
     if (code in special) return special[code];
-    const lang: string | undefined = code.split('_')[0];
-    return (lang ?? 'en').toLowerCase();
+    const lang = code.split('_')[0];
+    return lang.toLowerCase();
 }
 
 async function loadDayjsLocale(code: string): Promise<void> {
     if (code === 'en') return;
-    const loader: (() => Promise<unknown>) | undefined = dayjsLocaleLoaders[code];
-    if (loader === undefined) return;
+    const loader = dayjsLocaleLoaders[code];
     await loader();
     dayjs.locale(code);
 }

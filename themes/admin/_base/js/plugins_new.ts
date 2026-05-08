@@ -102,17 +102,17 @@ function displayStars(element: HTMLElement, rating: number) {
     icons.forEach((i) => {
         i.className = '';
     });
-    rating = Math.round(rating * 2);
-    if (rating % 2 === 1) {
+    let r = Math.round(rating * 2);
+    if (r % 2 === 1) {
         const halfStar = spans
-            .find((s) => s.dataset['star'] === String((rating - 1) / 2))
+            .find((s) => s.dataset['star'] === String((r - 1) / 2))
             ?.querySelector<HTMLElement>('i');
         if (halfStar) halfStar.classList.add('icon-star-half');
-        rating -= 1;
+        r -= 1;
     }
-    while (rating > 0) {
-        rating -= 2;
-        const star = spans.find((s) => s.dataset['star'] === String(rating / 2));
+    while (r > 0) {
+        r -= 2;
+        const star = spans.find((s) => s.dataset['star'] === String(r / 2));
         if (star) {
             const icon = star.querySelector<HTMLElement>('i');
             if (icon) icon.classList.add('icon-star');
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     qsa('.pluginName span').forEach((el) => {
-        const text = el.textContent ?? '';
+        const text = el.textContent;
         if (text.length > 30) el.textContent = text.slice(0, 30) + '...';
     });
 

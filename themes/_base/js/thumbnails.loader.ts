@@ -62,7 +62,7 @@ function add_thumbnail_to_queue(img: HTMLImageElement, loop: number): void {
             const result = (await r.json()) as { url: string };
             img.src = result.url;
         } catch {
-            if (loop < 3) add_thumbnail_to_queue(img, ++loop);
+            if (loop < 3) add_thumbnail_to_queue(img, loop + 1);
             if (typeof error_icon !== 'undefined') img.src = error_icon;
         } finally {
             document.querySelectorAll<HTMLElement>('.loader').forEach((el) => {

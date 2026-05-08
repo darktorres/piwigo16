@@ -43,8 +43,7 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
         onChange: linked
             ? [
                   (_selectedDates, dateStr) => {
-                      if (targetEl !== null)
-                          targetEl.value = dateStr !== '' ? dateStr.split(' ')[0] : '';
+                      targetEl.value = dateStr !== '' ? dateStr.split(' ')[0] : '';
                   },
               ]
             : [],
@@ -85,13 +84,10 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
     (el as FpHost)._flatpickr = fp;
 
     // Fix SVG arrow sizing - set width/height attributes on navigation SVGs
-    const calendar = fp.calendarContainer;
-    if (calendar) {
-        calendar.querySelectorAll('svg').forEach((svg) => {
-            svg.setAttribute('width', '14');
-            svg.setAttribute('height', '14');
-        });
-    }
+    fp.calendarContainer.querySelectorAll('svg').forEach((svg) => {
+        svg.setAttribute('width', '14');
+        svg.setAttribute('height', '14');
+    });
 
     // Set initial value — pass ISO format explicitly so Flatpickr doesn't try to parse
     // the ISO string with the human-readable display format
@@ -109,7 +105,7 @@ function pwgDatepicker(el: HTMLElement, settings: PwgDatepickerOptions = {}): vo
         document.getElementById(unsetId)?.addEventListener('click', (e) => {
             e.preventDefault();
             fp.clear();
-            if (linked && targetEl !== null) targetEl.value = '';
+            if (linked) targetEl.value = '';
         });
     }
 

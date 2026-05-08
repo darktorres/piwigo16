@@ -228,11 +228,12 @@ export const test = base.extend<TestFixtures>({
         if (testInfo.status === 'failed' || testInfo.status === 'timedOut') {
             try {
                 const debugFile = await captureAndSaveDebugContext(page, testInfo.title);
-                if (debugFile) {
-                    console.log(`[DEBUG] Debug context saved on ${testInfo.status}: ${debugFile}`);
+                if (debugFile !== undefined && debugFile !== '') {
+                    console.warn(`[DEBUG] Debug context saved on ${testInfo.status}: ${debugFile}`);
                 }
             } catch (error) {
-                console.error(`[DEBUG] Failed to capture debug context: ${error}`);
+                const msg = error instanceof Error ? error.message : String(error);
+                console.error(`[DEBUG] Failed to capture debug context: ${msg}`);
             }
         }
 

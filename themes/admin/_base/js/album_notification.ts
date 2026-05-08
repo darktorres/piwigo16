@@ -20,7 +20,7 @@ document.querySelector<HTMLFormElement>('form#categoryNotify')?.addEventListener
     const checked = document.querySelector<HTMLInputElement>('input[name=who]:checked');
     const who_option = checked?.value ?? '';
     const selEl = document.querySelector<HTMLSelectElement>('.who_' + who_option + ' select');
-    const who_selected = Boolean(selEl) && selEl.querySelectorAll('option:checked').length > 0;
+    const who_selected = selEl !== null && selEl.querySelectorAll('option:checked').length > 0;
     const errEl = document.querySelector<HTMLElement>('.actionButtons .errors');
     if (!who_selected) {
         if (errEl) errEl.style.display = '';

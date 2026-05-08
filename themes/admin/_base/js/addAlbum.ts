@@ -142,7 +142,9 @@ function pwgAddAlbum(
                     const targetTs = targetSel.tomselect!;
 
                     if (parent_id !== '0') {
-                        const parent = parentTs.options[String(parent_id)];
+                        const parent = parentTs.options[String(parent_id)] as
+                            | CategoryOption
+                            | undefined;
                         if (parent !== undefined) {
                             newAlbum.fullname = parent.fullname + ' / ' + newAlbum.fullname;
                             newAlbum.global_rank = String(parent.global_rank) + '.1';

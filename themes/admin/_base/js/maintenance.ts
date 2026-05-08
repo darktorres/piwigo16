@@ -174,12 +174,9 @@ if (deleteSizesEl) {
 }
 document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((el) => {
     el.addEventListener('click', () => {
-        let displayDeleteSizes = false;
-        document.querySelectorAll<HTMLElement>('.delete-size-check').forEach((x) => {
-            if (x.getAttribute('data-selected') === '1') {
-                displayDeleteSizes = true;
-            }
-        });
+        const displayDeleteSizes = Array.from(
+            document.querySelectorAll<HTMLElement>('.delete-size-check')
+        ).some((x) => x.getAttribute('data-selected') === '1');
         const ds = document.querySelector<HTMLElement>('.delete-sizes');
         if (ds) ds.style.display = displayDeleteSizes ? '' : 'none';
     });

@@ -171,8 +171,8 @@ export function attachDnd(ctx: DndContext): () => void {
             do_move: () => ctx.moveNode(moved, targetNode, position),
         };
 
-        if (ctx.onMove) ctx.onMove(info, event);
-        if (!prevented) info.do_move();
+        ctx.onMove?.(info, event);
+        if (!event.defaultPrevented) info.do_move();
     };
 
     const onDragEnd = (): void => {

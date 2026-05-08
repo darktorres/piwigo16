@@ -22,7 +22,7 @@ interface CacheEnvelope<T> {
 
 export interface SelectizerOptions {
     value?: Array<number | string | CacheItem>;
-    default?: number | string | 'first';
+    default?: number | string;
     create?: boolean;
     filter?: (
         this: HTMLSelectElement,
@@ -124,25 +124,25 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
             if (dataValue !== undefined) options.value = dataValue;
             if (options.value !== undefined) {
                 (Array.isArray(options.value) ? options.value : [options.value]).forEach((cat) => {
-                    const id =
-                        typeof cat === 'object' && cat !== null && 'id' in cat ? cat.id : cat;
-                    if (!isNaN(Number(id))) ts.addItem(String(id), true);
-                    else ts.addItem(String(id), true);
+                    const id = typeof cat === 'object' && 'id' in cat ? cat.id : cat;
+                    ts.addItem(String(id), true);
                 });
             }
 
             const dataDefault = target.dataset['default'];
             if (dataDefault !== undefined) options.default = dataDefault;
-            if (options.default === 'first')
-                options.default = filtered[0] !== undefined ? filtered[0].id : undefined;
+            if (options.default !== undefined && String(options.default) === 'first')
+                options.default = filtered.length > 0 ? filtered[0].id : undefined;
 
             if (options.default !== undefined) {
                 if (ts.getValue() === '') ts.addItem(String(options.default), true);
+                const tsOn = ts.on as (name: string, cb: (...args: unknown[]) => void) => void;
                 if (target.multiple) {
                     const defaultItem = ts.getItem(String(options.default));
                     if (defaultItem)
                         defaultItem.querySelector<HTMLElement>('.remove')!.style.display = 'none';
-                    ts.on('item_remove', (id: string) => {
+                    tsOn('item_remove', (...args: unknown[]) => {
+                        const id = String(args[0]);
                         if (id === String(options.default)) {
                             ts.addItem(id, true);
                             const item = ts.getItem(id);
@@ -151,7 +151,7 @@ export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> 
                         }
                     });
                 } else {
-                    ts.on('dropdown_close', () => {
+                    tsOn('dropdown_close', () => {
                         if (ts.getValue() === '') ts.addItem(String(options.default!), true);
                     });
                 }

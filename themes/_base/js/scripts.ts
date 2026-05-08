@@ -69,7 +69,7 @@ class PwgWS {
             Object.assign(this.options, options);
         }
         this.xhr = new XMLHttpRequest();
-        this.xhr.onreadystatechange = pwgBind(this, this.onStateChange);
+        this.xhr.onreadystatechange = pwgBind(this, this.onStateChange.bind(this));
 
         let url = config.wsUrl + 'format=json&method=' + method;
         let body = '';
@@ -129,7 +129,7 @@ class PwgWS {
                 return;
             }
             if (resp !== null) {
-                if (resp.stat === undefined || resp.stat === null) {
+                if (resp.stat === undefined) {
                     this.error(200, 'Invalid response');
                 } else if (resp.stat === 'ok') {
                     this.options.onSuccess?.(resp.result);

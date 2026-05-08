@@ -32,8 +32,9 @@ function sbFunc(link: string, box: string): void {
 type SwitchBoxQueue = string[] | { push: typeof sbFunc };
 const existing = (window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox;
 if (Array.isArray(existing)) {
-    for (let i = 0; i < existing.length; i += 2) {
-        sbFunc(existing[i], existing[i + 1]);
+    const arr: string[] = existing;
+    for (let i = 0; i < arr.length; i += 2) {
+        sbFunc(arr[i], arr[i + 1]);
     }
 }
 

@@ -287,7 +287,7 @@ function restorePlugin(id: string) {
 
 function uninstallPlugin(id: string) {
     pluginAction(id, 'uninstall')
-        .then((data) => {
+        .then((_data) => {
             document.getElementById(id)?.remove();
             nb_plugin.other -= 1;
             nb_plugin.all -= 1;
@@ -368,10 +368,8 @@ function filterPlugins(text: string, activeFilter: string) {
         searchOther = 0;
 
     qsa('.pluginBox').forEach((box) => {
-        const name =
-            box.querySelector<HTMLElement>('.pluginName')?.textContent?.toLowerCase() ?? '';
-        const desc =
-            box.querySelector<HTMLElement>('.pluginDesc')?.textContent?.toLowerCase() ?? '';
+        const name = box.querySelector<HTMLElement>('.pluginName')?.textContent.toLowerCase() ?? '';
+        const desc = box.querySelector<HTMLElement>('.pluginDesc')?.textContent.toLowerCase() ?? '';
         const isActive = box.classList.contains('plugin-active');
         const isInactive = box.classList.contains('plugin-inactive');
         const isOther =
@@ -462,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             switchEl.addEventListener('change', function (this: HTMLElement) {
                 qsa('.pluginMiniBox').forEach((el) => el.classList.add('usable'));
                 const pluginBox = this.parentElement?.parentElement as HTMLElement;
-                const pluginId = pluginBox?.id ?? '';
+                const pluginId = pluginBox.id;
                 const toggleInput = this.querySelector<HTMLInputElement>('#toggleSelectionMode');
                 if (toggleInput?.checked === true) {
                     activatePlugin(pluginId);
@@ -569,7 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     void fetch(
         config.adminUrl +
-            new URLSearchParams({ page: 'plugins_installed', incompatible_plugins: 'true' })
+            new URLSearchParams({
+                page: 'plugins_installed',
+                incompatible_plugins: 'true',
+            }).toString()
     )
         .then((r) => r.json())
         .then((data: string[]) => {
@@ -638,7 +639,7 @@ document.addEventListener('mouseup', (e: MouseEvent) => {
     e.stopPropagation();
     const target = e.target as Element;
     qsa('.pluginBox').forEach((box) => {
-        if (!box.querySelector('.showOptions')?.contains(target)) {
+        if (box.querySelector('.showOptions')?.contains(target) !== true) {
             const block = box.querySelector<HTMLElement>('.PluginOptionsBlock');
             if (block) block.style.display = 'none';
         }

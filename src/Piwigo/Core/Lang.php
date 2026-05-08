@@ -37,7 +37,7 @@ final class Lang
     {
         // Delegate to Translator when PO files are loaded; it falls back to $lang
         // array internally so both pre-boot PHP-file loads and post-boot PO loads work.
-        return Translator::get()->translate($key, ...$args);
+        return Translator::get()->translate($key, array_values($args));
     }
 
     public static function has(string $key): bool

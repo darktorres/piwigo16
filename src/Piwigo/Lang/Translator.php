@@ -124,7 +124,10 @@ final class Translator
         $this->mirrorToGlobal($translations);
     }
 
-    public function translate(string $key, string|int|float|bool|null ...$args): string
+    /**
+     * @param list<string|int|float|bool|null> $args
+     */
+    public function translate(string $key, array $args = []): string
     {
         $val = $this->inner->gettext($key);
 

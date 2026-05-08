@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Config\Config;
 use Piwigo\Html\HtmlService;
 
 /**
@@ -199,8 +198,7 @@ class ScriptLoader
      */
     private static function doCombine(array $scripts, int $load_mode): array
     {
-        $combiner = new FileCombiner('js', $scripts);
-        return $combiner->combine();
+        return array_values($scripts);
     }
 
     /**
@@ -223,7 +221,7 @@ class ScriptLoader
                         $scripts[$precedent]->load_mode = $load;
                         $changed = true;
                     }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2 && ($scripts[$precedent]->isRemote() or !Config::templateCombineFiles())) {// we are async -> a predecessor cannot be async unlesss it can be merged; otherwise script execution order is not guaranteed
+                    if ($load == 2 && $scripts[$precedent]->load_mode == 2) {// predecessor of an async script must be footer to guarantee execution order
                         $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
@@ -235,7 +233,7 @@ class ScriptLoader
     /**
      * Fill a script path from known_paths if not already set.
      *
-     * @param string $id in FileCombiner::$known_paths
+     * @param string $id in ScriptLoader::$known_paths
      */
     private static function fillWellKnown(string $id, Script $script): void
     {
@@ -247,7 +245,7 @@ class ScriptLoader
     /**
      * Add a known script to loaded scripts if it appears in known_paths.
      *
-     * @param string $id in FileCombiner::$known_paths
+     * @param string $id in ScriptLoader::$known_paths
      */
     private function loadKnownRequiredScript($id, int $load_mode): bool
     {

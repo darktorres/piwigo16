@@ -54,7 +54,6 @@ use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Site\SiteRepository;
-use Piwigo\Template\FileCombiner;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -259,7 +258,6 @@ final class MaintenanceController
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
-                FileCombiner::clearCombinedFiles();
                 PersistentCacheRegistry::current()->purge(true);
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
                 break;
@@ -490,7 +488,6 @@ final class MaintenanceController
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
-                FileCombiner::clearCombinedFiles();
                 PersistentCacheRegistry::current()->purge(true);
                 break;
             case 'derivatives':

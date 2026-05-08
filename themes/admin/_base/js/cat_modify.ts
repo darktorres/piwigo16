@@ -50,8 +50,8 @@ const {
 
 // Mutable state
 let is_visible = _is_visible;
-let parent_album = _parent_album;
-let default_parent_album = _default_parent_album;
+let parent_album: number | string = _parent_album;
+let default_parent_album: number | string = _default_parent_album;
 let temp_txt = '';
 
 interface WsResponse<T = unknown> {
@@ -61,6 +61,13 @@ interface WsResponse<T = unknown> {
     message?: string;
 }
 
+function stringify(v: unknown): string {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (v === null || v === undefined) return '';
+    return JSON.stringify(v);
+}
+
 function pwgPost<T = unknown>(
     method: string,
     data: Record<string, unknown>
@@ -68,7 +75,7 @@ function pwgPost<T = unknown>(
     return fetch(`${config.wsUrl}format=json&method=${method}`, {
         method: 'POST',
         body: new URLSearchParams(
-            Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
+            Object.fromEntries(Object.entries(data).map(([k, v]) => [k, stringify(v)]))
         ),
     }).then((r) => r.json() as Promise<WsResponse<T>>);
 }
@@ -77,12 +84,12 @@ function pwgGet<T = unknown>(
     method: string,
     data: Record<string, unknown>
 ): Promise<WsResponse<T>> {
-    return fetch(
-        `${config.wsUrl}format=json&method=${method}&` +
-            new URLSearchParams(
-                Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]))
-            )
-    ).then((r) => r.json() as Promise<WsResponse<T>>);
+    const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(data).map(([k, v]) => [k, stringify(v)]))
+    ).toString();
+    return fetch(`${config.wsUrl}format=json&method=${method}&${qs}`).then(
+        (r) => r.json() as Promise<WsResponse<T>>
+    );
 }
 
 function showInfo(show: boolean) {
@@ -129,24 +136,34 @@ function checkAlbumLock() {
     });
 }
 
+interface CatAlbum {
+    id: string | number;
+    full_name_with_admin_links?: string;
+    root?: string;
+}
+
 function add_related_category({
     album,
     newSelectedAlbum,
     getSelectedAlbum,
 }: {
-    album: any;
-    newSelectedAlbum: any;
-    getSelectedAlbum: any;
+    album: CatAlbum;
+    newSelectedAlbum: () => void;
+    getSelectedAlbum: () => Array<string | number>;
+    addSelectedAlbum: () => void;
 }) {
     if (parent_album !== album.id) {
         document.getElementById('cat-parent')!.innerHTML =
-            album.full_name_with_admin_links ?? album.root;
+            album.full_name_with_admin_links ?? album.root ?? '';
         document
-            .querySelector<HTMLElement>(`#${album.id}.search-result-item > *`)
+            .querySelector<HTMLElement>(`#${String(album.id)}.search-result-item > *`)
             ?.classList.add('notClickable');
         document
             .querySelector('.invisible-related-categories-select')
-            ?.insertAdjacentHTML('beforeend', `<option selected value="${album.id}"></option>`);
+            ?.insertAdjacentHTML(
+                'beforeend',
+                `<option selected value="${String(album.id)}"></option>`
+            );
         newSelectedAlbum();
         parent_album = getSelectedAlbum()[0];
     }
@@ -167,10 +184,9 @@ function activateCommentDropdown() {
     document.addEventListener('mouseup', (e: MouseEvent) => {
         e.stopPropagation();
         const target = e.target as Element;
-        let optionClicked = false;
-        document.querySelectorAll('.comment-option span').forEach((span) => {
-            if (span.contains(target)) optionClicked = true;
-        });
+        const optionClicked = Array.from(document.querySelectorAll('.comment-option span')).some(
+            (span) => span.contains(target)
+        );
         if (!optionClicked) {
             document
                 .querySelectorAll<HTMLElement>('.toggle-comment-option .comment-option')
@@ -181,7 +197,7 @@ function activateCommentDropdown() {
     });
 }
 
-function delete_album(photo_deletion_mode: any): Promise<void> {
+function delete_album(photo_deletion_mode: string | undefined): Promise<void> {
     return pwgPost('pwg.categories.delete', {
         category_id: album_id,
         photo_deletion_mode,
@@ -243,24 +259,26 @@ async function showDeleteAlbumDialog(): Promise<string | null> {
             dialog.remove();
             resolve(null);
         });
-        dialog.querySelector('.confirm-btn')?.addEventListener('click', async () => {
-            const mode = dialog.querySelector<HTMLInputElement>(
-                'input[name=deletion-mode]:checked'
-            )?.value;
-            const btn = dialog.querySelector<HTMLButtonElement>('.confirm-btn')!;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="icon-spin6 animate-spin"></i>';
-            try {
-                await delete_album(mode);
-                dialog.close();
-                dialog.remove();
-                window.location.href = u_delete;
-            } catch (err) {
-                console.log(err);
-                dialog.close();
-                dialog.remove();
-                resolve(null);
-            }
+        dialog.querySelector('.confirm-btn')?.addEventListener('click', () => {
+            void (async () => {
+                const mode = dialog.querySelector<HTMLInputElement>(
+                    'input[name=deletion-mode]:checked'
+                )?.value;
+                const btn = dialog.querySelector<HTMLButtonElement>('.confirm-btn')!;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="icon-spin6 animate-spin"></i>';
+                try {
+                    await delete_album(mode);
+                    dialog.close();
+                    dialog.remove();
+                    window.location.href = u_delete;
+                } catch (err) {
+                    console.error(err);
+                    dialog.close();
+                    dialog.remove();
+                    resolve(null);
+                }
+            })();
         });
     });
 }
@@ -286,14 +304,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.stat === 'ok') {
                     is_visible = 'true';
                     const catLocked = document.getElementById('cat-locked') as HTMLInputElement;
-                    if (catLocked?.checked) catLocked.click();
+                    if (catLocked.checked) catLocked.click();
                     checkAlbumLock();
                     showInfo(true);
                 } else showError();
             })
             .catch((err) => {
                 showError();
-                console.log(err);
+                console.error(err);
             });
     });
 
@@ -332,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch((err) => {
                 save_button_set_loading(false);
                 showError();
-                console.log(err);
+                console.error(err);
             });
 
         if (parent_album !== default_parent_album) {
@@ -444,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else showError();
             })
             .catch((e) => {
-                console.log(e);
+                console.error(e);
                 save_button_set_loading(false);
             });
     }

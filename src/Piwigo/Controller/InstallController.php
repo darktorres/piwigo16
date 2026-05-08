@@ -137,9 +137,7 @@ final class InstallController implements ControllerInterface
         if (isset($_POST['install'])) {
             InstallService::installDbConnect($infos, $errors);
 
-            if (count($errors) > 0) {
-                $step = 1;
-            }
+            $dbConnectFailed = count($errors) > 0;
 
             if (
                 strlen((string) $prefixeTable) > 20
@@ -160,7 +158,7 @@ final class InstallController implements ControllerInterface
             }
             if (empty($_POST['admin_mail'] ?? '')) {
                 $errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
-            } else {
+            } elseif (!$dbConnectFailed) {
                 $error_mail_address = AuthService::get()->validateMailAddress(null, $admin_mail);
                 if (!empty($error_mail_address)) {
                     $errors[] = $error_mail_address;

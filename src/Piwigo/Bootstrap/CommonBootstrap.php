@@ -326,7 +326,7 @@ final class CommonBootstrap
         EventDispatcher::addListener('render_comment_content', 'render_comment_content');
         EventDispatcher::addListener('render_comment_author', 'strip_tags');
         EventDispatcher::addListener('render_tag_url', 'str2url');
-        EventDispatcher::addListener('blockmanager_register_blocks', 'register_default_menubar_blocks', EventDispatcher::NEUTRAL_PRIORITY - 1);
+        EventDispatcher::addListener('blockmanager_register_blocks', static fn (array $menuRefArr) => ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menuRefArr), EventDispatcher::NEUTRAL_PRIORITY - 1);
         if (!empty(Config::originalUrlProtection())) {
             EventDispatcher::addListener('UrlService::get()->getElementUrl', 'get_element_url_protection_handler');
             EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');

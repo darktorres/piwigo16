@@ -16,18 +16,14 @@ interface CommentsPageData {
 
 const {
     pwg_token,
-    str_yes_delete_confirmation,
-    str_no_delete_confirmation,
     str_delete,
     str_deletes,
-    str_no_comments_selected,
     str_an_error_has,
     str_comment_validated,
     str_comments_validated,
     str_and_others,
 } = getPageData<CommentsPageData>();
 
-const commentsContainer = document.getElementById('comments')!;
 const advancedFilters = document.getElementById('advancedFilters') as HTMLElement;
 const switchMode = document.getElementById('toggleSelectionMode') as HTMLInputElement;
 const commentContainer = document.getElementById('commentContainer') as HTMLElement;
@@ -53,12 +49,83 @@ const commentsOptionsFiltersAuthor = '<option value="" selected="">--</option>';
 const commentsSelectedList =
     '<div class="comments-selected-item"><a class="icon-cancel comments-selected-remove" id="deletecomment_%d"></a> <p>#%d</p></div>';
 
-let commentsState: Record<string, any> = {};
-const commentsParams: Record<string, any> = { status: 'all', page: 0, per_page: 5 };
+interface CommentsSummary {
+    all_comments: string | number;
+    validated: string | number;
+    pending: string | number;
+}
+
+interface CommentItem {
+    id: string | number;
+    medium_url: string;
+    raw_content: string;
+    content?: string;
+    author: string;
+    author_id?: string | number;
+    author_status: string;
+    date: string;
+    admin_link: string;
+    is_pending: boolean | number | string;
+    file?: string;
+    image_date_available?: string;
+}
+
+interface CommentsPaging {
+    total_pages: number;
+    page: number;
+}
+
+interface CommentsAuthorEntry {
+    author_id: string | number;
+    author: string;
+    nb_authors: number;
+}
+
+interface CommentsFilters {
+    nb_authors: CommentsAuthorEntry[];
+    started_at?: string | null;
+    ended_at?: string | null;
+}
+
+interface CommentsState {
+    comments?: CommentItem[];
+    summary?: CommentsSummary;
+    paging?: CommentsPaging;
+    filters?: CommentsFilters;
+}
+
+interface CommentsListResult {
+    comments: CommentItem[];
+    summary: CommentsSummary;
+    paging: CommentsPaging;
+    filters: CommentsFilters;
+}
+
+interface WsResponse<T> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
+interface CommentsParams {
+    status: string;
+    page: number;
+    per_page: number | string;
+    author_id?: string;
+    f_min_date?: string;
+    f_max_date?: string;
+    search?: string;
+    image_id?: string;
+    [k: string]: unknown;
+}
+
+let commentsState: CommentsState = {};
+const commentsParams: CommentsParams = { status: 'all', page: 0, per_page: 5 };
 let updateAuthorId = true;
 let searchTimeOut: ReturnType<typeof setTimeout> | null = null;
 let selectionMode = false;
-let commentsSelected: any[] = [];
+let commentsSelected: Array<string | number> = [];
 let selectionAbort: AbortController | null = null;
 let filtersAbort: AbortController | null = null;
 
@@ -109,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll<HTMLElement>('.tab-filters input').forEach((el) => {
         el.addEventListener('change', function (this: HTMLInputElement) {
-            commentsParams.status = this.dataset['status'];
+            commentsParams.status = this.dataset['status'] ?? '';
             commentsParams.page = 0;
             getComments(commentsParams);
         });
@@ -117,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     commentsNb.forEach((el) => {
         el.addEventListener('click', function (this: HTMLElement) {
-            updateNbComments(this.textContent ?? '');
+            updateNbComments(this.textContent);
             commentsParams.page = 0;
             getComments(commentsParams);
         });
@@ -150,26 +217,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     commentsParams.per_page = window.localStorage.getItem('adminCommentsNB') ?? 5;
-    updateNbComments(commentsParams.per_page);
+    updateNbComments(String(commentsParams.per_page));
     getComments(commentsParams);
 });
 
-function pwgFetch(url: string, data: Record<string, any>): Promise<any> {
-    const body = new URLSearchParams();
-    for (const [k, v] of Object.entries(data)) {
-        if (Array.isArray(v)) v.forEach((item) => body.append(k + '[]', String(item)));
-        else body.append(k, String(v ?? ''));
-    }
-    return fetch(url, { method: 'POST', body }).then((r) => r.json());
+function stringify(v: unknown): string {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (v === null || v === undefined) return '';
+    return JSON.stringify(v);
 }
 
-function getComments(params: any) {
+function pwgFetch<T = unknown>(url: string, data: Record<string, unknown>): Promise<WsResponse<T>> {
+    const body = new URLSearchParams();
+    for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v))
+            (v as unknown[]).forEach((item) => body.append(k + '[]', stringify(item)));
+        else body.append(k, stringify(v));
+    }
+    return fetch(url, { method: 'POST', body }).then((r) => r.json() as Promise<WsResponse<T>>);
+}
+
+function getComments(params: CommentsParams) {
     const query = new URLSearchParams();
-    for (const [k, v] of Object.entries(params)) query.append(k, String(v ?? ''));
-    fetch(config.wsUrl + 'format=json&method=pwg.userComments.getList&' + query.toString())
-        .then((r) => r.json())
+    for (const [k, v] of Object.entries(params)) query.append(k, stringify(v));
+    void fetch(config.wsUrl + 'format=json&method=pwg.userComments.getList&' + query.toString())
+        .then((r) => r.json() as Promise<WsResponse<CommentsListResult>>)
         .then((data) => {
-            if (data.stat === 'ok') {
+            if (data.stat === 'ok' && data.result !== undefined) {
                 commentsState = { ...data.result };
                 commentsDisplaySummary(data.result.summary);
                 displayComments(data.result.comments);
@@ -178,22 +253,22 @@ function getComments(params: any) {
                 delete commentsParams.search;
             }
         })
-        .catch((e) => {
-            console.log(e);
+        .catch((e: unknown) => {
+            console.error(e);
             window.alert(str_an_error_has);
         });
 }
 
-function commentsDisplaySummary(summary: any) {
-    commentsAll.textContent = summary.all_comments;
-    commentsValidated.textContent = summary.validated;
-    commentsPending.textContent = summary.pending;
+function commentsDisplaySummary(summary: CommentsSummary) {
+    commentsAll.textContent = String(summary.all_comments);
+    commentsValidated.textContent = String(summary.validated);
+    commentsPending.textContent = String(summary.pending);
 }
 
-function displayComments(comments: any) {
+function displayComments(comments: CommentItem[]) {
     commentsList.innerHTML = '';
     const template = document.querySelector<HTMLElement>('.comment-template')!;
-    comments.forEach((comment: any) => {
+    comments.forEach((comment) => {
         const clone = template.cloneNode(true) as HTMLElement;
         clone.classList.remove('comment-template');
         clone.classList.add('comment');
@@ -225,7 +300,7 @@ function displayComments(comments: any) {
                 ...(iconClass[comment.author_status] ?? 'icon-user icon-yellow').split(' ')
             )
         );
-        if (comment.is_pending)
+        if (comment.is_pending !== false && comment.is_pending !== 0 && comment.is_pending !== '')
             clone.querySelector<HTMLElement>('.comment-validate')!.style.display = '';
         else
             clone
@@ -248,10 +323,10 @@ function displayComments(comments: any) {
     });
     document.querySelectorAll<HTMLElement>('.comment-content').forEach((el) => {
         el.addEventListener('click', () => {
-            const id = el.dataset['idx'];
+            const id = el.dataset['idx'] ?? '';
             if (selectionMode) {
                 const checkbox = el.querySelector<HTMLElement>('.comment-select-checkbox')!;
-                const commentEl = document.getElementById(id!)!;
+                const commentEl = document.getElementById(id)!;
                 if (checkbox.classList.contains('icon-circle-empty')) {
                     checkbox.classList.replace('icon-circle-empty', 'icon-ok-circled');
                     commentEl.classList.add('comment-selected');
@@ -269,7 +344,7 @@ function displayComments(comments: any) {
     });
 }
 
-function commentsDiplayPagination(paging: any) {
+function commentsDiplayPagination(paging: CommentsPaging) {
     const container = document.querySelector<HTMLElement>('.pagination-item-container')!;
     container.innerHTML = '';
 
@@ -277,7 +352,7 @@ function commentsDiplayPagination(paging: any) {
         const div = document.createElement('div');
         div.innerHTML = html;
         const el = div.firstElementChild as HTMLElement;
-        if (cls) el.classList.add(cls);
+        if (cls !== undefined && cls !== '') el.classList.add(cls);
         return el;
     };
 
@@ -320,7 +395,8 @@ function commentsDiplayPagination(paging: any) {
             arrow.addEventListener('click', () => {
                 let newPage = commentsParams.page;
                 newPage += arrow.classList.contains('left') ? -1 : 1;
-                if (newPage === -1 || newPage > commentsState.paging.total_pages) return;
+                const totalPages = commentsState.paging?.total_pages ?? 0;
+                if (newPage === -1 || newPage > totalPages) return;
                 commentsParams.page = newPage;
                 getComments(commentsParams);
             });
@@ -335,7 +411,7 @@ function commentsDiplayPagination(paging: any) {
     });
 }
 
-function commentsDisplayFilters(filters: any) {
+function commentsDisplayFilters(filters: CommentsFilters) {
     filtersAbort?.abort();
     filtersAbort = new AbortController();
     const { signal } = filtersAbort;
@@ -356,7 +432,7 @@ function commentsDisplayFilters(filters: any) {
         'change',
         function (this: HTMLInputElement) {
             const min = this.value;
-            if (!min) delete commentsParams.f_min_date;
+            if (min === '') delete commentsParams.f_min_date;
             else commentsParams.f_min_date = min;
             filterDateEnd.setAttribute('min', min);
             commentsParams.page = 0;
@@ -369,7 +445,7 @@ function commentsDisplayFilters(filters: any) {
         'change',
         function (this: HTMLInputElement) {
             const max = this.value;
-            if (!max) delete commentsParams.f_max_date;
+            if (max === '') delete commentsParams.f_max_date;
             else commentsParams.f_max_date = max;
             filterDateStart.setAttribute('max', max);
             commentsParams.page = 0;
@@ -379,12 +455,12 @@ function commentsDisplayFilters(filters: any) {
     );
 }
 
-function commentsDisplayAuthors(nb_authors: any) {
+function commentsDisplayAuthors(nb_authors: CommentsAuthorEntry[]) {
     filterAuthor.innerHTML = commentsOptionsFiltersAuthor;
-    nb_authors.forEach((a: any) => {
+    nb_authors.forEach((a) => {
         filterAuthor.insertAdjacentHTML(
             'beforeend',
-            `<option value="${a.author_id}">${a.author} (${a.nb_authors})</option>`
+            `<option value="${String(a.author_id)}">${a.author} (${String(a.nb_authors)})</option>`
         );
     });
 
@@ -395,7 +471,7 @@ function commentsDisplayAuthors(nb_authors: any) {
         'change',
         function (this: HTMLSelectElement) {
             const authorId = this.value;
-            if (!authorId) delete commentsParams.author_id;
+            if (authorId === '') delete commentsParams.author_id;
             else commentsParams.author_id = authorId;
             commentsParams.page = 0;
             updateAuthorId = false;
@@ -405,18 +481,20 @@ function commentsDisplayAuthors(nb_authors: any) {
     );
 }
 
-function updateNbComments(nb: any) {
+function updateNbComments(nb: string | number) {
     document
         .querySelectorAll<HTMLElement>('.comments-paging-link')
         .forEach((el) => el.classList.remove('selected-pagination'));
-    document.getElementById(`pagination-per-page-${nb}`)?.classList.add('selected-pagination');
+    document
+        .getElementById(`pagination-per-page-${String(nb)}`)
+        ?.classList.add('selected-pagination');
     commentsParams.per_page = nb;
     window.localStorage.setItem('adminCommentsNB', String(nb));
 }
 
-function showModalViewComment(id: any) {
-    const comment = (commentsState as any).comments.find((c: any) => c.id === id) ?? null;
-    if (!comment) return;
+function showModalViewComment(id: string) {
+    const comment = commentsState.comments?.find((c) => String(c.id) === id) ?? null;
+    if (comment === null) return;
     const item = document.getElementById(id)!;
     modalViewComment.querySelector<HTMLElement>('.comment-datetime')!.textContent = comment.date;
     modalViewComment.querySelector('.comment-author')?.remove();
@@ -426,9 +504,9 @@ function showModalViewComment(id: any) {
     modalViewComment.querySelector<HTMLImageElement>('.comments-modal-img')!.src =
         comment.medium_url;
     const imgInfo = modalViewComment.querySelector<HTMLElement>('.comments-modal-img-i')!;
-    imgInfo.innerHTML = `<p class="comments-modal-filename">${comment.file}</p><p class="icon-calendar">${comment.image_date_available}</p>`;
+    imgInfo.innerHTML = `<p class="comments-modal-filename">${comment.file ?? ''}</p><p class="icon-calendar">${comment.image_date_available ?? ''}</p>`;
     modalViewComment.querySelector<HTMLElement>('.comments-modal-body')!.innerHTML =
-        comment.content;
+        comment.content ?? '';
 
     const validBtn = modalViewComment.querySelector<HTMLElement>('.comments-modal-validate')!;
     const validateBtn = document.getElementById('commentsModalValidate')!;
@@ -438,7 +516,7 @@ function showModalViewComment(id: any) {
     validateBtn.replaceWith(newValidateBtn);
     deleteBtn.replaceWith(newDeleteBtn);
 
-    if (comment.is_pending) {
+    if (comment.is_pending !== false && comment.is_pending !== 0 && comment.is_pending !== '') {
         validBtn.style.display = '';
         newValidateBtn.addEventListener('click', () => {
             validateComment([id]);
@@ -458,9 +536,9 @@ function closeModalViewComment() {
     modalViewComment.style.display = 'none';
 }
 
-function validateComment(id: any) {
-    const idLength = id.length ?? 1;
-    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.validate', {
+function validateComment(id: Array<string | number | undefined>) {
+    const idLength = id.length;
+    void pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.validate', {
         comment_id: id,
         pwg_token,
     })
@@ -472,27 +550,27 @@ function validateComment(id: any) {
             }
             window.alert(str_an_error_has);
         })
-        .catch((e) => {
-            console.log(e);
+        .catch((e: unknown) => {
+            console.error(e);
             window.alert(str_an_error_has);
         });
 }
 
-function deleteComment(id: any) {
-    const idLength = id.length ?? 1;
+function deleteComment(id: Array<string | number | undefined>) {
+    const idLength = id.length;
     const msg =
         idLength > 1
             ? str_deletes.replace('%d', String(idLength))
-            : str_delete.replace('%s', String(id));
+            : str_delete.replace('%s', stringify(id[0]));
     if (!window.confirm(msg)) return;
-    pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.delete', {
+    void pwgFetch(config.wsUrl + 'format=json&method=pwg.userComments.delete', {
         comment_id: id,
         pwg_token,
     })
         .then((res) => {
             if (res.stat === 'ok') getComments(commentsParams);
         })
-        .catch((e) => console.log(e));
+        .catch((e: unknown) => console.error(e));
 }
 
 function commentsUnselectAll() {

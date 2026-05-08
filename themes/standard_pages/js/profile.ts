@@ -1,5 +1,5 @@
 import { getPageData } from './page-data';
-import { config } from '../../default/js/config';
+import { config } from '../../_base/js/config';
 
 interface ProfilePageData {
     canUpdatePreferences: boolean;
@@ -44,7 +44,6 @@ const {
     can_manage_api,
     user,
     preferencesDefaultValues,
-    standardSaveSelector,
     selected_date,
     no_time_elapsed,
     str_handle_error,
@@ -69,8 +68,36 @@ const qs = <T extends HTMLElement = HTMLElement>(sel: string) => document.queryS
 const qsa = <T extends HTMLElement = HTMLElement>(sel: string) =>
     Array.from(document.querySelectorAll<T>(sel));
 
+interface ApiKeyLine {
+    auth_key: string;
+    apikey_name: string;
+    created_on_format: string;
+    last_used_on_since: string;
+    expiration: string;
+    revoked_on?: string | null;
+    is_expired?: boolean | number | string | null;
+    expired_on_format?: string;
+    expired_on_since?: string;
+    revoked_on_since?: string;
+    revoked_on_message?: string;
+}
+
+interface ApiKeyCreateResult {
+    apikey_secret: string;
+    auth_key: string;
+}
+
+interface WsResponse<T> {
+    stat?: string;
+    result?: T;
+    err?: string;
+    message?: string;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    PWG_TOKEN = String((document.getElementById('pwg_token') as HTMLInputElement)?.value ?? '');
+    PWG_TOKEN = String(
+        (document.getElementById('pwg_token') as HTMLInputElement | null)?.value ?? ''
+    );
 
     qsa('.profile-section .display-section').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -95,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     qs('#save_account')?.addEventListener('click', () => {
         const mail = qs<HTMLInputElement>('#email')?.value;
-        if (!mail || mail === '') {
+        if (mail === undefined || mail === '') {
             qs('#email_error')!.style.display = '';
             return;
         }
@@ -113,11 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 show_nb_comments: qs<HTMLInputElement>('#opt_comment')?.checked,
                 show_nb_hits: qs<HTMLInputElement>('#opt_hits')?.checked,
             };
-            if (!values.nb_image_page) {
+            if (values['nb_image_page'] === undefined || values['nb_image_page'] === '') {
                 qs('#error_nb_image')!.style.display = '';
                 return;
             }
-            if (!values.recent_period) {
+            if (values['recent_period'] === undefined || values['recent_period'] === '') {
                 qs('#error_period')!.style.display = '';
                 return;
             }
@@ -125,23 +152,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         qs('#reset_preferences')?.addEventListener('click', () => {
-            const u = user as any;
-            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value = u.nb_image_page;
-            qs<HTMLSelectElement>('select[name="theme"]')!.value = u.theme;
-            qs<HTMLSelectElement>('select[name="language"]')!.value = u.language;
-            qs<HTMLInputElement>('input[name="recent_period"]')!.value = u.recent_period;
-            qs<HTMLInputElement>('#opt_album')!.checked = u.opt_album;
-            qs<HTMLInputElement>('#opt_comment')!.checked = u.opt_comment;
-            qs<HTMLInputElement>('#opt_hits')!.checked = u.opt_hits;
+            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value = user.nb_image_page;
+            qs<HTMLSelectElement>('select[name="theme"]')!.value = user.theme;
+            qs<HTMLSelectElement>('select[name="language"]')!.value = user.language;
+            qs<HTMLInputElement>('input[name="recent_period"]')!.value = user.recent_period;
+            qs<HTMLInputElement>('#opt_album')!.checked = user.opt_album;
+            qs<HTMLInputElement>('#opt_comment')!.checked = user.opt_comment;
+            qs<HTMLInputElement>('#opt_hits')!.checked = user.opt_hits;
         });
 
         qs('#default_preferences')?.addEventListener('click', () => {
-            const d = preferencesDefaultValues as any;
-            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value = d.nb_image_page;
-            qs<HTMLInputElement>('input[name="recent_period"]')!.value = d.recent_period;
-            qs<HTMLInputElement>('#opt_album')!.checked = d.opt_album;
-            qs<HTMLInputElement>('#opt_comment')!.checked = d.opt_comment;
-            qs<HTMLInputElement>('#opt_hits')!.checked = d.opt_hits;
+            qs<HTMLInputElement>('input[name="nb_image_page"]')!.value =
+                preferencesDefaultValues.nb_image_page ?? '';
+            qs<HTMLInputElement>('input[name="recent_period"]')!.value =
+                preferencesDefaultValues.recent_period ?? '';
+            qs<HTMLInputElement>('#opt_album')!.checked = preferencesDefaultValues.opt_album;
+            qs<HTMLInputElement>('#opt_comment')!.checked = preferencesDefaultValues.opt_comment;
+            qs<HTMLInputElement>('#opt_hits')!.checked = preferencesDefaultValues.opt_hits;
         });
     }
 
@@ -152,9 +179,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 new_password: qs<HTMLInputElement>('#password_new')?.value,
                 conf_new_password: qs<HTMLInputElement>('#password_conf')?.value,
             };
-            if (!passwords.password || !passwords.new_password || !passwords.conf_new_password) {
+            if (
+                passwords['password'] === undefined ||
+                passwords['password'] === '' ||
+                passwords['new_password'] === undefined ||
+                passwords['new_password'] === '' ||
+                passwords['conf_new_password'] === undefined ||
+                passwords['conf_new_password'] === ''
+            ) {
                 qsa<HTMLInputElement>('#password-section input').forEach((el) => {
-                    if (!el.value) el.parentElement?.nextElementSibling?.removeAttribute('style');
+                    if (el.value === '')
+                        el.parentElement?.nextElementSibling?.removeAttribute('style');
                 });
                 return;
             }
@@ -176,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
                 >(`#${blockKey}-section input, #${blockKey}-section textarea, #${blockKey}-section select`)
                 .forEach((el) => {
-                    if (el.name) values[el.name] = el.value;
+                    if (el.name !== '') values[el.name] = el.value;
                 });
             setInfos(values);
         });
@@ -230,6 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
     getAllApiKeys();
 });
 
+function stringify(v: unknown): string {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (v === null || v === undefined) return '';
+    return JSON.stringify(v);
+}
+
 function setInfos(
     params: Record<string, unknown>,
     method = 'pwg.users.setMyInfo',
@@ -238,46 +280,57 @@ function setInfos(
 ): void {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries({ ...params, pwg_token: PWG_TOKEN }))
-        body.append(k, String(v ?? ''));
-    fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body })
-        .then((r) => r.json())
-        .then((data: any) => {
+        body.append(k, stringify(v));
+    void fetch(`${config.wsUrl}format=json&method=${method}`, { method: 'POST', body })
+        .then((r) => r.json() as Promise<WsResponse<unknown>>)
+        .then((data) => {
             if (data.stat === 'ok') {
-                (window as any).user = Object.assign({}, user as object, params);
+                (window as unknown as { user: unknown }).user = Object.assign(
+                    {},
+                    user as object,
+                    params
+                );
                 if (typeof callback === 'function') {
                     callback(data.result);
                     return;
                 }
-                pwgToaster({ text: data.result, icon: 'success' });
+                pwgToaster({ text: stringify(data.result), icon: 'success' });
             } else if (data.stat === 'fail') {
-                pwgToaster({ text: data.message, icon: 'error' });
+                pwgToaster({ text: data.message ?? str_handle_error, icon: 'error' });
             } else {
                 pwgToaster({ text: str_handle_error, icon: 'error' });
             }
             if (typeof errCallback === 'function') errCallback(data);
         })
-        .catch((e: any) => {
-            pwgToaster({ text: e.message ?? str_handle_error, icon: 'error' });
+        .catch((e: unknown) => {
+            const msg = e instanceof Error ? e.message : str_handle_error;
+            pwgToaster({ text: msg, icon: 'error' });
             if (typeof errCallback === 'function') errCallback(e);
         });
 }
 
 function getAllApiKeys(reset = false): void {
-    fetch(config.wsUrl + 'format=json&method=pwg.users.api_key.get', {
+    void fetch(config.wsUrl + 'format=json&method=pwg.users.api_key.get', {
         method: 'POST',
         body: new URLSearchParams({ pwg_token: PWG_TOKEN }),
     })
-        .then((r) => r.json())
-        .then((res: any) => {
-            if (res.stat === 'ok' && typeof res.result !== 'string' && res.result !== false)
+        .then((r) => r.json() as Promise<WsResponse<ApiKeyLine[] | string | false>>)
+        .then((res) => {
+            if (
+                res.stat === 'ok' &&
+                typeof res.result !== 'string' &&
+                res.result !== false &&
+                res.result !== undefined
+            )
                 AddApiLine(res.result, reset);
         })
-        .catch((e: any) =>
-            pwgToaster({ text: e.message ?? str_handle_error + 'getAllApiKeys', icon: 'error' })
-        );
+        .catch((e: unknown) => {
+            const msg = e instanceof Error ? e.message : str_handle_error + 'getAllApiKeys';
+            pwgToaster({ text: msg, icon: 'error' });
+        });
 }
 
-function AddApiLine(lines: any[], reset: boolean): void {
+function AddApiLine(lines: ApiKeyLine[], reset: boolean): void {
     const api_list = qs('#api_key_list')!;
     const api_list_expired = qs('#api_key_list_expired')!;
     qsa(
@@ -322,7 +375,15 @@ function AddApiLine(lines: any[], reset: boolean): void {
         const apiCopy = api_collapse.querySelector<HTMLElement>('.api-copy');
         if (apiCopy) apiCopy.id = `api_copy_success_${tmp_id}`;
 
-        if (!line.revoked_on && !line.is_expired) {
+        const revoked =
+            line.revoked_on !== null && line.revoked_on !== undefined && line.revoked_on !== '';
+        const expired =
+            line.is_expired !== null &&
+            line.is_expired !== undefined &&
+            line.is_expired !== false &&
+            line.is_expired !== 0 &&
+            line.is_expired !== '';
+        if (!revoked && !expired) {
             api_list.appendChild(api_line);
             api_line.after(api_collapse);
         } else {
@@ -331,10 +392,11 @@ function AddApiLine(lines: any[], reset: boolean): void {
             api_line.after(api_collapse);
             api_line.querySelectorAll('.api-icon-action').forEach((el) => el.remove());
             const expEl = api_line.querySelector<HTMLElement>('.api_expiration')!;
-            if (line.is_expired) {
-                expEl.innerHTML = `<i class="gallery-icon-skull api-skull"></i> <span data-tooltip="${line.expired_on_format}">${line.expired_on_since}</span>`;
+            if (expired) {
+                expEl.innerHTML = `<i class="gallery-icon-skull api-skull"></i> <span data-tooltip="${line.expired_on_format ?? ''}">${line.expired_on_since ?? ''}</span>`;
             } else {
-                expEl.innerHTML = `<i class="gallery-icon-skull api-skull"></i> <span>${/\d/.test(line.revoked_on_since) ? line.revoked_on_since : no_time_elapsed}</span> <i data-tooltip="${line.revoked_on_message}" class="icon-info-circled-1 api-info"></i>`;
+                const since = line.revoked_on_since ?? '';
+                expEl.innerHTML = `<i class="gallery-icon-skull api-skull"></i> <span>${/\d/.test(since) ? since : no_time_elapsed}</span> <i data-tooltip="${line.revoked_on_message ?? ''}" class="icon-info-circled-1 api-info"></i>`;
             }
         }
     });
@@ -535,9 +597,9 @@ function unbindApiRevokeEvents(): void {
 }
 
 function copyToClipboard(copy: string, message: string, selector: string | null = null): boolean {
-    if (window.isSecureContext && navigator.clipboard) {
+    if (window.isSecureContext) {
         void navigator.clipboard.writeText(copy);
-        if (selector) qs(selector)?.classList.remove('api-hide');
+        if (selector !== null && selector !== '') qs(selector)?.classList.remove('api-hide');
         else pwgToaster({ text: message, icon: 'success' });
         return true;
     } else {
@@ -556,11 +618,12 @@ function saveApiKeyEvent(): void {
         let api_duration: string | number = String(
             qs<HTMLSelectElement>('select[name="api_expiration"]')?.value ?? ''
         );
-        if (!api_name) {
+        if (api_name === '') {
             qs('#error_api_key_name')!.style.display = '';
             return;
         }
-        if (api_duration === 'custom' && !qs<HTMLInputElement>('#api_expiration_date')?.value) {
+        const customDateVal = qs<HTMLInputElement>('#api_expiration_date')?.value ?? '';
+        if (api_duration === 'custom' && customDateVal === '') {
             qs('#error_api_key_date')!.style.display = '';
             return;
         }
@@ -580,7 +643,7 @@ function saveApiKeyEvent(): void {
             { key_name: api_name, duration: api_duration },
             'pwg.users.api_key.create',
             (res: unknown) => {
-                const r = res as any;
+                const r = res as ApiKeyCreateResult;
                 pwgToaster({ text: str_api_added, icon: 'success' });
                 getAllApiKeys(true);
                 successApiModal(r.apikey_secret, r.auth_key);

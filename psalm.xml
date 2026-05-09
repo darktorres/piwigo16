@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="2"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedCode="false"
+    findUnusedVariables="true"
+    strictBinaryOperands="true"
+    allowPhpStormGenerics="false"
+    checkForThrowsDocblock="false"
+    phpVersion="8.5"
+>
+    <stubs>
+        <file name="tools/psalm-stubs.phpstub"/>
+    </stubs>
+
+    <projectFiles>
+        <directory name="src"/>
+        <directory name="tests"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+            <directory name="install/db"/>
+            <directory name="language"/>
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <!-- Legacy globals used in bootstrapped files — not actionable yet -->
+        <MissingFile errorLevel="suppress"/>
+
+        <!-- Reference assignments to $GLOBALS / static properties are intentional
+             legacy-compatibility bridges; Psalm cannot analyze them but they are correct. -->
+        <UnsupportedPropertyReferenceUsage errorLevel="suppress"/>
+    </issueHandlers>
+</psalm>

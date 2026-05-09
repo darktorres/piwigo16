@@ -1,0 +1,223 @@
+<?php
+
+// All declarations use brace-based namespace blocks so that named-namespace
+// stubs (Relay, Predis) can coexist in the same file without parse errors.
+
+namespace {
+    /**
+     * The xmlrpc extension is deprecated/removed in modern PHP builds but still used
+     * in PwgXmlRpcEncoder.
+     */
+    function xmlrpc_encode(mixed $value): string {}
+
+    // -------------------------------------------------------------------------
+    // Runtime constants
+    // -------------------------------------------------------------------------
+
+    // Core path / URL — use a non-empty placeholder so Psalm cannot statically
+    // evaluate string comparisons like str_starts_with(PHPWG_ROOT_PATH, '../')
+    const PHPWG_ROOT_PATH = '/piwigo/';
+    const PHPWG_URL = '';
+    const PHPWG_DOMAIN = '';
+    const PWG_LOCAL_DIR = '';
+    const UPGRADES_PATH = '';
+
+    // Table-name constants
+    const PREFIX_TABLE = '';
+    const DEFAULT_PREFIX_TABLE = '';
+    const CADDIE_TABLE = '';
+    const CATEGORIES_TABLE = '';
+    const COMMENTS_TABLE = '';
+    const CONFIG_TABLE = '';
+    const FAVORITES_TABLE = '';
+    const GROUPS_TABLE = '';
+    const GROUP_ACCESS_TABLE = '';
+    const HISTORY_TABLE = '';
+    const HISTORY_SUMMARY_TABLE = '';
+    const IMAGES_TABLE = '';
+    const IMAGE_CATEGORY_TABLE = '';
+    const IMAGE_TAG_TABLE = '';
+    const LANGUAGES_TABLE = '';
+    const OLD_PERMALINKS_TABLE = '';
+    const PLUGINS_TABLE = '';
+    const RATE_TABLE = '';
+    const SEARCH_TABLE = '';
+    const SESSIONS_TABLE = '';
+    const SITES_TABLE = '';
+    const TAGS_TABLE = '';
+    const THEMES_TABLE = '';
+    const UPGRADE_TABLE = '';
+    const USERS_TABLE = '';
+    const USER_ACCESS_TABLE = '';
+    const USER_CACHE_TABLE = '';
+    const USER_CACHE_CATEGORIES_TABLE = '';
+    const USER_FEED_TABLE = '';
+    const USER_GROUP_TABLE = '';
+    const USER_INFOS_TABLE = '';
+    const USER_MAIL_NOTIFICATION_TABLE = '';
+
+    // Context flags
+    const IN_ADMIN = false;
+    const IN_WS = false;
+    const PHPWG_IN_UPGRADE = false;
+    const CURRENT_DATE = '';
+
+    // Web-service error / param constants
+    const WS_ERR_INVALID_METHOD = 501;
+    const WS_ERR_INVALID_PARAM = 400;
+    const WS_ERR_MISSING_PARAM = 400;
+    const WS_PARAM_ACCEPT_ARRAY = 0;
+    const WS_PARAM_FORCE_ARRAY = 0;
+    const WS_PARAM_OPTIONAL = 0;
+    const WS_TYPE_BOOL = 0;
+    const WS_TYPE_FLOAT = 0;
+    const WS_TYPE_ID = 0;
+    const WS_TYPE_INT = 0;
+    const WS_TYPE_NOTNULL = 0;
+    const WS_TYPE_POSITIVE = 0;
+    const WS_XML_ATTRIBUTES = 0;
+    const PWG_API_KEY_REQUEST = '';
+
+    // Misc
+    const PEM_URL = '';
+    const PWG_HELP = '';
+    const PHOTOS_ADD_BASE_URL = '';
+
+    // mkgetdir flags
+    const MKGETDIR_NONE = 0;
+    const MKGETDIR_DEFAULT = 0;
+    const MKGETDIR_RECURSIVE = 0;
+    const MKGETDIR_PROTECT_INDEX = 0;
+    const MKGETDIR_DIE_ON_ERROR = 0;
+
+    // UI
+    const BUTTONS_RANK_NEUTRAL = 0;
+
+    // PclZip library constants (defined in vendor/pclzip/pclzip/pclzip.lib.php at runtime)
+    const PCLZIP_OPT_PATH = 77001;
+    const PCLZIP_OPT_ADD_PATH = 77002;
+    const PCLZIP_OPT_REMOVE_PATH = 77003;
+    const PCLZIP_OPT_REMOVE_ALL_PATH = 77004;
+    const PCLZIP_OPT_SET_CHMOD = 77005;
+    const PCLZIP_OPT_EXTRACT_AS_STRING = 77006;
+    const PCLZIP_OPT_NO_COMPRESSION = 77007;
+    const PCLZIP_OPT_BY_NAME = 77008;
+    const PCLZIP_OPT_BY_INDEX = 77009;
+    const PCLZIP_OPT_BY_EREG = 77010;
+    const PCLZIP_OPT_BY_PREG = 77011;
+    const PCLZIP_OPT_COMMENT = 77012;
+    const PCLZIP_OPT_ADD_COMMENT = 77013;
+    const PCLZIP_OPT_PREPEND_COMMENT = 77014;
+    const PCLZIP_OPT_EXTRACT_IN_OUTPUT = 77015;
+    const PCLZIP_OPT_REPLACE_NEWER = 77016;
+    const PCLZIP_OPT_STOP_ON_ERROR = 77017;
+    const PCLZIP_OPT_EXTRACT_DIR_RESTRICTION = 77019;
+    const PCLZIP_OPT_TEMP_FILE_THRESHOLD = 77020;
+
+    // -------------------------------------------------------------------------
+    // Imagick PECL extension
+    // -------------------------------------------------------------------------
+    class Imagick
+    {
+        public const int ORIENTATION_TOPLEFT = 1;
+        public const int INTERLACE_LINE = 2;
+        public const int FILTER_LANCZOS = 22;
+        public const int ALPHACHANNEL_OPAQUE = 7;
+        public const int EVALUATE_MULTIPLY = 6;
+        public const int EVALUATE_DISSOLVE = 23;
+        public const int CHANNEL_ALPHA = 8;
+        public const int COMPOSITE_DISSOLVE = 23;
+
+        public function __construct(string $files = '') {}
+        public function getImageWidth(): int {}
+        public function getImageHeight(): int {}
+        public function setImageCompressionQuality(int $quality): bool {}
+        public function cropImage(int $width, int $height, int $x, int $y): bool {}
+        public function stripImage(): bool {}
+        public function rotateImage(mixed $background, float $degrees): bool {}
+        public function setImageOrientation(int $orientation): bool {}
+        public function setInterlaceScheme(int $interlace): bool {}
+        public function scaleImage(int $cols, int $rows, bool $bestfit = false): bool {}
+        public function resizeImage(int $columns, int $rows, int $filter, float $blur, bool $bestfit = false): bool {}
+        public function convolveImage(array $kernel): bool {}
+        public function compositeImage(Imagick $composite_object, int $composite, int $x, int $y, int $channel = self::CHANNEL_ALPHA): bool {}
+        public function evaluateImage(int $evaluate, float $constant, int $channel = self::CHANNEL_ALPHA): bool {}
+        public function getImageAlphaChannel(): int {}
+        public function setImageAlphaChannel(int $mode): bool {}
+        public function writeImage(string $filename = ''): bool {}
+        /** @return array{versionNumber: int, versionString: string} */
+        public function getVersion(): array {}
+        /** @param list<int> $factors */
+        public function setSamplingFactors(array $factors): bool {}
+    }
+
+    class ImagickPixel
+    {
+        public function __construct(string $color = '') {}
+    }
+
+    // -------------------------------------------------------------------------
+    // Redis PECL extension (optional Symfony Cache driver)
+    // -------------------------------------------------------------------------
+    class Redis
+    {
+        public function connect(string $host, int $port = 6379, float $timeout = 0.0): bool {}
+    }
+
+    class RedisArray
+    {
+        /** @param string[] $hosts */
+        public function __construct(array $hosts, array $opts = []) {}
+    }
+
+    class RedisCluster
+    {
+        public function __construct(?string $name, array $seeds = [], float $timeout = 0.0, float $readTimeout = 0.0, bool $persistent = false, mixed $auth = null) {}
+    }
+
+    // -------------------------------------------------------------------------
+    // IntlDateFormatter (ext-intl) — guarded by class_exists() at call sites
+    // -------------------------------------------------------------------------
+    class IntlDateFormatter
+    {
+        public const int FULL = 0;
+        public const int LONG = 1;
+        public const int MEDIUM = 2;
+        public const int SHORT = 3;
+        public const int NONE = -1;
+
+        public function __construct(
+            ?string $locale,
+            int $dateType = self::FULL,
+            int $timeType = self::FULL,
+            mixed $timezone = null,
+            mixed $calendar = null,
+            string $pattern = '',
+        ) {}
+
+        public function format(mixed $datetime): string|false {}
+    }
+}
+
+// -------------------------------------------------------------------------
+// Relay extension (high-performance Redis client)
+// -------------------------------------------------------------------------
+namespace Relay {
+    class Relay
+    {
+        public function connect(string $host, int $port = 6379, float $timeout = 0.0): bool {}
+    }
+
+    class Cluster
+    {
+        /** @param string[] $seeds */
+        public function __construct(?string $name, array $seeds = [], float $timeout = 0.0, float $readTimeout = 0.0, bool $persistent = false, mixed $auth = null) {}
+    }
+}
+
+// -------------------------------------------------------------------------
+// Predis (optional Symfony Cache driver — package not required)
+// -------------------------------------------------------------------------
+namespace Predis {
+    interface ClientInterface {}
+}

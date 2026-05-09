@@ -48,7 +48,8 @@
     "rector/rector": "^2.0",
     "rector/swiss-knife": "^2.3",
     "rector/type-perfect": "^2.1",
-    "symfony/process": "^8.0"
+    "symfony/process": "^8.0",
+    "vimeo/psalm": "^6.16"
   },
   "suggest": {
     "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent."

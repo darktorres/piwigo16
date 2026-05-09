@@ -4,8 +4,8 @@ import { getCookieHeader, createAlbum, uploadPhoto } from './helpers/upload-phot
 import { wsUrl } from './helpers/url';
 import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const IMAGE_1 = TEST_PHOTOS[1];
-const IMAGE_2 = TEST_PHOTOS[2];
+const IMAGE_1 = TEST_PHOTOS[1]!;
+const IMAGE_2 = TEST_PHOTOS[2]!;
 
 test('upload photo via API returns image_id', async ({ page, request }) => {
     await loginAsAdmin(page);

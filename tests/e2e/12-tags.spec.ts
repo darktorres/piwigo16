@@ -6,7 +6,7 @@ import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const IMAGE = TEST_PHOTOS[5];
+const IMAGE = TEST_PHOTOS[5]!;
 
 test.describe('tag management', () => {
     test('create tag, assign to photo, delete tag', async ({ page, request }) => {

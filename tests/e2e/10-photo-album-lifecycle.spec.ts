@@ -4,7 +4,7 @@ import { getCookieHeader, createAlbum, uploadPhoto, getPwgToken } from './helper
 import { wsUrl } from './helpers/url';
 import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const IMAGE = TEST_PHOTOS[3];
+const IMAGE = TEST_PHOTOS[3]!;
 
 test('photo and album full CRUD lifecycle', async ({ page, request }) => {
     await loginAsAdmin(page);

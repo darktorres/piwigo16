@@ -92,7 +92,7 @@ async function globalSetup(): Promise<void> {
     fs.mkdirSync(wallpapersDir, { recursive: true });
     const colors = ['220,50,50', '50,180,80', '50,100,220', '230,200,50', '150,60,200', '200,120,50', '50,180,180', '180,50,180', '100,180,50', '50,50,180'];
     const phpScript = '<?php\n' + TEST_PHOTOS.map((p, i) => {
-        const [r, g, b] = colors[i % colors.length].split(',');
+        const [r, g, b] = colors[i % colors.length]!.split(',');
         const label = path.basename(p, '.jpg');
         return `$img = imagecreatetruecolor(800, 600);
 imagefill($img, 0, 0, imagecolorallocate($img, ${r}, ${g}, ${b}));

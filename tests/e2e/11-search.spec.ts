@@ -6,7 +6,7 @@ import { gotoOk } from './helpers/strict-assertions';
 import { attachMonitor } from './helpers/page-monitor';
 import { TEST_PHOTOS } from './helpers/test-data.js';
 
-const IMAGE = TEST_PHOTOS[4];
+const IMAGE = TEST_PHOTOS[4]!;
 
 test.describe('search functionality', () => {
     test('API search finds photo by name', async ({ page, request }) => {

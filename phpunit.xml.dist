@@ -14,16 +14,4 @@
             <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
-    <php>
-        <!--
-            Integration tests read DB credentials from .env.test at the repo root
-            (loaded by tests/bootstrap.php via ConfigLoader::loadEnv). Tests fail
-            if that file does not exist or credentials are wrong — no fallbacks.
-
-            PIWIGO_DB_BASE  — name of the throw-away test database (never production).
-            PIWIGO_BASE_URL — base URL of the running Piwigo web server.
-        -->
-        <env name="PIWIGO_DB_BASE" value="piwigo_test"/>
-        <env name="PIWIGO_BASE_URL" value="http://localhost/piwigo16"/>
-    </php>
 </phpunit>

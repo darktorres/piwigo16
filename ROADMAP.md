@@ -11,7 +11,7 @@
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9  | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)  |
-| 1.2 | Templates pipeline            | 🟢 Active ▸ W2 Phase B done · 1 / 137 .latte | XL | wave 1 hygiene done → wave 2 Latte foundation+plugin port done, bulk conversion next → wave 3 precompile |
+| 1.2 | Templates pipeline            | 🟢 Active ▸ W2 Phase C foundation · 2 / 137 .latte | XL | wave 1 hygiene done → wave 2 Latte foundation + plugin port + converter foundation done, bulk conversion next → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
 | 1.5 | Type correctness              | 🟡 **Not started**     | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
@@ -312,8 +312,8 @@ document.addEventListener('click', e => {
 | B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | 🟢 Done | `037d9bff3` |
 | B.5   | `LatteEngine::default()` factory using Piwigo's data location | 🟢 Done | `037d9bff3` |
 | B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | 🟢 Done | `037d9bff3` |
-| C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool | 🟡 Not started | — |
-| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟡 Not started · 1 / 70 done | — |
+| C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool — foundation: foreach, dot-access, if-not, escape filters, combine_script/css, define_derivative, include path, printed-literal filter prefix. 16 unit tests + tabsheet.latte produced end-to-end. Residue (untested in this batch): `{section}` loops, `{capture}`, `{literal}`, `\|implode`/`\|str_replace` arg-swap rewrites. | 🟢 Foundation done | TBD |
+| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟡 Not started · 2 / 70 done | — |
 | D.public | Convert ~50 public theme templates (`themes/_base/template/`) | 🟡 Not started · 0 / 55 done | — |
 | D.standard_pages | Convert 7 templates in `themes/standard_pages/` (login/register/password/profile + mail) | 🟡 Not started | — |
 | D.plugins | Convert ~31 templates across the 5 bundled plugins, one plugin per commit | 🟡 Not started | — |

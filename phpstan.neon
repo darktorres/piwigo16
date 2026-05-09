@@ -42,10 +42,19 @@ parameters:
             # doesn't yet extract typed variables from the params
             # array — that lands once typed page-context DTOs flow
             # through controllers. Until then, every `{$varName}` in a
-            # converted template appears as an undefined variable to
-            # phpstan-latte and casts to mixed.
+            # converted template appears as undefined / mixed to
+            # phpstan-latte. The patterns below are all the noise
+            # families that derive from this single root cause; once
+            # the resolver extracts types they all lift together.
             - '/Undefined variable: \$/'
+            - '/Variable \$\w+ might not be defined/'
+            - '/Variable \$\w+ in isset\(\) is never defined/'
             - '/Parameter #\d+ \(mixed\) of echo cannot be converted to string\./'
+            - '/Parameter #\d+ \$\w+ of function \w+ expects [^,]+, mixed given/'
+            - '/Cannot access offset [^ ]+ on mixed/'
+            - '/Argument of an invalid type mixed supplied for foreach/'
+            - '/If condition is always (true|false)/'
+            - '/Result of (&&|and|or|\|\|) is always (true|false)/'
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule

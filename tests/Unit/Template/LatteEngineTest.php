@@ -311,6 +311,50 @@ final class LatteEngineTest extends TestCase
         self::assertStringContainsString('<p>Configure your <strong>gallery</strong>.</p>', $output);
     }
 
+    /**
+     * Phase C end-to-end — the mechanical converter at
+     * tools/smarty-to-latte/Converter.php produced tabsheet.latte
+     * from tabsheet.tpl. This test renders the converter's actual
+     * output (no hand-touch since conversion) and asserts the loop
+     * body, the conditional class branches, and the array-index
+     * dot-access rewrite all work.
+     */
+    public function test_phase_c_tabsheet_latte_round_trip(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        $engine = new LatteEngine($this->tempDir);
+        $output = $engine->render('themes/admin/_base/template/tabsheet.latte', [
+            'tabsheet' => [
+                'general' => ['url' => '?page=general', 'caption' => 'General'],
+                'history' => ['url' => '?page=history', 'caption' => 'History'],
+            ],
+            'tabsheet_selected' => 'general',
+        ]);
+
+        // Two <li> rows — one selected, one normal.
+        self::assertStringContainsString('<li class="selected_tab">', $output);
+        self::assertStringContainsString('<li class="normal_tab">', $output);
+        // Dot-access rewrite worked: both URL and caption rendered.
+        self::assertStringContainsString('href="?page=general"', $output);
+        self::assertStringContainsString('<span>General</span>', $output);
+        self::assertStringContainsString('href="?page=history"', $output);
+        self::assertStringContainsString('<span>History</span>', $output);
+    }
+
+    public function test_phase_c_tabsheet_latte_skips_render_when_empty(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        $engine = new LatteEngine($this->tempDir);
+        $output = $engine->render('themes/admin/_base/template/tabsheet.latte', [
+            'tabsheet' => [],
+            'tabsheet_selected' => '',
+        ]);
+
+        self::assertStringNotContainsString('<div id="tabsheet">', $output);
+    }
+
     public function test_phase_b6_help_latte_drops_class_when_sync_enabled(): void
     {
         $this->stageTemplateWithLoaders();

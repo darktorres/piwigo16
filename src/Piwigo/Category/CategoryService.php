@@ -37,7 +37,7 @@ final readonly class CategoryService
      */
     public function globalRankCompare(array $a, array $b): int
     {
-        return strnatcasecmp(is_string($a['global_rank'] ?? null) ? $a['global_rank'] : '', is_string($b['global_rank'] ?? null) ? $b['global_rank'] : '');
+        return strnatcasecmp(is_scalar($a['global_rank'] ?? null) ? (string) $a['global_rank'] : '', is_scalar($b['global_rank'] ?? null) ? (string) $b['global_rank'] : '');
     }
 
     /**
@@ -207,7 +207,7 @@ WHERE ' . $where . '
                 $option .= '- ';
                 $option .= strip_tags((string) EventDispatcher::dispatch('render_category_name', is_string($category['name'] ?? null) ? $category['name'] : '', 'display_select_categories'));
             }
-            $tplCats[is_string($category['id'] ?? null) ? $category['id'] : ''] = $option;
+            $tplCats[is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''] = $option;
         }
         $template->assign($blockname, $tplCats);
         $template->assign($blockname . '_selected', $selecteds);
@@ -383,7 +383,7 @@ FROM ' . Tables::categories() . ' as c
                 $userdata['last_photo_date'] = $row['date_last'];
             }
             $rowCatIdRaw = $row['cat_id'] ?? null;
-            $cats[is_string($rowCatIdRaw) ? $rowCatIdRaw : ''] = $row;
+            $cats[is_scalar($rowCatIdRaw) ? (string) $rowCatIdRaw : ''] = $row;
         }
 
         uasort($cats, $this->globalRankCompare(...));
@@ -393,7 +393,7 @@ FROM ' . Tables::categories() . ' as c
                 continue;
             }
             $catIdUppercatRaw = $cat['id_uppercat'];
-            $catUppercatKey = is_string($catIdUppercatRaw) ? $catIdUppercatRaw : '';
+            $catUppercatKey = is_scalar($catIdUppercatRaw) ? (string) $catIdUppercatRaw : '';
             if (!isset($cats[$catUppercatKey])) {
                 continue;
             }
@@ -414,7 +414,7 @@ FROM ' . Tables::categories() . ' as c
                     break;
                 }
                 $parentUppercatRaw = $parent['id_uppercat'];
-                $parentKey = is_string($parentUppercatRaw) ? $parentUppercatRaw : '';
+                $parentKey = is_scalar($parentUppercatRaw) ? (string) $parentUppercatRaw : '';
                 $parent = &$cats[$parentKey];
             } while (true);
             unset($parent);
@@ -539,7 +539,7 @@ SELECT
 
         $cats = [];
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $cats[is_string($row['id'] ?? null) ? $row['id'] : ''] = $row;
+            $cats[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
         }
 
         return $cats;
@@ -583,7 +583,7 @@ SELECT
         $indexOfCat = [];
 
         foreach ($cats as $idx => $cat) {
-            $catIdKey             = is_string($cat['id'] ?? null) ? $cat['id'] : '';
+            $catIdKey             = is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
             $indexOfCat[$catIdKey] = $idx;
             $cats[$idx]['LEVEL']  = substr_count(is_string($cat['global_rank'] ?? null) ? $cat['global_rank'] : '', '.') + 1;
             $cats[$idx]['name']   = EventDispatcher::dispatch('render_category_name', is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);

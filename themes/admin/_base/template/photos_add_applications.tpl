@@ -12,7 +12,7 @@
       <div class="applicationName"> Piwigo Remote Sync </div> 
       <div class="applicationDesc"> {'Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded.'|@translate} </div> 
       <div class="applicationLink">
-        <a class="buttonLike" href="http://piwigo.org/ext/extension_view.php?eid=851" target="_blank">{'Learn more'|@translate}</a>
+        <a class="buttonLike" href="https://piwigo.org/ext/extension_view.php?eid=851" target="_blank">{'Learn more'|@translate}</a>
       </div> 
     </div>
   </div>
@@ -24,7 +24,7 @@
       <div class="applicationName"> {'Piwigo for iOS (iPhone, iPad, iPod Touch)'|@translate}</div> 
       <div class="applicationDesc"> {'<em>Piwigo for iOS</em> application empowers you to connect to your Piwigo gallery from your iPhone, iPad or iPod Touch, create some albums and upload several photos at once.'|@translate}</div> 
       <div class="applicationLink">
-        <a class="buttonLike" target="_blank" href="http://itunes.apple.com/us/app/piwigo/id472225196"> {'Available on'|@translate} Apple AppStore</a>
+        <a class="buttonLike" target="_blank" href="https://itunes.apple.com/us/app/piwigo/id472225196"> {'Available on'|@translate} Apple AppStore</a>
       </div> 
     </div>
   </div>
@@ -51,7 +51,7 @@
         {'The Piwigo publish Plug-in allows you to export and synchronize photos from Lightroom directly to your Piwigo photo gallery.'|@translate} 
       </div> 
       <div class="applicationLink">
-        <a class="buttonLike" target="_blank" href="http://alloyphoto.com/plugins/piwigo/">{'Available on'|@translate} alloyphoto.com</a>
+        <a class="buttonLike" target="_blank" href="https://alloyphoto.com/plugins/piwigo/">{'Available on'|@translate} alloyphoto.com</a>
       </div>
     </div>
   </div>
@@ -78,7 +78,7 @@
         {'digiKam is designed for photographers who want to view, manage, edit, enhance, organize, tag, and share photographs.'|@translate}
       </div> 
       <div class="applicationLink">
-        <a title="{'To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins.'|@translate}" class="buttonLike" href="http://digikam.org/" target="_blank">{'Learn more'|@translate}</a>
+        <a title="{'To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins.'|@translate}" class="buttonLike" href="https://digikam.org/" target="_blank">{'Learn more'|@translate}</a>
       </div>
     </div>
   </div>
@@ -90,7 +90,7 @@
       <div class="applicationName"> MacShareToPiwigo </div> 
       <div class="applicationDesc"> {'Share / Send your photos directly from your Mac Os X (10.10 and following) to Piwigo'|@translate} </div> 
       <div class="applicationLink">
-        <a class="buttonLike" target="_blank" href="http://piwigo.org/ext/extension_view.php?eid=804">{'Learn more'|@translate}</a>
+        <a class="buttonLike" target="_blank" href="https://piwigo.org/ext/extension_view.php?eid=804">{'Learn more'|@translate}</a>
       </div>
     </div>
   </div>
@@ -102,7 +102,7 @@
       <div class="applicationName"> iPhoto </div> 
       <div class="applicationDesc"> {'iPhoto is the default photo manager on MacOSX. The Piwigo export plugin let you create new albums and export your photos directly from iPhoto to your Piwigo photo gallery.'|@translate} </div> 
       <div class="applicationLink">
-        <a class="buttonLike" target="_blank" href="http://piwigo.org/ext/extension_view.php?eid=592">{'Learn more'|@translate}</a>
+        <a class="buttonLike" target="_blank" href="https://piwigo.org/ext/extension_view.php?eid=592">{'Learn more'|@translate}</a>
       </div>
     </div>
   </div>
@@ -118,7 +118,7 @@
         {'The Piwigo export plugin allows you to create albums and export photos.'|@translate}
       </div> 
       <div class="applicationLink">
-        <a class="buttonLike" target="_blank" href="http://piwigo.org/ext/extension_view.php?eid=598">{'Learn more'|@translate}</a>
+        <a class="buttonLike" target="_blank" href="https://piwigo.org/ext/extension_view.php?eid=598">{'Learn more'|@translate}</a>
       </div>
     </div>
   </div>

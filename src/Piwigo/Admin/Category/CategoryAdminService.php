@@ -157,7 +157,7 @@ SELECT DISTINCT id
     {
         $currentRankForUppercat = [];
         $currentRank            = 0;
-        $datas                  = [];
+        $keyed                  = [];
         foreach ($categories as $category) {
             if (is_array($category)) {
                 $id         = $category['id'] ?? null;
@@ -170,9 +170,12 @@ SELECT DISTINCT id
                 $id = $category;
                 $currentRank++;
             }
-            $datas[] = ['id' => $id, 'rank' => $currentRank];
+            if ($id === null) {
+                continue;
+            }
+            $keyed[(string) (is_scalar($id) ? $id : '')] = ['id' => $id, 'rank' => $currentRank];
         }
-        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['rank']], $datas);
+        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['rank']], array_values($keyed));
         $this->updateGlobalRank();
     }
 

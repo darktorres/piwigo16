@@ -103,6 +103,11 @@ final class PiwigoExtension extends Extension
             'nl2br' => nl2br(...),
             'number_format' => self::numberFormat(...),
             'cat' => self::cat(...),
+            'count' => count(...),
+            'strip_tags' => strip_tags(...),
+            'str_repeat' => str_repeat(...),
+            'default' => self::defaultFilter(...),
+            'date_format' => self::dateFormat(...),
 
             // Phase B.2 — small custom modifiers. Each is a one-liner
             // delegating to an existing service.
@@ -146,7 +151,45 @@ final class PiwigoExtension extends Extension
             'htmlOptions' => self::htmlOptions(...),
             'htmlRadios' => self::htmlRadios(...),
             'math' => self::math(...),
+            'url_is_remote' => UrlService::urlIsRemote(...),
+            'l10n' => self::translate(...),
         ];
+    }
+
+    /**
+     * Smarty `|default:'fallback'` modifier — returns the fallback when
+     * the piped value is empty (null, '', 0, false, []).
+     */
+    public static function defaultFilter(mixed $value, mixed $fallback): mixed
+    {
+        return empty($value) ? $fallback : $value;
+    }
+
+    /**
+     * Smarty `|date_format:"%d"` modifier — maps the strftime-style format
+     * to PHP `date()` for the subset Piwigo templates actually use. The
+     * input value is coerced via PHP's parsing rules (Unix timestamp, ISO
+     * string, or `'now'` for `$smarty.now`).
+     */
+    public static function dateFormat(mixed $value, string $format = '%b %e, %Y'): string
+    {
+        if (is_int($value)) {
+            $timestamp = $value;
+        } else {
+            $coerced = is_scalar($value) ? (string) $value : 'now';
+            $timestamp = strtotime($coerced);
+            if ($timestamp === false) {
+                return '';
+            }
+        }
+        $map = [
+            '%d' => 'd', '%m' => 'm', '%Y' => 'Y', '%y' => 'y',
+            '%H' => 'H', '%M' => 'i', '%S' => 's',
+            '%B' => 'F', '%b' => 'M', '%A' => 'l', '%a' => 'D',
+            '%e' => 'j', '%j' => 'z', '%p' => 'A', '%P' => 'a',
+            '%%' => '%',
+        ];
+        return date(strtr($format, $map), $timestamp);
     }
 
     public static function translate(string $key, string|int|float|bool|null ...$args): string

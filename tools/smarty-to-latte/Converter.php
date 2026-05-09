@@ -330,7 +330,7 @@ final class Converter
     private function rewriteCombineScript(string $source): string
     {
         return preg_replace_callback(
-            '/\{combine_script\s+([^}]+)\}/',
+            '/\{combine_script\s+((?:[^{}]|\{[^{}]*\})+)\}/',
             fn (array $m): string => '{do combineScript(' . $this->parseSmartyArgs($m[1]) . ')}',
             $source,
         ) ?? $source;
@@ -343,7 +343,7 @@ final class Converter
     private function rewriteCombineCss(string $source): string
     {
         return preg_replace_callback(
-            '/\{combine_css\s+([^}]+)\}/',
+            '/\{combine_css\s+((?:[^{}]|\{[^{}]*\})+)\}/',
             fn (array $m): string => '{do combineCss(' . $this->parseSmartyArgs($m[1]) . ')}',
             $source,
         ) ?? $source;
@@ -720,14 +720,16 @@ final class Converter
                 while ($previous !== $tag) {
                     $previous = $tag;
                     // `$arr.$key` → `$arr[$key]` (variable index).
+                    // Leading expr can chain `[...]` indices and `->prop`
+                    // PHP-style accesses before the dotted suffix.
                     $tag = preg_replace(
-                        '/(\$\w+(?:\[[^\]]+\])*)\.(\$\w+)/',
+                        '/(\$\w+(?:\[[^\]]+\]|->\w+)*)\.(\$\w+)/',
                         '$1[$2]',
                         $tag,
                     ) ?? $tag;
                     // `$arr.foo` → `$arr['foo']` (literal-key dot access).
                     $tag = preg_replace(
-                        '/(\$\w+(?:\[[^\]]+\])*)\.(\w+)/',
+                        '/(\$\w+(?:\[[^\]]+\]|->\w+)*)\.(\w+)/',
                         "$1['$2']",
                         $tag,
                     ) ?? $tag;

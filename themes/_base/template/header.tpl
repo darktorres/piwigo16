@@ -62,7 +62,7 @@
   {$elt}
 {/foreach}
 {/if}
-<script id="pwg-config" type="application/json">{ "wsUrl":"{$WS_URL}" }</script>
+<script id="pwg-config" type="application/json">{['wsUrl' => $WS_URL]|json_encode}</script>
 </head>
 
 <body id="{$BODY_ID}" class="{foreach from=$BODY_CLASSES item=class}{$class} {/foreach}"  data-infos='{$BODY_DATA}' data-error-icon="{$ROOT_URL}{$themeconf.icon_dir}/errors_small.png"{if isset($maxRequests)} data-max-requests="{$maxRequests}"{/if}>

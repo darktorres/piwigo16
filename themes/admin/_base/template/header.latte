@@ -41,10 +41,7 @@
   {$elt}
 {/foreach}
 {/if}
-{* Post-conversion manual annotation: build the JSON via |json_encode so
-   Latte doesn't trip over `{…}` print statements inside JS string quotes
-   (and so the payload escapes correctly when the URLs contain `"`). *}
-<script id="pwg-config" type="application/json">{=['wsUrl' => $WS_URL, 'adminUrl' => $ADMIN_URL]|json_encode|noescape}</script>
+<script id="pwg-config" type="application/json">{['wsUrl' => $WS_URL, 'adminUrl' => $ADMIN_URL]|json_encode}</script>
 </head>
 
 <body id="{$BODY_ID}">

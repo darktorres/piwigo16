@@ -41,7 +41,7 @@
   {$elt}
 {/foreach}
 {/if}
-<script id="pwg-config" type="application/json">{ "wsUrl":"{$WS_URL}","adminUrl":"{$ADMIN_URL}" }</script>
+<script id="pwg-config" type="application/json">{['wsUrl' => $WS_URL, 'adminUrl' => $ADMIN_URL]|json_encode}</script>
 </head>
 
 <body id="{$BODY_ID}">

@@ -622,6 +622,39 @@ final class SmartyToLatteConverterTest extends TestCase
         );
     }
 
+    public function test_smarty_dot_access_after_php_property_chain(): void
+    {
+        // Smarty allows mixed `$obj->prop.key` with property + dot. Without
+        // chain support the dot-access rule leaves `.key` for Latte to parse
+        // as concat with a constant — producing an unqualified-constant lint
+        // warning (e.g. `U_CATEGORIES`). The leading-expr regex must walk
+        // through `->prop` segments before the dotted suffix.
+        self::assertSame(
+            "{\$block->data['U_CATEGORIES']}",
+            $this->converter()->convert('{$block->data.U_CATEGORIES}'),
+        );
+        // Variable index after a property chain.
+        self::assertSame(
+            '{if isset($block->data[$key])}',
+            $this->converter()->convert('{if isset($block->data.$key)}'),
+        );
+    }
+
+    public function test_combine_css_path_with_nested_print(): void
+    {
+        // Path values that interpolate a Smarty var (e.g. theme color)
+        // contain `{...}` inside the outer combine_css `{...}` tag. The
+        // rule's regex must allow one level of nested braces, otherwise it
+        // truncates after the first inner `}` and produces broken output
+        // like `path: "…{$x['k'])}-…"`.
+        self::assertSame(
+            '{do combineCss(path: "themes/_base/css/{$themeconf[\'colorscheme\']}-search.css", order: -100)}',
+            $this->converter()->convert(
+                '{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css" order=-100}'
+            ),
+        );
+    }
+
     /**
      * End-to-end on a real production template: tabsheet.tpl exercises
      * foreach (with key + item), smarty-style `and` keyword (which Latte

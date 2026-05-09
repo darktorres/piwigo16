@@ -553,7 +553,6 @@ final class GeneralEndpoints
         $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
         $search = is_array($page['search'] ?? null) ? $page['search'] : [];
         $data = ServiceLocator::get(HistoryAdminService::class)->getHistory([], $search, $types);
-        usort($data, ServiceLocator::get(HistoryAdminService::class)->historyCompare(...));
         $page['nb_lines'] = count($data);
         $historyLines     = [];
         $userIds          = [];

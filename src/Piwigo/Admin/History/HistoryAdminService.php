@@ -30,15 +30,6 @@ final class HistoryAdminService
         $tabsheet->assign();
     }
 
-    public function historyCompare(mixed $a, mixed $b): int
-    {
-        $aArr = is_array($a) ? $a : [];
-        $bArr = is_array($b) ? $b : [];
-        $aStr = (is_scalar($aArr['date'] ?? null) ? (string) $aArr['date'] : '') . (is_scalar($aArr['time'] ?? null) ? (string) $aArr['time'] : '');
-        $bStr = (is_scalar($bArr['date'] ?? null) ? (string) $bArr['date'] : '') . (is_scalar($bArr['time'] ?? null) ? (string) $bArr['time'] : '');
-        return strcmp($aStr, $bStr);
-    }
-
     /**
      * @param array<array<string, mixed>> $data
      * @param array<mixed> $search
@@ -132,6 +123,7 @@ SELECT
     image_type
   FROM ' . Tables::history() . '
   WHERE ' . $where_separator . '
+  ORDER BY date ASC, time ASC
 ;';
 
         foreach (ServiceLocator::get(Connection::class)

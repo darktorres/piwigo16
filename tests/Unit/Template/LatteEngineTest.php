@@ -114,4 +114,74 @@ final class LatteEngineTest extends TestCase
 
         self::assertSame('hello world', $engine->renderFromString('hello {$name}'));
     }
+
+    /**
+     * Phase B.1 smoke — proves that PHP-passthrough filters land on the
+     * expected built-in. One representative per dispatch shape: zero-arg
+     * (md5), one-string-arg (sprintf with format-only), two-arg
+     * positional (sprintf with %d substitution), arity ≥ 2 returning
+     * non-string (in_array). If this row is green, the rest of the
+     * Phase B.1 table is wired the same way.
+     */
+    public function test_phase_b1_php_passthrough_filters(): void
+    {
+        $engine = new LatteEngine($this->tempDir);
+
+        self::assertSame(
+            md5('hi'),
+            $engine->renderFromString("{='hi'|md5}"),
+        );
+        self::assertSame(
+            'count: 5',
+            $engine->renderFromString("{='count: %d'|sprintf:5}"),
+        );
+        self::assertSame(
+            'World',
+            $engine->renderFromString('{=$x|strtolower|ucfirst}', ['x' => 'wOrLd']),
+            'sanity-check that registering ucfirst/strtolower under their PHP names dispatches correctly',
+        );
+        self::assertSame(
+            '1',
+            $engine->renderFromString('{=$x|in_array:$arr}', ['x' => 'b', 'arr' => ['a', 'b', 'c']]),
+        );
+    }
+
+    /**
+     * Phase B.2 smoke — explode, ternary, l10n alias of translate. The
+     * service-backed filters (is_admin, is_classic_user, get_device,
+     * get_gallery_home_url, url_is_remote) require ServiceLocator
+     * bootstrapping that's outside this unit test's scope; their
+     * stateless Latte wiring is identical to the four below, and
+     * integration coverage exercises them through real templates once
+     * Phase B.5 lands the dispatcher.
+     */
+    public function test_phase_b2_stateless_custom_modifiers(): void
+    {
+        $engine = new LatteEngine($this->tempDir);
+
+        self::assertSame(
+            'a-b-c',
+            $engine->renderFromString('{=$s|explode:","|implode:"-"}', ['s' => 'a,b,c']),
+        );
+        self::assertSame(
+            'a-b',
+            $engine->renderFromString('{=$s|explode:""|implode:"-"}', ['s' => 'a,b']),
+            'empty delimiter must fall back to "," like Template::modExplode',
+        );
+        self::assertSame(
+            'yes',
+            $engine->renderFromString('{=$x|ternary:"yes","no"}', ['x' => 1]),
+        );
+        self::assertSame(
+            'no',
+            $engine->renderFromString('{=$x|ternary:"yes","no"}', ['x' => 0]),
+        );
+
+        Lang::loadArray(['Comment' => 'Comentário']);
+        self::assertSame(
+            'Comentário',
+            $engine->renderFromString('{=$key|l10n}', ['key' => 'Comment']),
+            'l10n must be a strict alias of translate',
+        );
+    }
 }

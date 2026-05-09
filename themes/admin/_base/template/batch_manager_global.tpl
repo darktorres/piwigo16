@@ -217,8 +217,8 @@
       <!-- generate derivatives -->
       <div id="action_generate_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectGenerateDerivAll()">{'All'|translate}</a>
-          <a href="javascript:selectGenerateDerivNone()">{'None'|translate}</a>
+          <a href="#" data-deriv-select="generate-all">{'All'|translate}</a>
+          <a href="#" data-deriv-select="generate-none">{'None'|translate}</a>
         </div>
         <br>
         {foreach from=$generate_derivatives_types key=type item=disp}
@@ -229,8 +229,8 @@
       <!-- delete derivatives -->
       <div id="action_delete_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectDelDerivAll()">{'All'|translate}</a>
-          <a href="javascript:selectDelDerivNone()">{'None'|translate}</a>
+          <a href="#" data-deriv-select="delete-all">{'All'|translate}</a>
+          <a href="#" data-deriv-select="delete-none">{'None'|translate}</a>
         </div>
         <br>
         {foreach from=$del_derivatives_types key=type item=disp}

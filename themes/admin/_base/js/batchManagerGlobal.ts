@@ -36,10 +36,6 @@ interface WindowGlobals {
         opts: { showTimepicker: boolean; cancelButton: string }
     ) => void;
     pwgAddAlbum?: (el: HTMLElement) => void;
-    selectGenerateDerivAll?: () => void;
-    selectGenerateDerivNone?: () => void;
-    selectDelDerivAll?: () => void;
-    selectDelDerivNone?: () => void;
     getDerivativeUrls?: () => void;
 }
 
@@ -902,10 +898,18 @@ qs<HTMLSelectElement>('select[name=filter_prefilter]')?.addEventListener(
     }
 );
 
-winRef.selectGenerateDerivAll = selectGenerateDerivAll;
-winRef.selectGenerateDerivNone = selectGenerateDerivNone;
-winRef.selectDelDerivAll = selectDelDerivAll;
-winRef.selectDelDerivNone = selectDelDerivNone;
 winRef.getDerivativeUrls = getDerivativeUrls;
+
+document.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[data-deriv-select]');
+    if (!a) return;
+    e.preventDefault();
+    switch (a.dataset['derivSelect']) {
+        case 'generate-all':  selectGenerateDerivAll(); break;
+        case 'generate-none': selectGenerateDerivNone(); break;
+        case 'delete-all':    selectDelDerivAll(); break;
+        case 'delete-none':   selectDelDerivNone(); break;
+    }
+});
 
 export {};

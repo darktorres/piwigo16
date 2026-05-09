@@ -33,7 +33,7 @@
   {/foreach}
   {if isset($U_ORIGINAL)}
     {combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
-  <a href="javascript:phpWGOpenWindow('{$U_ORIGINAL}','xxx','scrollbars=yes,toolbar=no,status=no,resizable=yes')" rel="nofollow">{'Original'|translate}</a>
+  <a href="{$U_ORIGINAL|escape:'html'}" data-window-open-name="original" data-window-open-features="scrollbars=yes,toolbar=no,status=no,resizable=yes" rel="nofollow noopener">{'Original'|translate}</a>
   {/if}
 </div>
 {/strip}

@@ -15,21 +15,21 @@
   <input type="hidden" name="start" value="{$START}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
   {include file='include/batch_manager_filter.inc.tpl' 
-  title={'Batch Manager Filter'|@translate}
-  searchPlaceholder={'Filters'|@translate}
+  title={'Batch Manager Filter'|translate}
+  searchPlaceholder={'Filters'|translate}
   }
   <fieldset>
 
-    <legend><span class='icon-check icon-blue '></span>{'Selection'|@translate}</legend>
+    <legend><span class='icon-check icon-blue '></span>{'Selection'|translate}</legend>
 
   {if !empty($thumbnails)}
   <p id="checkActions">
-    <a href="#" id="selectAll">{if $nb_thumbs_set > $nb_thumbs_page}{'The whole page'|@translate}{else}{'All'|@translate}{/if}</a>
+    <a href="#" id="selectAll">{if $nb_thumbs_set > $nb_thumbs_page}{'The whole page'|translate}{else}{'All'|translate}{/if}</a>
 {if $nb_thumbs_set > $nb_thumbs_page}
-    <a href="#" id="selectSet">{'The whole set'|@translate}</a>
+    <a href="#" id="selectSet">{'The whole set'|translate}</a>
 {/if}
-    <a href="#" id="selectNone">{'None'|@translate}</a>
-    <a href="#" id="selectInvert">{'Invert'|@translate}</a>
+    <a href="#" id="selectNone">{'None'|translate}</a>
+    <a href="#" id="selectInvert">{'Invert'|translate}</a>
 
     <span id="selectedMessage"></span>
 
@@ -46,11 +46,11 @@
 					<span class="icon-check"></span><input type="checkbox" name="selection[]" value="{$thumbnail.id}" {if $isSelected}checked="checked"{/if}>
 					<span class="wrap2">
 					<div class="actions">
-            <a href="{$thumbnail.U_EDIT}" target="_blank" class="icon-pencil" title="{'Edit photo'|@translate}"></a>
-            <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|@translate}"></a>
+            <a href="{$thumbnail.U_EDIT}" target="_blank" class="icon-pencil" title="{'Edit photo'|translate}"></a>
+            <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|translate}"></a>
           </div>
 						{if $thumbnail.level > 0}
-						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|translate|sprintf:$thumbnail.level}</em>
+						<em class="levelIndicatorF" title="{'Who can see these photos?'|translate} : ">{'Level %d'|translate|sprintf:$thumbnail.level}</em>
 						{/if}
 						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
 					</span>
@@ -63,11 +63,11 @@
   {if !empty($navbar) }
   <div class="batchManager-pagination">
     <div class="pagination-per-page">
-      <span>{'display'|@translate}</span>
+      <span>{'display'|translate}</span>
       <a href="{$U_DISPLAY}&amp;display=20">20</a>
       <a href="{$U_DISPLAY}&amp;display=50">50</a>
       <a href="{$U_DISPLAY}&amp;display=100">100</a>
-      <a href="{$U_DISPLAY}&amp;display=all">{'all'|@translate}</a>
+      <a href="{$U_DISPLAY}&amp;display=all">{'all'|translate}</a>
     </div>
 
     {include file='navigation_bar.tpl'|@get_extent:'navbar'}
@@ -75,43 +75,43 @@
   {/if}
 
   {else}
-  <div class="selectionEmptyBlock">{'No photo in the current set.'|@translate}</div>
+  <div class="selectionEmptyBlock">{'No photo in the current set.'|translate}</div>
   {/if}
   </fieldset>
 
   <fieldset id="action">
 
-    <legend><span class='icon-cog icon-red'></span>{'Action'|@translate}</legend>
-      <div id="forbidAction"{if count($selection) != 0} hidden{/if}>{'No photos selected, no actions possible.'|@translate}</div>
+    <legend><span class='icon-cog icon-red'></span>{'Action'|translate}</legend>
+      <div id="forbidAction"{if count($selection) != 0} hidden{/if}>{'No photos selected, no actions possible.'|translate}</div>
       <div id="permitAction"{if count($selection) == 0} hidden{/if}>
     
     <div class="permitActionListButton">
       <div>
         <select name="selectAction">
-          <option value="-1">{'Choose an action'|@translate}</option>
+          <option value="-1">{'Choose an action'|translate}</option>
           <option disabled="disabled">------------------</option>
-          <option value="delete" class="icon-trash">{'Delete selected photos'|@translate}</option>
-          <option value="associate">{'Associate to album'|@translate}</option>
-          <option value="move">{'Move to album'|@translate}</option>
+          <option value="delete" class="icon-trash">{'Delete selected photos'|translate}</option>
+          <option value="associate">{'Associate to album'|translate}</option>
+          <option value="move">{'Move to album'|translate}</option>
       {if !empty($associated_categories)}
-          <option value="dissociate">{'Dissociate from album'|@translate}</option>
+          <option value="dissociate">{'Dissociate from album'|translate}</option>
       {/if}
-          <option value="add_tags">{'Add tags'|@translate}</option>
+          <option value="add_tags">{'Add tags'|translate}</option>
       {if !empty($associated_tags)}
-          <option value="del_tags">{'remove tags'|@translate}</option>
+          <option value="del_tags">{'remove tags'|translate}</option>
       {/if}
-          <option value="author">{'Set author'|@translate}</option>
-          <option value="title">{'Set title'|@translate}</option>
-          <option value="date_creation">{'Set creation date'|@translate}</option>
-          <option value="level" class="icon-lock">{'Who can see these photos?'|@translate} ({'Privacy level'|translate})</option>
-          <option value="metadata">{'Synchronize metadata'|@translate}</option>
+          <option value="author">{'Set author'|translate}</option>
+          <option value="title">{'Set title'|translate}</option>
+          <option value="date_creation">{'Set creation date'|translate}</option>
+          <option value="level" class="icon-lock">{'Who can see these photos?'|translate} ({'Privacy level'|translate})</option>
+          <option value="metadata">{'Synchronize metadata'|translate}</option>
       {if ($IN_CADDIE)}
-          <option value="remove_from_caddie">{'Remove from caddie'|@translate}</option>
+          <option value="remove_from_caddie">{'Remove from caddie'|translate}</option>
       {else}
-          <option value="add_to_caddie">{'Add to caddie'|@translate}</option>
+          <option value="add_to_caddie">{'Add to caddie'|translate}</option>
       {/if}
-    		<option value="delete_derivatives">{'Delete multiple size images'|@translate}</option>
-    		<option value="generate_derivatives">{'Generate multiple size images'|@translate}</option>
+    		<option value="delete_derivatives">{'Delete multiple size images'|translate}</option>
+    		<option value="generate_derivatives">{'Generate multiple size images'|translate}</option>
       {if !empty($element_set_global_plugins_actions)}
         {foreach from=$element_set_global_plugins_actions item=action}
           <option value="{$action.ID}">{$action.NAME}</option>
@@ -122,7 +122,7 @@
       <p id="confirmDel" class="u-invisible">
         <label class="font-checkbox">
           <span class="icon-check"></span>
-          <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|@translate}</input>
+          <input type="checkbox" name="confirm_deletion" value="1"> {'Are you sure?'|translate}</input>
         </label><br/><br/>
         <span class="errors u-invisible u-m-0">{"You need to confirm deletion"|translate}</span>
       </p>
@@ -150,8 +150,8 @@
 
       <!-- move -->
       <div id="action_move" class="bulkAction">
-        <select data-selectize="categories" data-default="" name="move" class="u-w-600" placeholder="{'Select an album... or type it!'|@translate}"></select>
-        <a href="#" data-add-album="move" title="{'create a new album'|@translate}" class="icon-plus"></a>
+        <select data-selectize="categories" data-default="" name="move" class="u-w-600" placeholder="{'Select an album... or type it!'|translate}"></select>
+        <a href="#" data-add-album="move" title="{'create a new album'|translate}" class="icon-plus"></a>
       </div>
 
       <!-- dissociate -->
@@ -181,19 +181,19 @@
 
       <!-- author -->
       <div id="action_author" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author"> {'remove author'|@translate}</label>
-      <input type="text" class="large" name="author" placeholder="{'Type here the author name'|@translate}">
+      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_author"> {'remove author'|translate}</label>
+      <input type="text" class="large" name="author" placeholder="{'Type here the author name'|translate}">
       </div>
 
       <!-- title -->
       <div id="action_title" class="bulkAction">
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title"> {'remove title'|@translate}</label>
-      <input type="text" class="large" name="title" placeholder="{'Type here the title'|@translate}">
+      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_title"> {'remove title'|translate}</label>
+      <input type="text" class="large" name="title" placeholder="{'Type here the title'|translate}">
       </div>
 
       <!-- date_creation -->
       <div id="action_date_creation" class="bulkAction">
-        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_date_creation"> {'remove creation date'|@translate}</label><br>
+        <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="remove_date_creation"> {'remove creation date'|translate}</label><br>
         <div id="set_date_creation">
           <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
           <label>
@@ -217,8 +217,8 @@
       <!-- generate derivatives -->
       <div id="action_generate_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectGenerateDerivAll()">{'All'|@translate}</a>
-          <a href="javascript:selectGenerateDerivNone()">{'None'|@translate}</a>
+          <a href="javascript:selectGenerateDerivAll()">{'All'|translate}</a>
+          <a href="javascript:selectGenerateDerivNone()">{'None'|translate}</a>
         </div>
         <br>
         {foreach from=$generate_derivatives_types key=type item=disp}
@@ -229,8 +229,8 @@
       <!-- delete derivatives -->
       <div id="action_delete_derivatives" class="bulkAction">
         <div class="deleteDerivButtons">
-          <a href="javascript:selectDelDerivAll()">{'All'|@translate}</a>
-          <a href="javascript:selectDelDerivNone()">{'None'|@translate}</a>
+          <a href="javascript:selectDelDerivAll()">{'All'|translate}</a>
+          <a href="javascript:selectDelDerivNone()">{'None'|translate}</a>
         </div>
         <br>
         {foreach from=$del_derivatives_types key=type item=disp}
@@ -250,7 +250,7 @@
     </div> <!-- #permitAction -->
     <div id="regenerationMsg" class="bulkAction" hidden>
         <div id="regenerationStatus">
-          <span id="regenerationText">{'Generate multiple size images'|@translate}</span>
+          <span id="regenerationText">{'Generate multiple size images'|translate}</span>
           <span class="badge-number badge-number-fs-128"></span>
         </div>
         <input type="hidden" name="regenerateSuccess" value="0">

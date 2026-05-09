@@ -6,40 +6,40 @@
 <form action="{$F_ACTION}" method="post" id="categoryPermissions">
 
 <fieldset>
-  <legend><span class="icon-lock icon-yellow"></span>{'Access type'|@translate}</legend>
+  <legend><span class="icon-lock icon-yellow"></span>{'Access type'|translate}</legend>
 
   <p id="selectStatus">
     <label class="font-checkbox">
       <span class="icon-dot-circled"></span>
       <input type="radio" name="status" value="public" {if not $private}checked="checked"{/if}>
-      <strong>{'public'|@translate}</strong> : <em>{'any visitor can see this album'|@translate}</em>
+      <strong>{'public'|translate}</strong> : <em>{'any visitor can see this album'|translate}</em>
     </label>
     <br>
     <label class="font-checkbox">
       <span class="icon-dot-circled"></span>
       <input type="radio" name="status" value="private" {if $private}checked="checked"{/if}>
-      <strong>{'private'|@translate}</strong> : <em>{'visitors need to login and have the appropriate permissions to see this album'|@translate}</em>
+      <strong>{'private'|translate}</strong> : <em>{'visitors need to login and have the appropriate permissions to see this album'|translate}</em>
     </label>
   </p>
 </fieldset>
 
 <fieldset id="privateOptions">
-  <legend>{'Groups and users'|@translate}</legend>
+  <legend>{'Groups and users'|translate}</legend>
 
   <p>
 {if count($groups) > 0}
-    <strong>{'Permission granted for groups'|@translate}</strong>
+    <strong>{'Permission granted for groups'|translate}</strong>
     <br>
     <select data-selectize="groups" data-value="{$groups_selected|@json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
       name="groups[]" multiple class="u-w-600"></select>
 {else}
-    {'There is no group in this gallery.'|@translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {'There is no group in this gallery.'|translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|translate}</a>
 {/if}
   </p>
 
   <p>
-    <strong>{'Permission granted for users'|@translate}</strong>
+    <strong>{'Permission granted for users'|translate}</strong>
     <br>
     <select data-selectize="users" data-value="{$users_selected|@json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
@@ -48,9 +48,9 @@
 
 {if isset($nb_users_granted_indirect) && $nb_users_granted_indirect>0}
   <p>
-    {'%u users have automatic permission because they belong to a granted group.'|@translate:$nb_users_granted_indirect}
-    <a href="#" class="toggle-indirectPermissions" hidden>{'hide details'|@translate}</a>
-    <a href="#" class="toggle-indirectPermissions">{'show details'|@translate}</a>
+    {'%u users have automatic permission because they belong to a granted group.'|translate:$nb_users_granted_indirect}
+    <a href="#" class="toggle-indirectPermissions" hidden>{'hide details'|translate}</a>
+    <a href="#" class="toggle-indirectPermissions">{'show details'|translate}</a>
 
     <ul id="indirectPermissionsDetails" hidden>
   {foreach from=$user_granted_indirect_groups item=group_details}
@@ -61,43 +61,43 @@
 {/if}
 
 {*
-  <h4>{'Groups'|@translate}</h4>
+  <h4>{'Groups'|translate}</h4>
 
   <fieldset>
-    <legend>{'Permission granted'|@translate}</legend>
+    <legend>{'Permission granted'|translate}</legend>
     <ul>
       {foreach from=$group_granted_ids item=id}
       <li><label><input type="checkbox" name="deny_groups[]" value="{$id}"> {$all_groups[$id]}</label></li>
       {/foreach}
     </ul>
-    <input class="submit" type="submit" name="deny_groups_submit" value="{'Deny selected groups'|@translate}">
+    <input class="submit" type="submit" name="deny_groups_submit" value="{'Deny selected groups'|translate}">
   </fieldset>
 
   <fieldset>
-    <legend>{'Permission denied'|@translate}</legend>
+    <legend>{'Permission denied'|translate}</legend>
     <ul>
       {foreach from=$group_denied_ids item=id}
       <li><label><input type="checkbox" name="grant_groups[]" value="{$id}"> {$all_groups[$id]}</label></li>
       {/foreach}
     </ul>
-    <input class="submit" type="submit" name="grant_groups_submit" value="{'Grant selected groups'|@translate}">
-    <label><input type="checkbox" name="apply_on_sub">{'Apply to sub-albums'|@translate}</label>
+    <input class="submit" type="submit" name="grant_groups_submit" value="{'Grant selected groups'|translate}">
+    <label><input type="checkbox" name="apply_on_sub">{'Apply to sub-albums'|translate}</label>
   </fieldset>
 
-  <h4>{'Users'|@translate}</h4>
+  <h4>{'Users'|translate}</h4>
 
   <fieldset>
-    <legend>{'Permission granted'|@translate}</legend>
+    <legend>{'Permission granted'|translate}</legend>
     <ul>
       {foreach from=$user_granted_direct_ids item=id}
       <li><label><input type="checkbox" name="deny_users[]" value="{$id}"> {$all_users[$id]}</label></li>
       {/foreach}
     </ul>
-    <input class="submit" type="submit" name="deny_users_submit" value="{'Deny selected users'|@translate}">
+    <input class="submit" type="submit" name="deny_users_submit" value="{'Deny selected users'|translate}">
   </fieldset>
 
   <fieldset>
-    <legend>{'Permission granted thanks to a group'|@translate}</legend>
+    <legend>{'Permission granted thanks to a group'|translate}</legend>
     {if isset($user_granted_indirects) }
     <ul>
       {foreach from=$user_granted_indirects item=user_group}
@@ -108,14 +108,14 @@
   </fieldset>
 
   <fieldset>
-    <legend>{'Permission denied'|@translate}</legend>
+    <legend>{'Permission denied'|translate}</legend>
     <ul>
       {foreach from=$user_denied_ids item=id}
       <li><label><input type="checkbox" name="grant_users[]" value="{$id}"> {$all_users[$id]}</label></li>
       {/foreach}
     </ul>
-    <input class="submit" type="submit" name="grant_users_submit" value="{'Grant selected users'|@translate}">
-    <label><input type="checkbox" name="apply_on_sub">{'Apply to sub-albums'|@translate}</label>
+    <input class="submit" type="submit" name="grant_users_submit" value="{'Grant selected users'|translate}">
+    <label><input type="checkbox" name="apply_on_sub">{'Apply to sub-albums'|translate}</label>
   </fieldset>
 *}
 </fieldset>
@@ -129,7 +129,7 @@
             <span class="slider round"></span>
           </label>
         </div>
-        <label class="switch-label" for="apply_on_sub"><span>{'Apply to sub-albums'|@translate}</span></label>
+        <label class="switch-label" for="apply_on_sub"><span>{'Apply to sub-albums'|translate}</span></label>
       </div>
     </div>
     <div class="savebar-footer-end">
@@ -143,7 +143,7 @@
 {/if}
     
       <div class="savebar-footer-block">
-        <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
+        <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> {'Save Settings'|translate}</button>
       </div>
     </div>
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

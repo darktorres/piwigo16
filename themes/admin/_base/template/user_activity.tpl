@@ -14,7 +14,7 @@
                     <i class="icon-download"> </i>
                 </a>
                 <div id="activityMoreFilters" class="activity-more-filters">
-                    <span class="icon-filter"></span>{'Filters'|@translate}
+                    <span class="icon-filter"></span>{'Filters'|translate}
                 </div>
             </div>
         </div>

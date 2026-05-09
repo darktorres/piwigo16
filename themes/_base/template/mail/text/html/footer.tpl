@@ -12,7 +12,7 @@ to show the origin of the script... --> *}
             {if not empty($VERSION)}{$VERSION}{/if}
             
             - {'Contact'|translate}
-            <a href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|@translate}</a>
+            <a href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|escape:url}">{'Webmaster'|translate}</a>
             {* <!-- end FOOTER --> *}
           </td></tr>
         </table>

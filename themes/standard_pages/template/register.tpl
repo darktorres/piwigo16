@@ -47,7 +47,7 @@
       <form class="properties" method="post" action="{$F_ACTION}" name="register_form" autocomplete="off">
 
         <div class="column-flex">
-          <label for="mail_address">{'Email address'|translate}{if not $obligatory_user_mail_address} ({'useful when password forgotten'|@translate}){/if}</label>
+          <label for="mail_address">{'Email address'|translate}{if not $obligatory_user_mail_address} ({'useful when password forgotten'|translate}){/if}</label>
           <div class="row-flex input-container">
             <i class="gallery-icon-user-2"></i>
             <input type="email" name="mail_address" id="login" value="{$F_EMAIL}"{if $obligatory_user_mail_address}data-required="true"{/if}>

@@ -1,7 +1,7 @@
 {if $COMMENTS_DISABLED}
 <div class="comments-disabled-notice" style="padding:1.5em;">
-  <p>{'User comments are disabled in the configuration.'|@translate}</p>
-  <p><a href="{$U_CONFIGURATION}">{'Enable user comments'|@translate}</a></p>
+  <p>{'User comments are disabled in the configuration.'|translate}</p>
+  <p><a href="{$U_CONFIGURATION}">{'Enable user comments'|translate}</a></p>
 </div>
 {else}
 {combine_script id="comments" load="footer" path="themes/admin/_base/js/comments.js"}
@@ -25,15 +25,15 @@
       </div>
 
       <div class='comments-selection-controller' id="commentsSelectController">
-        <p>{'Select'|@translate}</p>
-        <p class="comments-selection-btn" id="selectAll">{'All'|@translate}</p>
-        <p class="comments-selection-btn" id="selectNone">{'None'|@translate}</p>
-        <p class="comments-selection-btn" id="selectInvert">{'Invert'|@translate}</p>
+        <p>{'Select'|translate}</p>
+        <p class="comments-selection-btn" id="selectAll">{'All'|translate}</p>
+        <p class="comments-selection-btn" id="selectNone">{'None'|translate}</p>
+        <p class="comments-selection-btn" id="selectInvert">{'Invert'|translate}</p>
       </div>
 
       <div class="comments-advanced-filter">
         <div class="advanced-filter-btn icon-filter" id="commentFilters">
-          <span>{"Filters"|@translate}</span>
+          <span>{"Filters"|translate}</span>
         </div>
         <div class="comments-search">
           <span class="icon-search comments-search-icon"> </span>
@@ -49,7 +49,7 @@
           <input type="checkbox" id="toggleSelectionMode">
           <span class="slider round"></span>
         </label>
-        <span>{'Selection mode'|@translate}</span>
+        <span>{'Selection mode'|translate}</span>
       </div>
     </div>
   </div>
@@ -120,7 +120,7 @@
       <p class="comments-no-selection" id="commentsNoSelection">{"No comments selected, no actions possible."|translate}
       </p>
       <div class="comments-selections" id="commentsSelection">
-        <p>{'Your selection'|@translate}</p>
+        <p>{'Your selection'|translate}</p>
 
         <div class="comments-selected" id="commentsSelected">
 
@@ -129,8 +129,8 @@
         <div class="comments-and-others" id="commentsSelectedOthers">
         </div>
 
-        <button id="ValisateSelectionMode" class="icon-ok">{'Validate'|@translate}</button>
-        <button id="DeleteSelectionMode" class="icon-trash-1">{'Delete'|@translate}</button>
+        <button id="ValisateSelectionMode" class="icon-ok">{'Validate'|translate}</button>
+        <button id="DeleteSelectionMode" class="icon-trash-1">{'Delete'|translate}</button>
       </div>
     </div>
   </div>

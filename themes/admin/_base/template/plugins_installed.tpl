@@ -9,7 +9,7 @@
 {counter start=0 assign=i} {* <!-- counter for 'deactivate all' link --> *}
 
 <div class="pluginTypeFilter">
-<input type="radio" name="p-filter" class="filter" id="seeAll" {if $count_types_plugins["active"] <= 0} checked {/if}><label for="seeAll">{'All'|@translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeActive" {if $count_types_plugins["active"] > 0} checked {/if}><label class="filterLabel" for="seeActive">{'Activated'|@translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeInactive"><label class="filterLabel" for="seeInactive">{'Deactivated'|@translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeOther"><label class="filterLabel" for="seeOther">{'Other'|@translate}<span class="filter-badge">X</span></label>
+<input type="radio" name="p-filter" class="filter" id="seeAll" {if $count_types_plugins["active"] <= 0} checked {/if}><label for="seeAll">{'All'|translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeActive" {if $count_types_plugins["active"] > 0} checked {/if}><label class="filterLabel" for="seeActive">{'Activated'|translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeInactive"><label class="filterLabel" for="seeInactive">{'Deactivated'|translate}<span class="filter-badge">X</span></label><input type="radio" name="p-filter" class="filter" id="seeOther"><label class="filterLabel" for="seeOther">{'Other'|translate}<span class="filter-badge">X</span></label>
 </div>
 
 <div class="nbPluginsSearch"></div>
@@ -17,7 +17,7 @@
 <div class="pluginFilter"> 
   <span class="icon-search search-icon"></span>
   <span class="icon-cancel search-cancel"></span>
-  <input class='search-input' type="text" placeholder="{'Search'|@translate}">
+  <input class='search-input' type="text" placeholder="{'Search'|translate}">
 </div>
 
 <div class="AlbumViewSelector">
@@ -46,25 +46,25 @@
 
     <div class="AddPluginSuccess pluginNotif">
       <label class="icon-ok">
-        <span>{'Plugin activated'|@translate}</span>
+        <span>{'Plugin activated'|translate}</span>
       </label>
     </div>
 
     <div class="DeactivatePluginSuccess pluginNotif">
       <label class="icon-ok">
-        <span>{'Plugin deactivated'|@translate}</span>
+        <span>{'Plugin deactivated'|translate}</span>
       </label>
     </div>
 
     <div class="RestorePluginSuccess pluginNotif">
       <label class="icon-ok">
-        <span>{'Plugin deactivated'|@translate}</span>
+        <span>{'Plugin deactivated'|translate}</span>
       </label>
     </div>
 
     <div class="PluginActionError pluginNotif">
       <label class="icon-cancel">
-        <span>{'Plugin deactivated'|@translate}</span>
+        <span>{'Plugin deactivated'|translate}</span>
       </label>
     </div>
 
@@ -84,7 +84,7 @@
       <div class="pluginActionsSmallIcons">
         {if $plugin.STATE == 'active'}
           {if $plugin.SETTINGS_URL != ''}
-            <div class="tiptip" title="{'Settings'|@translate}"> 
+            <div class="tiptip" title="{'Settings'|translate}"> 
               <a href="{$plugin.SETTINGS_URL}"><span class="icon-cog"></span></a>
             </div>
           {else}
@@ -94,33 +94,33 @@
           {/if}
         {elseif $plugin.STATE == 'inactive'}
           {if $plugin.SETTINGS_URL != ''}
-              <div class="tiptip" title="{'Settings'|@translate}"> 
+              <div class="tiptip" title="{'Settings'|translate}"> 
                   <a href="{$plugin.SETTINGS_URL}"><span class="icon-cog"></span></a>
               </div>
           {else}
-              <div class="tiptip" title="{'N/A'|@translate}"> 
+              <div class="tiptip" title="{'N/A'|translate}"> 
                   <a><i class="icon-cog"></i></a>
               </div>
           {/if}
         {elseif $plugin.STATE == 'missing'}
-          <div class="tiptip" title="{'Uninstall'|@translate}">
-            <a class="uninstall-plugin-button">{'Uninstall'|@translate}</a>
+          <div class="tiptip" title="{'Uninstall'|translate}">
+            <a class="uninstall-plugin-button">{'Uninstall'|translate}</a>
           </div>
         {elseif $plugin.STATE == 'merged' and $CONF_ENABLE_EXTENSIONS_INSTALL}
-          <div class="tiptip" title="{'Delete'|@translate}">
-            <a class="" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|@translate}</a>
+          <div class="tiptip" title="{'Delete'|translate}">
+            <a class="" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|translate}</a>
           </div>
         {/if}                     
       </div>
       
       <div class="PluginOptionsBlock dropdown">
-        <div class="dropdown-option-content"> {if !empty($author)}{'By %s'|@translate:$author} | {/if}{'Version'|@translate} {$version}</div>
+        <div class="dropdown-option-content"> {if !empty($author)}{'By %s'|translate:$author} | {/if}{'Version'|translate} {$version}</div>
         <div class="pluginDescCompact">
           {$plugin.DESC}
         </div>
-          <a class="dropdown-option icon-back-in-time plugin-restore separator-top tiptip" title="{'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|@translate}">{'Restore'|@translate}</a>
+          <a class="dropdown-option icon-back-in-time plugin-restore separator-top tiptip" title="{'While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|translate}">{'Restore'|translate}</a>
   {if $CONF_ENABLE_EXTENSIONS_INSTALL}
-          <a class="dropdown-option icon-trash delete-plugin-button separator-top">{'Delete'|@translate}</a>
+          <a class="dropdown-option icon-trash delete-plugin-button separator-top">{'Delete'|translate}</a>
   {/if}
       </div>
       <div class="pluginName" data-title="{$plugin.NAME}">
@@ -132,20 +132,20 @@
       <div class="pluginActions">
         {if $plugin.STATE == 'active'}
           {if $plugin.SETTINGS_URL != ''}
-            <a href="{$plugin.SETTINGS_URL}" class="pluginActionLevel1 icon-cog">{'Settings'|@translate}</a>
+            <a href="{$plugin.SETTINGS_URL}" class="pluginActionLevel1 icon-cog">{'Settings'|translate}</a>
           {else}
-            <a class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Settings'|@translate}</a>
+            <a class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Settings'|translate}</a>
           {/if}
         {elseif $plugin.STATE == 'inactive'}
           {if $plugin.SETTINGS_URL != ''}
-            <a href="{$plugin.SETTINGS_URL}" class="pluginUnavailableAction icon-cog">{'Settings'|@translate}</a>
+            <a href="{$plugin.SETTINGS_URL}" class="pluginUnavailableAction icon-cog">{'Settings'|translate}</a>
           {else}
-            <a class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Settings'|@translate}</a>
+            <a class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Settings'|translate}</a>
           {/if}
         {elseif $plugin.STATE == 'missing'}
-          <a class="pluginActionLevel3 uninstall-plugin-button">{'Uninstall'|@translate}</a>
+          <a class="pluginActionLevel3 uninstall-plugin-button">{'Uninstall'|translate}</a>
         {elseif $plugin.STATE == 'merged' and $CONF_ENABLE_EXTENSIONS_INSTALL}
-          <a class="pluginActionLevel3" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|@translate}</a>
+          <a class="pluginActionLevel3" href="{$plugin.U_ACTION}&amp;action=delete">{'Delete'|translate}</a>
         {/if}                     
       </div>
     </div>

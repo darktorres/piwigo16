@@ -71,7 +71,7 @@
           <label for="remember_me">
             <input tabindex="3" type="checkbox" name="remember_me" id="remember_me" value="1">
             <span class="gallery-icon-checkmark"></span>
-            {'Auto login'|@translate}</label>
+            {'Auto login'|translate}</label>
           </div>
         </div>
 {/if}

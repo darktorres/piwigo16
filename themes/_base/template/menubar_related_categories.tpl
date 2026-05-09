@@ -1,5 +1,5 @@
 <dt>
-	{'Related albums'|@translate}
+	{'Related albums'|translate}
 </dt>
 <dd>
 {assign var='ref_level' value=0}

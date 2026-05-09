@@ -18,53 +18,53 @@
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="name ASC" name="order" checked>
-          {'Album name, A &rarr; Z'|@translate}
+          {'Album name, A &rarr; Z'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="name DESC" name="order">
-          {'Album name, Z &rarr; A'|@translate}
+          {'Album name, Z &rarr; A'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="natural_order ASC" name="order">
-          {'Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|@translate}
+          {'Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100'|translate}
         </label>
         
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="natural_order DESC" name="order">
-          {'Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|@translate}
+          {'Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1'|translate}
         </label>
         
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_creation DESC" name="order">
-          {'Date created, new &rarr; old'|@translate}
+          {'Date created, new &rarr; old'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_creation ASC" name="order">
-          {'Date created, old &rarr; new'|@translate}
+          {'Date created, old &rarr; new'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_available DESC" name="order">
-          {'Date posted, new &rarr; old'|@translate}
+          {'Date posted, new &rarr; old'|translate}
         </label>
 
         <label class="font-checkbox">
           <span class="icon-dot-circled"> </span>
           <input type="radio" value="date_available ASC" name="order">
-          {'Date posted, old &rarr; new'|@translate}
+          {'Date posted, old &rarr; new'|translate}
         </label>
       </div>
-      <input type="submit" name="simpleAutoOrder" value="{'Apply to direct sub-albums'|@translate}"/>
-      <input type="submit" name="recursiveAutoOrder" value="{'Apply to the whole hierarchy'|@translate}"/>
+      <input type="submit" name="simpleAutoOrder" value="{'Apply to direct sub-albums'|translate}"/>
+      <input type="submit" name="recursiveAutoOrder" value="{'Apply to the whole hierarchy'|translate}"/>
     </form>
   </div>
 </div>
@@ -72,25 +72,25 @@
 <div class="cat-move-header"> 
   <div class="add-album-button">
     <label class="head-button-2 icon-add-album">
-      <p>{'Add Album'|@translate}</p>
+      <p>{'Add Album'|translate}</p>
     </label>
   </div>
   <div class="order-root-button">
     <label class="order-root head-button-2 icon-sort-name-up">
-      <p>{'Automatic sort order'|@translate}</p>
+      <p>{'Automatic sort order'|translate}</p>
     </label>
   </div>
-  {* <div class="cat-move-info icon-help-circled"> {'Drag and drop to reorder albums'|@translate}</div> *}
+  {* <div class="cat-move-info icon-help-circled"> {'Drag and drop to reorder albums'|translate}</div> *}
   <div class="cat-move-info search-album">
     <div class="search-album-cont">
-      {* <div class="search-album-label">{'Search albums'|@translate}</div> *}
+      {* <div class="search-album-label">{'Search albums'|translate}</div> *}
       <span class="search-album-num-result"></span>
       <div class="search-album-input-container">
         <span class="icon-search search-icon"></span>
         <span class="icon-cancel search-cancel"></span>
-        <input id="cat_search_input" class='search-input' type="text" placeholder="{"Search"|@translate}">
+        <input id="cat_search_input" class='search-input' type="text" placeholder="{"Search"|translate}">
       </div>
-      <span class="search-album-help icon-help-circled" title="{'Enter a term to search for album'|@translate}"></span>
+      <span class="search-album-help icon-help-circled" title="{'Enter a term to search for album'|translate}"></span>
     </div>
   </div>
 </div>
@@ -107,13 +107,13 @@
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{'Album name'|@translate}
+      <label class="user-property-label AddAlbumLabelUsername">{'Album name'|translate}
         <input class="user-property-input" />
       </label>
     </div>
 
     <div class="AddAlbumInputContainer">
-      <label class="user-property-label AddAlbumLabelUsername">{'Position'|@translate}
+      <label class="user-property-label AddAlbumLabelUsername">{'Position'|translate}
 
       <div class="AddAlbumPositionSelect">
         <div class="AddAlbumRadioInput">
@@ -135,11 +135,11 @@
 
     <div class="AddAlbumFormValidation">
       <div class="AddAlbumSubmit">
-        <span>{'Add'|@translate}</span>
+        <span>{'Add'|translate}</span>
       </div>
 
       <div class="AddAlbumCancel">
-        <span>{'Cancel'|@translate}</span>
+        <span>{'Cancel'|translate}</span>
       </div>
     </div>
   </div>
@@ -157,7 +157,7 @@
     </div>
 
     <div class="RenameAlbumInputContainer">
-      <label class="user-property-label RenameAlbumLabelUsername">{'Rename album'|@translate}
+      <label class="user-property-label RenameAlbumLabelUsername">{'Rename album'|translate}
         <input class="user-property-input" />
       </label>
     </div>
@@ -167,11 +167,11 @@
 
     <div class="RenameAlbumFormValidation">
       <div class="RenameAlbumSubmit">
-        <span>{'Yes, rename'|@translate}</span>
+        <span>{'Yes, rename'|translate}</span>
       </div>
 
       <div class="RenameAlbumCancel">
-        <span>{'Cancel'|@translate}</span>
+        <span>{'Cancel'|translate}</span>
       </div>
     </div>
   </div>

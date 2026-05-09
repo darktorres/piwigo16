@@ -7,23 +7,23 @@
 	<div class="titrePage">
 		<ul class="categoryActions">
 			{combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
-			<li><a href="{$U_HELP}" data-popuphelp title="{'Help'|@translate}" class="pwg-state-default pwg-button">
-				<span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{'Help'|@translate}</span>
+			<li><a href="{$U_HELP}" data-popuphelp title="{'Help'|translate}" class="pwg-state-default pwg-button">
+				<span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{'Help'|translate}</span>
 			</a></li>
 		</ul>
-		<h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{'Search'|@translate}</h2>
+		<h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'Search'|translate}</h2>
 	</div>
 
 {include file='infos_errors.tpl'}
 
 <form class="filter" method="post" name="search" action="{$F_SEARCH_ACTION}">
 <fieldset>
-  <legend>{'Search for words'|@translate}</legend>
+  <legend>{'Search for words'|translate}</legend>
   <p>
     <input type="text" name="search_allwords" autofocus>
     <br>
-    <label><input type="radio" name="mode" value="AND" checked="checked"> {'Search for all terms'|@translate}</label>
-    <label><input type="radio" name="mode" value="OR"> {'Search for any term'|@translate}</label>
+    <label><input type="radio" name="mode" value="AND" checked="checked"> {'Search for all terms'|translate}</label>
+    <label><input type="radio" name="mode" value="OR"> {'Search for any term'|translate}</label>
   </p>
 
   <p>
@@ -40,7 +40,7 @@
 
 {if count($AUTHORS)>=1}
 <fieldset>
-  <legend>{'Search for Author'|@translate}</legend>
+  <legend>{'Search for Author'|translate}</legend>
   <p>
     <select id="authors" placeholder="{'Type in a search term'|translate}" name="authors[]" multiple>
 {foreach from=$AUTHORS item=author}
@@ -53,32 +53,32 @@
 
 {if isset($TAGS)}
 <fieldset>
-  <legend>{'Search tags'|@translate}</legend>
+  <legend>{'Search tags'|translate}</legend>
   <p>
   <select id="tags" placeholder="{'Type in a search term'|translate}" name="tags[]" multiple>
 {foreach from=$TAGS item=tag}
     <option value="{$tag.id}">{$tag.name} ({$tag.counter|translate_dec:'%d photo':'%d photos'})</option>
 {/foreach}
   </select>
-  <label><span><input type="radio" name="tag_mode" value="AND" checked="checked"> {'All tags'|@translate}</span></label>
-  <label><span><input type="radio" name="tag_mode" value="OR"> {'Any tag'|@translate}</span></label>
+  <label><span><input type="radio" name="tag_mode" value="AND" checked="checked"> {'All tags'|translate}</span></label>
+  <label><span><input type="radio" name="tag_mode" value="OR"> {'Any tag'|translate}</span></label>
   </p>
 </fieldset>
 {/if}
 
 <fieldset>
-  <legend>{'Search by date'|@translate}</legend>
+  <legend>{'Search by date'|translate}</legend>
   <ul>
-    <li><label>{'Kind of date'|@translate}</label></li>
+    <li><label>{'Kind of date'|translate}</label></li>
     <li><label>
-      <input type="radio" name="date_type" value="date_creation" checked="checked"> {'Creation date'|@translate}
+      <input type="radio" name="date_type" value="date_creation" checked="checked"> {'Creation date'|translate}
     </label></li>
     <li><label>
-      <input type="radio" name="date_type" value="date_available"> {'Post date'|@translate}
+      <input type="radio" name="date_type" value="date_available"> {'Post date'|translate}
     </label></li>
   </ul>
   <ul>
-    <li><label>{'Date'|@translate}</label></li>
+    <li><label>{'Date'|translate}</label></li>
     <li>
       <select id="start_day" name="start_day">
           <option value="0">--</option>
@@ -93,11 +93,11 @@
       <input id="start_linked_date" name="start_linked_date" type="hidden" size="10" disabled="disabled">
     </li>
     <li>
-      <a class="date_today" href="#" onClick="document.search.start_day.value={$smarty.now|date_format:"%d"};document.search.start_month.value={$smarty.now|date_format:"%m"};document.search.start_year.value={$smarty.now|date_format:"%Y"};return false;">{'today'|@translate}</a>
+      <a class="date_today" href="#" onClick="document.search.start_day.value={$smarty.now|date_format:"%d"};document.search.start_month.value={$smarty.now|date_format:"%m"};document.search.start_year.value={$smarty.now|date_format:"%Y"};return false;">{'today'|translate}</a>
     </li>
   </ul>
   <ul>
-    <li><label>{'End-Date'|@translate}</label></li>
+    <li><label>{'End-Date'|translate}</label></li>
     <li>
       <select id="end_day" name="end_day">
           <option value="0">--</option>
@@ -112,23 +112,23 @@
       <input id="end_linked_date" name="end_linked_date" type="hidden" size="10" disabled="disabled">
     </li>
     <li>
-      <a class="date_today" href="#" onClick="document.search.end_day.value={$smarty.now|date_format:"%d"};document.search.end_month.value={$smarty.now|date_format:"%m"};document.search.end_year.value={$smarty.now|date_format:"%Y"};return false;">{'today'|@translate}</a>
+      <a class="date_today" href="#" onClick="document.search.end_day.value={$smarty.now|date_format:"%d"};document.search.end_month.value={$smarty.now|date_format:"%m"};document.search.end_year.value={$smarty.now|date_format:"%Y"};return false;">{'today'|translate}</a>
     </li>
   </ul>
 </fieldset>
 
 <fieldset>
-  <legend>{'Search in albums'|@translate}</legend>
+  <legend>{'Search in albums'|translate}</legend>
   <p>
     <select id="categories" name="cat[]" multiple>
       {html_options options=$category_options selected=$category_options_selected}
     </select>
-    <label><input type="checkbox" name="subcats-included" value="1" checked="checked"> {'Search in sub-albums'|@translate}</label>
+    <label><input type="checkbox" name="subcats-included" value="1" checked="checked"> {'Search in sub-albums'|translate}</label>
   </p>
 </fieldset>
 <p>
-  <input type="submit" name="submit" value="{'Submit'|@translate}">
-  <input type="reset" value="{'Reset'|@translate}">
+  <input type="submit" name="submit" value="{'Submit'|translate}">
+  <input type="reset" value="{'Reset'|translate}">
 </p>
 </form>
 

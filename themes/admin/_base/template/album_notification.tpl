@@ -7,10 +7,10 @@
 <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 
 <fieldset id="emailCatInfo">
-  <legend><span class="icon-mail-1 icon-green"></span>{'Send mail to users'|@translate}</legend>
+  <legend><span class="icon-mail-1 icon-green"></span>{'Send mail to users'|translate}</legend>
 
   <p>
-    <strong>{'Recipients'|@translate}</strong>
+    <strong>{'Recipients'|translate}</strong>
     <label class="font-checkbox">
       <span class="icon-dot-circled"></span>
       <input type="radio" name="who" value="group" checked="checked">
@@ -30,10 +30,10 @@
       {html_options options=$group_mail_options}
     </select>
 {elseif isset($no_group_in_gallery) and $no_group_in_gallery}
-    {'There is no group in this gallery.'|@translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {'There is no group in this gallery.'|translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|translate}</a>
 {else}
-    {'No group is permitted to see this private album'|@translate}.
-    <a href="{$permission_url}" class="externalLink">{'Permission management'|@translate}</a>
+    {'No group is permitted to see this private album'|translate}.
+    <a href="{$permission_url}" class="externalLink">{'Permission management'|translate}</a>
 {/if}
     </p>
 
@@ -43,13 +43,13 @@
       {html_options options=$user_options}
     </select>
 {else}
-    {'No user is permitted to see this private album'|@translate}.
-    <a href="{$permission_url}" class="externalLink">{'Permission management'|@translate}</a>
+    {'No user is permitted to see this private album'|translate}.
+    <a href="{$permission_url}" class="externalLink">{'Permission management'|translate}</a>
 {/if}
     </p>
 
   <p>
-    <strong>{'Complementary mail content'|@translate}</strong>
+    <strong>{'Complementary mail content'|translate}</strong>
     <br>
 <textarea cols="50" rows="5" name="mail_content" id="mail_content" class="description">{if isset($MAIL_CONTENT)}{$MAIL_CONTENT}{/if}</textarea>
   </p>
@@ -75,7 +75,7 @@
 {/if}
     
       <div class="savebar-footer-block">
-        <button class="buttonLike" type="submit" name="submitEmail"><i class="icon-mail"></i> {'Send'|@translate}</button>
+        <button class="buttonLike" type="submit" name="submitEmail"><i class="icon-mail"></i> {'Send'|translate}</button>
       </div>
     </div>
   </div>

@@ -7,24 +7,24 @@
 
 <form action="{$F_ACTION}" method="GET" class="filter">
   <fieldset>
-    <legend><span class="icon-filter icon-green"></span>{'Filter'|@translate}</legend>
+    <legend><span class="icon-filter icon-green"></span>{'Filter'|translate}</legend>
 
     <label>
-      {'Sort by'|@translate}
+      {'Sort by'|translate}
       <select name="order_by">
         {html_options options=$order_by_options selected=$order_by_options_selected}
       </select>
     </label>
 
     <label>
-      {'Users'|@translate}
+      {'Users'|translate}
       <select name="users">
         {html_options options=$user_options selected=$user_options_selected}
       </select>
     </label>
 
     <label>
-      {'Number of items'|@translate}
+      {'Number of items'|translate}
       <input type="text" name="display" size="2" value="{$DISPLAY}">
     </label>
 
@@ -54,12 +54,12 @@
 
 <table class="rating-table">
 <tr class="throw">
-  <td>{'File'|@translate}</td>
-  <td>{'Number of rates'|@translate}</td>
-	<td>{'Rating score'|@translate}</td>
-  <td>{'Average rate'|@translate}</td>
-  <td>{'Sum of rates'|@translate}</td>
-  <td>{'Rate'|@translate}/{'Username'|@translate}/{'Rate date'|@translate}</td>
+  <td>{'File'|translate}</td>
+  <td>{'Number of rates'|translate}</td>
+	<td>{'Rating score'|translate}</td>
+  <td>{'Average rate'|translate}</td>
+  <td>{'Sum of rates'|translate}</td>
+  <td>{'Rate'|translate}/{'Username'|translate}/{'Rate date'|translate}</td>
   <td></td>
 </tr>
 {foreach from=$images item=image name=image}

@@ -9,18 +9,18 @@
   <div id="addAlbumForm">
     <form>
       <div class="popinField addAlbumFormParent">
-        <span class="popinFieldLabel">{'Parent album'|@translate}</span>
+        <span class="popinFieldLabel">{'Parent album'|translate}</span>
         <select name="category_parent"></select>
       </div>
 
       <div class="popinField">
-        <span class="popinFieldLabel">{'Album name'|@translate}</span>
+        <span class="popinFieldLabel">{'Album name'|translate}</span>
         <input name="category_name" type="text" maxlength="255">
         <span id="categoryNameError">{'The name of an album must not be empty'|translate}</span>
       </div>
 
       <div class="popinButtons">
-        <input type="submit" value="{'Create'|@translate}" class="albumCreationButton">
+        <input type="submit" value="{'Create'|translate}" class="albumCreationButton">
         <span id="albumCreationLoading"><span class="icon-spin6 animate-spin"></span></span>
       </div>
     </form>

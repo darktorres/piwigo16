@@ -6,4 +6,4 @@
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 </form>
 
-<p>{'Only private albums are listed'|@translate}</p>
+<p>{'Only private albums are listed'|translate}</p>

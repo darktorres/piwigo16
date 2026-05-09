@@ -2,13 +2,13 @@
 
 {combine_script id='batchManagerFilter' load='footer' path='themes/admin/_base/js/batchManagerFilter.js'}
 <fieldset>
-<legend><span class='icon-filter icon-green'></span>{'Filter'|@translate}</legend>
+<legend><span class='icon-filter icon-green'></span>{'Filter'|translate}</legend>
 <div class="filterBlock">
   <ul id="filterList">
     <li id="filter_prefilter" {if !isset($filter.prefilter)}hidden{/if}>
       <input type="checkbox" name="filter_prefilter_use" class="useFilterCheckbox" {if isset($filter.prefilter)}checked="checked"{/if}>
-      <p>{'Predefined filter'|@translate}</p>
-      <a href="#" class="removeFilter" title="{'remove this filter'|@translate}"><span>[x]</span></a>
+      <p>{'Predefined filter'|translate}</p>
+      <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       <select name="filter_prefilter">
         {foreach from=$prefilters item=prefilter}
           {assign 'optionClass' ''}
@@ -55,7 +55,7 @@
     {* categories *}
     <li id="filter_category" {if !isset($filter.category)}hidden{/if}>
       <input type="checkbox" name="filter_category_use" class="useFilterCheckbox" {if isset($filter.category)}checked="checked"{/if}>
-      <p>{'Album'|@translate}</p>
+      <p>{'Album'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       {* <select data-selectize="categories" data-value="{$filter_category_selected|@json_encode|escape:html}"
         data-default="first" name="filter_category"></select> *}
@@ -65,7 +65,7 @@
             <span class="icon-sitemap" id="selectedAlbumNameFilter">{$filter_category_selected_name}</span>
             <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
           </div>
-          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_category_recursive" {if isset($filter.category_recursive)}checked="checked"{/if}> {'include child albums'|@translate}</label>
+          <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_category_recursive" {if isset($filter.category_recursive)}checked="checked"{/if}> {'include child albums'|translate}</label>
         </div>
         <p class="head-button-1" id="selectAlbumFilter" {if $filter_category_selected}hidden{/if}>
           {"Select an album"|translate}
@@ -74,23 +74,23 @@
 
     <li id="filter_tags" {if !isset($filter.tags)}hidden{/if}>
       <input type="checkbox" name="filter_tags_use" class="useFilterCheckbox" {if isset($filter.tags)}checked="checked"{/if}>
-      <p>{'Tags'|@translate}</p>
+      <p>{'Tags'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       <select data-selectize="tags" data-value="{$filter_tags|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
         name="filter_tags[]" multiple class="u-w-600"></select>
-      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="AND" {if !isset($filter.tag_mode) or $filter.tag_mode eq 'AND'}checked="checked"{/if}> {'All tags'|@translate}</span></label>
-      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="OR" {if isset($filter.tag_mode) and $filter.tag_mode eq 'OR'}checked="checked"{/if}> {'Any tag'|@translate}</span></label>
+      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="AND" {if !isset($filter.tag_mode) or $filter.tag_mode eq 'AND'}checked="checked"{/if}> {'All tags'|translate}</span></label>
+      <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="OR" {if isset($filter.tag_mode) and $filter.tag_mode eq 'OR'}checked="checked"{/if}> {'Any tag'|translate}</span></label>
     </li>
 
     <li id="filter_level" {if !isset($filter.level)}hidden{/if}>
       <input type="checkbox" name="filter_level_use" class="useFilterCheckbox" {if isset($filter.level)}checked="checked"{/if}>
-      <p>{'Privacy level'|@translate}</p>
+      <p>{'Privacy level'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       <select name="filter_level" size="1">
         {html_options options=$filter_level_options selected=$filter_level_options_selected}
       </select>
-      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_level_include_lower" {if isset($filter.level_include_lower)}checked="checked"{/if}> {'include photos with lower privacy level'|@translate}</label>
+      <label class="font-checkbox"><span class="icon-check"></span><input type="checkbox" name="filter_level_include_lower" {if isset($filter.level_include_lower)}checked="checked"{/if}> {'include photos with lower privacy level'|translate}</label>
     </li>
 
     <li id="filter_dimension" {if !isset($filter.dimension)}hidden{/if}>
@@ -126,7 +126,7 @@
 
         <div data-slider="ratios" class="dimensionSlidersBlocks">
             <div>
-              <span>{'Ratio'|translate} ({'Width'|@translate}/{'Height'|@translate})</span>
+              <span>{'Ratio'|translate} ({'Width'|translate}/{'Height'|translate})</span>
               <span class="slider-info">{'between %.2f and %.2f'|translate:$dimensions.selected.min_ratio:$dimensions.selected.max_ratio}</span>
             </div>
             <div class="dimensionSlidersRatioButtons">
@@ -151,16 +151,16 @@
 
     <li id="filter_search"{if !isset($filter.search)} hidden{/if}>
       <input type="checkbox" name="filter_search_use" class="useFilterCheckbox"{if isset($filter.search)} checked="checked"{/if}>
-      <p>{'Search'|@translate}</p>
+      <p>{'Search'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
       <input name="q" size=40 value="{if isset($filter.search)} {$filter.search.q|stripslashes|htmlspecialchars}{/if}">
-      <p title="{'Help'|@translate}" class="help-popin-search">
+      <p title="{'Help'|translate}" class="help-popin-search">
         <i class="icon-help-circled"></i>
         <span>{'Search tips'|translate}</span>
       </p>
       {combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 {if (isset($no_search_results))}
-<div>{'No results for'|@translate} :
+<div>{'No results for'|translate} :
 <em><strong>
 {foreach $no_search_results as $res}
 {if !$res@first} &mdash; {/if}
@@ -188,25 +188,25 @@
     </li>
   </ul>
 
-  <div class='noFilter'>{'No filter, add one'|@translate}</div>
+  <div class='noFilter'>{'No filter, add one'|translate}</div>
 
   <div class="filterActions">
     <div id="addFilter">
-      <div class="addFilter-button icon-plus">{'Add a filter'|@translate}</div>
+      <div class="addFilter-button icon-plus">{'Add a filter'|translate}</div>
       <div class="addFilter-dropdown">
-        <a data-value="filter_prefilter" {if isset($filter.prefilter)}class="disabled"{/if}>{'Predefined filter'|@translate}</a>
-        <a data-value="filter_category" {if isset($filter.category)}class="disabled"{/if}>{'Album'|@translate}</a>
-        <a data-value="filter_tags" {if isset($filter.tags)}class="disabled"{/if}>{'Tags'|@translate}</a>
-        <a data-value="filter_level" {if isset($filter.level)}class="disabled"{/if}>{'Privacy level'|@translate}</a>
-        <a data-value="filter_dimension" {if isset($filter.dimension)}class="disabled"{/if}>{'Dimensions'|@translate}</a>
-        <a data-value="filter_filesize" {if isset($filter.filesize)}class="disabled"{/if}>{'Filesize'|@translate}</a>
-        <a data-value="filter_search"{if isset($filter.search)} class="disabled"{/if}>{'Search'|@translate}</a>
+        <a data-value="filter_prefilter" {if isset($filter.prefilter)}class="disabled"{/if}>{'Predefined filter'|translate}</a>
+        <a data-value="filter_category" {if isset($filter.category)}class="disabled"{/if}>{'Album'|translate}</a>
+        <a data-value="filter_tags" {if isset($filter.tags)}class="disabled"{/if}>{'Tags'|translate}</a>
+        <a data-value="filter_level" {if isset($filter.level)}class="disabled"{/if}>{'Privacy level'|translate}</a>
+        <a data-value="filter_dimension" {if isset($filter.dimension)}class="disabled"{/if}>{'Dimensions'|translate}</a>
+        <a data-value="filter_filesize" {if isset($filter.filesize)}class="disabled"{/if}>{'Filesize'|translate}</a>
+        <a data-value="filter_search"{if isset($filter.search)} class="disabled"{/if}>{'Search'|translate}</a>
       </div>
-      <a id="removeFilters" class="icon-cancel" hidden>{'Remove all filters'|@translate}</a>
+      <a id="removeFilters" class="icon-cancel" hidden>{'Remove all filters'|translate}</a>
     </div>
 
     <button id="applyFilter" name="submitFilter" type="submit">
-      <i class="icon-arrows-cw"></i> {'Refresh photo set'|@translate}
+      <i class="icon-arrows-cw"></i> {'Refresh photo set'|translate}
     </button>
 
     <div id="errorFilter" class="icon-red-error" hidden></div>

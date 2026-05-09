@@ -95,7 +95,7 @@
               {html_options options=$group_options selected=$main.email_admin_on_new_user_filter_group}
             </select>
 {else}
-    {'There is no group in this gallery.'|@translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|@translate}</a>
+    {'There is no group in this gallery.'|translate} <a href="{$ADMIN_URL}&amp;page=group_list" class="externalLink">{'Group management'|translate}</a>
 {/if}
             </span>
 
@@ -218,7 +218,7 @@
     </div>
 {/if}
     <div class="savebar-footer-block">
-      <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
+      <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|translate}</button>
     </div>
   </div>
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

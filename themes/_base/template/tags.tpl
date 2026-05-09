@@ -4,17 +4,17 @@
 <div class="titrePage">
 	<ul class="categoryActions">
 {if $display_mode == 'letters'}
-		<li><a href="{$U_CLOUD}" title="{'show tag cloud'|@translate}" class="pwg-state-default pwg-button">
-			<span class="pwg-icon pwg-icon-cloud"></span><span class="pwg-button-text">{'cloud'|@translate}</span>
+		<li><a href="{$U_CLOUD}" title="{'show tag cloud'|translate}" class="pwg-state-default pwg-button">
+			<span class="pwg-icon pwg-icon-cloud"></span><span class="pwg-button-text">{'cloud'|translate}</span>
 		</a></li>
 {/if}
 {if $display_mode == 'cloud'}
-		<li><a href="{$U_LETTERS}" title="{'group by letters'|@translate}" class="pwg-state-default pwg-button" rel="nofollow">
-			<span class="pwg-icon pwg-icon-letters"></span><span class="pwg-button-text">{'letters'|@translate}</span>
+		<li><a href="{$U_LETTERS}" title="{'group by letters'|translate}" class="pwg-state-default pwg-button" rel="nofollow">
+			<span class="pwg-icon pwg-icon-letters"></span><span class="pwg-button-text">{'letters'|translate}</span>
 		</a></li>
 {/if}
 	</ul>
-	<h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{'Tags'|@translate}</h2>
+	<h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'Tags'|translate}</h2>
 </div>
 
 {include file='infos_errors.tpl'}

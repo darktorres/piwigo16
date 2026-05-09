@@ -4,9 +4,9 @@
 <form action="{$F_ACTION}" method="post" id="element_set_ranks">
 {if !empty($thumbnails)}
   <fieldset>
-    <legend><span class="icon-sort-alt-down icon-blue"></span>{'Manual order'|@translate}</legend>
+    <legend><span class="icon-sort-alt-down icon-blue"></span>{'Manual order'|translate}</legend>
     {if !empty($thumbnails)}
-    <p>{'Drag to re-order'|@translate}</p>
+    <p>{'Drag to re-order'|translate}</p>
     <ul class="thumbnails">
       {foreach from=$thumbnails item=thumbnail}
       <li class="rank-of-image">
@@ -20,12 +20,12 @@
 {/if}
 
   <fieldset>
-    <legend><span class="icon-sort-name-up icon-red"></span>{'Sort order'|@translate}</legend>
+    <legend><span class="icon-sort-name-up icon-red"></span>{'Sort order'|translate}</legend>
     <p class="field">
       <label class="font-checkbox">
         <span class="icon-dot-circled"></span>
         <input type="radio" name="image_order_choice" id="image_order_default" value="default"{if $image_order_choice=='default'} checked="checked"{/if}>
-        {'Use the default photo sort order'|@translate}
+        {'Use the default photo sort order'|translate}
       </label>
     </p>
     <p class="field">
@@ -39,7 +39,7 @@
       <label class="font-checkbox">
         <span class="icon-dot-circled"></span>
         <input type="radio" name="image_order_choice" id="image_order_user_define" value="user_define"{if $image_order_choice=='user_define'} checked="checked"{/if}>
-        {'automatic order'|@translate}
+        {'automatic order'|translate}
       </label>
       <div id="image_order_user_define_options">
       {foreach from=$image_order item=order}
@@ -61,7 +61,7 @@
             <span class="slider round"></span>
           </label>
         </div>
-        <label class="switch-label" for="apply_on_sub"><span>{'Apply to sub-albums'|@translate}</span></label>
+        <label class="switch-label" for="apply_on_sub"><span>{'Apply to sub-albums'|translate}</span></label>
       </div>
     </div>
     <div class="savebar-footer-end">
@@ -75,7 +75,7 @@
 {/if}
   
     <div class="savebar-footer-block">
-      <button id="applyAction" class="buttonLike" type="submit" name="submit"><i class="icon-floppy"></i>{'Save order'|@translate}</button>
+      <button id="applyAction" class="buttonLike" type="submit" name="submit"><i class="icon-floppy"></i>{'Save order'|translate}</button>
     </div>
   </div>
 </div>

@@ -158,7 +158,7 @@
       </div>
 {/if}
       <div class="savebar-footer-block">
-        <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
+        <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|translate}</button>
       </div>    
     </div>
     <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

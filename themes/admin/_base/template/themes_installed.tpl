@@ -17,9 +17,9 @@
   <fieldset>
     <legend>
     {if $theme.STATE == 'active'}
-      <span class="icon-purple icon-toggle-on"></span>{'Active Themes'|@translate}
+      <span class="icon-purple icon-toggle-on"></span>{'Active Themes'|translate}
     {else}
-      <span class="icon-yellow icon-toggle-off"></span>{'Inactive Themes'|@translate}
+      <span class="icon-yellow icon-toggle-off"></span>{'Inactive Themes'|translate}
     {/if}
     </legend>
     <div class="themeBoxes">
@@ -42,48 +42,48 @@
   <div class="themeBox{if isset($theme.IS_DEFAULT) and $theme.IS_DEFAULT} themeDefault{/if}">
     <div class="themeShot"><a href="{$theme.SCREENSHOT}" class="preview-box" title="{$theme.NAME}"><img src="{$theme.SCREENSHOT}" alt=""></a></div>
     <div class="themeName" title="{$theme.NAME}">
-      {$theme.NAME} {if isset($theme.IS_DEFAULT) and $theme.IS_DEFAULT}<i class="icon-star" title="{'default'|@translate}"></i>{/if} {if $theme.IS_MOBILE}<i class="icon-mobile" title="{'Mobile'|translate}"></i>{/if}
+      {$theme.NAME} {if isset($theme.IS_DEFAULT) and $theme.IS_DEFAULT}<i class="icon-star" title="{'default'|translate}"></i>{/if} {if $theme.IS_MOBILE}<i class="icon-mobile" title="{'Mobile'|translate}"></i>{/if}
       {if $isWebmaster == 1} <a class="icon-ellipsis-v showInfo"></a>{/if}
     </div>
     <div class="showInfo-dropdown dropdown">
       <div class="showInfo-dropdown-header">
         {if !empty($author)}
-          {'By %s'|@translate:$author} | 
+          {'By %s'|translate:$author} | 
         {/if}
-        {'Version'|@translate} {$version}
+        {'Version'|translate} {$version}
       </div>
       <div class="showInfo-dropdown-content">
         {$theme.DESC|@escape:'html'}
       </div>
       {if $theme.STATE != "active" and $CONF_ENABLE_EXTENSIONS_INSTALL}
         {if $theme.DELETABLE}
-            <a class="dropdown-option icon-trash delete-plugin-button delete-theme-button" href="{$delete_baseurl}{$theme.ID}">{'Delete'|@translate}</a>
+            <a class="dropdown-option icon-trash delete-plugin-button delete-theme-button" href="{$delete_baseurl}{$theme.ID}">{'Delete'|translate}</a>
         {else}
-            <span class="dropdown-option icon-trash delete-plugin-button"title="{$theme.DELETE_TOOLTIP}">{'Delete'|@translate}</span>
+            <span class="dropdown-option icon-trash delete-plugin-button"title="{$theme.DELETE_TOOLTIP}">{'Delete'|translate}</span>
         {/if}
       {/if}
       {if isset($theme.DEACTIVABLE) and $theme.DEACTIVABLE}
-        <a href="{$deactivate_baseurl}{$theme.ID}" class="showInfo-dropdown-action tiptip icon-cancel-circled" title="{'Forbid this theme to users'|@translate}">{'Deactivate'|@translate}</a>
+        <a href="{$deactivate_baseurl}{$theme.ID}" class="showInfo-dropdown-action tiptip icon-cancel-circled" title="{'Forbid this theme to users'|translate}">{'Deactivate'|translate}</a>
       {/if}
     </div>
 {if $isWebmaster == 1}
     <div class="themeActions">
 {if $theme.STATE == 'active'}
   {if $theme.ADMIN_URI}
-        <a href="{$theme.ADMIN_URI}" class="icon-cog">{'Configuration'|@translate}</a>
+        <a href="{$theme.ADMIN_URI}" class="icon-cog">{'Configuration'|translate}</a>
   {else}
-        <div class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Configuration'|@translate}</div>
+        <div class="pluginUnavailableAction icon-cog tiptip" title="{'N/A'|translate}">{'Configuration'|translate}</div>
   {/if}
   {if isset($theme.IS_DEFAULT) and not $theme.IS_DEFAULT}
-        <a href="{$set_default_baseurl}{$theme.ID}" class="tiptip icon-star" title="{'Set as default theme for unregistered and new users'|@translate}">{'Set as default'|@translate}</a>
+        <a href="{$set_default_baseurl}{$theme.ID}" class="tiptip icon-star" title="{'Set as default theme for unregistered and new users'|translate}">{'Set as default'|translate}</a>
   {else}
-        <span class="tiptip icon-star" title="{'This is already the default theme'|@translate}">{'Set as default'|@translate}</span>
+        <span class="tiptip icon-star" title="{'This is already the default theme'|translate}">{'Set as default'|translate}</span>
   {/if}
 {else}
   {if $theme.ACTIVABLE}
-      <a href="{$activate_baseurl}{$theme.ID}" title="{'Make this theme available to users'|@translate}" class="icon-plus tiptip">{'Activate'|@translate}</a>
+      <a href="{$activate_baseurl}{$theme.ID}" title="{'Make this theme available to users'|translate}" class="icon-plus tiptip">{'Activate'|translate}</a>
   {else}
-      <span title="{$theme.ACTIVABLE_TOOLTIP}" class="icon-plus tiptip">{'Activate'|@translate}</span>
+      <span title="{$theme.ACTIVABLE_TOOLTIP}" class="icon-plus tiptip">{'Activate'|translate}</span>
   {/if}
 {/if}
     </div> <!-- themeActions -->

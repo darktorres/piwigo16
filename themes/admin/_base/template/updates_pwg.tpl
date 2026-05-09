@@ -20,31 +20,31 @@
 
 {if $STEP == 0}
   {if $CHECK_VERSION}
-    <p>{'You are running the latest version of Piwigo.'|@translate}</p>
+    <p>{'You are running the latest version of Piwigo.'|translate}</p>
   {elseif $DEV_VERSION}
-    <p>{'You are running on development sources, no check possible.'|@translate}</p>
+    <p>{'You are running on development sources, no check possible.'|translate}</p>
   {else}
-    <p>{'Check for update failed for unknown reasons.'|@translate}</p>
+    <p>{'Check for update failed for unknown reasons.'|translate}</p>
   {/if}
 {/if}
 
 {if $STEP == 1}
 <fieldset>
   {if isset($CONTAINER_VERSION)}
-    <legend><span class="icon-ok icon-purple"></span>{'Two container updates are available'|@translate}</legend>
+    <legend><span class="icon-ok icon-purple"></span>{'Two container updates are available'|translate}</legend>
   {else}
-    <legend><span class="icon-ok icon-purple"></span>{'Two updates are available'|@translate}</legend>
+    <legend><span class="icon-ok icon-purple"></span>{'Two updates are available'|translate}</legend>
   {/if}
 <p class="release release-minor">
   <a href="{$MINOR_RELEASE_URL}" target="_blank" class="badge-release icon-green icon-tags">{$MINOR_VERSION}</a>
-  {'This is a minor update, with only bug corrections.'|@translate}
+  {'This is a minor update, with only bug corrections.'|translate}
 {if isset($MINOR_RELEASE_PHP_REQUIRED)}
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
 {else}
   {if isset($CONTAINER_VERSION)}
-    <a href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank" class="icon-arrows-cw goto-update-page">{'Follow the update guide'|@translate}</a>
+    <a href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank" class="icon-arrows-cw goto-update-page">{'Follow the update guide'|translate}</a>
   {else}
-    <a href="{$ADMIN_URL}&amp;page=updates&amp;step=2&amp;to={$MINOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MINOR_VERSION}</a>
+    <a href="{$ADMIN_URL}&amp;page=updates&amp;step=2&amp;to={$MINOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|translate:$MINOR_VERSION}</a>
   {/if}
 {/if}
 </p>
@@ -56,12 +56,12 @@
 {if isset($MAJOR_RELEASE_PHP_REQUIRED)}
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
 {else}
-  <a href="{$ADMIN_URL}&amp;page=updates&amp;step=3&amp;to={$MAJOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|@translate:$MAJOR_VERSION}</a>
+  <a href="{$ADMIN_URL}&amp;page=updates&amp;step=3&amp;to={$MAJOR_VERSION}" class="icon-arrows-cw goto-update-page">{'Update to Piwigo %s'|translate:$MAJOR_VERSION}</a>
 {/if}
 </p>
 <p class="update-recommendation">
   <span class="icon-info-circled-1"></span>
-  {'You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended).'|@translate:$MAJOR_VERSION:$MINOR_VERSION}
+  {'You can update to Piwigo %s directly, without upgrading to Piwigo %s (recommended).'|translate:$MAJOR_VERSION:$MINOR_VERSION}
 </p>
 </fieldset>
 {/if}
@@ -71,21 +71,21 @@
   <a href="{$MINOR_RELEASE_URL}" target="_blank" class="badge-release icon-green icon-tags">{$MINOR_VERSION}</a>
 </p>
 <p>
-  {'A new version of Piwigo is available.'|@translate}<br>
-  {'This is a minor update, with only bug corrections.'|@translate}
+  {'A new version of Piwigo is available.'|translate}<br>
+  {'This is a minor update, with only bug corrections.'|translate}
 </p>
 <form action="" method="post">
 <p>
   {if isset($CONTAINER_VERSION)}
-    <a class="icon-right goto-update-guide" href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank"> {'Follow the update guide'|@translate}</a>
+    <a class="icon-right goto-update-guide" href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank"> {'Follow the update guide'|translate}</a>
   {else}
-    <input type="submit" name="submit" value="{'Update to Piwigo %s'|@translate:$UPGRADE_TO}"{if isset($MINOR_RELEASE_PHP_REQUIRED)} disabled{/if}>
+    <input type="submit" name="submit" value="{'Update to Piwigo %s'|translate:$UPGRADE_TO}"{if isset($MINOR_RELEASE_PHP_REQUIRED)} disabled{/if}>
     {if isset($MINOR_RELEASE_PHP_REQUIRED)}
       <span class="errors icon-block">{'Requires PHP %s'|translate:$MINOR_RELEASE_PHP_REQUIRED}</span>
     {/if}
   {/if}
 </p>
-<p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="themes/admin/_base/images/ajax-loader-bar.gif"></p>
+<p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|translate}<br><img src="themes/admin/_base/images/ajax-loader-bar.gif"></p>
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>
 </form>
 {/if}
@@ -95,14 +95,14 @@
   <a href="{if isset($CONTAINER_VERSION)} {$MAJOR_DOCKER_RELEASE_URL} {else} {$MAJOR_RELEASE_URL} {/if}" target="_blank" class="badge-release icon-blue icon-tags">{$MAJOR_VERSION}</a>
 </p>
 <p>
-  {'A new version of Piwigo is available.'|@translate}<br>
-  {'This is a major update, with <a href="%s">new exciting features</a>.'|@translate:$MAJOR_RELEASE_URL} {'Some themes and plugins may be not available yet.'|@translate}
+  {'A new version of Piwigo is available.'|translate}<br>
+  {'This is a major update, with <a href="%s">new exciting features</a>.'|translate:$MAJOR_RELEASE_URL} {'Some themes and plugins may be not available yet.'|translate}
 </p>
 <form action="" method="post">
 
 {counter assign=i}
 <fieldset>
-  <legend><span class="icon-floppy icon-red"></span>{'Backup'|@translate}</legend>
+  <legend><span class="icon-floppy icon-red"></span>{'Backup'|translate}</legend>
   <p>
     {'Always have a backup of your database and files.'|translate}
     {'The best is to have them made automatically on a regular basis.'|translate}
@@ -112,29 +112,29 @@
 
 {counter assign=i}
 <fieldset>
-  <legend><span class="icon-cog icon-purple"></span>{'Update to Piwigo %s'|@translate:$UPGRADE_TO}</legend>
+  <legend><span class="icon-cog icon-purple"></span>{'Update to Piwigo %s'|translate:$UPGRADE_TO}</legend>
   {if !empty($missing.plugins)}
-  <p><i>{'Following plugins may not be compatible with the new version of Piwigo:'|@translate}</i></p>
+  <p><i>{'Following plugins may not be compatible with the new version of Piwigo:'|translate}</i></p>
   <p><ul>{foreach from=$missing.plugins item=plugin}<li><a href="{$plugin.uri}" class="externalLink">{$plugin.name}</a></li>{/foreach}</ul><br></p>
   {/if}
   {if !empty($missing.themes)}
-  <p><i>{'Following themes may not be compatible with the new version of Piwigo:'|@translate}</i></p>
+  <p><i>{'Following themes may not be compatible with the new version of Piwigo:'|translate}</i></p>
   <p><ul>{foreach from=$missing.themes item=theme}<li><a href="{$theme.uri}" class="externalLink">{$theme.name}</a></li>{/foreach}</ul><br></p>
   {/if}
   <p>
   {if !empty($missing.plugins) or !empty($missing.themes)}
-  <p><label><input type="checkbox" name="understand"> &nbsp;{'I decide to update anyway'|@translate}</label></p>
+  <p><label><input type="checkbox" name="understand"> &nbsp;{'I decide to update anyway'|translate}</label></p>
   {/if}
   {if isset($CONTAINER_VERSION)}
-    <p><a class="icon-right goto-update-guide {if !empty($missing.plugins) or !empty($missing.themes)} goto-update-guide-disabled{/if}" href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank"> {'Follow the update guide'|@translate}</a>
+    <p><a class="icon-right goto-update-guide {if !empty($missing.plugins) or !empty($missing.themes)} goto-update-guide-disabled{/if}" href="{$DOCKER_UPDATE_GUIDE_URL}" target="_blank"> {'Follow the update guide'|translate}</a>
   {else}
-    <p><input type="submit" name="submit" value="{'Update to Piwigo %s'|@translate:$UPGRADE_TO}" {if !empty($missing.plugins) or !empty($missing.themes) or isset($MAJOR_RELEASE_PHP_REQUIRED)}disabled="disabled"{/if}>
+    <p><input type="submit" name="submit" value="{'Update to Piwigo %s'|translate:$UPGRADE_TO}" {if !empty($missing.plugins) or !empty($missing.themes) or isset($MAJOR_RELEASE_PHP_REQUIRED)}disabled="disabled"{/if}>
   {/if}
 {if isset($MAJOR_RELEASE_PHP_REQUIRED)}
   <span class="errors icon-block">{'Requires PHP %s'|translate:$MAJOR_RELEASE_PHP_REQUIRED}</span>
 {/if}
   </p>
-  <p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|@translate}<br><img src="themes/admin/_base/images/ajax-loader-bar.gif"></p>
+  <p class="autoupdate_bar" hidden>&nbsp; {'Update in progress...'|translate}<br><img src="themes/admin/_base/images/ajax-loader-bar.gif"></p>
 </fieldset>
 
 <p><input type="hidden" name="upgrade_to" value="{$UPGRADE_TO}"></p>

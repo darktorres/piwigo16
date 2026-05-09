@@ -125,7 +125,7 @@
               <input type="checkbox" id="opt_album" {if "true" === $EXPAND}checked{/if}>
               <span class="slider round"></span>
             </label>
-            <p>{'Expand all albums'|@translate}</p>
+            <p>{'Expand all albums'|translate}</p>
           </div>
 
           {if $ACTIVATE_COMMENTS}
@@ -134,7 +134,7 @@
                 <input type="checkbox" id="opt_comment" {if "true" === $NB_COMMENTS}checked{/if}>
                 <span class="slider round"></span>
               </label>
-              <p>{'Show number of comments'|@translate}</p>
+              <p>{'Show number of comments'|translate}</p>
             </div>
           {/if}
 
@@ -143,7 +143,7 @@
               <input type="checkbox" id="opt_hits" {if "true" === $NB_HITS}checked{/if}>
               <span class="slider round"></span>
             </label>
-            <p>{'Show number of hits'|@translate}</p>
+            <p>{'Show number of hits'|translate}</p>
           </div>
         </div>
 

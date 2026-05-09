@@ -48,10 +48,10 @@
       <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
   {if $action eq 'lost'}
 
-      <p class="form-instructions">{'Please enter your username or email address.'|@translate} {'You will receive a link to create a new password via email.'|@translate}</p>
+      <p class="form-instructions">{'Please enter your username or email address.'|translate} {'You will receive a link to create a new password via email.'|translate}</p>
 
       <div class="column-flex">
-        <label for="username">{'Username or email'|@translate}</label>
+        <label for="username">{'Username or email'|translate}</label>
         <div class="row-flex input-container">
           <i class="gallery-icon-user-2"></i>
           <input type="text" id="username_or_email" name="username_or_email" size="100" maxlength="100"{if isset($username_or_email)} value="{$username_or_email}"{/if} autofocus data-required="true">
@@ -60,7 +60,7 @@
       </div>
 
       <div class="column-flex">
-        <input tabindex="4" type="submit" name="submit" value="{'Change my password'|@translate}" class="btn btn-main ">
+        <input tabindex="4" type="submit" name="submit" value="{'Change my password'|translate}" class="btn btn-main ">
     {if isset($errors['password_form_error'])}
         <p class="error-message error-message--form-level"><i class="gallery-icon-attention-circled"></i> {$errors['password_form_error']}</p>
     {/if}
@@ -69,7 +69,7 @@
  {elseif $action eq 'reset'}
     <p class="intro-paragraph">
     {if !isset($is_first_login)}
-      {'Hello <em>%s</em>, enter your new password below.'|@translate:$username}
+      {'Hello <em>%s</em>, enter your new password below.'|translate:$username}
     {else}
       {'Let\'s set your password below.'|translate}
     {/if}
@@ -106,13 +106,13 @@
     </div>
 
     <div class="column-flex">
-      <input tabindex="4" type="submit" name="submit" {if !isset($is_first_login)}value="{'Confirm my new password'|@translate}"{else}value="{'Set my password'|@translate}"{/if} class="btn btn-main ">
+      <input tabindex="4" type="submit" name="submit" {if !isset($is_first_login)}value="{'Confirm my new password'|translate}"{else}value="{'Set my password'|translate}"{/if} class="btn btn-main ">
     </div>
 
   {elseif $action eq 'lost_code'}
     <span class="success-message"><i class="gallery-icon-ok-circled"></i>{'If your account exists, a verification code has been sent to your email address.'|translate}</span>
     <div class="column-flex">
-      <label for="user_code">{'Verification code'|@translate}</label>
+      <label for="user_code">{'Verification code'|translate}</label>
       <div class="row-flex input-container">
         <i class="gallery-icon-user-2"></i>
         <input type="text" id="user_code" name="user_code" size="100" maxlength="100" autofocus>
@@ -121,7 +121,7 @@
     </div>
 
     <div class="column-flex">
-      <input tabindex="4" type="submit" name="submit" value="{'Verify'|@translate}" class="btn btn-main">
+      <input tabindex="4" type="submit" name="submit" value="{'Verify'|translate}" class="btn btn-main">
       {if isset($errors['password_form_error'])}
       <p class="error-message error-message--form-level"><i class="gallery-icon-attention-circled"></i> {$errors['password_form_error']}</p>
       {/if}

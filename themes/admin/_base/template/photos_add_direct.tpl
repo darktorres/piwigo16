@@ -30,7 +30,7 @@
       <li>{$warning}</li>
       {/foreach}
     </ul>
-    <div class="hideButton u-text-center"><a href="{$hide_warnings_link}">{'Hide'|@translate}</a></div>
+    <div class="hideButton u-text-center"><a href="{$hide_warnings_link}">{'Hide'|translate}</a></div>
   </div>
     {/if}
   {/if} {* $setup_errors *}
@@ -42,12 +42,12 @@
           <img src="https://sandbox.piwigo.com/uploads/4/y/1/4y1zzhnrnw//2023/01/24/20230124175152-015bc1e3.png">
         </div>
         <div class="promote-text">
-          <span>{"Piwigo is also on mobile."|@translate|escape:javascript}</span>
-          <span>{"Try now !"|@translate|escape:javascript}</span>
+          <span>{"Piwigo is also on mobile."|translate|escape:javascript}</span>
+          <span>{"Try now !"|translate|escape:javascript}</span>
         </div>
         <div class="right-side">
           <div>
-            <a href="{$PHPWG_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{"Discover"|@translate|escape:javascript}</span></a>
+            <a href="{$PHPWG_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{"Discover"|translate|escape:javascript}</span></a>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@
       <input type="checkbox" id="toggleFormatMode" {if $DISPLAY_FORMATS}checked{/if}>
       <span class="slider round"></span>
     </label>
-      <p>{'Upload Formats'|@translate}</p>
+      <p>{'Upload Formats'|translate}</p>
     </div>
   {/if}
 
@@ -80,16 +80,16 @@
 
 <p class="afterUploadActions" hidden>
   {if !$DISPLAY_FORMATS}
-    <a class="batchLink icon-pencil"></a><span class="buttonSeparator">{'or'|translate}</span><a href="{$ADMIN_URL}&amp;page=photos_add" class="secondary_button icon-plus-circled">{'Add another set of photos'|@translate}</a>
+    <a class="batchLink icon-pencil"></a><span class="buttonSeparator">{'or'|translate}</span><a href="{$ADMIN_URL}&amp;page=photos_add" class="secondary_button icon-plus-circled">{'Add another set of photos'|translate}</a>
   {else}
-    <a href="{$ADMIN_URL}&amp;page=photos_add&amp;formats" class="icon-plus-circled">{'Add another set of formats'|@translate}</a>
+    <a href="{$ADMIN_URL}&amp;page=photos_add&amp;formats" class="icon-plus-circled">{'Add another set of formats'|translate}</a>
   {/if}
 </p>
 
   <form id="uploadForm" class="{if $DISPLAY_FORMATS}format-mode{/if}" enctype="multipart/form-data" method="post" action="{$form_action}"{if $NB_ALBUMS == 0} hidden{/if}>
     {if not $DISPLAY_FORMATS}
     <fieldset class="selectAlbum">
-      <legend><span class="icon-folder-open icon-red"></span>{'Drop into album'|@translate}</legend>
+      <legend><span class="icon-folder-open icon-red"></span>{'Drop into album'|translate}</legend>
       <div class="selectedAlbum"{if !$can_upload} hidden{/if} id="selectedAlbum">
         <span class="icon-sitemap" id="selectedAlbumName">{if isset($ADD_TO_ALBUM)}{$ADD_TO_ALBUM}{elseif isset($selected_category_name)}{$selected_category_name}{/if}</span>
         <a class="icon-pencil" id="selectedAlbumEdit"></a>
@@ -100,8 +100,8 @@
     </fieldset>
     {elseif $HAVE_FORMATS_ORIGINAL}
     <fieldset class="originalPicture">
-      <legend><span class="icon-link-1 icon-red"></span>{'Picture to associate formats with'|@translate}</legend>
-      <a class='info-framed' href='{$FORMATS_ORIGINAL_INFO['u_edit']}' title='{'Edit photo'|@translate}'>
+      <legend><span class="icon-link-1 icon-red"></span>{'Picture to associate formats with'|translate}</legend>
+      <a class='info-framed' href='{$FORMATS_ORIGINAL_INFO['u_edit']}' title='{'Edit photo'|translate}'>
         <div class='info-framed-icon'>
           <img src='{$FORMATS_ORIGINAL_INFO['src']}'></i>
         </div>
@@ -114,10 +114,10 @@
     </fieldset>
     {/if}
 {*
-    <p class="showFieldset"><a id="showPermissions" href="#">{'Manage Permissions'|@translate}</a></p>
+    <p class="showFieldset"><a id="showPermissions" href="#">{'Manage Permissions'|translate}</a></p>
 
     <fieldset id="permissions" hidden>
-      <legend>{'Who can see these photos?'|@translate}</legend>
+      <legend>{'Who can see these photos?'|translate}</legend>
 
       <select name="level" size="1">
         {html_options options=$level_options selected=$level_options_selected}
@@ -128,10 +128,10 @@
 
       <legend>
         <div>
-          <span class="icon-file-image icon-yellow"></span>{'Select files'|@translate}
+          <span class="icon-file-image icon-yellow"></span>{'Select files'|translate}
           {if !$DISPLAY_FORMATS}
           <div id="uploadOptions" class="upload-options">
-            <span class="icon-equalizer rotate-element upload-options-icon"></span>{'Options'|@translate}
+            <span class="icon-equalizer rotate-element upload-options-icon"></span>{'Options'|translate}
           </div>
           {/if}
         </div>
@@ -142,7 +142,7 @@
           <span class="slider round"></span>
         </label>
         <div>
-          <p>{'If a photo in this album has the same filename, update the file without changing the photo\'s properties'|@translate}</p>
+          <p>{'If a photo in this album has the same filename, update the file without changing the photo\'s properties'|translate}</p>
         </div>
       </div>
       {/if}
@@ -150,23 +150,23 @@
 
       <div class="selectFilesButtonBlock">
         <button id="addFiles" class="buttonLike icon-plus-circled" {if !$can_upload}disabled{/if}>
-          {if not $DISPLAY_FORMATS}{'Add Photos'|translate}{else}{'Add formats'|@translate}{/if}
+          {if not $DISPLAY_FORMATS}{'Add Photos'|translate}{else}{'Add formats'|translate}{/if}
         </button>
         <div class="selectFilesinfo">
           {if isset($original_resize_maxheight)}
-          <p class="uploadInfo">{'The picture dimensions will be reduced to %dx%d pixels.'|@translate:$original_resize_maxwidth:$original_resize_maxheight}</p>
+          <p class="uploadInfo">{'The picture dimensions will be reduced to %dx%d pixels.'|translate:$original_resize_maxwidth:$original_resize_maxheight}</p>
           {/if}
             <p id="uploadWarningsSummary">
             {if not $DISPLAY_FORMATS}
-              {'Allowed file types: %s.'|@translate:$upload_file_types}
+              {'Allowed file types: %s.'|translate:$upload_file_types}
             {else}
-              {'Allowed file types: %s.'|@translate:$str_format_ext} 
-              {if !$HAVE_FORMATS_ORIGINAL}<p>{'The original picture will be detected with the filename (without extension).'|@translate}</p>{/if}
+              {'Allowed file types: %s.'|translate:$str_format_ext} 
+              {if !$HAVE_FORMATS_ORIGINAL}<p>{'The original picture will be detected with the filename (without extension).'|translate}</p>{/if}
             {/if}
             </p>
           </p>
             {if isset($max_upload_resolution)}
-            {'Approximate maximum resolution: %dM pixels (that\'s %dx%d pixels).'|@translate:$max_upload_resolution:$max_upload_width:$max_upload_height}
+            {'Approximate maximum resolution: %dM pixels (that\'s %dx%d pixels).'|translate:$max_upload_resolution:$max_upload_width:$max_upload_height}
             {/if}
           </p>
         </div>

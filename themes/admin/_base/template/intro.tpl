@@ -3,7 +3,7 @@
 
 {combine_css path="themes/admin/_base/css/pages/intro.css"}
 
-<h2>{'Piwigo Administration'|@translate}</h2>
+<h2>{'Piwigo Administration'|translate}</h2>
 
 <div class="intro-page-container">
 <div class="stat-boxes">
@@ -81,10 +81,10 @@
 
 <div class="intro-charts">
 
-  <div class="chart-title"> {"Activity peak in the last weeks"|@translate}</div>
+  <div class="chart-title"> {"Activity peak in the last weeks"|translate}</div>
   <div class="activity-chart" style="--chart-rows:{count($ACTIVITY_CHART_DATA) + 1}">
     {foreach from=$ACTIVITY_CHART_DATA item=WEEK_ACTIVITY key=WEEK_NUMBER}
-      <div id="week-{$WEEK_NUMBER}-legend" class="row-legend"><div>{'Week %d'|@translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div></div>
+      <div id="week-{$WEEK_NUMBER}-legend" class="row-legend"><div>{'Week %d'|translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div></div>
       {foreach from=$WEEK_ACTIVITY item=SIZE key=DAY_NUMBER}
         <span class="activity_tooltips">
           {if $SIZE != 0}

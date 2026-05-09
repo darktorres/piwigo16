@@ -14,7 +14,7 @@
 <fieldset class="history-filter">
   <div class="selectable-filter">
     <div class="filter-part date-start">
-      <label>{'Start-Date'|@translate}</label>
+      <label>{'Start-Date'|translate}</label>
         <input type="hidden" name="start" value="{$START}">
         <label>
           <input type="text" data-datepicker="start" data-datepicker-end="end" data-datepicker-unset="start_unset" readonly>
@@ -22,7 +22,7 @@
         <a href="#" class="icon-cancel-circled" id="start_unset">{'unset'|translate}</a>
     </div>
     <div class="filter-part date-end">
-      <label>{'End-Date'|@translate}</label>
+      <label>{'End-Date'|translate}</label>
         <input type="hidden" name="end" value="{$END}">
         <label>
           <input type="text" data-datepicker="end" data-datepicker-start="start" data-datepicker-unset="end_unset" readonly>
@@ -31,11 +31,11 @@
     </div>
     <div class="filter-part elem-type advanced-filter-select-container">
       <label>
-        {'Action'|@translate}
+        {'Action'|translate}
         <select name="types[]" class="elem-type-select user-action-select advanced-filter-select">
           <option value=""></option>
-          <option value="visited">{'Visited'|@translate} </option>
-          <option value="downloaded">{'Downloaded'|@translate} </option>
+          <option value="visited">{'Visited'|translate} </option>
+          <option value="downloaded">{'Downloaded'|translate} </option>
         </select>
       </label>
     </div>
@@ -55,7 +55,7 @@
 
 {if isset($search_summary)}
 <fieldset>
-  <legend>{'Summary'|@translate}</legend>
+  <legend>{'Summary'|translate}</legend>
 
   <ul>
     <li>{$search_summary.NB_LINES}, {$search_summary.FILESIZE}</li>
@@ -107,7 +107,7 @@
   <span class="icon-spin6 animate-spin"> </span>
 </div>
 <div class="noResults">
-  {'No results'|@translate}
+  {'No results'|translate}
 </div>
 <div class="container">
   <div class="tab-title">
@@ -145,7 +145,7 @@
         <span class="icon-ellipsis-vert toggle-img-option">
           <div class="img-option">
             <a class="add-img-as-filter icon-filter"> {'Add as filter'|translate} </a>
-            <a class="edit-img icon-pencil" href="" target="_blank">{'Edit'|@translate}</a>
+            <a class="edit-img icon-pencil" href="" target="_blank">{'Edit'|translate}</a>
           </div>
         </span>
 

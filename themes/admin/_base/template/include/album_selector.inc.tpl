@@ -20,9 +20,9 @@
 
     <div class="album-selector" id="linkedAlbumSelector">
       <label class="head-button-2 put-to-root-container notClickable" id="put-to-root">
-        <p class="icon-home">{'Put at the root'|@translate}</p>
+        <p class="icon-home">{'Put at the root'|translate}</p>
       </label>
-      <p class="put-to-root-container">{'or'|@translate}</p>
+      <p class="put-to-root-container">{'or'|translate}</p>
 
       <div id="linkedAlbumSearch">
         <span class='icon-search search-icon'> </span>
@@ -43,13 +43,13 @@
       </div>
 
       <div class="linked-album-input-container album-name">
-        <label class="user-property-label">{'Album name'|@translate}
+        <label class="user-property-label">{'Album name'|translate}
           <input class="user-property-input" id="linkedAlbumInput" />
         </label>
       </div>
 
       <div class="linked-album-input-container">
-        <label class="user-property-label">{'Position'|@translate}
+        <label class="user-property-label">{'Position'|translate}
           <div class="linked-add-radio-input">
             <input type="radio" id="place-start" name="position" value="first" checked>
             <label for="place-start">{'Place first'|translate}</label>

@@ -1,4 +1,4 @@
-<dt>{'Links'|@translate}</dt>
+<dt>{'Links'|translate}</dt>
 <dd>
 	<ul>{strip}
 		{foreach from=$block->data item=link}

@@ -4,7 +4,7 @@
 <div class="titrePage">
 	<ul class="categoryActions">
 	</ul>
-	<h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{'User comments'|@translate}</h2>
+	<h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{'User comments'|translate}</h2>
 </div>
 
 {include file='infos_errors.tpl'}
@@ -12,11 +12,11 @@
 <form class="filter" action="{$F_ACTION}" method="get">
 
   <fieldset>
-    <legend><span class="icon-filter icon-green"></span>{'Filter'|@translate}</legend>
+    <legend><span class="icon-filter icon-green"></span>{'Filter'|translate}</legend>
 
 		<ul>
 			<li>
-				<label>{'Keyword'|@translate}</label>
+				<label>{'Keyword'|translate}</label>
 			</li>
 			<li>
 				<input type="text" name="keyword" value="{$F_KEYWORD}">
@@ -25,7 +25,7 @@
 
 		<ul>
 			<li>
-				<label>{'Author'|@translate}</label>
+				<label>{'Author'|translate}</label>
 			</li>
 			<li>
 				<input type="text" name="author" value="{$F_AUTHOR}">
@@ -34,7 +34,7 @@
 
 		<ul>
 			<li>
-				<label>{'Album'|@translate}</label>
+				<label>{'Album'|translate}</label>
 			</li>
 			<li>
 				<select name="cat">
@@ -46,7 +46,7 @@
 
 		<ul>
 			<li>
-				<label>{'Since'|@translate}</label>
+				<label>{'Since'|translate}</label>
 			</li>
 			<li>
 				<select name="since">
@@ -59,11 +59,11 @@
 
   <fieldset>
 
-    <legend>{'Display'|@translate}</legend>
+    <legend>{'Display'|translate}</legend>
 
 		<ul>
 			<li>
-				<label>{'Sort by'|@translate}</label>
+				<label>{'Sort by'|translate}</label>
 			</li>
 			<li>
 				<select name="sort_by">
@@ -74,7 +74,7 @@
 
 		<ul>
 			<li>
-				<label>{'Sort order'|@translate}</label>
+				<label>{'Sort order'|translate}</label>
 			</li>
 			<li>
 				<select name="sort_order">
@@ -85,7 +85,7 @@
 
 		<ul>
 			<li>
-				<label>{'Number of items'|@translate}</label>
+				<label>{'Number of items'|translate}</label>
 			</li>
 			<li>
 				<select name="items_number">
@@ -96,7 +96,7 @@
 
   </fieldset>
 
-  <p><input type="submit" value="{'Filter and display'|@translate}"></p>
+  <p><input type="submit" value="{'Filter and display'|translate}"></p>
 
 </form>
 

@@ -18,8 +18,8 @@
       <a class="icon-signal" href="{$U_HISTORY}" title="{'Visit history'|translate}"></a>
       <a class="icon-pulse" href="{$U_ACTIVITY}" title="{'Activity'|translate}"></a>
       {if !url_is_remote($PATH)}
-      <a class="icon-arrows-cw" href="{$U_SYNC}" title="{'Synchronize metadata'|@translate}"></a>
-      <a class="icon-trash" title="{'delete photo'|@translate}" id='action-delete-picture'></a>
+      <a class="icon-arrows-cw" href="{$U_SYNC}" title="{'Synchronize metadata'|translate}"></a>
+      <a class="icon-trash" title="{'delete photo'|translate}" id='action-delete-picture'></a>
       {/if}
     </div>
       {if $INTRO.is_svg}
@@ -57,19 +57,19 @@
 
 
     <p>
-      <strong>{'Title'|@translate}</strong>
+      <strong>{'Title'|translate}</strong>
       <br>
       <input type="text" class="large" name="name" value="{$NAME|@escape}">
     </p>
 
     <p>
-      <strong>{'Author'|@translate}</strong>
+      <strong>{'Author'|translate}</strong>
       <br>
       <input type="text" class="large" name="author" value="{$AUTHOR}">
     </p>
 
     <p>
-      <strong>{'Creation date'|@translate}</strong>
+      <strong>{'Creation date'|translate}</strong>
       <br>
       <input type="hidden" name="date_creation" value="{$DATE_CREATION}">
       <label class="date-input">
@@ -80,9 +80,9 @@
     </p>
 
     <p>
-      <strong>{'Linked albums'|@translate} <span class="linked-albums-badge {if $related_categories|@count < 1 } badge-red {/if}"> {$related_categories|@count} </span></strong>
+      <strong>{'Linked albums'|translate} <span class="linked-albums-badge {if $related_categories|@count < 1 } badge-red {/if}"> {$related_categories|@count} </span></strong>
       {if $related_categories|@count < 1}
-        <span class="orphan-photo">{'This photo is an orphan'|@translate}</span>
+        <span class="orphan-photo">{'This photo is an orphan'|translate}</span>
       {else}
         <span class="orphan-photo"></span>
       {/if}
@@ -101,7 +101,7 @@
     </p>
 
     <p>
-      <strong>{'Representation of albums'|@translate}</strong>
+      <strong>{'Representation of albums'|translate}</strong>
       <br>
       <select data-selectize="categories" data-value="{$represented_albums|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
@@ -109,7 +109,7 @@
     </p>
 
     <p>
-      <strong>{'Tags'|@translate}</strong>
+      <strong>{'Tags'|translate}</strong>
       <br>
       <select data-selectize="tags" data-value="{$tag_selection|@json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
@@ -117,13 +117,13 @@
     </p>
 
     <p>
-      <strong>{'Description'|@translate}</strong>
+      <strong>{'Description'|translate}</strong>
       <br>
       <textarea name="comment" id="description" class="description">{$DESCRIPTION}</textarea>
     </p>
 
     <p>
-      <strong>{'Who can see this photo?'|@translate}</strong> ({'Privacy level'|translate})
+      <strong>{'Who can see this photo?'|translate}</strong> ({'Privacy level'|translate})
       <br>
       <div class='select-icon icon-down-open'> </div>
       <select name="level" size="1">
@@ -135,7 +135,7 @@
       <div class="savebar-footer-start">
         <div class="savebar-footer-block">
 {if isset($U_JUMPTO)}
-          <a class="savebar-see-out" href="{$U_JUMPTO}" ><i class="icon-left-open"></i>{'Open in gallery'|@translate}</a>
+          <a class="savebar-see-out" href="{$U_JUMPTO}" ><i class="icon-left-open"></i>{'Open in gallery'|translate}</a>
 {else}
           <a class="savebar-see-out tiptip disabled" href="#" title="{'You don\'t have access to this photo'|translate}"><i class="icon-left-open"></i>{'Open in gallery'|translate}</a>
 {/if}
@@ -152,7 +152,7 @@
 {/if}
 
         <div class="savebar-footer-block">
-          <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
+          <button class="buttonLike"  type="submit" name="submit"><i class="icon-floppy"></i> {'Save Settings'|translate}</button>
         </div>
       </div>
       <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

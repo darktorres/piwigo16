@@ -16,16 +16,16 @@
 {if not empty($sites)}
 <table class="table2 site-manager-table">
 	<tr class="throw">
-		<td>{'Directory'|@translate}</td>
-		<td>{'Actions'|@translate}</td>
+		<td>{'Directory'|translate}</td>
+		<td>{'Actions'|translate}</td>
 	</tr>
   {foreach from=$sites item=site name=site}
   <tr class="{if $smarty.foreach.site.index is odd}row1{else}row2{/if}"><td>
-    <a href="{$site.NAME}">{$site.NAME}</a><br>({$site.TYPE}, {$site.CATEGORIES} {'Albums'|@translate}, {$site.IMAGES|@translate_dec:'%d photo':'%d photos'})
+    <a href="{$site.NAME}">{$site.NAME}</a><br>({$site.TYPE}, {$site.CATEGORIES} {'Albums'|translate}, {$site.IMAGES|@translate_dec:'%d photo':'%d photos'})
   </td><td>
-    [<a href="{$site.U_SYNCHRONIZE}" title="{'update the database from files'|@translate}">{'Synchronize'|@translate}</a>]
+    [<a href="{$site.U_SYNCHRONIZE}" title="{'update the database from files'|translate}">{'Synchronize'|translate}</a>]
     {if isset($site.U_DELETE)}
-      [<a class="delete-site-button" href="{$site.U_DELETE}" title="{'delete this site and all its attached elements'|@translate}">{'delete'|@translate}</a>]
+      [<a class="delete-site-button" href="{$site.U_DELETE}" title="{'delete this site and all its attached elements'|translate}">{'delete'|translate}</a>]
     {/if}
     {if not empty($site.plugin_links)}
         <br>
@@ -39,19 +39,19 @@
 {/if}
 
 <p id="showCreateSite">
-  <a href="#">{'create a new site'|@translate}</a>
+  <a href="#">{'create a new site'|translate}</a>
 </p>
 
 <form action="{$F_ACTION}" method="post" id="createSite" hidden>
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
   <fieldset>
-    <legend>{'create a new site'|@translate}</legend>
+    <legend>{'create a new site'|translate}</legend>
 
-  <p><strong>{'Directory'|@translate}</strong>
+  <p><strong>{'Directory'|translate}</strong>
     <br><input type="text" name="galleries_url" id="galleries_url">
   </p>
 
   <p class="actionButtons">
-    <input class="submit" type="submit" name="submit" value="{'Submit'|@translate}">
+    <input class="submit" type="submit" name="submit" value="{'Submit'|translate}">
   </p>
 </form>

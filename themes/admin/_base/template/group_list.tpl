@@ -30,10 +30,10 @@
      
       <div class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode">
         <div id="GroupOptions" class="dropdown">
-          <div class="icon-docs dropdown-option" id="GroupDuplicate" value="duplicate">{'Duplicate'|@translate}</div>
-          <div class="icon-trash dropdown-option" id="GroupDelete" value="delete">{'Delete'|@translate}</div>
+          <div class="icon-docs dropdown-option" id="GroupDuplicate" value="duplicate">{'Duplicate'|translate}</div>
+          <div class="icon-trash dropdown-option" id="GroupDelete" value="delete">{'Delete'|translate}</div>
           <div class="icon-star dropdown-option" id="GroupDefault" value="delete"></div>
-          <a class="icon-pulse dropdown-option" href="{$ADMIN_URL}&amp;page=user_activity&amp;group={$grp_id}">{'Activity'|@translate}</a>
+          <a class="icon-pulse dropdown-option" href="{$ADMIN_URL}&amp;page=user_activity&amp;group={$grp_id}">{'Activity'|translate}</a>
         </div>
       </div>
 
@@ -55,7 +55,7 @@
       <div id="EditGroupName">
         <input class="input-edit-group-name" type="text" name="username" maxlength="50" size="20" placeholder="{$grp_name}">
         <button class="icon-ok submit" name="submit_add" id="EditGroupNameSubmit" type="submit">Change group name</button>
-        <a id="EditGroupcancel">{'Cancel'|@translate}</a>
+        <a id="EditGroupcancel">{'Cancel'|translate}</a>
       </div>
 
       <p class="group_number_users">{$grp_members}</p>
@@ -73,14 +73,14 @@
     <input type="checkbox" id="toggleSelectionMode">
     <span class="slider round"></span>
   </label>
-  <p>{'Selection mode'|@translate}</p>
+  <p>{'Selection mode'|translate}</p>
 </div>
 
 <div id="selection-mode-block" class="in-selection-mode">
   <div class="Selection-mode-content">
-   <p id="nothing-selected">{'No groups selected, no actions possible.'|@translate}</p>
+   <p id="nothing-selected">{'No groups selected, no actions possible.'|translate}</p>
    <div class="SelectionModeGroup">
-    <p>{'Your selection'|@translate}</p>
+    <p>{'Your selection'|translate}</p>
     <div class="SelectionModeGroupList">
 
     <div class="DeleteGroupList">
@@ -88,27 +88,27 @@
     </div>
 
     </div>
-    <button id="MergeSelectionMode" class="icon-object-group unavailable" title="{'At least 2 selected groups are needed to merge'|@translate}">{'Merge'|@translate}</button>
-    <button id="DeleteSelectionMode" class="icon-trash-1 unavailable">{'Delete'|@translate}</button>
+    <button id="MergeSelectionMode" class="icon-object-group unavailable" title="{'At least 2 selected groups are needed to merge'|translate}">{'Merge'|translate}</button>
+    <button id="DeleteSelectionMode" class="icon-trash-1 unavailable">{'Delete'|translate}</button>
    </div>
 
    <div id="MergeOptionsBlock">
-   <p>{'Choose which group to merge these groups into'|@translate}</p>
-   <p class="ItalicTextInfo">{'The other groups will be removed'|@translate}</p>
+   <p>{'Choose which group to merge these groups into'|translate}</p>
+   <p class="ItalicTextInfo">{'The other groups will be removed'|translate}</p>
     <div class="MergeOptionsContainer">
       <select id="MergeOptionsChoices"> 
       </select>
     </div>
     
-    <button class="icon-ok ConfirmMergeButton">{'Confirm merge'|@translate}</button>
-    <a id="CancelMerge">{'Cancel'|@translate}</a>
+    <button class="icon-ok ConfirmMergeButton">{'Confirm merge'|translate}</button>
+    <a id="CancelMerge">{'Cancel'|translate}</a>
    </div>
  
 
    <div id="ConfirmGroupAction">
     <p>{'You are about to delete %s groups, are you sure?'|translate:'<span class="number-Selected">0</span>'}</p>
-    <button class="icon-ok ConfirmDeleteButton">{'Yes, delete'|@translate}</button>
-    <a id="CancelDelete">{"No, I have changed my mind"|@translate}</a>
+    <button class="icon-ok ConfirmDeleteButton">{'Yes, delete'|translate}</button>
+    <a id="CancelDelete">{"No, I have changed my mind"|translate}</a>
     </div>
   
   </div>
@@ -135,7 +135,7 @@
               <i class='icon-plus'> </i> {'Add'|translate}
             </button> 
             <br/>
-            <a id="addGroupClose">{'Cancel'|@translate}</a>
+            <a id="addGroupClose">{'Cancel'|translate}</a>
           </div>
           <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
         </fieldset>
@@ -187,7 +187,7 @@
         <div class='search-user'>
           <span class="icon-filter search-icon"></span>
           <span class="icon-cancel search-cancel"></span>
-          <input class="input-user-name search-input" type="text" name="username" maxlength="50" size="20" placeholder="{'Filter'|@translate}">
+          <input class="input-user-name search-input" type="text" name="username" maxlength="50" size="20" placeholder="{'Filter'|translate}">
         </div>
       </div>
     </div>

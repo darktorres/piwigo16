@@ -4,7 +4,7 @@
     <ul class="categoryActions">
     </ul>
 
-    <h2><a href="{$U_HOME}">{'Home'|@translate}</a>{$LEVEL_SEPARATOR}{$title}</h2>
+    <h2><a href="{$U_HOME}">{'Home'|translate}</a>{$LEVEL_SEPARATOR}{$title}</h2>
   </div>
 
 {include file='infos_errors.tpl'}
@@ -16,37 +16,37 @@
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
 
   {if $action eq 'lost'}
-  <div class="message">{'Please enter your username or email address.'|@translate} {'You will receive a link to create a new password via email.'|@translate}</div>
+  <div class="message">{'Please enter your username or email address.'|translate} {'You will receive a link to create a new password via email.'|translate}</div>
 
   <p>
     <label>
-      {'Username or email'|@translate}
+      {'Username or email'|translate}
       <br>
       <input type="text" id="username_or_email" name="username_or_email" size="100" maxlength="100"{if isset($username_or_email)} value="{$username_or_email}"{/if} autofocus>
     </label>
   </p>
 
-  <p class="bottomButtons"><input type="submit" name="submit" value="{'Change my password'|@translate}"></p>
+  <p class="bottomButtons"><input type="submit" name="submit" value="{'Change my password'|translate}"></p>
   {elseif $action eq 'lost_code'}
     <div>
       <div class="message">{"If you do not receive the email, please contact your webmaster."|translate}</div>
       <label>
-        {'Verification code'|@translate}
+        {'Verification code'|translate}
         <br>
         <input type="text" id="user_code" name="user_code" size="100" autofocus />
       </label>
 
-    <p class="bottomButtons"><input type="submit" name="submit" value="{'Verify'|@translate}"></p>
+    <p class="bottomButtons"><input type="submit" name="submit" value="{'Verify'|translate}"></p>
     </div>
   {elseif $action eq 'reset'}
 
   <div class="message">
-  {'Hello'|@translate} <em>{$username}</em>. {if !isset($is_first_login)}{'Enter your new password below.'|@translate}{else}{'Set your password below.'|translate}{/if}
+  {'Hello'|translate} <em>{$username}</em>. {if !isset($is_first_login)}{'Enter your new password below.'|translate}{else}{'Set your password below.'|translate}{/if}
   </div>
 
   <p>
     <label>
-        {if !isset($is_first_login)}{'New password'|@translate}{else}{'Password'|translate}{/if}
+        {if !isset($is_first_login)}{'New password'|translate}{else}{'Password'|translate}{/if}
       <br>
       <input type="password" name="use_new_pwd" id="use_new_pwd" value="" autofocus>
     </label>
@@ -54,13 +54,13 @@
 
   <p>
     <label>
-      {'Confirm Password'|@translate}
+      {'Confirm Password'|translate}
       <br>
       <input type="password" name="passwordConf" id="passwordConf" value="">
     </label>
   </p>
 </fieldset>
-  <p class="bottomButtons"><input type="submit" name="submit" value="{'Submit'|@translate}"></p>
+  <p class="bottomButtons"><input type="submit" name="submit" value="{'Submit'|translate}"></p>
   {/if}
 
 </form>

@@ -6,7 +6,7 @@
   {if isset($tag.U_ADD)}
     "{$tag.U_ADD}" title="{$tag.counter|@translate_dec:'%d photo is also linked to current tags':'%d photos are also linked to current tags'}" rel="nofollow">
   {else}
-    "{$tag.URL}" title="{'display photos linked to this tag'|@translate}">
+    "{$tag.URL}" title="{'display photos linked to this tag'|translate}">
   {/if}
     + {$tag.name}<div class="tag-counter">{$tag.counter}</div></a></span>{/strip}
 {/foreach}

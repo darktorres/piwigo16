@@ -339,9 +339,11 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'))
             ->executeQuery()
             ->fetchNumeric();
+        $row0 = ($row !== false) ? ($row[0] ?? null) : null;
+        $row1 = ($row !== false) ? ($row[1] ?? null) : null;
         return [
-            is_numeric($row[0] ?? null) ? (int) $row[0] : 0,
-            is_numeric($row[1] ?? null) ? (int) $row[1] : 0,
+            is_numeric($row0) ? (int) $row0 : 0,
+            is_numeric($row1) ? (int) $row1 : 0,
         ];
     }
 

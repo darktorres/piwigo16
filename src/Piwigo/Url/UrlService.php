@@ -32,6 +32,7 @@ final class UrlService
         if (is_string($rootPath) && $rootPath !== '') {
             return $rootPath;
         }
+        /** @psalm-var string $rootUrl */
         $rootUrl = PHPWG_ROOT_PATH;
         if (str_starts_with($rootUrl, './')) {
             return substr($rootUrl, 2);
@@ -48,36 +49,45 @@ final class UrlService
         $url = '';
         if ($withScheme) {
             $isHttps = false;
-            if (isset($_SERVER['HTTPS']) && is_scalar($_SERVER['HTTPS']) &&
-              ((strtolower((string) $_SERVER['HTTPS']) == 'on') or ($_SERVER['HTTPS'] == 1))) {
+            /** @psalm-var mixed $httpsRaw */
+            $httpsRaw = $_SERVER['HTTPS'] ?? null;
+            if ($httpsRaw !== null &&
+              ((is_string($httpsRaw) && strtolower($httpsRaw) === 'on') || $httpsRaw == 1)) {
                 $isHttps = true;
                 $url .= 'https://';
             } else {
                 $url .= 'http://';
             }
-            if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-                $url .= is_scalar($_SERVER['HTTP_X_FORWARDED_HOST']) ? (string) $_SERVER['HTTP_X_FORWARDED_HOST'] : '';
+            /** @psalm-var mixed $forwardedHost */
+            $forwardedHost = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? null;
+            if ($forwardedHost !== null) {
+                $url .= is_string($forwardedHost) ? $forwardedHost : '';
             } else {
-                $url .= is_scalar($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : '';
+                /** @psalm-var mixed $hostRaw */
+                $hostRaw = $_SERVER['HTTP_HOST'] ?? '';
+                $url    .= is_string($hostRaw) ? $hostRaw : '';
 
                 $urlPort = null;
 
                 if ('none' == Config::urlPort()) {
                     // do nothing
                 } elseif ('auto' == Config::urlPort()) {
-                    if ((!$isHttps && $_SERVER['SERVER_PORT'] != 80) || ($isHttps && $_SERVER['SERVER_PORT'] != 443)) {
-                        $urlPort = ':' . (is_scalar($_SERVER['SERVER_PORT']) ? (string) $_SERVER['SERVER_PORT'] : '');
+                    /** @psalm-var mixed $portRaw */
+                    $portRaw    = $_SERVER['SERVER_PORT'] ?? 80;
+                    $serverPort = is_numeric($portRaw) ? (int) $portRaw : 80;
+                    if ((!$isHttps && $serverPort !== 80) || ($isHttps && $serverPort !== 443)) {
+                        $urlPort = ':' . $serverPort;
                     }
                 } else {
                     $urlPort = ':' . Config::urlPort();
                 }
 
-                if (!empty($urlPort) and strrchr($url, ':') != $urlPort) {
+                if ($urlPort !== null && strrchr($url, ':') != $urlPort) {
                     $url .= $urlPort;
                 }
             }
         }
-        $url .= CookieService::cookiePath();
+        $url .= CookieService::cookiePath() ?? '';
         return $url;
     }
 
@@ -93,7 +103,7 @@ final class UrlService
             foreach ($params as $param => $val) {
                 if ($isFirst) {
                     $isFirst = false;
-                    $url .= (!str_contains((string) $url, '?')) ? '?' : $argSeparator;
+                    $url .= (!str_contains($url, '?')) ? '?' : $argSeparator;
                 } else {
                     $url .= $argSeparator;
                 }
@@ -166,14 +176,14 @@ final class UrlService
         $url = self::getRootUrl() . 'index.php?/picture/';
         switch (Config::pictureUrlStyle()) {
             case 'id-file':
-                $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
+                $url .= is_string($params['image_id'] ?? null) ? $params['image_id'] : '';
                 if (isset($params['image_file'])) {
-                    $url .= '-' . ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($params['image_file']) ? (string) $params['image_file'] : ''));
+                    $url .= '-' . ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
                 }
                 break;
             case 'file':
                 if (isset($params['image_file'])) {
-                    $fnameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($params['image_file']) ? (string) $params['image_file'] : '');
+                    $fnameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : '');
                     if (ord($fnameWoExt[0]) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
                         $url .= $fnameWoExt;
                         break;
@@ -181,7 +191,7 @@ final class UrlService
                 }
                 // no break
             default:
-                $url .= is_scalar($params['image_id']) ? (string) $params['image_id'] : '';
+                $url .= is_string($params['image_id'] ?? null) ? $params['image_id'] : '';
         }
         if (!isset($params['category'])) {
             unset($params['flat']);
@@ -195,13 +205,15 @@ final class UrlService
     public function addWellKnownParamsInUrl(string $url, array $params): string
     {
         if (isset($params['chronology_field'])) {
-            $url .= '/' . (is_scalar($params['chronology_field']) ? (string) $params['chronology_field'] : '');
-            $url .= '-' . (is_scalar($params['chronology_style']) ? (string) $params['chronology_style'] : '');
+            $chronoFieldRaw = $params['chronology_field'];
+            $chronoStyleRaw = $params['chronology_style'] ?? null;
+            $url .= '/' . (is_string($chronoFieldRaw) ? $chronoFieldRaw : '');
+            $url .= '-' . (is_string($chronoStyleRaw) ? $chronoStyleRaw : '');
             if (isset($params['chronology_view'])) {
-                $url .= '-' . (is_scalar($params['chronology_view']) ? (string) $params['chronology_view'] : '');
+                $url .= '-' . (is_string($params['chronology_view']) ? $params['chronology_view'] : '');
             }
             if (!empty($params['chronology_date'])) {
-                $url .= '-' . implode('-', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
+                $url .= '-' . implode('-', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($params['chronology_date']) ? $params['chronology_date'] : []));
             }
         }
 
@@ -210,7 +222,7 @@ final class UrlService
         }
 
         if (isset($params['start']) and $params['start'] > 0) {
-            $url .= '/start-' . (is_scalar($params['start']) ? (string) $params['start'] : '');
+            $url .= '/start-' . (is_string($params['start']) ? $params['start'] : '');
         }
         return $url;
     }
@@ -257,13 +269,14 @@ final class UrlService
                         );
 
                         $sectionString .= '/category/';
-                        if (empty($cat['permalink'])) {
-                            $sectionString .= is_scalar($cat['id']) ? (string) $cat['id'] : '';
+                        if (!isset($cat['permalink']) || $cat['permalink'] === '') {
+                            $sectionString .= is_string($cat['id'] ?? null) ? $cat['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
-                                $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_scalar($cat['name']) ? (string) $cat['name'] : '');
+                                $catNameRaw = $cat['name'] ?? null;
+                                $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($catNameRaw) ? $catNameRaw : '');
                             }
                         } else {
-                            $sectionString .= is_scalar($cat['permalink']) ? (string) $cat['permalink'] : '';
+                            $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
                         }
 
                         if (isset($params['combined_categories'])) {
@@ -274,12 +287,12 @@ final class UrlService
                                 $sectionString .= '/';
 
                                 if (empty($category['permalink'])) {
-                                    $sectionString .= is_scalar($category['id']) ? (string) $category['id'] : '';
+                                    $sectionString .= is_string($category['id'] ?? null) ? $category['id'] : '';
                                     if (Config::categoryUrlStyle() == 'id-name') {
-                                        $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_scalar($category['name']) ? (string) $category['name'] : '');
+                                        $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
                                     }
                                 } else {
-                                    $sectionString .= is_scalar($category['permalink']) ? (string) $category['permalink'] : '';
+                                    $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';
                                 }
                             }
                         }
@@ -297,18 +310,18 @@ final class UrlService
                         }
                         switch (Config::tagUrlStyle()) {
                             case 'id':
-                                $sectionString .= '/' . (is_scalar($tag['id']) ? (string) $tag['id'] : '');
+                                $sectionString .= '/' . (is_string($tag['id'] ?? null) ? $tag['id'] : '');
                                 break;
                             case 'tag':
                                 if (isset($tag['url_name'])) {
-                                    $sectionString .= '/' . (is_scalar($tag['url_name']) ? (string) $tag['url_name'] : '');
+                                    $sectionString .= '/' . (is_string($tag['url_name']) ? $tag['url_name'] : '');
                                     break;
                                 }
                                 // no break
                             default:
-                                $sectionString .= '/' . (is_scalar($tag['id']) ? (string) $tag['id'] : '');
+                                $sectionString .= '/' . (is_string($tag['id'] ?? null) ? $tag['id'] : '');
                                 if (isset($tag['url_name'])) {
-                                    $sectionString .= '-' . (is_scalar($tag['url_name']) ? (string) $tag['url_name'] : '');
+                                    $sectionString .= '-' . (is_string($tag['url_name']) ? $tag['url_name'] : '');
                                 }
                         }
                     }
@@ -317,12 +330,12 @@ final class UrlService
                 }
             case 'search':
                 {
-                    $sectionString .= '/search/' . (is_scalar($params['search']) ? (string) $params['search'] : '');
+                    $sectionString .= '/search/' . (is_string($params['search'] ?? null) ? $params['search'] : '');
                     break;
                 }
             case 'list':
                 {
-                    $sectionString .= '/list/' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', is_array($params['list']) ? $params['list'] : []));
+                    $sectionString .= '/list/' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($params['list']) ? $params['list'] : []));
                     break;
                 }
             case 'none':
@@ -387,8 +400,6 @@ final class UrlService
                     while (isset($tokens[$currentToken])
                         and !str_starts_with($tokens[$currentToken], 'created-')
                         and !str_starts_with($tokens[$currentToken], 'posted-')
-                        and !str_starts_with((string) $tokens[$nextToken], 'start-')
-                        and !str_starts_with((string) $tokens[$nextToken], 'startcat-')
                         and $tokens[$currentToken] != 'flat') {
                         if (empty($maybePermalinks)) {
                             $maybePermalinks[] = $tokens[$currentToken];
@@ -424,7 +435,7 @@ final class UrlService
 
             if (isset($page['category'])) {
                 $result = ServiceLocator::get(CategoryService::class)->getCatInfo($page['category']);
-                if (empty($result)) {
+                if ($result === null || count($result) === 0) {
                     ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
@@ -435,7 +446,7 @@ final class UrlService
 
                 foreach ($page['combined_categories'] as $catId) {
                     $result = ServiceLocator::get(CategoryService::class)->getCatInfo($catId);
-                    if (empty($result)) {
+                    if ($result === null || count($result) === 0) {
                         ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
                     }
 
@@ -497,9 +508,9 @@ final class UrlService
             $page['section'] = 'search';
             $nextToken++;
 
-            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', (string) ($tokens[$nextToken] ?? ''), $matches);
+            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', $tokens[$nextToken] ?? '', $matches);
             if (!isset($matches[1])) {
-                preg_match('/(\d+)/', (string) ($tokens[$nextToken] ?? ''), $matches);
+                preg_match('/(\d+)/', $tokens[$nextToken] ?? '', $matches);
                 if (!isset($matches[1])) {
                     ServiceLocator::get(HtmlService::class)->badRequest('search identifier is missing');
                     return $page;
@@ -513,13 +524,13 @@ final class UrlService
 
             $page['list'] = [];
 
-            if (empty($tokens[$nextToken])) {
+            if (!isset($tokens[$nextToken]) || $tokens[$nextToken] === '') {
                 $page['list'][] = -1;
             } else {
-                if (!preg_match('/^\d+(,\d+)*$/', (string) $tokens[$nextToken])) {
+                if (!preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
                     ServiceLocator::get(HtmlService::class)->badRequest('wrong format on list GET parameter');
                 }
-                foreach (explode(',', (string) $tokens[$nextToken]) as $imageId) {
+                foreach (explode(',', $tokens[$nextToken]) as $imageId) {
                     $page['list'][] = $imageId;
                 }
             }
@@ -591,7 +602,7 @@ final class UrlService
     /** @param array<string,mixed> $elementInfo */
     public function getElementUrl(array $elementInfo): string
     {
-        $url = is_scalar($elementInfo['path']) ? (string) $elementInfo['path'] : '';
+        $url = is_string($elementInfo['path'] ?? null) ? $elementInfo['path'] : '';
         if (!self::urlIsRemote($url)) {
             $url = self::embellishUrl(self::getRootUrl() . $url);
             $url = is_string($url) ? $url : '';
@@ -605,9 +616,7 @@ final class UrlService
         if (!is_array($page)) {
             $page = [];
         }
-        $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
-            ? $page['save_root_path']
-            : null;
+        $save = is_array($page['save_root_path'] ?? null) ? $page['save_root_path'] : null;
         if ($save === null) {
             $newSave = [];
             if (isset($page['root_path'])) {
@@ -629,9 +638,7 @@ final class UrlService
         if (!is_array($page)) {
             $page = [];
         }
-        $save = isset($page['save_root_path']) && is_array($page['save_root_path'])
-            ? $page['save_root_path']
-            : null;
+        $save = is_array($page['save_root_path'] ?? null) ? $page['save_root_path'] : null;
         if ($save === null) {
             return;
         }
@@ -672,11 +679,12 @@ final class UrlService
 
     public function getGalleryHomeUrl(): string
     {
-        if (!empty(Config::galleryUrl())) {
-            if (self::urlIsRemote(Config::galleryUrl()) or Config::galleryUrl()[0] == '/') {
-                return Config::galleryUrl();
+        $galleryUrl = Config::galleryUrl() ?? '';
+        if ($galleryUrl !== '') {
+            if (self::urlIsRemote($galleryUrl) or $galleryUrl[0] == '/') {
+                return $galleryUrl;
             }
-            return self::getRootUrl() . Config::galleryUrl();
+            return self::getRootUrl() . $galleryUrl;
         } else {
             return $this->makeIndexUrl();
         }
@@ -687,11 +695,14 @@ final class UrlService
      */
     public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
     {
-        if (empty($_SERVER['QUERY_STRING'])) {
+        /** @var mixed $rawQs */
+        $rawQs       = $_SERVER['QUERY_STRING'] ?? '';
+        $queryString = is_string($rawQs) ? $rawQs : '';
+        if ($queryString === '') {
             return '';
         }
 
-        parse_str(is_scalar($_SERVER['QUERY_STRING']) ? (string) $_SERVER['QUERY_STRING'] : '', $vars);
+        parse_str($queryString, $vars);
 
         $vars = array_diff_key($vars, array_flip($rejects));
 

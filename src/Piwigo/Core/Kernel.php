@@ -81,6 +81,7 @@ final class Kernel
         }
 
         $unreachable = new class () implements RequestHandlerInterface {
+            #[\Override]
             public function handle(ServerRequestInterface $request): ResponseInterface
             {
                 throw new \LogicException('Pipeline terminal handler reached — this is a bug.');

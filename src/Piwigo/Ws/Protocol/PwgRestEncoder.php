@@ -9,7 +9,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 
-class PwgRestEncoder extends PwgResponseEncoder
+final class PwgRestEncoder extends PwgResponseEncoder
 {
     private ?PwgXmlWriter $_writer = null;
 
@@ -19,12 +19,13 @@ class PwgRestEncoder extends PwgResponseEncoder
         return $this->_writer;
     }
 
+    #[\Override]
     public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
             $ret = '<?xml version="1.0"?>
 <rsp stat="fail">
-	<err code="'.$response->code().'" msg="'.htmlspecialchars((string) $response->message()).'" />
+	<err code="'.($response->code() ?? 0).'" msg="'.htmlspecialchars($response->message()).'" />
 </rsp>';
             return $ret;
         }
@@ -40,17 +41,18 @@ class PwgRestEncoder extends PwgResponseEncoder
         return $ret;
     }
 
+    #[\Override]
     public function getContentType(): string
     {
         return 'text/xml';
     }
 
-    /** @param array<mixed> $xml_attributes */
-    public function encodeArray(mixed $data, string $itemName, array $xml_attributes = []): void
+    /**
+     * @param array<mixed> $data
+     * @param array<mixed> $xml_attributes
+     */
+    public function encodeArray(array $data, string $itemName, array $xml_attributes = []): void
     {
-        if (!is_array($data)) {
-            return;
-        }
         foreach ($data as $item) {
             $this->writer()->startElement($itemName);
             $this->encode($item, $xml_attributes);
@@ -77,12 +79,12 @@ class PwgRestEncoder extends PwgResponseEncoder
             if ($name == WS_XML_ATTRIBUTES) {
                 if (is_array($value)) {
                     foreach ($value as $attr_name => $attr_value) {
-                        $this->writer()->writeAttribute((string) $attr_name, $attr_value);
+                        $this->writer()->writeAttribute((string) $attr_name, is_scalar($attr_value) ? (string) $attr_value : '');
                     }
                 }
                 unset($data[$name]);
             } elseif (isset($xml_attributes[$name])) {
-                $this->writer()->writeAttribute($name, $value);
+                $this->writer()->writeAttribute($name, is_scalar($value) ? (string) $value : '');
                 unset($data[$name]);
             }
         }
@@ -107,7 +109,6 @@ class PwgRestEncoder extends PwgResponseEncoder
     public function encode(mixed $data, array $xml_attributes = []): void
     {
         switch (gettype($data)) {
-            case 'null':
             case 'NULL':
                 $this->writer()->writeContent('');
                 break;
@@ -122,6 +123,7 @@ class PwgRestEncoder extends PwgResponseEncoder
                 $this->writer()->writeContent($data);
                 break;
             case 'array':
+                /** @var array<mixed> $data */
                 $is_array = range(0, count($data) - 1) === array_keys($data);
                 if ($is_array) {
                     $this->encodeArray($data, 'item');
@@ -131,7 +133,8 @@ class PwgRestEncoder extends PwgResponseEncoder
                 break;
             case 'object':
                 if ($data instanceof PwgNamedArray) {
-                    $this->encodeArray($data->getContent(), $data->getItemName(), $data->getXmlAttributes());
+                    $named = $data->getContent();
+                    $this->encodeArray(is_array($named) ? $named : [], $data->getItemName(), $data->getXmlAttributes());
                 } elseif ($data instanceof PwgNamedStruct) {
                     $content = $data->getContent();
                     $this->encodeStruct(is_array($content) ? $content : [], false, $data->getXmlAttributes());

@@ -28,6 +28,7 @@ final class SizesProcessor
             return;
         }
 
+        /** @var array<string, string|array<string, string>> $errors */
         $errors = [];
 
         $original_fields = [
@@ -39,8 +40,7 @@ final class SizesProcessor
 
         $updates = [];
         foreach ($original_fields as $field) {
-            $value = !empty($_POST[$field]) ? $_POST[$field] : null;
-            $updates[$field] = $value;
+            $updates[$field] = $_POST[$field] ?? null;
         }
 
         /** @var array<string, mixed> $page */
@@ -51,7 +51,8 @@ final class SizesProcessor
         $page['errors'] = $pageErrors;
         $GLOBALS['page'] = $page;
 
-        $rq = is_numeric($_POST['resize_quality'] ?? null) ? (int) $_POST['resize_quality'] : null;
+        $rq_raw = $_POST['resize_quality'] ?? null;
+        $rq = is_numeric($rq_raw) ? (int) $rq_raw : null;
         if ($rq !== null && ($rq < 50 || $rq > 98)) {
             $errors['resize_quality'] = '[50..98]';
         }
@@ -61,18 +62,20 @@ final class SizesProcessor
 
         // step 1 — sanitize HTML input
         foreach ($pderivatives as $type => &$pderivative) {
-            if ($pderivative['must_square'] = ($type == DerivativeSize::Square->value)) {
+            $isSquare = ($type == DerivativeSize::Square->value);
+            $pderivative['must_square'] = $isSquare;
+            $pderivative['must_enable'] = ($isSquare || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize());
+            if ($isSquare) {
                 $pderivative['h'] = $pderivative['w'];
                 $pderivative['minh'] = $pderivative['minw'] = $pderivative['w'];
                 $pderivative['crop'] = 100;
             }
-            $pderivative['must_enable'] = ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize()) ? true : false;
-            $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'] ? true : false;
+            $pderivative['enabled'] = isset($pderivative['enabled']) || $pderivative['must_enable'];
 
             if (isset($pderivative['crop'])) {
                 $pderivative['crop'] = 100;
-                $pderivative['minw'] = $pderivative['w'];
-                $pderivative['minh'] = $pderivative['h'];
+                $pderivative['minw'] = $pderivative['w'] ?? null;
+                $pderivative['minh'] = $pderivative['h'] ?? null;
             } else {
                 $pderivative['crop'] = 0;
                 $pderivative['minw'] = null;
@@ -92,27 +95,29 @@ final class SizesProcessor
             if (!is_array($errors[$type] ?? null)) {
                 $errors[$type] = [];
             }
+            /** @var array<string, string> $typeErrors */
+            $typeErrors = $errors[$type];
 
             if ($type == DerivativeSize::Thumb->value) {
                 $w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
                 if ($w <= 0) {
-                    $errors[$type]['w'] = '>0';
+                    $typeErrors['w'] = '>0';
                 }
                 $h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
                 if ($h <= 0) {
-                    $errors[$type]['h'] = '>0';
+                    $typeErrors['h'] = '>0';
                 }
                 if (max($w, $h) <= $prev_w) {
-                    $errors[$type]['w'] = $errors[$type]['h'] = '>' . $prev_w;
+                    $typeErrors['w'] = $typeErrors['h'] = '>' . $prev_w;
                 }
             } else {
                 $v = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
                 if ($v <= 0 || $v <= $prev_w) {
-                    $errors[$type]['w'] = '>' . $prev_w;
+                    $typeErrors['w'] = '>' . $prev_w;
                 }
                 $v = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
                 if ($v <= 0 || $v <= $prev_h) {
-                    $errors[$type]['h'] = '>' . $prev_h;
+                    $typeErrors['h'] = '>' . $prev_h;
                 }
             }
 
@@ -123,8 +128,9 @@ final class SizesProcessor
 
             $v = is_numeric($pderivative['sharpen']) ? (int) $pderivative['sharpen'] : 0;
             if ($v < 0 || $v > 100) {
-                $errors[$type]['sharpen'] = '[0..100]';
+                $typeErrors['sharpen'] = '[0..100]';
             }
+            $errors[$type] = $typeErrors;
         }
 
         // step 3 — save data
@@ -154,7 +160,7 @@ final class SizesProcessor
                     $new_params = new DerivativeParams(
                         new SizingParams(
                             [$pd_w, $pd_h],
-                            round($pd_crop / 100, 2),
+                            round($pd_crop / 100.0, 2),
                             [$pd_minw, $pd_minh]
                         )
                     );
@@ -171,7 +177,7 @@ final class SizesProcessor
                         }
                         if ($same
                             && $new_params->sizing->max_crop != 0
-                            && !DerivativeEncoding::sizeEquals($old_params->sizing->min_size, $new_params->sizing->min_size)) {
+                            && !DerivativeEncoding::sizeEquals($old_params->sizing->min_size ?? [], $new_params->sizing->min_size)) {
                             $same = false;
                         }
                         if ($quality_changed || $new_params->sharpen != $old_params->sharpen) {
@@ -225,14 +231,15 @@ final class SizesProcessor
                 if (isset($_POST[$field])) {
                     $tpl->append(
                         'sizes',
-                        [$field => strip_tags(is_scalar($_POST[$field]) ? (string) $_POST[$field] : '')],
+                        [$field => strip_tags(is_string($_POST[$field]) ? $_POST[$field] : '')],
                         true
                     );
                 }
             }
             $tpl->assign('derivatives', $pderivatives);
             $tpl->assign('ferrors', $errors);
-            $tpl->assign('resize_quality', $_POST['resize_quality'] ?? '');
+            $rawResizeQuality = $_POST['resize_quality'] ?? '';
+            $tpl->assign('resize_quality', is_scalar($rawResizeQuality) ? $rawResizeQuality : '');
             $GLOBALS['page']['sizes_loaded_in_tpl'] = true;
         }
     }

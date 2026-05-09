@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class IdentificationController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Free);
@@ -55,7 +56,7 @@ final class IdentificationController implements ControllerInterface
 
         $redirect_to = '';
         $get_redirect = StringUtil::get()->inputString('redirect', null, $_GET);
-        if (!empty($get_redirect)) {
+        if ($get_redirect !== null && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
             if (Config::guestAccess() && StringUtil::get()->inputString('hide_redirect_error', null, $_GET) === null) {
                 $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
@@ -76,14 +77,14 @@ final class IdentificationController implements ControllerInterface
                 }
                 $redirect_to  = $post_redirect !== null ? urldecode($post_redirect) : '';
                 $remember_me  = StringUtil::get()->inputString('remember_me', null, $_POST) !== null && StringUtil::get()->inputString('remember_me', null, $_POST) == 1;
-                $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+                $post_password = is_string($rawPassword = $_POST['password'] ?? null) ? $rawPassword : '';
                 if (AuthService::get()->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
                     $_SESSION['connected_with'] = 'pwg_ui';
                     Util::get()->redirect(
                         empty($redirect_to)
                         ? UrlService::get()->getGalleryHomeUrl()
-                        : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) CookieService::cookiePath())) . $redirect_to
+                        : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath() ?? '')) . $redirect_to
                     );
                 } else {
                     $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];

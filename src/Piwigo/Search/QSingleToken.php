@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 /** Represents a single word or quoted phrase to be searched.*/
-class QSingleToken implements \Stringable
+final class QSingleToken implements \Stringable
 {
     public bool $is_single = true; /* the actual word/phrase string*/
     /** @var string[] */
@@ -18,6 +18,7 @@ class QSingleToken implements \Stringable
     {
     }
 
+    #[\Override]
     public function __toString(): string
     {
         $s = '';

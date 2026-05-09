@@ -42,6 +42,7 @@ final class PwgResponseEncoderTest extends TestCase
         $named = new PwgNamedArray($content, 'item');
         $value = $named;
         PwgResponseEncoder::flattenResponse($value);
+        /** @var mixed $value */
         self::assertSame($content, $value);
     }
 
@@ -50,7 +51,7 @@ final class PwgResponseEncoderTest extends TestCase
         $content = ['x', 'y'];
         $value = ['key' => new PwgNamedArray($content, 'x')];
         PwgResponseEncoder::flattenResponse($value);
-        self::assertIsArray($value);
+        /** @var array<mixed> $value */
         self::assertSame($content, $value['key']);
     }
 

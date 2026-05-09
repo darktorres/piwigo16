@@ -16,7 +16,7 @@ final class SchemaHelper
         $options = [];
         foreach (DbConnection::get()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
             if ($row['Field'] === $field) {
-                $raw = explode(',', substr(is_scalar($row['Type']) ? (string) $row['Type'] : '', 5, -1));
+                $raw = explode(',', substr(is_string($row['Type'] ?? null) ? $row['Type'] : '', 5, -1));
                 foreach ($raw as $option) {
                     $options[] = str_replace("'", '', $option);
                 }

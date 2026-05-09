@@ -29,6 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class WsController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         if (!defined('IN_WS')) {
@@ -84,7 +85,7 @@ final class WsController implements ControllerInterface
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
     SwaggerUIBundle({
-      url: ' . json_encode($specUrl) . ',
+      url: ' . (($je = json_encode($specUrl)) !== false ? $je : '""') . ',
       dom_id: \'#swagger-ui\',
       presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
       layout: \'BaseLayout\',

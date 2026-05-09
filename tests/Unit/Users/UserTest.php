@@ -67,7 +67,7 @@ final class UserTest extends TestCase
     {
         $user = User::fromUserArray($this->baseRow());
         $this->expectException(\Error::class);
-        /** @phpstan-ignore-next-line */
-        $user->id = 99;
+        /** @psalm-suppress InaccessibleProperty */
+        $user->id = 99; // @phpstan-ignore assign.propertyProtectedSet
     }
 }

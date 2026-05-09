@@ -9,12 +9,14 @@ use Piwigo\Core\Lang;
 
 final class LangTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         Lang::reset();
         unset($GLOBALS['lang']);
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Lang::reset();

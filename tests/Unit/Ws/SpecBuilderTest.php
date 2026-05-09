@@ -18,8 +18,10 @@ use Piwigo\Ws\WsType;
  */
 final class SpecBuilderTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgServer $server;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->server = new PwgServer();

@@ -10,12 +10,12 @@ use Piwigo\Html\HtmlService;
  * Manage a list of required scripts for a page, by optimizing their loading location (head, footer, async)
  * and later on by combining them in a unique file respecting at the same time dependencies.
  */
-class ScriptLoader
+final class ScriptLoader
 {
     /** @var array<string, Script> */
-    private array $registered_scripts;
+    private array $registered_scripts = [];
     /** @var string[] */
-    public $inline_scripts;
+    public array $inline_scripts = [];
 
     private bool $did_head = false;
     /** @var array */
@@ -91,7 +91,7 @@ class ScriptLoader
             trigger_error("Attempt to add script $id but the footer has been written", E_USER_WARNING);
         }
         if (! isset($this->registered_scripts[$id])) {
-            if ($manifest = self::manifest()) {
+            if (($manifest = self::manifest()) !== null) {
                 $entry = $manifest[$id] ?? null;
                 if (is_array($entry) && is_string($entry['file'] ?? null)) {
                     $path = 'dist/' . $entry['file'];
@@ -113,7 +113,7 @@ class ScriptLoader
         } else {
             // Re-registration: resolve manifest path so a second combine_script call with
             // a legacy path does not overwrite the already-resolved dist/ path.
-            if ($manifest = self::manifest()) {
+            if (($manifest = self::manifest()) !== null) {
                 $entry = $manifest[$id] ?? null;
                 if (is_array($entry) && is_string($entry['file'] ?? null)) {
                     $path = 'dist/' . $entry['file'];
@@ -302,7 +302,7 @@ class ScriptLoader
     private static function manifest(): ?array
     {
         if (self::$manifest !== null) {
-            return self::$manifest ?: null;
+            return self::$manifest !== false ? self::$manifest : null;
         }
         $f = PHPWG_ROOT_PATH . 'dist/manifest.json';
         if (!is_file($f)) {
@@ -311,7 +311,7 @@ class ScriptLoader
         }
         $decoded = json_decode((string) file_get_contents($f), true);
         self::$manifest = is_array($decoded) ? $decoded : false;
-        return self::$manifest ?: null;
+        return self::$manifest !== false ? self::$manifest : null;
     }
 
     /**
@@ -334,6 +334,6 @@ class ScriptLoader
         if ($order1 == 0 and ($s1->isRemote() xor $s2->isRemote())) {
             return $s1->isRemote() ? -1 : 1;
         }
-        return strcmp((string) $s1->id, (string) $s2->id);
+        return strcmp($s1->id, $s2->id);
     }
 }

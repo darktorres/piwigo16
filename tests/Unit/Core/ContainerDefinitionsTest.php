@@ -24,9 +24,11 @@ final class ContainerDefinitionsTest extends TestCase
     /** @var array<mixed> */
     private static array $definitions = [];
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         $loaded = require dirname(__DIR__, 3) . '/config/container.php';
+        /** @psalm-suppress RedundantCondition */
         self::assertIsArray($loaded);
         self::$definitions = $loaded;
     }

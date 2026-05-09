@@ -15,17 +15,19 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 final class CacheFactoryTest extends TestCase
 {
-    private string $tmpRoot;
+    private string $tmpRoot = '';
 
+    #[\Override]
     protected function setUp(): void
     {
-        $this->tmpRoot = PHPWG_ROOT_PATH . 'tmp_factory_test_' . getmypid() . '_' . mt_rand() . '/';
+        $this->tmpRoot = PHPWG_ROOT_PATH . 'tmp_factory_test_' . (int) getmypid() . '_' . mt_rand() . '/';
         mkdir($this->tmpRoot . 'cache/', 0755, true);
 
         $rel = str_replace(PHPWG_ROOT_PATH, '', $this->tmpRoot);
         Config::loadArray(['data_location' => $rel, 'cache.backend' => 'file']);
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Config::reset();

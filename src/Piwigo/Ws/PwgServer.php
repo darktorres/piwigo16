@@ -22,7 +22,7 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
  * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParamDef>, options: array<string, mixed>}
  */
-class PwgServer
+final class PwgServer
 {
     private ?PwgRequestHandler $_requestHandler = null;
     private string $_requestFormat = '';
@@ -167,7 +167,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return;
         }
 
-        if ($response instanceof PwgError && !headers_sent()) {
+        if (!headers_sent() && $response instanceof PwgError) {
             $code = $response->code();
             if ($code !== null && $code >= 400 && $code < 600) {
                 ServiceLocator::get(HtmlService::class)->setStatusHeader($code, $response->message());
@@ -248,6 +248,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                 unset($value);
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
                 foreach ($param as &$value) {
+                    /** @psalm-suppress InvalidArgument */
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
                         return new PwgError(WS_ERR_INVALID_PARAM, $name.' must only contain'.$msg.' integers');
                     }
@@ -270,6 +271,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                     return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WS_TYPE_INT)) {
+                /** @psalm-suppress InvalidArgument */
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
                     return new PwgError(WS_ERR_INVALID_PARAM, $name.' must be an'.$msg.' integer');
                 }
@@ -392,7 +394,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
     {
         $methods = array_filter(
             $service->_methods,
-            fn (array $m): bool => empty($m['options']['hidden'])
+            fn (array $m): bool => !isset($m['options']['hidden']) || $m['options']['hidden'] === '' || $m['options']['hidden'] === false || $m['options']['hidden'] === 0
         );
         return ['methods' => new PwgNamedArray(array_keys($methods), 'method') ];
     }
@@ -492,7 +494,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if (!isset($responseFormat)) {
             $responseFormat = $requestFormat;
         }
-        $responseFormat = (string) $responseFormat;
+
 
         $server = new self();
         PwgServerRegistry::set($server);

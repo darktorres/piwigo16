@@ -28,6 +28,7 @@ final class EventSymmetryTest extends TestCase
     /** @var array<string, true>  eventName => true  (fired anywhere in codebase) */
     private static array $triggers = [];
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         self::$root = dirname(__DIR__, 3);
@@ -84,6 +85,7 @@ final class EventSymmetryTest extends TestCase
 
     /**
      * @param array<string, list<string>> $index
+     * @param non-empty-string $pattern
      */
     private static function scanForPattern(string $dir, string $pattern, array &$index): void
     {
@@ -95,7 +97,8 @@ final class EventSymmetryTest extends TestCase
             if (!($file instanceof \SplFileInfo) || !$file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }
-            $content = file_get_contents($file->getPathname()) ?: '';
+            $fileContent = file_get_contents($file->getPathname());
+            $content = $fileContent !== false ? $fileContent : '';
             preg_match_all($pattern, $content, $matches);
             foreach ($matches[1] as $name) {
                 $index[$name][] = $file->getPathname();

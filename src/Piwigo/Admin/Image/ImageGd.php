@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class ImageGd implements ImageInterface
+final class ImageGd implements ImageInterface
 {
     public \GdImage $image;
     public int $quality = 95;
@@ -30,19 +30,25 @@ class ImageGd implements ImageInterface
         $this->image = $img;
     }
 
+    #[\Override]
     public function getWidth(): int
     {
         return imagesx($this->image);
     }
 
+    #[\Override]
     public function getHeight(): int
     {
         return imagesy($this->image);
     }
 
+    #[\Override]
     public function crop(int $width, int $height, int $x, int $y): bool
     {
         $dest = imagecreatetruecolor(max(1, $width), max(1, $height));
+        if ($dest === false) {
+            return false;
+        }
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -55,11 +61,13 @@ class ImageGd implements ImageInterface
         return $result;
     }
 
+    #[\Override]
     public function strip(): bool
     {
         return true;
     }
 
+    #[\Override]
     public function rotate(int $rotation): bool
     {
         $dest = imagerotate($this->image, $rotation, 0);
@@ -70,15 +78,20 @@ class ImageGd implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function setCompressionQuality(int $quality): bool
     {
         $this->quality = $quality;
         return true;
     }
 
+    #[\Override]
     public function resize(int $width, int $height): bool
     {
         $dest = imagecreatetruecolor(max(1, $width), max(1, $height));
+        if ($dest === false) {
+            return false;
+        }
 
         imagealphablending($dest, false);
         imagesavealpha($dest, true);
@@ -91,12 +104,14 @@ class ImageGd implements ImageInterface
         return $result;
     }
 
+    #[\Override]
     public function sharpen(int $amount): bool
     {
         $m = PwgImage::getSharpenMatrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
+    #[\Override]
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         if (!($overlay instanceof ImageGd)) {
@@ -111,6 +126,9 @@ class ImageGd implements ImageInterface
 
         // Create a new blank image the site of our source image
         $cut = imagecreatetruecolor(max(1, $ow), max(1, $oh));
+        if ($cut === false) {
+            return false;
+        }
 
         // Copy the blank image into the destination image where the source goes
         imagecopy($cut, $this->image, 0, 0, $x, $y, $ow, $oh);
@@ -121,6 +139,7 @@ class ImageGd implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function write(string $destination_filepath): bool
     {
         $extension = strtolower(pathinfo($destination_filepath, PATHINFO_EXTENSION));

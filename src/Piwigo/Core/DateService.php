@@ -16,13 +16,13 @@ final class DateService
         return $date1->diff($date2);
     }
 
-    public function str2DateTime(int|string|null $original, mixed $format = null): \DateTime|false
+    public function str2DateTime(int|string|null $original, string|null $format = null): \DateTime|false
     {
-        if (empty($original)) {
+        if ($original === null || $original === '' || $original === 0) {
             return false;
         }
-        if (!empty($format)) {
-            return DateTime::createFromFormat('!' . (is_scalar($format) ? (string) $format : ''), (string) $original);
+        if ($format !== null && $format !== '') {
+            return DateTime::createFromFormat('!' . $format, (string) $original);
         }
         $t = trim((string) $original, '0123456789');
         if (empty($t)) {
@@ -180,10 +180,10 @@ final class DateService
 
     public function transformDate(mixed $original, mixed $formatIn, mixed $formatOut, mixed $default = null): ?string
     {
-        if (empty($original)) {
+        if ($original === null || $original === '' || $original === 0) {
             return is_string($default) ? $default : null;
         }
-        $date = $this->str2DateTime(is_int($original) || is_string($original) ? $original : null, $formatIn);
+        $date = $this->str2DateTime(is_int($original) || is_string($original) ? $original : null, is_string($formatIn) ? $formatIn : null);
         if ($date === false) {
             return is_string($default) ? $default : null;
         }

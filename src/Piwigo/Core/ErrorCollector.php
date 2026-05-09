@@ -109,7 +109,8 @@ final class ErrorCollector
                 str_contains($msg, '[DEPRECATED]') => 'warn',
                 default                            => 'info',
             };
-            $lines .= "console.{$level}(" . json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ");\n";
+            $jsonMsg = json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $lines .= "console.{$level}(" . ($jsonMsg !== false ? $jsonMsg : '""') . ");\n";
         }
 
         $count  = count(self::$collected);

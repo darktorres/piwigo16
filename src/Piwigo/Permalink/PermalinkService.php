@@ -20,8 +20,8 @@ final class PermalinkService
             return true;
         }
         if ($save) {
-            $oldCatId = $repo->findOldCategoryId((string) $permalink);
-            if (isset($oldCatId) && $oldCatId != $catId) {
+            $oldCatId = $repo->findOldCategoryId($permalink);
+            if ($oldCatId !== null && $oldCatId !== (int) $catId) {
                 PageState::current()->addError(
                     sprintf(
                         Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
@@ -37,7 +37,7 @@ final class PermalinkService
         RequestCache::clearNs('cat_names');
 
         if ($save) {
-            $oldCatId2 = $repo->findOldCategoryId((string) $permalink);
+            $oldCatId2 = $repo->findOldCategoryId($permalink);
             if (isset($oldCatId2)) {
                 $repo->markOldPermalinkDeleted((int) $catId, $permalink);
             } else {
@@ -71,7 +71,7 @@ final class PermalinkService
         }
 
         $oldCatId = $repo->findOldCategoryId($permalink);
-        if (isset($oldCatId) && $oldCatId != $catId) {
+        if ($oldCatId !== null && $oldCatId !== (int) $catId) {
             PageState::current()->addError(
                 sprintf(
                     Lang::t('Permalink %s has been previously used by album %s. Delete from the permalink history first'),
@@ -87,7 +87,7 @@ final class PermalinkService
         }
 
         if (isset($oldCatId)) {
-            $repo->deleteOldPermalink((int) $oldCatId, $permalink);
+            $repo->deleteOldPermalink($oldCatId, $permalink);
         }
 
         $repo->setCategoryPermalink((int) $catId, $permalink);

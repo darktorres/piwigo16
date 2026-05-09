@@ -475,7 +475,7 @@ final class TagRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $key = is_scalar($row['tag_id']) ? (string) $row['tag_id'] : '';
+            $key = is_string($row['tag_id'] ?? null) ? $row['tag_id'] : '';
             $result[$key] = $row['counter'];
         }
         return $result;

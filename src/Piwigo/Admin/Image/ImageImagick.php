@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-class ImageImagick implements ImageInterface
+final class ImageImagick implements ImageInterface
 {
     public \Imagick $image;
 
@@ -16,31 +16,37 @@ class ImageImagick implements ImageInterface
         $this->image = new \Imagick($source_filepath);
     }
 
+    #[\Override]
     public function getWidth(): int
     {
         return $this->image->getImageWidth();
     }
 
+    #[\Override]
     public function getHeight(): int
     {
         return $this->image->getImageHeight();
     }
 
+    #[\Override]
     public function setCompressionQuality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
 
+    #[\Override]
     public function crop(int $width, int $height, int $x, int $y): bool
     {
         return $this->image->cropImage($width, $height, $x, $y);
     }
 
+    #[\Override]
     public function strip(): bool
     {
         return $this->image->stripImage();
     }
 
+    #[\Override]
     public function rotate(int $rotation): bool
     {
         $this->image->rotateImage(new \ImagickPixel(), -$rotation);
@@ -48,6 +54,7 @@ class ImageImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function resize(int $width, int $height): bool
     {
         $this->image->setInterlaceScheme(\Imagick::INTERLACE_LINE);
@@ -59,18 +66,20 @@ class ImageImagick implements ImageInterface
         if ($this->getWidth() % 2 == 0
             && $this->getHeight() % 2 == 0
             && $this->getWidth() > 3 * $width) {
-            $this->image->scaleImage($this->getWidth() / 2, $this->getHeight() / 2);
+            $this->image->scaleImage(intval($this->getWidth() / 2), intval($this->getHeight() / 2));
         }
 
         return $this->image->resizeImage($width, $height, \Imagick::FILTER_LANCZOS, 0.9);
     }
 
+    #[\Override]
     public function sharpen(int $amount): bool
     {
         $m = PwgImage::getSharpenMatrix($amount);
         return  $this->image->convolveImage($m);
     }
 
+    #[\Override]
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         if (!($overlay instanceof ImageImagick)) {
@@ -91,6 +100,7 @@ class ImageImagick implements ImageInterface
         return $this->image->compositeImage($ioverlay, \Imagick::COMPOSITE_DISSOLVE, $x, $y);
     }
 
+    #[\Override]
     public function write(string $destination_filepath): bool
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

@@ -70,8 +70,10 @@ final class PageTailRenderer
         $template->assign('debug', $debug_vars);
 
         if (!empty(Config::mobilTheme()) && (ServiceLocator::get(Util::class)->getDevice() !== 'desktop' || ServiceLocator::get(Util::class)->mobileTheme())) {
+            /** @var mixed $requestUriRaw */
+            $requestUriRaw = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign('TOGGLE_MOBILE_THEME_URL', UrlService::get()->addUrlParams(
-                htmlspecialchars(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : ''),
+                htmlspecialchars(is_string($requestUriRaw) ? $requestUriRaw : ''),
                 ['mobile' => ServiceLocator::get(Util::class)->mobileTheme() ? 'false' : 'true']
             ));
         }

@@ -49,6 +49,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class AdminController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         defined('IN_ADMIN') or define('IN_ADMIN', true);
@@ -114,7 +115,7 @@ final class AdminController implements ControllerInterface
             $url_params = [];
             foreach (['page', 'tab', 'section'] as $url_param) {
                 if (isset($_GET[$url_param])) {
-                    $url_params[] = $url_param . '=' . (is_scalar($_GET[$url_param]) ? (string) $_GET[$url_param] : '');
+                    $url_params[] = $url_param . '=' . (is_scalar($_GET[$url_param]) ? $_GET[$url_param] : '');
                 }
             }
 
@@ -137,7 +138,8 @@ final class AdminController implements ControllerInterface
         $change_theme_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&';
         $test_get         = $_GET;
         unset($test_get['page'], $test_get['section'], $test_get['tag']);
-        $qsRaw = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
+        $qsRawVal = $_SERVER['QUERY_STRING'] ?? null;
+        $qsRaw = is_string($qsRawVal) ? $qsRawVal : '';
         if (count($test_get) === 0 && $qsRaw !== '') {
             $change_theme_url .= str_replace('&', '&amp;', $qsRaw) . '&amp;';
         }
@@ -197,7 +199,7 @@ final class AdminController implements ControllerInterface
             $page['page'] = 'intro';
         }
 
-        $adminPage  = (string) $page['page'];
+        $adminPage  = $page['page'];
         $adminBase  = ServiceLocator::get(UrlGenerator::class)->admin();
         $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
         $wsBase     = ServiceLocator::get(UrlGenerator::class)->ws();

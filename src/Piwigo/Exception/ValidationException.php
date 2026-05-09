@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Exception;
 
-class ValidationException extends PiwigoException
+final class ValidationException extends PiwigoException
 {
 }

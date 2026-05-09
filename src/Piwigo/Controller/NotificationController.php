@@ -27,6 +27,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class NotificationController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
@@ -41,7 +42,7 @@ final class NotificationController implements ControllerInterface
         $page['feed'] = $this->findAvailableFeedId();
 
         ServiceLocator::get(FeedRepository::class)
-            ->insert((string) $page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
+            ->insert($page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $feed_url = ServiceLocator::get(UrlGenerator::class)->feed();
         if (PermissionService::get()->isAGuest()) {

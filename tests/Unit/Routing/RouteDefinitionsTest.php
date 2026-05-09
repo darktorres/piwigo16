@@ -21,6 +21,7 @@ final class RouteDefinitionsTest extends TestCase
     /** @var array<string, string> routeName => controllerFqcn */
     private static array $controllers;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         $loaded = require dirname(__DIR__, 3) . '/config/routes.php';

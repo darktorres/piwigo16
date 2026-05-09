@@ -106,8 +106,8 @@ final class DerivativeService
                 }
             }
 
-            $x = (int) round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
-            $y = (int) round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
+            $x = (int) round(((float) $wm->xpos / 100.0) * ((float) $d_size[0] - (float) $wm_size[0]));
+            $y = (int) round(((float) $wm->ypos / 100.0) * ((float) $d_size[1] - (float) $wm_size[1]));
             $image->compose($wm_image, $x, $y, $wm->opacity);
             $wm_image->destroy();
         }

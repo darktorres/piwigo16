@@ -8,9 +8,9 @@ final class InflectorFr implements InflectorInterface
 {
     /** @var array<string,string> */
     private array $exceptions;
-    /** @var array<string,string> */
+    /** @var array<non-empty-string,string> */
     private readonly array $pluralizers;
-    /** @var array<string,string> */
+    /** @var array<non-empty-string,string> */
     private readonly array $singularizers;
 
     public function __construct()
@@ -44,11 +44,12 @@ final class InflectorFr implements InflectorInterface
     }
 
     /** @return string[] */
+    #[\Override]
     public function getVariants(string $word): array
     {
         $res = [];
 
-        $word = strtolower((string) $word);
+        $word = strtolower($word);
 
         $rc = $this->exceptions[$word] ?? null;
         if ($rc !== null) {
@@ -60,7 +61,7 @@ final class InflectorFr implements InflectorInterface
 
         foreach ($this->pluralizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
-            if ($count) {
+            if ($count > 0) {
                 if ($rc !== null) {
                     $res[] = $rc;
                 }
@@ -70,7 +71,7 @@ final class InflectorFr implements InflectorInterface
 
         foreach ($this->singularizers as $rule => $replacement) {
             $rc = preg_replace($rule, $replacement, $word, -1, $count);
-            if ($count) {
+            if ($count > 0) {
                 if ($rc !== null) {
                     $res[] = $rc;
                 }

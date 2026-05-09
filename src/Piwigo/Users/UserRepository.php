@@ -233,7 +233,7 @@ final class UserRepository extends AbstractRepository
             ->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[is_scalar($row['status']) ? (string) $row['status'] : ''] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
+            $result[is_string($row['status'] ?? null) ? $row['status'] : ''] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
         }
         return $result;
     }
@@ -449,7 +449,7 @@ final class UserRepository extends AbstractRepository
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[is_numeric($row['id']) ? (int) $row['id'] : 0] = is_scalar($row['username']) ? (string) $row['username'] : '';
+            $result[is_numeric($row['id']) ? (int) $row['id'] : 0] = is_string($row['username'] ?? null) ? $row['username'] : '';
         }
         return $result;
     }
@@ -547,7 +547,7 @@ final class UserRepository extends AbstractRepository
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = is_scalar($row['username']) ? (string) $row['username'] : '';
+            $result[is_string($row['id'] ?? null) ? $row['id'] : ''] = is_string($row['username'] ?? null) ? $row['username'] : '';
         }
         return $result;
     }
@@ -606,7 +606,7 @@ final class UserRepository extends AbstractRepository
         $rows = $this->conn->executeQuery(
             "SELECT $usernameField FROM $usersTable"
         )->fetchFirstColumn();
-        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rows);
     }
 
     /**

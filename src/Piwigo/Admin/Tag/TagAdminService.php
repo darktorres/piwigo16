@@ -45,17 +45,27 @@ final readonly class TagAdminService
         return ServiceLocator::get(TagRepository::class)->findOrphanTags();
     }
 
-    public function setTags(mixed $tags, mixed $imageId): void
+    /**
+     * @param (int|string)[] $tags
+     *
+     * @psalm-param array<int|string> $tags
+     */
+    public function setTags(array $tags, int $imageId): void
     {
-        $id      = is_numeric($imageId) ? (int) $imageId : (is_scalar($imageId) ? (string) $imageId : 0);
-        $tagsArr = is_array($tags) ? array_map(fn (mixed $v): int|string => is_numeric($v) ? (int) $v : (is_scalar($v) ? (string) $v : ''), $tags) : [];
-        $this->setTagsOf([$id => $tagsArr]);
+        $this->setTagsOf([$imageId => $tags]);
     }
 
-    public function addTags(mixed $tags, mixed $images): void
+    /**
+     * @param (int|string)[] $tags
+     * @param int[] $images
+     *
+     * @psalm-param array<int|string> $tags
+     * @psalm-param array<int> $images
+     */
+    public function addTags(array $tags, array $images): void
     {
-        $tagsArr   = is_array($tags) ? $tags : [];
-        $imagesArr = is_array($images) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $images) : [];
+        $tagsArr   = $tags;
+        $imagesArr = $images;
         if (count($tagsArr) === 0 || count($imagesArr) === 0) {
             return;
         }
@@ -114,7 +124,7 @@ final readonly class TagAdminService
                 $extraClauses = EventDispatcher::dispatch('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
                     $existing = array_column(DbConnection::get()->executeQuery(
-                        'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $extraClauses))
+                        'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $extraClauses))
                     )->fetchAllAssociative(), 'id');
                 }
                 if (count($existing) === 0) {
@@ -240,18 +250,24 @@ final readonly class TagAdminService
         return $taglist;
     }
 
-    /** @return int[] */
-    public function getTagIds(mixed $rawTags, bool $allowCreate = true): array
+    /**
+     * @return int[]
+     *
+     * @param (array|string)[]|string $rawTags
+     *
+     * @psalm-param array<int|string, array<int|string, mixed>|string>|string $rawTags
+     */
+    public function getTagIds(array|string $rawTags, bool $allowCreate = true): array
     {
         $tagIds = [];
         if (!is_array($rawTags)) {
-            $rawTags = explode(',', is_scalar($rawTags) ? (string) $rawTags : '');
+            $rawTags = explode(',', $rawTags);
         }
         foreach ($rawTags as $rawTag) {
-            if (preg_match('/^~~(\d+)~~$/', is_scalar($rawTag) ? (string) $rawTag : '', $matches)) {
+            if (is_string($rawTag) && preg_match('/^~~(\d+)~~$/', $rawTag, $matches)) {
                 $tagIds[] = (int) $matches[1];
-            } elseif ($allowCreate) {
-                $tagIds[] = (int) $this->tagIdFromTagName(strip_tags(is_scalar($rawTag) ? (string) $rawTag : ''));
+            } elseif ($allowCreate && is_string($rawTag)) {
+                $tagIds[] = (int) $this->tagIdFromTagName(strip_tags($rawTag));
             }
         }
         return $tagIds;

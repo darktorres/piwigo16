@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\SrcImage;
+use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
@@ -28,7 +31,7 @@ define('BUTTONS_RANK_NEUTRAL', 50);
 /**
  * This a wrapper arround Smarty classes proving various custom mechanisms for templates.
  */
-class Template
+final class Template
 {
     /** @var Smarty */
     public $smarty;
@@ -48,12 +51,12 @@ class Template
     private string $html_style = '';
 
     /** @const string */
-    public const COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
+    public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
     /** @var ScriptLoader */
     public $scriptLoader;
 
     /** @const string */
-    public const COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
+    public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
     /** @var CssLoader */
     public $cssLoader;
 
@@ -190,7 +193,7 @@ class Template
         if (
             '_base' != $theme
             and in_array(StringUtil::scriptBasename(), ['identification', 'register', 'password', 'profile'])
-            and (($themeconf['use_standard_pages'] ?? false) or ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false))
+            and (((bool) ($themeconf['use_standard_pages'] ?? false)) or ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->loadThemeconf($root.'/'.$theme);
@@ -380,7 +383,9 @@ class Template
      *    (in this case, do not use the _$value_ parameter)
      * @param mixed $value
      */
-    /** @param string|array<string,mixed> $tpl_var */
+    /**
+     * @param string|array<string,mixed> $tpl_var
+     */
     public function assign(string|array $tpl_var, mixed $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
@@ -401,9 +406,14 @@ class Template
 
     /**
      * Appends a new value in a template array variable, the variable is created if needed.
+     *
      * @see http://www.smarty.net/manual/en/api.append.php
+     *
+     * @param ((DerivativeImage|array|int|mixed|null|string)[]|(int|string)|DerivativeImage|SrcImage|RegisteredBlock|bool|float|mixed|null|numeric)[]|null|string $value
+     *
+     * @psalm-param array{items?: array|mixed, previous?: array{LABEL: string, URL: string}|mixed, next?: array{LABEL: string, URL: string}|mixed, NAME?: mixed|string, ID?: int|mixed|numeric|string, IS_DEFAULT?: mixed|string, NB_MEMBERS?: int<0, max>|mixed, L_MEMBERS?: mixed|string, MEMBERS?: mixed|string, U_DELETE?: mixed|string, U_PERM?: mixed|string, U_USERS?: mixed|string, U_ISDEFAULT?: mixed|string, TYPE?: mixed|string, CATEGORIES?: int|mixed, IMAGES?: int|mixed, U_SYNCHRONIZE?: mixed|string, plugin_links?: mixed, ELEMENT?: array-key|mixed, LABEL?: mixed|string, U_PICTURE?: mixed|string, src_image?: SrcImage|mixed, ALT?: mixed|string, AUTHOR?: mixed|string, WEBSITE_URL?: float|int|mixed|null|string, DATE?: mixed|string, CONTENT?: mixed|string, EMAIL?: mixed|null|string, U_EDIT?: mixed|string, IN_EDIT?: mixed|true, KEY?: mixed|string, IMAGE_ID?: int|mixed, PWG_TOKEN?: mixed|string, U_CANCEL?: mixed|string, U_VALIDATE?: mixed|string, NB_PHOTOS?: 0|mixed, NB_SUB_PHOTOS?: int<min, max>|mixed, NB_SUB_ALBUMS?: int<0, max>|mixed, RANK?: int|mixed, U_JUMPTO?: mixed|null|string, U_CHILDREN?: mixed|string, U_ADD_PHOTOS_ALBUM?: mixed|string, U_MOVE?: mixed|string, IS_VIRTUAL?: bool|mixed, CAT_ADMIN_ACCESS?: bool|mixed, U_SYNC?: mixed|string, group_name?: mixed|string, group_users?: mixed|string, TN_SRC?: array|mixed|string, SIZE?: array<int>|mixed|null, VALUE?: mixed|string, SELECTED?: bool|mixed, thumb?: DerivativeImage|mixed, TITLE?: mixed|null|string, FILE_SRC?: array|mixed|string, LEGEND?: mixed|string, LEVEL?: '0'|mixed, DESCRIPTION?: mixed|string, DATE_CREATION?: mixed, TAGS?: list<array<string, mixed>>|mixed, is_svg?: bool|mixed, DIMENSIONS?: mixed|string, FORMAT?: 0|1|mixed, FILESIZE?: mixed|string, REGISTRATION_DATE?: mixed|string, EXT?: mixed|string, POST_DATE?: mixed|string, AGE?: mixed|string, ADDED_BY?: mixed|string, STATS?: mixed|string, FILE?: mixed|string, related_categories?: array<int, array{name: string, unlinkable: bool}>|mixed, related_category_ids?: false|mixed|string, tag_selection?: list<array<string, mixed>>|mixed, U_DOWNLOAD?: mixed|string, U_HISTORY?: mixed|string, U_ACTIVITY?: mixed|string, PATH?: mixed, level_options_selected?: list{mixed|null}|mixed, EXT_NAME?: mixed|string, EXT_URL?: mixed|string, SMALL_DESC?: mixed|string, BIG_DESC?: mixed|string, VERSION?: mixed|string, REVISION_DATE?: mixed|null|string, REVISION_FORMATED_DATE?: mixed|string, DOWNLOADS?: mixed|null, URL_INSTALL?: mixed|string, CERTIFICATION?: int|mixed, RATING?: mixed|null, NB_RATINGS?: mixed|null, SCREENSHOT?: ''|mixed, name?: mixed, thumbnail?: ''|mixed, screenshot?: ''|mixed, install_url?: mixed|string, EXT_DESC?: mixed|string, VER_DESC?: mixed|string, URL_DOWNLOAD?: mixed|string, replacer?: array-key|mixed, url_parameter?: list{'----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags', ...}|mixed, original_tpl?: mixed|non-empty-list<'----------'|'about.tpl'|'comment_list.tpl'|'comments.tpl'|'footer.tpl'|'header.tpl'|'identification.tpl'|'index.tpl'|'mainpage_categories.tpl'|'menubar.tpl'|'menubar_categories.tpl'|'menubar_identification.tpl'|'menubar_links.tpl'|'menubar_menu.tpl'|'menubar_specials.tpl'|'menubar_tags.tpl'|'month_calendar.tpl'|'navigation_bar.tpl'|'nbm.tpl'|'notification.tpl'|'password.tpl'|'picture.tpl'|'picture_content.tpl'|'picture_nav_buttons.tpl'|'popuphelp.tpl'|'profile.tpl'|'profile_content.tpl'|'redirect.tpl'|'register.tpl'|'search.tpl'|'slideshow.tpl'|'tags.tpl'|'thumbnails.tpl'>, bound_tpl?: array{'N/A': string, ...}|mixed, selected_tpl?: mixed|string, selected_url?: mixed|string, selected_bound?: mixed|string, pos?: float|int|mixed, reg?: RegisteredBlock|mixed, id?: mixed|numeric, U_THUMB?: array|mixed|string, U_URL?: mixed|string, SCORE_RATE?: mixed, AVG_RATE?: mixed, SUM_RATE?: mixed, NB_RATES?: int|mixed, NB_RATES_TOTAL?: int<0, max>|mixed, rates?: list{0?: array{USER: string, ...}, ...}|mixed, HTML_DATA?: mixed|string, U_IMG?: mixed|string, HTM_SIZE?: mixed|string, formats?: list{0: array{download_url: ''|mixed, ext: string, filesize: mixed|null}, 1?: array<string, mixed>, ...}|mixed, URL?: mixed|string, U_TAG_IMAGE?: mixed|string, selected_derivative?: mixed|null, unique_derivatives?: array<DerivativeImage>|mixed, anomaly?: mixed, show_ignore_msg?: bool|mixed, show_correction_success_fct?: bool|mixed, correction_error_fct?: mixed|string, show_correction_fct?: bool|mixed, show_correction_bad_fct?: bool|mixed, correction_msg?: ''|mixed, can_select?: bool|mixed, original_resize_quality?: mixed|string, original_resize_maxheight?: mixed|string, original_resize_maxwidth?: mixed|string, original_resize?: mixed|string, upload_detect_duplicate?: mixed, show_mobile_app_banner_in_admin?: mixed, show_mobile_app_banner_in_gallery?: mixed, history_guest?: mixed, history_admin?: mixed, log?: mixed, allow_user_customization?: mixed, rate_anonymous?: mixed, rate?: mixed, obligatory_user_mail_address?: mixed, allow_user_registration?: mixed, comments_enable_website?: mixed, comments_email_mandatory?: mixed, comments_author_mandatory?: mixed, email_admin_on_comment_deletion?: mixed, email_admin_on_comment_edition?: mixed, user_can_edit_comment?: mixed, user_can_delete_comment?: mixed, email_admin_on_comment_validation?: mixed, email_admin_on_comment?: mixed, comments_validation?: mixed, comments_forall?: mixed, activate_comments?: mixed, picture_menu?: mixed, picture_navigation_thumb?: mixed, picture_navigation_icons?: mixed, picture_representative_icon?: mixed, picture_caddie_icon?: mixed, picture_edit_icon?: mixed, picture_download_icon?: mixed, picture_sizes_icon?: mixed, picture_favorite_icon?: mixed, picture_slideshow_icon?: mixed, picture_metadata_icon?: mixed, display_fromto?: mixed, index_caddie_icon?: mixed, index_edit_icon?: mixed, index_new_icon?: mixed, index_sizes_icon?: mixed, index_slideshow_icon?: mixed, index_created_date_icon?: mixed, index_posted_date_icon?: mixed, index_flat_icon?: mixed, index_sort_order_input?: mixed, index_search_in_set_action?: mixed, index_search_in_set_button?: mixed, menubar_filter_icon?: mixed, picture_informations?: array|mixed, NB_CATEGORIES_PAGE?: int|mixed, DISPLAY?: mixed|string, tags?: list{0?: array{URL: string, ...}, ...}|mixed, CHANGE_COLUMN?: mixed|true, lines?: array|mixed, ...}|null|string $value
      */
-    public function append(string $tpl_var, mixed $value = null, bool $merge = false): void
+    public function append(string $tpl_var, array|string|null $value = null, bool $merge = false): void
     {
         $this->smarty->append($tpl_var, $value, $merge);
     }
@@ -446,11 +456,9 @@ class Template
      * Loads the template file of the handle, compiles it and appends the result to the output
      * (or returns it if _$return_ is true).
      *
-     * @param string $handle
-     * @param bool $return
      * @return null|string
      */
-    public function parse($handle, $return = false)
+    public function parse(string $handle, bool $return = false)
     {
         if (!isset($this->files[$handle])) {
             HtmlService::fatalError("Template->parse(): Couldn't load template file for handle $handle");
@@ -466,7 +474,7 @@ class Template
 
         $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
         if (Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
-            $this->smarty->compile_id .= '_'.$lang_info['code'];
+            $this->smarty->compile_id .= '_'.(string)$lang_info['code'];
         }
 
         $v = $this->smarty->fetch($this->files[$handle]);
@@ -560,7 +568,7 @@ class Template
     {
         $this->flush();
 
-        if ($this->smarty->debugging) {
+        if ((bool) $this->smarty->debugging) {
             $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
             $this->smarty->assign(
                 [
@@ -579,6 +587,7 @@ class Template
         if (strlen($str) > 1) {
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
+                /** @var string|null $tmp */
                 $tmp = null;
                 eval('$tmp='.$str.';');
                 return $tmp;
@@ -757,17 +766,17 @@ class Template
             if (is_bool($cropVal)) {
                 $crop = $cropVal ? 1 : 0;
             } elseif (is_int($cropVal) || is_float($cropVal)) {
-                $crop = round($cropVal / 100, 2);
+                $crop = round((float) $cropVal / 100.0, 2);
             } elseif (is_string($cropVal) && is_numeric($cropVal)) {
-                $crop = round((float) $cropVal / 100, 2);
+                $crop = round((float) $cropVal / 100.0, 2);
             }
 
-            if ($crop) {
+            if ((bool) $crop) {
                 $minWidthVal = $params['min_width'] ?? null;
                 $minHeightVal = $params['min_height'] ?? null;
-                $minw = empty($minWidthVal) ? $w : (is_int($minWidthVal) ? $minWidthVal : (is_numeric($minWidthVal) ? (int) $minWidthVal : $w));
+                $minw = ($minWidthVal === null || $minWidthVal === '') ? $w : (is_int($minWidthVal) ? $minWidthVal : (is_numeric($minWidthVal) ? (int) $minWidthVal : $w));
                 $minw <= $w or HtmlService::fatalError('define_derivative invalid min_width');
-                $minh = empty($minHeightVal) ? $h : (is_int($minHeightVal) ? $minHeightVal : (is_numeric($minHeightVal) ? (int) $minHeightVal : $h));
+                $minh = ($minHeightVal === null || $minHeightVal === '') ? $h : (is_int($minHeightVal) ? $minHeightVal : (is_numeric($minHeightVal) ? (int) $minHeightVal : $h));
                 $minh <= $h or HtmlService::fatalError('define_derivative invalid min_height');
             }
         }
@@ -813,7 +822,7 @@ class Template
         $scriptTemplate = $params['template'] ?? false;
         $scriptTemplateVal = (bool) $scriptTemplate;
         $requireRaw = $params['require'] ?? null;
-        $requireArr = empty($requireRaw) ? [] : explode(',', is_string($requireRaw) ? $requireRaw : '');
+        $requireArr = ($requireRaw === null || $requireRaw === '') ? [] : explode(',', is_string($requireRaw) ? $requireRaw : '');
         $this->scriptLoader->add(
             $scriptIdStr,
             $load,
@@ -933,10 +942,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public function blockFooterScript(array $params, string|null $content): void
     {
         $content = trim($content ?? '');
-        if (!empty($content)) { // second call
+        if ($content !== '') { // second call
 
             $requireFooter = $params['require'] ?? null;
-            $requireFooterArr = empty($requireFooter) ? [] : explode(',', is_string($requireFooter) ? $requireFooter : '');
+            $requireFooterArr = ($requireFooter === null || $requireFooter === '') ? [] : explode(',', is_string($requireFooter) ? $requireFooter : '');
             $this->scriptLoader->addInline(
                 $content,
                 $requireFooterArr
@@ -1086,15 +1095,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 
     /**
      * @toto : description of Template::prefilter_white_space
-     *
-     * @param string $source
-     * @param Smarty $smarty
      */
-    /** @return string|array<mixed>|null */
-    public static function prefilterWhiteSpace(string $source, mixed $smarty): string|array|null
+    public static function prefilterWhiteSpace(string $source, Smarty $smarty): string|null
     {
-        $ld = ($smarty instanceof Smarty) ? $smarty->getLeftDelimiter() : '{';
-        $rd = ($smarty instanceof Smarty) ? $smarty->getRightDelimiter() : '}';
+        $ld = $smarty->getLeftDelimiter();
+        $rd = $smarty->getRightDelimiter();
         // $ld = $smarty->left_delimiter;
         // $rd = $smarty->right_delimiter;
         $ldq = preg_quote($ld, '#');
@@ -1117,11 +1122,9 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     /**
      * Postfilter used when \Piwigo\Config\Config::compiledTemplateCacheLanguage() is true.
      *
-     * @param string $source
      * @param Smarty $smarty
      */
-    /** @return string|array<mixed>|null */
-    public static function postfilterLanguage(string $source, mixed $smarty): string|array|null
+    public static function postfilterLanguage(string $source, mixed $smarty): string|null
     {
         // replaces echo PHP_STRING_LITERAL; with the string literal value
         $source = preg_replace_callback(
@@ -1182,9 +1185,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $themeconfs = [];
         }
 
-        $dir = realpath($dir);
+        $realpathDir = realpath($dir);
+        $dir = $realpathDir !== false ? $realpathDir : $dir;
         if (!isset($themeconfs[$dir])) {
             $themeconf = [];
+            /** @psalm-suppress UnresolvableInclude */
             require($dir.'/themeconf.inc.php');
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;

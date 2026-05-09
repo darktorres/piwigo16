@@ -26,8 +26,9 @@ final class NoPhotoYetRenderer
         $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $_no_photo_yet_route = PathExtractor::fromServer($_SERVER);
 
+        /** @psalm-suppress RedundantCondition — IN_ADMIN is runtime-set; stub value misleads Psalm */
         if (
-            !(defined('IN_ADMIN') ? constant('IN_ADMIN') : false)
+            !defined('IN_ADMIN')
             and StringUtil::scriptBasename() != 'identification'
             and StringUtil::scriptBasename() != 'password'
             and StringUtil::scriptBasename() != 'ws'
@@ -61,7 +62,7 @@ final class NoPhotoYetRenderer
 
                 if (PermissionService::get()->isAdmin()) {
                     $url = Config::noPhotoYetUrl();
-                    if (str_starts_with((string) $url, 'http')) {
+                    if (str_starts_with($url, 'http')) {
                         // absolute URL set by admin — use as-is
                     } elseif ($url === '' || $url === 'admin.php?page=photos_add') {
                         $url = ServiceLocator::get(UrlGenerator::class)->admin('photos_add');

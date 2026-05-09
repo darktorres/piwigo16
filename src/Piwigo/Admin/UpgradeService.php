@@ -70,7 +70,7 @@ final class UpgradeService
         $allActive  = $pluginRepo->findAll('active');
         $plugins    = [];
         foreach ($allActive as $row) {
-            $pluginId = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $pluginId = is_string($row['id'] ?? null) ? $row['id'] : '';
             if ($pluginId !== '' && !in_array($pluginId, $standard_plugins)) {
                 $plugins[] = $pluginId;
             }
@@ -96,10 +96,10 @@ final class UpgradeService
         $theme_ids   = [];
         $theme_names = [];
         foreach ($allThemes as $row) {
-            $tid = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $tid = is_string($row['id'] ?? null) ? $row['id'] : '';
             if ($tid !== '' && !in_array($tid, $standard_themes)) {
                 $theme_ids[]   = $tid;
-                $theme_names[] = is_scalar($row['name']) ? (string) $row['name'] : '';
+                $theme_names[] = is_string($row['name'] ?? null) ? $row['name'] : '';
             }
         }
 
@@ -114,7 +114,8 @@ final class UpgradeService
 
             $defaultUserInfo = ServiceLocator::get(UserRepository::class)
                 ->getDefaultUserInfo(Config::defaultUserId());
-            $default_theme = is_scalar($defaultUserInfo['theme'] ?? null) ? (string) $defaultUserInfo['theme'] : '';
+            $defaultThemeRaw = $defaultUserInfo !== null ? ($defaultUserInfo['theme'] ?? null) : null;
+            $default_theme = is_scalar($defaultThemeRaw) ? (string) $defaultThemeRaw : '';
 
             if (in_array($default_theme, $theme_ids)) {
                 if (!$themeRepo->existsById(AppInfo::DEFAULT_TEMPLATE)) {
@@ -137,7 +138,7 @@ final class UpgradeService
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             session_start();
             $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
-            if (!empty($pwgUid)) {
+            if ($pwgUid !== '') {
                 $statusValue = ServiceLocator::get(UserRepository::class)
                     ->findStatusByUserId((int) $pwgUid);
                 if ($statusValue === 'webmaster') {
@@ -151,12 +152,14 @@ final class UpgradeService
             return;
         }
 
-        $username = is_scalar($_POST['username']) ? (string) $_POST['username'] : '';
-        $password = is_scalar($_POST['password']) ? (string) $_POST['password'] : '';
+        $rawUsername = $_POST['username'];
+        $rawPassword = $_POST['password'];
+        $username = is_string($rawUsername) ? $rawUsername : '';
+        $password = is_string($rawPassword) ? $rawPassword : '';
 
         if (version_compare($current_release, '2.0', '<')) {
-            $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
-            $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
+            $username = (string) mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
+            $password = (string) mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
         }
 
         if (version_compare($current_release, '1.5', '<')) {
@@ -166,7 +169,8 @@ final class UpgradeService
                 .' INNER JOIN '.Tables::userInfos().' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
                 .' WHERE '.Config::userFields()['username'].' = ?';
         }
-        $row = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative() ?: null;
+        $rowResult = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative();
+        $row = $rowResult !== false ? $rowResult : null;
 
         if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
             PageState::current()->addError(Lang::t('Invalid password!'));
@@ -201,7 +205,7 @@ final class UpgradeService
     {
         $query   = 'SELECT id FROM '.Tables::upgrade().';';
         $applied = array_map(
-            fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
             array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id')
         );
         return count(array_diff(self::getAvailableUpgradeIds(), $applied)) > 0;

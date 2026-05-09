@@ -33,6 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class UpgradeController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         $prefixeTable = Config::dbPrefix();
@@ -59,8 +60,10 @@ final class UpgradeController implements ControllerInterface
         } else {
             $language = 'en_UK';
             foreach ($languages->fs_languages as $language_code => $fs_language) {
-                $httpAccLang = is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
-                if (substr((string) $language_code, 0, 2) == substr($httpAccLang, 0, 2)) {
+                /** @var mixed $httpAccLangRaw */
+                $httpAccLangRaw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+                $httpAccLang = is_string($httpAccLangRaw) ? $httpAccLangRaw : '';
+                if (substr($language_code, 0, 2) == substr($httpAccLang, 0, 2)) {
                     $language = $language_code;
                     break;
                 }
@@ -114,7 +117,7 @@ final class UpgradeController implements ControllerInterface
         $page = &$GLOBALS['page'];
         $has_remote_site = false;
         foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
-            if (UrlService::urlIsRemote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '')) {
+            if (UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '')) {
                 $has_remote_site = true;
             }
         }
@@ -183,7 +186,7 @@ final class UpgradeController implements ControllerInterface
         $columns_of = [];
         foreach ($tables as $table) {
             $columns_of[$table] = array_map(
-                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
                 DbConnection::get()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
             );
         }

@@ -117,7 +117,7 @@ final readonly class AdminService
             if (Filesystem::tryRmdir($path)) {
                 return true;
             }
-            if (!empty($trashPath)) {
+            if ($trashPath !== null && $trashPath !== '') {
                 if (!is_dir($trashPath)) {
                     Util::mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
                 }
@@ -153,7 +153,7 @@ final readonly class AdminService
         } else {
             $requested = array_intersect($requested, array_keys($tables));
         }
-        $keys = ['_hash' => md5((string) UrlService::getAbsoluteRootUrl())];
+        $keys = ['_hash' => md5(UrlService::getAbsoluteRootUrl())];
         foreach ($requested as $item) {
             $keys[$item] = $this->conn->executeQuery(
                 'SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*)) FROM `' . $tables[$item] . '`'
@@ -164,16 +164,18 @@ final readonly class AdminService
 
     public function numberFormatHumanReadable(float $numbers): string
     {
+        /** @var array<int<0,2>, string> $readable */
         $readable = ['', 'k', 'M'];
         $index    = 0;
         while ($numbers >= 1000) {
-            $numbers /= 1000;
+            $numbers /= 1000.0;
             $index++;
             if ($index > count($readable) - 1) {
                 $index--;
                 break;
             }
         }
+        /** @var int<0,2> $index */
         $decimals = $readable[$index] === '' ? 0 : 1;
         return number_format($numbers, $decimals) . $readable[$index];
     }
@@ -188,16 +190,17 @@ final readonly class AdminService
         return PHPWG_URL . '/newsletter';
     }
 
-    public function getActiveMenu(mixed $menuPage): int
+    public function getActiveMenu(string $menuPage): int
     {
         $page = &$GLOBALS['page'];
         if (!is_array($page)) {
             $page = [];
         }
-        if (isset($page['active_menu']) && is_int($page['active_menu'])) {
-            return $page['active_menu'];
+        if (isset($page['active_menu'])) {
+            $am = $page['active_menu'];
+            return is_int($am) ? $am : -1;
         }
-        $mp = is_scalar($menuPage) ? (string) $menuPage : '';
+        $mp = $menuPage;
         return match ($mp) {
             'photo', 'photos_add', 'rating', 'tags', 'batch_manager' => 0,
             'album', 'cat_list', 'albums', 'cat_options', 'cat_search', 'permalinks' => 1,
@@ -227,7 +230,7 @@ final readonly class AdminService
     /**
      * @param array<mixed> $getData
      * @param array<mixed> $postData
-     * @param-out string $dest
+     * @param resource|string $dest
      */
     public function fetchRemote(string $src, mixed &$dest, array $getData = [], array $postData = [], string $userAgent = 'Piwigo', int $step = 0): bool
     {
@@ -266,7 +269,7 @@ final readonly class AdminService
                         curl_setopt($ch, CURLOPT_PROXY, Config::proxyServer());
                         $proxyAuth = Config::proxyAuth();
                         if (Config::has('proxy_auth') && !empty($proxyAuth)) {
-                            curl_setopt($ch, CURLOPT_PROXYUSERPWD, (string) $proxyAuth);
+                            curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyAuth);
                         }
                     }
                     if (!empty($src)) {
@@ -307,7 +310,7 @@ final readonly class AdminService
                 return true;
             }
         }
-        if (ini_get('allow_url_fopen')) {
+        if (ini_get('allow_url_fopen') !== '' && ini_get('allow_url_fopen') !== false) {
             $opts = ['http' => ['method' => $method, 'user_agent' => $userAgent]];
             if ($method === 'POST') {
                 $opts['http']['content'] = $request;
@@ -410,7 +413,7 @@ final readonly class AdminService
         if (!is_file($cachePath) || filemtime($cachePath) < strtotime('24 hours ago')) {
             $url     = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
             $content = '';
-            if ($this->fetchRemote($url, $content)) {
+            if ($this->fetchRemote($url, $content) && is_string($content)) {
                 $porgNews = json_decode($content, true);
                 if (is_array($porgNews) && isset($porgNews['result']) && is_array($porgNews['result'])) {
                     $topic    = $porgNews['result'];
@@ -446,6 +449,7 @@ final readonly class AdminService
         }
         switch (PwgImage::getLibrary()) {
             case 'ext_imagick':
+                $returnarray = [];
                 exec(Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' -version', $returnarray);
                 if (isset($returnarray[0]) && preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                     $library .= '/' . $match[1];
@@ -511,7 +515,7 @@ final readonly class AdminService
         if (count($users) > 0) {
             $candidate = $users[0]['registration_date'];
         }
-        if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
+        if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
             $users = DbConnection::get()->executeQuery(
                 'SELECT MIN(registration_date) AS min_registration_date FROM ' . Tables::userInfos() . " WHERE registration_date > '$piwigoOrigins'"
             )->fetchAllAssociative();
@@ -519,7 +523,7 @@ final readonly class AdminService
                 $candidate = $users[0]['min_registration_date'];
             }
         }
-        if (empty($candidate) || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
+        if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
             $images = DbConnection::get()->executeQuery(
                 'SELECT date_available FROM ' . Tables::images() . ' ORDER BY id ASC LIMIT 1'
             )->fetchAllAssociative();
@@ -527,6 +531,6 @@ final readonly class AdminService
                 $candidate = $images[0]['date_available'];
             }
         }
-        return ($candidate && is_scalar($candidate)) ? (string) $candidate : null;
+        return ($candidate !== null && $candidate !== '' && is_scalar($candidate)) ? (string) $candidate : null;
     }
 }

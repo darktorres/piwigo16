@@ -30,14 +30,14 @@ use Symfony\Component\Process\Process;
 abstract class IntegrationTestCase extends TestCase
 {
     /** Header line array suitable for CURLOPT_HTTPHEADER. */
-    protected const TEST_HEADER = ['X-Piwigo-Env: test'];
+    protected const array TEST_HEADER = ['X-Piwigo-Env: test'];
 
-    protected string $dbHost;
-    protected int $dbPort;
-    protected string $dbUser;
-    protected string $dbPass;
-    protected string $dbName;
-    protected string $baseUrl;
+    protected string $dbHost = '';
+    protected int $dbPort = 0;
+    protected string $dbUser = '';
+    protected string $dbPass = '';
+    protected string $dbName = '';
+    protected string $baseUrl = '';
 
     protected function setUpConnectionFromEnv(): void
     {

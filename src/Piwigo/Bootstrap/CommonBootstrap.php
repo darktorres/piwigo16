@@ -67,9 +67,10 @@ final class CommonBootstrap
         array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
         array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
         array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
-        if (!empty($_SERVER['PATH_INFO'])) {
-            $path_info = $_SERVER['PATH_INFO'];
-            $_SERVER['PATH_INFO'] = addslashes(is_scalar($path_info) ? (string) $path_info : '');
+        if (isset($_SERVER['PATH_INFO'])) {
+            /** @var mixed $path_info */
+            $path_info            = $_SERVER['PATH_INFO'];
+            $_SERVER['PATH_INFO'] = addslashes(is_string($path_info) ? $path_info : '');
         }
 
         if (Kernel::isBooted()) {
@@ -113,7 +114,7 @@ final class CommonBootstrap
 
         if (Config::sessionGcProbability() > 0 && function_exists('ini_set')) {
             ini_set('session.gc_divisor', '100');
-            ini_set('session.gc_probability', (string) min((int) Config::sessionGcProbability(), 100));
+            ini_set('session.gc_probability', (string) min(Config::sessionGcProbability(), 100));
         }
 
         $GLOBALS['page']['execution_uuid'] = StringUtil::generateKey(10);
@@ -208,13 +209,15 @@ final class CommonBootstrap
         if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {
             define('PEM_URL', Config::alternativePemUrl());
         } else {
-            $pem_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $pem_host   = is_scalar($_SERVER['HTTP_HOST'] ?? null) ? (string) $_SERVER['HTTP_HOST'] : 'localhost';
+            $pem_scheme   = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            /** @var mixed $pem_host_raw */
+            $pem_host_raw = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $pem_host     = is_string($pem_host_raw) ? $pem_host_raw : 'localhost';
             define('PEM_URL', $pem_scheme . '://' . $pem_host . '/piwigo16-ext');
         }
 
         LangService::get()->loadLanguage('common.lang');
-        if (PermissionService::get()->isAdmin() || (defined('IN_ADMIN') ? constant('IN_ADMIN') : false)) {
+        if (PermissionService::get()->isAdmin() || defined('IN_ADMIN')) {
             LangService::get()->loadLanguage('admin.lang');
             LangService::get()->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
@@ -240,8 +243,8 @@ final class CommonBootstrap
             $notify_email_raw    = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
             $notify_days_left    = $notify_exp['days_left'];
             $is_mail_send = UserService::get()->notificationApiKeyExpiration(
-                is_scalar($notify_username_raw) ? (string) $notify_username_raw : '',
-                is_scalar($notify_email_raw) ? (string) $notify_email_raw : '',
+                is_string($notify_username_raw) ? $notify_username_raw : '',
+                is_string($notify_email_raw) ? $notify_email_raw : '',
                 is_numeric($notify_days_left) ? (int) $notify_days_left : 0
             );
 
@@ -260,13 +263,13 @@ final class CommonBootstrap
             unset($GLOBALS['page']['notify_api_key_expiration']);
         }
 
-        if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
+        if (defined('IN_ADMIN')) {
             $admin_theme_raw = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
-            $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark');
+            $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
         } else {
             $user_arr_theme = self::readGlobal('user');
             $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
-            $theme     = is_scalar($theme_raw) ? (string) $theme_raw : '';
+            $theme     = is_string($theme_raw) ? $theme_raw : '';
             if (StringUtil::scriptBasename() != 'ws' and ServiceLocator::get(Util::class)->mobileTheme()) {
                 $theme = Config::mobilTheme();
             }

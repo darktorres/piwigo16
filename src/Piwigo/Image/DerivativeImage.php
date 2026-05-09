@@ -173,19 +173,19 @@ final class DerivativeImage
         }
 
         $tokens = [];
-        $tokens[] = substr((string) $params->type, 0, 2);
+        $tokens[] = substr($params->type, 0, 2);
 
         if ($params->type == DerivativeSize::Custom->value) {
             $params->addUrlTokens($tokens);
         }
 
         $loc = $src->rel_path;
-        if (substr_compare((string) $loc, './', 0, 2) == 0) {
-            $loc = substr((string) $loc, 2);
-        } elseif (substr_compare((string) $loc, '../', 0, 3) == 0) {
-            $loc = substr((string) $loc, 3);
+        if (substr_compare($loc, './', 0, 2) == 0) {
+            $loc = substr($loc, 2);
+        } elseif (substr_compare($loc, '../', 0, 3) == 0) {
+            $loc = substr($loc, 3);
         }
-        $dot_pos = strrpos((string) $loc, '.');
+        $dot_pos = strrpos($loc, '.');
         if ($dot_pos !== false) {
             $loc = substr_replace($loc, '-'.implode('_', $tokens), $dot_pos, 0);
         }
@@ -268,7 +268,7 @@ final class DerivativeImage
     public function getSizeCss(): string
     {
         $size = $this->getSize();
-        if ($size) {
+        if ($size !== null) {
             return 'width:'.$size[0].'px; height:'.$size[1].'px';
         }
         return '';
@@ -280,7 +280,7 @@ final class DerivativeImage
     public function getSizeHtm(): string
     {
         $size = $this->getSize();
-        if ($size) {
+        if ($size !== null) {
             return 'width="'.$size[0].'" height="'.$size[1].'"';
         }
         return '';
@@ -292,7 +292,7 @@ final class DerivativeImage
     public function getSizeHr(): string
     {
         $size = $this->getSize();
-        if ($size) {
+        if ($size !== null) {
             return $size[0].' x '.$size[1];
         }
         return '';
@@ -306,15 +306,15 @@ final class DerivativeImage
     public function getScaledSize(int $maxw, int $maxh): array
     {
         $size = $this->getSize();
-        if ($size) {
-            $ratio_w = $size[0] / $maxw;
-            $ratio_h = $size[1] / $maxh;
+        if ($size !== null) {
+            $ratio_w = (float) $size[0] / (float) $maxw;
+            $ratio_h = (float) $size[1] / (float) $maxh;
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
                     $size[0] = $maxw;
-                    $size[1] = (int) floor($size[1] / $ratio_w);
+                    $size[1] = (int) floor((float) $size[1] / $ratio_w);
                 } else {
-                    $size[0] = (int) floor($size[0] / $ratio_h);
+                    $size[0] = (int) floor((float) $size[0] / $ratio_h);
                     $size[1] = $maxh;
                 }
             }
@@ -328,7 +328,7 @@ final class DerivativeImage
     public function getScaledSizeHtm(int $maxw = 9999, int $maxh = 9999): string
     {
         $size = $this->getScaledSize($maxw, $maxh);
-        if ($size) {
+        if (!empty($size)) {
             return 'width="'.$size[0].'" height="'.$size[1].'"';
         }
         return '';

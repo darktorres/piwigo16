@@ -33,6 +33,7 @@ final class StorageRegistry
     public static function fromConfig(string $configPath): self
     {
         /** @var array<string, \Closure(): FilesystemOperator> $factories */
+        /** @psalm-suppress UnresolvableInclude */
         $factories = require $configPath;
         return new self($factories);
     }

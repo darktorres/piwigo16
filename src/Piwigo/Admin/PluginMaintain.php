@@ -14,7 +14,7 @@ use Piwigo\Users\PermissionService;
  * pre-PHP-7 signatures (no parameter types, no return types). Adding
  * declared types here breaks LSP and produces fatal-on-load.
  */
-class PluginMaintain
+final class PluginMaintain
 {
     /**
      * @param string $plugin_id
@@ -35,13 +35,11 @@ class PluginMaintain
         return null;
     }
 
-    /** @return void */
-    public function deactivate()
+    public function deactivate(): void
     {
     }
 
-    /** @return void */
-    public function uninstall()
+    public function uninstall(): void
     {
     }
 

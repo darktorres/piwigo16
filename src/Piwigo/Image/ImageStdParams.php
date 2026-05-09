@@ -96,12 +96,12 @@ final class ImageStdParams
      */
     public static function getCustom($w, $h, $crop = 0, $minw = null, $minh = null): DerivativeParams
     {
-        $params = new DerivativeParams(new SizingParams([$w,$h], $crop, ($minw !== null && $minh !== null) ? [$minw,$minh] : null));
+        $params = new DerivativeParams(new SizingParams([$w,$h], $crop, ($minw !== null && $minh !== null) ? [$minw,$minh] : [0, 0]));
         self::applyGlobal($params);
 
-        $key = [];
-        $params->addUrlTokens($key);
-        $key = implode('_', $key);
+        $keyTokens = [];
+        $params->addUrlTokens($keyTokens);
+        $key = implode('_', $keyTokens);
         if ((self::$custom[$key] ?? 0) < time() - 24 * 3600) {
             self::$custom[$key] = time();
             self::save();

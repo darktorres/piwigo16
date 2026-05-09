@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-class QExpression extends QMultiToken
+final class QExpression extends QMultiToken
 {
     /** @var array<string, QSearchScope> */
     public array $scopes = [];
@@ -46,7 +46,7 @@ class QExpression extends QMultiToken
                     $modifier &= ~QST_NOT;
                 }
                 $this->stoken_modifiers[] = $modifier;
-            } elseif ($token instanceof QMultiToken) {
+            } else {
                 $this->buildSingleTokens($token, $crt_is_not);
             }
         }

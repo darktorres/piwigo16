@@ -78,7 +78,7 @@ final class GeneralEndpoints
             $types = array_keys(ImageStdParams::getDefinedTypeMap());
         } else {
             $typesRaw = is_array($params['types']) ? $params['types'] : [];
-            $types = array_intersect(array_keys(ImageStdParams::getDefinedTypeMap()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $typesRaw));
+            $types = array_intersect(array_keys(ImageStdParams::getDefinedTypeMap()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $typesRaw));
             if (count($types) === 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
             }
@@ -151,6 +151,7 @@ final class GeneralEndpoints
      */
     public function getInfos(array $params, PwgServer &$service): array
     {
+        $infos = [];
         $infos['version']            = AppInfo::VERSION;
         $imgRepo  = ServiceLocator::get(ImageRepository::class);
         $catRepo  = ServiceLocator::get(CategoryRepository::class);
@@ -187,15 +188,16 @@ final class GeneralEndpoints
      */
     public function getCacheSize(array $params, PwgServer &$service): array
     {
+        $infos = [];
         $pathCache = Config::dataLocation();
         $infos['cache_size'] = $this->directorySizeBytes($pathCache);
         $pathMsizes = Config::dataLocation() . 'i';
         $msizes     = ServiceLocator::get(ImageAdminService::class)->getCacheSizeDerivatives($pathMsizes);
-        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::getDefinedTypeMap()), 0);
-        $infos['msizes']['custom'] = 0;
-        $all = 0;
+        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::getDefinedTypeMap()), 0.0);
+        $infos['msizes']['custom'] = 0.0;
+        $all = 0.0;
         foreach (array_keys($infos['msizes']) as $sizeType) {
-            $infos['msizes'][$sizeType] += $msizes[DerivativeEncoding::derivativeToUrl($sizeType)] ?? 0;
+            $infos['msizes'][$sizeType] += (float) ($msizes[DerivativeEncoding::derivativeToUrl($sizeType)] ?? 0);
             $all += $infos['msizes'][$sizeType];
         }
         $infos['msizes']['all'] = $all;
@@ -232,7 +234,7 @@ final class GeneralEndpoints
         $userId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
         $query  = 'DELETE FROM ' . Tables::rate() . ' WHERE user_id=' . $userId;
         if (!empty($params['anonymous_id'])) {
-            $query .= " AND anonymous_id='" . (is_scalar($params['anonymous_id']) ? (string) $params['anonymous_id'] : '') . "'";
+            $query .= " AND anonymous_id='" . (is_string($params['anonymous_id']) ? $params['anonymous_id'] : '') . "'";
         }
         if (!empty($params['image_id'])) {
             $query .= ' AND element_id=' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
@@ -250,8 +252,8 @@ final class GeneralEndpoints
         if (defined('PWG_API_KEY_REQUEST')) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
-        $username = is_scalar($params['username']) ? (string) $params['username'] : '';
-        $password = is_scalar($params['password']) ? (string) $params['password'] : '';
+        $username = is_string($params['username'] ?? null) ? $params['username'] : '';
+        $password = is_string($params['password'] ?? null) ? $params['password'] : '';
         if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
             if (AuthService::get()->authKeyLogin($username . ':' . $password)) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
@@ -278,6 +280,7 @@ final class GeneralEndpoints
     public function sessionGetStatus(mixed $params, PwgServer &$service): mixed
     {
         $currentUser = CurrentUser::get();
+        $res = [];
         $res['username'] = PermissionService::get()->isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
@@ -288,7 +291,9 @@ final class GeneralEndpoints
         $res['version']   = AppInfo::VERSION;
         $res['save_visits'] = ServiceLocator::get(Util::class)->doLog();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
-        $httpUserAgent = isset($_SERVER['HTTP_USER_AGENT']) && is_string($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+        /** @var mixed $httpUserAgentRaw */
+        $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $httpUserAgent    = is_string($httpUserAgentRaw) ? $httpUserAgentRaw : '';
         if ($httpUserAgent !== '' && preg_match('/^PiwigoRemoteSync/', $httpUserAgent)) {
             unset($res['save_visits'], $res['connected_with']);
         }
@@ -323,15 +328,15 @@ final class GeneralEndpoints
         $min = '';
         $max = '';
         if (!empty($param['date_min'])) {
-            $dateMinStr = is_scalar($param['date_min']) ? (string) $param['date_min'] : '';
-            $dateMaxStr = isset($param['date_max']) && is_scalar($param['date_max']) ? (string) $param['date_max'] : '';
+            $dateMinStr = is_string($param['date_min']) ? $param['date_min'] : '';
+            $dateMaxStr = isset($param['date_max']) && is_string($param['date_max']) ? $param['date_max'] : '';
             $dmin       = date_create($dateMinStr);
             $dmax       = $dateMaxStr !== '' ? date_create($dateMaxStr) : false;
             $min        = $dmin !== false ? date_format($dmin, 'Y-m-d H:i:s') : '';
             $max        = $dmax !== false ? date_format($dmax, 'Y-m-d 23:59:59') : '';
         }
         if (!empty($param['date_max'])) {
-            $dateMaxStr2 = is_scalar($param['date_max']) ? (string) $param['date_max'] : '';
+            $dateMaxStr2 = is_string($param['date_max']) ? $param['date_max'] : '';
             $dmax2       = date_create($dateMaxStr2);
             $max         = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
         }
@@ -340,15 +345,17 @@ final class GeneralEndpoints
             $where .= ' AND performed_by=' . (is_numeric($param['uid']) ? (int) $param['uid'] : 0);
         }
         if (isset($param['action'])) {
-            $where .= ' AND action=' . DbConnection::get()->quote(is_scalar($param['action']) ? (string) $param['action'] : '');
+            $where .= ' AND action=' . DbConnection::get()->quote(is_string($param['action']) ? $param['action'] : '');
         }
         if (isset($param['object'])) {
-            $where .= ' AND object=' . DbConnection::get()->quote(is_scalar($param['object']) ? (string) $param['object'] : '');
+            $where .= ' AND object=' . DbConnection::get()->quote(is_string($param['object']) ? $param['object'] : '');
         }
-        if (!empty($param['date_min'])) {
+        $dateMinVal = $param['date_min'] ?? null;
+        if ($dateMinVal !== null && $dateMinVal !== '' && $dateMinVal !== false && $dateMinVal !== 0) {
             $where .= ' AND occured_on >= "' . $min . '"';
         }
-        if (!empty($param['date_max'])) {
+        $dateMaxVal = $param['date_max'] ?? null;
+        if ($dateMaxVal !== null && $dateMaxVal !== '' && $dateMaxVal !== false && $dateMaxVal !== 0) {
             $where .= ' AND occured_on <= "' . $max . '"';
         }
         if (!empty($param['id'])) {
@@ -369,15 +376,15 @@ final class GeneralEndpoints
             foreach ($rows as $row) {
                 if (count($outputLines) < $pageSize) {
                     $pageOffset++;
-                    $rowSessionIdx = is_scalar($row['session_idx']) ? (string) $row['session_idx'] : '';
-                    $rowObject     = is_scalar($row['object']) ? (string) $row['object'] : '';
-                    $rowAction     = is_scalar($row['action']) ? (string) $row['action'] : '';
+                    $rowSessionIdx = is_string($row['session_idx'] ?? null) ? $row['session_idx'] : '';
+                    $rowObject     = is_string($row['object'] ?? null) ? $row['object'] : '';
+                    $rowAction     = is_string($row['action'] ?? null) ? $row['action'] : '';
                     $lineKey = $rowSessionIdx . '~' . $rowObject . '~' . $rowAction . '~';
                     if ($lineKey === $currentKey) {
                         $outputLines[count($outputLines) - 1]['counter']++;
                         $outputLines[count($outputLines) - 1]['object_id'][] = $row['object_id'];
                     } else {
-                        $rowDetailsStr = is_scalar($row['details']) ? (string) $row['details'] : '';
+                        $rowDetailsStr = is_string($row['details'] ?? null) ? $row['details'] : '';
                         $rowDetailsStr = str_replace(['`groups`', '`rank`'], ['groups', 'rank'], $rowDetailsStr);
                         $details       = StringUtil::safeUnserialize($rowDetailsStr);
                         if (isset($row['user_agent'])) {
@@ -390,7 +397,7 @@ final class GeneralEndpoints
                         if (isset($details['script'])) {
                             $detailsType = 'script';
                         }
-                        [$date, $hour]     = explode(' ', is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '');
+                        [$date, $hour]     = explode(' ', is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '');
                         $rowPerformedBy    = $row['performed_by'];
                         $outputLines[]     = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => ServiceLocator::get(DateService::class)->formatDate($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
                         $userIdKey = is_scalar($rowPerformedBy) ? (string) $rowPerformedBy : '';
@@ -420,26 +427,30 @@ final class GeneralEndpoints
         }
         foreach ($outputLines as $idx => $outputLine) {
             if ('user' === ($outputLine['object'] ?? '')) {
-                $objIds = $outputLine['object_id'];
+                /** @phpstan-ignore-next-line nullCoalesce.offset */
+                $objIds = $outputLine['object_id'] ?? [];
                 foreach ($objIds as $uid) {
                     $uidKey = is_scalar($uid) ? (string) $uid : '';
+                    $detRaw = $outputLines[$idx]['details'] ?? null;
                     /** @var array<string, mixed> $detArr */
-                    $detArr = $outputLines[$idx]['details'] ?? [];
+                    $detArr = is_array($detRaw) ? $detRaw : [];
                     /** @var list<mixed> $detUsers */
-                    $detUsers   = is_array($detArr['users'] ?? null) ? $detArr['users'] : [];
+                    $detUsersArr = $detArr['users'] ?? null;
+                    $detUsers   = is_array($detUsersArr) ? $detUsersArr : [];
                     $detUsers[] = $usernameOf[$uidKey] ?? ('user#' . $uidKey);
                     $detArr['users'] = $detUsers;
                     $outputLines[$idx]['details'] = $detArr;
                 }
+                $detRaw2 = $outputLines[$idx]['details'] ?? null; // @phpstan-ignore nullCoalesce.offset
                 /** @var array<string, mixed> $detArr2 */
-                $detArr2 = $outputLines[$idx]['details'];
+                $detArr2 = is_array($detRaw2) ? $detRaw2 : [];
                 if (isset($detArr2['users'])) {
                     $usersArr = is_array($detArr2['users']) ? $detArr2['users'] : [];
-                    $detArr2['users_string'] = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $usersArr));
+                    $detArr2['users_string'] = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $usersArr));
                     $outputLines[$idx]['details'] = $detArr2;
                 }
             }
-            $lineUserId    = $outputLines[$idx]['user_id'] ?? '';
+            $lineUserId    = $outputLines[$idx]['user_id'] ?? null;
             $lineUserIdStr = is_scalar($lineUserId) ? (string) $lineUserId : '';
             $outputLines[$idx]['username'] = 'user#' . $lineUserIdStr;
             if ($lineUserIdStr !== '' && isset($usernameOf[$lineUserIdStr])) {
@@ -462,7 +473,7 @@ final class GeneralEndpoints
         if (!empty($params['cat_id'])) {
             $page['category'] = ['id' => $params['cat_id']];
         }
-        $tagsString = is_scalar($params['tags_string']) ? (string) $params['tags_string'] : '';
+        $tagsString = is_string($params['tags_string'] ?? null) ? $params['tags_string'] : '';
         if ($tagsString !== '' && preg_match('/^\d+(,\d+)*$/', $tagsString)) {
             $page['tag_ids'] = explode(',', $tagsString);
         }
@@ -509,16 +520,19 @@ final class GeneralEndpoints
             $search['fields']['image_id'] = is_numeric($param['image_id']) ? (int) $param['image_id'] : 0;
         }
         if (!empty($param['filename'])) {
-            $search['fields']['filename'] = str_replace('*', '%', is_scalar($param['filename']) ? (string) $param['filename'] : '');
+            $search['fields']['filename'] = str_replace('*', '%', is_string($param['filename']) ? $param['filename'] : '');
         }
         if (!empty($param['ip'])) {
-            $search['fields']['ip'] = str_replace('*', '%', is_scalar($param['ip']) ? (string) $param['ip'] : '');
+            $search['fields']['ip'] = str_replace('*', '%', is_string($param['ip']) ? $param['ip'] : '');
         }
         ServiceLocator::get(Util::class)->checkInputParameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
-        $displayThumbnailStr = is_scalar($param['display_thumbnail']) ? (string) $param['display_thumbnail'] : '';
+        $displayThumbnailRaw = $param['display_thumbnail'] ?? null;
+        $displayThumbnailStr = is_string($displayThumbnailRaw) ? $displayThumbnailRaw : '';
         $cookieVal           = ($displayThumbnailStr !== '' && isset($displayThumbnails[$displayThumbnailStr])) ? $displayThumbnailStr : null;
-        ServiceLocator::get(CookieService::class)->setCookieVar('display_thumbnail', $cookieVal, strtotime('+1 month'));
+        $strtotimeMonth = strtotime('+1 month');
+        /** @var int|false $strtotimeMonth */
+        ServiceLocator::get(CookieService::class)->setCookieVar('display_thumbnail', $cookieVal, $strtotimeMonth === false ? null : $strtotimeMonth);
         $searchRepo = ServiceLocator::get(SearchRepository::class);
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
@@ -560,7 +574,7 @@ final class GeneralEndpoints
         }
         $searchDetails = [];
         if (count($searchIds) > 0) {
-            $searchIdsStr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $searchIds);
+            $searchIdsStr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $searchIds);
             $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', $searchIdsStr) . ');';
             $searchDetails = array_column(DbConnection::get()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
@@ -598,7 +612,7 @@ final class GeneralEndpoints
         $imageInfos     = [];
         $fullCatPath    = [];
         if (count($categoryIds) > 0) {
-            $categoryIdsStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $categoryIds);
+            $categoryIdsStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds);
             $uppercatsOf    = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
@@ -614,7 +628,7 @@ final class GeneralEndpoints
         $nameOfTag = [];
         if ($hasTags) {
             foreach (ServiceLocator::get(TagRepository::class)->findAll() as $row) {
-                $tagIdKey = is_scalar($row['id']) ? (string) $row['id'] : '';
+                $tagIdKey = is_string($row['id'] ?? null) ? $row['id'] : '';
                 if ($tagIdKey !== '') {
                     $nameOfTag[$tagIdKey] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
                 }
@@ -627,17 +641,17 @@ final class GeneralEndpoints
         $result       = [];
         $sortedMembers = [];
         foreach ($historyLines as $line) {
-            $lineImageType  = is_scalar($line['image_type']) ? (string) $line['image_type'] : '';
+            $lineImageType  = is_string($line['image_type'] ?? null) ? $line['image_type'] : '';
             $lineImageId    = $line['image_id'] ?? null;
             $lineImageIdStr = is_scalar($lineImageId) ? (string) $lineImageId : '';
             $lineUserId     = $line['user_id'] ?? null;
             $lineUserIdStr  = is_scalar($lineUserId) ? (string) $lineUserId : '';
-            $lineIP         = is_scalar($line['IP']) ? (string) $line['IP'] : '';
+            $lineIP         = is_string($line['IP'] ?? null) ? $line['IP'] : '';
             $lineCatId      = $line['category_id'] ?? null;
             $lineCatIdStr   = is_scalar($lineCatId) ? (string) $lineCatId : '';
             $lineSearchId   = $line['search_id'] ?? null;
             $lineSearchIdStr = is_scalar($lineSearchId) ? (string) $lineSearchId : '';
-            $lineSection    = is_scalar($line['section']) ? (string) $line['section'] : '';
+            $lineSection    = is_string($line['section'] ?? null) ? $line['section'] : '';
             if ($lineImageType === 'high' && $lineImageIdStr !== '') {
                 $summary['total_filesize'] += is_numeric($imageInfos[$lineImageIdStr]['filesize'] ?? null) ? (int) $imageInfos[$lineImageIdStr]['filesize'] : 0;
             }
@@ -663,8 +677,11 @@ final class GeneralEndpoints
             $tagNames = '';
             $tagIds   = '';
             if (isset($line['tag_ids'])) {
-                $lineTagIds = is_scalar($line['tag_ids']) ? (string) $line['tag_ids'] : '';
-                $tagNames   = preg_replace_callback('/(\d+)/', fn (array $m): string => is_scalar($nameOfTag[$m[1]] ?? null) ? (string) ($nameOfTag[$m[1]] ?? $m[1]) : (string) $m[1], $lineTagIds) ?? $lineTagIds;
+                $lineTagIds = is_string($line['tag_ids']) ? $line['tag_ids'] : '';
+                $tagNames   = preg_replace_callback('/(\d+)/', function (array $m) use ($nameOfTag): string {
+                    $k = $m[1];
+                    return isset($nameOfTag[$k]) && is_string($nameOfTag[$k]) ? $nameOfTag[$k] : $k;
+                }, $lineTagIds) ?? $lineTagIds;
                 $tagIds     = $lineTagIds;
             }
             $imageString    = '';
@@ -707,11 +724,11 @@ final class GeneralEndpoints
                 $sdAllwordsWords = is_array($sdAllwords['words'] ?? null) ? $sdAllwords['words'] : [];
                 $sdAuthorWords   = is_array($sdAuthor['words'] ?? null) ? $sdAuthor['words'] : [];
                 $sdAddedBy       = is_array($sd['added_by'] ?? null) ? $sd['added_by'] : [];
-                $searchDetail = ['allwords' => !empty($sdAllwordsWords) ? $sdAllwordsWords : null, 'tags' => !empty($sdTagsWords) ? array_intersect_key($nameOfTag, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $sdTagsWords))) : null, 'date_posted' => !empty($sd['date_posted']) ? $sd['date_posted'] : null, 'cat' => !empty($sdCatWords) ? array_intersect_key($nameOfCategory, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $sdCatWords))) : null, 'author' => !empty($sdAuthorWords) ? $sdAuthorWords : null, 'added_by' => !empty($sdAddedBy) ? array_intersect_key($usernameOf, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $sdAddedBy))) : null, 'filetypes' => !empty($sd['filetypes']) ? $sd['filetypes'] : null];
+                $searchDetail = ['allwords' => (count($sdAllwordsWords) > 0) ? $sdAllwordsWords : null, 'tags' => (count($sdTagsWords) > 0) ? array_intersect_key($nameOfTag, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdTagsWords))) : null, 'date_posted' => (isset($sd['date_posted']) && $sd['date_posted'] !== '') ? $sd['date_posted'] : null, 'cat' => (count($sdCatWords) > 0) ? array_intersect_key($nameOfCategory, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdCatWords))) : null, 'author' => (count($sdAuthorWords) > 0) ? $sdAuthorWords : null, 'added_by' => (count($sdAddedBy) > 0) ? array_intersect_key($usernameOf, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdAddedBy))) : null, 'filetypes' => (isset($sd['filetypes']) && $sd['filetypes'] !== '') ? $sd['filetypes'] : null];
             }
             $sortedMembers[$userName] = ($sortedMembers[$userName] ?? 0) + 1;
             $lineDate                 = is_scalar($line['date'] ?? null) ? $line['date'] : null;
-            array_push($result, ['DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags((string) $fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', (string) $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
+            array_push($result, ['DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
         }
         $maxPage = ceil(count($result) / 300);
         $result  = array_reverse($result, true);

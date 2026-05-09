@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class PopuphelpController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
@@ -35,7 +36,8 @@ final class PopuphelpController implements ControllerInterface
         $page['page_banner'] = '';
         $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
-        $rawPage  = is_string($_GET['page'] ?? null) ? $_GET['page'] : null;
+        $getPage  = $_GET['page'] ?? null;
+        $rawPage  = is_string($getPage) ? $getPage : null;
         if ($rawPage === null || !preg_match('/^[a-z_]*$/', $rawPage)) {
             throw new AuthException('Hacking attempt!');
         }

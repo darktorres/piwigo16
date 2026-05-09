@@ -35,7 +35,9 @@ final readonly class SessionService
             return '';
         }
 
-        $remoteAddr = is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+        /** @var mixed $remoteAddrRaw */
+        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+        $remoteAddr    = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
         if (!str_contains($remoteAddr, ':')) { // ipv4
             $parts = explode('.', $remoteAddr);
             if (count($parts) >= 2) {
@@ -80,7 +82,12 @@ final readonly class SessionService
         return true;
     }
 
-    public function getSessionVar(string $var, mixed $default = null): mixed
+    /**
+     * @param (int|string)[]|false|int|null|string $default
+     *
+     * @psalm-param 0|array{user: 0, recent_period: -1, time: 0, date: ''}|false|null|string $default
+     */
+    public function getSessionVar(string $var, array|int|string|false|null $default = null): mixed
     {
         return $_SESSION['pwg_' . $var] ?? $default;
     }

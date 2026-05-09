@@ -20,13 +20,15 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 final class PersistentFileCacheTest extends TestCase
 {
-    private string $tmpRoot;
-    private string $cacheDir;
+    private string $tmpRoot = '';
+    private string $cacheDir = '';
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private PersistentFileCache $cache;
 
+    #[\Override]
     protected function setUp(): void
     {
-        $this->tmpRoot  = PHPWG_ROOT_PATH . 'tmp_cache_test_' . getmypid() . '_' . mt_rand() . '/';
+        $this->tmpRoot  = PHPWG_ROOT_PATH . 'tmp_cache_test_' . (int) getmypid() . '_' . mt_rand() . '/';
         $this->cacheDir = $this->tmpRoot . 'cache/';
         mkdir($this->cacheDir, 0755, true);
 
@@ -36,6 +38,7 @@ final class PersistentFileCacheTest extends TestCase
         $this->cache = new PersistentFileCache();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         $this->cache->purge(true);

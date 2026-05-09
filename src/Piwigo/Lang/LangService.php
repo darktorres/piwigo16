@@ -31,7 +31,9 @@ final class LangService
         return Translator::get()->plural($singularKey, $pluralKey, (int) $decimal);
     }
 
-    /** @return array<mixed> */
+    /**
+     * @return array<mixed>
+     */
     public function getL10nArgs(string $key, mixed $args = ''): array
     {
         if (is_array($args)) {
@@ -55,8 +57,9 @@ final class LangService
                     $element = is_array($element) ? $element : [];
                     $shifted = array_shift($element);
                     array_unshift($element, Lang::t(is_string($shifted) ? $shifted : ''));
+                    /** @var string $formatted */
                     $formatted = call_user_func_array(sprintf(...), $element);
-                    $result   .= is_scalar($formatted) ? (string) $formatted : '';
+                    $result   .= $formatted;
                 } else {
                     /** @var array<mixed>|string $element */
                     $result .= $this->l10nArgs($element, $sep);
@@ -70,7 +73,7 @@ final class LangService
 
     public function getParentLanguage(?string $langId = null): ?string
     {
-        if (empty($langId)) {
+        if ($langId === null || $langId === '') {
             $info   = LanguageStack::info();
             $parent = $info['parent'] ?? null;
             return is_string($parent) && $parent !== '' ? $parent : null;
@@ -125,9 +128,9 @@ final class LangService
         /** @var list<string> $languagesTyped */
         $languagesTyped = array_values(array_unique(array_filter($languages, is_string(...))));
 
-        if (!empty($options['return'])) {
+        if (isset($options['return']) && $options['return'] !== '') {
             foreach ($languagesTyped as $language) {
-                $f = !empty($options['local'])
+                $f = (isset($options['local']) && $options['local'] !== '')
                     ? $langDir . $language . '.' . $filename
                     : $langDir . $language . '/' . $filename;
                 if (is_readable($f)) {
@@ -143,6 +146,7 @@ final class LangService
                 if (is_readable($f)) {
                     $lang      = null;
                     $lang_info = null;
+                    /** @psalm-suppress UnresolvableInclude */
                     include $f;
                     LanguageStack::mergeLang((array) $lang);
                     LanguageStack::mergeInfo((array) $lang_info);

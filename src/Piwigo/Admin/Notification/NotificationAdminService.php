@@ -121,7 +121,7 @@ final class NotificationAdminService
     {
         $ctx = MailNotificationContext::current();
         $ctx->sentMailCount += 1;
-        PageState::current()->addInfo(sprintf($ctx->msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        PageState::current()->addInfo(sprintf($ctx->msgInfo, stripslashes((string) $nbmUser['username']), (string) $nbmUser['mail_address']));
     }
 
     /** @param array<string, float|int|string|null> $nbmUser */
@@ -129,7 +129,7 @@ final class NotificationAdminService
     {
         $ctx = MailNotificationContext::current();
         $ctx->errorOnMailCount += 1;
-        PageState::current()->addError(sprintf($ctx->msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+        PageState::current()->addError(sprintf($ctx->msgError, stripslashes((string) $nbmUser['username']), (string) $nbmUser['mail_address']));
     }
 
     public function displayCounterInfo(): void
@@ -217,10 +217,10 @@ final class NotificationAdminService
                 if ($doUpdate) {
                     $updates[] = ['check_key' => $nbmUser['check_key'], 'enabled' => $enabledValue];
                     $updatedDataCount++;
-                    PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    PageState::current()->addInfo(sprintf($msgInfo, stripslashes((string) $nbmUser['username']), (string) $nbmUser['mail_address']));
                 } else {
                     $errorOnUpdatedDataCount++;
-                    PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), $nbmUser['mail_address']));
+                    PageState::current()->addError(sprintf($msgError, stripslashes((string) $nbmUser['username']), (string) $nbmUser['mail_address']));
                 }
             }
 

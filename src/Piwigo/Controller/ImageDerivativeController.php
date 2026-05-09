@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ImageDerivativeController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         $logger = LoggerRegistry::current();
@@ -70,7 +71,7 @@ final class ImageDerivativeController implements ControllerInterface
             || $derivative_mtime < $params->last_mod_time
         ) {
             $need_generate   = true;
-            $derivative_mtime = $derivative_mtime ?: 0;
+            $derivative_mtime = ($derivative_mtime !== false) ? $derivative_mtime : 0;
         }
 
         $expires = false;
@@ -83,9 +84,9 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         if (!$need_generate) {
-            if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-                && is_scalar($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-                && strtotime((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime
+            $ifModifiedSinceRaw = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null;
+            if (is_string($ifModifiedSinceRaw)
+                && strtotime($ifModifiedSinceRaw) == $derivative_mtime
             ) {
                 header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
                 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
@@ -106,7 +107,8 @@ SELECT *
   FROM ' . $prefixeTable . 'images
   WHERE path=\'' . addslashes($ctx->srcLocation) . '\'
 ;';
-                $row = $conn->executeQuery($query)->fetchAssociative() ?: null;
+                $rowResult = $conn->executeQuery($query)->fetchAssociative();
+                $row = $rowResult !== false ? $rowResult : null;
                 if ($row !== null) {
                     if (isset($row['width'])) {
                         $ctx->originalSize = [
@@ -128,7 +130,7 @@ SELECT *
                         );
                     }
                 }
-                if (!$row) {
+                if ($row === null) {
                     DerivativePipeline::ierror('Db file path not found', 404);
                 }
             } catch (\Exception $e) {
@@ -140,11 +142,11 @@ SELECT *
         $conn->close();
 
         if (!DerivativePipeline::trySwitchSource($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
-            $sharpen = 0;
+            $sharpen = 0.0;
             foreach (ImageStdParams::getDefinedTypeMap() as $std_params) {
                 $sharpen += $std_params->sharpen;
             }
-            $params->sharpen = round($sharpen / count(ImageStdParams::getDefinedTypeMap()));
+            $params->sharpen = (int) round($sharpen / (float) count(ImageStdParams::getDefinedTypeMap()));
         }
 
         if (!is_dir(dirname($ctx->derivativePath)) && !mkdir(dirname($ctx->derivativePath), 0755, true)) {
@@ -171,13 +173,13 @@ SELECT *
         $crop_rect = null;
         $scaled_size = null;
         $params->sizing->compute($o_size, $ctx->coi, $crop_rect, $scaled_size);
-        if ($crop_rect) {
+        if ($crop_rect !== null) {
             $changes++;
             $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
             $timing['crop'] = DerivativePipeline::timeStep($step);
         }
 
-        if ($scaled_size) {
+        if ($scaled_size !== null) {
             $changes++;
             $image->resize((int) $scaled_size[0], (int) $scaled_size[1]);
             $d_size         = $scaled_size;
@@ -185,7 +187,7 @@ SELECT *
         }
 
         if ($params->sharpen) {
-            $changes += $image->sharpen((int) $params->sharpen);
+            $changes += (int) $image->sharpen((int) $params->sharpen);
             $timing['sharpen'] = DerivativePipeline::timeStep($step);
         }
 
@@ -201,22 +203,22 @@ SELECT *
                     $wm_image->resize((int) $wm_scaled_size[0], (int) $wm_scaled_size[1]);
                 }
             }
-            $x = round(($wm->xpos / 100) * ($d_size[0] - $wm_size[0]));
-            $y = round(($wm->ypos / 100) * ($d_size[1] - $wm_size[1]));
+            $x = round(((float) $wm->xpos / 100.0) * ((float) $d_size[0] - (float) $wm_size[0]));
+            $y = round(((float) $wm->ypos / 100.0) * ((float) $d_size[1] - (float) $wm_size[1]));
             if ($image->compose($wm_image, (int) $x, (int) $y, $wm->opacity)) {
                 $changes++;
                 if ($wm->xrepeat || $wm->yrepeat) {
-                    $xpad = $wm_size[0] + max(30, round($wm_size[0] / 4));
-                    $ypad = $wm_size[1] + max(30, round($wm_size[1] / 4));
+                    $xpad = (float) $wm_size[0] + max(30.0, round((float) $wm_size[0] / 4.0));
+                    $ypad = (float) $wm_size[1] + max(30.0, round((float) $wm_size[1] / 4.0));
                     for ($i = -$wm->xrepeat; $i <= $wm->xrepeat; $i++) {
                         for ($j = -$wm->yrepeat; $j <= $wm->yrepeat; $j++) {
                             if (!$i && !$j) {
                                 continue;
                             }
-                            $x2 = $x + $i * $xpad;
-                            $y2 = $y + $j * $ypad;
-                            if ($x2 >= 0 && $x2 + $wm_size[0] < $d_size[0] &&
-                                $y2 >= 0 && $y2 + $wm_size[1] < $d_size[1]) {
+                            $x2 = $x + (float) $i * $xpad;
+                            $y2 = $y + (float) $j * $ypad;
+                            if ($x2 >= 0 && $x2 + (float) $wm_size[0] < (float) $d_size[0] &&
+                                $y2 >= 0 && $y2 + (float) $wm_size[1] < (float) $d_size[1]) {
                                 if (!$image->compose($wm_image, (int) $x2, (int) $y2, $wm->opacity)) {
                                     break;
                                 }
@@ -234,7 +236,7 @@ SELECT *
             DerivativePipeline::ierror($ctx->srcUrl, 301);
         }
 
-        if ($d_size[0] * $d_size[1] < Config::derivativesStripMetadataThreshold()) {
+        if ((float) $d_size[0] * (float) $d_size[1] < (float) Config::derivativesStripMetadataThreshold()) {
             $image->strip();
         }
 
@@ -257,9 +259,9 @@ SELECT *
             $logger->debug('image timing', [
                 'src_path'        => basename($ctx->srcPath),
                 'derivative_path' => basename($ctx->derivativePath),
-                'o_size'          => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),
-                'd_size'          => $d_size[0] . ' ' . $d_size[1] . ' ' . ($d_size[0] * $d_size[1]),
-                'mem_usage'       => function_exists('memory_get_peak_usage') ? round(memory_get_peak_usage() / (1024 * 1024), 1) : '',
+                'o_size'          => (string) $o_size[0] . ' ' . (string) $o_size[1] . ' ' . (int) ((float) $o_size[0] * (float) $o_size[1]),
+                'd_size'          => (string) $d_size[0] . ' ' . (string) $d_size[1] . ' ' . (int) ((float) $d_size[0] * (float) $d_size[1]),
+                'mem_usage'       => function_exists('memory_get_peak_usage') ? round((float) memory_get_peak_usage() / (1024.0 * 1024.0), 1) : '',
                 'timing'          => $timing,
                 'quality'         => $compression_quality,
             ]);

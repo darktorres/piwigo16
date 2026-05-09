@@ -17,7 +17,7 @@ use Piwigo\Core\StringUtil;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-class LocalSiteReader
+final class LocalSiteReader
 {
     public function __construct(public string $site_url)
     {
@@ -160,7 +160,8 @@ class LocalSiteReader
         foreach (Config::formatExtensions() as $ext) {
             $test = $base_test.$ext;
             if (is_file($test)) {
-                $formats[$ext] = floor(filesize($test) / 1024);
+                $fsResult = filesize($test);
+                $formats[$ext] = floor(($fsResult !== false ? $fsResult : 0) / 1024);
             }
         }
 

@@ -8,29 +8,35 @@ final class CookieService
 {
     public static function cookiePath(): ?string
     {
+        $redirectScriptNameRaw = $_SERVER['REDIRECT_SCRIPT_NAME'] ?? null;
+        $redirectScriptName    = is_string($redirectScriptNameRaw) ? $redirectScriptNameRaw : '';
+        $redirectUrlRaw        = $_SERVER['REDIRECT_URL'] ?? null;
+        $redirectUrl           = is_string($redirectUrlRaw) ? $redirectUrlRaw : '';
+        $pathInfoRaw           = $_SERVER['PATH_INFO'] ?? null;
+        $pathInfo              = is_string($pathInfoRaw) ? $pathInfoRaw : '';
+        $scriptNameRaw         = $_SERVER['SCRIPT_NAME'] ?? null;
+        $scriptName            = is_string($scriptNameRaw) ? $scriptNameRaw : '';
         if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
              !empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
-            $scr = is_scalar($_SERVER['REDIRECT_SCRIPT_NAME']) ? (string) $_SERVER['REDIRECT_SCRIPT_NAME'] : '';
+            $scr = $redirectScriptName;
         } elseif (isset($_SERVER['REDIRECT_URL'])) {
             // mod_rewrite is activated for upper level directories. we must set the
             // cookie to the path shown in the browser otherwise it will be discarded.
             if (
                 isset($_SERVER['PATH_INFO']) and !empty($_SERVER['PATH_INFO']) and
-                ($_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO']) and
-                (str_ends_with(is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '', is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : ''))
+                ($redirectUrl !== $pathInfo) and
+                (str_ends_with($redirectUrl, $pathInfo))
             ) {
-                $redirect_url_str = is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '';
-                $path_info_str = is_scalar($_SERVER['PATH_INFO']) ? (string) $_SERVER['PATH_INFO'] : '';
                 $scr = substr(
-                    $redirect_url_str,
+                    $redirectUrl,
                     0,
-                    strlen($redirect_url_str) - strlen($path_info_str)
+                    strlen($redirectUrl) - strlen($pathInfo)
                 );
             } else {
-                $scr = is_scalar($_SERVER['REDIRECT_URL']) ? (string) $_SERVER['REDIRECT_URL'] : '';
+                $scr = $redirectUrl;
             }
         } else {
-            $scr = is_scalar($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
+            $scr = $scriptName;
         }
 
         $scr_str = $scr;
@@ -54,7 +60,7 @@ final class CookieService
         return $scr;
     }
 
-    public function setCookieVar(string $var, mixed $value, ?int $expire = null): bool
+    public function setCookieVar(string $var, string|null $value, ?int $expire = null): bool
     {
         if ($value == null or $expire === 0) {
             unset($_COOKIE['pwg_' . $var]);
@@ -62,7 +68,7 @@ final class CookieService
         } else {
             $_COOKIE['pwg_' . $var] = $value;
             $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-            return setcookie('pwg_' . $var, is_scalar($value) ? (string) $value : '', ['expires' => $expire, 'path' => self::cookiePath() ?? '/', 'samesite' => 'Strict']);
+            return setcookie('pwg_' . $var, $value, ['expires' => $expire, 'path' => self::cookiePath() ?? '/', 'samesite' => 'Strict']);
         }
     }
 

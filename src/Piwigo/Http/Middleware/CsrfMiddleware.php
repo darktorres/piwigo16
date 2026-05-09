@@ -36,6 +36,7 @@ final class CsrfMiddleware implements MiddlewareInterface
         '/register',
     ];
 
+    #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if ($request->getMethod() === 'POST') {

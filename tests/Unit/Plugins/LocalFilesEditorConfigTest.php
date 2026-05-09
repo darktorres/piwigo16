@@ -10,11 +10,13 @@ use Piwigo\Plugins\LocalFilesEditor\Config;
 
 final class LocalFilesEditorConfigTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         PiwigoConfig::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         PiwigoConfig::reset();
@@ -40,6 +42,7 @@ final class LocalFilesEditorConfigTest extends TestCase
     public function test_schema_method_matches_accessor(): void
     {
         self::assertArrayHasKey('LocalFilesEditor_tabs', Config::SCHEMA);
+        /** @psalm-suppress RedundantCondition */
         self::assertSame('tabs', Config::SCHEMA['LocalFilesEditor_tabs']['method']);
     }
 }

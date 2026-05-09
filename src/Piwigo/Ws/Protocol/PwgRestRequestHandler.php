@@ -8,8 +8,9 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
 use Piwigo\Ws\PwgServer;
 
-class PwgRestRequestHandler extends PwgRequestHandler
+final class PwgRestRequestHandler extends PwgRequestHandler
 {
+    #[\Override]
     public function handleRequest(PwgServer &$service): void
     {
         $params = [];
@@ -21,14 +22,14 @@ class PwgRestRequestHandler extends PwgRequestHandler
                 continue;
             } // ignore - special keys
             if ($name == 'method') {
-                $method = is_scalar($value) ? (string) $value : '';
+                $method = is_string($value) ? $value : '';
             } else {
                 $params[$name] = $value;
             }
         }
         if (empty($method) && isset($_GET['method'])) {
             $raw = $_GET['method'];
-            $method = is_scalar($raw) ? (string) $raw : '';
+            $method = is_string($raw) ? $raw : '';
         }
 
         if (empty($method)) {

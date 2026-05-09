@@ -10,7 +10,7 @@ use Piwigo\Exception\HttpException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 
-class ExceptionHandler
+final class ExceptionHandler
 {
     public static function handle(\Throwable $e): void
     {

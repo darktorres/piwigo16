@@ -14,7 +14,7 @@ use Piwigo\Db\SqlExpr;
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
  */
-class CalendarWeekly extends CalendarBase
+final class CalendarWeekly extends CalendarBase
 {
     /**
      * Initialize the calendar
@@ -52,8 +52,11 @@ class CalendarWeekly extends CalendarBase
         if ('monday' == Config::weekStartsOn()) {
             $this->calendar_levels[CWEEK]['sql'] = SqlExpr::week($this->date_field, 5).'+1';
             $this->calendar_levels[CDAY]['sql'] = SqlExpr::weekday($this->date_field);
-            $dayLabelsArr = $this->calendar_levels[CDAY]['labels'];
-            $dayLabelsArr[] = array_shift($dayLabelsArr);
+            $dayLabelsArr = (array) $this->calendar_levels[CDAY]['labels'];
+            $shifted = array_shift($dayLabelsArr);
+            if ($shifted !== null) {
+                $dayLabelsArr[] = $shifted;
+            }
             $this->calendar_levels[CDAY]['labels'] = $dayLabelsArr;
         }
     }
@@ -63,6 +66,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @return boolean false indicates that thumbnails where not included
      */
+    #[\Override]
     public function generateCategoryContent(): bool
     {
         $page = &$GLOBALS['page'];
@@ -87,6 +91,7 @@ class CalendarWeekly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
+    #[\Override]
     public function getDateWhere(int $max_levels = 3): string
     {
         $page = &$GLOBALS['page'];

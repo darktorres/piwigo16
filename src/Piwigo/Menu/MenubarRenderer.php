@@ -107,7 +107,7 @@ final class MenubarRenderer
             }
 
             $block->data = ['MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $exclude_cat_ids)];
-            if (!empty($block->data['MENU_CATEGORIES'])) {
+            if (count($block->data['MENU_CATEGORIES']) > 0) {
                 $block->template = 'menubar_related_categories.tpl';
             }
         }

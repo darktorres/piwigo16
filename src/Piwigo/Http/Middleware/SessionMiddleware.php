@@ -19,6 +19,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class SessionMiddleware implements MiddlewareInterface
 {
+    #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (session_status() === PHP_SESSION_NONE) {

@@ -50,17 +50,22 @@ final class PictureCommentRenderer
                 throw new AuthException('Session expired');
             }
 
+            $postAuthor = $_POST['author'] ?? null;
+            $postWebsite = $_POST['website_url'] ?? null;
+            $postEmail = $_POST['email'] ?? null;
             $comm = [
-                'author' => empty($_POST['author'] ?? null) ? '' : trim(is_scalar($_POST['author']) ? (string) $_POST['author'] : ''),
-                'content' => empty($_POST['content']) ? '' : trim(is_scalar($_POST['content']) ? (string) $_POST['content'] : ''),
-                'website_url' => empty($_POST['website_url'] ?? null) ? '' : trim(is_scalar($_POST['website_url']) ? (string) $_POST['website_url'] : ''),
-                'email' => empty($_POST['email'] ?? null) ? '' : trim(is_scalar($_POST['email']) ? (string) $_POST['email'] : ''),
-                'image_id' => $page['image_id'],
+                'author' => ($postAuthor === null || $postAuthor === '' || !is_string($postAuthor)) ? '' : trim($postAuthor),
+                'content' => ($_POST['content'] === '' || !is_string($_POST['content'])) ? '' : trim($_POST['content']),
+                'website_url' => ($postWebsite === null || $postWebsite === '' || !is_string($postWebsite)) ? '' : trim($postWebsite),
+                'email' => ($postEmail === null || $postEmail === '' || !is_string($postEmail)) ? '' : trim($postEmail),
+                'image_id' => $page['image_id'] ?? null,
             ];
 
             $post_key = $_POST['key'] ?? '';
-            $pageStateErrors = &PageState::current()->errors;
-            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_scalar($post_key) ? (string) $post_key : '', $pageStateErrors);
+            $pageStateErrors = PageState::current()->errors;
+            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_string($post_key) ? $post_key : '', $pageStateErrors);
+            /** @var list<string> $pageStateErrors */
+            PageState::current()->errors = $pageStateErrors;
 
             switch ($comment_action) {
                 case 'moderate':
@@ -90,14 +95,16 @@ final class PictureCommentRenderer
                 $validated_clause = '';
             }
 
-            $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
-            $row = ServiceLocator::get(Connection::class)
+            $pageImageId = $page['image_id'] ?? null;
+            $imageId = is_numeric($pageImageId) ? (int) $pageImageId : 0;
+            $rowFetch = ServiceLocator::get(Connection::class)
                 ->executeQuery(
                     'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
                     ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
                     [$imageId]
                 )
-                ->fetchAssociative() ?: [];
+                ->fetchAssociative();
+            $row = $rowFetch !== false ? $rowFetch : [];
 
             if (!isset($page['start']) || !is_numeric($page['start'])) {
                 $page['start'] = 0;
@@ -121,8 +128,8 @@ final class PictureCommentRenderer
 
             if ($nb_comments > 0) {
                 $get_comments_order = $_GET['comments_order'] ?? null;
-                if (!empty($get_comments_order) && in_array(strtoupper(is_scalar($get_comments_order) ? (string) $get_comments_order : ''), ['ASC', 'DESC'])) {
-                    ServiceLocator::get(SessionService::class)->setSessionVar('comments_order', $get_comments_order);
+                if (($get_comments_order !== null && $get_comments_order !== '') && in_array(strtoupper(is_string($get_comments_order) ? $get_comments_order : ''), ['ASC', 'DESC'])) {
+                    ServiceLocator::get(SessionService::class)->setSessionVar('comments_order', is_string($get_comments_order) ? $get_comments_order : '');
                 }
                 $rawOrder       = ServiceLocator::get(SessionService::class)->getSessionVar('comments_order', Config::commentsOrder());
                 $comments_order = is_string($rawOrder) ? $rawOrder : Config::commentsOrder();
@@ -171,7 +178,7 @@ SELECT
                     $tpl_comment = [
                         'ID' => $row['id'],
                         'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
-                        'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => EventDispatcher::dispatch('render_comment_content', $row['content']),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
@@ -240,7 +247,7 @@ SELECT
                 if ('reject' == $comment_action) {
                     foreach (['content', 'author', 'website_url', 'email'] as $k) {
                         $post_val = $_POST[$k] ?? null;
-                        $tpl_var[strtoupper($k)] = isset($post_val) ? htmlspecialchars(stripslashes(is_scalar($post_val) ? (string) $post_val : '')) : '';
+                        $tpl_var[strtoupper($k)] = (isset($post_val) && is_string($post_val)) ? htmlspecialchars(stripslashes($post_val)) : '';
                     }
                 }
                 $template->assign('comment_add', $tpl_var);

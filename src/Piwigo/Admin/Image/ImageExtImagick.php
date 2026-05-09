@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 
-class ImageExtImagick implements ImageInterface
+final class ImageExtImagick implements ImageInterface
 {
     public string $imagickdir = '';
     /** @var string|int */
@@ -46,7 +46,10 @@ class ImageExtImagick implements ImageInterface
         }
 
         $identify = PwgImage::getExtImagickCommand() === 'magick' ? 'magick identify' : 'identify';
-        $command = $this->imagickdir.$identify.' -format "%wx%h" "'.realpath($this->source_filepath).'"';
+        $realpathResult = realpath($this->source_filepath);
+        $sourcePath = $realpathResult !== false ? $realpathResult : $this->source_filepath;
+        $command = $this->imagickdir.$identify.' -format "%wx%h" "'.$sourcePath.'"';
+        $returnarray = [];
         exec($command, $returnarray);
         if (empty($returnarray[0]) or !preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
@@ -56,21 +59,24 @@ class ImageExtImagick implements ImageInterface
         $this->height = $match[2];
     }
 
-    public function addCommand(string $command, mixed $params = null): void
+    public function addCommand(string $command, string|int|null $params = null): void
     {
         $this->commands[$command] = $params;
     }
 
+    #[\Override]
     public function getWidth(): int
     {
         return (int) $this->width;
     }
 
+    #[\Override]
     public function getHeight(): int
     {
         return (int) $this->height;
     }
 
+    #[\Override]
     public function crop(int $width, int $height, int $x, int $y): bool
     {
         $this->width = $width;
@@ -81,12 +87,14 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function strip(): bool
     {
         $this->addCommand('strip');
         return true;
     }
 
+    #[\Override]
     public function rotate(int $rotation): bool
     {
         if (empty($rotation)) {
@@ -103,6 +111,7 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function setCompressionQuality(int $quality): bool
     {
         if ($this->is_animated_webp) {
@@ -116,6 +125,7 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function resize(int $width, int $height): bool
     {
         $this->width = $width;
@@ -126,6 +136,7 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function sharpen(int $amount): bool
     {
         $m = PwgImage::getSharpenMatrix($amount);
@@ -140,6 +151,7 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
     {
         if (!($overlay instanceof ImageExtImagick)) {
@@ -154,6 +166,7 @@ class ImageExtImagick implements ImageInterface
         return true;
     }
 
+    #[\Override]
     public function write(string $destination_filepath): bool
     {
         $logger = LoggerRegistry::current();
@@ -171,7 +184,8 @@ class ImageExtImagick implements ImageInterface
         }
 
         $exec = $this->imagickdir.PwgImage::getExtImagickCommand();
-        $exec .= ' "'.realpath($this->source_filepath).'"';
+        $realpathSrc = realpath($this->source_filepath);
+        $exec .= ' "'.($realpathSrc !== false ? $realpathSrc : $this->source_filepath).'"';
 
         // If the image is animated webp add a filter to avoid breaking the animation
         if ($this->is_animated_webp) {
@@ -181,11 +195,12 @@ class ImageExtImagick implements ImageInterface
         foreach ($this->commands as $command => $params) {
             $exec .= ' -'.$command;
             if (!empty($params) && is_scalar($params)) {
-                $exec .= ' '.$params;
+                $exec .= ' '.(string) $params;
             }
         }
-        $dest = pathinfo((string) $destination_filepath);
-        $dirname = isset($dest['dirname']) ? (realpath($dest['dirname']) ?: $dest['dirname']) : '';
+        $dest = pathinfo($destination_filepath);
+        $realDir = isset($dest['dirname']) ? realpath($dest['dirname']) : false;
+        $dirname = $realDir !== false ? $realDir : ($dest['dirname'] ?? '');
         $exec .= ' "'.$dirname.'/'.$dest['basename'].'" 2>&1';
         $logger->debug($exec);
         exec($exec, $returnarray);

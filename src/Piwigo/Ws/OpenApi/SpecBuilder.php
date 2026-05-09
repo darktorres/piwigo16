@@ -36,7 +36,7 @@ final readonly class SpecBuilder
 
         $paths = [];
         foreach ($this->server->getMethods() as $name => $method) {
-            if (!empty($method['options']['hidden'])) {
+            if (isset($method['options']['hidden']) && $method['options']['hidden'] !== '' && $method['options']['hidden'] !== false && $method['options']['hidden'] !== 0) {
                 continue;
             }
             $def    = $defs[$name] ?? null;

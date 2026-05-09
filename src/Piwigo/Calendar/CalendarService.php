@@ -40,9 +40,11 @@ final class CalendarService
             $innerSql .= '
 INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
-            if (isset($page['category']) && is_array($page['category'])) {
+            if (isset($page['category'])) {
+                /** @phpstan-ignore-next-line offsetAccess.nonOffsetAccessible */
+                $categoryIdRaw = $page['category']['id'] ?? null;
                 $subIds = array_diff(
-                    ServiceLocator::get(CategoryService::class)->getSubcatIds([is_numeric($page['category']['id'] ?? null) ? (int) $page['category']['id'] : 0]),
+                    ServiceLocator::get(CategoryService::class)->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
                     explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
                 );
 
@@ -62,15 +64,15 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
                 );
             }
         } else {
-            if (empty($page['items'])) {
+            /** @psalm-var mixed $pageItems */
+            $pageItems = $page['items'] ?? null;
+            if (!is_array($pageItems) || empty($pageItems)) {
                 return;
             }
             $items = [];
-            if (is_array($page['items'])) {
-                foreach ($page['items'] as $item) {
-                    if (is_int($item) || is_string($item)) {
-                        $items[] = (string) (int) $item;
-                    }
+            foreach ($pageItems as $item) {
+                if (is_int($item) || is_string($item)) {
+                    $items[] = (string) (int) $item;
                 }
             }
             $innerSql .= '
@@ -91,14 +93,17 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         $views = [CAL_VIEW_LIST, CAL_VIEW_CALENDAR];
 
-        $chronologyField = is_scalar($page['chronology_field'] ?? null) ? (string) $page['chronology_field'] : '';
+        $chronologyFieldRaw = $page['chronology_field'] ?? null;
+        $chronologyField = is_scalar($chronologyFieldRaw) ? (string) $chronologyFieldRaw : '';
         isset($fields[$chronologyField]) or HtmlService::fatalError('bad chronology field');
 
-        $chronologyStyle = is_scalar($page['chronology_style'] ?? null) ? (string) $page['chronology_style'] : '';
+        $chronologyStyleRaw = $page['chronology_style'] ?? null;
+        $chronologyStyle = is_scalar($chronologyStyleRaw) ? (string) $chronologyStyleRaw : '';
         if (!isset($styles[$chronologyStyle])) {
             $page['chronology_style'] = 'monthly';
         }
-        $calStyle = is_scalar($page['chronology_style'] ?? null) ? (string) $page['chronology_style'] : 'monthly';
+        $calStyleRaw = $page['chronology_style'] ?? null;
+        $calStyle = is_scalar($calStyleRaw) ? (string) $calStyleRaw : 'monthly';
         $calendar = match ($calStyle) {
             'monthly' => new CalendarMonthly(),
             default   => new CalendarWeekly(),
@@ -109,7 +114,9 @@ WHERE id IN (' . implode(',', $items) . ')';
         }
 
         $styleEntry = $styles[$calStyle] ?? null;
-        if (CAL_VIEW_CALENDAR == $page['chronology_view'] and
+        /** @var string $chronologyView */
+        $chronologyView = $page['chronology_view'];
+        if (CAL_VIEW_CALENDAR == $chronologyView and
               is_array($styleEntry) and
               !$styleEntry['view_calendar']) {
             $page['chronology_view'] = CAL_VIEW_LIST;
@@ -123,9 +130,11 @@ WHERE id IN (' . implode(',', $items) . ')';
         }
 
         $anyCount = 0;
+        /** @var string $currentChronologyView */
+        $currentChronologyView = $page['chronology_view'];
         for ($i = 0; $i < count($page['chronology_date']); $i++) {
             if ($page['chronology_date'][$i] == 'any') {
-                if ($page['chronology_view'] == CAL_VIEW_CALENDAR) {
+                if ($currentChronologyView == CAL_VIEW_CALENDAR) {
                     while ($i < count($page['chronology_date'])) {
                         array_pop($page['chronology_date']);
                     }

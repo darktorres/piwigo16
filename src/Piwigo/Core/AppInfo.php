@@ -11,8 +11,8 @@ final class AppInfo
     public const string DEFAULT_TEMPLATE     = 'modus';
     public const string REQUIRED_PHP_VERSION = '8.5.0';
 
-    public static function branchFromVersion(mixed $version): string
+    public static function branchFromVersion(string $version): string
     {
-        return implode('.', array_slice(explode('.', is_scalar($version) ? (string) $version : ''), 0, 1));
+        return implode('.', array_slice(explode('.', $version), 0, 1));
     }
 }

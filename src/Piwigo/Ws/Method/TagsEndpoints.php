@@ -39,8 +39,10 @@ final class TagsEndpoints
             usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
         }
         for ($i = 0; $i < count($tags); $i++) {
-            $tags[$i]['id']      = is_numeric($tags[$i]['id'] ?? null) ? (int) $tags[$i]['id'] : 0;
-            $tags[$i]['counter'] = is_numeric($tags[$i]['counter'] ?? null) ? (int) $tags[$i]['counter'] : 0;
+            $tagIdRaw = $tags[$i]['id'] ?? null;
+            $tags[$i]['id']      = is_numeric($tagIdRaw) ? (int) $tagIdRaw : 0;
+            $tagCounterRaw = $tags[$i]['counter'] ?? null;
+            $tags[$i]['counter'] = is_numeric($tagCounterRaw) ? (int) $tagCounterRaw : 0;
             $tags[$i]['url']     = UrlService::get()->makeIndexUrl(['section' => 'tags', 'tags' => [$tags[$i]]]);
         }
         return ['tags' => new PwgNamedArray($tags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes())];
@@ -61,9 +63,9 @@ final class TagsEndpoints
      */
     public function getImages(array $params, PwgServer &$service): array
     {
-        $tagIdArr     = is_array($params['tag_id']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $params['tag_id']) : [];
-        $tagUrlNameArr = is_array($params['tag_url_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $params['tag_url_name']) : [];
-        $tagNameArr   = is_array($params['tag_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $params['tag_name']) : [];
+        $tagIdArr     = is_array($params['tag_id']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_id']) : [];
+        $tagUrlNameArr = is_array($params['tag_url_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_url_name']) : [];
+        $tagNameArr   = is_array($params['tag_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_name']) : [];
         /** @var array<int, array<string, mixed>> $tagsResult */
         $tagsResult = ServiceLocator::get(TagService::class)->findTags($tagIdArr, $tagUrlNameArr, $tagNameArr);
         $tagsById   = [];
@@ -89,7 +91,7 @@ final class TagsEndpoints
             $tagMapRows = ServiceLocator::get(TagRepository::class)->findImageTagMap($tagIds, $imageIds);
             foreach ($tagMapRows as $row) {
                 $imgId = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
-                $imageTagMap[$imgId] = explode(',', is_scalar($row['tag_ids']) ? (string) $row['tag_ids'] : '');
+                $imageTagMap[$imgId] = explode(',', is_string($row['tag_ids'] ?? null) ? $row['tag_ids'] : '');
             }
         }
         $images = [];
@@ -99,29 +101,34 @@ final class TagsEndpoints
             $imageRows   = ServiceLocator::get(ImageRepository::class)->findByIds($imageIds);
             foreach ($imageRows as $row) {
                 $image       = [];
-                $rowIdKey    = is_scalar($row['id']) ? (string) $row['id'] : '';
-                $image['rank']        = $rankOf[$rowIdKey] ?? 0;
-                $image['is_favorite'] = isset($favoriteIds[$rowIdKey]);
+                $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+                $image['rank']        = $rankOf[$rowIdInt] ?? 0;
+                $image['is_favorite'] = isset($favoriteIds[$rowIdInt]);
                 foreach (['id', 'width', 'height', 'hit'] as $k) {
                     if (isset($row[$k])) {
                         $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k];
+                    $image[$k] = $row[$k] ?? null;
                 }
                 $imgNameStr    = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
                 $renderedName  = EventDispatcher::dispatch('render_element_name', $imgNameStr, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
-                $imgIdKey   = is_numeric($image['id']) ? (int) $image['id'] : 0;
+                $imgIdRaw   = $image['id'] ?? null;
+                $imgIdKey   = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;
                 $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgIdKey] ?? []);
                 $imageTags   = [];
                 foreach ($imageTagIds as $tagId) {
-                    $url    = UrlService::get()->makeIndexUrl(['section' => 'tags', 'tags' => [$tagsById[$tagId]]]);
-                    $pageUrl = UrlService::get()->makePictureUrl(['section' => 'tags', 'tags' => [$tagsById[$tagId]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
-                    $imageTags[] = ['id' => (int) $tagId, 'url' => $url, 'page_url' => $pageUrl];
+                    $tagIdInt = (int) $tagId;
+                    if (!isset($tagsById[$tagIdInt])) {
+                        continue;
+                    }
+                    $url    = UrlService::get()->makeIndexUrl(['section' => 'tags', 'tags' => [$tagsById[$tagIdInt]]]);
+                    $pageUrl = UrlService::get()->makePictureUrl(['section' => 'tags', 'tags' => [$tagsById[$tagIdInt]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
+                    $imageTags[] = ['id' => $tagIdInt, 'url' => $url, 'page_url' => $pageUrl];
                 }
                 $image['tags'] = new PwgNamedArray($imageTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());
                 $images[] = $image;
@@ -137,9 +144,9 @@ final class TagsEndpoints
      */
     public function add(array $params, PwgServer &$service): PwgError|array
     {
-        $creationOutput = ServiceLocator::get(TagAdminService::class)->createTag(is_scalar($params['name']) ? (string) $params['name'] : '');
+        $creationOutput = ServiceLocator::get(TagAdminService::class)->createTag(is_string($params['name'] ?? null) ? $params['name'] : '');
         if (isset($creationOutput['error'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, is_scalar($creationOutput['error']) ? (string) $creationOutput['error'] : '');
+            return new PwgError(WS_ERR_INVALID_PARAM, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }
         $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : (is_scalar($creationOutput['id'] ?? null) ? (string) $creationOutput['id'] : 0);
         ServiceLocator::get(Util::class)->pwgActivity('tag', $tagAddId, 'add');
@@ -176,7 +183,7 @@ final class TagsEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $tagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : (is_scalar($params['tag_id']) ? (string) $params['tag_id'] : 0);
-        $tagName = strip_tags(stripslashes(is_scalar($params['new_name']) ? (string) $params['new_name'] : ''));
+        $tagName = strip_tags(stripslashes(is_string($params['new_name'] ?? null) ? $params['new_name'] : ''));
         $tagRepo = ServiceLocator::get(TagRepository::class);
         if ($tagRepo->countById((int) $tagId) === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
@@ -207,7 +214,7 @@ final class TagsEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $dupTagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
-        $dupCopyName = is_scalar($params['copy_name']) ? (string) $params['copy_name'] : '';
+        $dupCopyName = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
         $dupTagRepo  = ServiceLocator::get(TagRepository::class);
         if ($dupTagRepo->countById($dupTagId) === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');

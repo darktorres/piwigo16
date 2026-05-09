@@ -73,7 +73,7 @@ final class SrcImage
             }
         }
 
-        if (!$this->size) {
+        if ($this->size === null || count($this->size) === 0) {
             if (isset($infos['width']) && isset($infos['height'])) {
                 $widthRaw = $infos['width'];
                 $heightRaw = $infos['height'];

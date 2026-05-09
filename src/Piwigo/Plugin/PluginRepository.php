@@ -20,11 +20,11 @@ final class PluginRepository extends AbstractRepository
             ->select('*')
             ->from($this->table('plugins'));
 
-        if (!empty($state)) {
+        if ($state !== null && $state !== '') {
             $qb->andWhere('state = :state')
                ->setParameter('state', $state);
         }
-        if (!empty($id)) {
+        if ($id !== null && $id !== '') {
             $qb->andWhere('id = :id')
                ->setParameter('id', $id);
         }

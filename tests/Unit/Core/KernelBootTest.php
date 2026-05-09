@@ -17,11 +17,13 @@ use Psr\Log\NullLogger;
 
 final class KernelBootTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         Kernel::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Kernel::reset();

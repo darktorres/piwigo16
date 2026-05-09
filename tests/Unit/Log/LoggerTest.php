@@ -12,17 +12,20 @@ use Psr\Log\LogLevel;
 
 final class LoggerTest extends TestCase
 {
-    private string $logDir;
+    private string $logDir = '';
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->logDir = sys_get_temp_dir() . '/piwigo_logger_test_' . uniqid();
         mkdir($this->logDir, 0777, true);
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
-        foreach (glob($this->logDir . '/*') ?: [] as $f) {
+        $globResult = glob($this->logDir . '/*');
+        foreach ($globResult !== false ? $globResult : [] as $f) {
             unlink($f);
         }
         rmdir($this->logDir);
@@ -35,7 +38,8 @@ final class LoggerTest extends TestCase
 
     private function logFileContent(): string
     {
-        $files = glob($this->logDir . '/log_*.txt') ?: [];
+        $globFiles = glob($this->logDir . '/log_*.txt');
+        $files = $globFiles !== false ? $globFiles : [];
         return $files ? (string) file_get_contents($files[0]) : '';
     }
 

@@ -41,7 +41,7 @@ final class HtmlService
 
             $cat['name'] = EventDispatcher::dispatch(
                 'render_category_name',
-                is_scalar($cat['name']) ? (string) $cat['name'] : '',
+                is_string($cat['name'] ?? null) ? $cat['name'] : '',
                 'get_cat_display_name'
             );
 
@@ -57,7 +57,8 @@ final class HtmlService
                 $output .= '<a href="' . UrlService::get()->makeIndexUrl(['category' => $cat]) . '">';
                 $output .= $cat['name'] . '</a>';
             } else {
-                $output .= '<a href="' . PHPWG_ROOT_PATH . $url . (is_scalar($cat['id']) ? (string) $cat['id'] : '') . '">';
+                $catIdRaw = $cat['id'] ?? null;
+                $output .= '<a href="' . PHPWG_ROOT_PATH . $url . (is_string($catIdRaw) ? $catIdRaw : '') . '">';
                 $output .= $cat['name'] . '</a>';
             }
         }
@@ -89,7 +90,8 @@ SELECT id, name, permalink
         $output = '';
         if ($singleLink) {
             $uppercatsArray = explode(',', $uppercats);
-            $singleUrl      = UrlService::get()->addUrlParams(UrlService::getRootUrl() . $url . array_pop($uppercatsArray), $addUrlParamsArr);
+            $lastCat = array_pop($uppercatsArray);
+            $singleUrl      = UrlService::get()->addUrlParams(UrlService::getRootUrl() . ($url ?? '') . $lastCat, $addUrlParamsArr);
             $output .= '<a href="' . $singleUrl . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -105,7 +107,7 @@ SELECT id, name, permalink
 
             $cat['name'] = EventDispatcher::dispatch(
                 'render_category_name',
-                is_scalar($cat['name']) ? (string) $cat['name'] : '',
+                is_string($cat['name'] ?? null) ? $cat['name'] : '',
                 'get_cat_display_name_cache'
             );
 
@@ -170,7 +172,7 @@ SELECT id, name, permalink
      */
     public function nameCompare(array $a, array $b): int
     {
-        return strcmp(strtolower(is_scalar($a['name']) ? (string) $a['name'] : ''), strtolower(is_scalar($b['name']) ? (string) $b['name'] : ''));
+        return strcmp(strtolower(is_string($a['name'] ?? null) ? $a['name'] : ''), strtolower(is_string($b['name'] ?? null) ? $b['name'] : ''));
     }
 
     /**
@@ -180,12 +182,12 @@ SELECT id, name, permalink
     public function tagAlphaCompare(array $a, array $b): int
     {
         foreach ([$a, $b] as $tag) {
-            $tagName = is_scalar($tag['name']) ? (string) $tag['name'] : '';
+            $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
             RequestCache::remember('tag_alpha', $tagName, static fn (): string => ServiceLocator::get(StringUtil::class)->pwgTransliterate($tagName));
         }
 
-        $aName = is_scalar($a['name']) ? (string) $a['name'] : '';
-        $bName = is_scalar($b['name']) ? (string) $b['name'] : '';
+        $aName = is_string($a['name'] ?? null) ? $a['name'] : '';
+        $bName = is_string($b['name'] ?? null) ? $b['name'] : '';
         $aSlug = RequestCache::get('tag_alpha', $aName);
         $bSlug = RequestCache::get('tag_alpha', $bName);
         return strcmp(
@@ -211,7 +213,9 @@ SELECT id, name, permalink
             exit();
         }
 
-        $requestUri = is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '';
+        /** @var mixed $rawRequestUri */
+        $rawRequestUri = $_SERVER['REQUEST_URI'] ?? '';
+        $requestUri    = is_string($rawRequestUri) ? $rawRequestUri : '';
         Util::get()->redirectHttp(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
@@ -246,7 +250,7 @@ SELECT id, name, permalink
         Util::get()->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>' . $msg . '</div>',
+<h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>' . ($msg ?? '') . '</div>',
             5
         );
     }
@@ -254,7 +258,7 @@ SELECT id, name, permalink
     /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
-        if (empty($title)) {
+        if ($title === null || $title === '') {
             $title = Lang::t('Piwigo encountered a non recoverable error');
         }
 
@@ -356,6 +360,7 @@ $btraceMsg
                 default => '',
             };
         }
+        /** @var mixed $protocolRaw */
         $protocolRaw = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
         $protocol    = is_string($protocolRaw) ? $protocolRaw : 'HTTP/1.0';
         if (('HTTP/1.1' != $protocol) && ('HTTP/1.0' != $protocol)) {
@@ -392,7 +397,7 @@ $btraceMsg
     public function renderElementName(array $info): string
     {
         if (!empty($info['name'])) {
-            return (string) EventDispatcher::dispatch('render_element_name', is_scalar($info['name']) ? (string) $info['name'] : '', $info);
+            return (string) EventDispatcher::dispatch('render_element_name', is_string($info['name']) ? $info['name'] : '', $info);
         }
         return ServiceLocator::get(StringUtil::class)->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
@@ -401,7 +406,7 @@ $btraceMsg
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (!empty($info['comment'])) {
-            return (string) EventDispatcher::dispatch('render_element_description', is_scalar($info['comment']) ? (string) $info['comment'] : '', $param);
+            return (string) EventDispatcher::dispatch('render_element_description', is_string($info['comment']) ? $info['comment'] : '', $param);
         }
         return '';
     }

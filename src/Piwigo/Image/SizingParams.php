@@ -14,9 +14,9 @@ final class SizingParams
      * @param int[] $ideal_size - two element array of maximum output dimensions (width, height)
      * @param float $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
      *    expressed as a factor of the input width/height
-     * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
+     * @param int[]|null $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    public function __construct(public $ideal_size, public $max_crop = 0, public $min_size = null)
+    public function __construct(public $ideal_size, public $max_crop = 0, public ?array $min_size = null)
     {
     }
 
@@ -55,7 +55,7 @@ final class SizingParams
         } else {
             $tokens[] = DerivativeEncoding::sizeToUrl($this->ideal_size);
             $tokens[] = DerivativeEncoding::fractionToChar($this->max_crop);
-            $tokens[] = DerivativeEncoding::sizeToUrl($this->min_size);
+            $tokens[] = DerivativeEncoding::sizeToUrl($this->min_size ?? [0, 0]);
         }
     }
 
@@ -72,21 +72,23 @@ final class SizingParams
         $destCrop = new ImageRect($in_size);
 
         if ($this->max_crop > 0) {
-            $ratio_w = $destCrop->width() / $this->ideal_size[0];
-            $ratio_h = $destCrop->height() / $this->ideal_size[1];
+            $ratio_w = (float) $destCrop->width() / (float) $this->ideal_size[0];
+            $ratio_h = (float) $destCrop->height() / (float) $this->ideal_size[1];
             if ($ratio_w > 1 || $ratio_h > 1) {
                 if ($ratio_w > $ratio_h) {
-                    $h = $destCrop->height() / $ratio_w;
-                    if ($h < $this->min_size[1]) {
-                        $idealCropPx = $destCrop->width() - floor($destCrop->height() * $this->ideal_size[0] / $this->min_size[1]);
-                        $maxCropPx = round($this->max_crop * $destCrop->width());
+                    $h = (float) $destCrop->height() / $ratio_w;
+                    $minSize1 = $this->min_size[1] ?? 0;
+                    if ($h < $minSize1) {
+                        $idealCropPx = (float) $destCrop->width() - floor((float) $destCrop->height() * (float) $this->ideal_size[0] / (float) $minSize1);
+                        $maxCropPx = round($this->max_crop * (float) $destCrop->width());
                         $destCrop->cropH(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 } else {
-                    $w = $destCrop->width() / $ratio_h;
-                    if ($w < $this->min_size[0]) {
-                        $idealCropPx = $destCrop->height() - floor($destCrop->width() * $this->ideal_size[1] / $this->min_size[0]);
-                        $maxCropPx = round($this->max_crop * $destCrop->height());
+                    $w = (float) $destCrop->width() / $ratio_h;
+                    $minSize0 = $this->min_size[0] ?? 0;
+                    if ($w < $minSize0) {
+                        $idealCropPx = (float) $destCrop->height() - floor((float) $destCrop->width() * (float) $this->ideal_size[1] / (float) $minSize0);
+                        $maxCropPx = round($this->max_crop * (float) $destCrop->height());
                         $destCrop->cropV(min($idealCropPx, $maxCropPx), $coi ?? '');
                     }
                 }
@@ -95,14 +97,14 @@ final class SizingParams
 
         $scale_size = [$destCrop->width(), $destCrop->height()];
 
-        $ratio_w = $destCrop->width() / $this->ideal_size[0];
-        $ratio_h = $destCrop->height() / $this->ideal_size[1];
+        $ratio_w = (float) $destCrop->width() / (float) $this->ideal_size[0];
+        $ratio_h = (float) $destCrop->height() / (float) $this->ideal_size[1];
         if ($ratio_w > 1 || $ratio_h > 1) {
             if ($ratio_w > $ratio_h) {
                 $scale_size[0] = $this->ideal_size[0];
-                $scale_size[1] = floor(1e-6 + $scale_size[1] / $ratio_w);
+                $scale_size[1] = floor(1e-6 + (float) $scale_size[1] / $ratio_w);
             } else {
-                $scale_size[0] = floor(1e-6 + $scale_size[0] / $ratio_h);
+                $scale_size[0] = floor(1e-6 + (float) $scale_size[0] / $ratio_h);
                 $scale_size[1] = $this->ideal_size[1];
             }
         } else {

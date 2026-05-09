@@ -7,8 +7,9 @@ namespace Piwigo\Ws\Protocol;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 
-class PwgJsonEncoder extends PwgResponseEncoder
+final class PwgJsonEncoder extends PwgResponseEncoder
 {
+    #[\Override]
     public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
@@ -25,6 +26,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
         ]);
     }
 
+    #[\Override]
     public function getContentType(): string
     {
         return 'text/plain';

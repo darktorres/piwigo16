@@ -40,6 +40,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CommentsController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         if (!Config::activateComments()) {
@@ -79,7 +80,7 @@ final class CommentsController implements ControllerInterface
         EventDispatcher::notify('loc_begin_comments');
 
         $get_since = StringUtil::get()->inputInt('since', null, $_GET);
-        $page['since'] = !empty($get_since) ? $get_since : 4;
+        $page['since'] = ($get_since !== null && $get_since !== 0) ? $get_since : 4;
 
         $page['sort_by'] = 'date';
         $get_sort_by = StringUtil::get()->inputString('sort_by', null, $_GET);
@@ -115,15 +116,16 @@ final class CommentsController implements ControllerInterface
         }
 
         $get_author = StringUtil::get()->inputString('author', null, $_GET);
-        if (!empty($get_author)) {
+        if ($get_author !== null && $get_author !== '') {
             $page['where_clauses'][] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
         }
 
         $get_comment_id_filter = StringUtil::get()->inputInt('comment_id', null, $_GET);
-        if (!empty($get_comment_id_filter)) {
+        if ($get_comment_id_filter !== null && $get_comment_id_filter !== 0) {
             ServiceLocator::get(Util::class)->checkInputParameter('comment_id', $_GET, false, ValidationPattern::ID);
             if (!PermissionService::get()->isAdmin()) {
-                $requestUri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
+                $requestUriRaw = $_SERVER['REQUEST_URI'] ?? null;
+                $requestUri = is_string($requestUriRaw) ? $requestUriRaw : '';
                 $login_url  = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]);
                 Util::get()->redirect($login_url);
             }
@@ -131,7 +133,7 @@ final class CommentsController implements ControllerInterface
         }
 
         $get_keyword = StringUtil::get()->inputString('keyword', null, $_GET);
-        if (!empty($get_keyword)) {
+        if ($get_keyword !== null && $get_keyword !== '') {
             $page['where_clauses'][] = '(' . implode(' AND ', array_map(
                 fn (string $s): string => "content LIKE '%$s%'",
                 preg_split('/[\s,;]+/', $get_keyword) ?: []
@@ -139,7 +141,7 @@ final class CommentsController implements ControllerInterface
         }
 
         $pageSinceRaw = $page['since'];
-        $pageSince    = in_array($pageSinceRaw, [1, 2, 3, 4]) ? (int) $pageSinceRaw : 4;
+        $pageSince    = in_array($pageSinceRaw, [1, 2, 3, 4]) ? $pageSinceRaw : 4;
         $page['where_clauses'][] = $since_options[$pageSince]['clause'];
 
         if (!PermissionService::get()->isAdmin()) {
@@ -161,14 +163,15 @@ final class CommentsController implements ControllerInterface
             if (isset($_GET[$loop_action])) {
                 $action = $loop_action;
                 ServiceLocator::get(Util::class)->checkInputParameter($action, $_GET, false, ValidationPattern::ID);
-                $comment_id = is_numeric($_GET[$action]) ? (int) $_GET[$action] : 0;
+                $actionRaw = $_GET[$action] ?? null;
+                $comment_id = is_numeric($actionRaw) ? (int) $actionRaw : 0;
                 break;
             }
         }
 
         if (isset($action)) {
             $comment_author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_id);
-            if (PermissionService::get()->canManageComment($action, (int) $comment_author_id)) {
+            if (PermissionService::get()->canManageComment($action, $comment_author_id)) {
                 $perform_redirect = false;
                 if ('delete' == $action) {
                     ServiceLocator::get(Util::class)->checkPwgToken();
@@ -182,7 +185,7 @@ final class CommentsController implements ControllerInterface
                 }
                 if ('edit' == $action) {
                     $post_content = StringUtil::get()->inputString('content', null, $_POST);
-                    if (!empty($post_content)) {
+                    if ($post_content !== null && $post_content !== '') {
                         ServiceLocator::get(Util::class)->checkPwgToken();
                         $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
                             ['comment_id' => $comment_id, 'image_id' => StringUtil::get()->inputInt('image_id', null, $_POST), 'content' => $post_content, 'website_url' => StringUtil::get()->inputString('website_url', null, $_POST)],
@@ -227,8 +230,8 @@ final class CommentsController implements ControllerInterface
         $tpl->setFilenames(['comments' => 'comments.tpl', 'comment_list' => 'comment_list.tpl']);
         $tpl->assign([
             'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
-            'F_KEYWORD' => !empty($get_keyword) ? htmlspecialchars(stripslashes($get_keyword)) : '',
-            'F_AUTHOR'  => !empty($get_author) ? htmlspecialchars(stripslashes($get_author)) : '',
+            'F_KEYWORD' => ($get_keyword !== null && $get_keyword !== '') ? htmlspecialchars(stripslashes($get_keyword)) : '',
+            'F_AUTHOR'  => ($get_author !== null && $get_author !== '') ? htmlspecialchars(stripslashes($get_author)) : '',
         ]);
 
         $blockname = 'categories';
@@ -304,13 +307,13 @@ SELECT id, name, uppercats, global_rank
             $query = '
 SELECT *
   FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $element_ids)) . ')
+  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $element_ids)) . ')
 ;';
             $elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             $query = 'SELECT id, name, permalink, uppercats
   FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')';
+  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')';
             $categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             foreach ($comments as $comment) {
@@ -322,7 +325,7 @@ SELECT *
 
                 /** @var array<string, float|int|string|null> $element_row */
                 $element_row  = $elements[(string) $cImageId] ?? [];
-                $name         = !empty($element_row['name']) ? (string) $element_row['name'] : ServiceLocator::get(StringUtil::class)->getNameFromFile((string) ($element_row['file'] ?? ''));
+                $name         = (isset($element_row['name']) && $element_row['name'] !== '') ? (string) $element_row['name'] : ServiceLocator::get(StringUtil::class)->getNameFromFile((string) ($element_row['file'] ?? ''));
                 $src_image    = new SrcImage($element_row);
                 $url          = UrlService::get()->makePictureUrl([
                     'category'   => $categories[(string) $cCategoryId] ?? [],
@@ -331,9 +334,9 @@ SELECT *
                 ]);
 
                 $email = null;
-                if (!empty($comment['user_email'])) {
+                if (isset($comment['user_email']) && $comment['user_email'] !== '') {
                     $email = (string) $comment['user_email'];
-                } elseif (!empty($comment['email'])) {
+                } elseif (isset($comment['email']) && $comment['email'] !== '') {
                     $email = (string) $comment['email'];
                 }
 

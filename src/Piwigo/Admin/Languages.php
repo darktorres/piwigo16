@@ -15,7 +15,7 @@ use Piwigo\Language\LanguageRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
-class Languages
+final class Languages
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_languages = [];
@@ -107,10 +107,10 @@ class Languages
     */
     public function getFsLanguages(?string $target_charset = null): void
     {
-        if (empty($target_charset)) {
+        if ($target_charset === null || $target_charset === '') {
             $target_charset = ServiceLocator::get(StringUtil::class)->getPwgCharset();
         }
-        $target_charset = strtolower((string) $target_charset);
+        $target_charset = strtolower($target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH.'language');
         if ($dir === false) {
@@ -130,7 +130,8 @@ class Languages
                         'uri' => '',
                         'author' => '',
                       ];
-                    $plg_data = implode('', file($path.'/common.po') ?: []);
+                    $plg_data_lines = file($path.'/common.po');
+                    $plg_data = implode('', $plg_data_lines !== false ? $plg_data_lines : []);
 
                     if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
@@ -172,7 +173,8 @@ class Languages
         $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -183,8 +185,8 @@ class Languages
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                $pemVerName = is_scalar($pem_version['name']) ? (string) $pem_version['name'] : '';
-                $pemVerId = is_scalar($pem_version['id']) ? (string) $pem_version['id'] : '';
+                $pemVerName = is_string($pem_version['name']) ? $pem_version['name'] : '';
+                $pemVerId = is_string($pem_version['id']) ? $pem_version['id'] : '';
                 if (str_starts_with($pemVerName, $branch)) {
                     $versions_to_check[] = $pemVerId;
                 }
@@ -198,7 +200,7 @@ class Languages
         $languages_to_check = [];
         foreach ($this->fs_languages as $fs_language) {
             if (isset($fs_language['extension'])) {
-                $languages_to_check[] = is_scalar($fs_language['extension']) ? (string) $fs_language['extension'] : '';
+                $languages_to_check[] = is_string($fs_language['extension']) ? $fs_language['extension'] : '';
             }
         }
 
@@ -221,7 +223,7 @@ class Languages
             }
         }
 
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_languages = StringUtil::safeUnserialize($result);
             if ($pem_languages === []) {
                 return false;
@@ -230,7 +232,7 @@ class Languages
                 if (!is_array($language) || !isset($language['extension_name'], $language['extension_id'])) {
                     continue;
                 }
-                $langExtName = is_scalar($language['extension_name']) ? (string) $language['extension_name'] : '';
+                $langExtName = is_string($language['extension_name']) ? $language['extension_name'] : '';
                 $langExtId = $language['extension_id'];
                 if (preg_match('/^.*? \[[A-Z]{2}\]$/', $langExtName) && (is_string($langExtId) || is_int($langExtId))) {
                     $this->server_languages[$langExtId] = $language;
@@ -250,7 +252,7 @@ class Languages
     {
         $logger = LoggerRegistry::current();
 
-        if ($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) {
+        if (($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) !== false) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -259,6 +261,7 @@ class Languages
 
             $handle = Filesystem::tryFopen($archive, 'wb');
             $fh = $handle;
+            /** @var resource|string $handle */
             if (is_resource($fh) && ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
                 $zip = new \PclZip($archive);
@@ -318,7 +321,7 @@ class Languages
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
-                                  and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                                  and ($old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
                                     $old_files[] = 'obsolete.list';
                                     $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
 

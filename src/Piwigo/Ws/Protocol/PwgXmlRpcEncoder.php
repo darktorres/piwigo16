@@ -7,13 +7,14 @@ namespace Piwigo\Ws\Protocol;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 
-class PwgXmlRpcEncoder extends PwgResponseEncoder
+final class PwgXmlRpcEncoder extends PwgResponseEncoder
 {
+    #[\Override]
     public function encodeResponse(mixed $response): string
     {
         if ($response instanceof PwgError) {
             $code = $response->code();
-            $msg = htmlspecialchars((string) $response->message());
+            $msg = htmlspecialchars($response->message());
             $ret = <<<EOD
 <methodResponse>
   <fault>
@@ -51,6 +52,7 @@ EOD;
         return $ret;
     }
 
+    #[\Override]
     public function getContentType(): string
     {
         return 'text/xml';

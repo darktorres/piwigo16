@@ -47,24 +47,25 @@ final class CommentsEndpoints
             $whereClauses[] = 'image_id = ' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
         }
         if (!empty($params['f_min_date'])) {
-            $dmin = date_create(is_scalar($params['f_min_date']) ? (string) $params['f_min_date'] : '');
+            $dmin = date_create(is_string($params['f_min_date']) ? $params['f_min_date'] : '');
             if ($dmin !== false) {
                 $whereClauses[] = "date >= '" . date_format($dmin, 'Y-m-d 00:00:00') . "'";
             }
         }
         if (!empty($params['f_max_date'])) {
-            $dmax = date_create(is_scalar($params['f_max_date']) ? (string) $params['f_max_date'] : '');
+            $dmax = date_create(is_string($params['f_max_date']) ? $params['f_max_date'] : '');
             if ($dmax !== false) {
                 $whereClauses[] = "date <= '" . date_format($dmax, 'Y-m-d 23:59:59') . "'";
             }
         }
         if (!empty($params['search'])) {
             $whereClauses   = ['1=1'];
-            $whereClauses[] = 'content LIKE ' . DbConnection::get()->quote('%' . (is_scalar($params['search']) ? (string) $params['search'] : '') . '%');
+            $whereClauses[] = 'content LIKE ' . DbConnection::get()->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%');
         }
         $conn = ServiceLocator::get(Connection::class);
         $querySum = 'SELECT count(*) as all_comments, sum(validated = \'true\') as validated, sum(validated = \'false\') as pending FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
-        $summary  = $conn->executeQuery($querySum)->fetchAssociative() ?: [];
+        $summaryResult = $conn->executeQuery($querySum)->fetchAssociative();
+        $summary  = $summaryResult !== false ? $summaryResult : [];
         $totalComments = $summary['all_comments'] ?? null;
         switch ($params['status']) {
             case 'pending':
@@ -90,15 +91,16 @@ final class CommentsEndpoints
                 $coalesced  = $row['username'] ?? $row['author'] ?? Lang::t('guest');
                 $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : Lang::t('guest'));
             }
-            $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['image_id']) ? (string) $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date_available']) ? (string) $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => ServiceLocator::get(DateService::class)->formatDate(is_scalar($row['date']) ? (string) $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $list[] = ['id' => $row['id'], 'admin_link' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
-        $dates      = $conn->executeQuery($datesQuery)->fetchAssociative() ?: [];
+        $datesResult = $conn->executeQuery($datesQuery)->fetchAssociative();
+        $dates      = $datesResult !== false ? $datesResult : [];
         unset($whereClauses['author_id']);
         $authorsQuery = 'SELECT author, author_id, count(*) as nb_authors FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY author_id;';
         $nbAuthorsIn  = DbConnection::get()->executeQuery($authorsQuery)->fetchAllAssociative();
         $totalCount   = is_numeric($totalComments) ? (int) $totalComments : 0;
-        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'] ?? null, 'ended_at' => $dates['ended_at'] ?? null], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, ceil($totalCount / max(1, $perPage)) - 1)]];
+        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'] ?? null, 'ended_at' => $dates['ended_at'] ?? null], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalCount / (float) max(1, $perPage)) - 1)]];
     }
 
     /** @param array<mixed> $params */
@@ -108,7 +110,7 @@ final class CommentsEndpoints
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds    = is_array($params['comment_id']) ? $params['comment_id'] : [];
-        $strIds    = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawIds);
+        $strIds    = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawIds);
         $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
         ServiceLocator::get(CommentService::class)->deleteUserComment($commentIds);
         return 'Comment successfully deleted';
@@ -121,7 +123,7 @@ final class CommentsEndpoints
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds     = is_array($params['comment_id']) ? $params['comment_id'] : [];
-        $strIds     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawIds);
+        $strIds     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawIds);
         $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
         ServiceLocator::get(CommentService::class)->validateUserComment($commentIds);
         return 'Comment successfully validated';

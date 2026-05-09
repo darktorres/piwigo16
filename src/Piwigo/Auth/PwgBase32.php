@@ -12,7 +12,7 @@ namespace Piwigo\Auth;
  * @author Bryan Ruiz
  * @url https://www.php.net/manual/en/function.base-convert.php#102232
  **/
-class PwgBase32
+final class PwgBase32
 {
     /** @var array<int,string> */
     private static array $map = [
@@ -41,7 +41,7 @@ class PwgBase32
         if (empty($input)) {
             return '';
         }
-        $input = str_split((string) $input);
+        $input = str_split($input);
         $binaryString = '';
         for ($i = 0; $i < count($input); $i++) {
             $binaryString .= str_pad(base_convert((string)ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
@@ -50,16 +50,16 @@ class PwgBase32
         $base32 = '';
         $i = 0;
         while ($i < count($fiveBitBinaryArray)) {
-            $base32 .= self::$map[base_convert(str_pad($fiveBitBinaryArray[$i], 5, '0'), 2, 10)];
+            $base32 .= self::$map[(int) base_convert(str_pad($fiveBitBinaryArray[$i], 5, '0'), 2, 10)];
             $i++;
         }
         if ($padding && ($x = strlen($binaryString) % 40) != 0) {
             if ($x == 8) {
-                $base32 .= str_repeat((string) self::$map[32], 6);
+                $base32 .= str_repeat(self::$map[32], 6);
             } elseif ($x == 16) {
-                $base32 .= str_repeat((string) self::$map[32], 4);
+                $base32 .= str_repeat(self::$map[32], 4);
             } elseif ($x == 24) {
-                $base32 .= str_repeat((string) self::$map[32], 3);
+                $base32 .= str_repeat(self::$map[32], 3);
             } elseif ($x == 32) {
                 $base32 .= self::$map[32];
             }
@@ -73,7 +73,7 @@ class PwgBase32
         if (empty($input)) {
             return false;
         }
-        $paddingCharCount = substr_count((string) $input, (string) self::$map[32]);
+        $paddingCharCount = substr_count($input, self::$map[32]);
         $allowedValues = [6, 4, 3, 1, 0];
         if (!in_array($paddingCharCount, $allowedValues)) {
             return false;
@@ -81,7 +81,7 @@ class PwgBase32
         for ($i = 0; $i < 4; $i++) {
             if (
                 $paddingCharCount == $allowedValues[$i] &&
-                substr((string) $input, - ($allowedValues[$i])) != str_repeat((string) self::$map[32], $allowedValues[$i])
+                substr($input, - ($allowedValues[$i])) != str_repeat(self::$map[32], $allowedValues[$i])
             ) {
                 return false;
             }

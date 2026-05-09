@@ -9,6 +9,12 @@ use Piwigo\Search\QExpression;
 use Piwigo\Search\QSearchScope;
 use Piwigo\Search\QSingleToken;
 
+use const Piwigo\Search\QST_NOT;
+use const Piwigo\Search\QST_OR;
+use const Piwigo\Search\QST_QUOTED;
+use const Piwigo\Search\QST_WILDCARD_BEGIN;
+use const Piwigo\Search\QST_WILDCARD_END;
+
 final class QExpressionTest extends TestCase
 {
     public function testSingleWord(): void

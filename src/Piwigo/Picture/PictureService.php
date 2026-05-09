@@ -51,14 +51,14 @@ final readonly class PictureService
             $result['period'] = $encoded;
         } else {
             $matches = [];
-            if (preg_match_all('/([a-z]+)-(\d+)/', (string) $encoded, $matches)) {
+            if (preg_match_all('/([a-z]+)-(\d+)/', $encoded, $matches) > 0) {
                 $matchcount = count($matches[1]);
                 for ($i = 0; $i < $matchcount; $i++) {
                     $result[$matches[1][$i]] = $matches[2][$i];
                 }
             }
 
-            if (preg_match_all('/([a-z]+)-(true|false)/', (string) $encoded, $matches)) {
+            if (preg_match_all('/([a-z]+)-(true|false)/', $encoded, $matches) > 0) {
                 $matchcount = count($matches[1]);
                 for ($i = 0; $i < $matchcount; $i++) {
                     $result[$matches[1][$i]] = BoolUtil::fromMixed($matches[2][$i]);

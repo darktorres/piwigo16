@@ -28,6 +28,7 @@ final readonly class RoutingMiddleware implements MiddlewareInterface
     {
     }
 
+    #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $path   = is_string($request->getAttribute('_route_path')) ? $request->getAttribute('_route_path') : '/';

@@ -55,7 +55,7 @@ final class PermissionsEndpoints
         foreach ($perms as $catId => &$cat) {
             if (isset($params['group_id'])) {
                 $groupIdArr    = is_array($params['group_id']) ? $params['group_id'] : [];
-                $groupIdArrStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $groupIdArr);
+                $groupIdArrStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $groupIdArr);
                 $catGroupsStr  = array_map(fn (mixed $v): string => (string) $v, $cat['groups'] ?? []);
                 if (empty($cat['groups']) || count(array_intersect($catGroupsStr, $groupIdArrStr)) === 0) {
                     unset($perms[$catId]);
@@ -64,7 +64,7 @@ final class PermissionsEndpoints
             }
             if (isset($params['user_id'])) {
                 $userIdArr             = is_array($params['user_id']) ? $params['user_id'] : [];
-                $userIdArrStr          = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $userIdArr);
+                $userIdArrStr          = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $userIdArr);
                 $catUsersIndirectStr   = array_map(fn (mixed $v): string => (string) $v, $cat['users_indirect'] ?? []);
                 $catUsersStr           = array_map(fn (mixed $v): string => (string) $v, $cat['users'] ?? []);
                 if ((empty($cat['users_indirect']) || count(array_intersect($catUsersIndirectStr, $userIdArrStr)) === 0) && (empty($cat['users']) || count(array_intersect($catUsersStr, $userIdArrStr)) === 0)) {
@@ -73,7 +73,7 @@ final class PermissionsEndpoints
                 }
             }
             $cat['groups']         = !empty($cat['groups']) ? array_values(array_unique($cat['groups'])) : [];
-            $cat['users']          = !empty($cat['users']) ? array_values(array_unique($cat['users'])) : [];
+            $cat['users']          = array_values(array_unique($cat['users'] ?? []));
             $cat['users_indirect'] = !empty($cat['users_indirect']) ? array_values(array_unique($cat['users_indirect'])) : [];
         }
         unset($cat);

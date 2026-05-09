@@ -130,7 +130,7 @@ final readonly class Util
             LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
-        } elseif (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
+        } elseif (defined('IN_ADMIN')) {
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
             TemplateRegistry::set($tpl);
         }
@@ -192,11 +192,11 @@ final readonly class Util
                 if (!$showMobile) {
                     continue;
                 }
-                $row['name'] = (is_scalar($row['name']) ? (string) $row['name'] : '') . (' (' . Lang::t('Mobile') . ')');
+                $row['name'] = (is_string($row['name'] ?? null) ? $row['name'] : '') . (' (' . Lang::t('Mobile') . ')');
             }
-            $themeId = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $themeId = is_string($row['id'] ?? null) ? $row['id'] : '';
             if ($this->checkThemeInstalled($themeId)) {
-                $themes[$themeId] = is_scalar($row['name']) ? (string) $row['name'] : '';
+                $themes[$themeId] = is_string($row['name'] ?? null) ? $row['name'] : '';
             }
         }
         $dispatched = EventDispatcher::dispatch('get_pwg_themes', $themes);
@@ -278,7 +278,7 @@ final readonly class Util
 
     public function checkPwgToken(): void
     {
-        if (!empty($_REQUEST['pwg_token'])) {
+        if (isset($_REQUEST['pwg_token']) && $_REQUEST['pwg_token'] !== '') {
             if ($this->getPwgToken() !== $_REQUEST['pwg_token']) {
                 ServiceLocator::get(HtmlService::class)->accessDenied();
             }
@@ -289,7 +289,7 @@ final readonly class Util
 
     public function getPwgToken(): string
     {
-        return hash_hmac('md5', (string) session_id(), (string) Config::secretKey());
+        return hash_hmac('md5', (string) session_id(), Config::secretKey());
     }
 
     /** @param array<mixed> $paramArray */
@@ -299,7 +299,7 @@ final readonly class Util
         if (isset($paramArray[$paramName])) {
             $paramValue = $paramArray[$paramName];
         }
-        if (empty($paramValue)) {
+        if ($paramValue === null || $paramValue === '' || $paramValue === []) {
             if ($mandatory) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
@@ -310,13 +310,15 @@ final readonly class Util
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
             }
             foreach ($paramValue as $key => $itemToCheck) {
-                if (!preg_match(ValidationPattern::ID, (string) $key) || !preg_match($pattern ?? '', is_scalar($itemToCheck) ? (string) $itemToCheck : '')) {
+                $effectivePattern = $pattern !== null && $pattern !== '' ? $pattern : '//';
+                if (!preg_match(ValidationPattern::ID, (string) $key) || !preg_match($effectivePattern, is_scalar($itemToCheck) ? (string) $itemToCheck : '')) {
                     HtmlService::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
             return true;
         }
-        if (!preg_match($pattern ?? '', is_scalar($paramValue) ? (string) $paramValue : '')) {
+        $effectivePattern = $pattern !== null && $pattern !== '' ? $pattern : '//';
+        if (!preg_match($effectivePattern, is_scalar($paramValue) ? (string) $paramValue : '')) {
             HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
         }
         return true;
@@ -344,7 +346,7 @@ final readonly class Util
     /** @return array<mixed>|false */
     public function getIcon(?string $date, bool $isChildDate = false): array|false
     {
-        if (empty($date)) {
+        if ($date === null || $date === '') {
             return false;
         }
         $raw         = CurrentUser::get()->rawAttributes;
@@ -373,12 +375,14 @@ final readonly class Util
     public function getEphemeralKey(int $validAfterSeconds, string $additionalData = ''): string
     {
         $time       = round(microtime(true), 1);
-        $remoteAddr = is_scalar($_SERVER['REMOTE_ADDR'] ?? '') ? (string) ($_SERVER['REMOTE_ADDR'] ?? '') : '';
-        return $time . ':' . $validAfterSeconds . ':'
+        /** @var mixed $remoteAddrRaw */
+        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+        $remoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
+        return number_format($time, 1, '.', '') . ':' . $validAfterSeconds . ':'
             . hash_hmac(
                 'md5',
-                $time . substr($remoteAddr, 0, 5) . $validAfterSeconds . $additionalData,
-                (string) Config::secretKey()
+                number_format($time, 1, '.', '') . substr($remoteAddr, 0, 5) . $validAfterSeconds . $additionalData,
+                Config::secretKey()
             );
     }
 
@@ -386,11 +390,13 @@ final readonly class Util
     {
         $time       = microtime(true);
         $key        = explode(':', $key);
-        $remoteAddr = is_scalar($_SERVER['REMOTE_ADDR'] ?? '') ? (string) ($_SERVER['REMOTE_ADDR'] ?? '') : '';
+        /** @var mixed $remoteAddrRaw */
+        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+        $remoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
         if (count($key) !== 3
             || $key[0] > $time - (float) $key[1]
-            || $key[0] < $time - 3600
-            || hash_hmac('md5', $key[0] . substr($remoteAddr, 0, 5) . $key[1] . $additionalData, (string) Config::secretKey()) !== $key[2]
+            || $key[0] < $time - 3600.0
+            || hash_hmac('md5', $key[0] . substr($remoteAddr, 0, 5) . $key[1] . $additionalData, Config::secretKey()) !== $key[2]
         ) {
             return false;
         }
@@ -410,12 +416,12 @@ final readonly class Util
 
         if ($nbElement > $nbElementPage) {
             $urlStart = $url . $startStr;
-            $curPage  = $navbar['CURRENT_PAGE'] = $start / $nbElementPage + 1;
-            $maximum  = ceil($nbElement / $nbElementPage);
-            $start    = $nbElementPage * round($start / $nbElementPage);
+            $curPage  = $navbar['CURRENT_PAGE'] = (float) $start / (float) $nbElementPage + 1.0;
+            $maximum  = ceil((float) $nbElement / (float) $nbElementPage);
+            $start    = (int) ((float) $nbElementPage * round((float) $start / (float) $nbElementPage));
             $previous = $start - $nbElementPage;
             $next     = $start + $nbElementPage;
-            $last     = ($maximum - 1) * $nbElementPage;
+            $last     = (int) (($maximum - 1.0) * (float) $nbElementPage);
 
             if ($curPage != 1) {
                 $navbar['URL_FIRST'] = $url;
@@ -428,7 +434,7 @@ final readonly class Util
 
             $navbar['pages']    = [];
             $navbar['pages'][1] = $url;
-            for ($i = (int) max(floor($curPage) - $pagesAround, 2), $stop = (int) min(ceil($curPage) + $pagesAround + 1, $maximum); $i < $stop; $i++) {
+            for ($i = (int) max(floor($curPage) - (float) $pagesAround, 2.0), $stop = (int) min(ceil($curPage) + (float) $pagesAround + 1.0, $maximum); $i < $stop; $i++) {
                 $navbar['pages'][$i] = $url . $startStr . (($i - 1) * $nbElementPage);
             }
             $navbar['pages'][(int) $maximum] = $urlStart . $last;
@@ -461,7 +467,11 @@ final readonly class Util
             return false;
         }
         if (isset($_GET['mobile'])) {
-            $isMobileTheme = BoolUtil::fromMixed($_GET['mobile']);
+            /** @var mixed $mobileRaw */
+            $mobileRaw = $_GET['mobile'];
+            $isMobileTheme = (is_string($mobileRaw) || is_int($mobileRaw) || is_float($mobileRaw))
+                ? BoolUtil::fromMixed($mobileRaw)
+                : false;
             ServiceLocator::get(SessionService::class)->setSessionVar('mobile_theme', $isMobileTheme);
         } else {
             $isMobileTheme = ServiceLocator::get(SessionService::class)->getSessionVar('mobile_theme');
@@ -473,7 +483,7 @@ final readonly class Util
         return (bool) $isMobileTheme;
     }
 
-    public function doLog(mixed $imageId = null, mixed $imageType = null): bool
+    public function doLog(int|null $imageId = null, string|null $imageType = null): bool
     {
         $doLog = Config::logConf();
         if (PermissionService::get()->isAdmin()) {
@@ -511,7 +521,7 @@ final readonly class Util
         $pageSection = is_scalar($page['section'] ?? null) ? (string) $page['section'] : '';
         if ($pageSection === 'tags') {
             $tagIds     = is_array($page['tag_ids'] ?? null) ? $page['tag_ids'] : [];
-            $tagsString = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tagIds));
+            $tagsString = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tagIds));
             if (strlen($tagsString) > 50) {
                 $tagsString  = substr($tagsString, 0, 50);
                 $commaPos    = strrpos($tagsString, ',');
@@ -521,8 +531,9 @@ final readonly class Util
             }
         }
 
-        $ipRaw = $_SERVER['REMOTE_ADDR'];
-        $ip    = is_scalar($ipRaw) ? (string) $ipRaw : '';
+        /** @var mixed $ipRaw */
+        $ipRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ip = is_string($ipRaw) ? $ipRaw : '';
         if (strlen($ip) > 39) {
             $ip = substr($ip, 0, 39);
         }
@@ -596,7 +607,7 @@ final readonly class Util
         } else {
             $details['script'] = StringUtil::scriptBasename();
             if ($details['script'] === 'admin' && isset($_GET['page'])) {
-                $details['script'] .= '/' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : '');
+                $details['script'] .= '/' . (is_string($_GET['page']) ? $_GET['page'] : '');
             }
         }
 
@@ -607,11 +618,15 @@ final readonly class Util
 
         $userAgent = null;
         if ($object === 'user' && $action === 'login' && isset($_SERVER['HTTP_USER_AGENT'])) {
-            $userAgent = strip_tags(is_scalar($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '');
+            /** @var mixed $uaRaw */
+            $uaRaw = $_SERVER['HTTP_USER_AGENT'];
+            $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
         }
         if (isset($_SESSION['connected_with']) && $_SESSION['connected_with'] === 'api_key' && isset($_SERVER['HTTP_USER_AGENT'])) {
             $details['connected_with'] = 'api_key';
-            $userAgent = strip_tags(is_scalar($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '');
+            /** @var mixed $uaRaw */
+            $uaRaw = $_SERVER['HTTP_USER_AGENT'];
+            $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
         }
         if ($object === 'user' && $action === 'login') {
             if (function_exists('debug_backtrace')) {
@@ -625,7 +640,8 @@ final readonly class Util
         }
         if ($object === 'photo' && $action === 'add' && !isset($details['sync'])) {
             $details['added_with'] = 'app';
-            if (isset($_SERVER['HTTP_REFERER']) && preg_match('/page=photos_add/', is_scalar($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : '')) {
+            $refRaw = $_SERVER['HTTP_REFERER'] ?? null;
+            if (is_string($refRaw) && preg_match('/page=photos_add/', $refRaw)) {
                 $details['added_with'] = 'browser';
             }
         }
@@ -640,7 +656,7 @@ final readonly class Util
         $inserts        = [];
         $detailsInsert  = serialize($details);
         $ipAddress      = $_SERVER['REMOTE_ADDR'] ?? null;
-        $sessionId      = !empty(session_id()) ? session_id() : 'none';
+        $sessionId      = session_id() !== '' ? session_id() : 'none';
 
         foreach ($objectIds as $loopObjectId) {
             $performedBy = CurrentUser::isInitialized() ? CurrentUser::get()->id : 0;
@@ -673,7 +689,11 @@ final readonly class Util
         $voyagers = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         if (count($voyagers)) {
             $voyager = $voyagers[0];
-            $age = strtotime(is_scalar($voyager['dbnow']) ? (string) $voyager['dbnow'] : '') - strtotime(is_scalar($voyager['date_available']) ? (string) $voyager['date_available'] : '');
+            $dbnowStr = is_string($voyager['dbnow'] ?? null) ? $voyager['dbnow'] : '';
+            $dateAvailStr = is_string($voyager['date_available'] ?? null) ? $voyager['date_available'] : '';
+            $dbnowTs = strtotime($dbnowStr);
+            $dateAvailTs = strtotime($dateAvailStr);
+            $age = ($dbnowTs !== false ? $dbnowTs : 0) - ($dateAvailTs !== false ? $dateAvailTs : 0);
             if ($age > Config::loungeMaxDuration()) {
                 ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
             }
@@ -720,10 +740,11 @@ final readonly class Util
 
     public function sendPiwigoInfosRetryLater(int $waitTime): void
     {
-        $lastNotice = Config::has('send_piwigo_infos_last_notice') ? strtotime(Config::sendPiwigoInfosLastNotice() ?? '') : time();
+        $strtotimeResult = Config::has('send_piwigo_infos_last_notice') ? strtotime(Config::sendPiwigoInfosLastNotice() ?? '') : false;
+        $lastNotice = $strtotimeResult !== false ? $strtotimeResult : time();
         $lastNotice += $waitTime;
         ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', date('c', $lastNotice), true);
-        $this->log->info('[sendPiwigoInfosRetryLater] new send_piwigo_infos_last_notice=' . Config::sendPiwigoInfosLastNotice());
+        $this->log->info('[sendPiwigoInfosRetryLater] new send_piwigo_infos_last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
     }
 
     public function sendPiwigoInfos(): void
@@ -788,7 +809,7 @@ final readonly class Util
         ];
 
         $du = $piwigoInfos['general_stats']['disk_usage'] ?? 0;
-        $piwigoInfos['general_stats']['disk_usage']        = intval((is_numeric($du) ? $du : 0) / 1024);
+        $piwigoInfos['general_stats']['disk_usage']        = intval((is_numeric($du) ? (float) $du : 0.0) / 1024.0);
         $piwigoInfos['general_stats']['installed_on']      = ServiceLocator::get(AdminService::class)->getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced']  = 0;
         $piwigoInfos['general_stats']['last_photo_synced'] = null;
@@ -819,7 +840,8 @@ final readonly class Util
         }
 
         $url         = PEM_URL . '/api/get_extension_list.php';
-        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) ? StringUtil::safeUnserialize($result) : [];
+        $result = '';
+        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) && is_string($result) ? StringUtil::safeUnserialize($result) : [];
 
         if ($pemExtensions !== []) {
             $officialExts = [];
@@ -856,10 +878,10 @@ final readonly class Util
                         $eid = $matches[1];
                     }
                 }
-                if (empty($eid)) {
+                if ($eid === null) {
                     $eid = $officialExts[Config::pemPluginsCategory()][$pluginId] ?? null;
                 }
-                if (empty($eid)) {
+                if ($eid === null || $eid === '') {
                     $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] ' . $pluginId . ' is a private plugin');
                     $piwigoInfos['general_stats']['nb_private_plugins']++;
                     continue;
@@ -886,10 +908,10 @@ final readonly class Util
                     $eid = $matches[1];
                 }
             }
-            if (empty($eid)) {
+            if ($eid === null) {
                 $eid = $officialExts[Config::pemThemesCategory()][$themeId] ?? null;
             }
-            if (empty($eid)) {
+            if ($eid === null || $eid === '') {
                 $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] ' . $themeId . ' is a private theme');
                 $privateThemes[$themeId] = 1;
                 continue;
@@ -929,8 +951,8 @@ final readonly class Util
         $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($activities as $activity) {
             $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
-            $objectKey = is_scalar($activity['object']) ? (string) $activity['object'] : '';
-            $actionKey = is_scalar($activity['action']) ? (string) $activity['action'] : '';
+            $objectKey = is_string($activity['object'] ?? null) ? $activity['object'] : '';
+            $actionKey = is_string($activity['action'] ?? null) ? $activity['action'] : '';
             if (!isset($piwigoInfos['activities'][$objectKey])) {
                 $piwigoInfos['activities'][$objectKey] = [];
             }
@@ -943,8 +965,8 @@ final readonly class Util
         $systemActivities = [];
         foreach ($activities as $activity) {
             $objectIdKey = is_numeric($activity['object_id']) ? (int) $activity['object_id'] : 0;
-            $actionKey   = is_scalar($activity['action']) ? (string) $activity['action'] : '';
-            $labelKey    = (string) ($labelForSystemObjectId[$objectIdKey] ?? 'undefined');
+            $actionKey   = is_string($activity['action'] ?? null) ? $activity['action'] : '';
+            $labelKey    = $labelForSystemObjectId[$objectIdKey] ?? 'undefined';
             if (!isset($systemActivities[$labelKey])) {
                 $systemActivities[$labelKey] = [];
             }
@@ -987,12 +1009,19 @@ final readonly class Util
         ];
         foreach ($activities as $activity) {
             foreach ($appsPattern as $appName => $pattern) {
-                if (preg_match($pattern, is_scalar($activity['user_agent']) ? (string) $activity['user_agent'] : '')) {
-                    $apps[$appName]['counter'] = (is_numeric($apps[$appName]['counter'] ?? null) ? (int) $apps[$appName]['counter'] : 0) + (is_numeric($activity['counter']) ? (int) $activity['counter'] : 0);
-                    if (!isset($apps[$appName]['first_encounter']) || strtotime(is_scalar($apps[$appName]['first_encounter']) ? (string) $apps[$appName]['first_encounter'] : '') > strtotime(is_scalar($activity['first_encounter']) ? (string) $activity['first_encounter'] : '')) {
+                if (preg_match($pattern, is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '')) {
+                    $existingApp = $apps[$appName] ?? [];
+                    /** @psalm-var mixed $existingCounter */
+                    $existingCounter = $existingApp['counter'] ?? null;
+                    $existingCounterInt = is_numeric($existingCounter) ? (int) $existingCounter : 0;
+                    /** @psalm-var mixed $activityCounterRaw */
+                    $activityCounterRaw = $activity['counter'] ?? null;
+                    $activityCounter    = is_numeric($activityCounterRaw) ? (int) $activityCounterRaw : 0;
+                    $apps[$appName]['counter'] = $existingCounterInt + $activityCounter;
+                    if (!isset($apps[$appName]['first_encounter']) || strtotime(is_scalar($apps[$appName]['first_encounter']) ? (string) $apps[$appName]['first_encounter'] : '') > strtotime(is_string($activity['first_encounter'] ?? null) ? $activity['first_encounter'] : '')) {
                         $apps[$appName]['first_encounter'] = $activity['first_encounter'];
                     }
-                    if (!isset($apps[$appName]['last_encounter']) || strtotime(is_scalar($apps[$appName]['last_encounter']) ? (string) $apps[$appName]['last_encounter'] : '') < strtotime(is_scalar($activity['last_encounter']) ? (string) $activity['last_encounter'] : '')) {
+                    if (!isset($apps[$appName]['last_encounter']) || strtotime(is_scalar($apps[$appName]['last_encounter']) ? (string) $apps[$appName]['last_encounter'] : '') < strtotime(is_string($activity['last_encounter'] ?? null) ? $activity['last_encounter'] : '')) {
                         $apps[$appName]['last_encounter'] = $activity['last_encounter'];
                     }
                 }
@@ -1016,7 +1045,7 @@ final readonly class Util
         } else {
             $lastNotice = date('c');
             ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . Config::sendPiwigoInfosLastNotice());
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
         }
 
         $this->pwgUniqueExecEnds('send_piwigo_infos');

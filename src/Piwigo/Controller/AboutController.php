@@ -22,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class AboutController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);

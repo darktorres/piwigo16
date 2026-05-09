@@ -251,10 +251,14 @@ final class StringUtil
             return $str;
         }
         if ($sourceCharset === 'iso-8859-1' && $destCharset === 'utf-8') {
-            return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
+            /** @var string|false $result */
+            $result = mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
+            return $result === false ? $str : $result;
         }
         if ($sourceCharset === 'utf-8' && $destCharset === 'iso-8859-1') {
-            return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
+            /** @var string|false $result */
+            $result = mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
+            return $result === false ? $str : $result;
         }
         if (function_exists('iconv')) {
             $result = iconv($sourceCharset, $destCharset . '//TRANSLIT', $str);
@@ -320,17 +324,21 @@ final class StringUtil
         return $value;
     }
 
-    /** @return array<int|string,mixed>|false */
-    public function pwgSafeGetimagesize(string $filename, mixed &$imageInfo = null): array|false
+    /**
+     * @param array<mixed>|null $imageInfo
+     * @return array<int|string,mixed>|false
+     */
+    public function pwgSafeGetimagesize(string $filename, array|null &$imageInfo = null): array|false
     {
         set_error_handler(static fn (): bool => true);
         try {
-            $result = getimagesize($filename, $imageInfo);
+            $imageInfoLocal = null;
+            $result = getimagesize($filename, $imageInfoLocal);
+            /** @var array<mixed>|null $narrowedInfo */
+            $narrowedInfo = $imageInfoLocal;
+            $imageInfo = $narrowedInfo;
         } finally {
             restore_error_handler();
-        }
-        if ($imageInfo === null) {
-            $imageInfo = [];
         }
         return $result;
     }
@@ -351,24 +359,28 @@ final class StringUtil
 
     public function originalToRepresentative(string $path, string $representativeExt): string
     {
-        $pos  = strrpos($path, '/');
+        $posSlash = strrpos($path, '/');
+        $pos  = $posSlash !== false ? $posSlash : 0;
         $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
-        $pos  = strrpos($path, '.');
+        $posDot = strrpos($path, '.');
+        $pos  = $posDot !== false ? $posDot : 0;
         return substr_replace($path, $representativeExt, $pos + 1);
     }
 
     public function originalToFormat(string $path, string $formatExt): string
     {
-        $pos  = strrpos($path, '/');
+        $posSlash = strrpos($path, '/');
+        $pos  = $posSlash !== false ? $posSlash : 0;
         $path = substr_replace($path, 'pwg_format/', $pos + 1, 0);
-        $pos  = strrpos($path, '.');
+        $posDot = strrpos($path, '.');
+        $pos  = $posDot !== false ? $posDot : 0;
         return substr_replace($path, $formatExt, $pos + 1);
     }
 
     /** @param array<string,mixed> $elementInfo */
     public function getElementPath(array $elementInfo): string
     {
-        $path = is_scalar($elementInfo['path']) ? (string) $elementInfo['path'] : '';
+        $path = is_string($elementInfo['path'] ?? null) ? $elementInfo['path'] : '';
         if (!UrlService::urlIsRemote($path)) {
             $path = PHPWG_ROOT_PATH . $path;
         }
@@ -386,10 +398,10 @@ final class StringUtil
     public static function scriptBasename(): string
     {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
-            if (!empty($_SERVER[$value])) {
-                $filename = strtolower(is_scalar($_SERVER[$value]) ? (string) $_SERVER[$value] : '');
+            if (isset($_SERVER[$value]) && is_string($_SERVER[$value])) {
+                $filename = strtolower($_SERVER[$value]);
                 $basename = basename($filename, '.php');
-                if (!empty($basename)) {
+                if ($basename !== '') {
                     return $basename;
                 }
             }
@@ -418,11 +430,14 @@ final class StringUtil
         return filter_var($mailAddress, FILTER_VALIDATE_EMAIL) !== false;
     }
 
-    public function safeVersionCompare(mixed $a, mixed $b, mixed $op = null): int|bool
+    /**
+     * @psalm-param '<'|'>='|null $op
+     */
+    public function safeVersionCompare(string $a, string $b, string|null $op = null): int|bool
     {
-        $replaceChars = static fn (array $m): string => (string) ord((strtolower(is_scalar($m[1] ?? null) ? (string) $m[1] : '')[0] ?? '')[0]);
-        $aStr = is_scalar($a) ? (string) $a : '';
-        $bStr = is_scalar($b) ? (string) $b : '';
+        $replaceChars = static fn (array $m): string => (string) ord((strtolower(is_string($m[1] ?? null) ? $m[1] : '')[0] ?? '')[0]);
+        $aStr = $a;
+        $bStr = $b;
         $aStr = (string) preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $aStr);
         $bStr = (string) preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $bStr);
         $aStr = (string) preg_replace_callback('#\b([a-z]{1})\b#i', $replaceChars, $aStr);
@@ -430,7 +445,9 @@ final class StringUtil
         if (empty($op)) {
             return version_compare($aStr, $bStr);
         }
-        return version_compare($aStr, $bStr, is_scalar($op) ? (string) $op : '');
+        /** @var '!='|'<'|'<='|'<>'|'='|'=='|'>'|'>='|'eq'|'ge'|'gt'|'le'|'lt'|'ne' $operator */
+        $operator = $op;
+        return version_compare($aStr, $bStr, $operator);
     }
 
     public function isValidMysqlDatetime(string $datetime): bool
@@ -456,10 +473,10 @@ final class StringUtil
     /** @return array{0: string, 1: string|null} */
     public function getContainerInfo(): array
     {
-        if (strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' && empty(ini_get('open_basedir'))) {
+        if (strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' && (ini_get('open_basedir') === '' || ini_get('open_basedir') === false)) {
             if (file_exists('/proc/2/sched')) {
                 $file = file_get_contents('/proc/2/sched');
-                if ($file && str_starts_with($file, 'kthreadd')) {
+                if ($file !== false && $file !== '' && str_starts_with($file, 'kthreadd')) {
                     return ['none', null];
                 }
             }
@@ -467,7 +484,7 @@ final class StringUtil
             $infoFileLinuxserver = '/build_version';
             if (is_readable($infoFilePath)) {
                 $fileLines = file($infoFilePath);
-                if (is_array($fileLines) && 'Official Piwigo container' === trim($fileLines[0])) {
+                if (is_array($fileLines) && count($fileLines) > 0 && 'Official Piwigo container' === trim($fileLines[0])) {
                     $containerVersion = null;
                     if (preg_match('/^Build Version (.*)$/', $fileLines[count($fileLines) - 1], $matches)) {
                         $containerVersion = $matches[1];

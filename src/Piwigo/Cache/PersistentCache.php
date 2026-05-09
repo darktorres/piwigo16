@@ -30,7 +30,8 @@ abstract class PersistentCache
 
     abstract public function get(string $key, mixed &$value): bool;
 
-    abstract public function set(string $key, mixed $value, ?int $lifetime = null): bool;
+    /** @param array<mixed>|scalar $value */
+    abstract public function set(string $key, array|string|int|float|bool $value, ?int $lifetime = null): bool;
 
     abstract public function purge(bool $all): bool;
 }

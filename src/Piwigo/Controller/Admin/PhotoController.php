@@ -93,7 +93,8 @@ final class PhotoController
         ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
         ServiceLocator::get(Util::class)->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
 
-        $image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '';
+        $rawImageIdStr = $_GET['image_id'] ?? null;
+        $image_id_str = is_string($rawImageIdStr) ? $rawImageIdStr : '';
         $this->adminPhotoBaseUrl = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_str);
         $GLOBALS['admin_photo_base_url'] = $this->adminPhotoBaseUrl;
 
@@ -118,7 +119,7 @@ final class PhotoController
             'ADMIN_PAGE_TITLE' => Lang::t('Edit photo') . ' <span class="image-id">#' . $image_id_str . '</span>',
         ]);
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'properties') {
             $this->pictureModify();
         } elseif ($tab === 'coi') {
@@ -141,7 +142,8 @@ final class PhotoController
         ServiceLocator::get(Util::class)->checkInputParameter('level', $_POST, false, '/^\d+$/');
         ServiceLocator::get(Util::class)->checkInputParameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
-        $image_id_str = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '';
+        $rawImageIdStr2 = $_GET['image_id'] ?? null;
+        $image_id_str = is_string($rawImageIdStr2) ? $rawImageIdStr2 : '';
 
         // photo() may have already set these; fall back for direct-page access
         if ($this->adminPhotoBaseUrl === '') {
@@ -153,26 +155,28 @@ final class PhotoController
             $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos($image_id_str, true);
         }
 
+        $getImageId = $_GET['image_id'] ?? null;
+        $getImageIdInt = is_numeric($getImageId) ? (int) $getImageId : 0;
         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
-  WHERE representative_picture_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . '
+  WHERE representative_picture_id = ' . $getImageIdInt . '
 ;';
         $represented_albums = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
 
         if (isset($_GET['delete'])) {
             ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(ImageAdminService::class)->deleteElements([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0], true);
+            ServiceLocator::get(ImageAdminService::class)->deleteElements([$getImageIdInt], true);
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
 
-            if ($custom_context = UserService::get()->getEditContext(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
+            if (($custom_context = UserService::get()->getEditContext($getImageIdInt)) !== false && $custom_context !== null && $custom_context !== '') {
                 Util::get()->redirect(str_replace('list/1,2', $custom_context, UrlService::get()->makeIndexUrl(['list' => [1, 2]])));
             }
             Util::get()->redirect(UrlService::get()->makeIndexUrl());
         }
 
         if (isset($_GET['sync_metadata'])) {
-            ServiceLocator::get(MetadataAdminService::class)->syncMetadata([is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0]);
+            ServiceLocator::get(MetadataAdminService::class)->syncMetadata([$getImageIdInt]);
             PageState::current()->addInfo(Lang::t('Metadata synchronized from file'));
         }
 
@@ -180,36 +184,39 @@ SELECT id
             ServiceLocator::get(Util::class)->checkPwgToken();
 
             $data        = [];
-            $data['id']  = is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0;
-            $data['level'] = is_numeric($_POST['level'] ?? null) ? (int) $_POST['level'] : 0;
+            $data['id']  = $getImageIdInt;
+            $postLevelRaw = $_POST['level'] ?? null;
+            $data['level'] = is_numeric($postLevelRaw) ? (int) $postLevelRaw : 0;
 
             foreach (['name', 'author', 'comment'] as $field) {
                 $post_field  = $_POST[$field] ?? null;
-                $data[$field] = Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_scalar($post_field) ? (string) $post_field : '');
+                $data[$field] = Config::allowHtmlDescriptions() ? $post_field : strip_tags(is_string($post_field) ? $post_field : '');
             }
 
-            $data['date_creation'] = !empty($_POST['date_creation']) ? $_POST['date_creation'] : null;
+            $rawDateCreation = $_POST['date_creation'] ?? null;
+            $data['date_creation'] = (is_string($rawDateCreation) && $rawDateCreation !== '') ? $rawDateCreation : null;
             $data = EventDispatcher::dispatch('picture_modify_before_update', $data);
 
             Dml::singleUpdate(Tables::images(), $data, ['id' => $data['id']]);
 
             $tag_ids = [];
-            if (!empty($_POST['tags'])) {
-                $tags_post = $_POST['tags'];
-                if (is_scalar($tags_post)) {
-                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds((string) $tags_post);
-                } elseif (is_array($tags_post)) {
-                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $tags_post));
+            $tags_post = $_POST['tags'] ?? null;
+            if ($tags_post !== null && $tags_post !== '') {
+                if (is_array($tags_post)) {
+                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds(array_map(fn (mixed $v): string => is_string($v) ? $v : '', $tags_post));
+                } else {
+                    /** @phpstan-ignore-next-line argument.type */
+                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds($tags_post);
                 }
             }
-            ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
+            ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, $getImageIdInt);
 
             if (!isset($_POST['associate'])) {
                 $_POST['associate'] = [];
             }
             ServiceLocator::get(Util::class)->checkInputParameter('associate', $_POST, true, ValidationPattern::ID);
             ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories(
-                [is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0],
+                [$getImageIdInt],
                 is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
             );
 
@@ -231,21 +238,22 @@ SELECT id
             $new_thumbnail_for = array_diff($represent_post_int, $represented_albums_int);
             if (count($new_thumbnail_for) > 0) {
                 ServiceLocator::get(CategoryRepository::class)->setRepresentativePicture(
-                    array_map(fn ($v): int => (int) $v, $new_thumbnail_for),
-                    is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0
+                    $new_thumbnail_for,
+                    $getImageIdInt
                 );
             }
 
             $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
             $tpl->assign(['save_success' => Lang::t('Photo informations updated')]);
-            ServiceLocator::get(Util::class)->pwgActivity('photo', is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0, 'edit');
+            ServiceLocator::get(Util::class)->pwgActivity('photo', $getImageIdInt, 'edit');
 
-            $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos(is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '', true);
+            $rawImageId3 = $_GET['image_id'] ?? null;
+            $page['image'] = ServiceLocator::get(ImageAdminService::class)->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);
         }
 
         $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(
             ServiceLocator::get(TagRepository::class)
-                ->findTagsByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)
+                ->findTagsByImageId($getImageIdInt)
         );
 
         /** @var array<string, mixed> $row */
@@ -273,23 +281,23 @@ SELECT id
 
         $tpl->assign([
             'tag_selection'      => $tag_selection,
-            'U_DOWNLOAD'         => ServiceLocator::get(UrlGenerator::class)->actionDownload((int) (is_scalar($_GET['image_id'] ?? null) ? $_GET['image_id'] : 0), 'e', ServiceLocator::get(Util::class)->getPwgToken()),
+            'U_DOWNLOAD'         => ServiceLocator::get(UrlGenerator::class)->actionDownload(is_numeric($image_id_str) ? (int) $image_id_str : 0, 'e', ServiceLocator::get(Util::class)->getPwgToken()),
             'U_SYNC'             => $admin_url_start . '&amp;sync_metadata=1',
             'U_DELETE'           => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
-            'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
-            'U_ACTIVITY'         => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''),
+            'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . $image_id_str,
+            'U_ACTIVITY'         => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $image_id_str,
             'PATH'               => $row['path'],
             'TN_SRC'             => DerivativeImage::url(DerivativeSize::Medium->value, $src_image),
             'FILE_SRC'           => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
-            'NAME'               => isset($_POST['name']) ? stripslashes(is_scalar($_POST['name']) ? (string) $_POST['name'] : '') : ($row['name'] ?? null),
+            'NAME'               => isset($_POST['name']) ? stripslashes(is_string($rawPostName = $_POST['name']) ? $rawPostName : '') : ($row['name'] ?? null),
             'TITLE'              => ServiceLocator::get(HtmlService::class)->renderElementName($row),
             'DIMENSIONS'         => (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''),
             'FORMAT'             => ((is_numeric($row['width'] ?? null) ? (int) $row['width'] : 0) >= (is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0)) ? 1 : 0,
             'FILESIZE'           => (is_scalar($row['filesize'] ?? null) ? (string) $row['filesize'] : '') . ' KB',
             'REGISTRATION_DATE'  => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : null),
-            'AUTHOR'             => htmlspecialchars(isset($_POST['author']) ? stripslashes(is_scalar($_POST['author']) ? (string) $_POST['author'] : '') : (empty($row['author']) ? '' : (is_scalar($row['author']) ? (string) $row['author'] : ''))),
+            'AUTHOR'             => htmlspecialchars(isset($_POST['author']) ? stripslashes(is_string($rawPostAuthor = $_POST['author']) ? $rawPostAuthor : '') : (empty($row['author']) ? '' : (is_string($row['author']) ? $row['author'] : ''))),
             'DATE_CREATION'      => $row['date_creation'],
-            'DESCRIPTION'        => htmlspecialchars(isset($_POST['comment']) ? stripslashes(is_scalar($_POST['comment']) ? (string) $_POST['comment'] : '') : (empty($row['comment']) ? '' : (is_scalar($row['comment']) ? (string) $row['comment'] : ''))),
+            'DESCRIPTION'        => htmlspecialchars(isset($_POST['comment']) ? stripslashes(is_string($rawPostComment = $_POST['comment']) ? $rawPostComment : '') : (empty($row['comment']) ? '' : (is_string($row['comment']) ? $row['comment'] : ''))),
             'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['sync_metadata']),
         ]);
 
@@ -311,7 +319,7 @@ SELECT id
             'date'    => Lang::t('Posted the %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, ['day', 'month', 'year'])),
             'age'     => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, 'year'))),
             'added_by' => Lang::t('Added by %s', is_string($row['added_by'] ?? null) ? $row['added_by'] : ''),
-            'size'    => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
+            'size'    => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024.0),
             'stats'   => Lang::t('Visited %d times', is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0),
             'id'      => Lang::t(is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''),
             'ext'     => Lang::t('%s file type', strtoupper(end($extTab))),
@@ -320,15 +328,15 @@ SELECT id
 
         if (Config::rateEnabled() && !empty($row['rating_score'])) {
             $row['nb_rates'] = ServiceLocator::get(RateRepository::class)
-                ->countByElementId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0);
-            $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), (int) $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
+                ->countByElementId($getImageIdInt);
+            $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_string($row['id'] ?? null) ? $row['id'] : '0') . ';')->fetchAllAssociative();
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', is_scalar($format['ext']) ? (string) $format['ext'] : '', (is_numeric($format['filesize']) ? (int) $format['filesize'] : 0) / 1024);
+                $format_strings[] = sprintf('%s (%.2fMB)', is_string($format['ext'] ?? null) ? $format['ext'] : '', (is_numeric($format['filesize']) ? (int) $format['filesize'] : 0) / 1024);
             }
             $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
         }
@@ -336,7 +344,7 @@ SELECT id
         $tpl->assign('INTRO', $intro_vars);
 
         if (in_array(ServiceLocator::get(StringUtil::class)->getExtension(is_scalar($row['path'] ?? null) ? (string) $row['path'] : ''), Config::pictureExtensions())) {
-            $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id=' . (is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : ''));
+            $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id=' . $image_id_str);
         }
 
         $selected_level = $_POST['level'] ?? $row['level'];
@@ -345,7 +353,7 @@ SELECT id
         $related_categories     = [];
         $related_categories_ids = [];
         foreach (ServiceLocator::get(CategoryRepository::class)
-            ->findCategoryInfosByImageId(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) as $catRow) {
+            ->findCategoryInfosByImageId($getImageIdInt) as $catRow) {
             $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($catRow['uppercats'] ?? null) ? (string) $catRow['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
             if ($catRow['category_id'] == $storage_category_id) {
                 $tpl->assign('STORAGE_CATEGORY', $name);
@@ -358,11 +366,11 @@ SELECT id
 
         $userLevel  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
         $imageLevel = is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0;
-        if ($custom_context = UserService::get()->getEditContext(is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0)) {
-            $tpl->assign('U_JUMPTO', UrlService::get()->makePictureUrl(['image_id' => is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '']) . '/' . $custom_context);
+        if (($custom_context = UserService::get()->getEditContext($getImageIdInt)) !== false && $custom_context !== null && $custom_context !== '') {
+            $tpl->assign('U_JUMPTO', UrlService::get()->makePictureUrl(['image_id' => $_GET['image_id'] ?? '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
             $authorizeds = array_diff(
-                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'category_id')),
+                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . ($getImageIdInt) . ';')->fetchAllAssociative(), 'category_id')),
                 explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
             );
             if (count($authorizeds) > 0) {
@@ -376,7 +384,7 @@ SELECT id
             }
         }
 
-        $associated_albums = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id WHERE image_id = ' . (is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0) . ';')->fetchAllAssociative(), 'id');
+        $associated_albums = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id WHERE image_id = ' . ($getImageIdInt) . ';')->fetchAllAssociative(), 'id');
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
@@ -413,18 +421,22 @@ SELECT id
 
         ServiceLocator::get(Util::class)->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
 
-        $imageIdCoi = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
+        $rawImageIdCoi = $_GET['image_id'] ?? null;
+        $imageIdCoi    = is_string($rawImageIdCoi) ? $rawImageIdCoi : '0';
         $imgRepo    = ServiceLocator::get(ImageRepository::class);
 
         if (isset($_POST['submit'])) {
             $lRaw = $_POST['l'] ?? null;
-            if (strlen(is_scalar($lRaw) ? (string) $lRaw : '') == 0) {
+            if (strlen(is_string($lRaw) ? $lRaw : '') == 0) {
                 $imgRepo->updateCoi((int) $imageIdCoi, null);
             } else {
+                $tRaw = $_POST['t'] ?? null;
+                $rRaw = $_POST['r'] ?? null;
+                $bRaw = $_POST['b'] ?? null;
                 $coi = DerivativeEncoding::fractionToChar(is_numeric($lRaw) ? (float) $lRaw : 0)
-                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['t'] ?? null) ? (float) $_POST['t'] : 0)
-                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['r'] ?? null) ? (float) $_POST['r'] : 0)
-                    . DerivativeEncoding::fractionToChar(is_numeric($_POST['b'] ?? null) ? (float) $_POST['b'] : 0);
+                    . DerivativeEncoding::fractionToChar(is_numeric($tRaw) ? (float) $tRaw : 0)
+                    . DerivativeEncoding::fractionToChar(is_numeric($rRaw) ? (float) $rRaw : 0)
+                    . DerivativeEncoding::fractionToChar(is_numeric($bRaw) ? (float) $bRaw : 0);
                 $imgRepo->updateCoi((int) $imageIdCoi, $coi);
             }
         }
@@ -459,13 +471,16 @@ SELECT id
         ];
 
         if (!empty($row['coi'])) {
-            $coi = is_scalar($row['coi']) ? (string) $row['coi'] : '';
-            $tpl_var['coi'] = [
-                'l' => DerivativeEncoding::charToFraction($coi[0]),
-                't' => DerivativeEncoding::charToFraction($coi[1]),
-                'r' => DerivativeEncoding::charToFraction($coi[2]),
-                'b' => DerivativeEncoding::charToFraction($coi[3]),
-            ];
+            $coiRaw = $row['coi'];
+            $coi = is_string($coiRaw) ? $coiRaw : '';
+            if (strlen($coi) >= 4) {
+                $tpl_var['coi'] = [
+                    'l' => DerivativeEncoding::charToFraction(substr($coi, 0, 1)),
+                    't' => DerivativeEncoding::charToFraction(substr($coi, 1, 1)),
+                    'r' => DerivativeEncoding::charToFraction(substr($coi, 2, 1)),
+                    'b' => DerivativeEncoding::charToFraction(substr($coi, 3, 1)),
+                ];
+            }
         }
 
         foreach (ImageStdParams::getDefinedTypeMap() as $params) {
@@ -490,7 +505,8 @@ SELECT id
         $tpl = TemplateRegistry::current();
 
         ServiceLocator::get(Util::class)->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
-        $picFmtId = is_scalar($_GET['image_id'] ?? null) ? (string) $_GET['image_id'] : '0';
+        $rawPicFmtId = $_GET['image_id'] ?? null;
+        $picFmtId = is_string($rawPicFmtId) ? $rawPicFmtId : '0';
 
         $images  = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
         $image   = $images[0];
@@ -501,12 +517,14 @@ SELECT id
 
         foreach ($formats as &$format) {
             $format['download_url'] = ServiceLocator::get(UrlGenerator::class)->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
-            $format['label']        = strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
-            $lang_key = 'format ' . strtoupper(is_scalar($format['ext']) ? (string) $format['ext'] : '');
+            $extRaw = $format['ext'] ?? null;
+            $extStr = is_string($extRaw) ? $extRaw : '';
+            $format['label']        = strtoupper($extStr);
+            $lang_key = 'format ' . strtoupper($extStr);
             if (isset($lang[$lang_key]) && is_string($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
             }
-            $format['filesize'] = round((is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0) / 1024, 2);
+            $format['filesize'] = round((is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0) / 1024.0, 2);
         }
         unset($format);
 
@@ -557,7 +575,7 @@ SELECT id
 
         $tpl->setFilenames(['photos_add' => 'photos_add_' . $page['tab'] . '.tpl']);
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'direct') {
             $this->photosAddDirect();
         } elseif ($tab === 'ftp') {
@@ -583,7 +601,7 @@ SELECT id
             ServiceLocator::get(Util::class)->checkInputParameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
             ServiceLocator::get(ImageRepository::class)->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
             $inserts = [];
-            foreach (array_unique(explode(',', is_scalar($_GET['batch']) ? (string) $_GET['batch'] : '')) as $image_id) {
+            foreach (array_unique(explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : '')) as $image_id) {
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
             Dml::massInserts(Tables::caddie(), array_keys($inserts[0]), $inserts);
@@ -607,26 +625,30 @@ SELECT id
         $formats_original_info = [];
         $formats_ext_info      = null;
 
-        if ($display_formats && $_GET['formats']) {
+        $rawFormatsIdVal = $_GET['formats'] ?? null;
+        $formatsId       = is_string($rawFormatsIdVal) ? $rawFormatsIdVal : '';
+        if ($display_formats && $formatsId !== '') {
             ServiceLocator::get(Util::class)->checkInputParameter('formats', $_GET, false, ValidationPattern::ID, false);
-            $formatsId             = is_scalar($_GET['formats']) ? (string) $_GET['formats'] : '';
             $formats_original_info = ServiceLocator::get(ImageAdminService::class)->getImageInfos($formatsId);
-            if ($formats_original_info) {
+            if ($formats_original_info !== null && count($formats_original_info) > 0) {
                 $src_image = new SrcImage($formats_original_info);
                 $formats_original_info['src'] = DerivativeImage::url(DerivativeSize::Square->value, $src_image);
-                $fmtId  = is_scalar($formats_original_info['id'] ?? null) ? (string) $formats_original_info['id'] : '0';
+                $fmtIdRaw = $formats_original_info['id'] ?? null;
+                $fmtId  = is_scalar($fmtIdRaw) ? (string) $fmtIdRaw : '0';
                 $fmtRow = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
                 if (!empty($fmtRow)) {
                     $format_strings = [];
                     $formats_exts   = [];
                     foreach ($fmtRow as $fmt) {
-                        $format_strings[] = sprintf('%s (%.2fMB)', is_scalar($fmt['ext']) ? (string) $fmt['ext'] : '', (is_numeric($fmt['filesize']) ? (int) $fmt['filesize'] : 0) / 1024);
-                        $formats_exts[]   = strtolower(is_scalar($fmt['ext']) ? (string) $fmt['ext'] : '');
+                        $fmtExtRaw = $fmt['ext'] ?? null;
+                        $format_strings[] = sprintf('%s (%.2fMB)', is_string($fmtExtRaw) ? $fmtExtRaw : '', (is_numeric($fmt['filesize']) ? (int) $fmt['filesize'] : 0) / 1024);
+                        $formats_exts[]   = strtolower(is_string($fmtExtRaw) ? $fmtExtRaw : '');
                     }
                     $formats_original_info['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
                     $formats_ext_info                 = json_encode($formats_exts);
                 }
-                $extTab = explode('.', is_scalar($formats_original_info['file'] ?? null) ? (string) $formats_original_info['file'] : '');
+                $fmtFileRaw = $formats_original_info['file'] ?? null;
+                $extTab = explode('.', is_scalar($fmtFileRaw) ? (string) $fmtFileRaw : '');
                 $formats_original_info['ext']    = Lang::t('%s file type', strtoupper(end($extTab)));
                 $formats_original_info['u_edit'] = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $fmtId);
                 $have_formats_original           = true;
@@ -668,7 +690,8 @@ SELECT id
                 'haveFormatsOriginal'     => $have_formats_original,
                 'imageFormatsExtensions'  => $formats_ext_info ?? '',
                 'nb_albums'               => $nb_albums,
-                'originalImageId'         => $have_formats_original ? (is_numeric($formats_original_info['id'] ?? null) ? (int) $formats_original_info['id'] : -1) : -1,
+                /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
+                'originalImageId'         => $have_formats_original && $formats_original_info !== null && isset($formats_original_info['id']) && is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : -1,
                 'photosAdded_label'       => Lang::t('%d photos uploaded'),
                 'photosUpdated_label'     => Lang::t('%d photos updated'),
                 'related_categories_ids'  => $selected_category,

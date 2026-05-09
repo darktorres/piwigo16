@@ -57,11 +57,13 @@ final class MessengerFactory
             {
             }
 
+            #[\Override]
             public function get(string $id): mixed
             {
                 return $this->transports[$id];
             }
 
+            #[\Override]
             public function has(string $id): bool
             {
                 return isset($this->transports[$id]);
@@ -88,6 +90,7 @@ final class MessengerFactory
         Connection $conn,
         PhpSerializer $serializer,
     ): DoctrineTransport {
+        /** @psalm-suppress InternalClass, InternalMethod */
         $messengerConn = new DoctrineMessengerConnection(
             ['table_name' => $tableName, 'queue_name' => $queueName, 'auto_setup' => true],
             $conn

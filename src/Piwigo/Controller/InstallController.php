@@ -46,23 +46,33 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class InstallController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        $prefixeTable = isset($_POST['install']) && is_scalar($_POST['prefix'] ?? null)
-            ? (string) $_POST['prefix']
+        $prefixRaw = $_POST['prefix'] ?? null;
+        $prefixeTable = isset($_POST['install']) && is_string($prefixRaw)
+            ? $prefixRaw
             : DEFAULT_PREFIX_TABLE;
         $GLOBALS['prefixeTable'] = $prefixeTable;
 
-        $dbhost   = is_scalar($_POST['dbhost']   ?? null) ? (string) $_POST['dbhost'] : '';
-        $dbuser   = is_scalar($_POST['dbuser']   ?? null) ? (string) $_POST['dbuser'] : '';
-        $dbpasswd = is_scalar($_POST['dbpasswd'] ?? null) ? (string) $_POST['dbpasswd'] : '';
-        $dbname   = is_scalar($_POST['dbname']   ?? null) ? (string) $_POST['dbname'] : '';
+        $rawDbhost    = $_POST['dbhost']     ?? null;
+        $rawDbuser    = $_POST['dbuser']     ?? null;
+        $rawDbpasswd  = $_POST['dbpasswd']   ?? null;
+        $rawDbname    = $_POST['dbname']     ?? null;
+        $rawAdminName = $_POST['admin_name'] ?? null;
+        $rawAdminMail = $_POST['admin_mail'] ?? null;
+        $dbhost   = is_string($rawDbhost) ? $rawDbhost : '';
+        $dbuser   = is_string($rawDbuser) ? $rawDbuser : '';
+        $dbpasswd = is_string($rawDbpasswd) ? $rawDbpasswd : '';
+        $dbname   = is_string($rawDbname) ? $rawDbname : '';
         $dblayer  = 'mysqli';
 
-        $admin_name  = is_scalar($_POST['admin_name']  ?? null) ? (string) $_POST['admin_name'] : '';
-        $admin_pass1 = is_scalar($_POST['admin_pass1'] ?? null) ? (string) $_POST['admin_pass1'] : '';
-        $admin_pass2 = is_scalar($_POST['admin_pass2'] ?? null) ? (string) $_POST['admin_pass2'] : '';
-        $admin_mail  = is_scalar($_POST['admin_mail']  ?? null) && !empty($_POST['admin_mail']) ? (string) $_POST['admin_mail'] : '';
+        $admin_name  = is_string($rawAdminName) ? $rawAdminName : '';
+        $rawAdminPass1 = $_POST['admin_pass1'] ?? null;
+        $rawAdminPass2 = $_POST['admin_pass2'] ?? null;
+        $admin_pass1 = is_string($rawAdminPass1) ? $rawAdminPass1 : '';
+        $admin_pass2 = is_string($rawAdminPass2) ? $rawAdminPass2 : '';
+        $admin_mail  = (is_string($rawAdminMail) && $rawAdminMail !== '') ? $rawAdminMail : '';
 
         $is_newsletter_subscribe = isset($_POST['install']) && isset($_POST['newsletter_subscribe']);
 
@@ -78,14 +88,16 @@ final class InstallController implements ControllerInterface
         $languages = new Languages('utf-8');
 
         if (isset($_GET['language'])) {
-            $language = strip_tags(is_scalar($_GET['language']) ? (string) $_GET['language'] : '');
+            $language = strip_tags(is_string($rawLang = $_GET['language']) ? $rawLang : '');
             if (!in_array($language, array_keys($languages->fs_languages))) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
             $language = 'en_UK';
             foreach ($languages->fs_languages as $language_code => $fs_language) {
-                if (substr((string) $language_code, 0, 2) == substr(is_scalar($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null) ? (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '', 0, 2)) {
+                /** @var string $rawAcceptLang */
+                $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+                if (substr($language_code, 0, 2) == substr($rawAcceptLang, 0, 2)) {
                     $language = $language_code;
                     break;
                 }
@@ -140,27 +152,29 @@ final class InstallController implements ControllerInterface
             $dbConnectFailed = count($errors) > 0;
 
             if (
-                strlen((string) $prefixeTable) > 20
-                || preg_match('/^\d/', (string) $prefixeTable)
-                || !preg_match('/^[a-zA-Z0-9_$]*$/u', (string) $prefixeTable)
+                strlen($prefixeTable) > 20
+                || preg_match('/^\d/', $prefixeTable)
+                || !preg_match('/^[a-zA-Z0-9_$]*$/u', $prefixeTable)
             ) {
                 $errors[] = 'invalid table prefix';
             }
 
-            $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', (string) $admin_name));
-            if (empty($webmaster)) {
+            $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $admin_name));
+            if ($webmaster === '') {
                 $errors[] = Lang::t('enter a login for webmaster');
             } elseif (preg_match('/[\'"]/', $webmaster)) {
                 $errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
             }
-            if (empty($_POST['admin_pass1'] ?? '') || empty($_POST['admin_pass2'] ?? '') || $_POST['admin_pass1'] !== $_POST['admin_pass2']) {
+            $adminPass1 = $_POST['admin_pass1'] ?? '';
+            $adminPass2 = $_POST['admin_pass2'] ?? '';
+            if ($adminPass1 === '' || $adminPass2 === '' || $adminPass1 !== $adminPass2) {
                 $errors[] = Lang::t('please enter your password again');
             }
-            if (empty($_POST['admin_mail'] ?? '')) {
+            if (($_POST['admin_mail'] ?? '') === '') {
                 $errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             } elseif (!$dbConnectFailed) {
                 $error_mail_address = AuthService::get()->validateMailAddress(null, $admin_mail);
-                if (!empty($error_mail_address)) {
+                if ($error_mail_address !== null && $error_mail_address !== '') {
                     $errors[] = $error_mail_address;
                 }
             }
@@ -207,7 +221,7 @@ final class InstallController implements ControllerInterface
                 Dml::massInserts(Tables::sites(), ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
 
                 $inserts = [
-                    ['id' => 1, 'username' => $admin_name, 'password' => password_hash((string) $admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
+                    ['id' => 1, 'username' => $admin_name, 'password' => password_hash($admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
                     ['id' => 2, 'username' => 'guest'],
                 ];
                 Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
@@ -280,6 +294,7 @@ final class InstallController implements ControllerInterface
                 $user['preferences']['show_whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION)] = false;
 
                 if ($is_newsletter_subscribe) {
+                    $result = '';
                     ServiceLocator::get(AdminService::class)->fetchRemote(
                         ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
                         $result,

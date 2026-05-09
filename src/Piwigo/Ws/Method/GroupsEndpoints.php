@@ -26,13 +26,13 @@ final class GroupsEndpoints
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $orderStr = is_scalar($params['order']) ? (string) $params['order'] : '';
+        $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
         if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
         }
         $whereClauses = ['1=1'];
         if (!empty($params['name'])) {
-            $whereClauses[] = 'LOWER(name) LIKE ' . DbConnection::get()->quote(is_scalar($params['name']) ? (string) $params['name'] : '');
+            $whereClauses[] = 'LOWER(name) LIKE ' . DbConnection::get()->quote(is_string($params['name']) ? $params['name'] : '');
         }
         if (!empty($params['group_id'])) {
             $groupIdArr     = is_array($params['group_id']) ? $params['group_id'] : [];
@@ -48,7 +48,7 @@ final class GroupsEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        $params['name'] = strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
+        $params['name'] = strip_tags(stripslashes(is_string($params['name'] ?? null) ? $params['name'] : ''));
         $groupRepo      = ServiceLocator::get(GroupRepository::class);
         if ($groupRepo->countByName($params['name']) !== 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
@@ -71,7 +71,8 @@ final class GroupsEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $groupIdInt = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
-        $groupnames = array_values(ServiceLocator::get(UserAdminService::class)->deleteGroups($groupIdInt) ?: []);
+        $deleteResult = ServiceLocator::get(UserAdminService::class)->deleteGroups($groupIdInt);
+        $groupnames = array_values($deleteResult !== false ? $deleteResult : []);
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         return new PwgNamedArray($groupnames, 'group_deleted');
     }
@@ -82,7 +83,7 @@ final class GroupsEndpoints
         if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $setinfoName = is_scalar($params['name']) ? (string) $params['name'] : '';
+        $setinfoName = is_string($params['name']) ? $params['name'] : '';
         if (isset($params['name']) && strlen(str_replace(' ', '', $setinfoName)) === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
@@ -93,7 +94,7 @@ final class GroupsEndpoints
             return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
         }
         if (!empty($params['name'])) {
-            $params['name'] = strip_tags(stripslashes(is_scalar($params['name']) ? (string) $params['name'] : ''));
+            $params['name'] = strip_tags(stripslashes(is_string($params['name']) ? $params['name'] : ''));
             if ($groupRepo->countByNameExcludingId($params['name'], $setinfoGroupId) !== 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
             }
@@ -159,7 +160,7 @@ final class GroupsEndpoints
         ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         ServiceLocator::get(Util::class)->pwgActivity('group', $destGroupId, 'edit');
         foreach ($userToAdd as $userId) {
-            $userIdInt = is_numeric($userId) ? (int) $userId : (string) $userId;
+            $userIdInt = is_numeric($userId) ? (int) $userId : $userId;
             ServiceLocator::get(Util::class)->pwgActivity('user', $userIdInt, 'edit', ['associated' => $destGroupId]);
         }
         ServiceLocator::get(UserAdminService::class)->deleteGroups($mergeGroup);
@@ -173,7 +174,7 @@ final class GroupsEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $dupGroupId  = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
-        $copyNameStr = is_scalar($params['copy_name']) ? (string) $params['copy_name'] : '';
+        $copyNameStr = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
         $groupRepo   = ServiceLocator::get(GroupRepository::class);
         if ($groupRepo->countByName($copyNameStr) !== 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');

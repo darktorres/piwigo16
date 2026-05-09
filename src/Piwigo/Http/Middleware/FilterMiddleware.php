@@ -29,6 +29,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class FilterMiddleware implements MiddlewareInterface
 {
+    #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $this->bootstrap();
@@ -56,9 +57,10 @@ final class FilterMiddleware implements MiddlewareInterface
         if (!ServiceLocator::get(Util::class)->getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
                 $urlMatches    = [];
+                $rawFilter = $_GET['filter'];
                 $filterEnabled = preg_match(
                     '/^start-recent-(\d+)$/',
-                    is_scalar($_GET['filter']) ? (string) $_GET['filter'] : '',
+                    is_string($rawFilter) ? $rawFilter : '',
                     $urlMatches
                 ) === 1;
                 $filter['enabled'] = $filterEnabled;
@@ -119,7 +121,7 @@ final class FilterMiddleware implements MiddlewareInterface
             $computedCategories    = ServiceLocator::get(CategoryService::class)->getComputedCategories($user, $recentPeriod);
             $filter['categories']  = $computedCategories;
 
-            $visibleCatKeys        = array_map(static fn (int|string $k): string => (string) $k, array_keys($computedCategories));
+            $visibleCatKeys        = array_map(static fn (string $k): string => $k, array_keys($computedCategories));
             $visibleCatStr         = implode(',', $visibleCatKeys);
             $filter['visible_categories'] = $visibleCatStr !== '' ? $visibleCatStr : -1;
 

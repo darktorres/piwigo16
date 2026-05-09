@@ -107,12 +107,12 @@ final class GroupsController
         $group_counter         = 0;
 
         foreach ($groupRepo->findAllOrdered() as $row) {
-            $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '';
             $members    = $groupRepo->findMemberUsernamesByGroupId($userFields['username'], $userFields['id'], Tables::users(), is_numeric($row['id']) ? (int) $row['id'] : 0);
             $tpl->append('groups', [
                 'NAME'      => $row['name'],
                 'ID'        => $row['id'],
-                'IS_DEFAULT' => (BoolUtil::fromMixed($row['is_default']) ? ' [' . Lang::t('default') . ']' : ''),
+                'IS_DEFAULT' => (BoolUtil::fromMixed(is_string($row['is_default']) || is_int($row['is_default']) || is_float($row['is_default']) ? $row['is_default'] : null) ? ' [' . Lang::t('default') . ']' : ''),
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
@@ -146,18 +146,21 @@ final class GroupsController
         }
 
         ServiceLocator::get(Util::class)->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
-        $page['group'] = $_GET['group_id'];
-        $group_id      = is_scalar($page['group']) ? (int) $page['group'] : 0;
+        $getGroupId = $_GET['group_id'];
+        $page['group'] = $getGroupId;
+        $group_id      = is_numeric($getGroupId) ? (int) $getGroupId : 0;
 
-        $post_cat_true  = is_array($_POST['cat_true'] ?? null) ? $_POST['cat_true'] : [];
-        $post_cat_false = is_array($_POST['cat_false'] ?? null) ? $_POST['cat_false'] : [];
+        $rawCatTrue  = $_POST['cat_true']  ?? null;
+        $rawCatFalse = $_POST['cat_false'] ?? null;
+        $post_cat_true  = is_array($rawCatTrue) ? $rawCatTrue : [];
+        $post_cat_false = is_array($rawCatFalse) ? $rawCatFalse : [];
 
         if (isset($_POST['falsify']) && count($post_cat_true) > 0) {
-            $post_cat_true_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+            $post_cat_true_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
             $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($post_cat_true_ids);
             ServiceLocator::get(PermissionRepository::class)->deleteGroupAccessForGroup($group_id, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
-            $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+            $post_cat_false_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
             $uppercats     = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($post_cat_false_ids);
             $uppercats_str = array_map(fn (string $v): string => $v, $uppercats);
 

@@ -7,12 +7,12 @@ namespace Piwigo\Db;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 
-class Dml
+final class Dml
 {
-    public const SKIP_EMPTY             = 1;
-    public const REGEX_OPERATOR         = 'REGEXP';
-    public const RANDOM_FUNCTION        = 'RAND';
-    public const REQUIRED_MYSQL_VERSION = '5.0.0';
+    public const int SKIP_EMPTY             = 1;
+    public const string REGEX_OPERATOR         = 'REGEXP';
+    public const string RANDOM_FUNCTION        = 'RAND';
+    public const string REQUIRED_MYSQL_VERSION = '5.0.0';
 
     /**
      * Updates multiple rows in a table.
@@ -73,18 +73,18 @@ class Dml
                 if (!in_array($row['Field'], $all_fields)) {
                     continue;
                 }
-                $col = '`' . (is_scalar($row['Field']) ? (string) $row['Field'] : '') . '` ' . (is_scalar($row['Type']) ? (string) $row['Type'] : '');
+                $col = '`' . (is_string($row['Field'] ?? null) ? $row['Field'] : '') . '` ' . (is_string($row['Type'] ?? null) ? $row['Type'] : '');
                 $nullable = !isset($row['Null']) || $row['Null'] === '' || $row['Null'] === 'NO' ? false : true;
                 if (!$nullable) {
                     $col .= ' NOT NULL';
                 }
                 if (isset($row['Default'])) {
-                    $col .= " default '" . (is_scalar($row['Default']) ? (string) $row['Default'] : '') . "'";
+                    $col .= " default '" . (is_string($row['Default']) ? $row['Default'] : '') . "'";
                 } elseif ($nullable) {
                     $col .= ' default NULL';
                 }
                 if (isset($row['Collation']) && $row['Collation'] !== 'NULL') {
-                    $col .= " collate '" . (is_scalar($row['Collation']) ? (string) $row['Collation'] : '') . "'";
+                    $col .= " collate '" . (is_string($row['Collation']) ? $row['Collation'] : '') . "'";
                 }
                 $columns[] = $col;
             }

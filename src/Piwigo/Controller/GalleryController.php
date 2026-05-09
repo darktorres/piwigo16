@@ -43,6 +43,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GalleryController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         ServiceLocator::get(SectionInitializer::class)->initialize($request, 'index');
@@ -118,14 +119,15 @@ final class GalleryController implements ControllerInterface
         if (isset($page['is_homepage']) && $page['is_homepage']) {
             $canonicalUrl = UrlService::get()->getGalleryHomeUrl();
         } else {
-            $safeStart = $nbImagePage > 0 ? (int) ($nbImagePage * round($start / $nbImagePage)) : 0;
+            $safeStart = $nbImagePage > 0 ? (int) ((float) $nbImagePage * round((float) $start / (float) $nbImagePage)) : 0;
             if ($safeStart > 0 && $safeStart >= count($items)) {
                 $safeStart -= $nbImagePage;
             }
             $canonicalUrl = UrlService::get()->duplicateIndexUrl(['start' => $safeStart]);
         }
         $tpl->assign('U_CANONICAL', $canonicalUrl);
-        $tpl->assign('use_standard_pages', ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false));
+        $useStandardPagesRaw = ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false);
+        $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
 
         // Page title
         $tpl->assign('TITLE', is_string($page['section_title'] ?? null) ? $page['section_title'] : '');
@@ -253,7 +255,7 @@ final class GalleryController implements ControllerInterface
                     $tpl->append('tag_search_results', $tag);
                 }
                 if (empty($items)) {
-                    $tpl->append('no_search_results', htmlspecialchars(is_scalar($qd['q'] ?? null) ? (string) $qd['q'] : ''));
+                    $tpl->append('no_search_results', htmlspecialchars(is_string($qd['q'] ?? null) ? $qd['q'] : ''));
                 } elseif (!empty($qd['unmatched_terms'])) {
                     $unmatched = is_array($qd['unmatched_terms']) ? $qd['unmatched_terms'] : [];
                     $tpl->assign('no_search_results', array_map(
@@ -268,7 +270,7 @@ final class GalleryController implements ControllerInterface
                 $preferredOrders = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
                 $rawOrder        = ServiceLocator::get(SessionService::class)->getSessionVar('image_order', 0);
                 $orderIdx        = is_numeric($rawOrder) ? (int) $rawOrder : 0;
-                $firstOrder      = trim(substr((string) Config::orderBy(), 9));
+                $firstOrder      = trim(substr(Config::orderBy(), 9));
                 if (($pos = strpos($firstOrder, ',')) !== false) {
                     $firstOrder = substr($firstOrder, 0, $pos);
                 }
@@ -299,7 +301,8 @@ final class GalleryController implements ControllerInterface
                 && !isset($page['chronology_field'])
                 && !empty($page['comment'])
             ) {
-                $tpl->assign('CONTENT_DESCRIPTION', $page['comment']);
+                $commentVal = $page['comment'];
+                $tpl->assign('CONTENT_DESCRIPTION', is_array($commentVal) || is_scalar($commentVal) ? $commentVal : null);
             }
 
             if ($countCats === 0) {
@@ -338,7 +341,8 @@ final class GalleryController implements ControllerInterface
 
             // Slideshow
             if (!empty($page['cat_slideshow_url'])) {
-                $slideshowUrl = is_string($page['cat_slideshow_url']) ? $page['cat_slideshow_url'] : '';
+                $slideshowUrlRaw = $page['cat_slideshow_url'];
+                $slideshowUrl = is_string($slideshowUrlRaw) ? $slideshowUrlRaw : '';
                 if (StringUtil::get()->inputString('slideshow', null, $_GET) !== null) {
                     Util::get()->redirect($slideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {

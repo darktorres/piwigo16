@@ -161,7 +161,7 @@ SELECT DISTINCT id
         foreach ($categories as $category) {
             if (is_array($category)) {
                 $id         = $category['id'] ?? null;
-                $idUppercat = is_scalar($category['id_uppercat'] ?? null) ? (string) $category['id_uppercat'] : '0';
+                $idUppercat = is_string($category['id_uppercat'] ?? null) ? $category['id_uppercat'] : '0';
                 if (!isset($currentRankForUppercat[$idUppercat])) {
                     $currentRankForUppercat[$idUppercat] = 0;
                 }
@@ -184,10 +184,10 @@ SELECT DISTINCT id
         foreach (ServiceLocator::get(CategoryRepository::class)->getAllForRankUpdate() as $row) {
             if ($row['id_uppercat'] != $currentUppercat) {
                 $currentRank    = 0;
-                $currentUppercat = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : '';
+                $currentUppercat = is_string($row['id_uppercat'] ?? null) ? $row['id_uppercat'] : '';
             }
             ++$currentRank;
-            $rowIdKey          = is_scalar($row['id']) ? (string) $row['id'] : '0';
+            $rowIdKey          = is_string($row['id'] ?? null) ? $row['id'] : '0';
             $catMap[$rowIdKey] = [
                 'rank'         => $currentRank,
                 'rank_changed' => $currentRank != $row['rank'],
@@ -198,7 +198,7 @@ SELECT DISTINCT id
         $datas    = [];
         $callback = (fn (array $m): string => is_string($m[1]) ? (string) ($catMap[$m[1]]['rank'] ?? 0) : '0');
         foreach ($catMap as $id => $cat) {
-            $uppercatsStr   = is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '';
+            $uppercatsStr   = is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '';
             $newGlobalRank  = preg_replace_callback('/(\d+)/', $callback, str_replace(',', '.', $uppercatsStr));
             if ($cat['rank_changed'] || $newGlobalRank !== $cat['global_rank']) {
                 $datas[] = ['id' => $id, 'rank' => $cat['rank'], 'global_rank' => $newGlobalRank];
@@ -227,7 +227,7 @@ SELECT DISTINCT id
             $catRepo->setVisible(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cats), true);
         } else {
             $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
-            $catRepo->setVisible(array_map(fn (mixed $v): int => (int) $v, $subcats), false);
+            $catRepo->setVisible(array_map(fn (int $v): int => $v, $subcats), false);
         }
     }
 
@@ -248,7 +248,7 @@ SELECT DISTINCT id
         }
         if ($value === 'private') {
             $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
-            $catRepo->setStatus(array_map(fn (mixed $v): int => (int) $v, $subcats), 'private');
+            $catRepo->setStatus(array_map(fn (int $v): int => $v, $subcats), 'private');
 
             $topCategories = [];
             $parentIds     = [];
@@ -258,7 +258,8 @@ SELECT DISTINCT id
             foreach ($allCategories as $cat) {
                 $isTop = true;
                 if (!empty($cat['id_uppercat'])) {
-                    foreach (explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') as $idUppercat) {
+                    $catUppercatsRaw3 = $cat['uppercats'] ?? null;
+                    foreach (explode(',', is_string($catUppercatsRaw3) ? $catUppercatsRaw3 : '') as $idUppercat) {
                         if (isset($topCategories[$idUppercat])) {
                             $isTop = false;
                             break;
@@ -266,10 +267,10 @@ SELECT DISTINCT id
                     }
                 }
                 if ($isTop) {
-                    $catIdKey = is_scalar($cat['id']) ? (string) $cat['id'] : '0';
+                    $catIdKey = is_string($cat['id'] ?? null) ? $cat['id'] : '0';
                     $topCategories[$catIdKey] = $cat;
                     if (!empty($cat['id_uppercat'])) {
-                        $parentIds[] = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
+                        $parentIds[] = is_string($cat['id_uppercat']) ? $cat['id_uppercat'] : '';
                     }
                 }
             }
@@ -278,12 +279,12 @@ SELECT DISTINCT id
             $tables     = [Tables::userAccess() => 'user_id', Tables::groupAccess() => 'group_id'];
 
             foreach ($topCategories as $topCategory) {
-                $refCatId      = is_scalar($topCategory['id']) ? (string) $topCategory['id'] : '0';
-                $topCatUppercat = is_scalar($topCategory['id_uppercat']) ? (string) $topCategory['id_uppercat'] : '';
+                $refCatId      = is_string($topCategory['id'] ?? null) ? $topCategory['id'] : '0';
+                $topCatUppercat = is_string($topCategory['id_uppercat'] ?? null) ? $topCategory['id_uppercat'] : '';
                 if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercat]) && $parentCats[$topCatUppercat]['status'] === 'private') {
                     $refCatId = $topCatUppercat;
                 }
-                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_scalar($topCategory['id']) ? (string) $topCategory['id'] : '0']);
+                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_string($topCategory['id'] ?? null) ? $topCategory['id'] : '0']);
                 foreach ($tables as $table => $field) {
                     $refAccess = array_column(DbConnection::get()->executeQuery(
                         'SELECT ' . $field . ' FROM ' . $table . ' WHERE cat_id = ' . $refCatId
@@ -327,7 +328,7 @@ SELECT DISTINCT id
         $imgRepo = ServiceLocator::get(ImageRepository::class);
         $datas   = [];
         foreach ($categories as $categoryId) {
-            $datas[] = ['id' => $categoryId, 'representative_picture_id' => $imgRepo->findRandomIdByCategoryId((int) $categoryId)];
+            $datas[] = ['id' => $categoryId, 'representative_picture_id' => $imgRepo->findRandomIdByCategoryId($categoryId)];
         }
         Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['representative_picture_id']], $datas);
     }
@@ -349,13 +350,17 @@ SELECT DISTINCT id
         $categories   = DbConnection::get()->executeQuery(
             'SELECT id, uppercats, site_id FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND id IN (' . wordwrap(implode(', ', $catIds), 80, "\n") . ')'
         )->fetchAllAssociative();
-        $callback     = (fn (array $m): string => is_string($m[1]) && is_scalar($catDirs[$m[1]] ?? null) ? (string) $catDirs[$m[1]] : '');
+        $callback     = (fn (array $m): string => is_string($m[1]) && is_string($catDirs[$m[1]] ?? null) ? $catDirs[$m[1]] : '');
         $catFulldirs  = [];
         foreach ($categories as $category) {
-            $uppercats = str_replace(',', '/', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '');
-            $catIdKey  = is_scalar($category['id']) ? (string) $category['id'] : '0';
-            $siteIdKey = is_scalar($category['site_id']) ? (string) $category['site_id'] : '0';
-            $catFulldirs[$catIdKey]  = is_scalar($galleriesUrl[$siteIdKey] ?? null) ? (string) $galleriesUrl[$siteIdKey] : '';
+            $catUppercatsRaw4 = $category['uppercats'] ?? null;
+            $catIdRaw4        = $category['id']        ?? null;
+            $catSiteIdRaw     = $category['site_id']   ?? null;
+            $uppercats = str_replace(',', '/', is_string($catUppercatsRaw4) ? $catUppercatsRaw4 : '');
+            $catIdKey  = is_string($catIdRaw4) ? $catIdRaw4 : '0';
+            $siteIdKey = is_string($catSiteIdRaw) ? $catSiteIdRaw : '0';
+            $galleriesUrlRaw = $galleriesUrl[$siteIdKey] ?? null;
+            $catFulldirs[$catIdKey]  = is_string($galleriesUrlRaw) ? $galleriesUrlRaw : '';
             $catFulldirs[$catIdKey] .= (string) preg_replace_callback('/(\d+)/', $callback, $uppercats);
         }
         return $catFulldirs;
@@ -371,7 +376,7 @@ SELECT DISTINCT id
             while ($uppercat) {
                 $upperList[] = $uppercat;
                 $next        = $catMap[$uppercat]['id_uppercat'] ?? null;
-                $uppercat    = is_scalar($next) ? (string) $next : '';
+                $uppercat    = is_string($next) ? $next : '';
             }
             $newUppercats = implode(',', array_reverse($upperList));
             if ($newUppercats != $cat['uppercats']) {
@@ -390,33 +395,38 @@ SELECT DISTINCT id
         }
     }
 
-    public function moveCategories(mixed $categoryIds, mixed $newParent = -1): void
+    /**
+     * @param int[] $categoryIds
+     *
+     * @psalm-param array<int<1, max>> $categoryIds
+     */
+    public function moveCategories(array $categoryIds, int $newParent = -1): void
     {
-        if (!is_array($categoryIds) || count($categoryIds) === 0) {
+        if (count($categoryIds) === 0) {
             return;
         }
-        $newParent  = (is_numeric($newParent) && (int) $newParent < 1) ? 'NULL' : $newParent;
+        $newParent  = $newParent < 1 ? 'NULL' : $newParent;
         $categories = [];
         $catRepo    = ServiceLocator::get(CategoryRepository::class);
-        $catIdsInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $categoryIds);
+        $catIdsInt = $categoryIds;
         foreach ($catRepo->findByIds($catIdsInt) as $row) {
-            $rowIdKey           = is_scalar($row['id']) ? (string) $row['id'] : '0';
+            $rowIdKey           = is_string($row['id'] ?? null) ? $row['id'] : '0';
             $categories[$rowIdKey] = ['parent' => empty($row['id_uppercat']) ? 'NULL' : $row['id_uppercat'], 'status' => $row['status'], 'uppercats' => $row['uppercats']];
         }
         if ($newParent !== 'NULL') {
-            $newParentUppercatsStr = $catRepo->findUppercatsStringById(is_numeric($newParent) ? (int) $newParent : 0) ?? '';
+            $newParentUppercatsStr = $catRepo->findUppercatsStringById($newParent) ?? '';
             foreach ($categories as $category) {
-                $catUppercats = is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '';
+                $catUppercats = is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '';
                 if (preg_match('/^' . $catUppercats . '(,|$)/', $newParentUppercatsStr)) {
                     PageState::current()->addError(Lang::t('You cannot move an album in its own sub album'));
                     return;
                 }
             }
         }
-        $catRepo->updateParent($catIdsInt, $newParent === 'NULL' ? null : (is_numeric($newParent) ? (int) $newParent : 0));
+        $catRepo->updateParent($catIdsInt, $newParent === 'NULL' ? null : ($newParent));
         $this->updateUppercats();
         $this->updateGlobalRank();
-        $parentStatus = ($newParent === 'NULL') ? 'public' : ($catRepo->findStatusById(is_numeric($newParent) ? (int) $newParent : 0) ?? 'public');
+        $parentStatus = ($newParent === 'NULL') ? 'public' : ($catRepo->findStatusById($newParent) ?? 'public');
         if ($parentStatus === 'private') {
             $this->setCatStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($categories)), 'private');
         }
@@ -435,7 +445,7 @@ SELECT DISTINCT id
         }
         $rank = 0;
         if (Config::newcatDefaultPosition() === 'last') {
-            $maxRank = ServiceLocator::get(CategoryRepository::class)->findMaxRankForParent(empty($parentId) ? null : (int) $parentId);
+            $maxRank = ServiceLocator::get(CategoryRepository::class)->findMaxRankForParent(($parentId === null || $parentId === '' || $parentId === 0) ? null : (int) $parentId);
             if ($maxRank !== null) {
                 $rank = $maxRank + 1;
             }
@@ -445,30 +455,31 @@ SELECT DISTINCT id
         $insert['visible']     = BoolUtil::toString(isset($options['visible']) && is_bool($options['visible']) ? $options['visible'] : Config::newcatDefaultVisible());
         $insert['status']      = (isset($options['status']) && $options['status'] === 'private') ? 'private' : Config::newcatDefaultStatus();
         if (isset($options['comment'])) {
-            $cv = is_scalar($options['comment']) ? (string) $options['comment'] : '';
+            $cv = is_string($options['comment']) ? $options['comment'] : '';
             $insert['comment'] = Config::allowHtmlDescriptions() ? $cv : strip_tags($cv);
         }
         $uppercatsPrefix = '';
-        if (!empty($parentId) && is_numeric($parentId)) {
+        if (($parentId !== null && $parentId !== '' && $parentId !== 0) && is_numeric($parentId)) {
             $parent = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $parentId);
             if ($parent !== null) {
                 $insert['id_uppercat'] = $parent['id'];
-                $insert['global_rank'] = (is_scalar($parent['global_rank']) ? (string) $parent['global_rank'] : '') . '.' . (string) $insert['rank'];
+                $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $insert['rank'];
                 if ($parent['visible'] === 'false') {
                     $insert['visible'] = 'false';
                 }
                 if ($parent['status'] === 'private') {
                     $insert['status'] = 'private';
                 }
-                $uppercatsPrefix = (is_scalar($parent['uppercats']) ? (string) $parent['uppercats'] : '') . ',';
+                $uppercatsPrefix = (is_string($parent['uppercats'] ?? null) ? $parent['uppercats'] : '') . ',';
             }
         }
         Dml::singleInsert(Tables::categories(), $insert);
         $insertedId = (int) DbConnection::get()->lastInsertId();
         Dml::singleUpdate(Tables::categories(), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
         $this->updateGlobalRank();
-        $idUppercatStr = is_scalar($insert['id_uppercat'] ?? null) ? (string) $insert['id_uppercat'] : '0';
-        if ($insert['status'] === 'private' && !empty($insert['id_uppercat']) && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
+        $idUppercatRaw = $insert['id_uppercat'] ?? null;
+        $idUppercatStr = is_string($idUppercatRaw) ? $idUppercatRaw : (is_numeric($idUppercatRaw) ? (string) $idUppercatRaw : '0');
+        if ($insert['status'] === 'private' && isset($insert['id_uppercat']) && $insert['id_uppercat'] !== '' && $insert['id_uppercat'] !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
             $grantedGrps = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'group_id');
             $inserts     = [];
             foreach ($grantedGrps as $grp) {
@@ -525,13 +536,18 @@ SELECT DISTINCT id
         }
     }
 
-    public function dissociateImagesFromCategory(mixed $images, string $category): int
+    /**
+     * @param int[] $images
+     *
+     * @psalm-param array<int> $images
+     */
+    public function dissociateImagesFromCategory(array $images, string $category): int
     {
         $query = '
 SELECT id FROM ' . Tables::imageCategory() . '
   INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id = ' . $category . '
-    AND id IN (' . implode(',', is_array($images) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $images) : []) . ')
+    AND id IN (' . implode(',', $images) . ')
     AND (category_id != storage_category_id OR storage_category_id IS NULL)
 ;';
         $dissociables = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
@@ -614,13 +630,15 @@ SELECT id FROM ' . Tables::imageCategory() . '
         Dml::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, ['ignore' => true]);
     }
 
-    public function saveImagesOrder(mixed $categoryId, mixed $images): void
+    /**
+     * @param (int|string)[] $images
+     *
+     * @psalm-param array<int|string> $images
+     */
+    public function saveImagesOrder(int $categoryId, array $images): void
     {
         $currentRank = 0;
         $datas       = [];
-        if (!is_array($images)) {
-            return;
-        }
         foreach ($images as $id) {
             $datas[] = ['category_id' => $categoryId, 'image_id' => $id, 'rank' => ++$currentRank];
         }
@@ -659,7 +677,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         $logger->debug('empty_lounge, exec=' . $execId . ', begins');
         $this->conn->executeStatement('INSERT IGNORE INTO ' . Tables::config() . ' SET param="empty_lounge_running", value=?', [$execId . '-' . time()]);
         $emptyLoungeRunning = $this->conn->executeQuery('SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"')->fetchOne();
-        [$runningExecId] = explode('-', is_scalar($emptyLoungeRunning) ? (string) $emptyLoungeRunning : '');
+        [$runningExecId] = explode('-', is_string($emptyLoungeRunning) ? $emptyLoungeRunning : '');
         if ($runningExecId != $execId) {
             $logger->debug('empty_lounge, exec=' . $execId . ', skip');
             return null;

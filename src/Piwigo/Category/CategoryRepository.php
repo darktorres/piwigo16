@@ -585,10 +585,13 @@ final class CategoryRepository extends AbstractRepository
             [$catId]
         )->fetchNumeric();
 
+        $row0 = ($row !== false) ? ($row[0] ?? null) : null;
+        $row1 = ($row !== false) ? ($row[1] ?? null) : null;
+        $row2 = ($row !== false) ? ($row[2] ?? null) : null;
         return [
-            is_numeric($row[0] ?? null) ? (int) $row[0] : 0,
-            isset($row[1]) && is_string($row[1]) ? $row[1] : null,
-            isset($row[2]) && is_string($row[2]) ? $row[2] : null,
+            is_numeric($row0) ? (int) $row0 : 0,
+            is_string($row1) ? $row1 : null,
+            is_string($row2) ? $row2 : null,
         ];
     }
 
@@ -842,7 +845,7 @@ final class CategoryRepository extends AbstractRepository
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $result[is_scalar($row['id']) ? (string) $row['id'] : ''] = $row;
+            $result[is_string($row['id'] ?? null) ? $row['id'] : ''] = $row;
         }
         return $result;
     }
@@ -865,7 +868,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $qb->executeQuery()->fetchFirstColumn());
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $qb->executeQuery()->fetchFirstColumn());
     }
 
     /** Record a hit on an old permalink entry. */

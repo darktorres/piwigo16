@@ -44,7 +44,9 @@ final class PictureRateRenderer
                 $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
                 $anonId = null;
                 if (!PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
-                    $ip_components = explode('.', is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '');
+                    /** @var mixed $remoteAddrRaw */
+                    $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+                    $ip_components = explode('.', is_string($remoteAddrRaw) ? $remoteAddrRaw : '');
                     if (count($ip_components) > 3) {
                         array_pop($ip_components);
                     }

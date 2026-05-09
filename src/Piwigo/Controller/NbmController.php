@@ -24,6 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class NbmController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Free);
@@ -33,8 +34,10 @@ final class NbmController implements ControllerInterface
         EventDispatcher::notify('loading_lang');
         LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
-        $subscribe   = is_string($_GET['subscribe'] ?? null) ? $_GET['subscribe'] : null;
-        $unsubscribe = is_string($_GET['unsubscribe'] ?? null) ? $_GET['unsubscribe'] : null;
+        $rawSubscribe   = $_GET['subscribe']   ?? null;
+        $rawUnsubscribe = $_GET['unsubscribe'] ?? null;
+        $subscribe   = is_string($rawSubscribe) ? $rawSubscribe : null;
+        $unsubscribe = is_string($rawUnsubscribe) ? $rawUnsubscribe : null;
 
         if ($subscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
             ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(false, [$subscribe]);

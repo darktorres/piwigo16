@@ -63,7 +63,7 @@ final readonly class UserService
         if (preg_match('/^ .*$/', $login)) {
             $errors[] = Lang::t('login mustn\'t start with a space character');
         }
-        if ($this->getUserid($login)) {
+        if ($this->getUserid($login) !== false && $this->getUserid($login) !== 0) {
             $errors[] = Lang::t('this login is already used');
         }
         if ($login != strip_tags($login)) {
@@ -102,11 +102,11 @@ final readonly class UserService
             }
 
             $override = [];
-            if (Config::browserLanguage() and $language = PreferencesService::get()->getBrowserLanguage()) {
+            if (Config::browserLanguage() and ($language = PreferencesService::get()->getBrowserLanguage()) !== false && $language !== '') {
                 $override['language'] = $language;
             }
 
-            $this->createUserInfos((int) $userId, $override);
+            $this->createUserInfos($userId, $override);
 
             if ($notifyAdmin and 'none' != Config::emailAdminOnNewUser()) {
                 $adminUrl     = ServiceLocator::get(UrlGenerator::class)->admin('user_list') . '&user_id=' . $userId;
@@ -139,7 +139,7 @@ final readonly class UserService
                     LangService::get()->getL10nArgs('If you think you\'ve received this email in error, please contact us at %s', ServiceLocator::get(Util::class)->getWebmasterMailAddress()),
                 ];
                 ServiceLocator::get(MessageBusInterface::class)->dispatch(
-                    new SendNotificationEmailJob((int) $userId, 'registration', [
+                    new SendNotificationEmailJob($userId, 'registration', [
                         'to'             => $mailAddress ?? '',
                         'subject'        => '[' . Config::galleryTitle() . '] ' . Lang::t('Registration'),
                         'content'        => LangService::get()->l10nArgs($keyargsContent),
@@ -151,7 +151,7 @@ final readonly class UserService
             EventDispatcher::notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
             ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'add');
 
-            return (int) $userId;
+            return $userId;
         } else {
             return false;
         }
@@ -161,7 +161,8 @@ final readonly class UserService
     public function buildUser(int $userId, bool $useCache = true): array
     {
         $user       = ['id' => $userId];
-        $user       = array_merge($user, $this->getuserdata($userId, $useCache) ?: []);
+        $userDataResult = $this->getuserdata($userId, $useCache);
+        $user       = array_merge($user, $userDataResult !== false ? $userDataResult : []);
 
         if ($user['id'] == Config::guestId() and $user['status'] <> 'guest') {
             $user['status'] = 'guest';
@@ -171,7 +172,8 @@ final readonly class UserService
             $user['internal_status']['guest_must_be_guest'] = true;
         }
 
-        if (!isset($user['theme_name']) or !ServiceLocator::get(Util::class)->checkThemeInstalled(is_scalar($user['theme']) ? (string) $user['theme'] : '')) {
+        $userThemeRaw = $user['theme'] ?? null;
+        if (!isset($user['theme_name']) or !ServiceLocator::get(Util::class)->checkThemeInstalled(is_string($userThemeRaw) ? $userThemeRaw : '')) {
             $user['theme']      = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -199,7 +201,8 @@ final readonly class UserService
   FROM ' . Tables::users() . '
   WHERE ' . Config::userFields()['id'] . ' = \'' . $userId . '\'';
 
-        $row = $this->conn->executeQuery($query)->fetchAssociative() ?: null;
+        $rowResult = $this->conn->executeQuery($query)->fetchAssociative();
+        $row = $rowResult !== false ? $rowResult : null;
 
         if (Config::externalAuthentification()) {
             $counter = $this->conn->executeQuery(
@@ -221,7 +224,8 @@ final readonly class UserService
              LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
              WHERE ui.user_id = ?',
             [$userId]
-        )->fetchAssociative() ?: null;
+        )->fetchAssociative();
+        $userInfosRow = $userInfosRow !== false ? $userInfosRow : null;
 
         $userdata = array_merge($row ?? [], $userInfosRow ?? []);
 
@@ -284,7 +288,8 @@ final readonly class UserService
                 $userdata['cache_update_time'] = time();
                 $userdata['need_update']       = false;
 
-                $udStatus            = is_scalar($userdata['status']) ? (string) $userdata['status'] : '';
+                $udStatusRaw         = $userdata['status'] ?? null;
+                $udStatus            = is_string($udStatusRaw) ? $udStatusRaw : '';
                 $udLevel             = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
                 $udForbiddenCats     = PermissionService::get()->calculatePermissions($udId, $udStatus);
                 $userdata['forbidden_categories'] = $udForbiddenCats;
@@ -322,14 +327,17 @@ final readonly class UserService
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
                 $udNeedUpdate        = ($userdata['need_update'] ?? '') === 'true';
                 $udCacheUpdateTime   = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
-                $udForbiddenCatsStr2 = is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '';
+                $udForbiddenCatsStr2 = is_string($userdata['forbidden_categories'] ?? null) ? $userdata['forbidden_categories'] : '';
                 $udNbTotalImages     = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
-                $udLastPhotoDate     = is_scalar($userdata['last_photo_date']) ? (string) $userdata['last_photo_date'] : '';
-                $udImageAccessType   = is_scalar($userdata['image_access_type']) ? (string) $userdata['image_access_type'] : '';
-                $udImageAccessList   = is_scalar($userdata['image_access_list']) ? (string) $userdata['image_access_list'] : '';
-                $lastPhotoPlaceholder = empty($udLastPhotoDate) ? 'NULL' : '?';
+                $lastPhotoDateRaw    = $userdata['last_photo_date'] ?? null;
+                $udLastPhotoDate     = is_string($lastPhotoDateRaw) ? $lastPhotoDateRaw : '';
+                $imageAccessTypeRaw  = $userdata['image_access_type'] ?? null;
+                $udImageAccessType   = is_string($imageAccessTypeRaw) ? $imageAccessTypeRaw : '';
+                $imageAccessListRaw  = $userdata['image_access_list'] ?? null;
+                $udImageAccessList   = is_string($imageAccessListRaw) ? $imageAccessListRaw : '';
+                $lastPhotoPlaceholder = $udLastPhotoDate === '' ? 'NULL' : '?';
                 $cacheParams = [$udId, $udNeedUpdate ? 'true' : 'false', $udCacheUpdateTime, $udForbiddenCatsStr2, $udNbTotalImages, $udImageAccessType, $udImageAccessList];
-                if (!empty($udLastPhotoDate)) {
+                if ($udLastPhotoDate !== '') {
                     array_splice($cacheParams, 5, 0, [$udLastPhotoDate]);
                 }
                 $this->conn->executeStatement(
@@ -474,7 +482,7 @@ SELECT DISTINCT f.image_id
                     $status = 'normal';
                 }
 
-                $insert    = array_merge(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $defaultUser), ['user_id' => $userId, 'status' => $status, 'registration_date' => $dbnow, 'level' => $level]);
+                $insert    = array_merge(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $defaultUser), ['user_id' => $userId, 'status' => $status, 'registration_date' => $dbnow, 'level' => $level]);
                 $inserts[] = $insert;
             }
 
@@ -507,7 +515,7 @@ SELECT DISTINCT f.image_id
      */
     public function checkAndSaveUserInfos(array $params): array
     {
-        if (isset($params['username']) and strlen(str_replace(' ', '', is_scalar($params['username']) ? (string) $params['username'] : '')) == 0) {
+        if (isset($params['username']) and strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) == 0) {
             return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Name field must not be empty']];
         }
 
@@ -521,12 +529,12 @@ SELECT DISTINCT f.image_id
                 return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'This user does not exist.']];
             }
 
-            if (!empty($params['username'])) {
-                $userId = $this->getUserid(is_scalar($params['username']) ? (string) $params['username'] : '');
-                if ($userId and $userId != $paramUserId[0]) {
+            if (isset($params['username']) && $params['username'] !== '') {
+                $userId = $this->getUserid(is_string($params['username']) ? $params['username'] : '');
+                if ($userId !== false && $userId !== 0 && $userId != $paramUserId[0]) {
                     return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('this login is already used')]];
                 }
-                $usernameStr = is_scalar($params['username']) ? (string) $params['username'] : '';
+                $usernameStr = is_string($params['username']) ? $params['username'] : '';
                 if ($usernameStr != strip_tags($usernameStr)) {
                     return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('html tags are not allowed in login')]];
                 }
@@ -549,7 +557,7 @@ SELECT DISTINCT f.image_id
                         return ['error' => ['code' => 403, 'message' => 'Only webmasters can change password of other "webmaster/admin" users']];
                     }
                 }
-                $updates[Config::userFields()['password']] = password_hash(is_scalar($params['password']) ? (string) $params['password'] : '', PASSWORD_BCRYPT);
+                $updates[Config::userFields()['password']] = password_hash(is_string($params['password']) ? $params['password'] : '', PASSWORD_BCRYPT);
             }
         }
 
@@ -626,13 +634,13 @@ SELECT DISTINCT f.image_id
                 }
                 $query .= $field . ' = "' . (is_scalar($value) ? (string) $value : '') . '"';
             }
-            $query .= ' WHERE user_id IN(' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paramUserId)) . ')';
+            $query .= ' WHERE user_id IN(' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $paramUserId)) . ')';
             $this->conn->executeStatement($query);
         }
 
-        if (!empty($paramGroupId)) {
+        if (count($paramGroupId) > 0) {
             $this->groupRepo->deleteUserGroupByUserIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId));
-            $groupIds = array_column($this->conn->executeQuery('SELECT id FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paramGroupId)) . ');')->fetchAllAssociative(), 'id');
+            $groupIds = array_column($this->conn->executeQuery('SELECT id FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $paramGroupId)) . ');')->fetchAllAssociative(), 'id');
             if (count($groupIds) > 0) {
                 $inserts = [];
                 foreach ($groupIds as $gid) {
@@ -701,7 +709,7 @@ SELECT DISTINCT f.image_id
     public function getApiKey(string $userId): false|array
     {
         $apiKeys = DbConnection::get()->executeQuery('SELECT * FROM `' . Tables::userAuthKeys() . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
-        if (!$apiKeys) {
+        if (count($apiKeys) === 0) {
             return false;
         }
 
@@ -717,7 +725,7 @@ SELECT DISTINCT f.image_id
             $akRevokedOn                   = is_scalar($apiKey['revoked_on']) ? (string) $apiKey['revoked_on'] : null;
             $apiKey['created_on_format']   = ServiceLocator::get(DateService::class)->formatDate($akCreatedOn, ['day', 'month', 'year']);
             $apiKey['expired_on_format']   = ServiceLocator::get(DateService::class)->formatDate($akExpiredOn, ['day', 'month', 'year']);
-            $apiKey['last_used_on_since']  = $akLastUsedOn ? ServiceLocator::get(DateService::class)->timeSince($akLastUsedOn, 'day') : Lang::t('Never');
+            $apiKey['last_used_on_since']  = ($akLastUsedOn !== null && $akLastUsedOn !== '') ? ServiceLocator::get(DateService::class)->timeSince($akLastUsedOn, 'day') : Lang::t('Never');
             $expiredOn                     = ServiceLocator::get(DateService::class)->str2DateTime($akExpiredOn);
             $nowDt                         = ServiceLocator::get(DateService::class)->str2DateTime($now);
             $apiKey['is_expired']          = $expiredOn < $nowDt;
@@ -734,8 +742,8 @@ SELECT DISTINCT f.image_id
                 }
             }
             $apiKey['expired_on_since'] = ServiceLocator::get(DateService::class)->timeSince($akExpiredOn, 'day');
-            $apiKey['revoked_on_since'] = $akRevokedOn ? ServiceLocator::get(DateService::class)->timeSince($akRevokedOn, 'day') : null;
-            $apiKey['revoked_on_message'] = $akRevokedOn ? Lang::t('This API key was manually revoked on %s', ServiceLocator::get(DateService::class)->formatDate($akRevokedOn, ['day', 'month', 'year'])) : null;
+            $apiKey['revoked_on_since'] = ($akRevokedOn !== null && $akRevokedOn !== '') ? ServiceLocator::get(DateService::class)->timeSince($akRevokedOn, 'day') : null;
+            $apiKey['revoked_on_message'] = ($akRevokedOn !== null && $akRevokedOn !== '') ? Lang::t('This API key was manually revoked on %s', ServiceLocator::get(DateService::class)->formatDate($akRevokedOn, ['day', 'month', 'year'])) : null;
             $apiKeys[$i] = $apiKey;
         }
 
@@ -746,7 +754,7 @@ SELECT DISTINCT f.image_id
     public function getAvailableApiKey(string $userId): array|false
     {
         $apiKeys = $this->getApiKey($userId);
-        if (!$apiKeys) {
+        if ($apiKeys === false || count($apiKeys) === 0) {
             return false;
         }
         $available = [];
@@ -789,8 +797,8 @@ SELECT DISTINCT f.image_id
         }
         $_SESSION['edit_context'] ??= [];
         $existingContext          = is_array($_SESSION['edit_context']) ? $_SESSION['edit_context'] : [];
-        $imageId                  = is_scalar($page['image_id']) ? (string) $page['image_id'] : '';
-        $sectionUrl               = is_scalar($page['section_url']) ? (string) $page['section_url'] : '';
+        $imageId                  = is_string($page['image_id']) ? $page['image_id'] : '';
+        $sectionUrl               = is_string($page['section_url']) ? $page['section_url'] : '';
         $_SESSION['edit_context'] = array_slice([$imageId => $sectionUrl] + $existingContext, 0, 10, true);
     }
 

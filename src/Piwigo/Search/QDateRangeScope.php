@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-class QDateRangeScope extends QSearchScope
+final class QDateRangeScope extends QSearchScope
 {
     /** @param string[] $aliases */
     public function __construct(string $id, array $aliases, bool $nullable = false)
@@ -17,13 +17,13 @@ class QDateRangeScope extends QSearchScope
     {
         $str = $token->term;
         $strict = [0,0];
-        if (($pos = strpos((string) $str, '..')) !== false) {
-            $range = [ substr((string) $str, 0, $pos), substr((string) $str, $pos + 2)];
+        if (($pos = strpos($str, '..')) !== false) {
+            $range = [ substr($str, 0, $pos), substr($str, $pos + 2)];
         } elseif ('>' === ($str[0] ?? '')) {
-            $range = [ substr((string) $str, 1), ''];
+            $range = [ substr($str, 1), ''];
             $strict[0] = 1;
         } elseif ('<' === ($str[0] ?? '')) {
-            $range = ['', substr((string) $str, 1)];
+            $range = ['', substr($str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
@@ -34,7 +34,7 @@ class QDateRangeScope extends QSearchScope
         }
 
         foreach ($range as $i => &$val) {
-            if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', (string) $val, $matches)) {
+            if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', $val, $matches)) {
                 array_shift($matches);
                 if (!isset($matches[1])) {
                     $matches[1] = ($i ^ $strict[$i]) ? 12 : 1;
@@ -46,7 +46,7 @@ class QDateRangeScope extends QSearchScope
                 if ($i ^ $strict[$i]) {
                     $val .= ' 23:59:59';
                 }
-            } elseif (strlen((string) $val)) {
+            } elseif (strlen($val)) {
                 return false;
             }
         }
@@ -64,8 +64,8 @@ class QDateRangeScope extends QSearchScope
     {
         $clauses = [];
         $scopeArr = is_array($token->scope_data) ? $token->scope_data : ['', ''];
-        $sd0 = isset($scopeArr[0]) && is_scalar($scopeArr[0]) ? (string) $scopeArr[0] : '';
-        $sd1 = isset($scopeArr[1]) && is_scalar($scopeArr[1]) ? (string) $scopeArr[1] : '';
+        $sd0 = is_string($scopeArr[0] ?? null) ? $scopeArr[0] : '';
+        $sd1 = is_string($scopeArr[1] ?? null) ? $scopeArr[1] : '';
         if ($sd0 != '') {
             $clauses[] = $field.' >= \'' . $sd0.'\'';
         }

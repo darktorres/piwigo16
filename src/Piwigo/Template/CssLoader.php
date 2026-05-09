@@ -7,12 +7,12 @@ namespace Piwigo\Template;
 /**
  * Manages a list of CSS files and combining them in a unique file.
  */
-class CssLoader
+final class CssLoader
 {
     /** @var Css[] */
-    private array $registered_css;
+    private array $registered_css = [];
     /** @var int used to keep declaration order */
-    private int $counter;
+    private int $counter = 0;
 
     public function __construct()
     {

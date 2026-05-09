@@ -15,12 +15,12 @@ use Piwigo\Plugins\EventDispatcher;
  * @method bool crop(int $width, int $height, int $x, int $y)
  * @method bool resize(int $width, int $height)
  * @method bool sharpen(int $amount)
- * @method bool compose(self $overlay, int $x, int $y, int $opacity)
+ * @method bool compose(PwgImage $overlay, int $x, int $y, int $opacity)
  * @method bool strip()
  * @method bool write(string $destination_filepath)
  * @method bool setCompressionQuality(int $quality)
  */
-class PwgImage
+final class PwgImage
 {
     /** @var ImageInterface|null */
     public $image = null;
@@ -42,7 +42,7 @@ class PwgImage
         }
 
         $lib = self::getLibrary($library, $extension);
-        if (!$lib) {
+        if ($lib === false) {
             die('No image library available on your server.');
         }
         $this->library = $lib;
@@ -124,7 +124,7 @@ class PwgImage
 
         $this->image->resize($rd_width, $rd_height);
 
-        if (!empty($rotation)) {
+        if ($rotation !== null && $rotation !== 0) {
             $this->image->rotate($rotation);
         }
 
@@ -137,6 +137,10 @@ class PwgImage
     /** @return array<mixed> */
     public static function getResizeDimensions(int|float $width, int|float $height, int|float $max_width, int|float $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
     {
+        $width = (float) $width;
+        $height = (float) $height;
+        $max_width = (float) $max_width;
+        $max_height = (float) $max_height;
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
             $rotate_for_dimensions = true;
@@ -146,9 +150,9 @@ class PwgImage
             [$width, $height] = [$height, $width];
         }
 
+        $x = 0;
+        $y = 0;
         if ($crop) {
-            $x = 0;
-            $y = 0;
 
             if ($width < $height and $follow_orientation) {
                 [$max_width, $max_height] = [$max_height, $max_width];
@@ -159,11 +163,11 @@ class PwgImage
 
             if ($dest_ratio > $img_ratio) {
                 $destHeight = round($width * $max_height / $max_width);
-                $y = round(($height - $destHeight) / 2);
+                $y = round(($height - $destHeight) / 2.0);
                 $height = $destHeight;
             } elseif ($dest_ratio < $img_ratio) {
                 $destWidth = round($height * $max_width / $max_height);
-                $x = round(($width - $destWidth) / 2);
+                $x = round(($width - $destWidth) / 2.0);
                 $width = $destWidth;
             }
         }
@@ -193,7 +197,7 @@ class PwgImage
           'height' => $destination_height,
           ];
 
-        if ($crop and ($x or $y)) {
+        if ($crop and ($x !== 0 or $y !== 0)) {
             $result['crop'] = [
               'width' => $width,
               'height' => $height,
@@ -245,15 +249,15 @@ class PwgImage
                 return [
                   'type'            => 'VP8L',
                   'has-animation'   => false,
-                  'has-transparent' => (bool) (!!(ord($buf[24]) & 0x00000010)),
+                  'has-transparent' => !!(ord($buf[24]) & 0x00000010),
                 ];
 
             case $buf[15] == 'X':
                 // Extended File Format
                 return [
                   'type'            => 'VP8X',
-                  'has-animation'   => (bool) (!!(ord($buf[20]) & 0x00000002)),
-                  'has-transparent' => (bool) (!!(ord($buf[20]) & 0x00000010)),
+                  'has-animation'   => !!(ord($buf[20]) & 0x00000002),
+                  'has-transparent' => !!(ord($buf[20]) & 0x00000010),
                 ];
 
             default:
@@ -321,12 +325,12 @@ class PwgImage
     public static function getSharpenMatrix(int $amount): array
     {
         // Amount should be in the range of 48-10
-        $amount = round(abs(-48 + ($amount * 0.38)), 2);
+        $amountF = round(abs(-48.0 + ((float) $amount * 0.38)), 2);
 
         $matrix = [
-          [-1,   -1,    -1],
-          [-1, $amount, -1],
-          [-1,   -1,    -1],
+          [-1.0,   -1.0,    -1.0],
+          [-1.0, $amountF, -1.0],
+          [-1.0,   -1.0,    -1.0],
           ];
 
         $norm = array_sum(array_map(array_sum(...), $matrix));
@@ -348,8 +352,8 @@ class PwgImage
           'destination' => $destination_filepath,
           'width'       => $width,
           'height'      => $height,
-          'size'        => floor(filesize($destination_filepath) / 1024).' KB',
-          'time'        => $time ? number_format((StringUtil::get()->getMoment() - $time) * 1000, 2, '.', ' ').' ms' : null,
+          'size'        => (int) floor((int) filesize($destination_filepath) / 1024).' KB',
+          'time'        => $time !== null ? number_format((StringUtil::get()->getMoment() - $time) * 1000.0, 2, '.', ' ').' ms' : null,
           'library'     => $this->library,
         ];
     }
@@ -388,6 +392,7 @@ class PwgImage
             return false;
         }
 
+        $returnarray = [];
         exec(Config::extImagickDir().self::getExtImagickCommand().' -version', $returnarray);
         if (!empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
@@ -410,7 +415,7 @@ class PwgImage
         }
 
         // Choose image library
-        switch (strtolower((string) $library)) {
+        switch (strtolower($library)) {
             case 'auto':
             case 'ext_imagick':
                 if ($extension != 'gif' and self::isExtImagick()) {

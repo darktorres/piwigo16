@@ -29,6 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TagsController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
@@ -57,7 +58,7 @@ final class TagsController implements ControllerInterface
             );
         }
 
-        $displayMode = (string) $page['display_mode'];
+        $displayMode = $page['display_mode'];
         $tpl->assign('display_mode', $displayMode);
 
         $tags = ServiceLocator::get(TagService::class)->getAvailableTags();

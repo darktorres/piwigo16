@@ -32,15 +32,17 @@ final class WatermarkProcessor
 
         // step 0 — manage upload if any
         $watermarkImage = is_array($_FILES['watermarkImage'] ?? null) ? $_FILES['watermarkImage'] : [];
-        if (!empty($watermarkImage['tmp_name'])) {
-            $tmp_name = is_scalar($watermarkImage['tmp_name']) ? (string) $watermarkImage['tmp_name'] : '';
+        $rawTmpName = $watermarkImage['tmp_name'] ?? null;
+        $tmp_name   = is_string($rawTmpName) ? $rawTmpName : '';
+        if ($tmp_name !== '') {
             [$width, $height, $type] = getimagesize($tmp_name) ?: [0, 0, 0];
             if (IMAGETYPE_PNG != $type) {
                 $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
                 if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-                    $wm_file_name = is_scalar($watermarkImage['name']) ? (string) $watermarkImage['name'] : '';
+                    $rawWmName    = $watermarkImage['name'] ?? null;
+                    $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
                     $new_name = ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
@@ -151,8 +153,8 @@ final class WatermarkProcessor
                     $changed = $watermark_changed;
                 }
                 if (!$changed && $params->use_watermark) {
-                    $changed |= $watermark->min_size[0] != $old_watermark->min_size[0] && ($watermark->min_size[0] < $params->maxWidth() || $old_watermark->min_size[0] < $params->maxWidth());
-                    $changed |= $watermark->min_size[1] != $old_watermark->min_size[1] && ($watermark->min_size[1] < $params->maxHeight() || $old_watermark->min_size[1] < $params->maxHeight());
+                    $changed = ($watermark->min_size[0] != $old_watermark->min_size[0] && ($watermark->min_size[0] < $params->maxWidth() || $old_watermark->min_size[0] < $params->maxWidth()));
+                    $changed = $changed || ($watermark->min_size[1] != $old_watermark->min_size[1] && ($watermark->min_size[1] < $params->maxHeight() || $old_watermark->min_size[1] < $params->maxHeight()));
                 }
 
                 if ($changed) {

@@ -97,11 +97,12 @@ final class InflectorEn implements InflectorInterface
     }
 
     /** @return string[] */
+    #[\Override]
     public function getVariants(string $word): array
     {
         $res = [];
 
-        $lword = strtolower((string) $word);
+        $lword = strtolower($word);
 
         $rc = $this->exceptions[$lword] ?? null;
         if ($rc !== null) {
@@ -113,10 +114,10 @@ final class InflectorEn implements InflectorInterface
 
         self::run($this->pluralizers, $word, $res);
         self::run($this->singularizers, $word, $res);
-        if (strlen((string) $word) > 4) {
+        if (strlen($word) > 4) {
             self::run($this->er2ing, $word, $res);
         }
-        if (strlen((string) $word) > 5) {
+        if (strlen($word) > 5) {
             $rc = self::run($this->ing2er, $word, $res);
             if ($rc !== null && $rc !== false) {
                 self::run($this->pluralizers, $rc, $res);
@@ -132,8 +133,8 @@ final class InflectorEn implements InflectorInterface
     private static function run(array $rules, string $word, array &$res): string|null|false
     {
         foreach ($rules as $rule => $replacement) {
-            $rc = preg_replace($rule.'i', (string) $replacement, (string) $word, -1, $count);
-            if ($count) {
+            $rc = preg_replace($rule.'i', $replacement, $word, -1, $count);
+            if ($count > 0) {
                 if ($rc !== $word) {
                     if ($rc !== null) {
                         $res[] = $rc;

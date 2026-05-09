@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class RegisterController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Free);
@@ -61,15 +62,15 @@ final class RegisterController implements ControllerInterface
                 $pgErrors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
-            if (empty($_POST['password'])) {
+            if (($_POST['password'] ?? '') === '') {
                 $pgErrors['register_form_error'] = Lang::t('Password is missing. Please enter the password.');
-            } elseif (empty($_POST['password_conf'])) {
+            } elseif (($_POST['password_conf'] ?? '') === '') {
                 $pgErrors['register_form_error'] = Lang::t('Password confirmation is missing. Please confirm the chosen password.');
             } elseif ($_POST['password'] != $_POST['password_conf']) {
                 $pgErrors['register_form_error'] = Lang::t('The passwords do not match');
             }
 
-            $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+            $post_password = is_string($rawRegisterPwd = $_POST['password'] ?? null) ? $rawRegisterPwd : '';
             UserService::get()->registerUser($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
             $page['errors'] = $pgErrors;
 
@@ -82,7 +83,7 @@ final class RegisterController implements ControllerInterface
                 }
                 $user_id = UserService::get()->getUserid($post_login ?? '');
                 if ($user_id !== false) {
-                    AuthService::get()->logUser((int) $user_id, false);
+                    AuthService::get()->logUser($user_id, false);
                 }
                 Util::get()->redirect(UrlService::get()->makeIndexUrl());
             }
@@ -91,8 +92,8 @@ final class RegisterController implements ControllerInterface
             $registration_post_key = ServiceLocator::get(Util::class)->getEphemeralKey(6);
         }
 
-        $login = !empty($post_login) ? htmlspecialchars(stripslashes($post_login)) : '';
-        $email = !empty($post_mail) ? htmlspecialchars(stripslashes($post_mail)) : '';
+        $login = ($post_login !== null && $post_login !== '') ? htmlspecialchars(stripslashes($post_login)) : '';
+        $email = ($post_mail !== null && $post_mail !== '') ? htmlspecialchars(stripslashes($post_mail)) : '';
 
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['register' => 'register.tpl']);

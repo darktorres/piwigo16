@@ -19,7 +19,7 @@ use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
-class Plugins
+final class Plugins
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_plugins = [];
@@ -59,6 +59,7 @@ class Plugins
 
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
+            /** @psalm-suppress UnresolvableInclude */
             require_once($file_to_include.'.class.php');
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                 return new $classname($plugin_id); // @phpstan-ignore piwigo.noDynamicNew
@@ -67,6 +68,7 @@ class Plugins
 
         // before 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.inc.php')) {
+            /** @psalm-suppress UnresolvableInclude */
             require_once($file_to_include.'.inc.php');
 
             if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
@@ -146,23 +148,22 @@ class Plugins
 
             case 'activate':
                 if (!isset($crt_db_plugin)) {
-                    $errors = $this->performAction('install', $plugin_id);
-                    [$crt_db_plugin] = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id);
+                    $installResult = $this->performAction('install', $plugin_id);
+                    $errors = is_array($installResult) ? $installResult : [];
+                    $crt_db_plugin = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id)[0] ?? null;
                     ConfigService::loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
                 }
 
-                if (empty($errors)) {
-                    $vRaw = $crt_db_plugin['version'] ?? null;
+                if (count($errors) === 0) {
+                    $vRaw = is_array($crt_db_plugin) ? ($crt_db_plugin['version'] ?? null) : null;
                     $version = is_scalar($vRaw) ? (string) $vRaw : '';
-                    $errorsArr = is_array($errors) ? $errors : [];
-                    self::buildMaintainClass($plugin_id)->activate($version, $errorsArr);
-                    $errors = $errorsArr;
+                    self::buildMaintainClass($plugin_id)->activate($version, $errors);
                     $activity_details['version'] = $version;
                 }
 
-                if (empty($errors)) {
+                if (count($errors) === 0) {
                     ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'active');
                 } else {
                     $activity_details['result'] = 'error';
@@ -309,7 +310,7 @@ class Plugins
                     $plugin['hasSettings'] = true;
                 }
             }
-            if (!empty($plugin['uri']) and strpos($plugin['uri'], 'extension_view.php?eid=')) {
+            if ($plugin['uri'] !== '' and str_contains($plugin['uri'], 'extension_view.php?eid=')) {
                 list(, $extension) = explode('extension_view.php?eid=', $plugin['uri']);
                 if (is_numeric($extension)) {
                     $plugin['extension'] = $extension;
@@ -356,7 +357,8 @@ class Plugins
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
@@ -412,7 +414,7 @@ class Plugins
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = is_scalar($fs_plugin['extension']) ? (string) $fs_plugin['extension'] : '';
+                $plugins_to_check[] = is_string($fs_plugin['extension']) ? $fs_plugin['extension'] : '';
             }
         }
 
@@ -434,7 +436,8 @@ class Plugins
                 $get_data['extension_include'] = implode(',', $plugins_to_check);
             }
         }
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -470,7 +473,7 @@ class Plugins
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
             if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = is_scalar($fs_plugin['extension']) ? (string) $fs_plugin['extension'] : '';
+                $plugins_to_check[] = is_string($fs_plugin['extension']) ? $fs_plugin['extension'] : '';
             }
         }
 
@@ -483,7 +486,8 @@ class Plugins
           'extension_include' => implode(',', $plugins_to_check),
         ];
 
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -501,7 +505,7 @@ class Plugins
                 if (!isset($server_plugins[$eid])) {
                     $server_plugins[$eid] = [];
                 }
-                $server_plugins[$eid][] = is_scalar($plugin['revision_name']) ? (string) $plugin['revision_name'] : '';
+                $server_plugins[$eid][] = is_string($plugin['revision_name']) ? $plugin['revision_name'] : '';
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
@@ -554,7 +558,7 @@ class Plugins
     {
         $logger = LoggerRegistry::current();
 
-        if ($archive = tempnam(Config::pluginsPath(), 'zip')) {
+        if (($archive = tempnam(Config::pluginsPath(), 'zip')) !== false) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -617,7 +621,7 @@ class Plugins
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
-                                  and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                                  and ($old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
                                     $old_files[] = 'obsolete.list';
                                     $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
 
@@ -682,7 +686,7 @@ class Plugins
         $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
         $merged_extensions = [];
 
-        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) {
+        if (file_exists($file) and ($obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) !== false) {
             foreach ($obsolete_ext as $ext) {
                 if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
                     $merged_extensions[$matches[1]] = $matches[2];

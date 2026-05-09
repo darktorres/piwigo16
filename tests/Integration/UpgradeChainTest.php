@@ -9,6 +9,7 @@ final class UpgradeChainTest extends IntegrationTestCase
     private const string FIXTURE       = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
     private const string FIXTURE_PRE15 = __DIR__ . '/../../dev/fixtures/piwigo-15.x.sql';
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
@@ -22,13 +23,16 @@ final class UpgradeChainTest extends IntegrationTestCase
         // setUp() loaded the 16.x fixture; apply the pre-15.x patch on top.
         $this->loadFixture(self::FIXTURE_PRE15);
 
-        $ch = curl_init($this->baseUrl . '/index.php?/upgrade');
+        $chRaw = curl_init($this->baseUrl . '/index.php?/upgrade');
+        self::assertNotFalse($chRaw, 'curl_init failed');
+        $ch = $chRaw;
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
-        $body       = (string) curl_exec($ch);
+        $execResult = curl_exec($ch);
+        $body       = is_string($execResult) ? $execResult : '';
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 
@@ -38,7 +42,9 @@ final class UpgradeChainTest extends IntegrationTestCase
 
     public function test_upgrade_from_16x_dump_lands_on_current_version(): void
     {
-        $ch = curl_init($this->baseUrl . '/index.php?/upgrade');
+        $ch2Raw = curl_init($this->baseUrl . '/index.php?/upgrade');
+        self::assertNotFalse($ch2Raw, 'curl_init failed');
+        $ch = $ch2Raw;
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query([
@@ -49,7 +55,8 @@ final class UpgradeChainTest extends IntegrationTestCase
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
-        $statusCode = (int) curl_getinfo(curl_exec($ch) !== false ? $ch : $ch, CURLINFO_HTTP_CODE);
+        curl_exec($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch); // curl_close() deprecated in PHP 8.5; unset triggers cleanup equivalently
 
         self::assertSame(200, $statusCode, 'index.php?/upgrade must return 200');

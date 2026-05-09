@@ -39,7 +39,7 @@ final readonly class AuthService
 
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null
     {
-        if (empty($mailAddress) and
+        if (($mailAddress === null || $mailAddress === '') and
             !(Config::obligatoryUserMailAddress() and in_array(StringUtil::scriptBasename(), ['register', 'profile']))) {
             return '';
         }
@@ -48,14 +48,14 @@ final readonly class AuthService
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (InstallSentinel::isInstalled() and !empty($mailAddress)) {
+        if (InstallSentinel::isInstalled() and $mailAddress !== null && $mailAddress !== '') {
             $userFields = Config::userFields();
             $count = $this->userRepo->countByEmail(
                 $userFields['email'],
                 $userFields['id'],
                 Tables::users(),
                 $mailAddress,
-                is_numeric($userId) ? (int) $userId : null
+                $userId
             );
             if ($count != 0) {
                 return Lang::t('this email address is already in use');
@@ -91,10 +91,10 @@ final readonly class AuthService
         if (count($usersFound) != 1) {
             return $username;
         }
-        return (string) $usersFound[0];
+        return $usersFound[0];
     }
 
-    public function calculateAutoLoginKey(mixed $userId, mixed $time, mixed &$username): string|false
+    public function calculateAutoLoginKey(int $userId, int $time, mixed &$username): string|false
     {
         $userFields = Config::userFields();
         $row = $this->userRepo->findAuthFieldsById(
@@ -102,12 +102,12 @@ final readonly class AuthService
             $userFields['password'],
             $userFields['id'],
             Tables::users(),
-            is_numeric($userId) ? (int) $userId : 0
+            $userId
         );
         if ($row !== null) {
             $username  = stripslashes($row['username']);
-            $timeStr   = is_scalar($time) ? (string) $time : '';
-            $userIdStr = is_scalar($userId) ? (string) $userId : '';
+            $timeStr   = (string) $time;
+            $userIdStr = (string) $userId;
             $data      = $timeStr . $userIdStr . $username;
             return base64_encode(hash_hmac('sha1', $data, Config::secretKey() . $row['password'], true));
         }
@@ -116,7 +116,7 @@ final readonly class AuthService
 
     public function logUser(int $userId, bool $rememberMe): void
     {
-        $cookieLang = isset($_COOKIE['lang']) && is_scalar($_COOKIE['lang']) ? (string) $_COOKIE['lang'] : '';
+        $cookieLang = is_string($_COOKIE['lang'] ?? null) ? $_COOKIE['lang'] : '';
         if ($cookieLang !== '' and CurrentUser::get()->language != $cookieLang) {
             if (!array_key_exists($cookieLang, Util::get()->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
@@ -155,9 +155,10 @@ final readonly class AuthService
 
     public function autoLogin(): bool
     {
-        $rememberCookieRaw = $_COOKIE[Config::rememberMeName()] ?? null;
-        if (isset($rememberCookieRaw)) {
-            $cookie = explode('-', stripslashes(is_scalar($rememberCookieRaw) ? (string) $rememberCookieRaw : ''));
+        $rememberMeName = Config::rememberMeName();
+        $rememberCookieRaw = ($rememberMeName !== '') ? ($_COOKIE[$rememberMeName] ?? null) : null;
+        if (is_string($rememberCookieRaw)) {
+            $cookie = explode('-', stripslashes($rememberCookieRaw));
             if (count($cookie) === 3
                 and is_numeric($cookie[0])
                 and is_numeric($cookie[1])
@@ -193,12 +194,13 @@ final readonly class AuthService
 
         $userFound = $this->findUserByUsernameOrEmail($username);
         $fakeUser  = $this->generateFakeUser();
-        $hash      = $userFound['password'] ?? $fakeUser['password'];
+        $hash      = ($userFound !== null ? ($userFound['password'] ?? null) : null) ?? $fakeUser['password'];
         $passwordVerify = password_verify($password, is_string($hash) ? $hash : '');
-        $ufId = is_numeric($userFound['id'] ?? null) ? (int) $userFound['id'] : 0;
+        $ufIdRaw = $userFound !== null ? ($userFound['id'] ?? null) : null;
+        $ufId = is_numeric($ufIdRaw) ? (int) $ufIdRaw : 0;
 
-        if (empty($userFound) || 'guest' === $userFound['status'] || !$passwordVerify) {
-            if (!empty($userFound) && !$passwordVerify) {
+        if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
+            if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
                 ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, 'login_failure_wrong_password');
             }
             EventDispatcher::notify('login_failure', stripslashes($username));
@@ -206,10 +208,13 @@ final readonly class AuthService
         }
 
         $stateInit = ['can_login' => true, 'reason' => null, 'authenticated' => false];
+        /** @var array<string, mixed> $state */
         $state     = EventDispatcher::dispatch('finalize_login', $stateInit, $userFound, $rememberMe);
 
         if (!$state['can_login']) {
-            $stateReason = is_scalar($state['reason']) ? (string) $state['reason'] : 'login_failure_before_log_user';
+            /** @psalm-var mixed $stateReasonRaw */
+            $stateReasonRaw = $state['reason'] ?? null;
+            $stateReason    = is_string($stateReasonRaw) ? $stateReasonRaw : 'login_failure_before_log_user';
             ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, $stateReason);
             EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
             return false;
@@ -237,7 +242,7 @@ final readonly class AuthService
             $usernameOrEmail
         );
 
-        if (!empty($user)) {
+        if ($user !== null && count($user) > 0) {
             $user['status'] ??= 'normal';
             return $user;
         }
@@ -322,7 +327,7 @@ SELECT
 
         $key = $keys[0];
 
-        if (strtotime(is_scalar($key['expired_on']) ? (string) $key['expired_on'] : '') < strtotime(is_scalar($key['dbnow']) ? (string) $key['dbnow'] : '')) {
+        if (strtotime(is_string($key['expired_on'] ?? null) ? $key['expired_on'] : '') < strtotime(is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '')) {
             $page['auth_key_invalid'] = true;
             return false;
         }
@@ -332,7 +337,7 @@ SELECT
         }
 
         if ('api_key' === $validKey) {
-            $apikeySecret = is_scalar($key['apikey_secret']) ? (string) $key['apikey_secret'] : '';
+            $apikeySecret = is_string($key['apikey_secret'] ?? null) ? $key['apikey_secret'] : '';
             if (!password_verify((string) $secretKey, $apikeySecret)) {
                 return false;
             }
@@ -340,9 +345,11 @@ SELECT
                 return false;
             }
             $daysLeft = is_numeric($key['days_left']) ? (int) $key['days_left'] : 0;
+            $lastNotifiedOnRaw = $key['last_notified_on'] ?? null;
+            $ago48hRaw         = $key['48h_ago'] ?? null;
             if ($daysLeft <= 7 and !empty($key['email']) and
-                (null === $key['last_notified_on'] or
-                 strtotime(is_scalar($key['last_notified_on']) ? (string) $key['last_notified_on'] : '') < strtotime(is_scalar($key['48h_ago']) ? (string) $key['48h_ago'] : ''))) {
+                (null === $lastNotifiedOnRaw or
+                 strtotime(is_string($lastNotifiedOnRaw) ? $lastNotifiedOnRaw : '') < strtotime(is_string($ago48hRaw) ? $ago48hRaw : ''))) {
                 $page['notify_api_key_expiration'] = [
                     'days_left' => $daysLeft,
                     'dbnow'     => $key['dbnow'],
@@ -436,7 +443,8 @@ SELECT
         $passwordLink = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
         UrlService::get()->unsetMakeFullUrl();
 
-        $timeValidation = ServiceLocator::get(DateService::class)->timeSince(strtotime('now -' . $duration . ' second') ?: null, 'second', null, false);
+        $strAuthResult = strtotime('now -' . $duration . ' second');
+        $timeValidation = ServiceLocator::get(DateService::class)->timeSince($strAuthResult !== false ? $strAuthResult : null, 'second', null, false);
 
         return ['time_validation' => $timeValidation, 'password_link' => $passwordLink];
     }

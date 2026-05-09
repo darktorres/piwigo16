@@ -22,14 +22,14 @@ final class MaintenanceService
 
         $success = true;
         try {
-            $allTablesStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $allTables);
+            $allTablesStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $allTables);
             $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTablesStr));
 
             foreach ($allTablesStr as $tableName) {
                 $primaryKeys = [];
                 foreach ($conn->executeQuery('DESC ' . $tableName)->fetchAllAssociative() as $row) {
                     if ($row['Key'] === 'PRI') {
-                        $primaryKeys[] = is_scalar($row['Field']) ? (string) $row['Field'] : '';
+                        $primaryKeys[] = is_string($row['Field'] ?? null) ? $row['Field'] : '';
                     }
                 }
                 if ($primaryKeys !== []) {

@@ -18,7 +18,7 @@ class QSearchScope
 
     public function parse(QSingleToken $token): bool
     {
-        if (!$this->nullable && 0 == strlen((string) $token->term)) {
+        if (!$this->nullable && 0 == strlen($token->term)) {
             return false;
         }
         return true;

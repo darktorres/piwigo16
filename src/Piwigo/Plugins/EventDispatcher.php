@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Plugins;
 
+use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Menu\BlockManager;
+
 /**
  * Static event dispatcher replacing the $pwg_event_handlers global.
  *
@@ -25,7 +28,10 @@ final class EventDispatcher
         $GLOBALS['pwg_event_handlers'] = &self::$handlers;
     }
 
-    public static function addListener(string $event, mixed $func, int $priority = self::NEUTRAL_PRIORITY, ?string $include_path = null): bool
+    /**
+     * @psalm-param \Closure(CheckIntegrity):void|\Closure(BlockManager):void|\Closure(array<mixed>, string):array<mixed>|\Closure((array<mixed>|string)):string|\Closure(bool, string, string, bool):bool|\Closure(mixed, string, array<mixed>):mixed|\Closure(string, array<string, mixed>):string|string $func
+     */
+    public static function addListener(string $event, string|\Closure $func, int $priority = self::NEUTRAL_PRIORITY, ?string $include_path = null): bool
     {
         if (isset(self::$handlers[$event][$priority])) {
             foreach (self::$handlers[$event][$priority] as $handler) {
@@ -83,7 +89,8 @@ final class EventDispatcher
         foreach (self::$handlers[$event] as $handlers) {
             foreach ($handlers as $handler) {
                 $args[0] = $data;
-                if (!empty($handler['include_path'])) {
+                if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                    /** @psalm-suppress UnresolvableInclude */
                     include_once($handler['include_path']);
                 }
                 if (is_callable($handler['function'])) {
@@ -111,7 +118,8 @@ final class EventDispatcher
 
         foreach (self::$handlers[$event] as $handlers) {
             foreach ($handlers as $handler) {
-                if (!empty($handler['include_path'])) {
+                if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                    /** @psalm-suppress UnresolvableInclude */
                     include_once($handler['include_path']);
                 }
                 if (is_callable($handler['function'])) {

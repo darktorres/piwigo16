@@ -23,7 +23,8 @@ final class InstallService
             $conn = DbConnection::build();
         }
 
-        $sql_lines = file($filepath) ?: [];
+        $sql_lines_raw = file($filepath);
+        $sql_lines = $sql_lines_raw !== false ? $sql_lines_raw : [];
         $query     = '';
         foreach ($sql_lines as $sql_line) {
             $sql_line = trim($sql_line);
@@ -71,10 +72,14 @@ final class InstallService
      */
     public static function installDbConnect(array &$infos, array &$errors): void
     {
-        $host   = is_scalar($_POST['dbhost'] ?? null) ? (string) $_POST['dbhost'] : '';
-        $user   = is_scalar($_POST['dbuser'] ?? null) ? (string) $_POST['dbuser'] : '';
-        $pass   = is_scalar($_POST['dbpasswd'] ?? null) ? (string) $_POST['dbpasswd'] : '';
-        $dbname = is_scalar($_POST['dbname'] ?? null) ? (string) $_POST['dbname'] : '';
+        $rawHost   = $_POST['dbhost']   ?? null;
+        $rawUser   = $_POST['dbuser']   ?? null;
+        $rawPass   = $_POST['dbpasswd'] ?? null;
+        $rawDbname = $_POST['dbname']   ?? null;
+        $host   = is_string($rawHost) ? $rawHost : '';
+        $user   = is_string($rawUser) ? $rawUser : '';
+        $pass   = is_string($rawPass) ? $rawPass : '';
+        $dbname = is_string($rawDbname) ? $rawDbname : '';
 
         $port   = null;
         $socket = null;
@@ -94,7 +99,7 @@ final class InstallService
             } finally {
                 restore_error_handler();
             }
-            if ($tmp->connect_error) {
+            if ($tmp->connect_error !== null && $tmp->connect_error !== '') {
                 throw new DbException($tmp->connect_error);
             }
             $safe = $tmp->real_escape_string($dbname);

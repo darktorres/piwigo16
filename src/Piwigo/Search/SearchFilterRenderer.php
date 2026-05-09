@@ -45,22 +45,26 @@ final class SearchFilterRenderer
         $template->assign('display_filter', $filters_views);
 
         if ('search' == $page['section'] and isset($page['search_details'])) {
-            $search_details = is_array($page['search_details']) ? $page['search_details'] : [];
+            /** @var array<string, mixed> $search_details */
+            $search_details = $page['search_details'];
             $page['search_details'] = &$search_details;
+            /** @var array<string, array<string, bool>> $display_filters */
             $display_filters = $filters_views;
 
             foreach ($filters_views as $filt_name => $filt_conf) {
                 if (isset($filt_conf['access'])) {
-                    if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and PermissionService::get()->isAdmin()) or ($filt_conf['access'] == 'registered-users' and PermissionService::get()->isClassicUser())) {
-                        $display_filters[$filt_name]['access'] = true;
-                    } else {
-                        $display_filters[$filt_name]['access'] = false;
-                    }
+                    $hasAccess = $filt_conf['access'] == 'everybody'
+                        || ($filt_conf['access'] == 'admins-only' && PermissionService::get()->isAdmin())
+                        || ($filt_conf['access'] == 'registered-users' && PermissionService::get()->isClassicUser());
+                    $display_filters[$filt_name]['access'] = $hasAccess;
                 }
             }
 
+            /** @psalm-var mixed $searchRaw */
+            $searchRaw = $page['search'] ?? null;
+            $searchKey = is_string($searchRaw) ? $searchRaw : '';
             /** @var array<string, mixed> $my_search */
-            $my_search = ServiceLocator::get(SearchService::class)->getSearchArray($page['search']);
+            $my_search = ServiceLocator::get(SearchService::class)->getSearchArray($searchKey);
             /** @var array<string, mixed> $my_search_fields_tmp */
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
@@ -72,11 +76,12 @@ final class SearchFilterRenderer
 
             if ($search_details['has_filters_filled']) {
                 $search_items = [-1];
-                $pageItems = is_array($page['items'] ?? null) ? $page['items'] : [];
-                if (!empty($pageItems)) {
+                $pageItemsRaw = $page['items'] ?? null;
+                $pageItems = is_array($pageItemsRaw) ? $pageItemsRaw : [];
+                if (count($pageItems) > 0) {
                     $search_items = $pageItems;
                 }
-                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $search_items)) . ')';
+                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $search_items)) . ')';
             } else {
                 $search_items_clause = '1=1';
             }
@@ -85,38 +90,40 @@ final class SearchFilterRenderer
                 unset($my_search['fields']['allwords']);
             }
 
-            if (isset($my_search['fields']['tags']) and $display_filters['tags']['access']) {
-                $filter_tags = [];
-                $other_filters_items = ServiceLocator::get(SearchService::class)->getItemsForFilter('tags');
-                if (false === $other_filters_items) {
-                    $filter_tags = ServiceLocator::get(TagService::class)->getAvailableTags();
-                    usort($filter_tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
-                } else {
-                    $filter_tags = ServiceLocator::get(TagService::class)->getCommonTags($other_filters_items, 0);
+            if (isset($my_search['fields']['tags'])) {
+                if ($display_filters['tags']['access']) {
+                    $filter_tags = [];
+                    $other_filters_items = ServiceLocator::get(SearchService::class)->getItemsForFilter('tags');
+                    if (false === $other_filters_items) {
+                        $filter_tags = ServiceLocator::get(TagService::class)->getAvailableTags();
+                        usort($filter_tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                    } else {
+                        $filter_tags = ServiceLocator::get(TagService::class)->getCommonTags($other_filters_items, 0);
 
-                    $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
-                    $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
-                    $missing_tag_ids = array_diff(
-                        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_words_raw),
-                        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column($filter_tags, 'id'))
-                    );
+                        $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
+                        $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
+                        $missing_tag_ids = array_diff(
+                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tags_words_raw),
+                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($filter_tags, 'id'))
+                        );
 
-                    if (count($missing_tag_ids) > 0) {
-                        $filter_tags = array_merge(ServiceLocator::get(TagService::class)->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                        if (count($missing_tag_ids) > 0) {
+                            $filter_tags = array_merge(ServiceLocator::get(TagService::class)->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                        }
                     }
+
+                    $template->assign('TAGS', $filter_tags);
+
+                    $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
+                    $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
+                    $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
+                    $tags_words2 = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tags_words2_raw);
+                    $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tag_ids);
+                    $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
+                    $my_search['fields']['tags'] = $tags_field2;
+                } else {
+                    unset($my_search['fields']['tags']);
                 }
-
-                $template->assign('TAGS', $filter_tags);
-
-                $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
-                $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
-                $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
-                $tags_words2 = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_words2_raw);
-                $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $filter_tag_ids);
-                $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
-                $my_search['fields']['tags'] = $tags_field2;
-            } elseif (isset($my_search['fields']['tags']) and !($display_filters['tags']['access'])) {
-                unset($my_search['fields']['tags']);
             }
 
             if (isset($my_search['fields']['expert'])) {
@@ -145,10 +152,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_author_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
-                        $persistent_cache->set($cache_key, $filter_rows_raw);
+                        $db_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                        $persistent_cache->set($cache_key, $db_rows);
+                        $filter_rows = $this->normalizeRows($db_rows);
+                    } else {
+                        $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     }
-                    $filter_rows = $this->normalizeRows($filter_rows_raw);
                 } else {
                     $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 }
@@ -161,11 +170,11 @@ SELECT
 
                 $author_field = is_array($my_search['fields']['author']) ? $my_search['fields']['author'] : [];
                 $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
-                $author_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $author_words_raw);
-                $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $author_names);
+                $author_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_words_raw);
+                $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_names);
                 $author_field['words'] = array_intersect($author_words_str, $author_names_str);
                 $my_search['fields']['author'] = $author_field;
-            } elseif (isset($my_search['fields']['author']) and !($display_filters['author']['access'])) {
+            } elseif (isset($my_search['fields']['author'])) {
                 unset($my_search['fields']['author']);
             }
 
@@ -175,7 +184,7 @@ SELECT
                 $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_posted = false;
                 $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_posted = $persistent_cache->get($cache_key, $date_posted_raw));
-                $date_posted = $this->normalizeDateData($date_posted_raw);
+                $date_posted = $this->normalizeDateData(is_array($date_posted_raw) ? $date_posted_raw : null);
 
                 if (!$cache_hit_date_posted) {
                     $query = '
@@ -207,11 +216,14 @@ SELECT
                             }
                         }
 
-                        [$date_without_time] = explode(' ', is_scalar($row['date']) ? (string) $row['date'] : '');
+                        [$date_without_time] = explode(' ', is_string($row['date'] ?? null) ? $row['date'] : '');
                         [$y, $m] = explode('-', $date_without_time);
 
-                        $list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count'] ?? 0) + 1;
-                        $list_of_dates[$y]['months'][$y . '-' . $m]['count'] = ($list_of_dates[$y]['months'][$y . '-' . $m]['count'] ?? 0) + 1;
+                        $ymKey = $y . '-' . $m;
+                        $prevDayCount = $list_of_dates[$y]['months'][$ymKey]['days'][$date_without_time]['count'] ?? 0;
+                        $list_of_dates[$y]['months'][$ymKey]['days'][$date_without_time]['count'] = $prevDayCount + 1;
+                        $prevMonthCount = $list_of_dates[$y]['months'][$ymKey]['count'] ?? 0;
+                        $list_of_dates[$y]['months'][$ymKey]['count'] = $prevMonthCount + 1;
                         $list_of_dates[$y]['count'] = ($list_of_dates[$y]['count'] ?? 0) + 1;
                     }
 
@@ -241,7 +253,8 @@ SELECT
                 foreach (array_keys($dp_list) as $y) {
                     $dp_list[$y] = is_array($dp_list[$y]) ? $dp_list[$y] : [];
                     $dp_list[$y]['label'] = Lang::t('year %d', $y);
-                    $months = is_array($dp_list[$y]['months'] ?? null) ? $dp_list[$y]['months'] : [];
+                    $dpListYMonths = $dp_list[$y]['months'] ?? null;
+                    $months = is_array($dpListYMonths) ? $dpListYMonths : [];
 
                     foreach (array_keys($months) as $ym) {
                         $months[$ym] = is_array($months[$ym]) ? $months[$ym] : [];
@@ -250,9 +263,10 @@ SELECT
                         $months[$ym]['label'] = Lang::month((int) $m) . ' ' . $y;
 
                         if ($month_days !== null) {
-                            foreach (array_keys($month_days) as $ymd) {
-                                $month_days[$ymd] = is_array($month_days[$ymd]) ? $month_days[$ymd] : [];
-                                $month_days[$ymd]['label'] = ServiceLocator::get(DateService::class)->formatDate($ymd);
+                            foreach ($month_days as $ymd => $dayEntry) {
+                                $dayEntry = is_array($dayEntry) ? $dayEntry : [];
+                                $dayEntry['label'] = ServiceLocator::get(DateService::class)->formatDate((string) $ymd);
+                                $month_days[$ymd] = $dayEntry;
                             }
                             $months[$ym]['days'] = $month_days;
                         }
@@ -263,7 +277,7 @@ SELECT
 
                 $template->assign('LIST_DATE_POSTED', $dp_list);
                 $template->assign('DATE_POSTED', $counters);
-            } elseif (isset($my_search['fields']['date_posted']) and !($display_filters['post_date']['access'])) {
+            } elseif (isset($my_search['fields']['date_posted'])) {
                 unset($my_search['fields']['date_posted']);
             }
 
@@ -273,7 +287,7 @@ SELECT
                 $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_created = false;
                 $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_created = $persistent_cache->get($cache_key, $date_created_raw));
-                $date_created = $this->normalizeDateData($date_created_raw);
+                $date_created = $this->normalizeDateData(is_array($date_created_raw) ? $date_created_raw : null);
 
                 if (!$cache_hit_date_created) {
                     $query = '
@@ -306,11 +320,14 @@ SELECT
                                 }
                             }
 
-                            [$date_without_time] = explode(' ', is_scalar($row['date']) ? (string) $row['date'] : '');
+                            [$date_without_time] = explode(' ', is_string($row['date']) ? $row['date'] : '');
                             [$y, $m] = explode('-', $date_without_time);
 
-                            $list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count'] = ($list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count'] ?? 0) + 1;
-                            $list_of_dates[$y]['months'][$y . '-' . $m]['count'] = ($list_of_dates[$y]['months'][$y . '-' . $m]['count'] ?? 0) + 1;
+                            $ymKey2 = $y . '-' . $m;
+                            $prevDayCount2 = $list_of_dates[$y]['months'][$ymKey2]['days'][$date_without_time]['count'] ?? 0;
+                            $list_of_dates[$y]['months'][$ymKey2]['days'][$date_without_time]['count'] = $prevDayCount2 + 1;
+                            $prevMonthCount2 = $list_of_dates[$y]['months'][$ymKey2]['count'] ?? 0;
+                            $list_of_dates[$y]['months'][$ymKey2]['count'] = $prevMonthCount2 + 1;
                             $list_of_dates[$y]['count'] = ($list_of_dates[$y]['count'] ?? 0) + 1;
                         }
                     }
@@ -341,7 +358,8 @@ SELECT
                 foreach (array_keys($dc_list) as $y) {
                     $dc_list[$y] = is_array($dc_list[$y]) ? $dc_list[$y] : [];
                     $dc_list[$y]['label'] = Lang::t('year %d', $y);
-                    $months = is_array($dc_list[$y]['months'] ?? null) ? $dc_list[$y]['months'] : [];
+                    $dcListYMonths = $dc_list[$y]['months'] ?? null;
+                    $months = is_array($dcListYMonths) ? $dcListYMonths : [];
 
                     foreach (array_keys($months) as $ym) {
                         $months[$ym] = is_array($months[$ym]) ? $months[$ym] : [];
@@ -350,9 +368,10 @@ SELECT
                         $months[$ym]['label'] = Lang::month((int) $m) . ' ' . $y;
 
                         if ($month_days !== null) {
-                            foreach (array_keys($month_days) as $ymd) {
-                                $month_days[$ymd] = is_array($month_days[$ymd]) ? $month_days[$ymd] : [];
-                                $month_days[$ymd]['label'] = ServiceLocator::get(DateService::class)->formatDate($ymd);
+                            foreach ($month_days as $ymd => $dayEntry) {
+                                $dayEntry = is_array($dayEntry) ? $dayEntry : [];
+                                $dayEntry['label'] = ServiceLocator::get(DateService::class)->formatDate((string) $ymd);
+                                $month_days[$ymd] = $dayEntry;
                             }
                             $months[$ym]['days'] = $month_days;
                         }
@@ -363,7 +382,7 @@ SELECT
 
                 $template->assign('LIST_DATE_CREATED', $dc_list);
                 $template->assign('DATE_CREATED', $counters);
-            } elseif (isset($my_search['fields']['date_created']) and !($display_filters['creation_date']['access'])) {
+            } elseif (isset($my_search['fields']['date_created'])) {
                 unset($my_search['fields']['date_created']);
             }
 
@@ -385,10 +404,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_added_by_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
-                        $persistent_cache->set($cache_key, $filter_rows_raw);
+                        $db_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                        $persistent_cache->set($cache_key, $db_rows);
+                        $filter_rows = $this->normalizeRows($db_rows);
+                    } else {
+                        $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     }
-                    $filter_rows = $this->normalizeRows($filter_rows_raw);
                 } else {
                     $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
                 }
@@ -422,14 +443,14 @@ SELECT
                 $added_by_field_raw = is_array($my_search['fields']['added_by']) ? $my_search['fields']['added_by'] : [];
                 $added_by_field_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
                 $my_search['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
-            } elseif (isset($my_search['fields']['added_by']) and !($display_filters['added_by']['access'])) {
+            } elseif (isset($my_search['fields']['added_by'])) {
                 unset($my_search['fields']['added_by']);
             }
 
             if (isset($my_search['fields']['cat']) and $display_filters['album']['access']) {
                 $cat_field = is_array($my_search['fields']['cat']) ? $my_search['fields']['cat'] : [];
                 $cat_words = is_array($cat_field['words'] ?? null) ? $cat_field['words'] : [];
-                if (!empty($cat_words)) {
+                if (count($cat_words) > 0) {
                     $fullname_of = [];
 
                     $query = '
@@ -447,16 +468,17 @@ SELECT
                             ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
                         );
                         $row['fullname'] = strip_tags($cat_display_name);
-                        $fullname_of[is_scalar($row['id']) ? (string) $row['id'] : ''] = $row['fullname'];
+                        $sfRowIdRaw = $row['id'] ?? null;
+                        $fullname_of[is_string($sfRowIdRaw) ? $sfRowIdRaw : ''] = $row['fullname'];
                     }
 
                     $template->assign('fullname_of', json_encode($fullname_of));
 
-                    $cat_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_words);
+                    $cat_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_words);
                     $cat_field['words'] = array_intersect($cat_words_str, array_keys($fullname_of));
                     $my_search['fields']['cat'] = $cat_field;
                 }
-            } elseif (isset($my_search['fields']['cat']) and !($display_filters['album']['access'])) {
+            } elseif (isset($my_search['fields']['cat'])) {
                 unset($my_search['fields']['cat']);
             }
 
@@ -502,7 +524,7 @@ SELECT
                 } else {
                     $template->assign('FILETYPES', $all_exts);
                 }
-            } elseif (isset($my_search['fields']['filetypes']) and !($display_filters['file_type']['access'])) {
+            } elseif (isset($my_search['fields']['filetypes'])) {
                 unset($my_search['fields']['filetypes']);
             }
 
@@ -549,7 +571,7 @@ SELECT
                         }
                     }
                     $template->assign('RATING', $ratings);
-                } elseif (isset($my_search['fields']['ratings']) and !($display_filters['rating']['access'])) {
+                } elseif (isset($my_search['fields']['ratings'])) {
                     unset($my_search['fields']['ratings']);
                 }
             } else {
@@ -574,7 +596,7 @@ SELECT
 ;';
                 foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
                     $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
-                    $key_fs = sprintf('%.1f', $fs_val / 1024);
+                    $key_fs = sprintf('%.1f', $fs_val / 1024.0);
                     $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
                 }
 
@@ -591,12 +613,12 @@ SELECT
                 $fs_min_raw = $my_search['fields']['filesize_min'];
                 $fs_max_raw = $my_search['fields']['filesize_max'];
                 $filesize['selected'] = [
-                    'min' => !empty($fs_min_raw) ? sprintf('%.1f', (is_numeric($fs_min_raw) ? (float) $fs_min_raw : 0.0) / 1024) : $unique_filesizes[0],
-                    'max' => !empty($fs_max_raw) ? sprintf('%.1f', (is_numeric($fs_max_raw) ? (float) $fs_max_raw : 0.0) / 1024) : end($unique_filesizes),
+                    'min' => !empty($fs_min_raw) ? sprintf('%.1f', (is_numeric($fs_min_raw) ? (float) $fs_min_raw : 0.0) / 1024.0) : $unique_filesizes[0],
+                    'max' => !empty($fs_max_raw) ? sprintf('%.1f', (is_numeric($fs_max_raw) ? (float) $fs_max_raw : 0.0) / 1024.0) : end($unique_filesizes),
                 ];
 
                 $template->assign('FILESIZE', $filesize);
-            } elseif (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and !($display_filters['file_size']['access'])) {
+            } elseif (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max'])) {
                 unset($my_search['fields']['filesize_min']);
                 unset($my_search['fields']['filesize_max']);
             }
@@ -648,7 +670,7 @@ SELECT
                     }
                 }
                 $template->assign('RATIOS', $ratios);
-            } elseif (isset($my_search['fields']['ratios']) and !($display_filters['ratio']['access'])) {
+            } elseif (isset($my_search['fields']['ratios'])) {
                 unset($my_search['fields']['ratios']);
             }
 
@@ -688,7 +710,7 @@ SELECT
                     ],
                 ];
                 $template->assign('HEIGHT', $height);
-            } elseif (isset($my_search['fields']['height_min']) && isset($my_search['fields']['height_max']) and !($display_filters['height']['access'])) {
+            } elseif (isset($my_search['fields']['height_min']) && isset($my_search['fields']['height_max'])) {
                 unset($my_search['fields']['height_min']);
                 unset($my_search['fields']['height_max']);
             }
@@ -729,12 +751,12 @@ SELECT
                     ],
                 ];
                 $template->assign('WIDTH', $width);
-            } elseif (isset($my_search['fields']['width_min']) && isset($my_search['fields']['width_max']) and !($display_filters['width']['access'])) {
+            } elseif (isset($my_search['fields']['width_min']) && isset($my_search['fields']['width_max'])) {
                 unset($my_search['fields']['width_min']);
                 unset($my_search['fields']['width_max']);
             }
 
-            $template->assign(['GP' => json_encode($my_search), 'SEARCH_ID' => $page['search']]);
+            $template->assign(['GP' => json_encode($my_search), 'SEARCH_ID' => $searchRaw]);
 
             $sliders_data = [];
             if (isset($filesize)) {
@@ -762,7 +784,7 @@ SELECT
             $template->assign('page_data_json', json_encode(
                 [
                     'global_params' => $my_search,
-                    'search_id' => $page['search'],
+                    'search_id' => $searchRaw,
                     'fullname_of_cat' => $fullname_of ?? [],
                     'show_filter_ratings' => Config::rateEnabled() ? true : false,
                     'sliders' => $sliders_data,
@@ -794,9 +816,10 @@ SELECT
             ));
 
             if (0 == $page['start'] and !isset($page['chronology_field'])) {
-                $matchingCatIds = is_array($search_details['matching_cat_ids'] ?? null) ? $search_details['matching_cat_ids'] : null;
+                $matchingCatIdsRaw = $search_details['matching_cat_ids'] ?? null;
+                $matchingCatIds = is_array($matchingCatIdsRaw) ? $matchingCatIdsRaw : null;
                 if ($matchingCatIds !== null) {
-                    $cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $matchingCatIds);
+                    $cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $matchingCatIds);
                     if (count($cat_ids)) {
                         $query = '
 SELECT
@@ -822,7 +845,8 @@ SELECT
                         }
                     }
                 }
-                $matchingTagIds = is_array($search_details['matching_tag_ids'] ?? null) ? $search_details['matching_tag_ids'] : null;
+                $matchingTagIdsRaw = $search_details['matching_tag_ids'] ?? null;
+                $matchingTagIds = is_array($matchingTagIdsRaw) ? $matchingTagIdsRaw : null;
                 if ($matchingTagIds !== null) {
                     $tag_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingTagIds);
 
@@ -851,8 +875,10 @@ SELECT
      * Normalize a mixed cache value into a typed date-filter data structure.
      *
      * @return array{pre_counters: array<string, int>, list_of_dates: array<mixed>}
+     *
+     * @param array<mixed>|null $raw
      */
-    private function normalizeDateData(mixed $raw): array
+    private function normalizeDateData(array|null $raw): array
     {
         $rawArr = is_array($raw) ? $raw : [];
         $pre = [];
@@ -869,10 +895,12 @@ SELECT
      * Normalize a mixed cache value to a flat array of rows.
      *
      * @return array<int, array<mixed>>
+     *
+     * @param array<mixed>|null $raw
      */
-    private function normalizeRows(mixed $raw): array
+    private function normalizeRows(array|null $raw): array
     {
-        if (!is_array($raw)) {
+        if ($raw === null) {
             return [];
         }
         $out = [];

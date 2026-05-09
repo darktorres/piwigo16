@@ -9,7 +9,7 @@ namespace Piwigo\Ws;
  * integers starting at 0). Provides naming clues for xml output (what is xml
  * attributes and what is element)
  */
-class PwgNamedStruct
+final class PwgNamedStruct
 {
     /** @var array<string, int> */
     private array $_xmlAttributes = [];
@@ -33,8 +33,8 @@ class PwgNamedStruct
             $this->_xmlAttributes = [];
             if (is_array($this->_content)) {
                 foreach ($this->_content as $key => $value) {
-                    if (!empty($key) and (is_scalar($value) or is_null($value))) {
-                        if (empty($xmlElements) or !in_array($key, $xmlElements)) {
+                    if (($key !== '' && $key !== 0) and (is_scalar($value) or is_null($value))) {
+                        if ($xmlElements === null || count($xmlElements) === 0 or !in_array($key, $xmlElements)) {
                             $this->_xmlAttributes[(string) $key] = 1;
                         }
                     }

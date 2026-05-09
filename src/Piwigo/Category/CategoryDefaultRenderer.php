@@ -42,7 +42,7 @@ final class CategoryDefaultRenderer
                 'loc_index_thumbnails_selection',
                 array_slice($pageItems, $pageStart, $pageNbImagePage)
             ),
-            fn ($v): bool => is_int($v) || is_string($v)
+            fn (mixed $v): bool => is_int($v) || is_string($v)
         ));
 
         if (count($selection) > 0) {
@@ -100,18 +100,21 @@ SELECT image_id, COUNT(*) AS nb_comments
             $name = ServiceLocator::get(HtmlService::class)->renderElementName($row);
             $desc = ServiceLocator::get(HtmlService::class)->renderElementDescription($row, 'main_page_element_description');
 
+            $rowPath = $row['path'] ?? null;
+            $rowFile = $row['file'] ?? null;
             $tpl_var = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
                 'TN_TITLE' => ServiceLocator::get(HtmlService::class)->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($row['path'] ?? null) ? $row['path'] : '')),
-                'file_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($row['file'] ?? null) ? $row['file'] : '')),
+                'path_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($rowPath) ? $rowPath : '')),
+                'file_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($rowFile) ? $rowFile : '')),
             ]);
 
             if (Config::indexNewIcon()) {
-                $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($row['date_available'] ?? null) ? $row['date_available'] : null);
+                $rowDateAvailable = $row['date_available'] ?? null;
+                $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($rowDateAvailable) ? $rowDateAvailable : null);
             }
 
             if ($user['show_nb_hits']) {
@@ -120,11 +123,13 @@ SELECT image_id, COUNT(*) AS nb_comments
 
             switch ($page['section']) {
                 case 'best_rated':
-                    $name = '(' . (is_scalar($row['rating_score']) ? (string) $row['rating_score'] : '') . ') ' . $name;
+                    $ratingScoreRaw = $row['rating_score'] ?? null;
+                    $name = '(' . (is_string($ratingScoreRaw) ? $ratingScoreRaw : '') . ') ' . $name;
                     break;
                 case 'most_visited':
                     if (!$user['show_nb_hits']) {
-                        $name = '(' . (is_scalar($row['hit']) ? (string) $row['hit'] : '') . ') ' . $name;
+                        $hitRaw = $row['hit'] ?? null;
+                        $name = '(' . (is_string($hitRaw) ? $hitRaw : '') . ') ' . $name;
                     }
                     break;
             }

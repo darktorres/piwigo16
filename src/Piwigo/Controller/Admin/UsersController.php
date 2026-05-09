@@ -123,7 +123,7 @@ final class UsersController
             'password_protected_users'  => implode(',', array_unique($password_protected_users)),
             'guest_user'                => Config::guestId(),
             'filter_group'              => $_GET['group'] ?? null,
-            'search_input'              => isset($_GET['user_id']) ? 'id:' . (is_scalar($_GET['user_id']) ? (string) $_GET['user_id'] : '') : null,
+            'search_input'              => isset($_GET['user_id']) ? 'id:' . (is_string($_GET['user_id']) ? $_GET['user_id'] : '') : null,
             'connected_user'            => $userId,
             'connected_user_status'     => $userStatus,
             'owner'                     => Config::webmasterId(),
@@ -167,21 +167,27 @@ final class UsersController
             $nb_users_by_level[$level] = ['name' => Lang::t(sprintf('Level %d', $level)), 'counter' => $count];
         }
         $tpl->assign('level_options', $level_options);
-        $tpl->assign('level_selected', $default_user['level'] ?? 0);
+        $defaultUserLevelRaw = $default_user['level'] ?? 0;
+        $defaultUserLevel    = is_scalar($defaultUserLevelRaw) ? $defaultUserLevelRaw : 0;
+        $tpl->assign('level_selected', $defaultUserLevel);
         $tpl->assign('nb_users_by_level', $nb_users_by_level);
 
         $groups_arr_id = $groups_arr_name = [];
         foreach (ServiceLocator::get(GroupRepository::class)->findAllOrdered() as $row) {
-            $groups_arr_name[] = '"' . addslashes(is_scalar($row['name']) ? (string) $row['name'] : '') . '"';
-            $groups_arr_id[]   = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $groups_arr_name[] = '"' . addslashes(is_string($row['name'] ?? null) ? $row['name'] : '') . '"';
+            $groups_arr_id[]   = is_string($row['id'] ?? null) ? $row['id'] : '';
         }
         $tpl->assign('groups_arr_id', implode(',', $groups_arr_id));
         $tpl->assign('groups_arr_name', implode(',', $groups_arr_name));
         $tpl->assign('guest_id', Config::guestId());
-        $tpl->assign('view_selector', PreferencesService::get()->userprefsGetParam('user-manager-view', 'line'));
+        $viewSelRaw = PreferencesService::get()->userprefsGetParam('user-manager-view', 'line');
+        $viewSelStr = is_string($viewSelRaw) ? $viewSelRaw : 'line';
+        $tpl->assign('view_selector', $viewSelStr);
 
-        $viewSel = PreferencesService::get()->userprefsGetParam('user-manager-view', 'line');
-        $tpl->assign('pagination', $viewSel === 'line' ? PreferencesService::get()->userprefsGetParam('user-manager-pagination', 5) : PreferencesService::get()->userprefsGetParam('user-manager-pagination', 10));
+        $viewSel = $viewSelStr;
+        $paginationRaw = $viewSel === 'line' ? PreferencesService::get()->userprefsGetParam('user-manager-pagination', 5) : PreferencesService::get()->userprefsGetParam('user-manager-pagination', 10);
+        $pagination    = is_scalar($paginationRaw) ? $paginationRaw : 5;
+        $tpl->assign('pagination', $pagination);
 
         if ($this->webmasterIdIsLocal()) {
             PageState::current()->addWarning(Lang::t('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
@@ -270,15 +276,17 @@ final class UsersController
         }
         $pageUser = (int) $page['user'];
 
-        $post_cat_true  = is_array($_POST['cat_true'] ?? null) ? $_POST['cat_true'] : [];
-        $post_cat_false = is_array($_POST['cat_false'] ?? null) ? $_POST['cat_false'] : [];
+        $rawCatTrue3  = $_POST['cat_true']  ?? null;
+        $rawCatFalse3 = $_POST['cat_false'] ?? null;
+        $post_cat_true  = is_array($rawCatTrue3) ? $rawCatTrue3 : [];
+        $post_cat_false = is_array($rawCatFalse3) ? $rawCatFalse3 : [];
 
         if (isset($_POST['falsify']) && count($post_cat_true) > 0) {
-            $post_cat_true_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
+            $post_cat_true_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
             $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($post_cat_true_ids);
             ServiceLocator::get(PermissionRepository::class)->deleteUserAccessForUser($pageUser, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
-            $post_cat_false_ids = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
+            $post_cat_false_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
             ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
@@ -352,9 +360,10 @@ final class UsersController
 
             $output_lines = [['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']];
             foreach ($activityRows as $row) {
-                $row['details'] = str_replace('`groups`', 'groups', is_scalar($row['details']) ? (string) $row['details'] : '');
+                $row['details'] = str_replace('`groups`', 'groups', is_string($row['details'] ?? null) ? $row['details'] : '');
                 $row['details'] = str_replace('`rank`', 'rank', $row['details']);
-                [$date, $hour] = explode(' ', is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '');
+                $occurredOnRaw = $row['occured_on'] ?? null;
+                [$date, $hour] = explode(' ', is_string($occurredOnRaw) ? $occurredOnRaw : '');
                 $output_lines[] = ['username' => $row['username'], 'user_id' => $row['performed_by'], 'object' => $row['object'], 'object_id' => $row['object_id'], 'action' => $row['action'], 'date' => $date, 'hour' => $hour, 'ip_address' => $row['ip_address'], 'details' => $row['details']];
             }
 
@@ -364,7 +373,7 @@ final class UsersController
             $f = fopen('php://output', 'w');
             if ($f !== false) {
                 foreach ($output_lines as $line) {
-                    fputcsv($f, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $line), ';', '"', '\\');
+                    fputcsv($f, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $line), ';', '"', '\\');
                 }
                 fclose($f);
             }
@@ -404,7 +413,7 @@ final class UsersController
         $min_date = $actRepo->findOldestDate();
         $max_date = $actRepo->findNewestDate();
 
-        $tpl->assign('ACTIVITY_DATES', ['min' => empty($min_date) ? '' : substr((string) $min_date, 0, 10), 'max' => empty($max_date) ? '' : substr((string) $max_date, 0, 10)]);
+        $tpl->assign('ACTIVITY_DATES', ['min' => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10), 'max' => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10)]);
 
         $additional_filt_type  = false;
         $additional_filt_name  = null;
@@ -412,7 +421,7 @@ final class UsersController
 
         foreach (['photo' => Tables::images(), 'album' => Tables::categories(), 'group' => Tables::groups()] as $filter_key => $filter_table) {
             if (isset($_GET[$filter_key])) {
-                $filterId = is_scalar($_GET[$filter_key]) ? (string) $_GET[$filter_key] : '0';
+                $filterId = is_string($_GET[$filter_key]) ? $_GET[$filter_key] : '0';
                 $rows = DbConnection::get()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
                 if (count($rows) == 0) {
                     HtmlService::fatalError($filter_key . ' #' . $filterId . ' does not exist');
@@ -434,17 +443,17 @@ final class UsersController
 
         $actions = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
         foreach ($actions as &$action) {
-            $action['value'] = (is_scalar($action['object']) ? (string) $action['object'] : '') . '/' . (is_scalar($action['action']) ? (string) $action['action'] : '');
+            $action['value'] = (is_string($action['object'] ?? null) ? $action['object'] : '') . '/' . (is_string($action['action'] ?? null) ? $action['action'] : '');
         }
         unset($action);
 
         $tpl->assign('ACTIONS', $actions);
         $tpl->assign('page_data_json', json_encode([
-            'nb_users'                      => (int) $nb_users,
+            'nb_users'                      => $nb_users,
             'additional_filt_type'          => $additional_filt_type ?: null,
             'additional_filt_value'         => $additional_filt_value !== null ? (is_numeric($additional_filt_value) ? (int) $additional_filt_value : 0) : null,
-            'date_min'                      => empty($min_date) ? '' : substr((string) $min_date, 0, 10),
-            'date_max'                      => empty($max_date) ? '' : substr((string) $max_date, 0, 10),
+            'date_min'                      => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
+            'date_max'                      => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
             'color_icons'                   => ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'],
             'page_ellipsis'                 => '<span>...</span>',
             'page_item'                     => '<a data-page="%d">%d</a>',

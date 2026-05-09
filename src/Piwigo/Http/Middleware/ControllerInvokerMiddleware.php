@@ -23,6 +23,7 @@ final readonly class ControllerInvokerMiddleware implements MiddlewareInterface
     {
     }
 
+    #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $result = $request->getAttribute('_route_result');

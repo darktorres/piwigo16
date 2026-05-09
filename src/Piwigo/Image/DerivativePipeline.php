@@ -26,6 +26,7 @@ final class DerivativePipeline
             exit;
         }
         if ($code >= 400) {
+            /** @var mixed $protocolRaw */
             $protocolRaw = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0';
             $protocol    = is_string($protocolRaw) ? $protocolRaw : 'HTTP/1.0';
             if ('HTTP/1.1' != $protocol && 'HTTP/1.0' != $protocol) {
@@ -42,7 +43,7 @@ final class DerivativePipeline
     {
         $tmp  = $step;
         $step = microtime(true);
-        return intval(1000 * ($step - $tmp));
+        return intval(1000.0 * ($step - $tmp));
     }
 
     /** @param string[] $tokens */
@@ -71,13 +72,15 @@ final class DerivativePipeline
             $token    = array_shift($tokens);
             $min_size = DerivativeEncoding::urlToSize($token ?? '');
         }
-        return new DerivativeParams(new SizingParams($size, $crop, $min_size));
+        return new DerivativeParams(new SizingParams($size, $crop, $min_size ?? [0, 0]));
     }
 
     public static function parseRequest(ImageDerivativeContext $ctx): DerivativeParams
     {
-        $req = is_scalar($_SERVER['QUERY_STRING'] ?? null) ? (string) $_SERVER['QUERY_STRING'] : '';
-        if ($pos = strpos($req, '&')) {
+        /** @var mixed $reqRaw */
+        $reqRaw = $_SERVER['QUERY_STRING'] ?? '';
+        $req    = is_string($reqRaw) ? $reqRaw : '';
+        if (($pos = strpos($req, '&')) !== false) {
             $req = substr($req, 0, $pos);
         }
         $req           = rawurldecode($req);
@@ -133,9 +136,9 @@ final class DerivativePipeline
             if ($params->sizing->max_crop < 0 || $params->sizing->max_crop > 1) {
                 self::ierror('Invalid crop', 400);
             }
-            $key = [];
-            $params->addUrlTokens($key);
-            $key = implode('_', $key);
+            $keyTokens = [];
+            $params->addUrlTokens($keyTokens);
+            $key = implode('_', $keyTokens);
             if (!isset(ImageStdParams::$custom[$key])) {
                 self::ierror('Size not allowed', 403);
             }
@@ -198,7 +201,8 @@ final class DerivativePipeline
                 if ($candidate->sizing->max_crop != 0) {
                     continue;
                 }
-                if ($candidate_size[0] < $params->sizing->min_size[0] || $candidate_size[1] < $params->sizing->min_size[1]) {
+                $paramsMinSize = $params->sizing->min_size;
+                if ($candidate_size[0] < ($paramsMinSize[0] ?? 0) || $candidate_size[1] < ($paramsMinSize[1] ?? 0)) {
                     continue;
                 }
             }

@@ -37,7 +37,7 @@ final readonly class CategoryService
      */
     public function globalRankCompare(array $a, array $b): int
     {
-        return strnatcasecmp(is_scalar($a['global_rank']) ? (string) $a['global_rank'] : '', is_scalar($b['global_rank']) ? (string) $b['global_rank'] : '');
+        return strnatcasecmp(is_string($a['global_rank'] ?? null) ? $a['global_rank'] : '', is_string($b['global_rank'] ?? null) ? $b['global_rank'] : '');
     }
 
     /**
@@ -75,7 +75,7 @@ SELECT
 FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id;
 
-        if (!$userExpand and !$filter['enabled']) {
+        if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter['enabled']) {
             $where = '
 (id_uppercat is NULL';
             $category = is_array($page['category'] ?? null) ? $page['category'] : null;
@@ -109,7 +109,7 @@ WHERE ' . $where . '
                     ' / '
                 ),
                 'URL'         => UrlService::get()->makeIndexUrl(['category' => $row]),
-                'LEVEL'       => substr_count(is_scalar($row['global_rank']) ? (string) $row['global_rank'] : '', '.') + 1,
+                'LEVEL'       => substr_count(is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '', '.') + 1,
                 'SELECTED'    => ($selectedCategory !== null && $selectedCategory['id'] == $row['id']) ? true : false,
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
             ]);
@@ -134,17 +134,20 @@ WHERE ' . $where . '
     public function getCatInfo(int|string $id): ?array
     {
         $cat = $this->catRepo->findCategoryById((int) $id);
-        if (empty($cat)) {
+        if ($cat === null || count($cat) === 0) {
             return null;
         }
 
         foreach ($cat as $k => $v) {
             if ($cat[$k] == 'true' or $cat[$k] == 'false') {
-                $cat[$k] = BoolUtil::fromMixed($cat[$k]);
+                $catKv = $cat[$k];
+                if (is_string($catKv) || is_int($catKv) || is_float($catKv) || $catKv === null) {
+                    $cat[$k] = BoolUtil::fromMixed($catKv);
+                }
             }
         }
 
-        $upperIds = explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '');
+        $upperIds = explode(',', is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '');
         if (count($upperIds) == 1) {
             $cat['upper_names'] = [[
                 'id'        => $cat['id'],
@@ -155,7 +158,7 @@ WHERE ' . $where . '
             $query = '
   SELECT id, name, permalink
     FROM ' . Tables::categories() . '
-    WHERE id IN (' . (is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') . ')
+    WHERE id IN (' . (is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '') . ')
   ;';
             $names = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
@@ -197,14 +200,14 @@ WHERE ' . $where . '
         $template = TemplateRegistry::current();
         $tplCats  = [];
         foreach ($categories as $category) {
-            if ($fullname) {
-                $option = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '', null));
+            if ($fullname !== false && $fullname !== '') {
+                $option = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '', null));
             } else {
-                $option  = str_repeat('&nbsp;', (3 * substr_count(is_scalar($category['global_rank']) ? (string) $category['global_rank'] : '', '.')));
+                $option  = str_repeat('&nbsp;', (3 * substr_count(is_string($category['global_rank'] ?? null) ? $category['global_rank'] : '', '.')));
                 $option .= '- ';
-                $option .= strip_tags((string) EventDispatcher::dispatch('render_category_name', is_scalar($category['name']) ? (string) $category['name'] : '', 'display_select_categories'));
+                $option .= strip_tags((string) EventDispatcher::dispatch('render_category_name', is_string($category['name'] ?? null) ? $category['name'] : '', 'display_select_categories'));
             }
-            $tplCats[is_scalar($category['id']) ? (string) $category['id'] : ''] = $option;
+            $tplCats[is_string($category['id'] ?? null) ? $category['id'] : ''] = $option;
         }
         $template->assign($blockname, $tplCats);
         $template->assign($blockname . '_selected', $selecteds);
@@ -297,7 +300,7 @@ SELECT id, permalink, 0 AS is_old
             $displayText .= Translator::get()->plural('%d photo', '%d photos', $catCountImages);
 
             if ($catCountCategories == 0 or $catNbImages == $catCountImages) {
-                if (!$shortMessage) {
+                if ($shortMessage === false || $shortMessage === '') {
                     $displayText .= ' ' . Lang::t('in this album');
                 }
             } else {
@@ -320,7 +323,7 @@ SELECT image_id
   WHERE ';
             if ($recursive) {
                 $query .= '
-    (c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0) . ' OR uppercats LIKE \'' . addslashes(is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '') . ',%\')';
+    (c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0) . ' OR uppercats LIKE \'' . addslashes(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') . ',%\')';
             } else {
                 $query .= '
     c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0);
@@ -361,7 +364,7 @@ FROM ' . Tables::categories() . ' as c
 
         if (!empty($userdata['forbidden_categories'])) {
             $query .= '
-  WHERE c.id NOT IN (' . (is_scalar($userdata['forbidden_categories']) ? (string) $userdata['forbidden_categories'] : '') . ')';
+  WHERE c.id NOT IN (' . (is_string($userdata['forbidden_categories']) ? $userdata['forbidden_categories'] : '') . ')';
         }
 
         $query .= '
@@ -370,7 +373,8 @@ FROM ' . Tables::categories() . ' as c
         $userdata['last_photo_date'] = null;
         $cats                        = [];
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $row['user_id']          = is_scalar($userdata['id']) ? $userdata['id'] : 0;
+            $udIdRaw = $userdata['id'] ?? null;
+            $row['user_id']          = is_scalar($udIdRaw) ? $udIdRaw : 0;
             $row['nb_categories']    = 0;
             $row['count_categories'] = 0;
             $row['count_images']     = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
@@ -378,7 +382,8 @@ FROM ' . Tables::categories() . ' as c
             if ($row['date_last'] > $userdata['last_photo_date']) {
                 $userdata['last_photo_date'] = $row['date_last'];
             }
-            $cats[is_scalar($row['cat_id']) ? (string) $row['cat_id'] : ''] = $row;
+            $rowCatIdRaw = $row['cat_id'] ?? null;
+            $cats[is_string($rowCatIdRaw) ? $rowCatIdRaw : ''] = $row;
         }
 
         uasort($cats, $this->globalRankCompare(...));
@@ -387,7 +392,8 @@ FROM ' . Tables::categories() . ' as c
             if (!isset($cat['id_uppercat'])) {
                 continue;
             }
-            $catUppercatKey = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
+            $catIdUppercatRaw = $cat['id_uppercat'];
+            $catUppercatKey = is_string($catIdUppercatRaw) ? $catIdUppercatRaw : '';
             if (!isset($cats[$catUppercatKey])) {
                 continue;
             }
@@ -396,7 +402,8 @@ FROM ' . Tables::categories() . ' as c
             $parent['nb_categories']++;
 
             do {
-                $parent['count_images']     += is_numeric($cat['nb_images']) ? (int) $cat['nb_images'] : 0;
+                /** @phpstan-ignore-next-line nullCoalesce.offset */
+                $parent['count_images']     += is_numeric($cat['nb_images'] ?? null) ? (int) ($cat['nb_images'] ?? 0) : 0;
                 $parent['count_categories']++;
 
                 if ((empty($parent['max_date_last'])) or ($parent['max_date_last'] < $cat['date_last'])) {
@@ -406,7 +413,9 @@ FROM ' . Tables::categories() . ' as c
                 if (!isset($parent['id_uppercat'])) {
                     break;
                 }
-                $parent = &$cats[is_scalar($parent['id_uppercat']) ? (string) $parent['id_uppercat'] : ''];
+                $parentUppercatRaw = $parent['id_uppercat'];
+                $parentKey = is_string($parentUppercatRaw) ? $parentUppercatRaw : '';
+                $parent = &$cats[$parentKey];
             } while (true);
             unset($parent);
         }
@@ -435,8 +444,10 @@ FROM ' . Tables::categories() . ' as c
             $parent['nb_categories'] = (is_numeric($parent['nb_categories'] ?? null) ? (int) $parent['nb_categories'] : 0) - 1;
 
             do {
-                $parent['count_images']     = (is_numeric($parent['count_images'] ?? null) ? (int) $parent['count_images'] : 0) - (is_numeric($cat['nb_images'] ?? null) ? (int) $cat['nb_images'] : 0);
-                $parent['count_categories'] = (is_numeric($parent['count_categories'] ?? null) ? (int) $parent['count_categories'] : 0) - 1 - (is_numeric($cat['count_categories'] ?? null) ? (int) $cat['count_categories'] : 0);
+                /** @phpstan-ignore-next-line nullCoalesce.offset */
+                $parent['count_images']     = (is_numeric($parent['count_images'] ?? null) ? (int) ($parent['count_images'] ?? 0) : 0) - (is_numeric($cat['nb_images'] ?? null) ? (int) ($cat['nb_images'] ?? 0) : 0);
+                /** @phpstan-ignore-next-line nullCoalesce.offset */
+                $parent['count_categories'] = (is_numeric($parent['count_categories'] ?? null) ? (int) ($parent['count_categories'] ?? 0) : 0) - 1 - (is_numeric($cat['count_categories'] ?? null) ? (int) ($cat['count_categories'] ?? 0) : 0);
 
                 if (!isset($parent['id_uppercat'])) {
                     break;
@@ -477,7 +488,7 @@ SELECT id
             $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
         }
 
-        $query .= (empty($extraImagesWhereSql) ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
+        $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
   GROUP BY id';
 
         if ($mode == 'AND' and count($catIds) > 1) {
@@ -507,7 +518,7 @@ SELECT
     count(*) AS counter
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' c ON category_id = id
-  WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $items)) . ')';
+  WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $items)) . ')';
 
         $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
 
@@ -528,7 +539,7 @@ SELECT
 
         $cats = [];
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $cats[is_scalar($row['id']) ? (string) $row['id'] : ''] = $row;
+            $cats[is_string($row['id'] ?? null) ? $row['id'] : ''] = $row;
         }
 
         return $cats;
@@ -550,7 +561,7 @@ SELECT
 
         $catIds = [];
         foreach ($commonCats as $cat) {
-            foreach (explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '') as $uppercat) {
+            foreach (explode(',', is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '') as $uppercat) {
                 $catIds[$uppercat] = ($catIds[$uppercat] ?? 0) + 1;
             }
         }
@@ -572,10 +583,10 @@ SELECT
         $indexOfCat = [];
 
         foreach ($cats as $idx => $cat) {
-            $catIdKey             = is_scalar($cat['id']) ? (string) $cat['id'] : '';
+            $catIdKey             = is_string($cat['id'] ?? null) ? $cat['id'] : '';
             $indexOfCat[$catIdKey] = $idx;
-            $cats[$idx]['LEVEL']  = substr_count(is_scalar($cat['global_rank']) ? (string) $cat['global_rank'] : '', '.') + 1;
-            $cats[$idx]['name']   = EventDispatcher::dispatch('render_category_name', is_scalar($cat['name']) ? (string) $cat['name'] : '', $cat);
+            $cats[$idx]['LEVEL']  = substr_count(is_string($cat['global_rank'] ?? null) ? $cat['global_rank'] : '', '.') + 1;
+            $cats[$idx]['name']   = EventDispatcher::dispatch('render_category_name', is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
 
             if (isset($commonCats[$catIdKey])) {
                 $cats[$idx]['count_images'] = $commonCats[$catIdKey]['counter'];
@@ -584,7 +595,8 @@ SELECT
                 if (isset($page['category'])) {
                     $urlParams['category'] = $page['category'];
                     $urlParams['combined_categories'] = [$cat];
-                    $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : null;
+                    $combinedRaw = $page['combined_categories'] ?? null;
+                    $combined = is_array($combinedRaw) ? $combinedRaw : null;
                     if ($combined !== null) {
                         $urlParams['combined_categories'] = array_merge($combined, [$cat]);
                     }
@@ -596,7 +608,8 @@ SELECT
             }
 
             if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {
-                foreach (array_slice(explode(',', is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : ''), 0, -1) as $uppercatId) {
+                $catUppercatsRaw = $cat['uppercats'] ?? null;
+                foreach (array_slice(explode(',', is_string($catUppercatsRaw) ? $catUppercatsRaw : ''), 0, -1) as $uppercatId) {
                     $upperIdx = $indexOfCat[$uppercatId] ?? null;
                     if ($upperIdx !== null) {
                         $cats[$upperIdx]['count_categories'] = (is_numeric($cats[$upperIdx]['count_categories'] ?? null) ? (int) $cats[$upperIdx]['count_categories'] : 0) + 1;

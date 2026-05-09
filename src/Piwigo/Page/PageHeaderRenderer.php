@@ -29,7 +29,7 @@ final class PageHeaderRenderer
         EventDispatcher::notify('loc_begin_page_header');
 
         $show_mobile_app_banner = ServiceLocator::get(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
-        if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
+        if (defined('IN_ADMIN')) {
             $show_mobile_app_banner = ServiceLocator::get(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
         }
 

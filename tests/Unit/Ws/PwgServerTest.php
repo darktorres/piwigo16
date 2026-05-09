@@ -19,8 +19,10 @@ use Piwigo\Ws\PwgServer;
  */
 final class PwgServerTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgServer $server;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->server = new PwgServer();

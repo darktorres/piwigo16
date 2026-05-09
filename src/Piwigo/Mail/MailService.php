@@ -97,8 +97,11 @@ final readonly class MailService
         }
     }
 
-    /** @return string[][] */
-    public function getCleanRecipientsList(mixed $data): array
+    /**
+     * @param array<mixed>|string $data
+     * @return string[][]
+     */
+    public function getCleanRecipientsList(array|string $data): array
     {
         if (empty($data)) {
             return [];
@@ -118,7 +121,7 @@ final readonly class MailService
                 $data = array_map(fn (mixed $item): array => $this->unformatEmail(is_array($item) || is_string($item) ? $item : ''), $data);
             }
         } else {
-            $data = explode(',', is_scalar($data) ? (string) $data : '');
+            $data = explode(',', $data);
             $data = array_map($this->unformatEmail(...), $data);
         }
 
@@ -240,8 +243,8 @@ final readonly class MailService
         if ($sendTechnicalDetails) {
             $tplVars['TECHNICAL'] = [
                 'username'   => stripslashes(CurrentUser::get()->username),
-                'ip'         => $_SERVER['REMOTE_ADDR'],
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'],
+                'ip'         => $_SERVER['REMOTE_ADDR'] ?? '',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
             ];
         }
 
@@ -324,7 +327,7 @@ SELECT
      * @param array<mixed> $args
      * @param array<mixed> $tpl
      */
-    public function pwgMailGroup(int $groupId, array $args = [], array $tpl = []): bool|int
+    public function pwgMailGroup(int $groupId, array $args = [], array $tpl = []): bool
     {
         if (empty($groupId) or (empty($args['content']) and empty($tpl))) {
             return false;
@@ -343,7 +346,7 @@ SELECT DISTINCT language
     AND ' . Config::userFields()['email'] . ' <> ""';
         if (!empty($args['language_selected'])) {
             $query .= '
-    AND language = \'' . (is_scalar($args['language_selected']) ? (string) $args['language_selected'] : '') . '\'';
+    AND language = \'' . (is_string($args['language_selected']) ? $args['language_selected'] : '') . '\'';
         }
         $query .= '
 ;';
@@ -404,7 +407,7 @@ SELECT
                     $userArgs['auth_key'] = $authkey['auth_key'];
                 }
 
-                $return &= $this->pwgMail(is_string($u['email']) ? $u['email'] : '', $userArgs, $userTpl);
+                $return = $return && $this->pwgMail(is_string($u['email']) ? $u['email'] : '', $userArgs, $userTpl);
             }
 
             $this->switchLangBack();
@@ -422,7 +425,8 @@ SELECT
             $smtp = trim((string) ini_get('SMTP'));
             return $smtp !== '' && strtolower($smtp) !== 'localhost';
         }
-        return !empty(ini_get('sendmail_path'));
+        $sendmailPath = ini_get('sendmail_path');
+        return $sendmailPath !== false && $sendmailPath !== '';
     }
 
     /**
@@ -464,16 +468,19 @@ SELECT
         if (empty($args['subject'])) {
             $args['subject'] = 'Piwigo';
         }
-        $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', is_scalar($args['subject']) ? (string) $args['subject'] : ''));
+        $subjectStr = is_string($args['subject']) ? $args['subject'] : '';
+        $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $subjectStr));
         $mail->Subject   = $args['subject'];
 
         if (!empty($args['Cc'])) {
-            foreach ($this->getCleanRecipientsList($args['Cc']) as $recipient) {
+            $ccData = is_array($args['Cc']) || is_string($args['Cc']) ? $args['Cc'] : '';
+            foreach ($this->getCleanRecipientsList($ccData) as $recipient) {
                 $mail->addCC($recipient['email'], $recipient['name']);
             }
         }
 
-        $Bcc = $this->getCleanRecipientsList($args['Bcc'] ?? '');
+        $bccRaw = $args['Bcc'] ?? '';
+        $Bcc = $this->getCleanRecipientsList(is_array($bccRaw) || is_string($bccRaw) ? $bccRaw : '');
         if (Config::sendBccMailWebmaster()) {
             $Bcc[] = ['email' => ServiceLocator::get(Util::class)->getWebmasterMailAddress(), 'name' => ''];
         }
@@ -517,8 +524,8 @@ SELECT
         $contents = [];
         foreach ($contentTypeList as $contentType) {
             $cacheKey = $contentType . '-' . (is_scalar($langInfo['code'] ?? null) ? (string) $langInfo['code'] : '');
-            if (!empty($args['auth_key'])) {
-                $cacheKey .= '-' . (is_scalar($args['auth_key']) ? (string) $args['auth_key'] : '');
+            if (isset($args['auth_key']) && $args['auth_key'] !== '') {
+                $cacheKey .= '-' . (is_string($args['auth_key']) ? $args['auth_key'] : '');
             }
 
             if (!RequestCache::has('mail_tpl', $cacheKey)) {
@@ -530,7 +537,7 @@ SELECT
                 $mailTpl->setFilename('mail_footer', 'footer.tpl');
 
                 $addUrlParams = [];
-                if (!empty($args['auth_key'])) {
+                if (isset($args['auth_key']) && $args['auth_key'] !== '') {
                     $addUrlParams['auth'] = $args['auth_key'];
                 }
 
@@ -549,7 +556,7 @@ SELECT
                         $mailTpl->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 
-                    $mailTheme = is_scalar($args['theme']) ? (string) $args['theme'] : '';
+                    $mailTheme = is_string($args['theme']) ? $args['theme'] : '';
                     if ($mailTpl->smarty->templateExists('mail-css-' . $mailTheme . '.tpl')) {
                         $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.tpl');
                         $mailTpl->assignVarFromHandle('MAIL_CSS', 'css');
@@ -565,7 +572,7 @@ SELECT
 
             $contents[$contentType] = $template->parse('mail_header', true) ?? '';
 
-            $contentStr = is_scalar($args['content']) ? (string) $args['content'] : '';
+            $contentStr = is_string($args['content']) ? $args['content'] : '';
             if ($args['content_format'] == 'text/plain' and $contentType == 'text/html') {
                 $mailContent =
                   '<p>' .
@@ -583,9 +590,9 @@ SELECT
 
             if (isset($tpl['filename'])) {
                 if (isset($tpl['dirname'])) {
-                    $template->setTemplateDir((is_scalar($tpl['dirname']) ? (string) $tpl['dirname'] : '') . '/' . $contentType);
+                    $template->setTemplateDir((is_string($tpl['dirname']) ? $tpl['dirname'] : '') . '/' . $contentType);
                 }
-                $tplFilename = is_scalar($tpl['filename']) ? (string) $tpl['filename'] : '';
+                $tplFilename = is_string($tpl['filename']) ? $tpl['filename'] : '';
                 if ($template->smarty->templateExists($tplFilename . '.tpl')) {
                     $template->setFilename($tplFilename, $tplFilename . '.tpl');
                     if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
@@ -639,28 +646,28 @@ SELECT
             $mail->Port      = (int) $smtpPort;
 
             $smtpSecure = Config::smtpSecure();
-            if (!empty($smtpSecure) and in_array($smtpSecure, ['ssl', 'tls'])) {
+            if ($smtpSecure !== null && $smtpSecure !== '' && in_array($smtpSecure, ['ssl', 'tls'])) {
                 $mail->SMTPSecure = $smtpSecure;
             }
 
             $smtpUser = Config::smtpUser();
-            if (!empty($smtpUser)) {
+            if ($smtpUser !== '') {
                 $mail->SMTPAuth = true;
                 $mail->Username = $smtpUser;
                 $mail->Password = Config::smtpPassword();
             }
         }
 
-        if (empty($smtpHost) && !$this->mailFunctionIsUsable()) {
+        if ($smtpHost === '' && !$this->mailFunctionIsUsable()) {
             return false;
         }
 
         $ret        = true;
         $preResult  = EventDispatcher::dispatch('before_send_mail', true, $to, $args, $mail);
 
-        if ($preResult) {
+        if ($preResult !== false) {
             $ret = $mail->send();
-            if (!$ret and (!ini_get('display_errors') or PermissionService::get()->isAdmin())) {
+            if (!$ret and (ini_get('display_errors') === false || ini_get('display_errors') === '' or PermissionService::get()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }
             if (Config::debugMail()) {
@@ -697,7 +704,7 @@ SELECT
     }
 
     /** @param array<mixed> $args */
-    public function pwgSendMailTest(bool $success, mixed $mail, array $args): void
+    public function pwgSendMailTest(bool $success, PHPMailer $mail, array $args): void
     {
         $info     = LanguageStack::info();
         $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
@@ -713,12 +720,10 @@ SELECT
 
             $file = fopen($filename, 'w+');
             if ($file !== false) {
-                if (!$success && $mail instanceof PHPMailer) {
+                if (!$success) {
                     fwrite($file, 'ERROR: ' . $mail->ErrorInfo . "\n\n");
                 }
-                if ($mail instanceof PHPMailer) {
-                    fwrite($file, $mail->getSentMIMEMessage());
-                }
+                fwrite($file, $mail->getSentMIMEMessage());
                 fclose($file);
             }
         }

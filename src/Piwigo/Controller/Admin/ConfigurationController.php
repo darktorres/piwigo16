@@ -57,8 +57,8 @@ final class ConfigurationController
 
         ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
 
-        $page['section'] = isset($_GET['section']) && is_scalar($_GET['section']) ? (string) $_GET['section'] : 'main';
-        $section = (string) $page['section'];
+        $page['section'] = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'main';
+        $section = $page['section'];
 
         $main_checkboxes = [
             'allow_user_registration', 'obligatory_user_mail_address', 'rate', 'rate_anonymous',
@@ -125,13 +125,13 @@ final class ConfigurationController
             switch ($section) {
                 case 'main':
                     if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
-                        if (!empty($_POST['order_by'])) {
+                        if (isset($_POST['order_by']) && $_POST['order_by'] !== '') {
                             ServiceLocator::get(Util::class)->checkInputParameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
                             $used = [];
                             foreach ($post_order_by as $i => $val) {
-                                $val_str = is_scalar($val) ? (string) $val : '';
-                                if (empty($val_str) || isset($used[$val_str])) {
+                                $val_str = is_string($val) ? $val : '';
+                                if ($val_str === '' || isset($used[$val_str])) {
                                     unset($post_order_by[$i]);
                                 } else {
                                     $used[$val_str] = true;
@@ -148,24 +148,25 @@ final class ConfigurationController
                                 if (count($order_by) == 0) {
                                     $order_by = ['id ASC'];
                                 }
-                                $_POST['order_by'] = 'ORDER BY ' . implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $order_by));
-                                $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $order_by_inside_category));
+                                $_POST['order_by'] = 'ORDER BY ' . implode(', ', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $order_by));
+                                $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $order_by_inside_category));
                             }
                         } else {
                             PageState::current()->addError(Lang::t('No order field selected'));
                         }
                     }
 
-                    if (empty($_POST['email_admin_on_new_user'])) {
+                    if (!isset($_POST['email_admin_on_new_user']) || $_POST['email_admin_on_new_user'] === '') {
                         $_POST['email_admin_on_new_user'] = 'none';
                     } elseif ('all' == $_POST['email_admin_on_new_user_filter']) {
                         $_POST['email_admin_on_new_user'] = 'all';
                     } else {
-                        $_POST['email_admin_on_new_user'] = empty($_POST['email_admin_on_new_user_filter_group']) ? 'all' : 'group:' . (is_scalar($_POST['email_admin_on_new_user_filter_group']) ? (string) $_POST['email_admin_on_new_user_filter_group'] : '');
+                        $filterGroup = $_POST['email_admin_on_new_user_filter_group'] ?? null;
+                        $_POST['email_admin_on_new_user'] = (is_string($filterGroup) && $filterGroup !== '') ? 'group:' . $filterGroup : 'all';
                     }
 
                     foreach ($main_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
                     }
                     break;
 
@@ -178,45 +179,55 @@ final class ConfigurationController
                     break;
 
                 case 'comments':
-                    if (!preg_match($int_pattern, is_scalar($_POST['nb_comment_page']) ? (string) $_POST['nb_comment_page'] : '')
-                        || (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] < 5)
-                        || (is_numeric($_POST['nb_comment_page']) && $_POST['nb_comment_page'] > 50)) {
+                    $nb_comment_page = is_string($rawNbCommentPage = $_POST['nb_comment_page'] ?? null) ? $rawNbCommentPage : '';
+                    if (!preg_match($int_pattern, $nb_comment_page)
+                        || (is_numeric($nb_comment_page) && $nb_comment_page < 5)
+                        || (is_numeric($nb_comment_page) && $nb_comment_page > 50)) {
                         PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
                     }
                     break;
 
                 case 'display':
-                    if (!preg_match($int_pattern, is_scalar($_POST['nb_categories_page']) ? (string) $_POST['nb_categories_page'] : '')
-                        || (is_numeric($_POST['nb_categories_page']) && $_POST['nb_categories_page'] < 4)) {
+                    $nb_categories_page = is_string($rawNbCatPage = $_POST['nb_categories_page'] ?? null) ? $rawNbCatPage : '';
+                    if (!preg_match($int_pattern, $nb_categories_page)
+                        || (is_numeric($nb_categories_page) && $nb_categories_page < 4)) {
                         PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = empty($_POST[$checkbox]) ? 'false' : 'true';
+                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
                     }
-                    $post_picture_informations = is_array($_POST['picture_informations'] ?? null) ? $_POST['picture_informations'] : [];
+                    $picInfoRaw = $_POST['picture_informations'] ?? null;
+                    $post_picture_informations = is_array($picInfoRaw) ? $picInfoRaw : [];
                     foreach ($display_info_checkboxes as $checkbox) {
-                        $post_picture_informations[$checkbox] = empty($post_picture_informations[$checkbox]) ? false : true;
+                        $picInfoVal = $post_picture_informations[$checkbox] ?? null;
+                        $post_picture_informations[$checkbox] = $picInfoVal !== null;
                     }
                     $_POST['picture_informations'] = addslashes(serialize($post_picture_informations));
                     break;
 
                 case 'search':
-                    $post_filters_views     = is_array($_POST['filters_views'] ?? null) ? $_POST['filters_views'] : [];
-                    $post_filters_views_box = is_array($_POST['filters_views_box'] ?? null) ? $_POST['filters_views_box'] : [];
+                    $filtersViewsRaw = $_POST['filters_views'] ?? null;
+                    $post_filters_views = is_array($filtersViewsRaw) ? $filtersViewsRaw : [];
+                    $filtersViewsBoxRaw = $_POST['filters_views_box'] ?? null;
+                    $post_filters_views_box = is_array($filtersViewsBoxRaw) ? $filtersViewsBoxRaw : [];
                     foreach ($filters_names_checkboxes as $checkbox) {
-                        $fv_entry = is_array($post_filters_views[$checkbox] ?? null) ? $post_filters_views[$checkbox] : [];
-                        if (empty($post_filters_views_box[$checkbox])) {
+                        $fvRaw = $post_filters_views[$checkbox] ?? null;
+                        $fv_entry = is_array($fvRaw) ? $fvRaw : [];
+                        $fvBoxVal = $post_filters_views_box[$checkbox] ?? null;
+                        if ($fvBoxVal === null || $fvBoxVal === '') {
                             $fv_entry['access'] = 'nobody';
                             $fv_entry['default'] = false;
                         } else {
-                            $fv_entry['default'] = empty($fv_entry['default']) ? false : true;
+                            $fvDefaultVal = $fv_entry['default'] ?? null;
+                            $fv_entry['default'] = $fvDefaultVal !== null && $fvDefaultVal !== '';
                         }
                         $post_filters_views[$checkbox] = $fv_entry;
                     }
-                    $post_filters_views['last_filters_conf'] = empty($post_filters_views['last_filters_conf']) ? false : true;
+                    $lastFiltersConfVal = $post_filters_views['last_filters_conf'] ?? null;
+                    $post_filters_views['last_filters_conf'] = $lastFiltersConfVal !== null && $lastFiltersConfVal !== '';
                     $_POST['filters_views'] = addslashes(serialize($post_filters_views));
                     break;
             }
@@ -226,7 +237,7 @@ final class ConfigurationController
                 foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
-                        $value = is_scalar($_POST[$row_param]) ? (string) $_POST[$row_param] : '';
+                        $value = is_string($_POST[$row_param]) ? $_POST[$row_param] : '';
                         if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
                             $value = strip_tags($value);
                         }
@@ -279,7 +290,7 @@ final class ConfigurationController
                     $order_by = [''];
                     $tpl->assign('ORDER_BY_IS_CUSTOM', true);
                 } else {
-                    $order_by_str = trim((string) Config::orderByInsideCategory());
+                    $order_by_str = trim(Config::orderByInsideCategory());
                     $order_by_str = str_replace('ORDER BY ', '', $order_by_str);
                     $order_by     = explode(', ', $order_by_str);
                 }
@@ -289,8 +300,8 @@ final class ConfigurationController
                 $langDay = is_array($lang['day'] ?? null) ? $lang['day'] : [];
 
                 $tpl->assign('main', [
-                    'CONF_GALLERY_TITLE'                    => htmlspecialchars((string) Config::galleryTitle()),
-                    'CONF_PAGE_BANNER'                      => htmlspecialchars((string) Config::pageBanner()),
+                    'CONF_GALLERY_TITLE'                    => htmlspecialchars(Config::galleryTitle()),
+                    'CONF_PAGE_BANNER'                      => htmlspecialchars(Config::pageBanner()),
                     'week_starts_on_options'                => [
                         'sunday' => is_scalar($langDay[0] ?? null) ? (string) $langDay[0] : 'Sunday',
                         'monday' => is_scalar($langDay[1] ?? null) ? (string) $langDay[1] : 'Monday',
@@ -306,7 +317,7 @@ final class ConfigurationController
                 ]);
 
                 $groups = array_map(
-                    fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+                    fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
                     array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'name', 'id')
                 );
                 natcasesort($groups);
@@ -352,7 +363,7 @@ final class ConfigurationController
                     $tpl->append('display', [$checkbox => Config::raw($checkbox)], true);
                 }
                 $tpl->append('display', [
-                    'picture_informations' => StringUtil::safeUnserialize(is_string(Config::pictureInformations()) ? Config::pictureInformations() : ''),
+                    'picture_informations' => StringUtil::safeUnserialize(Config::pictureInformations() ?? ''),
                     'NB_CATEGORIES_PAGE'   => Config::nbCategoriesPage(),
                 ], true);
                 break;
@@ -388,9 +399,11 @@ final class ConfigurationController
                             $params = ($params_raw instanceof DerivativeParams) ? $params_raw : null;
                         }
                         if ($params instanceof DerivativeParams) {
-                            [$tpl_var['w'], $tpl_var['h']] = $params->sizing->ideal_size;
-                            if (($tpl_var['crop'] = round(100 * $params->sizing->max_crop)) > 0) {
-                                [$tpl_var['minw'], $tpl_var['minh']] = $params->sizing->min_size;
+                            $idealSize = $params->sizing->ideal_size;
+                            [$tpl_var['w'], $tpl_var['h']] = [$idealSize[0] ?? 0, $idealSize[1] ?? 0];
+                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0) {
+                                $minSize = $params->sizing->min_size;
+                                [$tpl_var['minw'], $tpl_var['minh']] = [$minSize[0] ?? 0, $minSize[1] ?? 0];
                             } else {
                                 $tpl_var['minw'] = $tpl_var['minh'] = '';
                             }
@@ -421,7 +434,8 @@ final class ConfigurationController
 
             case 'watermark':
                 $watermark_files = [];
-                foreach (glob(PHPWG_ROOT_PATH . 'themes/_base/watermarks/*.png') ?: [] as $file) {
+                $watermarkGlob = glob(PHPWG_ROOT_PATH . 'themes/_base/watermarks/*.png');
+                foreach ($watermarkGlob !== false ? $watermarkGlob : [] as $file) {
                     $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
                 }
                 if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {

@@ -34,6 +34,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ProfileController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
@@ -62,7 +63,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user ?? []);
         }
 
-        $pgErrors = is_array($page['errors'] ?? null) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $page['errors']) : [];
+        $pgErrors = is_array($page['errors'] ?? null) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $page['errors']) : [];
         ServiceLocator::get(ProfileService::class)->saveProfileFromPost($userdata, $pgErrors);
         $page['errors'] = $pgErrors;
 
@@ -88,14 +89,14 @@ final class ProfileController implements ControllerInterface
                 'recent_period' => is_scalar($userdata['recent_period'] ?? null) ? (string) $userdata['recent_period'] : '',
                 'opt_album'     => !empty($userdata['expand']),
                 'opt_comment'   => !empty($userdata['show_nb_comments']),
-                'opt_hits'      => !empty($userdata['show_nb_hits']),
+                'opt_hits'      => isset($userdata['show_nb_hits']) && $userdata['show_nb_hits'] !== '' && $userdata['show_nb_hits'] !== false && $userdata['show_nb_hits'] !== 0,
             ],
             'preferencesDefaultValues' => [
                 'nb_image_page' => $default_user['nb_image_page'] ?? null,
                 'recent_period' => $default_user['recent_period'] ?? null,
-                'opt_album'     => !empty($default_user['expand'] ?? null),
-                'opt_comment'   => !empty($default_user['show_nb_comments'] ?? null),
-                'opt_hits'      => !empty($default_user['show_nb_hits'] ?? null),
+                'opt_album'     => isset($default_user['expand']) && $default_user['expand'] !== '' && $default_user['expand'] !== false && $default_user['expand'] !== 0,
+                'opt_comment'   => isset($default_user['show_nb_comments']) && $default_user['show_nb_comments'] !== '' && $default_user['show_nb_comments'] !== false && $default_user['show_nb_comments'] !== 0,
+                'opt_hits'      => isset($default_user['show_nb_hits']) && $default_user['show_nb_hits'] !== '' && $default_user['show_nb_hits'] !== false && $default_user['show_nb_hits'] !== 0,
             ],
             'standardSaveSelector' => [],
             'selected_date'        => $tpl->getTemplateVars('API_SELECTED_EXPIRATION') ?? '',

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Protocol;
 
-class PwgXmlWriter
+final class PwgXmlWriter
 {
     private readonly string $_indentStr;
     /** @var array<mixed> */
@@ -47,7 +47,7 @@ class PwgXmlWriter
         $this->_elementStack[] = $name;
     }
 
-    public function endElement(mixed $x): void
+    public function endElement(string|null $x): void
     {
         $close_tag = $this->_end_prev(true);
         $name = array_pop($this->_elementStack);
@@ -59,11 +59,10 @@ class PwgXmlWriter
         }
     }
 
-    public function writeContent(mixed $value): void
+    public function writeContent(float|int|string $value): void
     {
         $this->_end_prev(false);
-        $str = is_scalar($value) || $value === null ? (string) $value : '';
-        $this->_output(htmlspecialchars($str));
+        $this->_output(htmlspecialchars((string) $value));
     }
 
     public function writeCdata(string $value): void
@@ -76,15 +75,14 @@ class PwgXmlWriter
         );
     }
 
-    public function writeAttribute(string $name, mixed $value): void
+    public function writeAttribute(string $name, string $value): void
     {
         $this->_output(' '.$name.'="'.$this->encodeAttribute($value).'"');
     }
 
-    public function encodeAttribute(mixed $value): string
+    public function encodeAttribute(string $value): string
     {
-        $str = is_scalar($value) || $value === null ? (string) $value : '';
-        return htmlspecialchars($str);
+        return htmlspecialchars($value);
     }
 
     public function _end_prev(bool $done): bool
@@ -113,7 +111,7 @@ class PwgXmlWriter
     {
         if ($this->_indentLevel > count($this->_elementStack)) {
             $this->_output(
-                str_repeat((string) $this->_indentStr, count($this->_elementStack))
+                str_repeat($this->_indentStr, count($this->_elementStack))
             );
         }
     }

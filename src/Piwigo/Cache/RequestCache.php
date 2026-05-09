@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
+use Piwigo\Template\Template;
+
 /**
  * Per-request memoisation cache, replacing direct $cache global array writes.
  *
@@ -24,7 +26,7 @@ final class RequestCache
         return self::$data[$ns][$key] ?? null;
     }
 
-    public static function set(string $ns, string $key, mixed $value): void
+    public static function set(string $ns, string $key, bool|Template $value): void
     {
         self::$data[$ns][$key] = $value;
     }

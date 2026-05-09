@@ -37,19 +37,19 @@ final readonly class SearchService
     ) {
     }
 
-    public function getSearchIdPattern(int|string $candidate): ?string
+    public function getSearchIdPattern(string $candidate): ?string
     {
         $clause_pattern = null;
-        if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate)) {
+        if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', $candidate)) {
             $clause_pattern = 'search_uuid = \'%s\'';
-        } elseif (preg_match('/^\d+$/', (string) $candidate)) {
+        } elseif (preg_match('/^\d+$/', $candidate)) {
             $clause_pattern = 'id = %u';
         }
         return $clause_pattern;
     }
 
     /** @return array<string,mixed>|null */
-    public function getSearchInfo(int|string $candidate): ?array
+    public function getSearchInfo(string $candidate): ?array
     {
         $page = &$GLOBALS['page'];
         if (!is_array($page)) {
@@ -57,7 +57,7 @@ final readonly class SearchService
         }
         $clausePattern = $this->getSearchIdPattern($candidate);
 
-        if (empty($clausePattern)) {
+        if ($clausePattern === null || $clausePattern === '') {
             throw new ValidationException('Invalid search identifier');
         }
 
@@ -78,10 +78,10 @@ final readonly class SearchService
     }
 
     /** @return array<mixed> */
-    public function getSearchArray(mixed $searchId): array
+    public function getSearchArray(string $searchId): array
     {
-        $search = $this->getSearchInfo(is_int($searchId) ? $searchId : (is_scalar($searchId) ? (string) $searchId : ''));
-        if (empty($search)) {
+        $search = $this->getSearchInfo($searchId);
+        if ($search === null || count($search) === 0) {
             ServiceLocator::get(HtmlService::class)->badRequest('this search identifier does not exist');
         }
         $rules  = $search['rules'] ?? '';
@@ -111,7 +111,7 @@ final readonly class SearchService
         foreach ($displayFilters as $filtName => $filtConf) {
             $filtConf = is_array($filtConf) ? $filtConf : [];
             if (isset($filtConf['access'])) {
-                $access      = is_scalar($filtConf['access']) ? (string) $filtConf['access'] : '';
+                $access      = is_string($filtConf['access']) ? $filtConf['access'] : '';
                 $filtNameStr = (string) $filtName;
                 $filtEntry   = is_array($displayFilters[$filtNameStr] ?? null) ? (array) $displayFilters[$filtNameStr] : [];
                 if ($access == 'everybody' or ($access == 'admins-only' and PermissionService::get()->isAdmin()) or ($access == 'registered-users' and PermissionService::get()->isClassicUser())) {
@@ -143,16 +143,18 @@ final readonly class SearchService
         $expertFields = is_array($searchFields['expert'] ?? null) ? $searchFields['expert'] : [];
         if (isset($searchFields['expert']) and !empty($expertFields['string']) and $expertFilter['access']) {
             $hasFilersFilled = true;
-            $expertString = is_scalar($expertFields['string']) ? (string) $expertFields['string'] : '';
+            $expertString = is_string($expertFields['string']) ? $expertFields['string'] : '';
             $expertQsr    = $this->getQuickSearchResults($expertString, []) ?? [];
             $imageIdsForFilter['expert'] = is_array($expertQsr['items'] ?? null) ? $expertQsr['items'] : [];
         }
 
         $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
-        if (isset($searchFields['allwords']) and !empty($allwordsFields['words']) and count(is_array($allwordsFields['fields'] ?? null) ? $allwordsFields['fields'] : []) > 0 and ($allwordsFilter['access'] ?? false)) {
+        $allwordsFieldsFields = $allwordsFields['fields'] ?? null;
+        $allwordsFilterAccess = $allwordsFilter['access'] ?? false;
+        if (isset($searchFields['allwords']) and isset($allwordsFields['words']) && $allwordsFields['words'] !== '' and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and ($allwordsFilterAccess === true || $allwordsFilterAccess === 1 || $allwordsFilterAccess === '1')) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
-            $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($allwordsFields['fields'] ?? null) ? $allwordsFields['fields'] : []);
+            $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []);
             if (isset($allwordsFields['fields'])) {
                 $fields = array_intersect($fields, $allwordsFieldList);
             }
@@ -202,7 +204,8 @@ final readonly class SearchService
                     $s = '(' . $s . ')';
                 });
             }
-            $allwordsMode = is_scalar($allwordsFields['mode'] ?? null) ? (string) $allwordsFields['mode'] : 'AND';
+            $allwordsModeRaw = $allwordsFields['mode'] ?? null;
+            $allwordsMode = is_scalar($allwordsModeRaw) ? (string) $allwordsModeRaw : 'AND';
             if (!in_array($allwordsMode, ['OR', 'AND'])) {
                 $allwordsMode = 'AND';
             }
@@ -246,14 +249,14 @@ final readonly class SearchService
             $imageIdsForFilter['filetypes'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filetypesClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
-        $addedByList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : []);
+        $addedByList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : []);
         if (!empty($searchFields['added_by']) and $addedByFilter['access']) {
             $hasFilersFilled = true;
             $imageIdsForFilter['added_by'] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE added_by IN (' . implode(',', $addedByList) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
 
         $catFieldsData = is_array($searchFields['cat'] ?? null) ? $searchFields['cat'] : [];
-        $catWords      = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($catFieldsData['words'] ?? null) ? $catFieldsData['words'] : []);
+        $catWords      = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($catFieldsData['words'] ?? null) ? $catFieldsData['words'] : []);
         if (isset($searchFields['cat']) and !empty($catWords) and $albumFilter['access']) {
             $hasFilersFilled = true;
             $catSubInc = !empty($catFieldsData['sub_inc']);
@@ -274,29 +277,29 @@ final readonly class SearchService
                 $datePostedClause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$datePostedPreset] . ')';
             } elseif ('custom' == $datePostedPreset and isset($datePostedFields['custom'])) {
                 $datePostedSubclauses = [];
-                $datePostedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($datePostedFields['custom']) ? $datePostedFields['custom'] : []);
+                $datePostedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($datePostedFields['custom']) ? $datePostedFields['custom'] : []);
                 $customDates = array_flip($datePostedCustom);
                 foreach (array_keys($customDates) as $customDate) {
                     $begin = $end = null;
-                    $ymd   = substr((string) $customDate, 0, 1);
+                    $ymd   = substr($customDate, 0, 1);
                     if ('y' == $ymd) {
-                        $year = substr((string) $customDate, 1);
+                        $year = substr($customDate, 1);
                         $begin = $year . '-01-01 00:00:00';
                         $end   = $year . '-12-31 23:59:59';
                     } elseif ('m' == $ymd) {
-                        [$year, $month] = explode('-', substr((string) $customDate, 1));
+                        [$year, $month] = explode('-', substr($customDate, 1));
                         if (!isset($customDates['y' . $year])) {
                             $begin = $year . '-' . $month . '-01 00:00:00';
                             $end   = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
                         }
                     } elseif ('d' == $ymd) {
-                        [$year, $month, $day] = explode('-', substr((string) $customDate, 1));
+                        [$year, $month, $day] = explode('-', substr($customDate, 1));
                         if (!isset($customDates['y' . $year]) and !isset($customDates['m' . $year . '-' . $month])) {
                             $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
                             $end   = $year . '-' . $month . '-' . $day . ' 23:59:59';
                         }
                     }
-                    if (!empty($begin)) {
+                    if (!empty($begin) && $end !== null) {
                         $datePostedSubclauses[] = 'date_available BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
@@ -316,29 +319,29 @@ final readonly class SearchService
                 $dateCreatedClause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$dateCreatedPreset] . ')';
             } elseif ('custom' == $dateCreatedPreset and isset($dateCreatedFields['custom'])) {
                 $dateCreatedSubclauses = [];
-                $dateCreatedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($dateCreatedFields['custom']) ? $dateCreatedFields['custom'] : []);
+                $dateCreatedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($dateCreatedFields['custom']) ? $dateCreatedFields['custom'] : []);
                 $customDates = array_flip($dateCreatedCustom);
                 foreach (array_keys($customDates) as $customDate) {
                     $begin = $end = null;
-                    $ymd   = substr((string) $customDate, 0, 1);
+                    $ymd   = substr($customDate, 0, 1);
                     if ('y' == $ymd) {
-                        $year = substr((string) $customDate, 1);
+                        $year = substr($customDate, 1);
                         $begin = $year . '-01-01 00:00:00';
                         $end   = $year . '-12-31 23:59:59';
                     } elseif ('m' == $ymd) {
-                        [$year, $month] = explode('-', substr((string) $customDate, 1));
+                        [$year, $month] = explode('-', substr($customDate, 1));
                         if (!isset($customDates['y' . $year])) {
                             $begin = $year . '-' . $month . '-01 00:00:00';
                             $end   = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
                         }
                     } elseif ('d' == $ymd) {
-                        [$year, $month, $day] = explode('-', substr((string) $customDate, 1));
+                        [$year, $month, $day] = explode('-', substr($customDate, 1));
                         if (!isset($customDates['y' . $year]) and !isset($customDates['m' . $year . '-' . $month])) {
                             $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
                             $end   = $year . '-' . $month . '-' . $day . ' 23:59:59';
                         }
                     }
-                    if (!empty($begin)) {
+                    if (!empty($begin) && $end !== null) {
                         $dateCreatedSubclauses[] = 'date_creation BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
@@ -474,13 +477,14 @@ final readonly class SearchService
 
         if (!isset($cache[$cacheKey])) {
             $functionStart = StringUtil::get()->getMoment();
-            $first         = $imageIdsForFilter[array_shift($otherFilters)] ?? [];
+            $firstKey      = array_shift($otherFilters);
+            $first         = $imageIdsForFilter[$firstKey] ?? [];
             $otherFiltersItems = is_array($first)
                 ? array_values(array_filter($first, fn ($v): bool => is_int($v) || is_string($v)))
                 : [];
             foreach ($otherFilters as $otherFilter) {
                 $nextRaw           = is_array($imageIdsForFilter[$otherFilter] ?? null) ? $imageIdsForFilter[$otherFilter] : [];
-                $next              = array_filter($nextRaw, fn ($v): bool => is_int($v) || is_string($v));
+                $next              = array_filter($nextRaw, fn (mixed $v): bool => is_int($v) || is_string($v));
                 $otherFiltersItems = array_intersect($otherFiltersItems, $next);
             }
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
@@ -522,7 +526,7 @@ final readonly class SearchService
         $variants = array_merge([$token->term], $token->variants);
         $fts      = [];
         foreach ($variants as $variant) {
-            $useFt = mb_strlen((string) $variant) > 3;
+            $useFt = mb_strlen($variant) > 3;
             if ($token->modifier & QST_WILDCARD_BEGIN) {
                 $useFt = false;
             }
@@ -530,7 +534,7 @@ final readonly class SearchService
                 $useFt = false;
             }
             if ($useFt) {
-                $parts = preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', (string) $variant);
+                $parts = preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', $variant);
                 $max   = ($parts !== false) ? max(array_map(mb_strlen(...), $parts)) : 0;
                 if ($max < 4) {
                     $useFt = false;
@@ -544,10 +548,10 @@ final readonly class SearchService
                         $page['use_regexp_ICU'] = true;
                     }
                 }
-                $pre  = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
-                $post = ($token->modifier & QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+                $pre  = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ((bool) $page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
+                $post = ($token->modifier & QST_WILDCARD_END) ? '' : ((bool) $page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
-                    $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote((string) $variant)) . $post . '\'';
+                    $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote($variant)) . $post . '\'';
                 }
             } else {
                 $ft = $variant;
@@ -575,7 +579,7 @@ final readonly class SearchService
             $scopeId    = isset($token->scope) ? $token->scope->id : 'photo';
             $tokenScope = $token->scope;
             $clauses    = [];
-            $like       = addslashes((string) $token->term);
+            $like       = addslashes($token->term);
             $like       = str_replace(['%', '_'], ['\\%', '\\_'], $like);
             $fileLike   = 'CONVERT(file, CHAR) LIKE \'%' . $like . '%\'';
 
@@ -588,7 +592,7 @@ final readonly class SearchService
                     $clauses[] = $fileLike;
                     break;
                 case 'author':
-                    if (strlen((string) $token->term)) {
+                    if (strlen($token->term)) {
                         $clauses = array_merge($clauses, $this->qsearchGetTextTokenSearchSql($token, ['author']));
                     } elseif ($token->modifier & QST_WILDCARD) {
                         $clauses[] = 'author IS NOT NULL';
@@ -676,7 +680,7 @@ final readonly class SearchService
         }
 
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-            if ((strlen((string) $expr->stokens[$i]->term) <= 3 || strlen((string) $expr->stokens[$i + 1]->term) <= 3)
+            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
               && (($expr->stoken_modifiers[$i] & (QST_QUOTED | QST_WILDCARD)) == 0)
               && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
                 $common = array_intersect($tokenTagIds[$i], $tokenTagIds[$i + 1]);
@@ -696,7 +700,7 @@ final readonly class SearchService
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $tagIds);
                 } else {
-                    if (strlen((string) $token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {
+                    if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {
                         $positiveIds = array_merge($positiveIds, $tagIds);
                     }
                 }
@@ -743,7 +747,7 @@ final readonly class SearchService
         }
 
         for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-            if ((strlen((string) $expr->stokens[$i]->term) <= 3 || strlen((string) $expr->stokens[$i + 1]->term) <= 3)
+            if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
               && (($expr->stoken_modifiers[$i] & (QST_QUOTED | QST_WILDCARD)) == 0)
               && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
                 $common = array_intersect($tokenCatIds[$i], $tokenCatIds[$i + 1]);
@@ -766,7 +770,7 @@ final readonly class SearchService
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $catIds);
                 } else {
-                    if (strlen((string) $token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {
+                    if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {
                         $positiveIds = array_merge($positiveIds, $catIds);
                     }
                 }
@@ -808,7 +812,7 @@ final readonly class SearchService
                 $crtIds       = $qsr->iids[$crt->idx] = array_unique(array_merge($qsr->images_iids[$crt->idx], $qsr->cat_iids[$crt->idx], $qsr->tag_iids[$crt->idx]));
                 $crtQualifies = count($crtIds) > 0 || count($qsr->tag_ids[$crt->idx]) > 0;
                 $crtIgnoredTerms = $crtQualifies ? [] : [(string) $crt];
-            } elseif ($crt instanceof QMultiToken) {
+            } else {
                 $crtIds = $this->qsearchEval($crt, $qsr, $crtQualifies, $crtIgnoredTerms);
             }
 
@@ -856,11 +860,9 @@ final readonly class SearchService
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
         ]);
-        /** @var mixed $res */
-        $res      = false;
-        $cacheHit = $persistentCache->get($cacheKey, $res);
-        if ($cacheHit) {
-            return is_array($res) ? $res : null;
+        $cachedRes = false;
+        if ($persistentCache->get($cacheKey, $cachedRes)) {
+            return is_array($cachedRes) ? $cachedRes : null;
         }
 
         $res      = $this->getQuickSearchResultsNoCache($q, $options);
@@ -919,9 +921,9 @@ final readonly class SearchService
                 if (isset($token->scope) && !$token->scope->is_text) {
                     continue;
                 }
-                if (strlen((string) $token->term) > 2
+                if (strlen($token->term) > 2
                   && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0
-                  && strcspn((string) $token->term, '\'0123456789') == strlen((string) $token->term)) {
+                  && strcspn($token->term, '\'0123456789') == strlen($token->term)) {
                     $token->variants = array_unique(array_diff($inflector->getVariants($token->term), [$token->term]));
                 }
             }
@@ -960,7 +962,8 @@ final readonly class SearchService
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
         $searchResults = EventDispatcher::dispatch('qsearch_results', $searchResults, $expression, $qsr);
-        $extraItems    = array_map(static fn (mixed $v): int => (int) $v, $searchResults['items']);
+        $rawItems      = is_array($searchResults['items'] ?? null) ? $searchResults['items'] : [];
+        $extraItems    = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawItems);
         $ids           = array_merge($ids, $extraItems);
 
         if (empty($ids)) {
@@ -969,11 +972,12 @@ final readonly class SearchService
             return $searchResults;
         }
 
-        $permissions   = !isset($options['permissions']) ? true : $options['permissions'];
+        $permissionsRaw = !isset($options['permissions']) ? true : $options['permissions'];
+        $permissions   = $permissionsRaw === true || $permissionsRaw === 1 || $permissionsRaw === '1';
         $whereClauses  = [];
         $whereClauses[] = 'i.id IN (' . implode(',', $ids) . ')';
-        if (!empty($options['images_where'])) {
-            $whereClauses[] = '(' . (is_scalar($options['images_where']) ? (string) $options['images_where'] : '') . ')';
+        if (isset($options['images_where']) && $options['images_where'] !== '') {
+            $whereClauses[] = '(' . (is_string($options['images_where']) ? $options['images_where'] : '') . ')';
         }
         if ($permissions) {
             $whereClauses[] = PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
@@ -1000,7 +1004,7 @@ final readonly class SearchService
         if (!isset($search['q'])) {
             return $this->getRegularSearchResults($search, '');
         } else {
-            $searchQ = is_scalar($search['q']) ? (string) $search['q'] : '';
+            $searchQ = is_string($search['q']) ? $search['q'] : '';
             return $this->getQuickSearchResults($searchQ, ['super_order_by' => $superOrderBy, 'images_where' => '']) ?? [];
         }
     }

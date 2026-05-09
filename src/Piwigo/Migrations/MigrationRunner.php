@@ -42,13 +42,16 @@ final class MigrationRunner
             return;
         }
 
+        /** @psalm-suppress InternalMethod */
         $version = $factory->getVersionAliasResolver()->resolveVersionAlias('latest');
         $plan    = $factory->getMigrationPlanCalculator()->getPlanUntilVersion($version);
         if (count($plan) === 0) {
             return;
         }
 
+        /** @psalm-suppress InternalClass, InternalMethod */
         $migratorConfig = new MigratorConfiguration()->setAllOrNothing(true);
+        /** @psalm-suppress InternalMethod */
         $factory->getMigrator()->migrate($plan, $migratorConfig);
     }
 }

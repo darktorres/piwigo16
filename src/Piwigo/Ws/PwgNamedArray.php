@@ -9,7 +9,7 @@ namespace Piwigo\Ws;
  * Provides naming clues for xml output (xml attributes vs. xml child elements?)
  * Usually returned by web service function implementation.
  */
-class PwgNamedArray
+final class PwgNamedArray
 {
     /** @var array<string, int> */
     private array $_xmlAttributes = [];
@@ -31,7 +31,10 @@ class PwgNamedArray
         return $this->_content;
     }
 
-    public function appendItem(mixed $item): void
+    /**
+     * @psalm-param array{id_uppercat: mixed,...} $item
+     */
+    public function appendItem(array $item): void
     {
         if (!is_array($this->_content)) {
             $this->_content = [];

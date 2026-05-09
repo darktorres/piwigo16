@@ -10,8 +10,10 @@ use Piwigo\Search\QSingleToken;
 
 final class QDateRangeScopeTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private QDateRangeScope $scope;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->scope = new QDateRangeScope('date', []);

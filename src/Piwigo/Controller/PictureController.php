@@ -54,6 +54,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PictureController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
@@ -91,7 +92,10 @@ final class PictureController implements ControllerInterface
                 $row = $imageRepo->findById($imageId);
             } else {
                 assert(!empty($page['image_file']));
-                $pattern = str_replace(['_', '%'], ['/_', '/%'], is_string($page['image_file']) ? $page['image_file'] : '') . '.%';
+                $imageFileRaw = $page['image_file'];
+                $imageFileStr = is_string($imageFileRaw) ? $imageFileRaw : '';
+                $replaced = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
+                $pattern = $replaced . '.%';
                 $row     = $imageRepo->findByFilePattern($pattern);
             }
             if ($row === null) {
@@ -154,7 +158,8 @@ SELECT id
         $tpl = TemplateRegistry::current();
 
         // Refresh typed locals in case image_id was updated in the block above
-        $items       = array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, is_array($page['items'] ?? null) ? $page['items'] : []);
+        $pageItems   = $page['items'] ?? null;
+        $items       = array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, is_array($pageItems) ? $pageItems : []);
         $imageId     = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
         $nbImagePage = is_scalar($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0;
 
@@ -163,7 +168,7 @@ SELECT id
         $page['current_rank'] = $page['rank_of'][$imageId];
         $page['current_item'] = $imageId;
 
-        $currentRank = (int) $page['current_rank'];
+        $currentRank = max(0, (int) $page['current_rank']);
         $firstRank   = 0;
         $lastRank    = count($items) - 1;
 
@@ -172,7 +177,7 @@ SELECT id
             $page['first_item']    = $items[$firstRank];
         }
         if ($currentRank != $lastRank) {
-            $page['next_item'] = $items[$currentRank + 1];
+            $page['next_item'] = $items[min($currentRank + 1, $lastRank)];
             $page['last_item'] = $items[$lastRank];
         }
 
@@ -220,9 +225,9 @@ SELECT id
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     $comment_to_edit = StringUtil::get()->inputInt('comment_to_edit', null, $_GET);
                     $author_id       = ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_to_edit ?? 0);
-                    if (PermissionService::get()->canManageComment('edit', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('edit', $author_id)) {
                         $post_content = StringUtil::get()->inputString('content', null, $_POST);
-                        if (!empty($post_content)) {
+                        if ($post_content !== null && $post_content !== '') {
                             ServiceLocator::get(Util::class)->checkPwgToken();
                             $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
                                 ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::get()->inputString('website_url', null, $_POST)],
@@ -255,7 +260,7 @@ SELECT id
                     ServiceLocator::get(Util::class)->checkPwgToken();
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::get()->inputInt('comment_to_delete', null, $_GET) ?? 0);
-                    if (PermissionService::get()->canManageComment('delete', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('delete', $author_id)) {
                         ServiceLocator::get(CommentService::class)->deleteUserComment(StringUtil::get()->inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
                     Util::get()->redirect($url_self);
@@ -264,7 +269,7 @@ SELECT id
                     ServiceLocator::get(Util::class)->checkPwgToken();
                     ServiceLocator::get(Util::class)->checkInputParameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::get()->inputInt('comment_to_validate', null, $_GET) ?? 0);
-                    if (PermissionService::get()->canManageComment('validate', (int) $author_id)) {
+                    if (PermissionService::get()->canManageComment('validate', $author_id)) {
                         ServiceLocator::get(CommentService::class)->validateUserComment(StringUtil::get()->inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
                     Util::get()->redirect($url_self);
@@ -380,20 +385,20 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 }
                 if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
                     $refresh  = $slideshow_params['period'];
-                    $url_link = UrlService::get()->addUrlParams((string) $picture[$id_pict_redirect]['url'], $slideshow_url_params);
+                    $url_link = UrlService::get()->addUrlParams($picture[$id_pict_redirect]['url'], $slideshow_url_params);
                 }
             }
         } else {
             $page['slideshow'] = false;
         }
 
-        if ($page['slideshow'] && Config::lightSlideshow()) {
+        if ($page['slideshow'] === true && Config::lightSlideshow()) {
             $tpl->setFilenames(['slideshow' => 'slideshow.tpl']);
         } else {
             $tpl->setFilenames(['picture' => 'picture.tpl']);
         }
 
-        $title    = (string) $picture['current']['TITLE'];
+        $title    = $picture['current']['TITLE'];
         $title_nb = ($currentRank + 1) . '/' . count($items);
 
         $url_metadata     = UrlService::get()->duplicatePictureUrl();
@@ -423,7 +428,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             }
         }
 
-        if (Config::pictureDownloadIcon() && !empty($picture['current']['download_url']) && $user['enabled_high'] == 'true') {
+        if (Config::pictureDownloadIcon() && isset($picture['current']['download_url']) && $picture['current']['download_url'] !== '' && $user['enabled_high'] == 'true') {
             $tpl->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
             if (Config::isFormatsEnabled()) {
@@ -442,31 +447,34 @@ SELECT *
                     if (!isset($format['download_url'])) {
                         $format['download_url'] = ServiceLocator::get(UrlGenerator::class)->actionFormat((int) (is_scalar($format['format_id'] ?? null) ? $format['format_id'] : 0));
                     }
-                    $extStr           = is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '';
+                    $fmtExtRaw        = $format['ext'] ?? null;
+                    $extStr           = is_scalar($fmtExtRaw) ? (string) $fmtExtRaw : '';
                     $format['label']  = strtoupper($extStr);
                     $lang_key         = 'format ' . strtoupper($extStr);
                     if (isset($lang[$lang_key])) {
                         $format['label'] = $lang[$lang_key];
                     }
                     $fsRaw                = $format['filesize'] ?? 0;
-                    $format['filesize']   = sprintf('%.1fMB', (is_numeric($fsRaw) ? $fsRaw : 0) / 1024);
+                    $format['filesize']   = sprintf('%.1fMB', (is_numeric($fsRaw) ? (float) $fsRaw : 0.0) / 1024.0);
                 }
                 $tpl->append('current', ['formats' => $formats], true);
             }
         }
 
         // Slideshow controls
-        if ($page['slideshow']) {
+        if ($page['slideshow'] === true) {
             $tpl_slideshow = [];
             $currentUrl    = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
             foreach (['repeat', 'play'] as $p) {
-                $var_name = 'U_' . ($slideshow_params[$p] ? 'STOP_' : 'START_') . strtoupper($p);
-                $tpl_slideshow[$var_name] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ServiceLocator::get(PictureService::class)->encodeSlideshowParams(array_merge($slideshow_params, [$p => !$slideshow_params[$p]]))]);
+                $pVal = $slideshow_params[$p] ?? false;
+                $pValBool = $pVal !== false && $pVal !== '' && $pVal !== 0 && $pVal !== [];
+                $var_name = 'U_' . ($pValBool ? 'STOP_' : 'START_') . strtoupper($p);
+                $tpl_slideshow[$var_name] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ServiceLocator::get(PictureService::class)->encodeSlideshowParams(array_merge($slideshow_params, [$p => !$pValBool]))]);
             }
             foreach (['dec', 'inc'] as $op) {
                 $periodRaw = $slideshow_params['period'] ?? 0;
-                $new_period  = (is_numeric($periodRaw) ? $periodRaw : 0) + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
+                $new_period  = (is_numeric($periodRaw) ? (int) $periodRaw : 0) + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
                 $new_params  = ServiceLocator::get(PictureService::class)->correctSlideshowParams(array_merge($slideshow_params, ['period' => $new_period]));
                 if ($new_params['period'] === $new_period) {
                     $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ServiceLocator::get(PictureService::class)->encodeSlideshowParams($new_params)]);
@@ -514,13 +522,17 @@ SELECT *
 
         // Picture info
         $infos = [];
-        if (isset($picture['current']['comment']) && !empty($picture['current']['comment'])) {
-            $tpl->assign('COMMENT_IMG', EventDispatcher::dispatch('render_element_description', $picture['current']['comment'], 'picture_page_element_description'));
+        if (isset($picture['current']['comment']) && $picture['current']['comment'] !== '') {
+            /** @var mixed $commentValue */
+            $commentValue = $picture['current']['comment'];
+            $tpl->assign('COMMENT_IMG', EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description'));
         }
-        if (!empty($currentPic['author'] ?? null)) {
-            $infos['INFO_AUTHOR'] = $currentPic['author'];
+        if (isset($currentPic['author']) && $currentPic['author'] !== '') {
+            /** @var mixed $authorValue */
+            $authorValue = $currentPic['author'];
+            $infos['INFO_AUTHOR'] = $authorValue;
         }
-        if (!empty($currentPic['date_creation'])) {
+        if (isset($currentPic['date_creation']) && $currentPic['date_creation'] !== '') {
             $dc   = (is_string($currentPic['date_creation']) || is_int($currentPic['date_creation'])) ? $currentPic['date_creation'] : null;
             $val  = ServiceLocator::get(DateService::class)->formatDate($dc);
             $url  = UrlService::get()->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
@@ -532,9 +544,10 @@ SELECT *
         $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
         if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
-            $infos['INFO_DIMENSIONS'] = (is_scalar($currentPic['width']) ? (string) $currentPic['width'] : '') . '*' . (is_scalar($currentPic['height'] ?? null) ? (string) $currentPic['height'] : '');
+            $picHeightRaw = $currentPic['height'] ?? null;
+            $infos['INFO_DIMENSIONS'] = (is_string($currentPic['width']) ? $currentPic['width'] : '') . '*' . (is_scalar($picHeightRaw) ? (string) $picHeightRaw : '');
         }
-        if (!empty($currentPic['filesize'] ?? null)) {
+        if (isset($currentPic['filesize']) && $currentPic['filesize'] !== '') {
             $filesize = $currentPic['filesize'];
             $infos['INFO_FILESIZE'] = Lang::t('%d Kb', is_numeric($filesize) ? (int) $filesize : 0);
         }
@@ -558,14 +571,14 @@ SELECT *
         } else {
             $ids = [];
             foreach ($related_categories as $category) {
-                $ids = array_merge($ids, explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : ''));
+                $ids = array_merge($ids, explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : ''));
             }
             $ids    = array_unique($ids);
             $query  = 'SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')';
             $catMap = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
             foreach ($related_categories as $category) {
                 $cats = [];
-                foreach (explode(',', is_scalar($category['uppercats']) ? (string) $category['uppercats'] : '') as $id) {
+                foreach (explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') as $id) {
                     $cats[] = $catMap[$id];
                 }
                 $tpl->append('related_categories', ServiceLocator::get(HtmlService::class)->getCatDisplayName($cats));
@@ -581,12 +594,16 @@ SELECT *
 
         $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
         $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;
-        if ($nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
-            && !str_contains(is_scalar($_SERVER['HTTP_USER_AGENT'] ?? null) ? (string) $_SERVER['HTTP_USER_AGENT'] : '', 'Chrome/')
+        /** @var mixed $httpUserAgentRaw */
+        $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $httpUserAgent    = is_string($httpUserAgentRaw) ? $httpUserAgentRaw : '';
+        if ($nextPic !== null && $nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
+            && !str_contains($httpUserAgent, 'Chrome/')
         ) {
             $derivRaw   = ServiceLocator::get(SessionService::class)->getSessionVar('picture_deriv', Config::derivativeDefaultSize());
             $derivType  = is_string($derivRaw) ? $derivRaw : Config::derivativeDefaultSize();
-            $nextDerivs = is_array($nextPic['derivatives'] ?? null) ? $nextPic['derivatives'] : [];
+            $nextDerivsRaw = $nextPic['derivatives'] ?? null;
+            $nextDerivs = is_array($nextDerivsRaw) ? $nextDerivsRaw : [];
             $nextDeriv  = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
             if ($nextDeriv !== null) {
                 $tpl->assign('U_PREFETCH', $nextDeriv->getUrl());
@@ -616,7 +633,7 @@ SELECT *
         PageHeaderRenderer::render($title, isset($refresh) && is_int($refresh) ? $refresh : null, $url_link ?? null);
         EventDispatcher::notify('loc_end_picture');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        if ($page['slideshow'] && Config::lightSlideshow()) {
+        if ($page['slideshow'] === true && Config::lightSlideshow()) {
             $tpl->pparse('slideshow');
         } else {
             $tpl->parsePictureButtons();

@@ -16,7 +16,7 @@ use Symfony\Component\Cache\PruneableInterface;
  * (e.g. the pool returned by CacheFactory::create()). When called without
  * arguments, a FilesystemAdapter pointing at the data/cache directory is used.
  */
-class PersistentFileCache extends PersistentCache
+final class PersistentFileCache extends PersistentCache
 {
     private readonly CacheItemPoolInterface $pool;
 
@@ -30,11 +30,13 @@ class PersistentFileCache extends PersistentCache
         }
     }
 
+    #[\Override]
     public function getPool(): CacheItemPoolInterface
     {
         return $this->pool;
     }
 
+    #[\Override]
     public function get(string $key, mixed &$value): bool
     {
         $item = $this->pool->getItem($key);
@@ -45,7 +47,8 @@ class PersistentFileCache extends PersistentCache
         return true;
     }
 
-    public function set(string $key, mixed $value, ?int $lifetime = null): bool
+    #[\Override]
+    public function set(string $key, array|string|int|float|bool $value, ?int $lifetime = null): bool
     {
         $item = $this->pool->getItem($key);
         $item->set($value);
@@ -53,6 +56,7 @@ class PersistentFileCache extends PersistentCache
         return $this->pool->save($item);
     }
 
+    #[\Override]
     public function purge(bool $all): bool
     {
         if ($all) {

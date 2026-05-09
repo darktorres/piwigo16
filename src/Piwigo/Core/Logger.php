@@ -20,22 +20,22 @@ use Psr\Log\LogLevel;
  * automatically. Keeps Piwigo's integer severity constants and helper
  * methods for the handful of callers that still reference them.
  */
-class Logger extends AbstractLogger
+final class Logger extends AbstractLogger
 {
     /** Integer severity — higher = more verbose (0=emergency, 7=debug). */
-    public const EMERGENCY = 0;
-    public const ALERT     = 1;
-    public const CRITICAL  = 2;
-    public const ERROR     = 3;
-    public const WARNING   = 4;
-    public const NOTICE    = 5;
-    public const INFO      = 6;
-    public const DEBUG     = 7;
+    public const int EMERGENCY = 0;
+    public const int ALERT     = 1;
+    public const int CRITICAL  = 2;
+    public const int ERROR     = 3;
+    public const int WARNING   = 4;
+    public const int NOTICE    = 5;
+    public const int INFO      = 6;
+    public const int DEBUG     = 7;
 
     /** Disable logging entirely. */
-    public const OFF = -1;
+    public const int OFF = -1;
 
-    public const ARCHIVE_NO_PURGE = -1;
+    public const int ARCHIVE_NO_PURGE = -1;
 
     private readonly MonologLogger $mono;
     private readonly int $configuredSeverity;
@@ -87,10 +87,14 @@ class Logger extends AbstractLogger
     // PSR-3 — the single required implementation
     // -------------------------------------------------------------------------
 
-    /** @param array<mixed> $context */
+    /**
+     * @param array<mixed> $context
+     */
+    #[\Override]
     public function log(mixed $level, string|\Stringable $message, array $context = []): void
     {
-        $this->mono->log($this->psrLevelToMonolog($level), (string) $message, $context);
+        $levelStr = is_string($level) ? $level : (is_scalar($level) ? (string) $level : '');
+        $this->mono->log($this->psrLevelToMonolog($levelStr), (string) $message, $context);
     }
 
     // -------------------------------------------------------------------------
@@ -106,7 +110,7 @@ class Logger extends AbstractLogger
     {
         $files = glob($this->logDir . $this->globPattern);
         $limit = time() - $this->archiveDays * 86400;
-        foreach ($files ?: [] as $file) {
+        foreach ($files !== false ? $files : [] as $file) {
             $mtime = Filesystem::tryFileMtime($file);
             if ($mtime !== false && $mtime < $limit) {
                 Filesystem::tryUnlink($file);
@@ -148,12 +152,9 @@ class Logger extends AbstractLogger
     // Private
     // -------------------------------------------------------------------------
 
-    private function psrLevelToMonolog(mixed $level): MonologLevel
+    private function psrLevelToMonolog(string $level): MonologLevel
     {
-        if (!is_string($level) && !($level instanceof \Stringable)) {
-            throw new InvalidArgumentException('Log level must be a string, got: ' . gettype($level));
-        }
-        $levelStr = (string) $level;
+        $levelStr = $level;
         return match ($levelStr) {
             LogLevel::EMERGENCY => MonologLevel::Emergency,
             LogLevel::ALERT     => MonologLevel::Alert,

@@ -10,11 +10,13 @@ use Piwigo\Config\ConfigLoader;
 
 final class ConfigLoaderApplyDefaultsTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         Config::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Config::reset();

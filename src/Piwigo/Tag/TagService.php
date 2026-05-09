@@ -100,7 +100,8 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
 
         $tags = [];
         foreach ($rows as $row) {
-            $rowId = is_numeric($row['id']) ? (int) $row['id'] : (is_scalar($row['id']) ? (string) $row['id'] : '');
+            $rowIdRaw = $row['id'];
+            $rowId = is_numeric($rowIdRaw) ? (int) $rowIdRaw : (is_string($rowIdRaw) ? $rowIdRaw : '');
             if (isset($tagCounters[$rowId])) {
                 $row['counter']  = is_scalar($tagCounters[$rowId]) ? intval($tagCounters[$rowId]) : 0;
                 $row['name_raw'] = $row['name'];
@@ -144,7 +145,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         $tagAverageCount    = $totalCount / count($tags);
         $thresholdOfLevel   = [];
         for ($i = 1; $i < Config::tagsLevels(); $i++) {
-            $thresholdOfLevel[$i] = 2 * $i * $tagAverageCount / Config::tagsLevels();
+            $thresholdOfLevel[$i] = 2.0 * (float) $i * (float) $tagAverageCount / (float) Config::tagsLevels();
         }
 
         foreach ($tags as &$tag) {
@@ -201,14 +202,14 @@ SELECT id
             );
         }
 
-        $query .= (empty($extraImagesWhereSql) ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
+        $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
   GROUP BY id';
 
         if ($mode == 'AND' and count($tagIds) > 1) {
             $query .= '
   HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
         }
-        $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
+        $query .= "\n" . (($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy);
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
     }

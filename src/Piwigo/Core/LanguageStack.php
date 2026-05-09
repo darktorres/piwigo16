@@ -153,6 +153,7 @@ final class LanguageStack
         $lang = [];
         $lang_info = [];
         if (is_readable($path)) {
+            /** @psalm-suppress UnresolvableInclude */
             include $path;
         }
         self::mergeLang($lang);

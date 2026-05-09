@@ -10,8 +10,10 @@ use Piwigo\Ws\PwgError;
 
 final class PwgRestEncoderTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgRestEncoder $encoder;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->encoder = new PwgRestEncoder();

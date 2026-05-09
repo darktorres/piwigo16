@@ -22,7 +22,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
-class Updates
+final class Updates
 {
     /** @var string[] */
     public $types = [];
@@ -51,15 +51,9 @@ class Updates
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
-        foreach ($this->types as $type) {
-            if ($type === 'plugins') {
-                $this->plugins = new Plugins();
-            } elseif ($type === 'themes') {
-                $this->themes = new Themes();
-            } else {
-                $this->languages = new Languages();
-            }
-        }
+        $this->plugins = new Plugins();
+        $this->themes = new Themes();
+        $this->languages = new Languages();
     }
 
     /** @return array<string, array<mixed>> */
@@ -110,8 +104,10 @@ class Updates
     {
         $_SESSION['need_update'.AppInfo::VERSION] = null;
 
+        $result = '';
         if (preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
-          and ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)) {
+          and ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)
+          and is_string($result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
             $_SESSION['need_update'.AppInfo::VERSION] = version_compare(AppInfo::VERSION, $new_version, '<');
@@ -138,7 +134,7 @@ class Updates
           ];
 
         [$env, $build_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
-        $build_version = is_scalar($build_version) ? (string) $build_version : '';
+        $build_version = is_string($build_version) ? $build_version : '';
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
             $actual_branch = AppInfo::branchFromVersion(
@@ -152,7 +148,8 @@ class Updates
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
 
-            if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result)) {
+            $result = '';
+            if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) && is_string($result)) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -236,7 +233,7 @@ class Updates
             $new_versions,
             array_fill_keys(['minor', 'major'], 1)
         );
-        $new_versions_strings = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $new_versions_intersected);
+        $new_versions_strings = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $new_versions_intersected);
         $new_versions_string = join(' & ', $new_versions_strings);
 
         if (empty($new_versions_string)) {
@@ -253,8 +250,8 @@ class Updates
             $notify = true;
         } else {
             $lastNotifArr = StringUtil::safeUnserialize(Config::updateNotifyLastNotification() ?? '');
-            $last_notification = is_scalar($lastNotifArr['notified_on'] ?? null) ? (string) $lastNotifArr['notified_on'] : '';
-            $last_notif_version = is_scalar($lastNotifArr['version'] ?? null) ? (string) $lastNotifArr['version'] : '';
+            $last_notification = is_string($lastNotifArr['notified_on'] ?? null) ? $lastNotifArr['notified_on'] : '';
+            $last_notif_version = is_string($lastNotifArr['version'] ?? null) ? $lastNotifArr['version'] : '';
 
             if ($new_versions_string != $last_notif_version) {
                 $notify = true;
@@ -315,19 +312,20 @@ class Updates
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
-            if (!preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+            if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
-                $version = is_scalar($pem_ver0_name) ? (string) $pem_ver0_name : $version;
+                $version = is_string($pem_ver0_name) ? $pem_ver0_name : $version;
             }
             $branch = AppInfo::branchFromVersion($version);
             foreach ($pem_versions as $pem_version) {
                 if (!is_array($pem_version) || !isset($pem_version['name'], $pem_version['id'])) {
                     continue;
                 }
-                $pemVersionName = is_scalar($pem_version['name']) ? (string) $pem_version['name'] : '';
-                $pemVersionId = is_scalar($pem_version['id']) ? (string) $pem_version['id'] : '';
+                $pemVersionName = is_string($pem_version['name']) ? $pem_version['name'] : '';
+                $pemVersionId = is_string($pem_version['id']) ? $pem_version['id'] : '';
                 if (str_starts_with($pemVersionName, $branch)) {
                     $versions_to_check[] = $pemVersionId;
                 }
@@ -365,7 +363,7 @@ class Updates
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data, $post_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data, $post_data) && is_string($result)) {
             $pem_exts = StringUtil::safeUnserialize($result);
             if ($pem_exts === []) {
                 return false;
@@ -438,11 +436,15 @@ class Updates
                         continue;
                     }
 
-                    if (!ServiceLocator::get(StringUtil::class)->safeVersionCompare($fs_ext_item['version'], is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '', '>=')) {
+                    $fsExtVersionRaw = $fs_ext_item['version'] ?? null;
+                    $fsExtVersion    = is_string($fsExtVersionRaw) ? $fsExtVersionRaw : '';
+                    $extRevNameRaw   = $ext_info['revision_name'] ?? null;
+                    $extRevName      = is_string($extRevNameRaw) ? $extRevNameRaw : '';
+                    if (ServiceLocator::get(StringUtil::class)->safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
                         if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;
                         } else {
-                            $_SESSION['extensions_need_update'][$type][$ext_id] = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
+                            $_SESSION['extensions_need_update'][$type][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
                         }
                     }
                 }
@@ -460,14 +462,14 @@ class Updates
         $extensionsNeedUpdate = is_array($_SESSION['extensions_need_update'] ?? null) ? $_SESSION['extensions_need_update'] : [];
         foreach ($this->types as $type) {
             $typeUpdates = is_array($extensionsNeedUpdate[$type] ?? null) ? $extensionsNeedUpdate[$type] : [];
-            if (!empty($typeUpdates)) {
+            if (count($typeUpdates) > 0) {
                 $fs = 'fs_'.$type;
                 foreach ($this->getFsByType($type) as $ext_id => $fs_ext) {
-                    $need_update_version = is_scalar($typeUpdates[$ext_id] ?? null)
-                        ? (string) $typeUpdates[$ext_id]
+                    $need_update_version = is_string($typeUpdates[$ext_id] ?? null)
+                        ? $typeUpdates[$ext_id]
                         : '';
                     if (isset($typeUpdates[$ext_id])
-                      and ServiceLocator::get(StringUtil::class)->safeVersionCompare(is_scalar($fs_ext['version'] ?? null) ? (string) $fs_ext['version'] : '', $need_update_version, '>=')) {
+                      and ServiceLocator::get(StringUtil::class)->safeVersionCompare(is_string($fs_ext['version'] ?? null) ? $fs_ext['version'] : '', $need_update_version, '>=') === true) {
                         // Extension have been upgraded
                         $this->checkExtensions();
                         break;
@@ -500,7 +502,8 @@ class Updates
 
     public function getMergedExtensions(string $version): void
     {
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($this->merged_extension_url, $result)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($this->merged_extension_url, $result) && is_string($result)) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -516,7 +519,7 @@ class Updates
     public static function processObsoleteList(string $file): void
     {
         if (file_exists(PHPWG_ROOT_PATH.$file)
-          and $old_files = file(PHPWG_ROOT_PATH.$file, FILE_IGNORE_NEW_LINES)) {
+          and ($old_files = file(PHPWG_ROOT_PATH.$file, FILE_IGNORE_NEW_LINES)) !== false) {
             $old_files[] = $file;
             foreach ($old_files as $old_file) {
                 $path = PHPWG_ROOT_PATH.$old_file;
@@ -570,13 +573,14 @@ class Updates
             while (!$end) {
                 $chunk_num++;
                 if (ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
+                  and is_string($result)
                   and $input = StringUtil::safeUnserialize($result)) {
                     if (0 == ($input['remaining'] ?? -1)) {
                         $end = true;
                     }
                     if (is_resource($zip)) {
                         $inputData = $input['data'] ?? '';
-                        fwrite($zip, base64_decode(is_scalar($inputData) ? (string) $inputData : ''));
+                        fwrite($zip, base64_decode(is_string($inputData) ? $inputData : ''));
                     }
                 } else {
                     $end = true;
@@ -586,7 +590,8 @@ class Updates
                 fclose($zip);
             }
 
-            if (Filesystem::tryFilesize($filename)) {
+            $filesize = Filesystem::tryFilesize($filename);
+            if ($filesize !== false && $filesize > 0) {
                 $zip = new \PclZip($filename);
                 $resultRaw = $zip->extract(
                     PCLZIP_OPT_PATH,
@@ -605,8 +610,8 @@ class Updates
                         if (!is_array($extract)) {
                             continue;
                         }
-                        $extractStatus = is_scalar($extract['status'] ?? null) ? (string) $extract['status'] : '';
-                        $extractFilename = is_scalar($extract['filename'] ?? null) ? (string) $extract['filename'] : '';
+                        $extractStatus = is_string($extract['status'] ?? null) ? $extract['status'] : '';
+                        $extractFilename = is_string($extract['filename'] ?? null) ? $extract['filename'] : '';
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
@@ -621,7 +626,8 @@ class Updates
                                   0755,
                                   PCLZIP_OPT_REPLACE_NEWER
                               ))
-                              and isset($res[0]) && is_array($res[0])
+                              and isset($res[0])
+                              /** @phpstan-ignore-next-line offsetAccess.nonOffsetAccessible */
                               and is_string($res[0]['status'] ?? null)
                               and $res[0]['status'] == 'ok') {
                                 continue;
@@ -676,13 +682,13 @@ class Updates
 
     // Compare version number with a letter suffix
     // Similar to version_compare with "<" sign
-    public function containerVersionCompare(string $v1, string $v2): bool|int|null
+    public function containerVersionCompare(string $v1, string $v2): bool|int
     {
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
-        $v1_semantic_ver = substr((string) $v1, 0, -1);
-        $v1_sub_ver = substr((string) $v1, -1);
-        $v2_semantic_ver = substr((string) $v2, 0, -1);
-        $v2_sub_ver = substr((string) $v2, -1);
+        $v1_semantic_ver = substr($v1, 0, -1);
+        $v1_sub_ver = substr($v1, -1);
+        $v2_semantic_ver = substr($v2, 0, -1);
+        $v2_sub_ver = substr($v2, -1);
 
         $res = version_compare($v1_semantic_ver, $v2_semantic_ver);
 

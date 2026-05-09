@@ -21,6 +21,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class UpgradeFeedController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         if (!Config::checkUpgradeFeed()) {
@@ -32,7 +33,7 @@ final class UpgradeFeedController implements ControllerInterface
         define('PREFIX_TABLE', Config::dbPrefix());
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
+        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
         $existing = UpgradeService::getAvailableUpgradeIds();
         $to_apply = array_diff($existing, $applied);
 
@@ -40,16 +41,18 @@ final class UpgradeFeedController implements ControllerInterface
         echo count($to_apply) . ' upgrades to apply';
 
         foreach ($to_apply as $upgrade_id) {
-            unset($upgrade_description);
+            $upgrade_description = null;
             echo "\n\n";
             echo '=== upgrade ' . $upgrade_id . "\n";
 
+            /** @psalm-suppress UnresolvableInclude */
             require(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
+            /** @var string|null $upgrade_description -- may be set by the required migration file */
 
             Dml::singleInsert(PREFIX_TABLE . 'upgrade', [
                 'id'          => $upgrade_id,
                 'applied'     => new \DateTimeImmutable()->format('Y-m-d H:i:s'),
-                'description' => is_string($upgrade_description ?? null) ? $upgrade_description : '',
+                'description' => is_string($upgrade_description) ? $upgrade_description : '',
             ]);
         }
 

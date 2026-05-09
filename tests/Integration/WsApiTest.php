@@ -18,17 +18,19 @@ final class WsApiTest extends IntegrationTestCase
     private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
 
     /** @var non-empty-string */
-    private string $cookieJar;
+    private string $cookieJar = '/tmp/piwigo_ws_test_default.txt';
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . getmypid() . '.txt';
+        $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . (int) getmypid() . '.txt';
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
         $this->markTestInstalled();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         if (file_exists($this->cookieJar)) {
@@ -102,13 +104,16 @@ final class WsApiTest extends IntegrationTestCase
     {
         // Piwigo may return HTTP 401 or JSON stat='fail' for unauthenticated admin calls.
         $url = $this->baseUrl . '/index.php?/ws&method=pwg.users.getList&format=json';
-        $ch = curl_init($url);
+        $chRaw = curl_init($url);
+        self::assertNotFalse($chRaw, 'curl_init failed');
+        $ch = $chRaw;
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
-        $body   = (string) curl_exec($ch);
+        $execResult = curl_exec($ch);
+        $body   = is_string($execResult) ? $execResult : '';
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
         $decoded = json_decode($body, true);
@@ -203,7 +208,9 @@ final class WsApiTest extends IntegrationTestCase
      */
     private function curlRequest(string $url, bool $post, array $postFields): array
     {
-        $ch = curl_init($url);
+        $chRaw = curl_init($url);
+        self::assertNotFalse($chRaw, 'curl_init failed');
+        $ch = $chRaw;
         $opts = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -216,7 +223,8 @@ final class WsApiTest extends IntegrationTestCase
             $opts[CURLOPT_POSTFIELDS] = http_build_query($postFields);
         }
         curl_setopt_array($ch, $opts);
-        $body = (string) curl_exec($ch);
+        $execResult = curl_exec($ch);
+        $body = is_string($execResult) ? $execResult : '';
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 

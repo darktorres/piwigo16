@@ -43,13 +43,14 @@ final readonly class CommentService
             return $action;
         }
 
-        $linkCount = preg_match_all(
+        $linkCountResult = preg_match_all(
             '/https?:\/\//',
-            is_scalar($comment['content']) ? (string) $comment['content'] : '',
+            is_string($comment['content'] ?? null) ? $comment['content'] : '',
             $matches
-        ) ?: 0;
+        );
+        $linkCount = $linkCountResult !== false ? $linkCountResult : 0;
 
-        if (str_contains(is_scalar($comment['author']) ? (string) $comment['author'] : '', 'http://')) {
+        if (str_contains(is_string($comment['author'] ?? null) ? $comment['author'] : '', 'http://')) {
             $linkCount++;
         }
 
@@ -73,8 +74,8 @@ final readonly class CommentService
     public function insertUserComment(array &$comm, string $key, array &$infos): string
     {
         $comm = array_merge($comm, [
-            'ip'    => $_SERVER['REMOTE_ADDR'],
-            'agent' => $_SERVER['HTTP_USER_AGENT'],
+            'ip'    => $_SERVER['REMOTE_ADDR'] ?? '',
+            'agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
         ]);
 
         $infos = [];
@@ -95,7 +96,7 @@ final readonly class CommentService
             $comm['author_id'] = Config::guestId();
             if ($comm['author'] != 'guest') {
                 $usernameField = Config::userFields()['username'];
-                $authorStr     = is_scalar($comm['author']) ? (string) $comm['author'] : '';
+                $authorStr     = is_string($comm['author']) ? $comm['author'] : '';
                 $count = $this->repo->countByUsername($usernameField, $authorStr);
                 if ($count > 0) {
                     $infos[]       = Lang::t('This login is already used by another user');
@@ -112,7 +113,8 @@ final readonly class CommentService
             $commentAction = 'reject';
         }
 
-        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($key, is_scalar($comm['image_id']) ? (string) $comm['image_id'] : '')) {
+        $commImageIdRaw = $comm['image_id'] ?? null;
+        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($key, is_string($commImageIdRaw) ? $commImageIdRaw : '')) {
             $commentAction = 'reject';
             if (!is_array($_POST['cr'] ?? null)) {
                 $_POST['cr'] = [];
@@ -128,7 +130,7 @@ final readonly class CommentService
                 }
                 $_POST['cr'][] = 'website_url';
             } else {
-                $comm['website_url'] = strip_tags(is_scalar($comm['website_url']) ? (string) $comm['website_url'] : '');
+                $comm['website_url'] = strip_tags(is_string($comm['website_url']) ? $comm['website_url'] : '');
                 if (!preg_match('/^https?/i', $comm['website_url'])) {
                     $comm['website_url'] = 'http://' . $comm['website_url'];
                 }
@@ -147,12 +149,14 @@ final readonly class CommentService
                 $infos[]       = Lang::t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
-        } elseif (!ServiceLocator::get(StringUtil::class)->emailCheckFormat(is_scalar($comm['email']) ? (string) $comm['email'] : '')) {
+        } elseif (!ServiceLocator::get(StringUtil::class)->emailCheckFormat(is_string($comm['email']) ? $comm['email'] : '')) {
             $infos[]       = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             $commentAction = 'reject';
         }
 
-        $ipComponents = explode('.', is_scalar($comm['ip']) ? (string) $comm['ip'] : '');
+        $rawCommIp = $comm['ip'];
+        /** @psalm-suppress RedundantCondition,TypeDoesNotContainType */
+        $ipComponents = explode('.', is_string($rawCommIp) ? $rawCommIp : '');
         if (count($ipComponents) > 3) {
             array_pop($ipComponents);
         }
@@ -160,7 +164,7 @@ final readonly class CommentService
 
         if ($commentAction != 'reject' and Config::antiFloodTime() > 0 and !PermissionService::get()->isAdmin()) {
             $counter = $this->repo->countRecentByAuthor(
-                (int) $comm['author_id'],
+                $comm['author_id'],
                 Config::antiFloodTime(),
                 PermissionService::get()->isClassicUser() ? '' : $anonymousId
             );
@@ -177,15 +181,22 @@ final readonly class CommentService
         $commentAction = (string) EventDispatcher::dispatch('user_comment_check', $commentAction, $comm);
 
         if ($commentAction != 'reject') {
+            $commAuthorRaw  = $comm['author'] ?? null;
+            /** @phpstan-ignore-next-line nullCoalesce.offset */
+            $commIpRaw      = $comm['ip'] ?? null;
+            $commContentRaw = $comm['content'] ?? null;
+            $commImgIdRaw   = $comm['image_id'] ?? null;
+            $commWebsiteRaw = $comm['website_url'] ?? null;
+            $commEmailRaw   = $comm['email'] ?? null;
             $comm['id'] = $this->repo->insert([
-                'author'       => is_scalar($comm['author']) ? (string) $comm['author'] : '',
-                'author_id'    => (int) $comm['author_id'],
-                'anonymous_id' => is_scalar($comm['ip']) ? (string) $comm['ip'] : '',
-                'content'      => is_scalar($comm['content']) ? (string) $comm['content'] : '',
+                'author'       => is_string($commAuthorRaw) ? $commAuthorRaw : '',
+                'author_id'    => $comm['author_id'],
+                'anonymous_id' => is_string($commIpRaw) ? $commIpRaw : '',
+                'content'      => is_string($commContentRaw) ? $commContentRaw : '',
                 'validated'    => $commentAction === 'validate',
-                'image_id'     => is_scalar($comm['image_id']) ? (int)    $comm['image_id'] : 0,
-                'website_url'  => !empty($comm['website_url']) ? (is_scalar($comm['website_url']) ? (string) $comm['website_url'] : null) : null,
-                'email'        => !empty($comm['email']) ? (is_scalar($comm['email']) ? (string) $comm['email'] : null) : null,
+                'image_id'     => is_scalar($commImgIdRaw) ? (int) $commImgIdRaw : 0,
+                'website_url'  => (is_string($commWebsiteRaw) && $commWebsiteRaw !== '') ? $commWebsiteRaw : null,
+                'email'        => (is_string($commEmailRaw) && $commEmailRaw !== '') ? $commEmailRaw : null,
             ]);
 
             $this->invalidateUserCacheNbComments();
@@ -195,10 +206,13 @@ final readonly class CommentService
 
                 $commentUrl = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => (string) $comm['id']]);
 
+                $commAuthorStr  = is_string($commAuthorRaw) ? $commAuthorRaw : '';
+                $commEmailStr   = is_string($commEmailRaw) ? $commEmailRaw : '';
+                $commContentStr = is_string($commContentRaw) ? $commContentRaw : '';
                 $keyargsContent = [
-                    LangService::get()->getL10nArgs('Author: %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
-                    LangService::get()->getL10nArgs('Email: %s', stripslashes(is_scalar($comm['email']) ? (string) $comm['email'] : '')),
-                    LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_scalar($comm['content']) ? (string) $comm['content'] : '')),
+                    LangService::get()->getL10nArgs('Author: %s', stripslashes($commAuthorStr)),
+                    LangService::get()->getL10nArgs('Email: %s', stripslashes($commEmailStr)),
+                    LangService::get()->getL10nArgs('Comment: %s', stripslashes($commContentStr)),
                     LangService::get()->getL10nArgs(''),
                     LangService::get()->getL10nArgs('Manage this user comment: %s', $commentUrl),
                 ];
@@ -208,7 +222,7 @@ final readonly class CommentService
                 }
 
                 ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
-                    LangService::get()->getL10nArgs('Comment by %s', stripslashes(is_scalar($comm['author']) ? (string) $comm['author'] : '')),
+                    LangService::get()->getL10nArgs('Comment by %s', stripslashes($commAuthorStr)),
                     $keyargsContent
                 );
             }
@@ -233,7 +247,7 @@ final readonly class CommentService
             $this->invalidateUserCacheNbComments();
 
             $this->emailAdmin('delete', [
-                'author'     => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '',
+                'author'     => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '',
                 'comment_id' => $commentId,
             ]);
             EventDispatcher::notify('user_comment_deletion', $commentId);
@@ -254,7 +268,7 @@ final readonly class CommentService
     {
         $commentAction = 'validate';
 
-        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($postKey, is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '')) {
+        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($postKey, is_string($comment['image_id'] ?? null) ? $comment['image_id'] : '')) {
             $commentAction = 'reject';
         } elseif (!Config::commentsValidation() or PermissionService::get()->isAdmin()) {
             $commentAction = 'validate';
@@ -266,11 +280,11 @@ final readonly class CommentService
         $commentAction = (string) EventDispatcher::dispatch(
             'user_comment_check',
             $commentAction,
-            array_merge($comment, ['author' => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : ''])
+            array_merge($comment, ['author' => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : ''])
         );
 
         if (!empty($comment['website_url'])) {
-            $wUrl              = is_scalar($comment['website_url']) ? (string) $comment['website_url'] : '';
+            $wUrl              = is_string($comment['website_url']) ? $comment['website_url'] : '';
             $comment['website_url'] = strip_tags($wUrl);
             if (!preg_match('/^https?/i', $comment['website_url'])) {
                 $comment['website_url'] = 'http://' . $comment['website_url'];
@@ -286,8 +300,8 @@ final readonly class CommentService
             $result = $this->repo->update(
                 (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
                 [
-                    'content'     => is_scalar($comment['content']) ? (string) $comment['content'] : '',
-                    'website_url' => !empty($comment['website_url']) ? (is_scalar($comment['website_url']) ? (string) $comment['website_url'] : null) : null,
+                    'content'     => is_string($comment['content'] ?? null) ? $comment['content'] : '',
+                    'website_url' => !empty($comment['website_url']) ? (is_string($comment['website_url']) ? $comment['website_url'] : null) : null,
                     'validated'   => $commentAction === 'validate',
                 ],
                 $updateAuthorId
@@ -295,23 +309,23 @@ final readonly class CommentService
 
             if ($result and Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction) {
 
-                $commentUrl     = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0']);
+                $commentUrl     = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_string($comment['comment_id'] ?? null) ? $comment['comment_id'] : '0']);
                 $keyargsContent = [
-                    LangService::get()->getL10nArgs('Author: %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
-                    LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : '')),
+                    LangService::get()->getL10nArgs('Author: %s', stripslashes(is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '')),
+                    LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_string($comment['content'] ?? null) ? $comment['content'] : '')),
                     LangService::get()->getL10nArgs(''),
                     LangService::get()->getL10nArgs('Manage this user comment: %s', $commentUrl),
                     LangService::get()->getL10nArgs('(!) This comment requires validation'),
                 ];
 
                 ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
-                    LangService::get()->getL10nArgs('Comment by %s', stripslashes(is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '')),
+                    LangService::get()->getL10nArgs('Comment by %s', stripslashes(is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '')),
                     $keyargsContent
                 );
             } elseif ($result) {
                 $this->emailAdmin('edit', [
-                    'author'  => is_scalar($globalUser['username'] ?? null) ? (string) $globalUser['username'] : '',
-                    'content' => stripslashes(is_scalar($comment['content']) ? (string) $comment['content'] : ''),
+                    'author'  => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '',
+                    'content' => stripslashes(is_string($comment['content'] ?? null) ? $comment['content'] : ''),
                 ]);
             }
         }
@@ -333,17 +347,24 @@ final readonly class CommentService
         }
 
 
-        $keyargsContent = [LangService::get()->getL10nArgs('Author: %s', $comment['author'])];
+        $authorRaw    = $comment['author'] ?? null;
+        $authorStr    = is_scalar($authorRaw) ? (string) $authorRaw : '';
+        $commentIdRaw = $comment['comment_id'] ?? null;
+        $commentIdStr = is_scalar($commentIdRaw) ? (string) $commentIdRaw : '';
+        $contentRaw   = $comment['content'] ?? null;
+        $contentStr   = is_scalar($contentRaw) ? (string) $contentRaw : '';
+
+        $keyargsContent = [LangService::get()->getL10nArgs('Author: %s', $authorStr)];
 
         if ($action == 'delete') {
-            $keyargsContent[] = LangService::get()->getL10nArgs('This author removed the comment with id %d', $comment['comment_id']);
+            $keyargsContent[] = LangService::get()->getL10nArgs('This author removed the comment with id %d', $commentIdStr);
         } else {
             $keyargsContent[] = LangService::get()->getL10nArgs('This author modified following comment:');
-            $keyargsContent[] = LangService::get()->getL10nArgs('Comment: %s', $comment['content']);
+            $keyargsContent[] = LangService::get()->getL10nArgs('Comment: %s', $contentStr);
         }
 
         ServiceLocator::get(MailService::class)->pwgMailNotificationAdmins(
-            LangService::get()->getL10nArgs('Comment by %s', $comment['author']),
+            LangService::get()->getL10nArgs('Comment by %s', $authorStr),
             $keyargsContent
         );
     }

@@ -11,10 +11,11 @@ use ReflectionClass;
 
 final class ScriptLoaderTest extends TestCase
 {
-    private string $realManifest;
-    private string $backupManifest;
+    private string $realManifest = '';
+    private string $backupManifest = '';
     private bool $manifestExisted = false;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->realManifest = PHPWG_ROOT_PATH . 'dist/manifest.json';
@@ -26,6 +27,7 @@ final class ScriptLoaderTest extends TestCase
         $this->resetManifestCache();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         $this->resetManifestCache();
@@ -160,7 +162,8 @@ final class ScriptLoaderTest extends TestCase
         if (!is_dir($distDir)) {
             mkdir($distDir, 0755, true);
         }
-        file_put_contents($this->realManifest, json_encode($data));
+        $encoded = json_encode($data);
+        file_put_contents($this->realManifest, $encoded !== false ? $encoded : '{}');
         if ($resetCache) {
             $this->resetManifestCache();
         }

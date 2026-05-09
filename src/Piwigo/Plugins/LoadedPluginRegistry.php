@@ -63,7 +63,8 @@ final class LoadedPluginRegistry
             $null = null;
             return $null;
         }
-        return self::$plugins[$id]['plugin_data'];
+        $ref = &self::$plugins[$id]['plugin_data'];
+        return $ref;
     }
 
     public static function reset(): void

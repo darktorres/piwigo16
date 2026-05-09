@@ -17,7 +17,7 @@ final class PreferencesService
     public function getBrowserLanguage(): false|int|string
     {
         $languageHeaderRaw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
-        $languageHeader    = is_scalar($languageHeaderRaw) ? (string) $languageHeaderRaw : '';
+        $languageHeader    = is_string($languageHeaderRaw) ? $languageHeaderRaw : '';
         if ($languageHeader == '') {
             return false;
         }
@@ -50,10 +50,12 @@ final class PreferencesService
         }
 
         foreach ($qValues as $i => $qValue) {
-            if (array_key_exists($acceptLanguagesFull[$i], $languagesAvailable)) {
-                return $languagesAvailable[$acceptLanguagesFull[$i]];
-            } elseif (array_key_exists($acceptLanguagesShort[$i], $languagesAvailable)) {
-                return $languagesAvailable[$acceptLanguagesShort[$i]];
+            $fullKey  = strtolower($acceptLanguagesFull[$i] ?? '');
+            $shortKey = strtolower($acceptLanguagesShort[$i] ?? '');
+            if ($fullKey !== '' && array_key_exists($fullKey, $languagesAvailable)) {
+                return $languagesAvailable[$fullKey];
+            } elseif ($shortKey !== '' && array_key_exists($shortKey, $languagesAvailable)) {
+                return $languagesAvailable[$shortKey];
             }
         }
 
@@ -69,7 +71,7 @@ final class PreferencesService
             ->updatePreferences(CurrentUser::get()->id, serialize($preferences));
     }
 
-    public function userprefsUpdateParam(mixed $param, mixed $value): void
+    public function userprefsUpdateParam(string $param, mixed $value): void
     {
         $user = &$GLOBALS['user'];
         if (!is_array($user)) {
@@ -85,12 +87,17 @@ final class PreferencesService
             $user['preferences'] = [];
         }
 
-        $paramKey = is_scalar($param) ? (string) $param : '';
+        $paramKey = $param;
         $user['preferences'][$paramKey] = $value;
         $this->userprefsSave();
     }
 
-    public function userprefsDeleteParam(mixed $params): void
+    /**
+     * @param (int|string)[]|string $params
+     *
+     * @psalm-param 'reset_password_forbidden_until'|non-empty-list<array-key> $params
+     */
+    public function userprefsDeleteParam(array|string $params): void
     {
         $user = &$GLOBALS['user'];
         if (!is_array($user)) {
@@ -99,15 +106,12 @@ final class PreferencesService
         if (!is_array($params)) {
             $params = [$params];
         }
-        if (empty($params)) {
-            return;
-        }
 
         if (!isset($user['preferences']) || !is_array($user['preferences'])) {
             $user['preferences'] = [];
         }
         foreach ($params as $param) {
-            $paramKey = is_scalar($param) ? (string) $param : '';
+            $paramKey = $param;
             if ($paramKey !== '' && isset($user['preferences'][$paramKey])) {
                 unset($user['preferences'][$paramKey]);
             }
@@ -116,12 +120,17 @@ final class PreferencesService
         $this->userprefsSave();
     }
 
-    public function userprefsGetParam(mixed $param, mixed $defaultValue = null): mixed
+    /**
+     * @param (int|string)[]|int|null|string|true $defaultValue
+     *
+     * @psalm-param 'classic'|'dark'|'line'|5|10|list<array-key>|null|true $defaultValue
+     */
+    public function userprefsGetParam(string $param, array|string|int|bool|null $defaultValue = null): mixed
     {
         $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $preferences = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
 
-        $key = is_scalar($param) ? (string) $param : '';
+        $key = $param;
         return $preferences[$key] ?? $defaultValue;
     }
 }

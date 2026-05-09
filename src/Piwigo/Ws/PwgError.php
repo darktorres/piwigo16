@@ -9,9 +9,9 @@ namespace Piwigo\Ws;
  * Pure value object — no side effects in the constructor. HTTP status headers
  * are applied by PwgServer::sendResponse() when the response is actually sent.
  */
-class PwgError
+final readonly class PwgError
 {
-    public function __construct(private readonly int|null $_code, private readonly string $_codeText)
+    public function __construct(private int|null $_code, private string $_codeText)
     {
     }
 

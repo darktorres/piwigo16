@@ -15,7 +15,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
-class CheckIntegrity
+final class CheckIntegrity
 {
     /** @var array<string> */
     public array $ignore_list = [];
@@ -47,7 +47,7 @@ class CheckIntegrity
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
-            $this->ignore_list = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $conf_c13y_ignore['list']);
+            $this->ignore_list = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $conf_c13y_ignore['list']);
         } else {
             $ignore_list_changed = true;
             $this->ignore_list = [];
@@ -60,18 +60,23 @@ class CheckIntegrity
         EventDispatcher::notify('list_check_integrity', $this);
 
         // Information
-        if (count($this->retrieve_list) > 0) {
+        /** @var array<mixed> $retrieveList */
+        $retrieveList = $this->retrieve_list;
+        $anomalyCount = count($retrieveList);
+        if ($anomalyCount > 0) {
             if (!isset($GLOBALS['header_notes']) || !is_array($GLOBALS['header_notes'])) {
                 $GLOBALS['header_notes'] = [];
             }
+            /** @psalm-suppress NoValue -- Psalm over-narrows through $GLOBALS array assignment */
             $GLOBALS['header_notes'][] = Translator::get()->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
-                count($this->retrieve_list)
+                $anomalyCount
             );
         }
 
         // Treatments
+        /** @var array<mixed> $c13y_selection_post */
         $c13y_selection_post = is_array($_POST['c13y_selection'] ?? null) ? $_POST['c13y_selection'] : [];
         if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection'])) {
             $corrected_count = 0;
@@ -91,7 +96,7 @@ class CheckIntegrity
                     $fct = $c13y['correction_fct'];
                     $this->retrieve_list[$i]['corrected'] = is_callable($fct) ? call_user_func_array($fct, $args) : false;
 
-                    if ($this->retrieve_list[$i]['corrected']) {
+                    if ($this->retrieve_list[$i]['corrected'] !== false && $this->retrieve_list[$i]['corrected'] !== null && $this->retrieve_list[$i]['corrected'] !== '' && $this->retrieve_list[$i]['corrected'] !== 0) {
                         $corrected_count += 1;
                     } else {
                         $not_corrected_count += 1;
@@ -192,7 +197,8 @@ class CheckIntegrity
                             }
                         } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
-                            $template->append('c13y_do_check', $c13y['id']);
+                            $rawId = $c13y['id'] ?? null;
+                            $template->append('c13y_do_check', is_string($rawId) ? $rawId : (is_int($rawId) ? (string) $rawId : ''));
                             $submit_automatic_correction = true;
                             $can_select = true;
                         } else {
@@ -232,7 +238,7 @@ class CheckIntegrity
     /** @param array<mixed>|null $correction_fct_args */
     public function addAnomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
-        $id = md5($anomaly.(is_callable($correction_fct) ? serialize($correction_fct) : '').serialize($correction_fct_args).$correction_msg);
+        $id = md5($anomaly.(is_callable($correction_fct) ? serialize($correction_fct) : '').serialize($correction_fct_args).($correction_msg ?? ''));
 
         if (in_array($id, $this->ignore_list)) {
             $this->build_ignore_list[] = $id;

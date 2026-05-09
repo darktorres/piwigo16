@@ -12,14 +12,17 @@ use Piwigo\Menu\RegisteredBlock;
 
 final class BlockManagerTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private BlockManager $mgr;
 
+    #[\Override]
     protected function setUp(): void
     {
         Config::reset();
         $this->mgr = new BlockManager('menubar');
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Config::reset();

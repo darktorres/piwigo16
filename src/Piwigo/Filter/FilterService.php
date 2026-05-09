@@ -16,7 +16,8 @@ final class FilterService
 
             $filter_categories = is_array($filter['categories']) ? $filter['categories'] : [];
             foreach ($cats as $cat_id => &$category) {
-                $cat_id_val = is_numeric($category['id']) ? (int) $category['id'] : (is_scalar($category['id']) ? (string) $category['id'] : '');
+                $catIdRaw = $category['id'];
+                $cat_id_val = is_numeric($catIdRaw) ? (int) $catIdRaw : (is_string($catIdRaw) ? $catIdRaw : '');
                 $raw_cat_data = $filter_categories[$cat_id_val] ?? null;
                 $cat_data = is_array($raw_cat_data) ? $raw_cat_data : [];
                 foreach ($upd_fields as $upd_field) {

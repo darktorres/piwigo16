@@ -25,7 +25,7 @@ final readonly class ConfigService
     public static function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {
         $sql  = 'SELECT param, value FROM ' . Tables::config() .
-            (!empty($condition) ? ' WHERE ' . $condition : '');
+            (($condition !== null && $condition !== '') ? ' WHERE ' . $condition : '');
 
         if (ServiceLocator::has(Connection::class)) {
             $conn = ServiceLocator::get(Connection::class);
@@ -35,7 +35,7 @@ final readonly class ConfigService
 
         $rows = $conn->executeQuery($sql)->fetchAllAssociative();
 
-        if (count($rows) === 0 && !empty($condition) && $dieOnConditionWithNoResult) {
+        if (count($rows) === 0 && ($condition !== null && $condition !== '') && $dieOnConditionWithNoResult) {
             HtmlService::fatalError('No configuration data');
         }
 
@@ -46,7 +46,8 @@ final readonly class ConfigService
             } elseif ($val === 'false') {
                 $val = false;
             }
-            Config::override(is_scalar($row['param']) ? (string) $row['param'] : '', $val);
+            /** @var array<mixed>|bool|float|int|string|null $val */
+            Config::override(is_string($row['param'] ?? null) ? $row['param'] : '', $val);
         }
 
         EventDispatcher::notify('load_conf', $condition);
@@ -67,13 +68,15 @@ final readonly class ConfigService
         return true;
     }
 
-    /** @param callable-string|null $parser */
+    /**
+     * @param callable-string|null $parser
+     */
     public function confUpdateParam(string $param, mixed $value, bool $updateGlobal = false, ?string $parser = null): void
     {
         if ($parser !== null) {
             $raw     = call_user_func($parser, $value);
             $dbValue = is_scalar($raw) ? (string) $raw : '';
-        } elseif (is_array($value) || is_object($value)) {
+        } elseif (is_array($value)) {
             $dbValue = serialize($value);
         } else {
             $dbValue = BoolUtil::toString(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
@@ -121,7 +124,12 @@ final readonly class ConfigService
         }
     }
 
-    public function confGetParam(string $param, mixed $defaultValue = null): mixed
+    /**
+     * @param array<mixed>|bool|int|null|string $defaultValue
+     *
+     * @psalm-param 90|604800|array<mixed>|bool|null|string $defaultValue
+     */
+    public function confGetParam(string $param, array|string|int|bool|null $defaultValue = null): mixed
     {
         return Config::raw($param) ?? $defaultValue;
     }

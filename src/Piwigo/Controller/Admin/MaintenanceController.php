@@ -141,7 +141,7 @@ final class MaintenanceController
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'actions') {
             $this->maintenanceActions();
         } elseif ($tab === 'env') {
@@ -168,7 +168,7 @@ final class MaintenanceController
         }
         $maint_actions = $this->maintActions;
 
-        $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
+        $action = $_GET['action'] ?? '';
         $register_activity = true;
 
         switch ($action) {
@@ -226,9 +226,9 @@ final class MaintenanceController
                 $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
-                    if (preg_match('/pwg_uid\|i:(\d+);/', is_scalar($session['data']) ? (string) $session['data'] : '', $matches)) {
+                    if (preg_match('/pwg_uid\|i:(\d+);/', is_string($session['data'] ?? null) ? $session['data'] : '', $matches)) {
                         if (!isset($all_user_ids[$matches[1]])) {
-                            $sessions_to_delete[] = is_scalar($session['id']) ? (string) $session['id'] : '';
+                            $sessions_to_delete[] = is_string($session['id'] ?? null) ? $session['id'] : '';
                         }
                     }
                 }
@@ -262,7 +262,7 @@ final class MaintenanceController
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
                 break;
             case 'derivatives':
-                $types_str = is_string($_GET['type'] ?? null) ? $_GET['type'] : '';
+                $types_str = is_string($rawGetType = $_GET['type'] ?? null) ? $rawGetType : '';
                 $types     = $types_str === 'all' ? ['all'] : explode('_', $types_str);
                 foreach ($types as $type_to_clear) {
                     ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($type_to_clear);
@@ -271,7 +271,8 @@ final class MaintenanceController
                 PageState::current()->addInfo(Lang::t('action successfully performed.'));
                 break;
             case 'check_upgrade':
-                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
+                $result = '';
+                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -286,7 +287,7 @@ final class MaintenanceController
                     }
                     if ('' == $versions['latest']) {
                         PageState::current()->addError(Lang::t('Check for upgrade failed for unknown reasons.'));
-                    } elseif (str_contains((string) ($versions['current'] ?? ''), '%')) {
+                    } elseif (str_contains($versions['current'] ?? '', '%')) {
                         PageState::current()->addInfo(Lang::t('You are running on development sources, no check possible.'));
                     } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                         PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
@@ -380,8 +381,9 @@ final class MaintenanceController
         switch (PwgImage::getLibrary()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
+                $returnarray = [];
                 exec(Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' -version', $returnarray);
-                if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
+                if (!empty($returnarray[0]) && preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                     $library .= ' ' . $match[1];
                 }
                 $tpl->assign('GRAPHICS_LIBRARY', $library);
@@ -428,7 +430,7 @@ final class MaintenanceController
             ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
-        $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
+        $action = $_GET['action'] ?? '';
         switch ($action) {
             case 'phpinfo':  phpinfo();
                 exit();
@@ -467,9 +469,9 @@ final class MaintenanceController
                 $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
-                    if (preg_match('/pwg_uid\|i:(\d+);/', is_scalar($session['data']) ? (string) $session['data'] : '', $matches)) {
+                    if (preg_match('/pwg_uid\|i:(\d+);/', is_string($session['data'] ?? null) ? $session['data'] : '', $matches)) {
                         if (!isset($all_user_ids[$matches[1]])) {
-                            $sessions_to_delete[] = is_scalar($session['id']) ? (string) $session['id'] : '';
+                            $sessions_to_delete[] = is_string($session['id'] ?? null) ? $session['id'] : '';
                         }
                     }
                 }
@@ -495,7 +497,8 @@ final class MaintenanceController
                 ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($dtype);
                 break;
             case 'check_upgrade':
-                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result)) {
+                $result = '';
+                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -510,7 +513,7 @@ final class MaintenanceController
                     }
                     if ('' == $versions['latest']) {
                         PageState::current()->addError(Lang::t('Check for upgrade failed for unknown reasons.'));
-                    } elseif (str_contains((string) ($versions['current'] ?? ''), '%')) {
+                    } elseif (str_contains($versions['current'] ?? '', '%')) {
                         PageState::current()->addInfo(Lang::t('You are running on development sources, no check possible.'));
                     } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                         PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
@@ -563,7 +566,7 @@ final class MaintenanceController
             'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
             'OS'                          => PHP_OS,
-            'CONTAINER_INFO'              => $container_name . (!empty($container_version) ? ' ' . $container_version : ''),
+            'CONTAINER_INFO'              => $container_name . (($container_version !== null && $container_version !== '') ? ' ' . $container_version : ''),
             'PHP_VERSION'                 => phpversion(),
             'DB_ENGINE'                   => 'MySQL',
             'DB_VERSION'                  => $db_version,
@@ -593,7 +596,7 @@ final class MaintenanceController
         }
 
         $installed_on = ServiceLocator::get(AdminService::class)->getInstallationDate();
-        if (!empty($installed_on)) {
+        if ($installed_on !== null && $installed_on !== '') {
             $tpl->assign(['INSTALLED_ON' => ServiceLocator::get(DateService::class)->formatDate($installed_on, ['day', 'month', 'year']), 'INSTALLED_SINCE' => ServiceLocator::get(DateService::class)->timeSince($installed_on, 'day')]);
         }
 
@@ -630,7 +633,7 @@ final class MaintenanceController
                     $object = $object_icon = $action_icon = $action_color = '';
                     $action = $rows['action'];
                     $date = $hour = '';
-                    $detailsRaw = unserialize(is_scalar($rows['details']) ? (string) $rows['details'] : '');
+                    $detailsRaw = unserialize(is_string($rows['details'] ?? null) ? $rows['details'] : '');
                     $details    = is_array($detailsRaw) ? $detailsRaw : [];
                     $detail     = ['type' => 'empty'];
 
@@ -670,7 +673,7 @@ final class MaintenanceController
                                                 $c_text = Lang::t('Display');
                                                 break;
                                             default:          $c_icon = 'icon-cog-alt';
-                                                $c_text = is_scalar($details['config_section']) ? (string) $details['config_section'] : '';
+                                                $c_text = is_string($details['config_section']) ? $details['config_section'] : '';
                                                 break;
                                         }
                                         $detail['type'] = 'config_section';
@@ -682,8 +685,10 @@ final class MaintenanceController
                                     $action_color = 'icon-yellow';
                                     $action = Lang::t('Maintenance');
                                     if (isset($details['maintenance_action'])) {
-                                        $action_detail = is_scalar($details['maintenance_action']) ? (string) $details['maintenance_action'] : '';
-                                        $detail = ['type' => 'maintenance_action', 'icon' => $maint_actions[$action_detail]['icon'] ?? 'icon-cone', 'text' => $maint_actions[$action_detail]['label'] ?? $action_detail];
+                                        $maintActionRaw = $details['maintenance_action'];
+                                        $action_detail = is_string($maintActionRaw) ? $maintActionRaw : '';
+                                        $maint_action_entry = is_array($maint_actions[$action_detail] ?? null) ? $maint_actions[$action_detail] : [];
+                                        $detail = ['type' => 'maintenance_action', 'icon' => $maint_action_entry['icon'] ?? 'icon-cone', 'text' => $maint_action_entry['label'] ?? $action_detail];
                                     }
                                     break;
                                 case 'update':     $action_icon = 'icon-arrows-cw';
@@ -706,7 +711,7 @@ final class MaintenanceController
                             $object_icon = 'icon-puzzle';
                             $object = 'plugin';
                             if (isset($details['plugin_id'])) {
-                                $object = str_replace(['_', '-'], ' ', is_scalar($details['plugin_id']) ? (string) $details['plugin_id'] : '');
+                                $object = str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '');
                             }
                             switch ($rows['action']) {
                                 case 'install':    $action_icon = 'icon-download';
@@ -739,11 +744,11 @@ final class MaintenanceController
                                     $action = Lang::t('Delete');
                                     if (isset($details['db_version'])) {
                                         $detail['type'] = 'db_fs_version';
-                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_scalar($details['db_version']) ? (string) $details['db_version'] : '')];
+                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_string($details['db_version']) ? $details['db_version'] : '')];
                                     }
                                     if (isset($details['fs_version'])) {
                                         $detail['type'] = 'db_fs_version';
-                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_scalar($details['fs_version']) ? (string) $details['fs_version'] : '')];
+                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_string($details['fs_version']) ? $details['fs_version'] : '')];
                                     }
                                     break;
                                 case 'autoupdate': $action_icon = 'icon-arrows-cw';
@@ -760,7 +765,7 @@ final class MaintenanceController
                             $object_icon = 'icon-brush';
                             $object = 'theme';
                             if (isset($details['theme_id'])) {
-                                $object = str_replace(['_', '-'], ' ', is_scalar($details['theme_id']) ? (string) $details['theme_id'] : '');
+                                $object = str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '');
                             }
                             switch ($rows['action']) {
                                 case 'install':    $action_icon = 'icon-download';
@@ -795,14 +800,16 @@ final class MaintenanceController
                     }
 
                     if (isset($details['from_version'])) {
-                        $detail = ['type' => 'from_to', ['icon' => 'icon-flow-branch', 'text' => is_scalar($details['from_version']) ? (string) $details['from_version'] : ''], ['icon' => isset($details['to_version']) ? 'icon-flow-branch' : 'icon-block', 'text' => is_scalar($details['to_version'] ?? null) ? (string) $details['to_version'] : (is_scalar($details['result'] ?? null) ? (string) $details['result'] : '')]];
+                        $toVersionRaw = $details['to_version'] ?? null;
+                        $resultRaw = $details['result'] ?? null;
+                        $detail = ['type' => 'from_to', ['icon' => 'icon-flow-branch', 'text' => is_string($details['from_version']) ? $details['from_version'] : ''], ['icon' => $toVersionRaw !== null ? 'icon-flow-branch' : 'icon-block', 'text' => is_scalar($toVersionRaw) ? (string) $toVersionRaw : (is_scalar($resultRaw) ? (string) $resultRaw : '')]];
                     } elseif (isset($details['version'])) {
-                        $detail = ['type' => 'version', 'icon' => 'icon-flow-branch', 'text' => is_scalar($details['version']) ? (string) $details['version'] : ''];
+                        $detail = ['type' => 'version', 'icon' => 'icon-flow-branch', 'text' => is_string($details['version']) ? $details['version'] : ''];
                     } elseif (isset($details['result'])) {
-                        $detail = ['type' => 'error', 'icon' => 'icon-block', 'text' => is_scalar($details['result']) ? (string) $details['result'] : ''];
+                        $detail = ['type' => 'error', 'icon' => 'icon-block', 'text' => is_string($details['result']) ? $details['result'] : ''];
                     }
 
-                    [$date, $hour] = explode(' ', is_scalar($rows['occured_on']) ? (string) $rows['occured_on'] : '');
+                    [$date, $hour] = explode(' ', is_string($rows['occured_on'] ?? null) ? $rows['occured_on'] : '');
                     $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => $rows['username'], 'date' => ServiceLocator::get(DateService::class)->formatDate($date), 'hour' => $hour, 'detail' => $detail];
                 }
 
@@ -864,10 +871,13 @@ final class MaintenanceController
             $form['display_thumbnail'] = ServiceLocator::get(CookieService::class)->getCookieVar('display_thumbnail', 'no_display_thumbnail');
         }
 
+        $getFilterIp     = $_GET['filter_ip']     ?? null;
+        $getFilterImageId = $_GET['filter_image_id'] ?? null;
+        $getFilterUserId  = $_GET['filter_user_id']  ?? null;
         $form_param = [];
-        $form_param['ip']       = is_scalar($_GET['filter_ip'] ?? null) ? (string) $_GET['filter_ip'] : $form['ip'];
-        $form_param['image_id'] = is_scalar($_GET['filter_image_id'] ?? null) ? (string) $_GET['filter_image_id'] : $form['image_id'];
-        $form_param['user_id']  = is_scalar($_GET['filter_user_id'] ?? null) ? (string) $_GET['filter_user_id'] : '-1';
+        $form_param['ip']       = is_string($getFilterIp) ? $getFilterIp : $form['ip'];
+        $form_param['image_id'] = is_string($getFilterImageId) ? $getFilterImageId : $form['image_id'];
+        $form_param['user_id']  = is_string($getFilterUserId) ? $getFilterUserId : '-1';
 
         if (isset($_GET['filter_ip']) || isset($_GET['filter_image_id']) || isset($_GET['filter_user_id'])) {
             $form['start'] = '';
@@ -1008,13 +1018,14 @@ final class MaintenanceController
         $tabsheet->select('site_maager');
         $tabsheet->assign();
 
-        if (isset($_POST['submit']) && !empty($_POST['galleries_url'])) {
-            $galleries_url = is_scalar($_POST['galleries_url']) ? (string) $_POST['galleries_url'] : '';
+        $rawGalleriesUrl = $_POST['galleries_url'] ?? null;
+        if (isset($_POST['submit']) && isset($_POST['galleries_url']) && $rawGalleriesUrl !== null && $rawGalleriesUrl !== '') {
+            $galleries_url = is_string($rawGalleriesUrl) ? $rawGalleriesUrl : '';
             $is_remote = UrlService::urlIsRemote($galleries_url);
             if ($is_remote) {
                 HtmlService::fatalError('remote sites not supported');
             }
-            $url = preg_replace('/[\/]*$/', '', $galleries_url) . '/';
+            $url = (string) preg_replace('/[\/]*$/', '', $galleries_url) . '/';
             if (!str_starts_with($url, '.')) {
                 $url = './' . $url;
             }
@@ -1046,7 +1057,7 @@ final class MaintenanceController
             $galleries_url = ServiceLocator::get(SiteRepository::class)->findGalleriesUrlById($siteIdSm);
             switch ($_GET['action']) {
                 case 'delete': ServiceLocator::get(CategoryAdminService::class)->deleteSite($page['site']);
-                    PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
+                    PageState::current()->addInfo(($galleries_url ?? '') . ' ' . Lang::t('deleted'));
                     break;
             }
         }
@@ -1061,8 +1072,8 @@ final class MaintenanceController
         $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
 
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
-            $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $is_remote  = UrlService::urlIsRemote(is_scalar($row['galleries_url']) ? (string) $row['galleries_url'] : '');
+            $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '';
+            $is_remote  = UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '');
             $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&amp;site=' . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '&amp;action=';
             $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
@@ -1115,7 +1126,7 @@ final class MaintenanceController
         if (!isset($site_url)) {
             throw new NotFoundException('site ' . $site_id . ' does not exist');
         }
-        $site_url_str  = (string) $site_url;
+        $site_url_str  = $site_url;
         $site_is_remote = UrlService::urlIsRemote($site_url_str);
 
         defined('CURRENT_DATE') or define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
@@ -1191,7 +1202,7 @@ final class MaintenanceController
             $db_fulldirs   = ServiceLocator::get(CategoryAdminService::class)->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
-                $basedir = (string) ($db_fulldirs[(int) $_POST['cat']] ?? '');
+                $basedir = $db_fulldirs[(int) $_POST['cat']] ?? '';
             } else {
                 $basedir = (string) preg_replace('#/*$#', '', $site_url_str);
             }
@@ -1200,7 +1211,7 @@ final class MaintenanceController
             $next_rank   = ['NULL' => 1];
             $conn        = ServiceLocator::get(Connection::class);
             foreach ($conn->executeQuery('SELECT id FROM ' . Tables::categories())->fetchAllAssociative() as $row) {
-                $rowIdKey = is_scalar($row['id']) ? (string) $row['id'] : '';
+                $rowIdKey = is_string($row['id'] ?? null) ? $row['id'] : '';
                 if ($rowIdKey !== '') {
                     $next_rank[$rowIdKey] = 1;
                 }
@@ -1209,7 +1220,8 @@ final class MaintenanceController
                 if (!isset($row['id_uppercat']) || $row['id_uppercat'] == '') {
                     $row['id_uppercat'] = 'NULL';
                 }
-                $ruk = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : 'NULL';
+                $rowIdUppercatRaw = $row['id_uppercat'];
+                $ruk = is_string($rowIdUppercatRaw) ? $rowIdUppercatRaw : 'NULL';
                 $next_rank[$ruk] = $row['next_rank'];
             }
 
@@ -1226,15 +1238,15 @@ final class MaintenanceController
 
             $inserts = [];
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
-                $dir = basename((string) $fulldir);
+                $dir = basename($fulldir);
                 if (preg_match(Config::syncCharsRegex(), $dir)) {
                     $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toString(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toString(Config::newcatDefaultVisible())];
-                    if (isset($db_fulldirs[dirname((string) $fulldir)])) {
-                        $parent    = $db_fulldirs[dirname((string) $fulldir)];
-                        $parentKey = (string) $parent;
+                    if (isset($db_fulldirs[dirname($fulldir)])) {
+                        $parent    = $db_fulldirs[dirname($fulldir)];
+                        $parentKey = $parent;
                         $parentRow = is_array($db_categories[$parent] ?? null) ? $db_categories[$parent] : [];
                         $insert['id_uppercat'] = $parent;
-                        $insert['uppercats']   = (is_scalar($parentRow['uppercats'] ?? null) ? (string) $parentRow['uppercats'] : '') . ',' . $insert['id'];
+                        $insert['uppercats']   = (is_string($parentRow['uppercats'] ?? null) ? $parentRow['uppercats'] : '') . ',' . $insert['id'];
                         $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
                         $insert['rank']        = $nextRankParent;
                         $next_rank[$parentKey] = $nextRankParent + 1;
@@ -1267,7 +1279,7 @@ final class MaintenanceController
                 $category_ids = $category_up = [];
                 foreach ($inserts as $category) {
                     $category_ids[] = $category['id'];
-                    if (!empty($category['id_uppercat'])) {
+                    if (isset($category['id_uppercat']) && $category['id_uppercat'] !== '' && $category['id_uppercat'] !== 0) {
                         $category_up[] = $category['id_uppercat'];
                     }
                 }
@@ -1332,8 +1344,8 @@ final class MaintenanceController
                 $to_delete[] = $db_fulldirs[$fulldir];
                 unset($db_fulldirs[$fulldir]);
                 $infos[] = ['path' => $fulldir, 'info' => Lang::t('deleted')];
-                if (substr_compare((string) $fulldir, '../', 0, 3) == 0) {
-                    $fulldir = substr((string) $fulldir, 3);
+                if (substr_compare($fulldir, '../', 0, 3) == 0) {
+                    $fulldir = substr($fulldir, 3);
                 }
                 $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . Config::derivativeDir() . $fulldir;
             }
@@ -1371,7 +1383,7 @@ final class MaintenanceController
             $start             = StringUtil::get()->getMoment();
             $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
 
-            foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements)) as $path) {
+            foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements)) as $path) {
                 $dirname  = dirname((string) $path);
                 if (!isset($db_fulldirs[$dirname])) {
                     continue;
@@ -1399,7 +1411,7 @@ final class MaintenanceController
             }
 
             if (Config::isFormatsEnabled()) {
-                $db_elements_str  = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $db_elements);
+                $db_elements_str  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements);
                 $db_elements_flip = array_flip($db_elements_str);
                 $existing_ids     = [];
                 foreach (array_intersect_key($fs, $db_elements_flip) as $path => $existing) {
@@ -1463,7 +1475,7 @@ final class MaintenanceController
             $counts['new_elements'] = count($inserts);
 
             $to_delete_elements = [];
-            foreach (array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $db_elements), array_keys($fs)) as $path) {
+            foreach (array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements), array_keys($fs)) as $path) {
                 $found = array_search($path, $db_elements);
                 if ($found !== false) {
                     $to_delete_elements[] = (int) $found;
@@ -1499,8 +1511,8 @@ final class MaintenanceController
                         $opts['recursive'] = false;
                     }
                 }
-                $catIdOpt = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
-                $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdOpt, (int) $site_id, (bool) $opts['recursive'], false);
+                $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
+                $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdOpt, (int) $site_id, $opts['recursive'], false);
                 $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
                 $start = StringUtil::get()->getMoment();
                 $datas = [];
@@ -1512,7 +1524,7 @@ final class MaintenanceController
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
-                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getUpdateAttributes())], $datas);
+                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes())], $datas);
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
             }
@@ -1533,8 +1545,8 @@ final class MaintenanceController
                 }
             }
             $start       = StringUtil::get()->getMoment();
-            $catIdMeta   = is_int($opts['category_id']) || is_string($opts['category_id']) ? $opts['category_id'] : '';
-            $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdMeta, (int) $site_id, (bool) $opts['recursive'], (bool) $opts['only_new']);
+            $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
+            $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdMeta, (int) $site_id, $opts['recursive'], $opts['only_new']);
             $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
             $start = StringUtil::get()->getMoment();
             $datas = $tags_of = [];
@@ -1561,7 +1573,7 @@ final class MaintenanceController
             }
             if (!$simulate) {
                 if (count($datas) > 0) {
-                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
+                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
                 }
                 ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
             }
@@ -1573,7 +1585,7 @@ final class MaintenanceController
 
         $tpl->setFilenames(['update' => 'site_update.tpl']);
         $result_title  = $simulate ? '[' . Lang::t('Simulation') . '] ' : '';
-        $used_metadata = implode(', ', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()));
+        $used_metadata = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()));
 
         $tpl->assign([
             'SITE_URL'       => $site_url_str,
@@ -1592,11 +1604,15 @@ final class MaintenanceController
                 'display_info'          => isset($_POST['display_info']) && $_POST['display_info'] == 1,
                 'add_to_caddie'         => isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1,
                 'subcats_included'      => isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1,
-                'privacy_level_selected' => is_numeric($_POST['privacy_level'] ?? null) ? (int) $_POST['privacy_level'] : 0,
+                'privacy_level_selected' => (function (): int {
+                    $v = $_POST['privacy_level'] ?? null;
+                    return is_numeric($v) ? (int) $v : 0;
+                })(),
                 'meta_all'              => isset($_POST['meta_all']),
                 'meta_empty_overrides'  => isset($_POST['meta_empty_overrides']),
             ];
-            $cat_selected = (isset($_POST['cat']) && is_numeric($_POST['cat'])) ? [(int) $_POST['cat']] : [];
+            $catRaw = $_POST['cat'] ?? null;
+            $cat_selected = is_numeric($catRaw) ? [(int) $catRaw] : [];
         } else {
             $tpl_introduction = ['sync' => 'dirs', 'sync_meta' => true, 'display_info' => false, 'add_to_caddie' => false, 'subcats_included' => true, 'privacy_level_selected' => 0, 'meta_all' => false, 'meta_empty_overrides' => false];
             $cat_selected = [];
@@ -1753,11 +1769,11 @@ final class MaintenanceController
     {
         $date_string = is_scalar($row['year'] ?? null) ? (string) $row['year'] : '2000';
         if (($row['month'] ?? null) !== null) {
-            $date_string .= '-' . (is_scalar($row['month']) ? (string) $row['month'] : '1');
+            $date_string .= '-' . (is_string($row['month']) ? $row['month'] : '1');
             if (($row['day'] ?? null) !== null) {
-                $date_string .= '-' . (is_scalar($row['day']) ? (string) $row['day'] : '1');
+                $date_string .= '-' . (is_string($row['day']) ? $row['day'] : '1');
                 if (($row['hour'] ?? null) !== null) {
-                    $date_string .= ' ' . (is_scalar($row['hour']) ? (string) $row['hour'] : '0') . ':00';
+                    $date_string .= ' ' . (is_string($row['hour']) ? $row['hour'] : '0') . ':00';
                 }
             }
         } else {

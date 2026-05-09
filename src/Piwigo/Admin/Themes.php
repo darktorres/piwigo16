@@ -24,7 +24,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 
-class Themes
+final class Themes
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_themes = [];
@@ -42,7 +42,8 @@ class Themes
 
         foreach ($this->getDbThemes() as $db_theme) {
             if (isset($db_theme['id'])) {
-                $this->db_themes_by_id[is_scalar($db_theme['id']) ? (string) $db_theme['id'] : ''] = $db_theme;
+                $themeIdVal = $db_theme['id'];
+                $this->db_themes_by_id[is_string($themeIdVal) ? $themeIdVal : ''] = $db_theme;
             }
         }
     }
@@ -286,7 +287,8 @@ class Themes
                       'author' => '',
                       'mobile' => false,
                       ];
-                    $theme_data = implode('', file($path.'/themeconf.inc.php') ?: []);
+                    $theme_data_lines = file($path.'/themeconf.inc.php');
+                    $theme_data = implode('', $theme_data_lines !== false ? $theme_data_lines : []);
                     if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
                         $theme['name'] = trim($val[1]);
                     }
@@ -307,7 +309,7 @@ class Themes
                     if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['author uri'] = trim($val[1]);
                     }
-                    if (!empty($theme['uri']) and strpos($theme['uri'], 'extension_view.php?eid=')) {
+                    if ($theme['uri'] !== '' and str_contains($theme['uri'], 'extension_view.php?eid=')) {
                         list(, $extension) = explode('extension_view.php?eid=', $theme['uri']);
                         if (is_numeric($extension)) {
                             $theme['extension'] = $extension;
@@ -389,7 +391,8 @@ class Themes
         $version = AppInfo::VERSION;
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        $result = '';
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -415,7 +418,7 @@ class Themes
         $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
             if (isset($fs_theme['extension'])) {
-                $themes_to_check[] = is_scalar($fs_theme['extension']) ? (string) $fs_theme['extension'] : '';
+                $themes_to_check[] = is_string($fs_theme['extension']) ? $fs_theme['extension'] : '';
             }
         }
 
@@ -438,7 +441,7 @@ class Themes
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data)) {
+        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_themes = StringUtil::safeUnserialize($result);
             if ($pem_themes === []) {
                 return false;
@@ -485,7 +488,7 @@ class Themes
     {
         $logger = LoggerRegistry::current();
 
-        if ($archive = tempnam(Config::themesPath(), 'zip')) {
+        if (($archive = tempnam(Config::themesPath(), 'zip')) !== false) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -548,7 +551,7 @@ class Themes
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
-                                  and $old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) {
+                                  and ($old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
                                     $old_files[] = 'obsolete.list';
 
                                     $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');

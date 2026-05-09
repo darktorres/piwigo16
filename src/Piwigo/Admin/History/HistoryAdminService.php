@@ -40,11 +40,10 @@ final class HistoryAdminService
     }
 
     /**
-     * @param array<mixed> $data
+     * @param array<array<string, mixed>> $data
      * @param array<mixed> $search
-     * @param list<array<string, mixed>> $data
      * @param string[]|string $types
-     * @return list<array<string, mixed>>
+     * @return array<array<string, mixed>>
      */
     public function getHistory(array $data, array $search, array|string $types): array
     {
@@ -59,7 +58,7 @@ final class HistoryAdminService
 SELECT
     id
   FROM ' . Tables::images() . '
-  WHERE file LIKE ' . DbConnection::get()->quote(is_scalar($fields['filename']) ? (string) $fields['filename'] : '') . '
+  WHERE file LIKE ' . DbConnection::get()->quote(is_string($fields['filename']) ? $fields['filename'] : '') . '
 ;';
             $search['image_ids'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         }
@@ -67,11 +66,11 @@ SELECT
         $clauses = [];
 
         if (isset($fields['date-after'])) {
-            $clauses[] = "date >= '" . (is_scalar($fields['date-after']) ? (string) $fields['date-after'] : '') . "'";
+            $clauses[] = "date >= '" . (is_string($fields['date-after']) ? $fields['date-after'] : '') . "'";
         }
 
         if (isset($fields['date-before'])) {
-            $clauses[] = "date <= '" . (is_scalar($fields['date-before']) ? (string) $fields['date-before'] : '') . "'";
+            $clauses[] = "date <= '" . (is_string($fields['date-before']) ? $fields['date-before'] : '') . "'";
         }
 
         if (isset($fields['types'])) {
@@ -96,11 +95,11 @@ SELECT
         }
 
         if (isset($fields['user']) && $fields['user'] != -1) {
-            $clauses[] = 'user_id = ' . (is_scalar($fields['user']) ? (string) $fields['user'] : '0');
+            $clauses[] = 'user_id = ' . (is_string($fields['user']) ? $fields['user'] : '0');
         }
 
         if (isset($fields['image_id'])) {
-            $clauses[] = 'image_id = ' . (is_scalar($fields['image_id']) ? (string) $fields['image_id'] : '0');
+            $clauses[] = 'image_id = ' . (is_string($fields['image_id']) ? $fields['image_id'] : '0');
         }
 
         if (isset($fields['filename'])) {
@@ -108,12 +107,12 @@ SELECT
             if (count($image_ids) == 0) {
                 $clauses[] = '1 = 2 ';
             } else {
-                $clauses[] = 'image_id IN (' . implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)) . ')';
+                $clauses[] = 'image_id IN (' . implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')';
             }
         }
 
         if (isset($fields['ip'])) {
-            $clauses[] = 'IP LIKE ' . DbConnection::get()->quote(is_scalar($fields['ip']) ? (string) $fields['ip'] : '');
+            $clauses[] = 'IP LIKE ' . DbConnection::get()->quote(is_string($fields['ip']) ? $fields['ip'] : '');
         }
 
         $clauses = ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($clauses, '(', ')');
@@ -202,7 +201,7 @@ SELECT
         $first_time_key = null;
 
         foreach ($historyRows as $row) {
-            $row_date = is_scalar($row['date']) ? (string) $row['date'] : '';
+            $row_date = is_string($row['date'] ?? null) ? $row['date'] : '';
             $row_hour = is_numeric($row['hour']) ? (int) $row['hour'] : 0;
             $time_keys = [
                 substr($row_date, 0, 4),
@@ -278,7 +277,7 @@ SELECT *
         }
 
         foreach ($need_update as $time_key => $summary) {
-            $time_tokens = explode('-', (string) $time_key);
+            $time_tokens = explode('-', $time_key);
             $inserts[] = [
                 'year'     => $time_tokens[0],
                 'month'    => $time_tokens[1] ?? null,

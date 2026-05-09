@@ -61,8 +61,10 @@ final class SectionInitializer
         $rewritten         = $routePath;
         $page['root_path'] = PHPWG_ROOT_PATH;
 
-        if (str_starts_with((string) $page['root_path'], './')) {
-            $page['root_path'] = substr((string) $page['root_path'], 2);
+        /** @psalm-var string $rootPathStr */
+        $rootPathStr = $page['root_path'];
+        if (str_starts_with($rootPathStr, './')) {
+            $page['root_path'] = substr($rootPathStr, 2);
         }
 
         $page['section_url'] = $rewritten;
@@ -83,12 +85,12 @@ final class SectionInitializer
                 preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
                 if (isset($matches[1]) && is_numeric($matches[1] = rtrim($matches[1], '-'))) {
                     $page['image_id'] = $matches[1];
-                    if (!empty($matches[2])) {
+                    if (isset($matches[2]) && $matches[2] !== '') {
                         $page['image_file'] = $matches[2];
                     }
                 } else {
                     $page['image_id'] = 0;
-                    if (!empty($matches[2] ?? '')) {
+                    if (isset($matches[2]) && $matches[2] !== '') {
                         $page['image_file'] = $matches[2];
                     } else {
                         ServiceLocator::get(HtmlService::class)->badRequest('picture identifier is missing');
@@ -106,10 +108,10 @@ final class SectionInitializer
             $page['section'] = 'categories';
 
             if ($scriptContext === 'index') {
-                if (!empty(Config::randomIndexRedirect()) && empty($tokens[$nextToken])) {
+                if (!empty(Config::randomIndexRedirect()) && (!isset($tokens[$nextToken]) || $tokens[$nextToken] === '')) {
                     $randomOptions = [];
                     foreach (Config::randomIndexRedirect() as $randomUrl => $randomCondition) {
-                        if (empty($randomCondition) || eval($randomCondition)) {
+                        if ($randomCondition === '' || eval($randomCondition)) {
                             $randomOptions[] = $randomUrl;
                         }
                     }
@@ -132,11 +134,16 @@ final class SectionInitializer
 
         // ── Extract typed locals now that $page is fully populated ───────────
 
-        $section   = is_string($page['section'] ?? null) ? $page['section'] : 'categories';
-        $category  = is_array($page['category'] ?? null) ? $page['category'] : null;
-        $pageTags  = is_array($page['tags'] ?? null) ? $page['tags'] : [];
-        $pageList  = is_array($page['list'] ?? null) ? $page['list'] : [];
-        $startcat  = is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0;
+        $pageSectionRaw = $page['section'] ?? null;
+        $section   = is_string($pageSectionRaw) ? $pageSectionRaw : 'categories';
+        $pageCategoryRaw = $page['category'] ?? null;
+        $category  = is_array($pageCategoryRaw) ? $pageCategoryRaw : null;
+        $pageTagsRaw = $page['tags'] ?? null;
+        $pageTags  = is_array($pageTagsRaw) ? $pageTagsRaw : [];
+        $pageListRaw = $page['list'] ?? null;
+        $pageList  = is_array($pageListRaw) ? $pageListRaw : [];
+        $startcatRaw = $page['startcat'] ?? null;
+        $startcat  = is_numeric($startcatRaw) ? (int) $startcatRaw : 0;
 
         $page['nb_image_page'] = is_numeric($user['nb_image_page'] ?? null)
             ? (int) $user['nb_image_page']
@@ -150,8 +157,10 @@ final class SectionInitializer
         if (is_numeric($imageOrderRaw) && (int) $imageOrderRaw > 0) {
             $orders          = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
             $imageOrderIdInt = (int) $imageOrderRaw;
-            $orderEntry      = is_array($orders[$imageOrderIdInt] ?? null) ? $orders[$imageOrderIdInt] : [];
-            if ($orderEntry[2] ?? false) {
+            $ordersEntry = $orders[$imageOrderIdInt] ?? null;
+            $orderEntry  = is_array($ordersEntry) ? $ordersEntry : [];
+            $orderEntry2 = $orderEntry[2] ?? null;
+            if ($orderEntry2 !== null && $orderEntry2 !== false && $orderEntry2 !== '' && $orderEntry2 !== 0) {
                 $orderCol = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
                 Config::override('order_by', str_replace(
                     'ORDER BY ',
@@ -218,7 +227,7 @@ final class SectionInitializer
                 if (isset($page['flat'])) {
                     if ($category !== null) {
                         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
-                        $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
+                        $catId        = is_string($category['id'] ?? null) ? $category['id'] : '0';
                         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
@@ -234,7 +243,7 @@ SELECT id
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
                         $forbidden   = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
-                        $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
+                        $userId    = is_string($user['id'] ?? null) ? $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
                         $cacheKey  = PersistentCacheRegistry::current()->makeKey(
                             'all_iids' . $userId . $cacheTime . Config::orderBy()
@@ -243,7 +252,7 @@ SELECT id
                         $whereSql = '1=1';
                     }
                 } else {
-                    $catId    = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
+                    $catId    = $category !== null && is_string($category['id'] ?? null) ? $category['id'] : '0';
                     $whereSql = 'category_id = ' . $catId;
                 }
 
@@ -281,10 +290,12 @@ SELECT DISTINCT(image_id)
 
             $items = ServiceLocator::get(TagService::class)->getImageIdsForTags($tagIds);
             if (count($items) === 0) {
+                /** @var mixed $remoteAddrInfo */
+                $remoteAddrInfo = $_SERVER['REMOTE_ADDR'] ?? '';
                 LoggerRegistry::current()->info(
                     'attempt to see the name of the tag #' . implode(', #', $tagIds)
                     . ' from the address : '
-                    . (is_scalar($_SERVER['REMOTE_ADDR'] ?? null) ? (string) $_SERVER['REMOTE_ADDR'] : '')
+                    . (is_string($remoteAddrInfo) ? $remoteAddrInfo : '')
                 );
                 ServiceLocator::get(HtmlService::class)->accessDenied();
             }
@@ -294,7 +305,8 @@ SELECT DISTINCT(image_id)
             ]);
         } elseif ($section === 'search') {
             $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
-            $pageSearch   = is_scalar($page['search'] ?? null) ? (string) $page['search'] : '';
+            $pageSearchRaw = $page['search'] ?? null;
+            $pageSearch   = is_scalar($pageSearchRaw) ? (string) $pageSearchRaw : '';
             $searchResult = ServiceLocator::get(SearchService::class)->getSearchResults($pageSearch, $superOrderBy);
             if (isset($searchResult['qs'])) {
                 $page['qsearch_details'] = $searchResult['qs'];
@@ -310,13 +322,13 @@ SELECT DISTINCT(image_id)
             $page = array_merge($page, [
                 'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Favorites') . '</a>',
             ]);
-            $action = is_scalar($_GET['action'] ?? null) ? (string) $_GET['action'] : '';
+            $action = $_GET['action'] ?? '';
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 ServiceLocator::get(UserRepository::class)->deleteAllFavoritesByUserId($userId);
                 Util::get()->redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
             } else {
-                $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
+                $userId = is_string($user['id'] ?? null) ? $user['id'] : '0';
                 $query  = '
 SELECT image_id
   FROM ' . Tables::favorites() . '
@@ -421,9 +433,10 @@ SELECT DISTINCT(id)
 
         if (isset($page['title'])) {
             $page['section_title'] = '<a href="' . UrlService::get()->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
-            $pageTitle = is_string($page['title']) ? $page['title'] : '';
+            /** @var mixed $pageTitle */
+            $pageTitle = $page['title'];
             if ($pageTitle !== '') {
-                $page['section_title'] .= Config::levelSeparator() . $pageTitle;
+                $page['section_title'] .= Config::levelSeparator() . (is_scalar($pageTitle) ? (string) $pageTitle : '');
             } else {
                 $page['title'] = $page['section_title'];
             }
@@ -438,7 +451,8 @@ SELECT DISTINCT(id)
             || $section === 'recent_pics') {
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
         } elseif ($section === 'tags') {
-            $tagIds = is_array($page['tag_ids'] ?? null) ? $page['tag_ids'] : [];
+            $pageTagIdsRaw = $page['tag_ids'] ?? null;
+            $tagIds = is_array($pageTagIdsRaw) ? $pageTagIdsRaw : [];
             if (count($tagIds) > 1) {
                 $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
             }
@@ -450,7 +464,7 @@ SELECT DISTINCT(id)
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
         }
 
-        $filterEnabled = is_bool($filter['enabled'] ?? null) ? $filter['enabled'] : (bool) ($filter['enabled'] ?? false);
+        $filterEnabled = (bool) ($filter['enabled'] ?? false);
         if ($filterEnabled) {
             $page['meta_robots']['noindex'] = 1;
         }
@@ -460,7 +474,8 @@ SELECT DISTINCT(id)
         if ($section === 'categories' && $category !== null && !isset($page['combined_categories'])) {
             $catPermalink   = is_scalar($category['permalink'] ?? null) ? (string) $category['permalink'] : '';
             $catName        = is_scalar($category['name'] ?? null) ? (string) $category['name'] : '';
-            $hitBy          = is_array($page['hit_by'] ?? null) ? $page['hit_by'] : [];
+            $pageHitByRaw = $page['hit_by'] ?? null;
+            $hitBy          = is_array($pageHitByRaw) ? $pageHitByRaw : [];
             $hitUrlName     = is_scalar($hitBy['cat_url_name'] ?? null) ? (string) $hitBy['cat_url_name'] : '';
             $hitPermalink   = is_scalar($hitBy['cat_permalink'] ?? null) ? (string) $hitBy['cat_permalink'] : null;
             $needRedirect   = false;
@@ -488,19 +503,22 @@ SELECT DISTINCT(id)
 
         // ── Body classes and data ─────────────────────────────────────────────
 
-        $bodyClasses = is_array($page['body_classes'] ?? null) ? $page['body_classes'] : [];
-        $bodyData    = is_array($page['body_data'] ?? null) ? $page['body_data'] : [];
+        $bodyClassesRaw = $page['body_classes'] ?? null;
+        $bodyClasses = is_array($bodyClassesRaw) ? $bodyClassesRaw : [];
+        $bodyDataRaw = $page['body_data'] ?? null;
+        $bodyData    = is_array($bodyDataRaw) ? $bodyDataRaw : [];
 
         $bodyClasses[] = 'section-' . $section;
         $bodyData['section'] = $section;
 
         if ($section === 'categories' && $category !== null) {
-            $catId = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
+            $catId = is_string($category['id'] ?? null) ? $category['id'] : '0';
             $bodyClasses[] = 'category-' . $catId;
             $bodyData['category_id'] = $catId;
 
-            $combinedCategories = is_array($page['combined_categories'] ?? null)
-                ? $page['combined_categories']
+            $combinedCategoriesRaw = $page['combined_categories'] ?? null;
+            $combinedCategories = is_array($combinedCategoriesRaw)
+                ? $combinedCategoriesRaw
                 : null;
             if ($combinedCategories !== null) {
                 $bodyData['combined_category_ids'] = [];
@@ -508,7 +526,7 @@ SELECT DISTINCT(id)
                     if (!is_array($combinedCat)) {
                         continue;
                     }
-                    $combinedId = is_scalar($combinedCat['id'] ?? null) ? (string) $combinedCat['id'] : '0';
+                    $combinedId = is_string($combinedCat['id'] ?? null) ? $combinedCat['id'] : '0';
                     $bodyClasses[] = 'category-' . $combinedId;
                     $bodyData['combined_category_ids'][] = $combinedId;
                 }
@@ -519,18 +537,21 @@ SELECT DISTINCT(id)
                 if (!is_array($tag)) {
                     continue;
                 }
-                $tagId = is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '0';
+                $tagIdRaw = $tag['id'] ?? null;
+                $tagId = is_string($tagIdRaw) ? $tagIdRaw : '0';
                 $bodyClasses[] = 'tag-' . $tagId;
                 $bodyData['tag_ids'][] = $tagId;
             }
         } elseif (isset($page['search'])) {
-            $searchId = is_scalar($page['search']) ? (string) $page['search'] : '';
+            $pageSearchRaw = $page['search'];
+            $searchId = is_string($pageSearchRaw) ? $pageSearchRaw : '';
             $bodyClasses[] = 'search-' . $searchId;
             $bodyData['search_id'] = $searchId;
         }
 
         if (isset($page['image_id'])) {
-            $imageId = is_scalar($page['image_id']) ? (string) $page['image_id'] : '0';
+            $pageImageIdRaw = $page['image_id'];
+            $imageId = is_string($pageImageIdRaw) ? $pageImageIdRaw : '0';
             $bodyClasses[] = 'image-' . $imageId;
             $bodyData['image_id'] = $imageId;
         }

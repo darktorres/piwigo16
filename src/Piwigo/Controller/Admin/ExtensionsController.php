@@ -108,7 +108,7 @@ final class ExtensionsController
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
@@ -136,7 +136,7 @@ final class ExtensionsController
             $show_details = ServiceLocator::get(SessionService::class)->getSessionVar('plugins_show_details', false);
         }
 
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'plugins';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
         $pwg_token = ServiceLocator::get(Util::class)->getPwgToken();
         $action_url = $base_url . '&amp;plugin=' . '%s' . '&amp;pwg_token=' . $pwg_token;
@@ -189,12 +189,13 @@ final class ExtensionsController
             $setting_url = '';
             if ($fs_plugin['hasSettings']) {
                 $setting_url = ServiceLocator::get(UrlGenerator::class)->admin('plugin-' . $plugin_id);
-                if (preg_match('/^piwigo-(videojs|openstreetmap)$/', (string) $plugin_id)) {
+                if (preg_match('/^piwigo-(videojs|openstreetmap)$/', $plugin_id)) {
                     $setting_url = str_replace('piwigo-', 'piwigo_', $setting_url);
                 }
             }
 
-            $visit_url = str_replace(['http://piwigo.org/ext', 'https://piwigo.org/ext'], PEM_URL, is_scalar($fs_plugin['uri'] ?? null) ? (string) $fs_plugin['uri'] : '');
+            $fsPluginUri = $fs_plugin['uri'] ?? null;
+            $visit_url = str_replace(['http://piwigo.org/ext', 'https://piwigo.org/ext'], PEM_URL, is_scalar($fsPluginUri) ? (string) $fsPluginUri : '');
 
             $tpl_plugin = [
                 'ID'          => $plugin_id,
@@ -218,7 +219,7 @@ final class ExtensionsController
                 $merged_plugins      = true;
             }
 
-            $pluginState = is_scalar($tpl_plugin['STATE']) ? (string) $tpl_plugin['STATE'] : 'inactive';
+            $pluginState = is_string($tpl_plugin['STATE'] ?? null) ? $tpl_plugin['STATE'] : 'inactive';
             if (isset($count_types_plugins[$pluginState])) {
                 $count_types_plugins[$pluginState]++;
             }
@@ -294,7 +295,7 @@ final class ExtensionsController
 
         $tpl->setFilenames(['plugins' => 'plugins_new.tpl']);
 
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'plugins_new';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
 
@@ -306,7 +307,7 @@ final class ExtensionsController
             } else {
                 ServiceLocator::get(Util::class)->checkPwgToken();
                 $install_status = $plugins->extractPluginFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
-                Util::get()->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
+                Util::get()->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . ($plugin_id ?? ''));
             }
         }
 
@@ -316,7 +317,8 @@ final class ExtensionsController
                     $activate_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins') . '&amp;filter=deactivated';
                     PageState::current()->addInfo(Lang::t('Plugin has been successfully copied'));
                     PageState::current()->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
-                    $getPluginId = is_string($_GET['plugin_id'] ?? null) ? $_GET['plugin_id'] : '';
+                    $pluginIdRaw = $_GET['plugin_id'] ?? null;
+                    $getPluginId = is_string($pluginIdRaw) ? $pluginIdRaw : '';
                     if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
                         ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Plugin, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]);
                     }
@@ -327,7 +329,7 @@ final class ExtensionsController
                     break;
                 case 'archive_error':     PageState::current()->addError(Lang::t('Can\'t read or extract archive.'));
                     break;
-                default:                  PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
+                default:                  PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_string($rawInstallStatus = $_GET['installstatus']) ? $rawInstallStatus : '')));
                     PageState::current()->addError(Lang::t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
@@ -340,7 +342,7 @@ final class ExtensionsController
             if (ServiceLocator::get(SessionService::class)->getSessionVar('plugins_new_order') != null) {
                 $order_selected = ServiceLocator::get(SessionService::class)->getSessionVar('plugins_new_order');
                 $plugins->sortServerPlugins(is_string($order_selected) ? $order_selected : 'date');
-                $tpl->assign('order_selected', $order_selected);
+                $tpl->assign('order_selected', is_scalar($order_selected) ? (string) $order_selected : '');
             } else {
                 $plugins->sortServerPlugins('date');
                 $tpl->assign('order_selected', 'date');
@@ -423,15 +425,11 @@ final class ExtensionsController
     private function plugin(): void
     {
         $raw_section = $_GET['section'] ?? '';
-        $sections = explode('/', is_scalar($raw_section) ? (string) $raw_section : '');
-        for ($i = 0; $i < count($sections); $i++) {
-            if (empty($sections[$i])) {
-                unset($sections[$i]);
-                $i--;
-                continue;
-            }
-            if ($sections[$i] == '..' || !preg_match('/^[a-zA-Z0-9_\.-]+$/', $sections[$i])) {
-                throw new ValidationException('invalid section token [' . htmlentities($sections[$i]) . ']');
+        $sections = explode('/', is_string($raw_section) ? $raw_section : '');
+        $sections = array_values(array_filter($sections, fn (string $s): bool => $s !== ''));
+        foreach ($sections as $sectionToken) {
+            if ($sectionToken == '..' || !preg_match('/^[a-zA-Z0-9_\.-]+$/', $sectionToken)) {
+                throw new ValidationException('invalid section token [' . htmlentities($sectionToken) . ']');
             }
         }
 
@@ -479,7 +477,7 @@ final class ExtensionsController
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
@@ -504,7 +502,7 @@ final class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'themes';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
         $themes   = new Themes();
 
@@ -603,7 +601,7 @@ final class ExtensionsController
 
         $tpl->setFilenames(['themes' => 'themes_new.tpl']);
 
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'themes_new';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
         $themes   = new Themes();
@@ -619,7 +617,7 @@ final class ExtensionsController
             } else {
                 ServiceLocator::get(Util::class)->checkPwgToken();
                 $install_status = $themes->extractThemeFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
-                Util::get()->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
+                Util::get()->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . ($theme_id ?? ''));
             }
         }
 
@@ -627,7 +625,8 @@ final class ExtensionsController
             switch ($_GET['installstatus']) {
                 case 'ok':
                     PageState::current()->addInfo(Lang::t('Theme has been successfully installed'));
-                    $theme_id_str = is_string($_GET['theme_id'] ?? null) ? $_GET['theme_id'] : '';
+                    $themeIdRaw = $_GET['theme_id'] ?? null;
+                    $theme_id_str = is_string($themeIdRaw) ? $themeIdRaw : '';
                     if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
                         ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Theme, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]);
                     }
@@ -638,7 +637,7 @@ final class ExtensionsController
                     break;
                 case 'archive_error':    PageState::current()->addError(Lang::t('Can\'t read or extract archive.'));
                     break;
-                default:                 PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : '')));
+                default:                 PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_string($rawInstallStatus = $_GET['installstatus']) ? $rawInstallStatus : '')));
             }
         }
 
@@ -674,17 +673,21 @@ final class ExtensionsController
 
         if (isset($_POST['submit']) && PermissionService::get()->isWebmaster()) {
             ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('use_standard_pages', !empty($_POST['use_standard_pages']), true);
+            ServiceLocator::get(ConfigService::class)->confUpdateParam('use_standard_pages', isset($_POST['use_standard_pages']) && $_POST['use_standard_pages'] !== '', true);
             if (isset($_POST['std_pgs_display_logo']) && in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options)) {
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('standard_pages_selected_logo', $_POST['std_pgs_display_logo'], true);
+                $stdPgsDisplayLogoRaw = $_POST['std_pgs_display_logo'];
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('standard_pages_selected_logo', is_string($stdPgsDisplayLogoRaw) ? $stdPgsDisplayLogoRaw : '', true);
             }
             if (isset($_POST['std_pgs_selected_skin']) && in_array($_POST['std_pgs_selected_skin'], $std_pgs_skin_options)) {
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('standard_pages_selected_skin', $_POST['std_pgs_selected_skin'], true);
+                $stdPgsSelectedSkinRaw = $_POST['std_pgs_selected_skin'];
+                ServiceLocator::get(ConfigService::class)->confUpdateParam('standard_pages_selected_skin', is_string($stdPgsSelectedSkinRaw) ? $stdPgsSelectedSkinRaw : '', true);
             }
         }
 
-        $std_pgs_logo_file = is_array($_FILES['std_pgs_logo'] ?? null) ? $_FILES['std_pgs_logo'] : [];
-        $std_pgs_logo_tmp  = is_string($std_pgs_logo_file['tmp_name'] ?? null) ? (string) $std_pgs_logo_file['tmp_name'] : '';
+        $stdPgsLogoRaw = $_FILES['std_pgs_logo'] ?? null;
+        $std_pgs_logo_file = is_array($stdPgsLogoRaw) ? $stdPgsLogoRaw : [];
+        $stdPgsLogoTmpRaw = $std_pgs_logo_file['tmp_name'] ?? null;
+        $std_pgs_logo_tmp  = is_string($stdPgsLogoTmpRaw) ? $stdPgsLogoTmpRaw : '';
         if (isset($_FILES['std_pgs_logo']) && !empty($std_pgs_logo_tmp)) {
             $finfo     = finfo_open(FILEINFO_MIME_TYPE);
             $mime_type = $finfo !== false ? finfo_file($finfo, $std_pgs_logo_tmp) : false;
@@ -695,7 +698,8 @@ final class ExtensionsController
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
                 if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-                    $std_pgs_logo_name = is_scalar($std_pgs_logo_file['name'] ?? null) ? (string) $std_pgs_logo_file['name'] : '';
+                    $stdPgsLogoNameRaw = $std_pgs_logo_file['name'] ?? null;
+                    $std_pgs_logo_name = is_string($stdPgsLogoNameRaw) ? $stdPgsLogoNameRaw : '';
                     $pathinfo  = pathinfo($std_pgs_logo_name);
                     $file_path = $upload_dir . '/' . ServiceLocator::get(StringUtil::class)->str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
                     ServiceLocator::get(ConfigService::class)->confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
@@ -744,16 +748,17 @@ final class ExtensionsController
 
     private function theme(): void
     {
-        if (empty($_GET['theme'])) {
+        $themeParam = $_GET['theme'] ?? null;
+        if (!isset($themeParam) || $themeParam === '' || $themeParam === []) {
             throw new ValidationException('Invalid theme URL');
         }
 
         $themes = new Themes();
-        if (!in_array($_GET['theme'], array_keys($themes->fs_themes))) {
+        if (!in_array($themeParam, array_keys($themes->fs_themes))) {
             throw new ValidationException('Invalid theme');
         }
 
-        $theme_name = is_scalar($_GET['theme']) ? (string) $_GET['theme'] : '';
+        $theme_name = is_string($themeParam) ? $themeParam : '';
         $filename   = Config::themesPath() . $theme_name . '/admin/admin.inc.php';
         if (is_file($filename)) {
             require_once $filename;
@@ -785,7 +790,7 @@ final class ExtensionsController
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
@@ -809,7 +814,7 @@ final class ExtensionsController
         }
 
         $tpl->setFilenames(['languages' => 'languages_installed.tpl']);
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
 
         $languages = new Languages();
@@ -859,8 +864,8 @@ final class ExtensionsController
         $missing_language_ids = array_diff(array_keys($languages->db_languages), array_keys($languages->fs_languages));
         $langRepo = ServiceLocator::get(LanguageRepository::class);
         foreach ($missing_language_ids as $language_id) {
-            $langRepo->reassignUsers((string) $language_id, UserService::get()->getDefaultLanguage());
-            $langRepo->deactivate((string) $language_id);
+            $langRepo->reassignUsers($language_id, UserService::get()->getDefaultLanguage());
+            $langRepo->deactivate($language_id);
         }
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
@@ -883,7 +888,7 @@ final class ExtensionsController
         }
 
         $tpl->setFilenames(['languages' => 'languages_new.tpl']);
-        $pageStr  = is_scalar($page['page']) ? (string) $page['page'] : 'languages_new';
+        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
 
@@ -911,7 +916,7 @@ final class ExtensionsController
                 'temp_path_error' => PageState::current()->addError(Lang::t('Can\'t create temporary file.')),
                 'dl_archive_error' => PageState::current()->addError(Lang::t('Can\'t download archive.')),
                 'archive_error' => PageState::current()->addError(Lang::t('Can\'t read or extract archive.')),
-                default => PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_scalar($_GET['installstatus']) ? (string) $_GET['installstatus'] : ''))),
+                default => PageState::current()->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars(is_string($rawInstallStatus = $_GET['installstatus']) ? $rawInstallStatus : ''))),
             };
         }
 
@@ -958,7 +963,7 @@ final class ExtensionsController
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'pwg') {
             $this->updatesPwg();
         } elseif ($tab === 'ext') {
@@ -985,7 +990,7 @@ final class ExtensionsController
         $updates_ignored_raw = Config::raw('updates_ignored');
         Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
-        $pageStr = is_scalar($page['page']) ? (string) $page['page'] : 'updates';
+        $pageStr = is_string($page['page'] ?? null) ? $page['page'] : 'updates';
         $autoupdate = new Updates($pageStr);
 
         $show_reset = false;
@@ -1021,7 +1026,7 @@ final class ExtensionsController
 
                 $extVersion = is_scalar($fs_ext_item['version'] ?? null) ? (string) $fs_ext_item['version'] : '';
                 $revName = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
-                if (!ServiceLocator::get(StringUtil::class)->safeVersionCompare($extVersion, $revName, '>=')) {
+                if (ServiceLocator::get(StringUtil::class)->safeVersionCompare($extVersion, $revName, '<') === true) {
                     $extId = is_scalar($ext_info['extension_id'] ?? null) ? $ext_info['extension_id'] : '';
                     $revId = is_scalar($ext_info['revision_id'] ?? null) ? $ext_info['revision_id'] : '';
                     $revDesc = is_scalar($ext_info['revision_description'] ?? null) ? (string) $ext_info['revision_description'] : '';
@@ -1035,7 +1040,7 @@ final class ExtensionsController
                         'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
                     ]);
                 }
-                if (!empty($updates_ignored_for_type)) {
+                if (count($updates_ignored_for_type) > 0) {
                     $show_reset = true;
                 }
             }
@@ -1065,17 +1070,20 @@ final class ExtensionsController
             throw new ConfigException('Piwigo core update system is disabled');
         }
 
-        $step = is_numeric($_GET['step'] ?? null) ? (int) $_GET['step'] : 0;
+        $getStepRaw = $_GET['step'] ?? null;
+        $step = is_numeric($getStepRaw) ? (int) $getStepRaw : 0;
         [$ct_env, $ct_build_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
 
         if ('Official' === $ct_env) {
             $tpl->assign(['CONTAINER_VERSION' => $ct_build_version, 'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker']);
             ServiceLocator::get(Util::class)->checkInputParameter('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
-            $upgrade_to_raw = isset($_GET['to']) ? (is_scalar($_GET['to']) ? (string) $_GET['to'] : '') : '';
+            $rawUpgradeTo   = $_GET['to'] ?? null;
+            $upgrade_to_raw = is_string($rawUpgradeTo) ? $rawUpgradeTo : '';
             $upgrade_to     = $upgrade_to_raw !== '' ? (string) preg_replace('/[a-z]$/', '', $upgrade_to_raw) : '';
         } else {
             ServiceLocator::get(Util::class)->checkInputParameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
-            $upgrade_to = isset($_GET['to']) ? (is_scalar($_GET['to']) ? (string) $_GET['to'] : '') : '';
+            $rawUpgradeToAlt = $_GET['to'] ?? null;
+            $upgrade_to = is_string($rawUpgradeToAlt) ? $rawUpgradeToAlt : '';
         }
 
         $updates      = new Updates();
@@ -1084,55 +1092,67 @@ final class ExtensionsController
         if ($step == 0) {
             if (isset($new_versions['minor']) && isset($new_versions['major'])) {
                 $step = 1;
-                $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : '';
+                $upgrade_to = is_string($new_versions['major']) ? $new_versions['major'] : '';
             } elseif (isset($new_versions['minor'])) {
                 $step = 2;
-                $upgrade_to = is_scalar($new_versions['minor']) ? (string) $new_versions['minor'] : '';
+                $upgrade_to = is_string($new_versions['minor']) ? $new_versions['minor'] : '';
             } elseif (isset($new_versions['major'])) {
                 $step = 3;
-                $upgrade_to = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : '';
+                $upgrade_to = is_string($new_versions['major']) ? $new_versions['major'] : '';
             }
-            $tpl->assign('CHECK_VERSION', $new_versions['piwigo.org-checked']);
-            $tpl->assign('DEV_VERSION', $new_versions['is_dev']);
+            $checkVersionRaw = $new_versions['piwigo.org-checked'] ?? null;
+            $devVersionRaw   = $new_versions['is_dev'] ?? null;
+            $tpl->assign('CHECK_VERSION', is_scalar($checkVersionRaw) ? (string) $checkVersionRaw : '');
+            $tpl->assign('DEV_VERSION', is_scalar($devVersionRaw) ? (string) $devVersionRaw : '');
         }
 
         if ($step == 2 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
-                Updates::upgradeTo(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+                $rawUpgradeTo2 = $_POST['upgrade_to'];
+                Updates::upgradeTo(is_string($rawUpgradeTo2) ? $rawUpgradeTo2 : '', $step);
             }
         }
 
         if ($step == 3 && PermissionService::get()->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
-                Updates::upgradeTo(is_scalar($_POST['upgrade_to']) ? (string) $_POST['upgrade_to'] : '', $step);
+                $rawUpgradeTo3 = $_POST['upgrade_to'];
+                Updates::upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
             }
             $updates->getMergedExtensions($upgrade_to);
             $updates->getServerExtensions($upgrade_to);
             $tpl->assign('missing', $updates->missing);
         }
 
-        if (isset($new_versions['minor_php']) && version_compare(phpversion(), is_scalar($new_versions['minor_php']) ? (string) $new_versions['minor_php'] : '', '<')) {
-            $tpl->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']);
+        $phpVersionResult = phpversion();
+        /** @var string|false $phpVersionResult */
+        $phpVersion       = $phpVersionResult === false ? '0.0.0' : $phpVersionResult;
+        if (isset($new_versions['minor_php']) && version_compare($phpVersion, is_string($new_versions['minor_php']) ? $new_versions['minor_php'] : '', '<')) {
+            $minorPhpRaw = $new_versions['minor_php'];
+            $tpl->assign('MINOR_RELEASE_PHP_REQUIRED', is_scalar($minorPhpRaw) ? (string) $minorPhpRaw : '');
         }
-        if (isset($new_versions['major_php']) && version_compare(phpversion(), is_scalar($new_versions['major_php']) ? (string) $new_versions['major_php'] : '', '<')) {
-            $tpl->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
+        if (isset($new_versions['major_php']) && version_compare($phpVersion, is_string($new_versions['major_php']) ? $new_versions['major_php'] : '', '<')) {
+            $majorPhpRaw = $new_versions['major_php'];
+            $tpl->assign('MAJOR_RELEASE_PHP_REQUIRED', is_scalar($majorPhpRaw) ? (string) $majorPhpRaw : '');
         }
 
         if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageUpdatedVersion = is_scalar($page['updated_version'] ?? null) ? (string) $page['updated_version'] : AppInfo::VERSION;
+        $updatedVersionRaw = $page['updated_version'] ?? null;
+        $pageUpdatedVersion = is_scalar($updatedVersionRaw) ? (string) $updatedVersionRaw : AppInfo::VERSION;
         $tpl->assign(['STEP' => $step, 'PIWIGO_CURRENT_VERSION' => $pageUpdatedVersion, 'UPGRADE_TO' => $upgrade_to]);
 
         if (isset($new_versions['minor'])) {
-            $minor_ver = is_scalar($new_versions['minor']) ? (string) $new_versions['minor'] : '';
-            $tpl->assign(['MINOR_VERSION' => $minor_ver, 'MINOR_RELEASE_URL' => (('Official' === $ct_env) ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $minor_ver) : PHPWG_URL . '/releases/' . $minor_ver)]);
+            $minor_ver = is_string($new_versions['minor']) ? $new_versions['minor'] : '';
+            $tpl->assign(['MINOR_VERSION' => $minor_ver, 'MINOR_RELEASE_URL' => (('Official' === $ct_env) ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . (string) preg_replace('/\./', '', $minor_ver) : PHPWG_URL . '/releases/' . $minor_ver)]);
         }
 
         if (isset($new_versions['major'])) {
-            $major_ver = is_scalar($new_versions['major']) ? (string) $new_versions['major'] : '';
-            $tpl->assign(['MAJOR_VERSION' => $major_ver, 'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' . (('Official' === $ct_env) ? substr($major_ver, 0, -1) : $major_ver), 'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $major_ver), 'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $major_ver)]);
+            $major_ver = is_string($new_versions['major']) ? $new_versions['major'] : '';
+            $majorVerNoDots = preg_replace('/\./', '', $major_ver) ?? '';
+            $majorVerNoAlpha = preg_replace('/[a-z]$/', '', $major_ver) ?? '';
+            $tpl->assign(['MAJOR_VERSION' => $major_ver, 'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' . (('Official' === $ct_env) ? substr($major_ver, 0, -1) : $major_ver), 'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . $majorVerNoDots, 'MAJOR_VERSION_PWG' => $majorVerNoAlpha]);
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
@@ -1159,21 +1179,28 @@ final class ExtensionsController
         $available_templates = array_merge(['N/A' => '----------'], ServiceLocator::get(AdminService::class)->getDirs(PHPWG_ROOT_PATH . 'themes'));
 
         if (isset($_POST['submit'])) {
-            $reptpl_arr  = is_array($_POST['reptpl'] ?? null) ? $_POST['reptpl'] : [];
-            $original_arr = is_array($_POST['original'] ?? null) ? $_POST['original'] : [];
-            $url_arr     = is_array($_POST['url'] ?? null) ? $_POST['url'] : [];
-            $bound_arr   = is_array($_POST['bound'] ?? null) ? $_POST['bound'] : [];
+            $reptplRaw   = $_POST['reptpl'] ?? null;
+            $reptpl_arr  = is_array($reptplRaw) ? $reptplRaw : [];
+            $originalRaw = $_POST['original'] ?? null;
+            $original_arr = is_array($originalRaw) ? $originalRaw : [];
+            $urlRaw      = $_POST['url'] ?? null;
+            $url_arr     = is_array($urlRaw) ? $urlRaw : [];
+            $boundRaw    = $_POST['bound'] ?? null;
+            $bound_arr   = is_array($boundRaw) ? $boundRaw : [];
             $replacements = [];
             $i = 0;
             while (isset($reptpl_arr[$i])) {
-                $newtpl     = is_scalar($reptpl_arr[$i]) ? (string) $reptpl_arr[$i] : '';
-                $original   = is_scalar($original_arr[$i] ?? null) ? (string) $original_arr[$i] : '';
+                $newtpl     = is_string($reptpl_arr[$i]) ? $reptpl_arr[$i] : '';
+                $origRaw    = $original_arr[$i] ?? null;
+                $original   = is_string($origRaw) ? $origRaw : '';
                 $handle     = $eligible_templates[$original] ?? 'N/A';
-                $url_keyword = is_scalar($url_arr[$i] ?? null) ? (string) $url_arr[$i] : '';
+                $urlRaw2    = $url_arr[$i] ?? null;
+                $url_keyword = is_string($urlRaw2) ? $urlRaw2 : '';
                 if ($url_keyword == '----------') {
                     $url_keyword = 'N/A';
                 }
-                $bound_tpl  = is_scalar($bound_arr[$i] ?? null) ? (string) $bound_arr[$i] : '';
+                $boundRaw2  = $bound_arr[$i] ?? null;
+                $bound_tpl  = is_string($boundRaw2) ? $boundRaw2 : '';
                 if ($bound_tpl == '----------') {
                     $bound_tpl = 'N/A';
                 }

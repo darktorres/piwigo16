@@ -35,7 +35,7 @@ final readonly class PluginService
     /** @param array<string,mixed> $plugin */
     public function loadPlugin(array $plugin): void
     {
-        $pluginId  = is_scalar($plugin['id']) ? (string) $plugin['id'] : '';
+        $pluginId  = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
         $fileName  = Config::pluginsPath() . $pluginId . '/main.inc.php';
         if (file_exists($fileName)) {
             $this->autoupdatePlugin($plugin);
@@ -47,7 +47,7 @@ final readonly class PluginService
     /** @param array<string,mixed> $plugin */
     public function autoupdatePlugin(array &$plugin): void
     {
-        $pluginId  = is_scalar($plugin['id']) ? (string) $plugin['id'] : '';
+        $pluginId  = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
         $fh        = fopen(Config::pluginsPath() . $pluginId . '/main.inc.php', 'r');
         $fsVersion = null;
         $i         = -1;
@@ -66,10 +66,10 @@ final readonly class PluginService
             fclose($fh);
         }
 
-        $pluginVersion = is_scalar($plugin['version']) ? (string) $plugin['version'] : '';
+        $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
         if ($fsVersion != null && (
             $fsVersion == 'auto' || $pluginVersion == 'auto' ||
-              ServiceLocator::get(StringUtil::class)->safeVersionCompare($pluginVersion, $fsVersion, '<')
+              ServiceLocator::get(StringUtil::class)->safeVersionCompare($pluginVersion, $fsVersion, '<') === true
         )
         ) {
             $oldVersion = $pluginVersion;
@@ -80,14 +80,19 @@ final readonly class PluginService
             $maintainFile = Config::pluginsPath() . $pluginId . '/maintain.class.php';
 
             if (file_exists($maintainFile)) {
+                /** @psalm-suppress UnresolvableInclude */
                 require_once($maintainFile);
 
-                $classname = str_replace('-', '_', $pluginId) . '_maintain';
+                /** @var string $replacedPluginId */
+                $replacedPluginId = str_replace('-', '_', $pluginId);
+                $classname = $replacedPluginId . '_maintain';
 
                 if (class_exists($classname) && is_a($classname, PluginMaintain::class, true)) {
                     $pluginMaintain = new $classname($pluginId); // @phpstan-ignore piwigo.noDynamicNew
-                    $errors         = &PageState::current()->errors;
+                    $errors = PageState::current()->errors;
                     $pluginMaintain->update($oldVersion, $fsVersion, $errors);
+                    /** @var list<string> $errors */
+                    PageState::current()->errors = $errors;
                 }
             }
 

@@ -13,7 +13,7 @@ namespace Piwigo\Page\Context;
  *
  * Consumed by #23 Wave 1 Latte templates (themes/admin/_base/template/).
  */
-readonly class AdminPageContext
+final readonly class AdminPageContext
 {
     /**
      * @param array<string,mixed>         $pageMeta       body_id, admin_theme, meta_robots, etc.

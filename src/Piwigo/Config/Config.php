@@ -63,13 +63,16 @@ final class Config
     }
     /**
      * Public escape hatch for parametric / dynamic keys (per-block menu config,
-     * *_running semaphores, flip_picture_ext caches, DB row write loops, etc.).
+     * _running semaphores, flip_picture_ext caches, DB row write loops, etc.).
      * Bypasses SCHEMA validation by design.
      *
      * Static keys MUST go through a typed accessor — `raw()` is for cases where
      * the key is computed at runtime and cannot be expressed via SCHEMA.
+     *
+     *
+     * @psalm-param 'fallback'|null $default
      */
-    public static function raw(string $key, mixed $default = null): mixed
+    public static function raw(string $key, string|null $default = null): mixed
     {
         return self::src()[$key] ?? $default;
     }
@@ -656,9 +659,15 @@ final class Config
     {
         return self::getBool('meta_ref', true);
     }
+    /**
+     * @return non-empty-string
+     * @psalm-suppress MoreSpecificReturnType
+     */
     public static function metadataKeywordSeparatorRegex(): string
     {
-        return self::getString('metadata_keyword_separator_regex', '/[.,;]/');
+        $value = self::getString('metadata_keyword_separator_regex', '/[.,;]/');
+        /** @psalm-suppress LessSpecificReturnStatement */
+        return $value !== '' ? $value : '/[.,;]/';
     }
     public static function mobilTheme(): string
     {
@@ -1060,9 +1069,15 @@ final class Config
     {
         return self::getInt('stat_compare_year_displayed', 5);
     }
+    /**
+     * @return non-empty-string
+     * @psalm-suppress MoreSpecificReturnType
+     */
     public static function syncCharsRegex(): string
     {
-        return self::getString('sync_chars_regex', '/^[a-zA-Z0-9-_.]+$/');
+        $value = self::getString('sync_chars_regex', '/^[a-zA-Z0-9-_.]+$/');
+        /** @psalm-suppress LessSpecificReturnStatement */
+        return $value !== '' ? $value : '/^[a-zA-Z0-9-_.]+$/';
     }
     public static function tagLettersColumnNumber(): int
     {
@@ -1486,13 +1501,15 @@ final class Config
         unset(self::$data[$key]);
     }
     // ---- Writers ---------------------------------------------------------
-    /** Transient runtime override (per-album, etc). Does not persist to DB. */
+    /**
+     * Transient runtime override (per-album, etc). Does not persist to DB.
+     */
     public static function override(string $key, mixed $value): void
     {
         self::$data[$key] = $value;
     }
     /** Persists via existing ServiceLocator::get(ConfigService::class)->confUpdateParam() free function — DB write. */
-    public static function persist(string $key, mixed $value): void
+    public static function persist(string $key, string $value): void
     {
         ServiceLocator::get(ConfigService::class)->confUpdateParam($key, $value);
         self::$data[$key] = $value;

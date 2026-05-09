@@ -25,6 +25,7 @@ final class TemplateFilesExistTest extends TestCase
     /** @var array<string, string>  tplName => first directory that has it */
     private static array $tplIndex = [];
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         self::$root = dirname(__DIR__, 3);
@@ -67,7 +68,8 @@ final class TemplateFilesExistTest extends TestCase
                 continue;
             }
 
-            $content = file_get_contents($phpFile->getPathname()) ?: '';
+            $phpFileContent = file_get_contents($phpFile->getPathname());
+            $content = $phpFileContent !== false ? $phpFileContent : '';
 
             // Match: ->setFilename('handle', 'foo.tpl')
             //        ->setFilenames(['handle' => 'foo.tpl', ...])

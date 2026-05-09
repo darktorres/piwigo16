@@ -86,13 +86,13 @@ final class FilterResolver
 
         $filter_tags = [];
         $filter_tags_raw = $bulk_manager_filter['tags'] ?? null;
-        if (!empty($filter_tags_raw) && is_array($filter_tags_raw)) {
+        if ($filter_tags_raw !== null && is_array($filter_tags_raw) && count($filter_tags_raw) > 0) {
             $query = '
 SELECT
     id,
     name
   FROM ' . Tables::tags() . '
-  WHERE id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
+  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
 ;';
             $filter_tags = ServiceLocator::get(TagAdminService::class)->getTaglist($query);
         }
@@ -115,7 +115,7 @@ SELECT
     DISTINCT(category_id) AS id
   FROM ' . Tables::imageCategory() . ' AS ic
     JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', array_map(fn ($v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')
+  WHERE ic.image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')
     AND (
       ic.category_id != i.storage_category_id
       OR i.storage_category_id IS NULL

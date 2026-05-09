@@ -123,7 +123,7 @@ final class GroupRepository extends AbstractRepository
              WHERE ug.group_id = ?",
             [$groupId]
         )->fetchFirstColumn();
-        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+        return array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rows);
     }
 
     /** Return the name of a group by id, or null if not found. */

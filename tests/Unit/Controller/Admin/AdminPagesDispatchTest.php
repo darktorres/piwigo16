@@ -49,7 +49,8 @@ final class AdminPagesDispatchTest extends TestCase
     #[DataProvider('subControllerProvider')]
     public function test_every_page_is_handled(string $controllerClass, array $pages): void
     {
-        $src = file_get_contents(new \ReflectionClass($controllerClass)->getFileName() ?: '');
+        $rfFileName = new \ReflectionClass($controllerClass)->getFileName();
+        $src = file_get_contents($rfFileName !== false ? $rfFileName : '');
         self::assertIsString($src, "Could not read $controllerClass source");
         self::assertNotEmpty($src, "Could not read $controllerClass source");
 
@@ -70,9 +71,8 @@ final class AdminPagesDispatchTest extends TestCase
 
     public function test_AdminController_dispatches_all_sub_controller_PAGES(): void
     {
-        $adminSrc = file_get_contents(
-            new \ReflectionClass(AdminController::class)->getFileName() ?: ''
-        );
+        $adminRfFileName = new \ReflectionClass(AdminController::class)->getFileName();
+        $adminSrc = file_get_contents($adminRfFileName !== false ? $adminRfFileName : '');
         self::assertIsString($adminSrc);
         self::assertNotEmpty($adminSrc);
 

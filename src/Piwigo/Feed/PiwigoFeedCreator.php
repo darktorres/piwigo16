@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Feed;
 
-class PiwigoFeedCreator extends \UniversalFeedCreator
+final class PiwigoFeedCreator extends \UniversalFeedCreator
 {
-    /** @var string */
-    #[\Override]
+    /** @var mixed */
     public $encoding = 'UTF-8';
 }

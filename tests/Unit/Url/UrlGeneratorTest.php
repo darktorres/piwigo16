@@ -22,10 +22,14 @@ use Piwigo\Url\UrlService;
  */
 final class UrlGeneratorTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private Router $router;
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private UrlService $urls;
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private UrlGenerator $gen;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->router = new Router(dirname(__DIR__, 3) . '/config/routes.php');
@@ -35,6 +39,7 @@ final class UrlGeneratorTest extends TestCase
         $GLOBALS['page'] = ['root_path' => '/'];
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         unset($GLOBALS['page']);

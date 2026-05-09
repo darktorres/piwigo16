@@ -18,6 +18,7 @@ final class ConfigLoaderTest extends TestCase
 
     private const array TOUCHED_VARS = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'];
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'piwigo-config-loader-test-' . uniqid();
@@ -35,6 +36,7 @@ final class ConfigLoaderTest extends TestCase
         }
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         foreach (['.env', '.env.test'] as $f) {

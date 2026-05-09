@@ -32,7 +32,7 @@ final class PictureMetadataRenderer
                 $tpl_meta = ['TITLE' => Lang::t('EXIF Metadata'), 'lines' => []];
 
                 foreach (Config::showExifFields() as $field) {
-                    if (!str_contains((string) $field, ';')) {
+                    if (!str_contains($field, ';')) {
                         if (isset($exif[$field]) and !is_array($exif[$field])) {
                             $key = $field;
                             if (Lang::has('exif_field_' . $field)) {
@@ -41,7 +41,7 @@ final class PictureMetadataRenderer
                             $tpl_meta['lines'][$key] = $exif[$field];
                         }
                     } else {
-                        $tokens = explode(';', (string) $field);
+                        $tokens = explode(';', $field);
                         if (isset($exif[$field]) and !is_array($exif[$field])) {
                             $key = $tokens[1];
                             if (Lang::has('exif_field_' . $key)) {

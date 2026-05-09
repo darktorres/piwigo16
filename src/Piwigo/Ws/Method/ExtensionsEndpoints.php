@@ -166,8 +166,9 @@ final class ExtensionsEndpoints
         Config::override('updates_ignored', is_array($updatesIgnoredUnserialized) ? $updatesIgnoredUnserialized : []);
         if ($params['reset']) {
             $updatesIgnored = Config::raw('updates_ignored');
-            $ignoreType     = is_string($params['type'] ?? null) ? $params['type'] : '';
-            if (!empty($ignoreType) && is_array($updatesIgnored) && isset($updatesIgnored[$ignoreType])) {
+            $typeRaw1       = $params['type'] ?? null;
+            $ignoreType     = is_string($typeRaw1) ? $typeRaw1 : '';
+            if ($ignoreType !== '' && is_array($updatesIgnored) && isset($updatesIgnored[$ignoreType])) {
                 $updatesIgnored[$ignoreType] = [];
                 Config::override('updates_ignored', $updatesIgnored);
             } else {
@@ -177,9 +178,11 @@ final class ExtensionsEndpoints
             unset($_SESSION['extensions_need_update']);
             return true;
         }
-        $ignoreId    = is_string($params['id'] ?? null) ? $params['id'] : '';
-        $ignoreType2 = is_string($params['type'] ?? null) ? $params['type'] : '';
-        if (empty($ignoreId) || empty($ignoreType2) || !in_array($ignoreType2, ['plugins', 'themes', 'languages'])) {
+        $idRaw       = $params['id'] ?? null;
+        $ignoreId    = is_string($idRaw) ? $idRaw : '';
+        $typeRaw2    = $params['type'] ?? null;
+        $ignoreType2 = is_string($typeRaw2) ? $typeRaw2 : '';
+        if ($ignoreId === '' || $ignoreType2 === '' || !in_array($ignoreType2, ['plugins', 'themes', 'languages'])) {
             return new PwgError(403, 'Invalid parameters');
         }
         $ignoredCfgRaw     = Config::raw('updates_ignored');
@@ -206,7 +209,7 @@ final class ExtensionsEndpoints
         if (!isset($_SESSION['need_update' . AppInfo::VERSION])) {
             $update->checkPiwigoUpgrade();
         }
-        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION];
+        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
         $cuUpdatesIgnoredRaw = Config::raw('updates_ignored');
         $cuUpdatesIgnored    = is_string($cuUpdatesIgnoredRaw) ? unserialize($cuUpdatesIgnoredRaw) : false;
         Config::override('updates_ignored', is_array($cuUpdatesIgnored) ? $cuUpdatesIgnored : []);

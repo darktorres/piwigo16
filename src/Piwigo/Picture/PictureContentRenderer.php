@@ -62,7 +62,7 @@ final class PictureContentRenderer
                 continue;
             }
             $added[$url]   = 1;
-            $showOriginal &= !($derivative->sameAsSource());
+            $showOriginal = $showOriginal && !($derivative->sameAsSource());
 
             if (Config::pictureSizesIcon() || $type == $derivType) {
                 $uniqueDerivatives[$type] = $derivative;

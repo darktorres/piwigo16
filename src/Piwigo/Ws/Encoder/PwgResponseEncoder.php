@@ -13,7 +13,9 @@ use Piwigo\Ws\PwgNamedStruct;
  */
 abstract class PwgResponseEncoder
 {
-    /** encodes the web service response to the appropriate output format
+    /**
+     * encodes the web service response to the appropriate output format
+     *
      * @param mixed $response the unencoded result of a service method call
      */
     abstract public function encodeResponse(mixed $response): mixed;
@@ -25,8 +27,10 @@ abstract class PwgResponseEncoder
     /**
      * returns true if the parameter is a 'struct' (php array type whose keys are
      * NOT consecutive integers starting with 0)
+     *
+     * @param array<mixed>|string $data
      */
-    public static function isStruct(mixed &$data): bool
+    public static function isStruct(array|string $data): bool
     {
         if (is_array($data)) {
             if (range(0, count($data) - 1) !== array_keys($data)) { # string keys, unordered, non-incremental keys, .. - whatever, make object
@@ -72,9 +76,6 @@ abstract class PwgResponseEncoder
             }
         }
 
-        if (!is_array($value)) {
-            return;
-        }
         foreach ($value as $key => &$v) {
             self::flatten($v);
         }

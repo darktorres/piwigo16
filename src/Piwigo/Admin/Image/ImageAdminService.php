@@ -49,17 +49,17 @@ final class ImageAdminService
             if (!isset($formatsOf[$fmtImageId])) {
                 $formatsOf[$fmtImageId] = [];
             }
-            $formatsOf[$fmtImageId][] = is_scalar($row['ext']) ? (string) $row['ext'] : '';
+            $formatsOf[$fmtImageId][] = is_string($row['ext'] ?? null) ? $row['ext'] : '';
         }
         foreach ($repo->findPathsByIds($ids) as $row) {
-            $rowPath = is_scalar($row['path']) ? (string) $row['path'] : '';
+            $rowPath = is_string($row['path'] ?? null) ? $row['path'] : '';
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
             $files   = [];
             $files[] = ServiceLocator::get(StringUtil::class)->getElementPath($row);
             if (!empty($row['representative_ext'])) {
-                $files[] = ServiceLocator::get(StringUtil::class)->originalToRepresentative($files[0], is_scalar($row['representative_ext']) ? (string) $row['representative_ext'] : '');
+                $files[] = ServiceLocator::get(StringUtil::class)->originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
             }
             $rowIdInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($formatsOf[$rowIdInt])) {
@@ -159,6 +159,12 @@ final class ImageAdminService
     #[\Deprecated(message: '2.4')]
     public function getFs(string $path, bool $recursive = true): mixed
     {
+        return $this->getFsInternal($path, $recursive);
+    }
+
+    /** @return array{elements: list<string>, thumbnails: list<string>, representatives: list<string>} */
+    private function getFsInternal(string $path, bool $recursive = true): array
+    {
         if (!Config::has('flip_picture_ext')) {
             Config::override('flip_picture_ext', array_flip(Config::pictureExtensions()));
         }
@@ -197,11 +203,10 @@ final class ImageAdminService
                 closedir($contents);
             }
             foreach ($subdirs as $subdir) {
-                $tmpFs = $this->getFs($path . '/' . $subdir);
-                $tmpFsArr = is_array($tmpFs) ? $tmpFs : [];
-                $fs['elements']        = array_merge($fs['elements'], is_array($tmpFsArr['elements'] ?? null) ? $tmpFsArr['elements'] : []);
-                $fs['thumbnails']      = array_merge($fs['thumbnails'], is_array($tmpFsArr['thumbnails'] ?? null) ? $tmpFsArr['thumbnails'] : []);
-                $fs['representatives'] = array_merge($fs['representatives'], is_array($tmpFsArr['representatives'] ?? null) ? $tmpFsArr['representatives'] : []);
+                $tmpFs = $this->getFsInternal($path . '/' . $subdir);
+                $fs['elements']        = array_merge($fs['elements'], $tmpFs['elements']);
+                $fs['thumbnails']      = array_merge($fs['thumbnails'], $tmpFs['thumbnails']);
+                $fs['representatives'] = array_merge($fs['representatives'], $tmpFs['representatives']);
             }
         }
         return $fs;
@@ -210,9 +215,9 @@ final class ImageAdminService
     /** @param array<mixed> $infos */
     public function deleteElementDerivatives(array $infos, string|int $type = 'all'): void
     {
-        $path = is_scalar($infos['path']) ? (string) $infos['path'] : '';
+        $path = is_string($infos['path'] ?? null) ? $infos['path'] : '';
         if (!empty($infos['representative_ext'])) {
-            $path = ServiceLocator::get(StringUtil::class)->originalToRepresentative($path, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
+            $path = ServiceLocator::get(StringUtil::class)->originalToRepresentative($path, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);
@@ -222,15 +227,18 @@ final class ImageAdminService
             return;
         }
         $pattern = $type === 'all' ? '-*' : '-' . DerivativeEncoding::derivativeToUrl((string) $type) . '*';
-        $path    = substr_replace($path, $pattern, $dot, 0);
-        if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $path)) !== false) {
+        /** @var array<int, string>|string $replaced */
+        $replaced = substr_replace($path, $pattern, $dot, 0);
+        $pathStr  = is_array($replaced) ? '' : $replaced;
+        if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $pathStr)) !== false) {
             foreach ($glob as $file) {
                 Filesystem::tryUnlink($file);
             }
         }
     }
 
-    public function clearDerivativeCache(mixed $types = 'all'): void
+    /** @param array<mixed>|string $types */
+    public function clearDerivativeCache(array|string $types = 'all'): void
     {
         if ($types === 'all') {
             $types   = ImageStdParams::getAllTypes();
@@ -263,6 +271,7 @@ final class ImageAdminService
         }
     }
 
+    /** @param non-empty-string $pattern */
     public function clearDerivativeCacheRec(string $path, string $pattern): bool
     {
         $rmdir   = true;
@@ -314,10 +323,10 @@ final class ImageAdminService
                         $split    = explode('-', $node);
                         $sizeCode = substr(end($split), 0, 2);
                         $fsize    = filesize($path . '/' . $node);
-                        $msizes[$sizeCode] = (is_numeric($msizes[$sizeCode] ?? null) ? (float) $msizes[$sizeCode] : 0.0) + ($fsize !== false ? $fsize : 0);
+                        $msizes[$sizeCode] = (is_numeric($msizes[$sizeCode] ?? null) ? (float) $msizes[$sizeCode] : 0.0) + (float) ($fsize !== false ? $fsize : 0);
                     } elseif (is_dir($path . '/' . $node)) {
                         foreach ($this->getCacheSizeDerivatives($path . '/' . $node) as $k => $v) {
-                            $msizes[$k] = (is_numeric($msizes[$k] ?? null) ? (float) $msizes[$k] : 0.0) + $v;
+                            $msizes[$k] = (is_numeric($msizes[$k] ?? null) ? (float) $msizes[$k] : 0.0) + (float) $v;
                         }
                     }
                 }
@@ -340,7 +349,7 @@ final class ImageAdminService
     public function getImageInfos(int|string $imageId, bool $dieOnMissing = false): ?array
     {
         if (!is_numeric($imageId)) {
-            HtmlService::fatalError('[getImageInfos] invalid image identifier ' . htmlentities((string) $imageId));
+            HtmlService::fatalError('[getImageInfos] invalid image identifier ' . htmlentities($imageId));
         }
         $images = DbConnection::get()->executeQuery(
             'SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId

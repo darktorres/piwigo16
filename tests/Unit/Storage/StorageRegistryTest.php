@@ -12,15 +12,17 @@ use Piwigo\Storage\StorageRegistry;
 
 final class StorageRegistryTest extends TestCase
 {
-    private string $tmpDir;
+    private string $tmpDir = '';
 
+    #[\Override]
     protected function setUp(): void
     {
-        $this->tmpDir = sys_get_temp_dir() . '/piwigo_storage_test_' . getmypid() . '_' . mt_rand();
+        $this->tmpDir = sys_get_temp_dir() . '/piwigo_storage_test_' . (int) getmypid() . '_' . mt_rand();
         mkdir($this->tmpDir, 0755, true);
         StorageRegistry::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         StorageRegistry::reset();

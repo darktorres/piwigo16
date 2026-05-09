@@ -24,6 +24,7 @@ final readonly class Router
 
     public function __construct(string $routesFile)
     {
+        /** @psalm-suppress UnresolvableInclude */
         $routes = require $routesFile;
         assert($routes instanceof RouteCollection);
         $this->routes = $routes;

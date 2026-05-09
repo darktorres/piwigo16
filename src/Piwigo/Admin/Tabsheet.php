@@ -7,7 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 
-class Tabsheet
+final class Tabsheet
 {
     /** @var array<string, array<string, bool|string>> */
     public array $sheets = [];
@@ -69,7 +69,7 @@ class Tabsheet
     public function select(string $name): void
     {
         $this->sheets = EventDispatcher::dispatch('tabsheet_before_select', $this->sheets, $this->uniqid);
-        if (!array_key_exists((string) $name, $this->sheets)) {
+        if (!array_key_exists($name, $this->sheets)) {
             $keys = array_keys($this->sheets);
             $name = $keys[0];
         }

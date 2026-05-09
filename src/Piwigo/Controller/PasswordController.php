@@ -33,6 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PasswordController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 

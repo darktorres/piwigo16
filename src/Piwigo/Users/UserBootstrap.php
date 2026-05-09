@@ -42,7 +42,7 @@ final class UserBootstrap
         $user['id'] = Config::guestId();
 
         if (isset($_COOKIE[session_name()])) {
-            if (isset($_GET['act']) && is_scalar($_GET['act']) && (string) $_GET['act'] === 'logout') {
+            if (isset($_GET['act']) && is_string($_GET['act']) && $_GET['act'] === 'logout') {
                 AuthService::get()->logoutUser();
                 Util::get()->redirect(UrlService::get()->getGalleryHomeUrl());
             } elseif (!empty($_SESSION['pwg_uid'])) {
@@ -67,7 +67,7 @@ final class UserBootstrap
             if (isset($remoteUser)) {
                 $remoteUserStr = is_scalar($remoteUser) ? (string) $remoteUser : '';
                 $userId = UserService::get()->getUserid($remoteUserStr);
-                if (!$userId) {
+                if ($userId === false || $userId === 0) {
                     $userId = UserService::get()->registerUser($remoteUserStr, '', '', false);
                 }
                 $user['id'] = $userId;
@@ -76,7 +76,8 @@ final class UserBootstrap
 
         // Auth-key login (e.g. email confirmation links)
         if (isset($_GET['auth'])) {
-            AuthService::get()->authKeyLogin(is_scalar($_GET['auth']) ? (string) $_GET['auth'] : '');
+            $rawAuth = $_GET['auth'];
+            AuthService::get()->authKeyLogin(is_string($rawAuth) ? $rawAuth : '');
         }
 
         // HTTP API key (only relevant when IN_WS is defined by WsController)
@@ -85,31 +86,32 @@ final class UserBootstrap
             && !empty($_SERVER['HTTP_X_PIWIGO_API'])
             && isset($_REQUEST['method'])
         ) {
-            $authHeader = is_scalar($_SERVER['HTTP_X_PIWIGO_API']) ? (string) $_SERVER['HTTP_X_PIWIGO_API'] : '';
-            if ($authHeader) {
-                $authenticated = AuthService::get()->authKeyLogin($authHeader, true);
-                if (!$authenticated) {
-                    PwgServer::boot();
-                    $serviceRaw = $GLOBALS['service'] ?? null;
-                    if ($serviceRaw instanceof PwgServer) {
-                        $serviceRaw->sendResponse(new PwgError(401, 'Invalid api_key'));
-                    }
-                    exit;
+            /** @var mixed $authHeaderRaw */
+            $authHeaderRaw = $_SERVER['HTTP_X_PIWIGO_API'];
+            $authHeader    = is_string($authHeaderRaw) ? $authHeaderRaw : '';
+            $authenticated = AuthService::get()->authKeyLogin($authHeader, true);
+            if (!$authenticated) {
+                PwgServer::boot();
+                $serviceRaw = $GLOBALS['service'] ?? null;
+                if ($serviceRaw instanceof PwgServer) {
+                    $serviceRaw->sendResponse(new PwgError(401, 'Invalid api_key'));
                 }
-                define('PWG_API_KEY_REQUEST', true);
-                $_POST['pwg_token'] = $_GET['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
-                LoggerRegistry::current()->info(
-                    '[api_key][pkid=' . explode(':', $authHeader)[0] . ']'
-                    . '[method=' . (is_scalar($_REQUEST['method']) ? (string) $_REQUEST['method'] : '') . ']'
-                );
+                exit;
             }
+            define('PWG_API_KEY_REQUEST', true);
+            $_POST['pwg_token'] = $_GET['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
+            $requestMethodRaw = $_REQUEST['method'];
+            LoggerRegistry::current()->info(
+                '[api_key][pkid=' . explode(':', $authHeader)[0] . ']'
+                . '[method=' . (is_string($requestMethodRaw) ? $requestMethodRaw : '') . ']'
+            );
         }
 
         // pwg.images.uploadAsync credential login (IN_WS only)
         if (defined('IN_WS')
             && isset($_REQUEST['method'])
-            && is_scalar($_REQUEST['method'])
-            && (string) $_REQUEST['method'] === 'pwg.images.uploadAsync'
+            && is_string($_REQUEST['method'])
+            && $_REQUEST['method'] === 'pwg.images.uploadAsync'
             && isset($_POST['username'])
             && isset($_POST['password'])
         ) {
@@ -131,27 +133,26 @@ final class UserBootstrap
 
         // Cache invalidation flag
         $page['user_use_cache'] = true;
-        if (defined('IN_ADMIN') ? constant('IN_ADMIN') : false) {
+        if (defined('IN_ADMIN')) {
             $page['user_use_cache'] = false;
-        } elseif (
-            isset($_REQUEST['method'])
-            && isset($_SERVER['HTTP_REFERER'])
-            && preg_match(
-                '/\/admin\.php\?page=/',
-                is_scalar($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : ''
-            )
-        ) {
-            $page['user_use_cache'] = false;
+        } else {
+            $referer = $_SERVER['HTTP_REFERER'] ?? null;
+            if (isset($_REQUEST['method'])
+                && is_string($referer)
+                && preg_match('/\/admin\.php\?page=/', $referer)
+            ) {
+                $page['user_use_cache'] = false;
+            }
         }
 
         // Build full user array from DB
         $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
-        $user   = UserService::get()->buildUser($userId, (bool) $page['user_use_cache']);
+        $user   = UserService::get()->buildUser($userId, $page['user_use_cache']);
 
         // Browser-language override for guests
         if (Config::browserLanguage() && (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric())) {
             $language = PreferencesService::get()->getBrowserLanguage();
-            if ($language) {
+            if ($language !== false && $language !== '') {
                 $user['language'] = $language;
             }
         }

@@ -43,21 +43,22 @@ final class ImageRect
     /**
      * Crops horizontally this rectangle by increasing left side and/or reducing the right side.
      *
-     * @param int $pixels - the amount to substract from the width
+     * @param int|float $pixels - the amount to substract from the width
      * @param string|null $coi - a 4 character string (or null) containing the center of interest
      */
     public function cropH(int|float $pixels, ?string $coi): void
     {
+        $pixels = (float) $pixels;
         if ($this->width() <= $pixels) {
             return;
         }
-        $tlcrop = floor($pixels / 2);
+        $tlcrop = floor($pixels / 2.0);
 
-        if (!empty($coi)) {
-            $coil = floor($this->r * DerivativeEncoding::charToFraction($coi[0]));
-            $coir = ceil($this->r * DerivativeEncoding::charToFraction($coi[2]));
-            $availableL = $coil > $this->l ? $coil - $this->l : 0;
-            $availableR = $coir < $this->r ? $this->r - $coir : 0;
+        if ($coi !== null && $coi !== '') {
+            $coil = floor((float) $this->r * (float) DerivativeEncoding::charToFraction($coi[0]));
+            $coir = ceil((float) $this->r * (float) DerivativeEncoding::charToFraction($coi[2]));
+            $availableL = $coil > $this->l ? $coil - (float) $this->l : 0.0;
+            $availableR = $coir < $this->r ? (float) $this->r - $coir : 0.0;
             if ($availableL + $availableR >= $pixels) {
                 if ($availableL < $tlcrop) {
                     $tlcrop = $availableL;
@@ -73,21 +74,22 @@ final class ImageRect
     /**
      * Crops vertically this rectangle by increasing top side and/or reducing the bottom side.
      *
-     * @param int $pixels - the amount to substract from the height
+     * @param int|float $pixels - the amount to substract from the height
      * @param string|null $coi - a 4 character string (or null) containing the center of interest
      */
     public function cropV(int|float $pixels, ?string $coi): void
     {
+        $pixels = (float) $pixels;
         if ($this->height() <= $pixels) {
             return;
         }
-        $tlcrop = floor($pixels / 2);
+        $tlcrop = floor($pixels / 2.0);
 
-        if (!empty($coi)) {
-            $coit = floor($this->b * DerivativeEncoding::charToFraction($coi[1]));
-            $coib = ceil($this->b * DerivativeEncoding::charToFraction($coi[3]));
-            $availableT = $coit > $this->t ? $coit - $this->t : 0;
-            $availableB = $coib < $this->b ? $this->b - $coib : 0;
+        if ($coi !== null && $coi !== '') {
+            $coit = floor((float) $this->b * (float) DerivativeEncoding::charToFraction($coi[1]));
+            $coib = ceil((float) $this->b * (float) DerivativeEncoding::charToFraction($coi[3]));
+            $availableT = $coit > $this->t ? $coit - (float) $this->t : 0.0;
+            $availableB = $coib < $this->b ? (float) $this->b - $coib : 0.0;
             if ($availableT + $availableB >= $pixels) {
                 if ($availableT < $tlcrop) {
                     $tlcrop = $availableT;

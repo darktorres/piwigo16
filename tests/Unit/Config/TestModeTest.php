@@ -10,8 +10,9 @@ use Piwigo\Config\TestMode;
 final class TestModeTest extends TestCase
 {
     /** @var array{header: mixed, remote: mixed} */
-    private array $serverBackup;
+    private array $serverBackup = ['header' => null, 'remote' => null];
 
+    #[\Override]
     protected function setUp(): void
     {
         // tests/bootstrap.php sets HTTP_X_PIWIGO_ENV=test for the whole
@@ -23,6 +24,7 @@ final class TestModeTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         if ($this->serverBackup['header'] === null) {

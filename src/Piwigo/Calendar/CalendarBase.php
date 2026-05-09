@@ -156,7 +156,7 @@ abstract class CalendarBase
     ): array {
         $nav_bar_datas = [];
 
-        if (Config::calendarShowEmpty() and $show_empty and !empty($labels)) {
+        if (Config::calendarShowEmpty() and $show_empty and $labels !== null && count($labels) > 0) {
             foreach ($labels as $item => $label) {
                 if (! isset($items[$item])) {
                     $items[$item] = -1;
@@ -285,7 +285,7 @@ $this->getDateWhere($level).'
         $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
 
         $prev = $next = null;
-        if (empty($chronologyDate)) {
+        if (count($chronologyDate) === 0) {
             return;
         }
 

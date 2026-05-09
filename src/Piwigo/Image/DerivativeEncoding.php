@@ -34,7 +34,7 @@ final class DerivativeEncoding
         if ($s[0] == $s[1]) {
             return (int) $s[0];
         }
-        return $s[0] . 'x' . $s[1];
+        return (string) $s[0] . 'x' . (string) $s[1];
     }
 
     /**
@@ -55,6 +55,6 @@ final class DerivativeEncoding
     /** Converts a 0..1 float into a char a-z. */
     public static function fractionToChar(float|int $f): string
     {
-        return chr(min(255, max(0, (int) (ord('a') + round($f * 25)))));
+        return chr(min(255, max(0, (int) ((float) ord('a') + round((float) $f * 25.0)))));
     }
 }

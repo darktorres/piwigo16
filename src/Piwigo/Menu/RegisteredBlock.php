@@ -7,7 +7,7 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-class RegisteredBlock
+final class RegisteredBlock
 {
     /**
      * @param string $id

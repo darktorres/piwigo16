@@ -50,8 +50,11 @@ final class DisplayBlockTest extends TestCase
         $block->raw_content = '<div>raw</div>';
         $block->id = 'custom_id';
         self::assertSame(['key' => 'value'], $block->data);
+        /** @psalm-suppress RedundantCondition */
         self::assertSame('my_template.tpl', $block->template);
+        /** @psalm-suppress RedundantCondition */
         self::assertSame('<div>raw</div>', $block->raw_content);
+        /** @psalm-suppress RedundantCondition */
         self::assertSame('custom_id', $block->id);
     }
 }

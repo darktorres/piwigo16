@@ -85,7 +85,7 @@ final readonly class PermissionService
         return $this->isAutorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
 
-    public function canManageComment(string $action, mixed $commentAuthorId): bool
+    public function canManageComment(string $action, int $commentAuthorId): bool
     {
         if ($this->isAGuest()) {
             return false;
@@ -154,7 +154,7 @@ final readonly class PermissionService
             switch ($condition) {
                 case 'forbidden_categories':
                     if (!empty($user['forbidden_categories'])) {
-                        $sqlList[] = $fieldName . ' NOT IN (' . (is_scalar($user['forbidden_categories']) ? (string) $user['forbidden_categories'] : '') . ')';
+                        $sqlList[] = $fieldName . ' NOT IN (' . (is_string($user['forbidden_categories']) ? $user['forbidden_categories'] : '') . ')';
                     }
                     break;
                 case 'visible_categories':
@@ -178,10 +178,10 @@ final readonly class PermissionService
                             $tablePrefix = 'i.';
                         }
                         if (isset($tablePrefix)) {
-                            $sqlList[] = $tablePrefix . 'level<=' . (is_scalar($user['level'] ?? null) ? (string) $user['level'] : '0');
+                            $sqlList[] = $tablePrefix . 'level<=' . (is_string($user['level'] ?? null) ? $user['level'] : '0');
                         } elseif (!empty($user['image_access_list']) and !empty($user['image_access_type'])) {
-                            $sqlList[] = $fieldName . ' ' . (is_scalar($user['image_access_type']) ? (string) $user['image_access_type'] : '')
-                                . ' (' . (is_scalar($user['image_access_list']) ? (string) $user['image_access_list'] : '') . ')';
+                            $sqlList[] = $fieldName . ' ' . (is_string($user['image_access_type']) ? $user['image_access_type'] : '')
+                                . ' (' . (is_string($user['image_access_list']) ? $user['image_access_list'] : '') . ')';
                         }
                     }
                     break;
@@ -209,8 +209,9 @@ final readonly class PermissionService
         if (!isset($user['last_photo_date'])) {
             return '0=1';
         }
-        $recentPeriod  = is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0;
-        $lastPhotoDate = is_scalar($user['last_photo_date']) ? (string) $user['last_photo_date'] : '';
+        $recentPeriodRaw = $user['recent_period'] ?? null;
+        $recentPeriod  = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
+        $lastPhotoDate = is_string($user['last_photo_date']) ? $user['last_photo_date'] : '';
         return $dbField . '>=LEAST('
           . SqlExpr::recentPeriodExpr($recentPeriod)
           . ',' . SqlExpr::recentPeriodExpr(1, $lastPhotoDate) . ')';

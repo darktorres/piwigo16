@@ -25,6 +25,7 @@ final readonly class MiddlewarePipeline implements RequestHandlerInterface
     ) {
     }
 
+    #[\Override]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         if ($this->middleware === []) {

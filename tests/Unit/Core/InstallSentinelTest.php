@@ -9,8 +9,9 @@ use Piwigo\Core\InstallSentinel;
 
 final class InstallSentinelTest extends TestCase
 {
-    private string $stampPath;
+    private string $stampPath = '';
 
+    #[\Override]
     protected function setUp(): void
     {
         if (!defined('PHPWG_ROOT_PATH')) {
@@ -25,6 +26,7 @@ final class InstallSentinelTest extends TestCase
         InstallSentinel::markUninstalled();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         InstallSentinel::markUninstalled();

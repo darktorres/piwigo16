@@ -137,16 +137,16 @@ final class UserAdminService
         return $groupList;
     }
 
-    public function getUsername(mixed $userId): false|string
+    public function getUsername(int $userId): false|string
     {
         $userFields = Config::userFields();
         $username   = ServiceLocator::get(UserRepository::class)->findUsernameById(
             $userFields['id'],
             $userFields['username'],
             Tables::users(),
-            is_numeric($userId) ? (int) $userId : 0
+            $userId
         );
-        return $username !== null ? stripslashes((string) $username) : false;
+        return $username !== null ? stripslashes($username) : false;
     }
 
     public function invalidateUserCache(bool $full = true): void

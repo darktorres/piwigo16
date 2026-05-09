@@ -99,11 +99,12 @@ SELECT SQL_CALC_FOUND_ROWS
             } elseif (Config::allowRandomRepresentative()) {
                 $image_id = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
+                $rowUppercatsForQuery = $row['uppercats'] ?? null;
                 $subquery = '
 SELECT representative_picture_id
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id . '
-  WHERE uppercats LIKE \'' . (is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '') . ',%\'
+  WHERE uppercats LIKE \'' . (is_string($rowUppercatsForQuery) ? $rowUppercatsForQuery : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
                     . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
   ORDER BY ' . Dml::RANDOM_FUNCTION . '()
@@ -116,13 +117,14 @@ SELECT representative_picture_id
             }
 
             if (isset($image_id)) {
-                if (Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] != $image_id) {
-                    $user_representative_updates_for[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $image_id;
+                if (Config::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) != $image_id) {
+                    $rowIdRaw5 = $row['id'] ?? null;
+                    $user_representative_updates_for[is_scalar($rowIdRaw5) ? (string) $rowIdRaw5 : ''] = $image_id;
                 }
                 $row['representative_picture_id'] = $image_id;
                 $image_ids[] = $image_id;
                 $categories[] = $row;
-                $category_ids[] = $row['id'];
+                $category_ids[] = $row['id'] ?? null;
             } else {
                 $logger->info(sprintf(
                     '[CategoryCatsRenderer] category #%u was listed in SQL but no image_id found, so it was skipped',
@@ -141,7 +143,7 @@ SELECT
     MAX(date_creation) AS `to`
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $category_ids)) . ')
+  WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')
 ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
 ;';
@@ -153,14 +155,14 @@ SELECT
             usort($categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
         }
 
+        $infos_of_image = [];
         if (count($categories) > 0) {
-            $infos_of_image = [];
             $new_image_ids = [];
 
             $query = '
 SELECT *
   FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $image_ids)) . ')
+  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')
 ;';
             foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
                 if ($row['level'] <= $user['level']) {
@@ -173,7 +175,8 @@ SELECT *
                                 $new_image_ids[] = $image_id;
                             }
                             if (Config::representativeCacheOnLevel()) {
-                                $user_representative_updates_for[is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''] = $image_id;
+                                $catIdRaw = $category['id'] ?? null;
+                                $user_representative_updates_for[is_scalar($catIdRaw) ? (string) $catIdRaw : ''] = $image_id;
                             }
                             $category['representative_picture_id'] = $image_id;
                         }
@@ -234,14 +237,16 @@ SELECT *
                 );
 
                 if ($page['section'] == 'recent_cats') {
-                    $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null);
+                    $uppercatsRaw = $category['uppercats'] ?? null;
+                    $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($uppercatsRaw) ? (string) $uppercatsRaw : '', null);
                 } else {
                     $name = $category['name'];
                 }
 
                 $repPicIdRaw = $category['representative_picture_id'] ?? null;
                 $repPicId = (is_string($repPicIdRaw) || is_int($repPicIdRaw)) ? $repPicIdRaw : null;
-                $representative_infos = ($repPicId !== null && is_array($infos_of_image[$repPicId] ?? null)) ? $infos_of_image[$repPicId] : [];
+                $infosRaw = ($repPicId !== null) ? ($infos_of_image[$repPicId] ?? null) : null;
+                $representative_infos = is_array($infosRaw) ? $infosRaw : [];
 
                 $tpl_var = array_merge($category, [
                     'ID' => $category['id'],
@@ -249,9 +254,9 @@ SELECT *
                     'TN_ALT' => strip_tags((string) $category['name']),
                     'URL' => UrlService::get()->makeIndexUrl(['category' => $category]),
                     'CAPTION_NB_IMAGES' => ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
-                        is_numeric($category['nb_images'] ?? null) ? (int) $category['nb_images'] : 0,
+                        is_numeric($category['nb_images']) ? (int) $category['nb_images'] : 0,
                         is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
-                        is_numeric($category['count_categories'] ?? null) ? (int) $category['count_categories'] : 0,
+                        is_numeric($category['count_categories']) ? (int) $category['count_categories'] : 0,
                         true,
                         '<br>'
                     ),
@@ -262,8 +267,9 @@ SELECT *
                     'NAME' => $name,
                 ]);
                 if (Config::indexNewIcon()) {
+                    $maxDateLastRaw = $category['max_date_last'] ?? null;
                     $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(
-                        is_scalar($category['max_date_last'] ?? null) ? (string) $category['max_date_last'] : null,
+                        is_scalar($maxDateLastRaw) ? (string) $maxDateLastRaw : null,
                         (bool) ($category['is_child_date_last'] ?? false)
                     );
                 }
@@ -274,7 +280,7 @@ SELECT *
                     if ($catId !== null && isset($dates_of_category[$catId])) {
                         $from = $dates_of_category[$catId]['from'] ?? null;
                         $to = $dates_of_category[$catId]['to'] ?? null;
-                        if (!empty($from)) {
+                        if ($from !== null && $from !== '') {
                             $tpl_var['INFO_DATES'] = ServiceLocator::get(DateService::class)->formatFromto(
                                 (is_string($from) || is_int($from)) ? $from : null,
                                 (is_string($to) || is_int($to)) ? $to : null
@@ -302,7 +308,7 @@ SELECT *
                 $page['cats_navigation_bar'] = ServiceLocator::get(Util::class)->createNavigationBar(
                     UrlService::get()->duplicateIndexUrl([], ['startcat']),
                     is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
-                    is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
+                    is_numeric($page['startcat']) ? (int) $page['startcat'] : 0,
                     Config::nbCategoriesPage(),
                     true,
                     'startcat'

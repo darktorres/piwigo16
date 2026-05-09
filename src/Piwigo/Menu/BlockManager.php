@@ -15,7 +15,7 @@ use Piwigo\Template\TemplateRegistry;
 /**
  * Manages a set of RegisteredBlock and DisplayBlock.
  */
-class BlockManager
+final class BlockManager
 {
     /** @var RegisteredBlock[] */
     protected $registered_blocks = [];
@@ -138,7 +138,7 @@ class BlockManager
      */
     protected function sortBlocks(): void
     {
-        uasort($this->display_blocks, [self::class, 'cmpByPosition']);
+        uasort($this->display_blocks, self::cmpByPosition(...));
     }
 
     /**

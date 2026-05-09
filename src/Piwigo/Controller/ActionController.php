@@ -32,17 +32,19 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ActionController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
 
         $params = $request->getQueryParams();
+        $format = [];
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
             ServiceLocator::get(Util::class)->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
             $get_format = StringUtil::get()->inputInt('format', null, $_GET);
 
-            $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $get_format . ';';
+            $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . ($get_format ?? 0) . ';';
             $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
 
             if (count($formats) == 0) {
@@ -60,8 +62,8 @@ final class ActionController implements ControllerInterface
             $this->error(400, 'Invalid request - id/part');
         }
 
-        $element_info = ServiceLocator::get(ImageRepository::class)->findById((int) $get_id);
-        if (empty($element_info)) {
+        $element_info = ServiceLocator::get(ImageRepository::class)->findById($get_id);
+        if ($element_info === null || count($element_info) === 0) {
             $this->error(404, 'Requested id not found');
         }
 
@@ -90,7 +92,7 @@ SELECT id FROM ' . Tables::categories() . '
         switch ($get_part) {
             case 'e':
                 $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-                if ($src_image->isOriginal() && !($user['enabled_high'] ?? false)) {
+                if ($src_image->isOriginal() && ($user['enabled_high'] ?? false) === false) {
                     $deriv = new DerivativeImage(DerivativeSize::TwoXLarge->value, $src_image);
                     if (!$deriv->sameAsSource()) {
                         $this->error(401, 'Access denied e');
@@ -105,7 +107,7 @@ SELECT id FROM ' . Tables::categories() . '
             case 'f':
                 $formatExt = $format['ext'] ?? null;
                 $file = ServiceLocator::get(StringUtil::class)->originalToFormat(ServiceLocator::get(StringUtil::class)->getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
-                $element_info['file'] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_scalar($element_info['file']) ? (string) $element_info['file'] : '') . '.' . (is_scalar($format['ext'] ?? null) ? (string) $format['ext'] : '');
+                $element_info['file'] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
                 break;
         }
 
@@ -128,9 +130,10 @@ SELECT id FROM ' . Tables::categories() . '
             if (!is_readable($file)) {
                 $this->error(404, "Requested file not found - $file");
             }
-            $http_headers[] = 'Content-Length: ' . filesize($file);
+            $http_headers[] = 'Content-Length: ' . (int) filesize($file);
             if (function_exists('mime_content_type')) {
-                $ctype = mime_content_type($file);
+                $mimeResult = mime_content_type($file);
+                $ctype = $mimeResult !== false ? $mimeResult : null;
             }
             $gmt_mtime      = gmdate('D, d M Y H:i:s', (int) filemtime($file)) . ' GMT';
             $http_headers[] = 'Last-Modified: ' . $gmt_mtime;

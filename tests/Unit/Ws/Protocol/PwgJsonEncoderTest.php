@@ -10,8 +10,10 @@ use Piwigo\Ws\PwgError;
 
 final class PwgJsonEncoderTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgJsonEncoder $encoder;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->encoder = new PwgJsonEncoder();
@@ -26,7 +28,7 @@ final class PwgJsonEncoderTest extends TestCase
     {
         $err = new PwgError(404, 'not found');
         $json = $this->encoder->encodeResponse($err);
-        $decoded = json_decode((string) $json, true);
+        $decoded = json_decode($json, true);
         self::assertIsArray($decoded);
         self::assertSame('fail', $decoded['stat']);
         self::assertSame(404, $decoded['err']);
@@ -36,7 +38,7 @@ final class PwgJsonEncoderTest extends TestCase
     public function testEncodeStringResponse(): void
     {
         $json = $this->encoder->encodeResponse('hello');
-        $decoded = json_decode((string) $json, true);
+        $decoded = json_decode($json, true);
         self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         self::assertSame('hello', $decoded['result']);
@@ -45,7 +47,7 @@ final class PwgJsonEncoderTest extends TestCase
     public function testEncodeArrayResponse(): void
     {
         $json = $this->encoder->encodeResponse(['a' => 1, 'b' => 2]);
-        $decoded = json_decode((string) $json, true);
+        $decoded = json_decode($json, true);
         self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         $result = $decoded['result'];
@@ -56,7 +58,7 @@ final class PwgJsonEncoderTest extends TestCase
     public function testEncodeNullResponse(): void
     {
         $json = $this->encoder->encodeResponse(null);
-        $decoded = json_decode((string) $json, true);
+        $decoded = json_decode($json, true);
         self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         self::assertNull($decoded['result']);

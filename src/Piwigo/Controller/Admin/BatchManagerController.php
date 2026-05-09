@@ -85,7 +85,7 @@ final class BatchManagerController
             if ('empty_caddie' == $_GET['action']) {
                 ServiceLocator::get(ImageRepository::class)->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
 
             if ('delete_orphans' == $_GET['action'] && isset($_GET['nb_orphans_deleted'])) {
@@ -98,7 +98,8 @@ final class BatchManagerController
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
-                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                    $getPage = $_GET['page'] ?? null;
+                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
                 }
             }
 
@@ -112,7 +113,8 @@ final class BatchManagerController
                     /** @var array<mixed> $page_infos_ref */
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
-                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                    $getPage2 = $_GET['page'] ?? null;
+                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
                 }
             }
         }
@@ -157,9 +159,9 @@ final class BatchManagerController
             if (isset($_POST['filter_tags_use'])) {
                 $filter_tags_post = $_POST['filter_tags'] ?? null;
                 if (is_array($filter_tags_post)) {
-                    $filter_tags_raw = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $filter_tags_post);
+                    $filter_tags_raw = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $filter_tags_post);
                 } else {
-                    $filter_tags_raw = is_scalar($filter_tags_post) ? (string) $filter_tags_post : '';
+                    $filter_tags_raw = is_string($filter_tags_post) ? $filter_tags_post : '';
                 }
                 $bmf['tags'] = ServiceLocator::get(TagAdminService::class)->getTagIds($filter_tags_raw, false);
                 if (isset($_POST['tag_mode']) && in_array($_POST['tag_mode'], ['AND', 'OR'])) {
@@ -211,18 +213,21 @@ final class BatchManagerController
             $_SESSION['bulk_manager_filter'] = EventDispatcher::dispatch('batch_manager_register_filters', $bmf);
         } elseif (isset($_GET['filter'])) {
             if (!is_array($_GET['filter'])) {
-                $_GET['filter'] = explode(',', is_scalar($_GET['filter']) ? (string) $_GET['filter'] : '');
+                /** @var string $rawFilter */
+                $rawFilter      = $_GET['filter'];
+                $_GET['filter'] = explode(',', $rawFilter);
             }
             /** @var array<string, mixed> $bmf */
             $bmf = [];
 
             foreach ($_GET['filter'] as $filter) {
-                [$type, $value] = explode('-', is_scalar($filter) ? (string) $filter : '', 2) + [1 => ''];
+                [$type, $value] = explode('-', is_string($filter) ? $filter : '', 2) + ['1' => ''];
 
                 switch ($type) {
                     case 'prefilter':
                         if (preg_match('/^duplicates-?/', $value)) {
-                            [, $duplicate_field] = explode('-', $value, 2);
+                            $dupParts = explode('-', $value, 2);
+                            $duplicate_field = $dupParts[1] ?? '';
                             $bmf['prefilter'] = 'duplicates';
                             if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'])) {
                                 $bmf['duplicates_' . $duplicate_field] = true;
@@ -319,7 +324,7 @@ final class BatchManagerController
                     break;
                 case 'last_import':
                     $last_import_date = ServiceLocator::get(ImageRepository::class)->findMaxDateAvailable();
-                    if (!empty($last_import_date)) {
+                    if ($last_import_date !== null && $last_import_date !== '') {
                         $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
                     }
                     break;
@@ -383,7 +388,7 @@ final class BatchManagerController
             $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
             if (!ServiceLocator::get(CategoryRepository::class)->existsById($bmf_category)) {
                 unset($_SESSION['bulk_manager_filter']);
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page']) ? (string) $_GET['page'] : ''));
+                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? ServiceLocator::get(CategoryService::class)->getSubcatIds([$bmf_category]) : [$bmf_category];
             $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
@@ -397,7 +402,8 @@ final class BatchManagerController
 
         if (!empty($bmf['tags'])) {
             $bmf_tags     = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags']) ? $bmf['tags'] : []);
-            $bmf_tag_mode = is_string($bmf['tag_mode'] ?? null) ? $bmf['tag_mode'] : 'AND';
+            $bmfTagMode = $bmf['tag_mode'] ?? null;
+            $bmf_tag_mode = is_string($bmfTagMode) ? $bmfTagMode : 'AND';
             $filter_sets[] = ServiceLocator::get(TagService::class)->getImageIdsForTags($bmf_tags, $bmf_tag_mode, null, null, false);
         }
 
@@ -405,23 +411,23 @@ final class BatchManagerController
             $bmf_dimension = is_array($bmf['dimension']) ? $bmf['dimension'] : [];
             $where_clause  = [];
             if (isset($bmf_dimension['min_width'])) {
-                $where_clause[] = 'width >= '  . (is_scalar($bmf_dimension['min_width']) ? (string) $bmf_dimension['min_width'] : '0');
+                $where_clause[] = 'width >= '  . (is_string($bmf_dimension['min_width']) ? $bmf_dimension['min_width'] : '0');
             }
             if (isset($bmf_dimension['max_width'])) {
-                $where_clause[] = 'width <= '  . (is_scalar($bmf_dimension['max_width']) ? (string) $bmf_dimension['max_width'] : '0');
+                $where_clause[] = 'width <= '  . (is_string($bmf_dimension['max_width']) ? $bmf_dimension['max_width'] : '0');
             }
             if (isset($bmf_dimension['min_height'])) {
-                $where_clause[] = 'height >= ' . (is_scalar($bmf_dimension['min_height']) ? (string) $bmf_dimension['min_height'] : '0');
+                $where_clause[] = 'height >= ' . (is_string($bmf_dimension['min_height']) ? $bmf_dimension['min_height'] : '0');
             }
             if (isset($bmf_dimension['max_height'])) {
-                $where_clause[] = 'height <= ' . (is_scalar($bmf_dimension['max_height']) ? (string) $bmf_dimension['max_height'] : '0');
+                $where_clause[] = 'height <= ' . (is_string($bmf_dimension['max_height']) ? $bmf_dimension['max_height'] : '0');
             }
             if (isset($bmf_dimension['min_ratio'])) {
-                $where_clause[] = 'width/height >= ' . (is_scalar($bmf_dimension['min_ratio']) ? (string) $bmf_dimension['min_ratio'] : '0');
+                $where_clause[] = 'width/height >= ' . (is_string($bmf_dimension['min_ratio']) ? $bmf_dimension['min_ratio'] : '0');
             }
             if (isset($bmf_dimension['max_ratio'])) {
                 $max_ratio    = is_numeric($bmf_dimension['max_ratio']) ? (float) $bmf_dimension['max_ratio'] : 0.0;
-                $where_clause[] = 'width/height < ' . ($max_ratio + 0.01);
+                $where_clause[] = 'width/height < ' . number_format($max_ratio + 0.01, 4, '.', '');
             }
             if (!empty($where_clause)) {
                 $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
@@ -433,11 +439,11 @@ final class BatchManagerController
             $where_clause = [];
             if (isset($bmf_filesize['min'])) {
                 $fs_min = is_numeric($bmf_filesize['min']) ? (float) $bmf_filesize['min'] : 0.0;
-                $where_clause[] = 'filesize >= ' . (($fs_min - 0.1) * 1024);
+                $where_clause[] = 'filesize >= ' . number_format(($fs_min - 0.1) * 1024.0, 4, '.', '');
             }
             if (isset($bmf_filesize['max'])) {
                 $fs_max = is_numeric($bmf_filesize['max']) ? (float) $bmf_filesize['max'] : 0.0;
-                $where_clause[] = 'filesize <= ' . (($fs_max + 0.1) * 1024);
+                $where_clause[] = 'filesize <= ' . number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
             }
             if (!empty($where_clause)) {
                 $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
@@ -461,8 +467,8 @@ final class BatchManagerController
 
         $current_set = array_shift($filter_sets);
         foreach ($filter_sets as $set) {
-            $a = is_array($current_set) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $current_set) : [];
-            $b = is_array($set) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $set) : [];
+            $a = is_array($current_set) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $current_set) : [];
+            $b = is_array($set) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $set) : [];
             $current_set = array_intersect($a, $b);
         }
         $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;
@@ -500,7 +506,7 @@ final class BatchManagerController
             if ($row_width > 0 && $row_height > 0) {
                 $widths[]  = $row_width;
                 $heights[] = $row_height;
-                $ratios[]  = floor($row_width / $row_height * 100) / 100;
+                $ratios[]  = floor((float) $row_width / (float) $row_height * 100.0) / 100.0;
             }
         }
         if (empty($widths)) {
@@ -515,7 +521,7 @@ final class BatchManagerController
             sort(${$type});
             $dimensions[$type] = implode(',', ${$type});
         }
-        $dimensions['bounds'] = ['min_width' => $widths[0], 'max_width' => end($widths), 'min_height' => $heights[0], 'max_height' => end($heights), 'min_ratio' => $ratios[0], 'max_ratio' => end($ratios)];
+        $dimensions['bounds'] = ['min_width' => $widths[0], 'max_width' => end($widths), 'min_height' => $heights[0] ?? 0, 'max_height' => end($heights), 'min_ratio' => $ratios[0] ?? 0.0, 'max_ratio' => end($ratios)];
 
         $ratio_categories = ['portrait' => [], 'square' => [], 'landscape' => [], 'panorama' => []];
         foreach ($ratios as $ratio) {
@@ -529,9 +535,9 @@ final class BatchManagerController
                 $ratio_categories['panorama'][]  = $ratio;
             }
         }
-        foreach (array_keys($ratio_categories) as $rtype) {
-            if (count($ratio_categories[$rtype]) > 0) {
-                $dimensions['ratio_' . $rtype] = ['min' => $ratio_categories[$rtype][0], 'max' => end($ratio_categories[$rtype])];
+        foreach ($ratio_categories as $rtype => $rtypeValues) {
+            if (count($rtypeValues) > 0) {
+                $dimensions['ratio_' . $rtype] = ['min' => $rtypeValues[0], 'max' => end($rtypeValues)];
             }
         }
 
@@ -546,7 +552,7 @@ final class BatchManagerController
 
         $filesizes = [];
         foreach (ServiceLocator::get(ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
-            $filesizes[] = sprintf('%.1f', $filesize_kb / 1024);
+            $filesizes[] = sprintf('%.1f', (float) $filesize_kb / 1024.0);
         }
         if (empty($filesizes)) {
             $filesizes = [0, 1, 2, 5, 8, 15];
@@ -554,6 +560,7 @@ final class BatchManagerController
         $filesizes = array_unique($filesizes);
         sort($filesizes);
 
+        $filesize = [];
         $filesize['list']   = implode(',', $filesizes);
         $filesize['bounds'] = ['min' => $filesizes[0], 'max' => end($filesizes)];
         $bmf_filesize_sel   = is_array($bmf['filesize'] ?? null) ? $bmf['filesize'] : [];
@@ -566,7 +573,7 @@ final class BatchManagerController
             'widths'    => ['values' => array_map(floatval(...), explode(',', $dimensions['widths'])),   'selected' => ['min' => $dimensions['selected']['min_width'],  'max' => $dimensions['selected']['max_width']],  'text' => Lang::t('between %d and %d pixels')],
             'heights'   => ['values' => array_map(floatval(...), explode(',', $dimensions['heights'])),  'selected' => ['min' => $dimensions['selected']['min_height'], 'max' => $dimensions['selected']['max_height']], 'text' => Lang::t('between %d and %d pixels')],
             'ratios'    => ['values' => array_map(floatval(...), explode(',', $dimensions['ratios'])),   'selected' => ['min' => $dimensions['selected']['min_ratio'],  'max' => $dimensions['selected']['max_ratio']],  'text' => Lang::t('between %.2f and %.2f')],
-            'filesizes' => ['values' => array_map(floatval(...), explode(',', (string) $filesize['list'])),       'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],                  'text' => Lang::t('between %s and %s MB')],
+            'filesizes' => ['values' => array_map(floatval(...), explode(',', $filesize['list'])),       'selected' => ['min' => $filesize['selected']['min'], 'max' => $filesize['selected']['max']],                  'text' => Lang::t('between %s and %s MB')],
         ];
 
         $selected_category            = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : null;
@@ -580,7 +587,7 @@ final class BatchManagerController
 
         // ── Dispatch to tab ───────────────────────────────────────────────────
 
-        $tab = (string) $page['tab'];
+        $tab = $page['tab'];
         if ($tab === 'global') {
             $this->batchManagerGlobal();
         } elseif ($tab === 'unit') {
@@ -615,7 +622,7 @@ final class BatchManagerController
             ServiceLocator::get(Util::class)->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
-            $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
+            $collection = explode(',', is_string($rawWholeSet1 = $_POST['whole_set'] ?? null) ? $rawWholeSet1 : '');
             foreach ($collection as $id) {
                 if (!preg_match('/^\d+$/', $id)) {
                     HtmlService::fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
@@ -632,7 +639,7 @@ final class BatchManagerController
             $page['prefilter'] = $bmf['prefilter'];
         }
 
-        $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+        $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
 
         /** @var array<int> $collection_int */
         $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
@@ -642,18 +649,24 @@ final class BatchManagerController
                 PageState::current()->addError(Lang::t('Select at least one photo'));
             }
 
-            $action   = is_scalar($_POST['selectAction'] ?? null) ? (string) $_POST['selectAction'] : '';
+            $selectActionRaw = $_POST['selectAction'] ?? null;
+            $action   = is_string($selectActionRaw) ? $selectActionRaw : '';
             $redirect = false;
 
             if ('remove_from_caddie' == $action) {
                 ServiceLocator::get(ImageRepository::class)->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
                 $redirect = true;
             } elseif ('add_tags' == $action) {
-                if (empty($_POST['add_tags'])) {
+                if (!isset($_POST['add_tags']) || $_POST['add_tags'] === '') {
                     PageState::current()->addError(Lang::t('Select at least one tag'));
                 } else {
+                    /** @var array<mixed>|string $add_tags_raw */
                     $add_tags_raw = $_POST['add_tags'];
-                    $add_tags_val = is_array($add_tags_raw) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $add_tags_raw) : (is_scalar($add_tags_raw) ? (string) $add_tags_raw : '');
+                    if (is_array($add_tags_raw)) {
+                        $add_tags_val = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $add_tags_raw);
+                    } else {
+                        $add_tags_val = $add_tags_raw;
+                    }
                     $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds($add_tags_val);
                     ServiceLocator::get(TagAdminService::class)->addTags($tag_ids, $collection_int);
                     if ('no_tag' == $page['prefilter']) {
@@ -661,7 +674,8 @@ final class BatchManagerController
                     }
                 }
             } elseif ('del_tags' == $action) {
-                $del_tags_post = is_array($_POST['del_tags'] ?? null) ? $_POST['del_tags'] : [];
+                $del_tags_raw = $_POST['del_tags'] ?? null;
+                $del_tags_post = is_array($del_tags_raw) ? $del_tags_raw : [];
                 /** @var array<int> $del_tags_int */
                 $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
                 if (count($del_tags_int) > 0) {
@@ -679,7 +693,7 @@ final class BatchManagerController
                     PageState::current()->addError(Lang::t('Select at least one tag'));
                 }
             } elseif ('associate' == $action) {
-                if (empty($_POST['associate'])) {
+                if (!isset($_POST['associate']) || $_POST['associate'] === '') {
                     PageState::current()->addError(Lang::t('Select at least one album'));
                 } else {
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
@@ -688,15 +702,17 @@ final class BatchManagerController
                     if ('no_album' == $page['prefilter']) {
                         $redirect = true;
                     } elseif ('no_virtual_album' == $page['prefilter']) {
-                        $associate_id  = is_scalar($_POST['associate']) ? (string) $_POST['associate'] : '';
+                        $rawAssociate  = $_POST['associate'];
+                        $associate_id  = is_string($rawAssociate) ? $rawAssociate : '';
                         $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($associate_id);
-                        if (empty($category_info['dir'])) {
+                        if (!isset($category_info['dir']) || $category_info['dir'] === '') {
                             $redirect = true;
                         }
                     }
                 }
             } elseif ('move' == $action) {
-                $move_id     = is_scalar($_POST['move'] ?? null) ? (string) $_POST['move'] : '';
+                $moveRaw     = $_POST['move'] ?? null;
+                $move_id     = is_string($moveRaw) ? $moveRaw : '';
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
                 ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories($collection_int, [$move_id_int]);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
@@ -704,41 +720,38 @@ final class BatchManagerController
                     $redirect = true;
                 } elseif ('no_virtual_album' == $page['prefilter']) {
                     $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($move_id);
-                    if (empty($category_info['dir'])) {
+                    if (!isset($category_info['dir']) || $category_info['dir'] === '') {
                         $redirect = true;
                     }
-                } elseif (isset($bmf['category']) && $move_id != (is_scalar($bmf['category']) ? (string) $bmf['category'] : '')) {
+                } elseif (isset($bmf['category']) && $move_id != (is_string($bmf['category']) ? $bmf['category'] : '')) {
                     $redirect = true;
                 }
             } elseif ('dissociate' == $action) {
-                $dissociate_raw = is_scalar($_POST['dissociate'] ?? null) ? (string) $_POST['dissociate'] : '';
+                $dissociate_key = $_POST['dissociate'] ?? null;
+                $dissociate_raw = is_string($dissociate_key) ? $dissociate_key : '';
                 $nb_dissociated = ServiceLocator::get(CategoryAdminService::class)->dissociateImagesFromCategory($collection_int, $dissociate_raw);
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
                     $redirect = true;
                 }
             } elseif ('author' == $action) {
-                if (isset($_POST['remove_author'])) {
-                    $_POST['author'] = null;
-                }
+                $authorValue = isset($_POST['remove_author']) ? null : ($_POST['author'] ?? null);
                 $datas = [];
                 foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'author' => $_POST['author']];
+                    $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['author']], $datas);
                 ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'author']);
             } elseif ('title' == $action) {
-                if (isset($_POST['remove_title'])) {
-                    $_POST['title'] = null;
-                }
+                $titleValue = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
                 $datas = [];
                 foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'name' => $_POST['title']];
+                    $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name']], $datas);
                 ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'title']);
             } elseif ('date_creation' == $action) {
-                $date_creation = (isset($_POST['remove_date_creation']) || empty($_POST['date_creation'])) ? null : $_POST['date_creation'];
+                $date_creation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
@@ -746,15 +759,17 @@ final class BatchManagerController
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['date_creation']], $datas);
                 ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
             } elseif ('level' == $action) {
+                $levelValue = $_POST['level'] ?? null;
                 $datas = [];
                 foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'level' => $_POST['level']];
+                    $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['level']], $datas);
                 ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-                    $post_level_val = is_numeric($_POST['level'] ?? null) ? (int) $_POST['level'] : 0;
+                    $postLevelRaw = $_POST['level'] ?? null;
+                    $post_level_val = is_numeric($postLevelRaw) ? (int) $postLevelRaw : 0;
                     if ($post_level_val < $bmf_level_val) {
                         $redirect = true;
                     }
@@ -770,7 +785,7 @@ final class BatchManagerController
                         /** @var array<mixed> $page_infos_ref */
                         $page_infos_ref   = &$_SESSION['page_infos'];
                         $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection_int));
-                        $redirect_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_scalar($_GET['page'] ?? null) ? (string) $_GET['page'] : '');
+                        $redirect_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
                         $redirect         = true;
                     } else {
                         PageState::current()->addError(Lang::t('No photo can be deleted'));
@@ -780,11 +795,11 @@ final class BatchManagerController
                 }
             } elseif ('metadata' == $action) {
                 PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>');
-            } elseif ('delete_derivatives' == $action && !empty($_POST['del_derivatives_type'])) {
+            } elseif ('delete_derivatives' == $action && isset($_POST['del_derivatives_type']) && $_POST['del_derivatives_type'] !== '') {
                 foreach (ServiceLocator::get(ImageRepository::class)->findPathsAndRepresentativesByIds($collection_int) as $info) {
                     $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
                     foreach ($del_types as $dtype) {
-                        ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($info, is_scalar($dtype) ? (string) $dtype : '');
+                        ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($info, is_string($dtype) ? $dtype : '');
                     }
                 }
             } elseif ('generate_derivatives' == $action) {
@@ -824,7 +839,9 @@ final class BatchManagerController
             $tpl->assign('associated_tags', ServiceLocator::get(TagService::class)->getCommonTags($catElementsId, -1));
         }
 
-        $tpl->assign('DATE_CREATION', empty($_POST['date_creation']) ? date('Y-m-d') . ' 00:00:00' : $_POST['date_creation']);
+        $rawDateCreationPost = $_POST['date_creation'] ?? null;
+        $dateCreationAssign  = (!isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? date('Y-m-d') . ' 00:00:00' : (is_string($rawDateCreationPost) ? $rawDateCreationPost : '');
+        $tpl->assign('DATE_CREATION', $dateCreationAssign);
         $tpl->assign(['level_options' => ServiceLocator::get(Util::class)->getPrivacyLevelOptions(), 'level_options_selected' => 0]);
 
         $site_reader  = new LocalSiteReader('./');
@@ -839,7 +856,7 @@ final class BatchManagerController
         $del_deriv_map[DerivativeSize::Custom->value] = Lang::t(DerivativeSize::Custom->value);
         $tpl->assign(['del_derivatives_types' => $del_deriv_map, 'generate_derivatives_types' => $gen_deriv_map]);
 
-        if (!empty($_GET['display'])) {
+        if (isset($_GET['display']) && $_GET['display'] !== '') {
             $nbImages = 'all' == $_GET['display'] ? count($catElementsId) : (is_numeric($_GET['display']) ? (int) $_GET['display'] : 20);
         } elseif (in_array(Config::batchManagerImagesPerPageGlobal(), [20, 50, 100])) {
             $nbImages = Config::batchManagerImagesPerPageGlobal();
@@ -861,13 +878,13 @@ final class BatchManagerController
             if ($is_category) {
                 $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
-                if (!empty($category_info['image_order'])) {
-                    Config::override('order_by', ' ORDER BY ' . (is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+                if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
+                    Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
                 $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catElementsId)) . ')';
+            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')';
             if ($is_category) {
                 $query .= ' AND category_id = ' . $bmf_category_val;
             }
@@ -885,13 +902,13 @@ final class BatchManagerController
                     $ttitle .= ' (' . $row_file . ')';
                 }
                 $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
-                $ttitle .= '<br>' . (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : '') . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
+                $ttitle .= '<br>' . (is_string($row['width'] ?? null) ? $row['width'] : '') . '&times;' . (is_string($row['height'] ?? null) ? $row['height'] : '') . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024.0) . 'MB';
 
                 $tpl->append('thumbnails', array_merge($row, [
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
                     'TITLE'    => $ttitle,
                     'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
-                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['id']) ? (string) $row['id'] : '')),
+                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_string($row['id'] ?? null) ? $row['id'] : '')),
                 ]));
             }
             $tpl->assign('thumb_params', $thumb_params);
@@ -941,30 +958,35 @@ final class BatchManagerController
         if (isset($_POST['submit'])) {
             ServiceLocator::get(Util::class)->checkPwgToken();
             ServiceLocator::get(Util::class)->checkInputParameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
-            $collection = explode(',', is_scalar($_POST['element_ids']) ? (string) $_POST['element_ids'] : '');
+            $collection = explode(',', is_string($rawElementIds = $_POST['element_ids'] ?? null) ? $rawElementIds : '');
 
             $datas = [];
             foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), $collection)) as $row) {
                 $data         = [];
-                $row_id_str   = is_scalar($row['id']) ? (string) $row['id'] : '';
-                $data['id']   = $row['id'];
-                $data['name'] = $_POST['name-' . $row_id_str];
-                $data['author'] = $_POST['author-' . $row_id_str];
-                $data['level'] = $_POST['level-' . $row_id_str];
+                $row_id_raw   = $row['id'] ?? null;
+                $row_id_str   = is_string($row_id_raw) ? $row_id_raw : '';
+                $data['id']   = $row_id_raw;
+                $data['name'] = $_POST['name-' . $row_id_str] ?? null;
+                $data['author'] = $_POST['author-' . $row_id_str] ?? null;
+                $data['level'] = $_POST['level-' . $row_id_str] ?? null;
 
                 $desc_key = 'description-' . $row_id_str;
                 $desc_val = $_POST[$desc_key] ?? null;
-                $data['comment'] = Config::allowHtmlDescriptions() ? $desc_val : strip_tags(is_scalar($desc_val) ? (string) $desc_val : '');
+                $data['comment'] = Config::allowHtmlDescriptions() ? $desc_val : strip_tags(is_string($desc_val) ? $desc_val : '');
 
-                $data['date_creation'] = !empty($_POST['date_creation-' . $row_id_str]) ? $_POST['date_creation-' . $row_id_str] : null;
+                $rawDateCreation = $_POST['date_creation-' . $row_id_str] ?? null;
+                $data['date_creation'] = (is_string($rawDateCreation) && $rawDateCreation !== '') ? $rawDateCreation : null;
 
                 $datas[] = $data;
 
                 $tag_ids  = [];
-                $tags_key = 'tags-' . (is_scalar($row['id']) ? (string) $row['id'] : '');
-                if (!empty($_POST[$tags_key])) {
-                    $tags_val = $_POST[$tags_key];
-                    $tags_val = is_array($tags_val) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $tags_val) : (is_scalar($tags_val) ? (string) $tags_val : '');
+                $tags_key = 'tags-' . $row_id_str;
+                /** @var array<mixed>|string|null $tags_val */
+                $tags_val = $_POST[$tags_key] ?? null;
+                if ($tags_val !== null && $tags_val !== '') {
+                    if (is_array($tags_val)) {
+                        $tags_val = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $tags_val);
+                    }
                     $tag_ids  = ServiceLocator::get(TagAdminService::class)->getTagIds($tags_val);
                 }
                 ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
@@ -980,7 +1002,7 @@ final class BatchManagerController
             ServiceLocator::get(Util::class)->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
-            $collection = explode(',', is_scalar($_POST['whole_set']) ? (string) $_POST['whole_set'] : '');
+            $collection = explode(',', is_string($rawWholeSet2 = $_POST['whole_set'] ?? null) ? $rawWholeSet2 : '');
             foreach ($collection as $id) {
                 if (!preg_match('/^\d+$/', $id)) {
                     HtmlService::fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
@@ -1017,7 +1039,7 @@ final class BatchManagerController
 
         $catElementsIdU = is_array($page['cat_elements_id']) ? $page['cat_elements_id'] : [];
         $pageStartU     = is_int($page['start']) ? $page['start'] : 0;
-        if (!empty($_GET['display'])) {
+        if (isset($_GET['display']) && $_GET['display'] !== '') {
             $nbImagesU = is_numeric($_GET['display']) ? (int) $_GET['display'] : 5;
         } elseif (in_array(Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
             $nbImagesU = Config::batchManagerImagesPerPageUnit();
@@ -1045,13 +1067,13 @@ final class BatchManagerController
             if ($is_category) {
                 $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
-                if (!empty($category_info['image_order'])) {
-                    Config::override('order_by', ' ORDER BY ' . (is_scalar($category_info['image_order']) ? (string) $category_info['image_order'] : ''));
+                if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
+                    Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
                 $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $catElementsIdU)) . ')';
+            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsIdU)) . ')';
             if ($is_category) {
                 $query .= ' AND category_id = ' . $bmf_category_val;
             }
@@ -1067,7 +1089,7 @@ final class BatchManagerController
             $storage_category_id = null;
 
             foreach ($images as $row) {
-                $element_ids[] = is_scalar($row['id']) ? (string) $row['id'] : '0';
+                $element_ids[] = is_string($row['id'] ?? null) ? $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];
                 $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
@@ -1094,7 +1116,7 @@ final class BatchManagerController
                     $related_category_ids[] = $item_cat_id;
                 }
 
-                $row_id_str = is_scalar($row['id']) ? (string) $row['id'] : '0';
+                $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '0';
                 $authorizeds = array_diff(
                     array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
                     explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
@@ -1113,8 +1135,8 @@ final class BatchManagerController
 
                 $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str);
                 $admin_url_start      = $admin_photo_base_url . '-properties';
-                $admin_url_start     .= isset($row['cat_id']) ? '&amp;cat_id=' . (is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
-                $selected_level       = $row['level'] ?? $row['level'];
+                $admin_url_start     .= isset($row['cat_id']) ? '&amp;cat_id=' . (is_string($row['cat_id']) ? $row['cat_id'] : '') : '';
+                $selected_level       = $row['level'] ?? null;
 
                 $userLevel  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
                 $mediaLevelRaw = is_array($media_image) ? ($media_image['level'] ?? null) : null;
@@ -1126,24 +1148,24 @@ final class BatchManagerController
                     'FILE_SRC'              => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'LEGEND'                => $legend,
                     'U_EDIT'                => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str),
-                    'NAME'                  => htmlspecialchars(is_scalar($row['name']) ? (string) $row['name'] : ''),
-                    'AUTHOR'                => htmlspecialchars(is_scalar($row['author']) ? (string) $row['author'] : ''),
-                    'LEVEL'                 => !empty($row['level']) ? $row['level'] : '0',
-                    'DESCRIPTION'           => htmlspecialchars(is_scalar($row['comment']) ? (string) $row['comment'] : ''),
+                    'NAME'                  => htmlspecialchars(is_string($row['name'] ?? null) ? $row['name'] : ''),
+                    'AUTHOR'                => htmlspecialchars(is_string($row['author'] ?? null) ? $row['author'] : ''),
+                    'LEVEL'                 => (isset($row['level']) && $row['level'] !== '' && $row['level'] !== 0) ? $row['level'] : '0',
+                    'DESCRIPTION'           => htmlspecialchars(is_string($row['comment'] ?? null) ? $row['comment'] : ''),
                     'DATE_CREATION'         => $row['date_creation'],
                     'TAGS'                  => $tag_selection,
                     'is_svg'                => (strtoupper(end($extTab)) == 'SVG'),
                     'TITLE'                 => ServiceLocator::get(HtmlService::class)->renderElementName($row),
-                    'DIMENSIONS'            => (is_scalar($row['width']) ? (string) $row['width'] : '') . 'x' . (is_scalar($row['height']) ? (string) $row['height'] : '') . ' px',
+                    'DIMENSIONS'            => (is_string($row['width'] ?? null) ? $row['width'] : '') . 'x' . (is_string($row['height'] ?? null) ? $row['height'] : '') . ' px',
                     'FORMAT'                => ($row['width'] >= $row['height']) ? 1 : 0,
-                    'FILESIZE'              => Lang::t('%.2f MB', (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024),
-                    'REGISTRATION_DATE'     => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null)),
+                    'FILESIZE'              => Lang::t('%.2f MB', (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
+                    'REGISTRATION_DATE'     => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null)),
                     'EXT'                   => Lang::t('%s file type', end($extTab)),
-                    'POST_DATE'             => Lang::t('Added on %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), ['day', 'month', 'year'])),
-                    'AGE'                   => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available'] ?? null) ? $row['date_available'] : (is_int($row['date_available'] ?? null) ? $row['date_available'] : null), 'year'))),
-                    'ADDED_BY'              => Lang::t('Added by %s', is_string($added_by_username_of[is_scalar($row['added_by']) ? (string) $row['added_by'] : ''] ?? null) ? $added_by_username_of[is_scalar($row['added_by']) ? (string) $row['added_by'] : ''] : Lang::t('N/A')),
-                    'STATS'                 => Lang::t('Visited %d times', is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0),
-                    'FILE'                  => Lang::t('%s', is_string($row['file'] ?? null) ? $row['file'] : ''),
+                    'POST_DATE'             => Lang::t('Added on %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), ['day', 'month', 'year'])),
+                    'AGE'                   => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), 'year'))),
+                    'ADDED_BY'              => Lang::t('Added by %s', is_string($added_by_username_of[is_string($row['added_by'] ?? null) ? $row['added_by'] : ''] ?? null) ? $added_by_username_of[is_string($row['added_by'] ?? null) ? $row['added_by'] : ''] : Lang::t('N/A')),
+                    'STATS'                 => Lang::t('Visited %d times', is_numeric($row['hit']) ? (int) $row['hit'] : 0),
+                    'FILE'                  => Lang::t('%s', is_string($row['file']) ? $row['file'] : ''),
                     'related_categories'    => $related_categories,
                     'related_category_ids'  => json_encode($related_category_ids),
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
@@ -1190,8 +1212,9 @@ final class BatchManagerController
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
 
-        if ($action === 'retry' && is_numeric($_GET['id'] ?? null)) {
-            $failedId = (int) $_GET['id'];
+        $getIdRaw = $_GET['id'] ?? null;
+        if ($action === 'retry' && is_numeric($getIdRaw)) {
+            $failedId = (int) $getIdRaw;
             $row      = $conn->executeQuery('SELECT body, headers FROM ' . $tableName . ' WHERE id = ? AND queue_name = ?', [$failedId, 'piwigo_failed'])->fetchAssociative();
             if ($row !== false) {
                 $conn->executeStatement('UPDATE ' . $tableName . ' SET queue_name = ?, available_at = NOW(), delivered_at = NULL WHERE id = ?', ['piwigo_async', $failedId]);
@@ -1232,7 +1255,7 @@ final class BatchManagerController
         $failedJobsForTpl = array_map(static function (array $row): array {
             /** @var array<string, mixed> $body */
             $body  = json_decode(is_string($row['body']) ? $row['body'] : '{}', true) ?? [];
-            $class = is_string($body['type'] ?? null) ? basename(str_replace('\\', '/', $body['type'])) : 'Unknown';
+            $class = is_string($bodyType = $body['type'] ?? null) ? basename(str_replace('\\', '/', $bodyType)) : 'Unknown';
             return ['id' => is_numeric($row['id']) ? (int) $row['id'] : 0, 'class' => $class, 'created_at' => is_string($row['created_at']) ? $row['created_at'] : '', 'U_RETRY' => ServiceLocator::get(UrlGenerator::class)->admin('queue') . '&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0)];
         }, $failedJobs);
 

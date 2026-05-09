@@ -7,19 +7,16 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block ready for display in the BlockManager object.
  */
-class DisplayBlock
+final class DisplayBlock
 {
-    /** @var int */
-    protected $_position;
+    protected int $_position = 0;
     /** @var string|null */
     protected $_title = null;
 
     /** @var array<mixed> */
     public array $data = [];
-    /** @var string */
-    public $template;
-    /** @var string */
-    public $raw_content;
+    public string $template = '';
+    public string $raw_content = '';
 
     public string $id = '';
 
@@ -38,10 +35,7 @@ class DisplayBlock
         return $this->_registeredBlock;
     }
 
-    /**
-     * @return int
-     */
-    public function getPosition()
+    public function getPosition(): int
     {
         return $this->_position;
     }

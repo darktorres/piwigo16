@@ -11,11 +11,13 @@ use ReflectionMethod;
 
 final class ConfigTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         Config::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         Config::reset();

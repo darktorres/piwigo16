@@ -41,7 +41,9 @@ final readonly class RateService
             return false;
         }
 
-        $ipComponents = explode('.', is_scalar($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '');
+        /** @var string $remoteAddrRaw */
+        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ipComponents = explode('.', $remoteAddrRaw);
         if (count($ipComponents) > 3) {
             array_pop($ipComponents);
         }
@@ -93,8 +95,8 @@ final readonly class RateService
         }
 
         if ($allRatesCount > 0) {
-            $allRatesAvg      /= $allRatesCount;
-            $itemRatecountAvg  = $allRatesCount / count($byItem);
+            $allRatesAvg      /= (float) $allRatesCount;
+            $itemRatecountAvg  = (float) $allRatesCount / (float) count($byItem);
         }
 
         /** @var array<mixed>|null $return */
@@ -103,12 +105,12 @@ final readonly class RateService
         foreach ($byItem as $id => $rateSummary) {
             $rsum   = is_numeric($rateSummary['rsum']) ? (float) $rateSummary['rsum'] : 0.0;
             $rcount = is_numeric($rateSummary['rcount']) ? (int)   $rateSummary['rcount'] : 0;
-            $score  = ($itemRatecountAvg * $allRatesAvg + $rsum) / ($itemRatecountAvg + $rcount);
+            $score  = ($itemRatecountAvg * $allRatesAvg + $rsum) / ($itemRatecountAvg + (float) $rcount);
             $score  = round($score, 2);
             if ($id == $elementId) {
                 $return = [
                     'score'   => $score,
-                    'average' => $rcount > 0 ? round($rsum / $rcount, 2) : 0.0,
+                    'average' => $rcount > 0 ? round($rsum / (float) $rcount, 2) : 0.0,
                     'count'   => $rcount,
                 ];
             }

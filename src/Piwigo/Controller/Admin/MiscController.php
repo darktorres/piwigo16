@@ -137,15 +137,18 @@ final class MiscController
         switch ($page['mode']) {
             case 'param':
                 if (isset($_POST['param_submit'])) {
-                    $_POST['nbm_send_mail_as'] = strip_tags(is_scalar($_POST['nbm_send_mail_as'] ?? null) ? (string) $_POST['nbm_send_mail_as'] : '');
+                    $nbmSendMailAsRaw = $_POST['nbm_send_mail_as'] ?? null;
+                    $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbmSendMailAsRaw) ? $nbmSendMailAsRaw : '');
                     ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
                     ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
                     ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
                     foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
-                        $param = is_scalar($nbm_user['param']) ? (string) $nbm_user['param'] : '';
+                        $param = is_string($nbm_user['param'] ?? null) ? $nbm_user['param'] : '';
                         if (isset($_POST[$param])) {
-                            ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $_POST[$param], true);
+                            /** @var string $rawParamVal */
+                            $rawParamVal = $_POST[$param];
+                            ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $rawParamVal, true);
                             $updated_param_count++;
                         }
                     }
@@ -155,13 +158,15 @@ final class MiscController
                 // no break
             case 'subscribe':
                 if (isset($_POST['falsify']) && isset($_POST['cat_true'])) {
-                    $cat_true = is_array($_POST['cat_true']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_true']) : [];
+                    $rawCatTrue2 = $_POST['cat_true'];
+                    $cat_true = is_array($rawCatTrue2) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatTrue2) : [];
                     $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(true, $cat_true);
                     if ($this->doTimeoutTreatment('cat_true', $check_key_treated)) {
                         $this->mustRepost = true;
                     }
                 } elseif (isset($_POST['trueify']) && isset($_POST['cat_false'])) {
-                    $cat_false = is_array($_POST['cat_false']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_false']) : [];
+                    $rawCatFalse2 = $_POST['cat_false'];
+                    $cat_false = is_array($rawCatFalse2) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatFalse2) : [];
                     $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(true, $cat_false);
                     if ($this->doTimeoutTreatment('cat_false', $check_key_treated)) {
                         $this->mustRepost = true;
@@ -170,8 +175,10 @@ final class MiscController
                 break;
             case 'send':
                 if (isset($_POST['send_submit']) && isset($_POST['send_selection']) && isset($_POST['send_customize_mail_content'])) {
-                    $send_selection = is_array($_POST['send_selection']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['send_selection']) : [];
-                    $check_key_treated = $this->doActionSendMailNotification('send', $send_selection, stripslashes(is_scalar($_POST['send_customize_mail_content']) ? (string) $_POST['send_customize_mail_content'] : ''));
+                    $rawSendSelection = $_POST['send_selection'];
+                    $send_selection = is_array($rawSendSelection) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawSendSelection) : [];
+                    $rawCustomMail = $_POST['send_customize_mail_content'];
+                    $check_key_treated = $this->doActionSendMailNotification('send', $send_selection, stripslashes(is_string($rawCustomMail) ? $rawCustomMail : ''));
                     $check_key_treated_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $check_key_treated);
                     if ($this->doTimeoutTreatment('send_selection', $check_key_treated_str)) {
                         $this->mustRepost = true;
@@ -211,8 +218,10 @@ final class MiscController
                 $tpl->assign(['L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed')]);
                 $data_users = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('subscribe');
                 $opt_true = $opt_true_selected = $opt_false = $opt_false_selected = [];
-                $cat_true_post  = is_array($_POST['cat_true'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_true']) : [];
-                $cat_false_post = is_array($_POST['cat_false'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['cat_false']) : [];
+                $rawCatTruePost  = $_POST['cat_true']  ?? null;
+                $rawCatFalsePost = $_POST['cat_false'] ?? null;
+                $cat_true_post  = is_array($rawCatTruePost) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatTruePost) : [];
+                $cat_false_post = is_array($rawCatFalsePost) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatFalsePost) : [];
                 foreach ($data_users as $nbm_user) {
                     $ck = (string) $nbm_user['check_key'];
                     if (BoolUtil::fromMixed($nbm_user['enabled'])) {
@@ -233,8 +242,10 @@ final class MiscController
             case 'send':
                 $tpl_var    = ['users' => []];
                 $data_users = $this->doActionSendMailNotification('list_to_send');
-                $tpl_var['CUSTOMIZE_MAIL_CONTENT'] = isset($_POST['send_customize_mail_content']) ? stripslashes(is_scalar($_POST['send_customize_mail_content']) ? (string) $_POST['send_customize_mail_content'] : '') : Config::nbmComplementaryMailContent();
-                $send_sel_post = is_array($_POST['send_selection'] ?? null) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST['send_selection']) : [];
+                $rawCustomMailContent = $_POST['send_customize_mail_content'] ?? null;
+                $tpl_var['CUSTOMIZE_MAIL_CONTENT'] = isset($_POST['send_customize_mail_content']) ? stripslashes(is_string($rawCustomMailContent) ? $rawCustomMailContent : '') : Config::nbmComplementaryMailContent();
+                $rawSendSelPost = $_POST['send_selection'] ?? null;
+                $send_sel_post = is_array($rawSendSelPost) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawSendSelPost) : [];
                 if (count($data_users)) {
                     foreach ($data_users as $nbm_user_raw) {
                         if (!is_array($nbm_user_raw)) {
@@ -248,7 +259,8 @@ final class MiscController
                 }
                 $tpl->assign($page['mode'], $tpl_var);
                 if (Config::authKeyDuration() > 0) {
-                    $tpl->assign('auth_key_duration', ServiceLocator::get(DateService::class)->timeSince(strtotime('now -' . Config::authKeyDuration() . ' second') ?: null, 'second', null, false));
+                    $strMiscResult = strtotime('now -' . Config::authKeyDuration() . ' second');
+                    $tpl->assign('auth_key_duration', ServiceLocator::get(DateService::class)->timeSince($strMiscResult !== false ? $strMiscResult : null, 'second', null, false));
                 }
                 break;
         }
@@ -270,8 +282,10 @@ final class MiscController
         $selected_cat = [];
         if (isset($_POST['set_permalink']) && $_POST['cat_id'] > 0) {
             ServiceLocator::get(Util::class)->checkPwgToken();
-            $permalink  = is_scalar($_POST['permalink'] ?? null) ? (string) $_POST['permalink'] : '';
-            $postCatId  = is_scalar($_POST['cat_id']) ? (string) $_POST['cat_id'] : '';
+            $permalinkRaw = $_POST['permalink'] ?? null;
+            $permalink  = is_string($permalinkRaw) ? $permalinkRaw : '';
+            $rawPostCatId = $_POST['cat_id'];
+            $postCatId  = is_string($rawPostCatId) ? $rawPostCatId : '';
             if (empty($permalink)) {
                 ServiceLocator::get(PermalinkService::class)->deleteCatPermalink($postCatId, isset($_POST['save']));
             } else {
@@ -280,7 +294,8 @@ final class MiscController
             $selected_cat = [(int) $postCatId];
         } elseif (isset($_GET['delete_permanent'])) {
             ServiceLocator::get(Util::class)->checkPwgToken();
-            $deleted = ServiceLocator::get(PermalinkRepository::class)->deleteOldPermalinkByValue(is_scalar($_GET['delete_permanent']) ? (string) $_GET['delete_permanent'] : '');
+            $rawDeletePermanent = $_GET['delete_permanent'];
+            $deleted = ServiceLocator::get(PermalinkRepository::class)->deleteOldPermalinkByValue(is_string($rawDeletePermanent) ? $rawDeletePermanent : '');
             if (!$deleted) {
                 PageState::current()->addError(Lang::t('Cannot delete the old permalink !'));
             }
@@ -371,7 +386,8 @@ final class MiscController
 
         $message_tags = '';
         if (isset($_SESSION['message_tags'])) {
-            $message_tags = $_SESSION['message_tags'];
+            $rawMessageTags = $_SESSION['message_tags'];
+            $message_tags   = is_string($rawMessageTags) ? $rawMessageTags : '';
             unset($_SESSION['message_tags']);
         }
         $tpl->assign('message_tags', $message_tags);
@@ -384,7 +400,8 @@ final class MiscController
             $raw_name       = $tag['name'];
             $tag['raw_name'] = $raw_name;
             $tag['name']    = EventDispatcher::dispatch('render_tag_name', $raw_name, $tag);
-            $tag_id_key     = is_scalar($tag['id']) ? (string) $tag['id'] : '';
+            $tagIdRaw       = $tag['id'] ?? null;
+            $tag_id_key     = is_string($tagIdRaw) ? $tagIdRaw : '';
             $counter        = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
             if ($counter > 0) {
                 $tag['counter'] = $counter;
@@ -458,7 +475,8 @@ final class MiscController
             PageHeaderRenderer::render($title);
         }
 
-        $helpPage = is_scalar($_GET['help'] ?? null) ? (string) $_GET['help'] : '';
+        $rawHelpPage = $_GET['help'] ?? null;
+        $helpPage = is_string($rawHelpPage) ? $rawHelpPage : '';
         if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
             $help_content = LangService::get()->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
             if ($help_content == false) {
@@ -550,7 +568,7 @@ final class MiscController
 
         $stats      = ServiceLocator::get(AdminService::class)->getPwgGeneralStatitics();
         $du_decimals = 1;
-        $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024 * 1024);
+        $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024.0 * 1024.0);
         if ($du_gb > 100) {
             $du_decimals = 0;
         }
@@ -566,7 +584,10 @@ final class MiscController
         if (Config::showPiwigoLatestNews()) {
             $latest_news = ServiceLocator::get(AdminService::class)->getPiwigoNews();
             if (isset($latest_news['id']) && $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
-                PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_scalar($latest_news['url']) ? (string) $latest_news['url'] : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_scalar($latest_news['posted']) ? (string) $latest_news['posted'] : '') . ')', is_scalar($latest_news['subject']) ? (string) $latest_news['subject'] : ''));
+                $newsUrl     = $latest_news['url'] ?? null;
+                $newsPosted  = $latest_news['posted'] ?? null;
+                $newsSubject = $latest_news['subject'] ?? null;
+                PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_string($newsUrl) ? $newsUrl : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_string($newsPosted) ? $newsPosted : '') . ')', is_string($newsSubject) ? $newsSubject : ''));
             }
         }
 
@@ -595,7 +616,7 @@ final class MiscController
             $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
-                $day_date = new \DateTime((is_scalar($action['activity_day']) ? (string) $action['activity_day'] : '') . ' 12:00:00');
+                $day_date = new \DateTime((is_string($action['activity_day'] ?? null) ? $action['activity_day'] : '') . ' 12:00:00');
                 $week     = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
                     if ($week_number[$i] == $day_date->format('W')) {
@@ -603,7 +624,7 @@ final class MiscController
                     }
                 }
                 $day_nb = $day_date->format('N');
-                $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_scalar($action['object']) ? (string) $action['object'] : '')][ucfirst(is_scalar($action['action']) ? (string) $action['action'] : '')] = $action['activity_counter'];
+                $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_string($action['object'] ?? null) ? $action['object'] : '')][ucfirst(is_string($action['action'] ?? null) ? $action['action'] : '')] = $action['activity_counter'];
                 $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + (is_numeric($action['activity_counter']) ? (int) $action['activity_counter'] : 0);
                 $activity_last_weeks[$week][$day_nb]['date']   = ServiceLocator::get(DateService::class)->formatDate($day_date->getTimestamp());
             }
@@ -642,7 +663,7 @@ final class MiscController
 
         $diff_x = [];
         for ($i = 1; $i < count($temp_data); $i++) {
-            $diff_x[] = $temp_data[$i]['x'] / $temp_data[$i - 1]['x'] * 100;
+            $diff_x[] = (float) $temp_data[$i]['x'] / (float) $temp_data[$i - 1]['x'] * 100.0;
         }
         $split = 0;
         if (count($diff_x) > 0) {
@@ -701,14 +722,14 @@ final class MiscController
         if (Config::addCacheToStorageChart() && Config::has('cache_sizes')) {
             $cache_sizes = unserialize((string) Config::cacheSizes());
             if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-                $cacheFilesize = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024;
+                $cacheFilesize = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024.0;
                 $data_storage['Cache'] = ['total' => ['filesize' => $cacheFilesize, 'nb_files' => 0], 'details' => []];
             }
         }
 
-        $total_storage = 0;
+        $total_storage = 0.0;
         foreach ($data_storage as $value) {
-            $total_storage += $value['total']['filesize'];
+            $total_storage += (float) $value['total']['filesize'];
         }
 
         $tpl->assign('STORAGE_TOTAL', $total_storage);
@@ -719,7 +740,7 @@ final class MiscController
             $translate_type[$type] = Lang::t($type);
         }
 
-        $intro_dashboard_extras = ['check_for_updates' => (bool) Config::dashboardCheckForUpdates(), 'storage_total' => $total_storage, 'str_gb_used' => Lang::t('%s GB used'), 'str_mb_used' => Lang::t('%s MB used'), 'str_piwigo_need_update' => Lang::t('A new version of Piwigo is available.'), 'str_ext_need_update' => Lang::t('Some upgrades are available for extensions.')];
+        $intro_dashboard_extras = ['check_for_updates' => Config::dashboardCheckForUpdates(), 'storage_total' => $total_storage, 'str_gb_used' => Lang::t('%s GB used'), 'str_mb_used' => Lang::t('%s MB used'), 'str_piwigo_need_update' => Lang::t('A new version of Piwigo is available.'), 'str_ext_need_update' => Lang::t('Some upgrades are available for extensions.')];
         if ($intro_newsletter_data !== null) {
             $intro_dashboard_extras['newsletter'] = $intro_newsletter_data;
         }
@@ -902,8 +923,8 @@ final class MiscController
         $tpl->assign(['navbar' => ServiceLocator::get(Util::class)->createNavigationBar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
         $available_order_by = [[Lang::t('Rate date'), 'recently_rated DESC'], [Lang::t('Rating score'), 'score DESC'], [Lang::t('Average rate'), 'avg_rates DESC'], [Lang::t('Number of rates'), 'nb_rates DESC'], [Lang::t('Sum of rates'), 'sum_rates DESC'], [Lang::t('File name'), 'file DESC'], [Lang::t('Creation date'), 'date_creation DESC'], [Lang::t('Post date'), 'date_available DESC']];
-        for ($i = 0; $i < count($available_order_by); $i++) {
-            $tpl->append('order_by_options', $available_order_by[$i][0]);
+        foreach ($available_order_by as $orderByEntry) {
+            $tpl->append('order_by_options', $orderByEntry[0]);
         }
         $tpl->assign('order_by_options_selected', [$order_by_index]);
 
@@ -929,7 +950,7 @@ final class MiscController
             foreach ($all_rates as $row) {
                 $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
                 $user_rate = $users[$user_id] ?? '? ' . $user_id;
-                $anon_id_str = is_scalar($row['anonymous_id']) ? (string) $row['anonymous_id'] : '';
+                $anon_id_str = is_string($row['anonymous_id'] ?? null) ? $row['anonymous_id'] : '';
                 if (strlen($anon_id_str) > 0) {
                     $user_rate .= '(' . $anon_id_str . ')';
                 }
@@ -961,12 +982,12 @@ final class MiscController
         $userFields  = Config::userFields();
         $users_by_id = [];
         foreach (ServiceLocator::get(UserRepository::class)->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_scalar($row['username']) ? (string) $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(AccessLevel::Classic, is_scalar($row['status']) ? (string) $row['status'] : '')];
+            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(AccessLevel::Classic, is_string($row['status'] ?? null) ? $row['status'] : '')];
         }
 
         $by_user_rating_model = ['rates' => []];
         foreach (Config::rateItems() as $rate) {
-            $by_user_rating_model['rates'][(int) $rate] = [];
+            $by_user_rating_model['rates'][$rate] = [];
         }
 
         $image_ids     = [];
@@ -977,7 +998,7 @@ final class MiscController
                 $users_by_id[$user_id] = ['name' => '???' . $user_id, 'anon' => false];
             }
             $usr = $users_by_id[$user_id];
-            $user_key = $usr['anon'] ? $usr['name'] . '(' . (is_scalar($row['anonymous_id']) ? (string) $row['anonymous_id'] : '') . ')' : $usr['name'];
+            $user_key = $usr['anon'] ? $usr['name'] . '(' . (is_string($row['anonymous_id'] ?? null) ? $row['anonymous_id'] : '') . ')' : $usr['name'];
             if (!isset($by_user_ratings[$user_key])) {
                 $by_user_ratings[$user_key] = $by_user_rating_model;
                 $by_user_ratings[$user_key]['uid']        = $user_id;
@@ -1010,14 +1031,15 @@ final class MiscController
         $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
 
         foreach ($by_user_ratings as $id => &$rating) {
-            $c = $s = $ss = $consensus_dev = $consensus_dev_top = $consensus_dev_top_count = 0;
+            $c = $s = $ss = $consensus_dev = $consensus_dev_top = 0.0;
+            $consensus_dev_top_count = 0;
             foreach ($rating['rates'] as $rate => $rates) {
                 $ct = count($rates);
-                $c += $ct;
-                $s += $ct * $rate;
-                $ss += $ct * $rate * $rate;
+                $c += (float) $ct;
+                $s += (float) $ct * (float) $rate;
+                $ss += (float) $ct * (float) $rate * (float) $rate;
                 foreach ($rates as $id_date) {
-                    $dev = abs($rate - ($all_img_sum[$id_date['id']]['avg'] ?? 0));
+                    $dev = abs((float) $rate - (float) ($all_img_sum[$id_date['id']]['avg'] ?? 0));
                     $consensus_dev += $dev;
                     if (isset($best_rated[$id_date['id']])) {
                         $consensus_dev_top += $dev;
@@ -1027,14 +1049,15 @@ final class MiscController
             }
             $consensus_dev /= $c;
             if ($consensus_dev_top_count) {
-                $consensus_dev_top /= $consensus_dev_top_count;
+                $consensus_dev_top /= (float) $consensus_dev_top_count;
             }
             $var = ($ss - $s * $s / $c) / $c;
-            $rating += ['id' => $id, 'count' => $c, 'avg' => $s / $c, 'cv' => $s == 0 ? -1 : sqrt($var) / ($s / $c), 'cd' => $consensus_dev, 'cdtop' => $consensus_dev_top_count ? $consensus_dev_top : ''];
+            $rating += ['id' => $id, 'count' => (int) $c, 'avg' => $s / $c, 'cv' => $s == 0.0 ? -1 : sqrt($var) / ($s / $c), 'cd' => $consensus_dev, 'cdtop' => $consensus_dev_top_count ? $consensus_dev_top : ''];
         }
         unset($rating);
 
         foreach ($by_user_ratings as $id => $rating) {
+            /** @var array{rates: array<int, array<int, array{id: int, date: mixed}>>, uid: int, aid: mixed, last_date: mixed, first_date: mixed, id: mixed, count: int, avg: float, cv: float|int, cd: float, cdtop: float|string} $rating */
             if ($rating['count'] <= $filter_min_rates) {
                 unset($by_user_ratings[$id]);
             }
@@ -1049,12 +1072,13 @@ final class MiscController
             [Lang::t('Last'),                $this->lastRateCompare(...)],
         ];
 
-        for ($i = 0; $i < count($available_order_by); $i++) {
-            $tpl->append('order_by_options', $available_order_by[$i][0]);
+        foreach ($available_order_by as $orderByEntry) {
+            $tpl->append('order_by_options', $orderByEntry[0]);
         }
         $tpl->assign('order_by_options_selected', [$order_by_index]);
 
-        uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
+        $order_by_index_clamped = max(0, min($order_by_index, count($available_order_by) - 1));
+        uasort($by_user_ratings, $available_order_by[$order_by_index_clamped][1]);
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
@@ -1072,7 +1096,8 @@ final class MiscController
 
         ServiceLocator::get(Util::class)->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 
-        $editUserId = is_numeric($_GET['user_id'] ?? null) ? (int) $_GET['user_id'] : 0;
+        $userIdRaw = $_GET['user_id'] ?? null;
+        $editUserId = is_numeric($userIdRaw) ? (int) $userIdRaw : 0;
         $edit_user  = UserService::get()->buildUser($editUserId, false);
 
         if (!empty($_POST)) {
@@ -1103,10 +1128,11 @@ final class MiscController
         $ctx = MailNotificationContext::current();
         if ($ctx->isSendmailTimeout) {
             if (isset($_POST[$post_keyname])) {
-                $post_keyname_val = is_array($_POST[$post_keyname]) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $_POST[$post_keyname]) : [];
+                $rawPostKeyname   = $_POST[$post_keyname] ?? null;
+                $post_keyname_val = is_array($rawPostKeyname) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawPostKeyname) : [];
                 $post_count       = count($post_keyname_val);
                 $treated_count    = count($check_key_treated);
-                $time_refresh     = $treated_count !== 0 ? (int) ceil((StringUtil::get()->getMoment() - $ctx->startTime) * $post_count / $treated_count) : 0;
+                $time_refresh     = $treated_count !== 0 ? (int) ceil((StringUtil::get()->getMoment() - $ctx->startTime) * (float) $post_count / (float) $treated_count) : 0;
                 $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
                 $this->mustRepost = true;
                 PageState::current()->addError(Translator::get()->plural('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));
@@ -1141,7 +1167,9 @@ final class MiscController
                 $nbm_user['check_key'] = ServiceLocator::get(NotificationAdminService::class)->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
-                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), is_string($nbm_user['mail_address'] ?? null) ? $nbm_user['mail_address'] : ''));
+                $mailAddressRaw = $nbm_user['mail_address'] ?? null;
+                $usernameRaw    = $nbm_user['username'] ?? null;
+                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));
             }
             Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
             $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
@@ -1218,6 +1246,7 @@ final class MiscController
                             $return_list[] = (string) $nbm_user['check_key'];
                             $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
 
+                            $news = [];
                             if (Config::nbmSendDetailedContent()) {
                                 $news = ServiceLocator::get(NotificationService::class)->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
                                 $exist_data = count($news) > 0;
@@ -1255,7 +1284,9 @@ final class MiscController
 
                                 $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
 
-                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_scalar($nbm_user['username']) ? (string) $nbm_user['username'] : ''), 'email' => is_scalar($nbm_user['mail_address']) ? (string) $nbm_user['mail_address'] : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
+                                $nbmUsernameRaw    = $nbm_user['username']     ?? null;
+                                $nbmMailAddressRaw = $nbm_user['mail_address'] ?? null;
+                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
                                 if ($ret) {
                                     ServiceLocator::get(NotificationAdminService::class)->incMailSentSuccess($nbm_user);
@@ -1299,7 +1330,9 @@ final class MiscController
     private function parseSortVariables(array $sortable_by, ?string $default_field, string $get_param, ?array $get_rejects, ?string $template_var, string $anchor = ''): array
     {
         $tpl             = TemplateRegistry::current();
-        $url_components  = parse_url(is_scalar($_SERVER['REQUEST_URI'] ?? null) ? (string) $_SERVER['REQUEST_URI'] : '');
+        /** @var string $rawRequestUri */
+        $rawRequestUri   = $_SERVER['REQUEST_URI'] ?? '';
+        $url_components  = parse_url($rawRequestUri);
         if ($url_components === false) {
             $url_components = ['path' => '', 'query' => ''];
         }
@@ -1344,7 +1377,7 @@ final class MiscController
                 $disp = '<em>' . $disp . '</em>';
             }
             if (isset($template_var)) {
-                $tpl->assign($template_var . strtoupper((string) $field), '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>');
+                $tpl->assign($template_var . strtoupper($field), '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>');
             }
         }
         return $ret;

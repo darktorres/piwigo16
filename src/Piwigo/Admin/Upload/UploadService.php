@@ -51,7 +51,7 @@ final class UploadService
     /**
      * @param array<mixed> $data
      * @param string[] $errors
-     * @param string[] $formErrors
+     * @param array<array-key, mixed> $formErrors
      */
     public function saveUploadFormConfig(array $data, array &$errors = [], array &$formErrors = []): bool
     {
@@ -74,7 +74,8 @@ final class UploadService
                 $max     = $config[$field]['max'] ?? PHP_INT_MAX;
                 $pattern = $config[$field]['pattern'] ?? '';
                 $errMsg  = $config[$field]['error_message'] ?? '%s - %s';
-                if (preg_match($pattern, is_scalar($value) ? (string) $value : '') && $value >= $min && $value <= $max) {
+                $effectivePattern = $pattern !== '' ? $pattern : '//';
+                if (preg_match($effectivePattern, is_scalar($value) ? (string) $value : '') && $value >= $min && $value <= $max) {
                     $updates[] = ['param' => $field, 'value' => $value];
                 } else {
                     $errors[]          = sprintf($errMsg, $min, $max);
@@ -97,7 +98,8 @@ final class UploadService
         if ($originalFilename !== null) {
             $originalFilename = htmlspecialchars($originalFilename);
         }
-        $md5sum = $originalMd5sum ?? md5_file($sourceFilepath);
+        $md5fileResult = md5_file($sourceFilepath);
+        $md5sum = $originalMd5sum ?? ($md5fileResult !== false ? $md5fileResult : '');
 
         if (!isset($imageId) && Config::uploadDetectDuplicate()) {
             $imagesFound = DbConnection::get()->executeQuery(
@@ -123,10 +125,13 @@ final class UploadService
             ServiceLocator::get(ImageAdminService::class)->deleteElementFiles([$imageId]);
         } else {
             $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-            [$year, $month, $day] = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];
+            $splitDate = preg_split('/[^\d]/', $dbnow, 4) ?: ['', '', ''];
+            $year  = $splitDate[0];
+            $month = $splitDate[1] ?? '';
+            $day   = $splitDate[2] ?? '';
             $uploadDir = sprintf(PHPWG_ROOT_PATH . Config::uploadDir() . '/%s/%s/%s', $year, $month, $day);
-            $dateString = preg_replace('/[^\d]/', '', $dbnow);
-            $randomString  = substr((string) $md5sum, 0, 4) . '%s';
+            $dateString = (string) preg_replace('/[^\d]/', '', $dbnow);
+            $randomString  = substr($md5sum, 0, 4) . '%s';
             $filePathPattern = $uploadDir . '/' . $dateString . '-' . $randomString . '.';
             $imgsize = getimagesize($sourceFilepath);
             [$width, $height, $type] = $imgsize ?: [0, 0, 0];
@@ -145,7 +150,7 @@ final class UploadService
                 $finfoType         = $finfo !== false ? finfo_file($finfo, $sourceFilepath) : false;
                 if (in_array($finfoType, ['image/svg', 'image/svg+xml']) && $originalExtension !== 'svg') {
                     unlink($sourceFilepath);
-                    $errorMsg = 'Extension "' . $originalExtension . '" for "' . $originalFilename . '" does not match MIME "' . $finfoType . '"';
+                    $errorMsg = 'Extension "' . $originalExtension . '" for "' . ($originalFilename ?? '') . '" does not match MIME "' . ($finfoType !== false ? $finfoType : '') . '"';
                     if (defined('IN_WS')) {
                         PwgServerRegistry::current()->sendResponse(new PwgError(415, $errorMsg));
                         exit;
@@ -269,7 +274,7 @@ final class UploadService
             $formatExtList = ['cr2'];
         }
         if (!in_array($formatExt, $formatExtList)) {
-            $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $formatExtList);
+            $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $formatExtList);
             throw new ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
         }
         $images = DbConnection::get()->executeQuery('SELECT path FROM ' . Tables::images() . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
@@ -328,7 +333,8 @@ final class UploadService
         $jpgQuality = is_int(ServiceLocator::get(ConfigService::class)->confGetParam('pdf_jpg_quality', 90)) ? ServiceLocator::get(ConfigService::class)->confGetParam('pdf_jpg_quality', 90) : 90;
         $repFilePath = ServiceLocator::get(StringUtil::class)->originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"[0]';
+        $rpFilePath0 = realpath($filePath);
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpFilePath0 !== false ? $rpFilePath0 : $filePath) . '"[0]';
         if ($ext === 'jpg') {
             $exec .= ' -quality ' . $jpgQuality;
         }
@@ -357,8 +363,9 @@ final class UploadService
         $repFilePath = ServiceLocator::get(StringUtil::class)->originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         [$w, $h] = $this->getOptimalDimensionsForRepresentative();
-        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"';
-        $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
+        $rpHeic = realpath($filePath);
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpHeic !== false ? $rpHeic : $filePath) . '"';
+        $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . (int) $w . 'x' . (int) $h . '>"';
         $exec .= ' "' . $repFilePath . '" 2>&1';
         $logger->info('uploadFileHeic, exec=' . $exec);
         exec($exec, $returnarray);
@@ -384,14 +391,17 @@ final class UploadService
         $representativeExt = Config::tiffRepresentativeExt();
         $repFilePath       = dirname($filePath) . '/pwg_representative/' . ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '"';
+        $rpTiff = realpath($filePath);
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpTiff !== false ? $rpTiff : $filePath) . '"';
         if ($representativeExt === 'jpg') {
             $exec .= ' -quality 98';
         }
         $dest  = pathinfo($repFilePath);
-        $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        $destDirname = $dest['dirname'];
+        $rpDestDirname = realpath($destDirname);
+        $exec .= ' "' . ($rpDestDirname !== false ? $rpDestDirname : $destDirname) . '/' . $dest['basename'] . '" 2>&1';
         exec($exec, $returnarray);
-        $repAbs = realpath($dest['dirname']) . '/' . $dest['basename'];
+        $repAbs = ($rpDestDirname !== false ? $rpDestDirname : $destDirname) . '/' . $dest['basename'];
         if (!file_exists($repAbs)) {
             $first = preg_replace('/\.' . $representativeExt . '$/', '-0.' . $representativeExt, $repAbs) ?? '';
             if (file_exists($first)) {
@@ -415,10 +425,11 @@ final class UploadService
         $representativeExt = 'jpg';
         $repFilePath       = dirname($filePath) . '/pwg_representative/' . ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
         $this->prepareDirectory(dirname($repFilePath));
+        $O = [];
         exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1' . " '$filePath'", $O, $S);
-        $second = !empty($O[0]) ? min(floor((float) $O[0] * 10) / 10, 2) : 0;
-        $logger->info('uploadFileVideo, poster at ' . $second . 's');
-        $ffmpeg  = Config::ffmpegDir() . 'ffmpeg -ss ' . $second . ' -i "' . $filePath . '" -frames:v 1 "' . $repFilePath . '"';
+        $second = !empty($O[0]) ? min(floor((float) $O[0] * 10.0) / 10.0, 2.0) : 0.0;
+        $logger->info('uploadFileVideo, poster at ' . number_format($second, 1) . 's');
+        $ffmpeg  = Config::ffmpegDir() . 'ffmpeg -ss ' . number_format($second, 1) . ' -i "' . $filePath . '" -frames:v 1 "' . $repFilePath . '"';
         exec($ffmpeg . ' 2>&1', $FO, $FS);
         if (!file_exists($repFilePath)) {
             $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
@@ -437,10 +448,13 @@ final class UploadService
         $repFilePath       = dirname($filePath) . '/pwg_representative/' . ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(basename($filePath)) . '.png';
         $this->prepareDirectory(dirname($repFilePath));
         $dest  = pathinfo($repFilePath);
-        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '" "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
+        $destDirPsd = $dest['dirname'];
+        $rpPsdFilePath = realpath($filePath);
+        $rpPsdDestDir  = realpath($destDirPsd);
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpPsdFilePath !== false ? $rpPsdFilePath : $filePath) . '" "' . ($rpPsdDestDir !== false ? $rpPsdDestDir : $destDirPsd) . '/' . $dest['basename'] . '" 2>&1';
         $logger->info('uploadFilePsd, exec=' . $exec);
         exec($exec, $returnarray);
-        $repAbs = realpath($dest['dirname']) . '/' . $dest['basename'];
+        $repAbs = ($rpPsdDestDir !== false ? $rpPsdDestDir : $destDirPsd) . '/' . $dest['basename'];
         if (!file_exists($repAbs)) {
             $first = preg_replace('/\.png$/', '-0.png', $repAbs) ?? '';
             if (file_exists($first)) {
@@ -459,7 +473,8 @@ final class UploadService
         $ext         = 'png';
         $repFilePath = ServiceLocator::get(StringUtil::class)->originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
-        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . realpath($filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
+        $rpEps = realpath($filePath);
+        $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpEps !== false ? $rpEps : $filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
         $logger->info('uploadFileEps, exec=' . $exec);
         exec($exec, $returnarray);
         if (file_exists($repFilePath)) {
@@ -511,7 +526,8 @@ final class UploadService
     public function pwgImageInfos(string $path): array
     {
         [$width, $height] = getimagesize($path) ?: [0, 0];
-        return ['width' => $width, 'height' => $height, 'filesize' => floor(filesize($path) / 1024)];
+        $fsize = filesize($path);
+        return ['width' => $width, 'height' => $height, 'filesize' => floor(($fsize !== false ? $fsize : 0) / 1024)];
     }
 
     /** @return string[] */
@@ -548,7 +564,7 @@ final class UploadService
 
     public function convertShorthandNotationToBytes(string $value): int
     {
-        $suffix = substr((string) $value, -1);
+        $suffix = substr($value, -1);
         $multiplyBy = match ($suffix) {
             'K' => 1024,
             'M' => 1024 * 1024,
@@ -556,7 +572,7 @@ final class UploadService
             default => null,
         };
         if ($multiplyBy !== null) {
-            $value = (int) ((float) substr((string) $value, 0, -1) * $multiplyBy);
+            $value = (int) ((float) substr($value, 0, -1) * (float) $multiplyBy);
         }
         return (int) $value;
     }
@@ -572,9 +588,9 @@ final class UploadService
 
     public function readyForUploadMessage(): ?string
     {
-        $relativeDir = preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', (string) Config::uploadDir());
+        $relativeDir = (string) preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', Config::uploadDir());
         if (!is_dir(Config::uploadDir())) {
-            if (!is_writable(dirname((string) Config::uploadDir()))) {
+            if (!is_writable(dirname(Config::uploadDir()))) {
                 return sprintf(Lang::t('Create the "%s" directory at the root of your Piwigo installation'), $relativeDir);
             }
         } else {
@@ -601,6 +617,6 @@ final class UploadService
                 [$w, $h] = $params->sizing->ideal_size;
             }
         }
-        return [$w * 1.5, $h * 1.5];
+        return [(float) $w * 1.5, (float) $h * 1.5];
     }
 }

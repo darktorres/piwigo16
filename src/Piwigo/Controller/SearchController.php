@@ -30,6 +30,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SearchController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
@@ -77,7 +78,7 @@ final class SearchController implements ControllerInterface
 
         $words = [];
         $q     = StringUtil::get()->inputString('q', null, $_GET);
-        if (!empty($q)) {
+        if ($q !== null && $q !== '') {
             $words = ServiceLocator::get(SearchService::class)->splitAllwords($q);
         }
 

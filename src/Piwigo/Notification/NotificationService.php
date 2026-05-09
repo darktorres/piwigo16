@@ -48,11 +48,11 @@ final readonly class NotificationService
   FROM ' . Tables::comments() . ' AS c
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id
   WHERE 1=1';
-                if (!empty($start)) {
+                if ($start !== null && $start !== '') {
                     $query .= '
     AND c.validation_date > \'' . $start . '\'';
                 }
-                if (!empty($end)) {
+                if ($end !== null && $end !== '') {
                     $query .= '
     AND c.validation_date <= \'' . $end . '\'';
                 }
@@ -63,11 +63,11 @@ final readonly class NotificationService
                 $query = '
   FROM ' . Tables::comments() . '
   WHERE 1=1';
-                if (!empty($start)) {
+                if ($start !== null && $start !== '') {
                     $query .= '
     AND date > \'' . $start . '\'';
                 }
-                if (!empty($end)) {
+                if ($end !== null && $end !== '') {
                     $query .= '
     AND date <= \'' . $end . '\'';
                 }
@@ -80,11 +80,11 @@ final readonly class NotificationService
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
-                if (!empty($start)) {
+                if ($start !== null && $start !== '') {
                     $query .= '
     AND date_available > \'' . $start . '\'';
                 }
-                if (!empty($end)) {
+                if ($end !== null && $end !== '') {
                     $query .= '
     AND date_available <= \'' . $end . '\'';
                 }
@@ -96,11 +96,11 @@ final readonly class NotificationService
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
   WHERE 1=1';
-                if (!empty($start)) {
+                if ($start !== null && $start !== '') {
                     $query .= '
     AND date_available > \'' . $start . '\'';
                 }
-                if (!empty($end)) {
+                if ($end !== null && $end !== '') {
                     $query .= '
     AND date_available <= \'' . $end . '\'';
                 }
@@ -111,11 +111,11 @@ final readonly class NotificationService
                 $query = '
   FROM ' . Tables::userInfos() . '
   WHERE 1=1';
-                if (!empty($start)) {
+                if ($start !== null && $start !== '') {
                     $query .= '
     AND registration_date > \'' . $start . '\'';
                 }
-                if (!empty($end)) {
+                if ($end !== null && $end !== '') {
                     $query .= '
     AND registration_date <= \'' . $end . '\'';
                 }

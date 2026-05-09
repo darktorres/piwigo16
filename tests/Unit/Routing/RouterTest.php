@@ -16,8 +16,10 @@ use Piwigo\Routing\RouteResult;
  */
 final class RouterTest extends TestCase
 {
+    /** @psalm-suppress PropertyNotSetInConstructor */
     private Router $router;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->router = new Router(dirname(__DIR__, 3) . '/config/routes.php');

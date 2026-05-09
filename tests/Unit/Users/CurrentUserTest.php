@@ -10,11 +10,13 @@ use Piwigo\Users\User;
 
 final class CurrentUserTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         CurrentUser::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         CurrentUser::reset();

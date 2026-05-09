@@ -31,12 +31,12 @@ final class DirectPreparer
 
         if (PwgImage::getLibrary() == 'gd') {
             $fudge_factor = 1.7;
-            $available_memory = (int) ServiceLocator::get(UploadService::class)->getIniSize('memory_limit') - memory_get_usage();
-            $max_upload_width = round(sqrt($available_memory / (2 * $fudge_factor)));
-            $max_upload_height = round(2 * $max_upload_width / 3);
-            $max_upload_width = round($max_upload_width / 100) * 100;
-            $max_upload_height = round($max_upload_height / 100) * 100;
-            $max_upload_resolution = floor($max_upload_width * $max_upload_height / (1000000));
+            $available_memory = (float) ((int) ServiceLocator::get(UploadService::class)->getIniSize('memory_limit') - memory_get_usage());
+            $max_upload_width = round(sqrt($available_memory / (2.0 * $fudge_factor)));
+            $max_upload_height = round(2.0 * $max_upload_width / 3.0);
+            $max_upload_width = round($max_upload_width / 100.0) * 100.0;
+            $max_upload_height = round($max_upload_height / 100.0) * 100.0;
+            $max_upload_resolution = floor($max_upload_width * $max_upload_height / 1000000.0);
             if ($max_upload_resolution < 25) {
                 $tpl->assign([
                     'max_upload_width' => $max_upload_width,
@@ -81,18 +81,19 @@ final class DirectPreparer
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
                 $tpl->assign('ADD_TO_ALBUM', ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
-                    is_scalar($cat['uppercats']) ? (string) $cat['uppercats'] : '',
+                    is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '',
                     null
                 ));
             } else {
-                $album_id = is_scalar($_GET['album']) ? (string) $_GET['album'] : '';
+                $rawAlbum = $_GET['album'];
+                $album_id = is_string($rawAlbum) ? $rawAlbum : '';
                 HtmlService::fatalError('[Hacking attempt] the album id = "' . $album_id . '" is not valid');
             }
         } else {
             $last_cat = ServiceLocator::get(ImageRepository::class)->findLastUploadedCategoryInfo();
             if ($last_cat !== null) {
                 $selected_category = [$last_cat['category_id']];
-                $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache((string) $last_cat['uppercats'], null);
+                $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($last_cat['uppercats'], null);
                 $tpl->assign('selected_category_name', $selected_category_name);
             }
         }
@@ -109,7 +110,7 @@ final class DirectPreparer
 
         $setup_errors = [];
         $error_message = ServiceLocator::get(UploadService::class)->readyForUploadMessage();
-        if (!empty($error_message)) {
+        if ($error_message !== null && $error_message !== '') {
             $setup_errors[] = $error_message;
         }
         if (!function_exists('gd_info')) {

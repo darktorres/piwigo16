@@ -103,17 +103,18 @@ final readonly class MetadataService
             throw new ConfigException('Exif extension not available, admin should disable exif use');
         }
 
-        $exif = ServiceLocator::get(StringUtil::class)->pwgSafeExifReadData($filename) ?: null;
+        $exifResult = ServiceLocator::get(StringUtil::class)->pwgSafeExifReadData($filename);
+        $exif = $exifResult !== false ? $exifResult : null;
         $exif = EventDispatcher::dispatch('format_exif_data', $exif, $filename, $map);
-        if (!empty($exif)) {
+        if (is_array($exif) && count($exif) > 0) {
 
             foreach ($map as $key => $field) {
-                if (!str_contains((string) $field, ';')) {
+                if (!str_contains($field, ';')) {
                     if (isset($exif[$field])) {
                         $result[$key] = $exif[$field];
                     }
                 } else {
-                    $tokens      = explode(';', (string) $field);
+                    $tokens      = explode(';', $field);
                     $exifSection = $exif[$tokens[0]] ?? null;
                     if (is_array($exifSection) && isset($exifSection[$tokens[1]])) {
                         $result[$key] = $exifSection[$tokens[1]];
@@ -130,10 +131,10 @@ final readonly class MetadataService
                     $gpsLatArr !== null and in_array($gpsExif['GPSLatitudeRef'], ['S', 'N']) and
                     $gpsLonArr !== null and in_array($gpsExif['GPSLongitudeRef'], ['W', 'E'])
                 ) {
-                    $gpsLatStr = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $gpsLatArr);
-                    $gpsLonStr = array_map(fn ($v): string => is_scalar($v) ? (string) $v : '', $gpsLonArr);
-                    $gpsLatRef = is_scalar($gpsExif['GPSLatitudeRef']) ? (string) $gpsExif['GPSLatitudeRef'] : '';
-                    $gpsLonRef = is_scalar($gpsExif['GPSLongitudeRef']) ? (string) $gpsExif['GPSLongitudeRef'] : '';
+                    $gpsLatStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $gpsLatArr);
+                    $gpsLonStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $gpsLonArr);
+                    $gpsLatRef = is_string($gpsExif['GPSLatitudeRef'] ?? null) ? $gpsExif['GPSLatitudeRef'] : '';
+                    $gpsLonRef = is_string($gpsExif['GPSLongitudeRef'] ?? null) ? $gpsExif['GPSLongitudeRef'] : '';
                     $latitude  = $this->parseExifGpsData($gpsLatStr, $gpsLatRef);
                     $longitude = $this->parseExifGpsData($gpsLonStr, $gpsLonRef);
 
@@ -141,7 +142,7 @@ final readonly class MetadataService
                         $result['latitude']  = $latitude;
                         $result['longitude'] = $longitude;
                     } else {
-                        $this->logger->info('[' . __METHOD__ . '][filename=' . $filename . '] invalid GPS coordinates, latitude=' . $latitude . ' longitude=' . $longitude);
+                        $this->logger->info('[' . __METHOD__ . '][filename=' . $filename . '] invalid GPS coordinates, latitude=' . number_format($latitude, 6) . ' longitude=' . number_format($longitude, 6));
                     }
                 }
             }

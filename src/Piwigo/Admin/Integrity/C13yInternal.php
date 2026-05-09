@@ -19,7 +19,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserService;
 
-class C13yInternal
+final class C13yInternal
 {
     public function __construct()
     {
@@ -37,9 +37,12 @@ class C13yInternal
     {
         $check_list = [];
 
+        $phpVer = phpversion();
+        /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
+        $phpVerStr = $phpVer !== false ? $phpVer : '0.0.0';
         $check_list[] = [
             'type' => 'PHP',
-            'current' => phpversion(),
+            'current' => $phpVerStr,
             'required' => AppInfo::REQUIRED_PHP_VERSION,
             ];
 
@@ -185,7 +188,7 @@ class C13yInternal
 
                         UserService::get()->createUserInfos($id);
 
-                        PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password));
+                        PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, (string) $password));
 
                         $result = true;
                     }
@@ -212,7 +215,8 @@ class C13yInternal
                             $updates
                         );
 
-                        PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), ServiceLocator::get(UserAdminService::class)->getUsername($id)));
+                        $usernameResult = ServiceLocator::get(UserAdminService::class)->getUsername($id);
+                        PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));
 
                         $result = true;
                     }

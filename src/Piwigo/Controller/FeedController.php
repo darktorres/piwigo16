@@ -29,6 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class FeedController implements ControllerInterface
 {
+    #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
@@ -41,9 +42,9 @@ final class FeedController implements ControllerInterface
         $user = &$GLOBALS['user'];
 
         $feed_row = [];
-        if (!empty($feed_id)) {
-            $feed_row = ServiceLocator::get(FeedRepository::class)->findById((string) $feed_id);
-            if (empty($feed_row)) {
+        if ($feed_id !== null && $feed_id !== '') {
+            $feed_row = ServiceLocator::get(FeedRepository::class)->findById($feed_id);
+            if ($feed_row === null || count($feed_row) === 0) {
                 ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Unknown feed identifier'));
             }
             if ($feed_row !== null && $feed_row['user_id'] != $user['id']) {
@@ -64,7 +65,7 @@ final class FeedController implements ControllerInterface
         $rss           = new PiwigoFeedCreator();
         $rss->encoding = ServiceLocator::get(StringUtil::class)->getPwgCharset();
         $rss->title    = Config::galleryTitle();
-        $username      = is_scalar($user['username'] ?? null) ? (string) $user['username'] : '';
+        $username      = is_string($user['username'] ?? null) ? $user['username'] : '';
         $rss->title   .= ' (as ' . stripslashes($username) . ')';
         $rss->link     = UrlService::get()->getGalleryHomeUrl();
 
@@ -93,12 +94,12 @@ final class FeedController implements ControllerInterface
             }
         }
 
-        if (!empty($feed_id) && empty($news)) {
+        if (($feed_id !== null && $feed_id !== '') && count($news) === 0) {
             $lastCheck = isset($feed_row['last_check']) && is_scalar($feed_row['last_check'])
                 ? (string) $feed_row['last_check'] : '';
             if (!isset($feed_row['last_check']) || time() - FeedHelper::datetimeToTs($lastCheck) > 30 * 24 * 3600) {
                 $keepAliveDate = new \DateTimeImmutable($dbnow)->modify('+15 days')->format('Y-m-d H:i:s');
-                ServiceLocator::get(FeedRepository::class)->updateLastCheck((string) $feed_id, $keepAliveDate);
+                ServiceLocator::get(FeedRepository::class)->updateLastCheck($feed_id, $keepAliveDate);
             }
         }
 
@@ -108,7 +109,7 @@ final class FeedController implements ControllerInterface
                 continue;
             }
             $item  = new \FeedItem();
-            $date  = is_scalar($date_detail['date_available'] ?? null) ? (string) $date_detail['date_available'] : '';
+            $date  = is_string($date_detail['date_available'] ?? null) ? $date_detail['date_available'] : '';
             $item->title = ServiceLocator::get(NotificationService::class)->getTitleRecentPostDate($date_detail);
             $item->link  = UrlService::get()->makeIndexUrl([
                 'chronology_field' => 'posted',

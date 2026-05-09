@@ -9,7 +9,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
-class PwgTOTP
+final class PwgTOTP
 {
     /**
      * Generate a Base32 secret for TOTP
@@ -43,7 +43,7 @@ class PwgTOTP
      */
     public static function generateSecret($length = 20): string
     {
-        $random = random_bytes(max(1, (int) $length));
+        $random = random_bytes(max(1, $length));
         return PwgBase32::encode($random, false);
     }
 
@@ -55,7 +55,7 @@ class PwgTOTP
      */
     public static function getOtpAuthUrl(string $secret): string
     {
-        $url = substr((string) UrlService::getAbsoluteRootUrl(), 0, -1);
+        $url = substr(UrlService::getAbsoluteRootUrl(), 0, -1);
         return 'otpauth://totp/'.CurrentUser::get()->username.':'.$url.'?secret='.$secret.'&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 
@@ -97,7 +97,7 @@ class PwgTOTP
      */
     public static function verifyCode(string $code, string $secret, int $timestamp = 30, int $check_interval = 1): bool
     {
-        $timestamp = floor(time() / $timestamp);
+        $timestamp = (int) floor(time() / $timestamp);
 
         // generate a totp code for 30s intervals
         // following or preceding the current one and check it

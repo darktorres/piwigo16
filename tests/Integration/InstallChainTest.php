@@ -9,6 +9,7 @@ final class InstallChainTest extends IntegrationTestCase
     /** Absolute path to the test sentinel file (matches TestMode logic). */
     private const string INSTALLED_STAMP = __DIR__ . '/../../local/.installed.test';
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
@@ -18,6 +19,7 @@ final class InstallChainTest extends IntegrationTestCase
         }
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         // Restore sentinel so other integration tests remain unaffected.
@@ -31,7 +33,9 @@ final class InstallChainTest extends IntegrationTestCase
             $dbHostField .= ':' . $this->dbPort;
         }
 
-        $ch = curl_init($this->baseUrl . '/index.php?/install');
+        $chRaw = curl_init($this->baseUrl . '/index.php?/install');
+        self::assertNotFalse($chRaw, 'curl_init failed');
+        $ch = $chRaw;
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query([
@@ -50,7 +54,8 @@ final class InstallChainTest extends IntegrationTestCase
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTPHEADER     => self::TEST_HEADER,
         ]);
-        $body       = (string) curl_exec($ch);
+        $execResult = curl_exec($ch);
+        $body       = is_string($execResult) ? $execResult : '';
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 

@@ -46,7 +46,7 @@ final class UsersEndpoints
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $orderStr = is_scalar($params['order']) ? (string) $params['order'] : '';
+        $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
         if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
         }
@@ -59,11 +59,11 @@ final class UsersEndpoints
             $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdArr)) . ')';
         }
         if (!empty($params['username'])) {
-            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . DbConnection::get()->quote(is_scalar($params['username']) ? (string) $params['username'] : '');
+            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . DbConnection::get()->quote(is_string($params['username']) ? $params['username'] : '');
         }
         $filteredGroups = [];
         if (!empty($params['filter'])) {
-            $filterStr      = is_scalar($params['filter']) ? (string) $params['filter'] : '';
+            $filterStr      = is_string($params['filter']) ? $params['filter'] : '';
             $filteredGroups = ServiceLocator::get(GroupRepository::class)->findIdsByNameLike($filterStr);
             $filterQuoted   = DbConnection::get()->quote('%' . $filterStr . '%');
             $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ' . $filterQuoted . ' OR u.' . Config::userFields()['email'] . ' LIKE ' . $filterQuoted;
@@ -73,7 +73,7 @@ final class UsersEndpoints
             $whereClauses[] = $filterWhere . ')';
         }
         if (!empty($params['min_register'])) {
-            $minRegisterStr = is_scalar($params['min_register']) ? (string) $params['min_register'] : '';
+            $minRegisterStr = is_string($params['min_register']) ? $params['min_register'] : '';
             if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $minRegisterStr)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
             }
@@ -82,18 +82,19 @@ final class UsersEndpoints
             $whereClauses[] = "ui.registration_date >= '$minDate 00:00:00'";
         }
         if (!empty($params['max_register'])) {
-            $maxRegisterStr = is_scalar($params['max_register']) ? (string) $params['max_register'] : '';
+            $maxRegisterStr = is_string($params['max_register']) ? $params['max_register'] : '';
             if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $maxRegisterStr)) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
             }
             $maxDateTokens = explode('-', $maxRegisterStr);
-            $maxDay        = $maxDateTokens[2] ?? date('t', strtotime($maxDateTokens[0] . '-' . ($maxDateTokens[1] ?? '12') . '-1') ?: null);
+            $strResult = strtotime($maxDateTokens[0] . '-' . ($maxDateTokens[1] ?? '12') . '-1');
+            $maxDay        = $maxDateTokens[2] ?? date('t', $strResult !== false ? $strResult : null);
             $maxDate       = sprintf('%u-%02u-%02u', $maxDateTokens[0], $maxDateTokens[1] ?? '12', $maxDay);
             $whereClauses[] = "ui.registration_date <= '$maxDate 23:59:59'";
         }
         if (!empty($params['status'])) {
             $statusArr  = is_array($params['status']) ? $params['status'] : [];
-            $statusArr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $statusArr);
+            $statusArr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $statusArr);
             $statusArr  = array_intersect($statusArr, SchemaHelper::getEnums(Tables::userInfos(), 'status'));
             if (count($statusArr) > 0) {
                 $whereClauses[] = 'ui.status IN("' . implode('","', $statusArr) . '")';
@@ -120,7 +121,7 @@ final class UsersEndpoints
             $whereClauses[] = 'u.' . Config::userFields()['id'] . ' NOT IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $excludeArr)) . ')';
         }
         $display       = ['u.' . Config::userFields()['id'] => 'id'];
-        $displayParam  = is_scalar($params['display']) ? (string) $params['display'] : 'none';
+        $displayParam  = is_string($params['display'] ?? null) ? $params['display'] : 'none';
         if ($displayParam !== 'none') {
             $params['display'] = array_map(trim(...), explode(',', $displayParam));
             if (in_array('all', $params['display'])) {
@@ -171,7 +172,7 @@ final class UsersEndpoints
         $query  .= ' FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui ON u.' . Config::userFields()['id'] . ' = ui.user_id LEFT JOIN ' . Tables::userGroup() . ' AS ug ON u.' . Config::userFields()['id'] . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $page    = is_numeric($params['page']) ? (int) $params['page'] : 0;
-        if ($perPage !== 0 || !empty($params['display'])) {
+        if ($perPage !== 0 || $params['display'] !== []) {
             $query .= ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
         }
         $users      = [];
@@ -216,7 +217,7 @@ final class UsersEndpoints
                 if (isset($params['display']['last_visit'])) {
                     $lastVisit = $curUser['last_visit'] ?? null;
                     $users[$curUid]['last_visit'] = $lastVisit;
-                    if (!BoolUtil::fromMixed($curUser['last_visit_from_history'] ?? null) && empty($lastVisit)) {
+                    if (!BoolUtil::fromMixed($curUser['last_visit_from_history'] ?? null) && ($lastVisit === null || $lastVisit === '')) {
                         $lastVisit                    = UserService::get()->getUserLastVisitFromHistory($curUid, true);
                         $users[$curUid]['last_visit'] = $lastVisit;
                     }
@@ -232,7 +233,7 @@ final class UsersEndpoints
             }
         }
         $users = EventDispatcher::dispatch('ws_users_getList', $users);
-        if ($perPage === 0 && empty($params['display'])) {
+        if ($perPage === 0 && $params['display'] === []) {
             $methodResult = array_column(array_values($users), 'id');
         } else {
             $methodResult = ['paging' => new PwgNamedStruct(['page' => $page, 'per_page' => $perPage, 'count' => count($users), 'total_count' => $totalCount]), 'users' => new PwgNamedArray(array_values($users), 'user')];
@@ -249,7 +250,7 @@ final class UsersEndpoints
         if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (strlen(str_replace(' ', '', is_scalar($params['username']) ? (string) $params['username'] : '')) === 0) {
+        if (strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
         }
         if (Config::doublePasswordTypeInAdmin() && $params['password'] !== $params['password_confirm']) {
@@ -259,8 +260,9 @@ final class UsersEndpoints
             $params['password'] = StringUtil::generateKey(random_int(15, 20));
         }
         $errors = [];
-        $userId = UserService::get()->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($params['password']) ? $params['password'] : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
-        if (!$userId) {
+        $passwordRaw = $params['password'] ?? null;
+        $userId = UserService::get()->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($passwordRaw) ? $passwordRaw : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
+        if ($userId === false || $userId === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
         }
         return $service->invoke('pwg.users.getList', ['user_id' => $userId]);
@@ -340,8 +342,8 @@ final class UsersEndpoints
                 return new PwgError(403, Lang::t('The passwords do not match'));
             }
             $userFields      = Config::userFields();
-            $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), (int) $currentUser->id);
-            if (!password_verify(is_scalar($params['password']) ? (string) $params['password'] : '', is_string($currentPassword) ? $currentPassword : '')) {
+            $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), $currentUser->id);
+            if (!password_verify(is_string($params['password']) ? $params['password'] : '', is_string($currentPassword) ? $currentPassword : '')) {
                 return new PwgError(403, Lang::t('Current password is wrong'));
             }
             $params['password'] = $params['new_password'];
@@ -359,11 +361,11 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function preferencesSet(array $params, PwgServer &$service): mixed
     {
-        $prefParam = is_scalar($params['param']) ? (string) $params['param'] : '';
+        $prefParam = is_string($params['param'] ?? null) ? $params['param'] : '';
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $prefParam)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $prefParam . '#');
         }
-        $value = stripslashes(is_scalar($params['value']) ? (string) $params['value'] : '');
+        $value = stripslashes(is_string($params['value'] ?? null) ? $params['value'] : '');
         if ($params['is_json']) {
             $value = json_decode($value, true);
         }
@@ -424,7 +426,7 @@ final class UsersEndpoints
                 }
             }
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                $image[$k] = $row[$k];
+                $image[$k] = $row[$k] ?? null;
             }
             $images[] = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
         }
@@ -465,11 +467,15 @@ final class UsersEndpoints
         $langToUse      = $firstLogin ? UserService::get()->getDefaultLanguage() : $userLostLanguage;
         ServiceLocator::get(MailService::class)->switchLangTo($langToUse);
         $generateLink = AuthService::get()->generatePasswordLink($targetUserId, $firstLogin);
-        $userLostEmail    = is_string($userLost['email'] ?? null) ? $userLost['email'] : '';
-        $userLostUsername = is_string($userLost['username'] ?? null) ? $userLost['username'] : '';
-        $genPasswordLink  = is_string($generateLink['password_link'] ?? null) ? $generateLink['password_link'] : '';
-        $genTimeValidation = is_string($generateLink['time_validation'] ?? null) ? $generateLink['time_validation'] : '';
-        if ($params['send_by_mail'] && !empty($userLostEmail)) {
+        $userLostEmailRaw    = $userLost['email'] ?? null;
+        $userLostUsernameRaw = $userLost['username'] ?? null;
+        $genPasswordLinkRaw  = $generateLink['password_link'] ?? null;
+        $genTimeValidationRaw = $generateLink['time_validation'] ?? null;
+        $userLostEmail    = is_string($userLostEmailRaw) ? $userLostEmailRaw : '';
+        $userLostUsername = is_string($userLostUsernameRaw) ? $userLostUsernameRaw : '';
+        $genPasswordLink  = is_string($genPasswordLinkRaw) ? $genPasswordLinkRaw : '';
+        $genTimeValidation = is_string($genTimeValidationRaw) ? $genTimeValidationRaw : '';
+        if ($params['send_by_mail'] && $userLostEmail !== '') {
             $emailParams = $firstLogin ? ServiceLocator::get(MailService::class)->pwgGenerateSetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : ServiceLocator::get(MailService::class)->pwgGenerateResetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
             $sendByMailResp = ServiceLocator::get(MailService::class)->pwgMail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
         }
@@ -518,7 +524,7 @@ final class UsersEndpoints
         if ($params['duration'] < 1 || $params['duration'] > 999999) {
             return new PwgError(400, 'Invalid duration max days is 999999');
         }
-        $apiKeyNameRaw = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
+        $apiKeyNameRaw = is_string($params['key_name'] ?? null) ? $params['key_name'] : '';
         if (strlen($apiKeyNameRaw) > 100) {
             return new PwgError(400, 'Key name is too long');
         }
@@ -539,7 +545,7 @@ final class UsersEndpoints
         if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
-        $revokePkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
+        $revokePkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revokePkid)) {
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
@@ -562,11 +568,11 @@ final class UsersEndpoints
         if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
-        $editPkid = is_scalar($params['pkid']) ? (string) $params['pkid'] : '';
+        $editPkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $editPkid)) {
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
-        $keyName  = is_scalar($params['key_name']) ? (string) $params['key_name'] : '';
+        $keyName  = is_string($params['key_name'] ?? null) ? $params['key_name'] : '';
         $editedKey = UserService::get()->editApiKey($userId, $editPkid, $keyName);
         if (true !== $editedKey) {
             return new PwgError(403, $editedKey);
@@ -588,6 +594,6 @@ final class UsersEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $apiKeys = UserService::get()->getApiKey((string) CurrentUser::get()->id);
-        return $apiKeys ?: new PwgError(404, Lang::t('No API key found'));
+        return ($apiKeys !== false && count($apiKeys) > 0) ? $apiKeys : new PwgError(404, Lang::t('No API key found'));
     }
 }

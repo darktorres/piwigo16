@@ -22,9 +22,10 @@ final class MessengerBusTest extends IntegrationTestCase
 {
     private const string FIXTURE = __DIR__ . '/../../../dev/fixtures/piwigo-16.x.sql';
 
-    private Connection $conn;
-    private string $tableName;
+    private ?Connection $conn = null;
+    private string $tableName = '';
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
@@ -33,7 +34,8 @@ final class MessengerBusTest extends IntegrationTestCase
         $this->markTestInstalled();
 
         if (!defined('PHPWG_ROOT_PATH')) {
-            define('PHPWG_ROOT_PATH', realpath(__DIR__ . '/../../../') . '/');
+            $rootPath = realpath(__DIR__ . '/../../../');
+            define('PHPWG_ROOT_PATH', ($rootPath !== false ? $rootPath : '') . '/');
         }
 
         // Seed Config with the test DB prefix so MessengerFactory reads the right table name.
@@ -57,14 +59,16 @@ final class MessengerBusTest extends IntegrationTestCase
         $this->tableName = Config::dbPrefix() . 'messenger_messages';
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->close();
+        $this->conn?->close();
         Config::reset();
     }
 
     public function test_dispatch_inserts_row_into_messenger_table(): void
     {
+        self::assertNotNull($this->conn);
         $bus = MessengerFactory::build($this->conn);
         $bus->dispatch(new GenerateDerivativeJob(1, 'thumb'));
 
@@ -78,6 +82,7 @@ final class MessengerBusTest extends IntegrationTestCase
 
     public function test_consume_ack_removes_row_from_messenger_table(): void
     {
+        self::assertNotNull($this->conn);
         $bus       = MessengerFactory::build($this->conn);
         $transport = MessengerFactory::buildTransport('piwigo_async', $this->conn);
 
@@ -100,6 +105,7 @@ final class MessengerBusTest extends IntegrationTestCase
 
     public function test_reject_removes_row_without_moving_to_failed(): void
     {
+        self::assertNotNull($this->conn);
         $bus       = MessengerFactory::build($this->conn);
         $transport = MessengerFactory::buildTransport('piwigo_async', $this->conn);
 

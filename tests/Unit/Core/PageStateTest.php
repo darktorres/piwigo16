@@ -9,11 +9,13 @@ use Piwigo\Core\PageState;
 
 final class PageStateTest extends TestCase
 {
+    #[\Override]
     protected function setUp(): void
     {
         PageState::reset();
     }
 
+    #[\Override]
     protected function tearDown(): void
     {
         PageState::reset();

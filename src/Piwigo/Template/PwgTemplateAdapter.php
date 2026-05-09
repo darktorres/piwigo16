@@ -14,7 +14,7 @@ use Piwigo\Lang\Translator;
  * This class contains basic functions that can be called directly from the
  * templates in the form $pwg->Lang::t('edit')
  */
-class PwgTemplateAdapter
+final class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
     public function l10n(?string $text): string

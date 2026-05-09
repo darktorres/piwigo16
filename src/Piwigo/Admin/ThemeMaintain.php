@@ -12,7 +12,7 @@ namespace Piwigo\Admin;
  * types, no return types). Adding declared types here breaks LSP and
  * fatal-on-load. See PluginMaintain for the same reasoning.
  */
-class ThemeMaintain
+final class ThemeMaintain
 {
     /**
      * @param string $theme_id
@@ -28,13 +28,11 @@ class ThemeMaintain
         return null;
     }
 
-    /** @return void */
-    public function deactivate()
+    public function deactivate(): void
     {
     }
 
-    /** @return void */
-    public function delete()
+    public function delete(): void
     {
     }
 }

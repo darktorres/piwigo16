@@ -23,7 +23,7 @@ use Piwigo\Url\UrlService;
 /**
  * Monthly calendar style (composed of years/months and days)
  */
-class CalendarMonthly extends CalendarBase
+final class CalendarMonthly extends CalendarBase
 {
     /**
      * Initialize the calendar.
@@ -58,6 +58,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @return boolean false indicates that thumbnails where not included
      */
+    #[\Override]
     public function generateCategoryContent(): bool
     {
         $page = &$GLOBALS['page'];
@@ -132,6 +133,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @param int $max_levels (e.g. 2=only year and month)
      */
+    #[\Override]
     public function getDateWhere(int $max_levels = 3): string
     {
         $page = &$GLOBALS['page'];
@@ -249,7 +251,7 @@ class CalendarMonthly extends CalendarBase
         }
         if (count($items) == 1) {// only one year exists so bail out to year view
             $first_year = array_key_first($items);
-            $y = (string) $first_year;
+            $y = $first_year;
             if (is_array($page)) {
                 if (!is_array($page['chronology_date'] ?? null)) {
                     $page['chronology_date'] = [];
@@ -411,7 +413,8 @@ class CalendarMonthly extends CalendarBase
                 $page['chronology_date'] = $cdTmp2;
             }
 
-            $row = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative() ?: null;
+            $rowResult = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative();
+            $row = $rowResult !== false ? $rowResult : null;
             if ($row === null) {
                 continue;
             }

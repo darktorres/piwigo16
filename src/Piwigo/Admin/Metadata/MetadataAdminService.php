@@ -41,7 +41,7 @@ final class MetadataAdminService
         }
 
         if (isset($iptc['keywords'])) {
-            $iptc['keywords'] = $this->normalizeKeywordsString(is_scalar($iptc['keywords']) ? (string) $iptc['keywords'] : '');
+            $iptc['keywords'] = $this->normalizeKeywordsString(is_string($iptc['keywords']) ? $iptc['keywords'] : '');
         }
 
         foreach ($iptc as $pwg_key => $value) {
@@ -76,7 +76,7 @@ final class MetadataAdminService
                 $exif[$pwg_key] = $this->normalizeKeywordsString(is_scalar($exif[$pwg_key]) ? (string) $exif[$pwg_key] : '');
             }
 
-            if (empty($exif[$pwg_key])) {
+            if (!isset($exif[$pwg_key]) || $exif[$pwg_key] === '') {
                 unset($exif[$pwg_key]);
                 continue;
             }
@@ -127,13 +127,13 @@ final class MetadataAdminService
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file))) {
+            if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file)) !== false) {
                 $type = $image_size[2];
                 if (IMAGETYPE_TIFF_MM == $type || IMAGETYPE_TIFF_II == $type) {
                     $is_tiff = true;
                 }
             }
-            $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative($file, is_scalar($infos['representative_ext']) ? (string) $infos['representative_ext'] : '');
+            $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative($file, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
 
         if (function_exists('mime_content_type')) {
@@ -149,9 +149,9 @@ final class MetadataAdminService
                         return false;
                     }
                     $xmlattributes = $xmlget->attributes();
-                    $width = $xmlattributes->width;
-                    $height = $xmlattributes->height;
-                    $vb = (string) ($xmlattributes->viewBox ?? '');
+                    $width = $xmlattributes !== null ? $xmlattributes->width : null;
+                    $height = $xmlattributes !== null ? $xmlattributes->height : null;
+                    $vb = $xmlattributes !== null ? (string) $xmlattributes->viewBox : '';
 
                     if (isset($width) && $width != '') {
                         $infos['width'] = (int) $width;
@@ -165,7 +165,7 @@ final class MetadataAdminService
                         $infos['height'] = round((float) explode(' ', $vb)[3]);
                     }
                 }
-                if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file))) {
+                if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file)) !== false) {
                     $infos['width'] = $image_size[0];
                     $infos['height'] = $image_size[1];
                 }
@@ -173,7 +173,8 @@ final class MetadataAdminService
         }
 
         if ($is_tiff) {
-            $file = PHPWG_ROOT_PATH . (is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
+            $rawPath = $infos['path'] ?? null;
+            $file = PHPWG_ROOT_PATH . (is_scalar($rawPath) ? (string) $rawPath : '');
         }
 
         if (Config::useExif()) {
@@ -249,7 +250,7 @@ final class MetadataAdminService
 
     /** @return array<mixed> */
     public function getFilelist(
-        int|string $category_id = '',
+        string $category_id = '',
         int $site_id = 1,
         bool $recursive = false,
         bool $only_new = false
@@ -283,7 +284,7 @@ SELECT id
         $query = '
 SELECT id, path, representative_ext
   FROM ' . Tables::images() . '
-  WHERE storage_category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $cat_ids)) . ')';
+  WHERE storage_category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_ids)) . ')';
         if ($only_new) {
             $query .= '
     AND date_metadata_update IS NULL';

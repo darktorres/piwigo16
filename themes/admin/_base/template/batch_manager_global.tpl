@@ -52,7 +52,7 @@
             <a href="{$thumbnail.FILE_SRC}" class="preview-box icon-zoom-square" title="{'Zoom'|@translate}"></a>
           </div>
 						{if $thumbnail.level > 0}
-						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|@sprintf:$thumbnail.level|@translate}</em>
+						<em class="levelIndicatorF" title="{'Who can see these photos?'|@translate} : ">{'Level %d'|translate|sprintf:$thumbnail.level}</em>
 						{/if}
 						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
 					</span>

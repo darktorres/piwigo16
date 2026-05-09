@@ -25,7 +25,7 @@
 {if $NB_TAGS > 1}
 <a class="stat-box" href="{$U_TAGS}">
 <i class="icon-tags icon-yellow"></i>
-<span class="number">{$NB_TAGS}</span><span class="caption" title="{'%d associations'|translate:$NB_IMAGE_TAG}">{'Tags'|translate}</span>
+<span class="number">{$NB_TAGS}</span><span class="caption" title="{$NB_IMAGE_TAG|translate_dec:'%d association':'%d associations'}">{'Tags'|translate}</span>
 </a>
 {/if}
 
@@ -95,7 +95,7 @@
           <p class="tooltip" style="--tooltip-y:{$SIZE_IN_UNIT/2}vw">
             <span class="tooltip-arrow"></span>
             <span class="tooltip-header"> 
-              <span class="tooltip-title">{if $ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"] > 1}{'%d Activities'|translate:$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"]}{else}{'%d Activity'|translate:$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"]}{/if}</span>
+              <span class="tooltip-title">{$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["number"]|translate_dec:'%d Activity':'%d Activities'}</span>
               <span class="tooltip-date">{$ACTIVITY_LAST_WEEKS[$WEEK_NUMBER][$DAY_NUMBER]["date"]}</span>
             </span>
             <span class="tooltip-details">

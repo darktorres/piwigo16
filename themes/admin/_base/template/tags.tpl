@@ -16,7 +16,7 @@
       <div class="dropdown-content">
         <div class='tag-dropdown-header'>
           <b>{$tag_name}</b>
-          <i>{if !$has_image}{'no photo'|translate}{else}{'%d photos'|translate:$tag_count}{/if}</i>
+          <i>{if !$has_image}{'no photo'|translate}{else}{$tag_count|translate_dec:'%d photo':'%d photos'}{/if}</i>
         </div>
         <a class='dropdown-option icon-eye view' href="{$tag_U_VIEW}" {if !$has_image} style='display:none' {/if}> {'View in gallery'|translate}</a>
         <a class='dropdown-option icon-picture manage' href="{$tag_U_EDIT}" {if !$has_image} style='display:none' {/if}> {'Manage photos'|translate}</a>

@@ -440,7 +440,7 @@ final class MiscController
 
         EventDispatcher::notify('loc_end_help');
 
-        $tpl->setFilenames(['help' => 'help.tpl']);
+        $tpl->setFilenames(['help' => 'help.latte']);
         $tpl->assign([
             'HELP_CONTENT'       => LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]),
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',

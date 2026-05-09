@@ -372,6 +372,44 @@ final class LatteEngineTest extends TestCase
     }
 
     /**
+     * Phase F preparation — Template::parse() now routes by file
+     * extension. `.latte` paths land in `Template::renderLatte()` which
+     * threads Smarty's template-vars through {@see LatteEngine::default()}
+     * and resolves the bare filename against Smarty's template_dir.
+     * Test the renderLatte branch directly (the URL-globals assigns at
+     * the top of `parse()` are pre-existing Smarty plumbing that doesn't
+     * change behavior with this PR; stubbing `UrlGenerator` would require
+     * extending a `final readonly` class).
+     */
+    public function test_template_render_latte_threads_smarty_vars_into_latte(): void
+    {
+        Lang::loadArray(['Help' => 'Aide']);
+
+        $tpl = (new \ReflectionClass(Template::class))->newInstanceWithoutConstructor();
+        $tpl->scriptLoader = new ScriptLoader();
+        $tpl->cssLoader = new CssLoader();
+
+        $smarty = new \Smarty\Smarty();
+        $smarty->setCompileDir($this->tempDir);
+        $smarty->setTemplateDir([dirname(__DIR__, 3) . '/themes/admin/_base/template']);
+        $smarty->assign('HELP_SECTION_TITLE', 'Configuration');
+        $smarty->assign('HELP_CONTENT', '<p>body</p>');
+        $smarty->assign('ENABLE_SYNCHRONIZATION', false);
+        $tpl->smarty = $smarty;
+
+        TemplateRegistry::set($tpl);
+
+        $reflMethod = new \ReflectionMethod(Template::class, 'renderLatte');
+        $rendered = $reflMethod->invoke($tpl, 'help.latte');
+        $output = is_string($rendered) ? $rendered : '';
+
+        self::assertStringContainsString('<h2>Aide &raquo; Configuration</h2>', $output);
+        self::assertStringContainsString('<div id="helpContent" class="sync-disabled">', $output);
+        self::assertStringContainsString('<p>body</p>', $output);
+    }
+
+
+    /**
      * Reflection-construct a Template with usable loaders but no Smarty
      * bootstrap. Registers it as the current template; the tearDown
      * calls TemplateRegistry::reset() to keep tests isolated.

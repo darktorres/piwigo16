@@ -482,24 +482,69 @@ final class Template
         $this->smarty->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
         $this->smarty->assign('U_SEARCH', ServiceLocator::get(UrlGenerator::class)->searchPage());
 
-        $save_compile_id = $this->smarty->compile_id;
-        $this->loadExternalFilters($handle);
+        $file = $this->files[$handle];
+        if (str_ends_with($file, '.latte')) {
+            $v = $this->renderLatte($file);
+        } else {
+            $save_compile_id = $this->smarty->compile_id;
+            $this->loadExternalFilters($handle);
 
-        $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
-        if (Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
-            $this->smarty->compile_id .= '_'.(string)$lang_info['code'];
+            $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
+            if (Config::compiledTemplateCacheLanguage() and isset($lang_info['code']) && is_scalar($lang_info['code'])) {
+                $this->smarty->compile_id .= '_'.(string)$lang_info['code'];
+            }
+
+            $v = $this->smarty->fetch($file);
+
+            $this->smarty->compile_id = $save_compile_id;
+            $this->unloadExternalFilters($handle);
         }
-
-        $v = $this->smarty->fetch($this->files[$handle]);
-
-        $this->smarty->compile_id = $save_compile_id;
-        $this->unloadExternalFilters($handle);
 
         if ($return) {
             return $v;
         }
         $this->output .= $v;
         return null;
+    }
+
+    /**
+     * Render a `.latte` file via {@see LatteEngine::default()}, threading
+     * Smarty's accumulated template variables through. Plugin pre/post
+     * filters and `compiled_id` language-cache keys are deliberately not
+     * applied — Latte handles caching by content hash and plugin
+     * extension lands separately in §1.3.
+     */
+    private function renderLatte(string $file): string
+    {
+        $absPath = $this->resolveLatteTemplatePath($file);
+        /** @var array<string, mixed> $vars */
+        $vars = $this->smarty->getTemplateVars();
+
+        return LatteEngine::default()->render($absPath, $vars);
+    }
+
+    /**
+     * `.latte` paths registered via {@see setFilenames()} land here as the
+     * controller passed them — usually a bare filename (`help.latte`)
+     * resolved against Smarty's template_dir array. Latte expects an
+     * absolute (or cwd-relative) path; walk the registered dirs to find
+     * the first hit.
+     */
+    private function resolveLatteTemplatePath(string $file): string
+    {
+        if (file_exists($file)) {
+            return $file;
+        }
+        foreach ((array) $this->smarty->getTemplateDir() as $dir) {
+            if (! is_string($dir)) {
+                continue;
+            }
+            $candidate = rtrim($dir, '/') . '/' . $file;
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+        HtmlService::fatalError("Template->parse(): Latte file not found in template_dir: $file");
     }
 
     /**

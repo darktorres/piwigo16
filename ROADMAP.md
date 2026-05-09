@@ -30,6 +30,7 @@
 | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | 🟡 **Not started** | Scheduled, no commits yet.                                                                                     |
 | 🟢 **Active**      | Work in progress; one or more sub-tasks already shipped. The `▸ N / M` count shows shipped vs total sub-tasks. |
+| ✅ **Done**        | Shipped; no further work expected on this scope.                                                               |
 | 🔵 **Continuous**  | Opportunistic; no single checkpoint date. Applied as files are touched.                                        |
 | 🟠 **On-demand**   | Passive backlog; trigger when a deployment, audit, or external need calls for it.                              |
 
@@ -219,7 +220,7 @@ covers Smarty during a transition window that's about to end.
 
 #### Wave 1 — Smarty hygiene on existing `.tpl`
 
-**Status:** 🟢 Done · **Effort:** M · 8/8
+**Status:** ✅ Done · **Effort:** M · 8/8
 
 Eight ordered hygiene actions on the existing `.tpl` files, low-risk
 first. These run **before** the Latte conversion so the converter sees
@@ -298,22 +299,22 @@ document.addEventListener('click', e => {
 
 #### Wave 2 — Smarty → Latte conversion
 
-**Status:** 🟢 Active ▸ Phase A + B + C + D.admin done · 71 / 137 .latte · **Effort:** XL · depends on Wave 1
+**Status:** 🟢 Active ▸ Phase A + B done · C iterating · D.admin done · 71 / 137 .latte · **Effort:** XL · depends on Wave 1
 
 ##### Phase progress
 
 | Phase | Scope                                                              | Status |
 | ----- | ------------------------------------------------------------------ | ------ |
-| A     | latte/latte 3.1, `TemplateEngine` interface, `LatteEngine`, `PiwigoExtension` (translate, translate_dec) + 7 unit tests | 🟢 Done |
-| A.tooling | `composer lint:latte` wrapper around `Latte\Tools\Linter` + parallel CI job | 🟢 Done |
-| A.tooling+ | `efabrica/phpstan-latte` vendored fork (PHP 8.5 + Latte 3.1 patches), engine bootstrap, custom `PiwigoLatteEngineResolver` | 🟢 Done |
-| B.1+B.2 | 18 PHP-passthrough filters + 8 stateless custom modifiers (l10n, explode, ternary, url_is_remote, is_admin, is_classic_user, get_device, get_gallery_home_url, get_extent) | 🟢 Done |
-| B.3   | 8 stateful asset functions (combineScript, getCombinedScripts, combineCss, getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript) sharing `TemplateRegistry::current()` state | 🟢 Done |
-| B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | 🟢 Done |
-| B.5   | `LatteEngine::default()` factory using Piwigo's data location | 🟢 Done |
-| B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | 🟢 Done |
+| A     | latte/latte 3.1, `TemplateEngine` interface, `LatteEngine`, `PiwigoExtension` (translate, translate_dec) + 7 unit tests | ✅ Done |
+| A.tooling | `composer lint:latte` wrapper around `Latte\Tools\Linter` + parallel CI job | ✅ Done |
+| A.tooling+ | `efabrica/phpstan-latte` vendored fork (PHP 8.5 + Latte 3.1 patches), engine bootstrap, custom `PiwigoLatteEngineResolver` | ✅ Done |
+| B.1+B.2 | 18 PHP-passthrough filters + 8 stateless custom modifiers (l10n, explode, ternary, url_is_remote, is_admin, is_classic_user, get_device, get_gallery_home_url, get_extent) | ✅ Done |
+| B.3   | 8 stateful asset functions (combineScript, getCombinedScripts, combineCss, getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript) sharing `TemplateRegistry::current()` state | ✅ Done |
+| B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | ✅ Done |
+| B.5   | `LatteEngine::default()` factory using Piwigo's data location | ✅ Done |
+| B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | ✅ Done |
 | C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool — 49 unit tests pin behavior. Covers: foreach (with optional `name=`), dot-access, if-not (any expression), Smarty operator keywords (`eq`/`neq`/`ne`/`gt`/`lt`/`gte`/`lte`/`is odd`/`is even`), `{else if}`→`{elseif}`, escape filter (any arg form), combine_script/css/get_combined_*, define_derivative, include path, printed-literal filter prefix, assign (named + positional, parenthesizes pipes), section→foreach, capture, literal, strip→spaceless, html_head/style/footer_script blocks, regex_replace→replaceRe, multi-arg pipe `:`→`,`, function definition (named + positional, dedupes Smarty 5 dual-form declarations), `$smarty.foreach.X.{index,iteration,first,last,total}`→`$iterator->*`. CLI driver gains `--force` flag (default skips existing `.latte` so manual `\|noescape` annotations aren't lost). | 🟢 Iterating |
-| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟢 Done · **70 / 70 lint-clean**. Iteration 3 lifted the remaining 32 templates by registering `htmlOptions` / `htmlRadios` / `math` as PiwigoExtension functions (Smarty plugin ports), adding converter rules for `{counter}` strip, user-defined function call → `{include NAME, k: v, …}` rewrite, embedded `{$X}` print sub-tags inside `{if}`/`{elseif}`/`{var}`, Smarty backtick string interpolation → `.` concat (Latte's `~` is rejected inside function-call args), Smarty 5 `$item@index/iteration/first/last/total/key` iterator-attribute syntax, `{if X}{break}{/if}` → `{breakIf X}` idiom, pipe-in-`{if}` (`$x|count` → `count($x)`), nested-`:{round(...)}` filter-arg unwrap, `$arr.$varname` (variable-index dot-access), `{capture assign=NAME}` keyword variant, and an extended args parser that accepts `key = value` (with whitespace) plus expressions containing `,` `:` `|` `()`. Two templates needed hand-fixes that don't generalise: `header.latte` (JSON config script tag rebuilt with `\|json_encode\|noescape` since Latte rejects `{$X}` print-statements inside JS string literals) and `queue.tpl` source (HTML attribute quoting flipped to single-quoted to escape inner `"` chars in the Smarty translate-string literal). |
+| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | ✅ Done · **70 / 70 lint-clean**. Iteration 3 lifted the remaining 32 templates by registering `htmlOptions` / `htmlRadios` / `math` as PiwigoExtension functions (Smarty plugin ports), adding converter rules for `{counter}` strip, user-defined function call → `{include NAME, k: v, …}` rewrite, embedded `{$X}` print sub-tags inside `{if}`/`{elseif}`/`{var}`, Smarty backtick string interpolation → `.` concat (Latte's `~` is rejected inside function-call args), Smarty 5 `$item@index/iteration/first/last/total/key` iterator-attribute syntax, `{if X}{break}{/if}` → `{breakIf X}` idiom, pipe-in-`{if}` (`$x|count` → `count($x)`), nested-`:{round(...)}` filter-arg unwrap, `$arr.$varname` (variable-index dot-access), `{capture assign=NAME}` keyword variant, and an extended args parser that accepts `key = value` (with whitespace) plus expressions containing `,` `:` `|` `()`. Two templates needed hand-fixes that don't generalise: `header.latte` (JSON config script tag rebuilt with `\|json_encode\|noescape` since Latte rejects `{$X}` print-statements inside JS string literals) and `queue.tpl` source (HTML attribute quoting flipped to single-quoted to escape inner `"` chars in the Smarty translate-string literal). |
 | D.public | Convert ~50 public theme templates (`themes/_base/template/`) | 🟡 Not started · 0 / 55 done |
 | D.standard_pages | Convert 7 templates in `themes/standard_pages/` (login/register/password/profile + mail) | 🟡 Not started |
 | E     | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates | 🟡 Not started |

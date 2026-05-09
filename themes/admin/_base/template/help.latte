@@ -1,9 +1,12 @@
-{do combineCss(path: 'themes/admin/_base/css/pages/help.css')}
+{do combineCss(path: "themes/admin/_base/css/pages/help.css")}
 
 <h2>{='Help'|translate} &raquo; {$HELP_SECTION_TITLE}</h2>
 
 <div id="helpContent"{if !$ENABLE_SYNCHRONIZATION} class="sync-disabled"{/if}>
 
+{* Post-conversion manual annotation: the controller passes pre-rendered
+   HTML in $HELP_CONTENT, so |noescape preserves the original Smarty
+   render contract (Smarty ran with escape_html = false). *}
 {$HELP_CONTENT|noescape}
 
 </div>

@@ -29,14 +29,25 @@ final class Converter
         // Order matters: foreach rewrite must run before dot-access so the
         // `from=$arr` part is normalized; combine_css/script rewrites must
         // run before the generic `=` print prefix so the function calls
-        // aren't accidentally promoted to expression prints.
+        // aren't accidentally promoted to expression prints; literal block
+        // must run before any tag-content rewrites so the `{literal}` body
+        // isn't accidentally rewritten.
+        $source = $this->rewriteLiteralBlock($source);
+        $source = $this->rewriteAssign($source);
         $source = $this->rewriteForeach($source);
+        $source = $this->rewriteSection($source);
+        $source = $this->rewriteCaptureBlock($source);
+        $source = $this->rewriteHtmlHeadBlock($source);
+        $source = $this->rewriteHtmlStyleBlock($source);
+        $source = $this->rewriteFooterScriptBlock($source);
         $source = $this->rewriteIfNotKeyword($source);
         $source = $this->rewriteEscapeFilters($source);
         $source = $this->rewriteCombineScript($source);
         $source = $this->rewriteCombineCss($source);
         $source = $this->rewriteDefineDerivative($source);
         $source = $this->rewriteIncludePath($source);
+        $source = $this->rewriteRegexReplaceFilter($source);
+        $source = $this->rewriteCatFilter($source);
         $source = $this->rewriteSmartyDotAccess($source);
         $source = $this->rewritePrintedLiteralFilter($source);
 
@@ -223,6 +234,176 @@ final class Converter
         return preg_replace(
             "/\\{(?!=)((?:'[^']*'|\"[^\"]*\")\\|\\w[\\w:'\",\\s\\$]*)\\}/",
             '{=$1}',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{assign var=foo value=bar}` → `{var $foo = bar}`. Smarty also
+     * supports the bare-positional form `{assign 'foo' 'bar'}` but
+     * Piwigo's templates use the named-arg form exclusively (verified
+     * by grep), so the converter targets only that shape.
+     */
+    private function rewriteAssign(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{assign\s+var=[\'"]?(\w+)[\'"]?\s+value=([^}]+?)\}/',
+            static fn (array $m): string => sprintf('{var $%s = %s}', $m[1], trim($m[2])),
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{section name=NAME loop=$ARR}…{/section}` →
+     *   `{foreach $ARR as $NAME => $val}…{/foreach}`.
+     *
+     * The conversion is approximate. Smarty's `{section}` exposes
+     * `$smarty.section.NAME.index/iteration/total/...` inside the body;
+     * those references won't survive automated rewriting and need
+     * hand-fix. The roadmap calls this out as expected residue.
+     */
+    private function rewriteSection(string $source): string
+    {
+        $source = preg_replace_callback(
+            '/\{section\s+name=(\w+)\s+loop=(\$[\w\[\]\->]+)\s*\}/',
+            static fn (array $m): string => sprintf('{foreach %s as $%s => $val}', $m[2], $m[1]),
+            $source,
+        ) ?? $source;
+        return str_replace('{/section}', '{/foreach}', $source);
+    }
+
+    /**
+     * `{capture name=NAME}…{/capture}` → `{capture $NAME}…{/capture}`,
+     * paired with `{$smarty.capture.NAME}` → `{$NAME}`.
+     */
+    private function rewriteCaptureBlock(string $source): string
+    {
+        $source = preg_replace_callback(
+            '/\{capture\s+name=[\'"]?(\w+)[\'"]?\s*\}/',
+            static fn (array $m): string => sprintf('{capture $%s}', $m[1]),
+            $source,
+        ) ?? $source;
+        $source = preg_replace_callback(
+            '/\{\$smarty\.capture\.(\w+)\}/',
+            static fn (array $m): string => sprintf('{$%s}', $m[1]),
+            $source,
+        ) ?? $source;
+        return $source;
+    }
+
+    /**
+     * `{literal}…{/literal}` → `{syntax off}…{syntax on}`. Latte's
+     * {syntax off} disables tag parsing inside the block — the
+     * Smarty equivalent for embedding literal `{` `}` strings.
+     */
+    private function rewriteLiteralBlock(string $source): string
+    {
+        $source = str_replace('{literal}', '{syntax off}', $source);
+        $source = str_replace('{/literal}', '{syntax on}', $source);
+        return $source;
+    }
+
+    /**
+     * `{html_head}…{/html_head}` →
+     *   `{capture $_pwgHead<N>}…{/capture}{do htmlHead($_pwgHead<N>)}`
+     * `<N>` is a per-conversion counter so multiple blocks don't shadow.
+     */
+    private function rewriteHtmlHeadBlock(string $source): string
+    {
+        $i = 0;
+        return preg_replace_callback(
+            '/\{html_head\}(.*?)\{\/html_head\}/s',
+            static function (array $m) use (&$i): string {
+                $i++;
+                $var = '_pwgHead' . $i;
+                return "{capture \${$var}}{$m[1]}{/capture}{do htmlHead(\${$var})}";
+            },
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{html_style}…{/html_style}` →
+     *   `{capture $_pwgStyle<N>}…{/capture}{do htmlStyle($_pwgStyle<N>)}`
+     */
+    private function rewriteHtmlStyleBlock(string $source): string
+    {
+        $i = 0;
+        return preg_replace_callback(
+            '/\{html_style\}(.*?)\{\/html_style\}/s',
+            static function (array $m) use (&$i): string {
+                $i++;
+                $var = '_pwgStyle' . $i;
+                return "{capture \${$var}}{$m[1]}{/capture}{do htmlStyle(\${$var})}";
+            },
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{footer_script [require='r']}…{/footer_script}` →
+     *   `{capture $_pwgFooter<N>}…{/capture}{do footerScript($_pwgFooter<N>[, require: 'r'])}`
+     */
+    private function rewriteFooterScriptBlock(string $source): string
+    {
+        $i = 0;
+        return preg_replace_callback(
+            '/\{footer_script(\s+[^}]*)?\}(.*?)\{\/footer_script\}/s',
+            function (array $m) use (&$i): string {
+                $i++;
+                $var = '_pwgFooter' . $i;
+                $argHead = '';
+                if (isset($m[1]) && trim($m[1]) !== '') {
+                    $extras = $this->parseSmartyArgs(trim($m[1]));
+                    if ($extras !== '') {
+                        $argHead = ', ' . $extras;
+                    }
+                }
+                return "{capture \${$var}}{$m[2]}{/capture}{do footerScript(\${$var}{$argHead})}";
+            },
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `|regex_replace:$pattern:$replacement` → `|replaceRe:$pattern,$replacement`.
+     * Smarty's regex_replace and Latte's built-in replaceRe both call
+     * preg_replace($pattern, $replacement, $subject) under the hood,
+     * so only the syntax differs (colon-separator → comma-separator)
+     * and the filter name.
+     */
+    private function rewriteRegexReplaceFilter(string $source): string
+    {
+        return preg_replace(
+            '/\|regex_replace:([^:|}]+):([^|}]+)/',
+            '|replaceRe:$1,$2',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `|cat:'X'` → `~ 'X'` rewritten as a concat. Smarty's cat filter
+     * concatenates onto the pipe value; Latte uses `~` for string
+     * concat in expressions. Conversion is approximate: a chained
+     * `|cat:'a':'b'` becomes `~ 'a' ~ 'b'`. Only the print-position
+     * shape `{$x|cat:'…'}` is rewritten — embedded uses (within other
+     * expressions) need hand-fix.
+     */
+    private function rewriteCatFilter(string $source): string
+    {
+        // Match {$expr|cat:'arg1'[:'arg2'][...]} and rewrite to
+        // {=$expr ~ 'arg1' [~ 'arg2'][...]}. The args after the first
+        // `|cat:` are colon-separated.
+        return preg_replace_callback(
+            '/\{(\$[\w\[\]\->\.\']+(?:\|[\w]+(?::[^|:}]+)*)?)\|cat:([^}]+)\}/',
+            static function (array $m): string {
+                $value = $m[1];
+                $args = $m[2];
+                // Split args by `:` not inside quotes.
+                $parts = preg_split('/:(?=(?:[^\'"]*[\'"][^\'"]*[\'"])*[^\'"]*$)/', $args) ?: [$args];
+                $concat = $value . ' ~ ' . implode(' ~ ', array_map('trim', $parts));
+                return sprintf('{=%s}', $concat);
+            },
             $source,
         ) ?? $source;
     }

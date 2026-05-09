@@ -151,6 +151,127 @@ final class SmartyToLatteConverterTest extends TestCase
         );
     }
 
+    public function test_assign_named_args(): void
+    {
+        self::assertSame(
+            '{var $foo = $bar + 1}',
+            $this->converter->convert('{assign var=foo value=$bar + 1}'),
+        );
+    }
+
+    public function test_assign_quoted_var_name(): void
+    {
+        self::assertSame(
+            "{var \$foo = 'literal'}",
+            $this->converter->convert('{assign var="foo" value=\'literal\'}'),
+        );
+    }
+
+    public function test_section_to_foreach(): void
+    {
+        $smarty = "{section name=i loop=\$photos}\n  <li>{\$photos[i]['name']}</li>\n{/section}";
+        $latte = "{foreach \$photos as \$i => \$val}\n  <li>{\$photos[i]['name']}</li>\n{/foreach}";
+        // The body still references $photos[i] — that residue is documented:
+        // {section} body access via $photos[i] doesn't auto-translate;
+        // hand-fix to {$val['name']} or whatever the body should be after.
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_capture_block_rewrites_name_and_smarty_capture(): void
+    {
+        $smarty = "{capture name=foo}line1\nline2{/capture}{\$smarty.capture.foo}";
+        $latte = "{capture \$foo}line1\nline2{/capture}{\$foo}";
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_literal_block(): void
+    {
+        $smarty = "{literal}{ raw braces }{/literal}";
+        $latte = "{syntax off}{ raw braces }{syntax on}";
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_html_head_block(): void
+    {
+        $smarty = "{html_head}<link rel=\"x\" href=\"y\">{/html_head}";
+        $latte = '{capture $_pwgHead1}<link rel="x" href="y">{/capture}{do htmlHead($_pwgHead1)}';
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_html_head_block_unique_per_occurrence(): void
+    {
+        $smarty = "{html_head}A{/html_head}{html_head}B{/html_head}";
+        $latte =
+            '{capture $_pwgHead1}A{/capture}{do htmlHead($_pwgHead1)}'
+            . '{capture $_pwgHead2}B{/capture}{do htmlHead($_pwgHead2)}';
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_html_style_block(): void
+    {
+        $smarty = "{html_style}.foo { color: red }{/html_style}";
+        $latte = '{capture $_pwgStyle1}.foo { color: red }{/capture}{do htmlStyle($_pwgStyle1)}';
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_footer_script_block_no_args(): void
+    {
+        $smarty = "{footer_script}init();{/footer_script}";
+        $latte = '{capture $_pwgFooter1}init();{/capture}{do footerScript($_pwgFooter1)}';
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_footer_script_block_with_require(): void
+    {
+        $smarty = "{footer_script require='common'}init();{/footer_script}";
+        $latte = "{capture \$_pwgFooter1}init();{/capture}{do footerScript(\$_pwgFooter1, require: 'common')}";
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_regex_replace_to_replace_re(): void
+    {
+        self::assertSame(
+            "{\$s|replaceRe:'/foo/','bar'}",
+            $this->converter->convert("{\$s|regex_replace:'/foo/':'bar'}"),
+        );
+    }
+
+    public function test_cat_filter_single_arg(): void
+    {
+        self::assertSame(
+            "{=\$x ~ 'foo'}",
+            $this->converter->convert("{\$x|cat:'foo'}"),
+        );
+    }
+
+    public function test_cat_filter_chained(): void
+    {
+        self::assertSame(
+            "{=\$x ~ 'foo' ~ 'bar'}",
+            $this->converter->convert("{\$x|cat:'foo':'bar'}"),
+        );
+    }
+
+    public function test_default_filter_passes_through_unchanged(): void
+    {
+        // Latte has its own |default filter with the same semantics —
+        // the converter must not touch it.
+        self::assertSame(
+            "{\$x|default:''}",
+            $this->converter->convert("{\$x|default:''}"),
+        );
+    }
+
+    public function test_smarty_comment_passthrough(): void
+    {
+        // Latte uses the same {*…*} comment syntax; the converter should
+        // leave them untouched.
+        self::assertSame(
+            "{* a comment *}\n<h2>x</h2>",
+            $this->converter->convert("{* a comment *}\n<h2>x</h2>"),
+        );
+    }
+
     /**
      * End-to-end on a real production template: tabsheet.tpl exercises
      * foreach (with key + item), smarty-style `and` keyword (which Latte

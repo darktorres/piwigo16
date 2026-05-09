@@ -133,7 +133,7 @@ jobs:
           PIWIGO_BASE_URL=http://localhost:8080
           EOF
       - name: Create writable app directories
-        run: mkdir -p _data/templates_c _data/combined _data/upload local
+        run: mkdir -p _data/templates_c _data/upload local
       - name: Start PHP built-in server
         run: php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
       - name: Wait for PHP server
@@ -183,7 +183,7 @@ jobs:
           PIWIGO_BASE_URL=http://localhost:8080
           EOF
       - name: Create writable app directories
-        run: mkdir -p _data/templates_c _data/combined _data/upload local
+        run: mkdir -p _data/templates_c _data/upload local
       - name: Start PHP built-in server
         run: php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
       - name: Wait for PHP server

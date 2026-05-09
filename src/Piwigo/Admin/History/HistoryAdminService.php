@@ -44,6 +44,10 @@ final class HistoryAdminService
         /** @var array<string, mixed> $fields */
         $fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
 
+        if (isset($fields['image_id'])) {
+            unset($fields['filename']);
+        }
+
         if (isset($fields['filename'])) {
             $query = '
 SELECT

@@ -18,7 +18,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -465,7 +464,7 @@ SELECT
                         $uppercats_val = $row['uppercats'];
                         $cat_display_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
                             is_scalar($uppercats_val) ? (string) $uppercats_val : '',
-                            ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'
+                            ''
                         );
                         $row['fullname'] = strip_tags($cat_display_name);
                         $sfRowIdRaw = $row['id'] ?? null;

@@ -1,0 +1,10 @@
+includes:
+    - ./extension.neon
+
+services:
+    -
+        factory: Efabrica\PHPStanLatte\Rule\LatteTemplatesRule()
+        arguments:
+            phpstanCommand: %latte.features.phpstanCommand%
+        tags:
+            - phpstan.rules.rule

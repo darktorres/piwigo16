@@ -18,6 +18,15 @@ parameters:
         narrow_return: true
         no_mixed: true
         null_over_false: true
+    latte:
+        engineBootstrap: tools/phpstan-latte-engine.php
+        # phpstan-latte's compiler emits PHPDoc array shapes that mention
+        # bare `array` and `iterable` for some Latte 3.x runtime filter
+        # signatures (e.g. column, sort). Our strict rules flag those as
+        # missing iterable value type — the noise is in Latte runtime
+        # signatures, not in user template code, so silence the pattern.
+        errorPatternsToIgnore:
+            - '/PHPDoc tag @var for variable \$__(filters|functions|variables)__ has no value type specified in iterable type/'
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
@@ -31,7 +40,9 @@ services:
     -
         class: Piwigo\Tools\PhpStan\PwgGetSessionVarDynamicReturnType
         tags: [phpstan.broker.dynamicFunctionReturnTypeExtension]
+    - Piwigo\Tools\PhpStan\PiwigoLatteEngineResolver
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
     - vendor/rector/type-perfect/config/extension.neon
     - vendor/rector/mockstan/config/phpunit-mocks-rules.neon
+    - vendor/efabrica/phpstan-latte/rules.neon

@@ -34,6 +34,17 @@ final class StrictTypesRequiredRule implements Rule
         if (!$this->isInScope($file)) {
             return [];
         }
+        // phpstan-latte compiles `.latte` templates into PHP under
+        // sys_get_temp_dir()/phpstan-latte/ for analysis, then remaps error
+        // reports back onto the original .latte path. Skip both shapes:
+        // either we see the .latte source name (no PHP `declare()` ever
+        // belongs there) or the compiled file in the analyser tmp dir.
+        if (str_ends_with($file, '.latte')) {
+            return [];
+        }
+        if (str_contains($file, '/phpstan-latte/') || str_contains($file, '\\phpstan-latte\\')) {
+            return [];
+        }
 
         foreach ($node->getNodes() as $stmt) {
             if (!$stmt instanceof Declare_) {

@@ -1,0 +1,17 @@
+<?php
+
+namespace Latte\Runtime;
+
+class Helpers implements HtmlStringable
+{
+
+    /**
+     * @template A
+     * @param A $value
+     * @phpstan-return (A is string ? A|null : null)
+     */
+    public static function stringOrNull(mixed $value): ?string
+    {
+    }
+
+}

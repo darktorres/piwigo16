@@ -29,14 +29,22 @@ global $argv;
 
 $args = array_slice($argv, 1);
 $dryRun = false;
+$force = false;
 $paths = [];
 foreach ($args as $arg) {
     if ($arg === '--dry-run') {
         $dryRun = true;
         continue;
     }
+    if ($arg === '--force') {
+        $force = true;
+        continue;
+    }
     if ($arg === '--help' || $arg === '-h') {
-        fwrite(STDERR, "Usage: php tools/smarty-to-latte/convert.php [--dry-run] <path>...\n");
+        fwrite(STDERR, "Usage: php tools/smarty-to-latte/convert.php [--dry-run] [--force] <path>...\n");
+        fwrite(STDERR, "  --dry-run   print converted output to stdout instead of writing\n");
+        fwrite(STDERR, "  --force     overwrite existing .latte files (default: skip them so manual\n");
+        fwrite(STDERR, "              post-conversion annotations like |noescape aren't lost)\n");
         exit(0);
     }
     $paths[] = $arg;
@@ -72,6 +80,11 @@ foreach ($paths as $path) {
             echo $latte;
             echo "\n";
         } else {
+            if (!$force && file_exists($out)) {
+                echo "Skipped (exists, use --force to overwrite): $out\n";
+                $skipped++;
+                continue;
+            }
             if (file_put_contents($out, $latte) === false) {
                 fwrite(STDERR, "Failed to write: $out\n");
                 $skipped++;

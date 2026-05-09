@@ -236,18 +236,18 @@ final class SmartyToLatteConverterTest extends TestCase
         );
     }
 
-    public function test_cat_filter_single_arg(): void
+    public function test_cat_filter_passes_through_via_runtime(): void
     {
+        // |cat is registered in PiwigoExtension (multi-arg, returns
+        // string concat), so the converter doesn't need to rewrite it
+        // syntactically — the multi-arg-pipe rule converts the colons
+        // to commas and the runtime filter takes over.
         self::assertSame(
-            "{=\$x ~ 'foo'}",
+            "{\$x|cat:'foo'}",
             $this->converter->convert("{\$x|cat:'foo'}"),
         );
-    }
-
-    public function test_cat_filter_chained(): void
-    {
         self::assertSame(
-            "{=\$x ~ 'foo' ~ 'bar'}",
+            "{\$x|cat:'foo','bar'}",
             $this->converter->convert("{\$x|cat:'foo':'bar'}"),
         );
     }
@@ -259,6 +259,197 @@ final class SmartyToLatteConverterTest extends TestCase
         self::assertSame(
             "{\$x|default:''}",
             $this->converter->convert("{\$x|default:''}"),
+        );
+    }
+
+    public function test_if_not_with_function_call(): void
+    {
+        // {if not empty($x)} — `not` followed by a function call, not
+        // a bare variable. The earlier-iteration regex required a
+        // following `$`, so this pattern survived until the
+        // generalization landed.
+        self::assertSame(
+            '{if !empty($remote_output)}',
+            $this->converter->convert('{if not empty($remote_output)}'),
+        );
+    }
+
+    public function test_if_not_with_paren_expression(): void
+    {
+        self::assertSame(
+            '{if !($x === 0)}',
+            $this->converter->convert('{if not ($x === 0)}'),
+        );
+    }
+
+    public function test_operator_keywords_eq_neq_gt_lt(): void
+    {
+        self::assertSame(
+            '{if $pending_failed > 0}',
+            $this->converter->convert('{if $pending_failed gt 0}'),
+        );
+        self::assertSame(
+            '{if $a == $b}',
+            $this->converter->convert('{if $a eq $b}'),
+        );
+        self::assertSame(
+            '{if $a != $b}',
+            $this->converter->convert('{if $a neq $b}'),
+        );
+        self::assertSame(
+            '{if $count >= 3}',
+            $this->converter->convert('{if $count gte 3}'),
+        );
+        self::assertSame(
+            '{if $count <= 3}',
+            $this->converter->convert('{if $count lte 3}'),
+        );
+    }
+
+    public function test_operator_keywords_only_inside_if_tags(): void
+    {
+        // The `eq` substring appearing in a regular HTML attribute or
+        // text must not be touched.
+        self::assertSame(
+            '<a class="eq-button">eq</a>',
+            $this->converter->convert('<a class="eq-button">eq</a>'),
+        );
+    }
+
+    public function test_else_if_with_space(): void
+    {
+        self::assertSame(
+            "{elseif \$x == 'foo'}",
+            $this->converter->convert("{else if \$x == 'foo'}"),
+        );
+    }
+
+    public function test_function_definition_to_define(): void
+    {
+        $smarty = "{function name=tagContent}\n  body\n{/function}";
+        $latte = "{define tagContent}\n  body\n{/define}";
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_get_combined_css_to_function_call(): void
+    {
+        self::assertSame(
+            '{=getCombinedCss()}',
+            $this->converter->convert('{get_combined_css}'),
+        );
+    }
+
+    public function test_multi_arg_pipe_filter_colon_to_comma(): void
+    {
+        // Smarty: |translate:$a:$b → Latte: |translate:$a,$b
+        self::assertSame(
+            "{='msg'|translate:\$a,\$b}",
+            $this->converter->convert("{'msg'|translate:\$a:\$b}"),
+        );
+    }
+
+    public function test_multi_arg_pipe_filter_three_args(): void
+    {
+        self::assertSame(
+            "{='%s and %s and %s'|translate:\$a,\$b,\$c}",
+            $this->converter->convert("{'%s and %s and %s'|translate:\$a:\$b:\$c}"),
+        );
+    }
+
+    public function test_multi_arg_pipe_filter_preserves_colon_inside_strings(): void
+    {
+        // The `time:30` literal contains a colon that must NOT be
+        // rewritten to a comma. Variable print at the head doesn't
+        // need the `=` prefix Latte requires for printed string
+        // literals.
+        self::assertSame(
+            "{\$s|replaceRe:'/foo/','time:30'}",
+            $this->converter->convert("{\$s|regex_replace:'/foo/':'time:30'}"),
+        );
+    }
+
+    public function test_foreach_with_name_arg_drops_it(): void
+    {
+        // {foreach from=$arr item=v name=loop} → {foreach $arr as $v}
+        // The `name=loop` is dropped; references to
+        // $smarty.foreach.loop.* in the body are residue and need
+        // hand-rewrite to Latte's $iterator.
+        self::assertSame(
+            '{foreach $arr as $v}',
+            $this->converter->convert('{foreach from=$arr item=v name=loop}'),
+        );
+    }
+
+    public function test_foreach_with_key_item_name_arg(): void
+    {
+        self::assertSame(
+            '{foreach $arr as $k => $v}',
+            $this->converter->convert('{foreach from=$arr key=k item=v name=loop}'),
+        );
+    }
+
+    public function test_assign_positional_form(): void
+    {
+        // {assign 'foo' ''} (positional, two-arg form)
+        self::assertSame(
+            "{var \$foo = ''}",
+            $this->converter->convert("{assign 'foo' ''}"),
+        );
+    }
+
+    public function test_assign_with_pipe_filter_wraps_in_parens(): void
+    {
+        // Latte's {var} rejects a bare pipe; the converter wraps the
+        // RHS in parens to keep the expression unambiguous.
+        self::assertSame(
+            '{var $isSelected = ($id|in_array:$selection)}',
+            $this->converter->convert('{assign var=isSelected value=$id|in_array:$selection}'),
+        );
+    }
+
+    public function test_function_definition_positional(): void
+    {
+        // {function tagContent} (no `name=`)
+        self::assertSame(
+            "{define tagContent}\nbody\n{/define}",
+            $this->converter->convert("{function tagContent}\nbody\n{/function}"),
+        );
+    }
+
+    public function test_get_combined_scripts_with_args(): void
+    {
+        self::assertSame(
+            "{=getCombinedScripts(load: 'footer')}",
+            $this->converter->convert("{get_combined_scripts load='footer'}"),
+        );
+    }
+
+    public function test_get_combined_scripts_no_args(): void
+    {
+        self::assertSame(
+            '{=getCombinedScripts()}',
+            $this->converter->convert('{get_combined_scripts}'),
+        );
+    }
+
+    public function test_strip_to_spaceless(): void
+    {
+        $smarty = "{strip}\n  <li>x</li>\n{/strip}";
+        $latte = "{spaceless}\n  <li>x</li>\n{/spaceless}";
+        self::assertSame($latte, $this->converter->convert($smarty));
+    }
+
+    public function test_escape_with_argument_keyword(): void
+    {
+        // |escape:html (unquoted) and |escape:'html' (quoted) both
+        // collapse to bare print under Latte's auto-escape default.
+        self::assertSame(
+            '{$x|json_encode}',
+            $this->converter->convert('{$x|json_encode|escape:html}'),
+        );
+        self::assertSame(
+            '{$x|json_encode}',
+            $this->converter->convert("{\$x|json_encode|escape:'html'}"),
         );
     }
 

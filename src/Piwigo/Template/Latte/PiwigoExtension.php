@@ -99,6 +99,9 @@ final class PiwigoExtension extends Extension
             'is_file' => is_file(...),
             'strpos' => strpos(...),
             'sizeOf' => sizeof(...),
+            'nl2br' => nl2br(...),
+            'number_format' => self::numberFormat(...),
+            'cat' => self::cat(...),
 
             // Phase B.2 — small custom modifiers. Each is a one-liner
             // delegating to an existing service.
@@ -185,6 +188,33 @@ final class PiwigoExtension extends Extension
     public static function getGalleryHomeUrl(): string
     {
         return ServiceLocator::get(UrlGenerator::class)->gallery();
+    }
+
+    /**
+     * Smarty's `|cat:` modifier concatenates values onto the pipe head.
+     * Multi-arg form: `{$x|cat:'a':'b'}` calls cat($x, 'a', 'b'). The
+     * converter's multi-arg-pipe rewrite turns the colons into commas
+     * before this filter is invoked, so the runtime call is
+     * cat($x, 'a', 'b').
+     */
+    public static function cat(string|int|float|bool|null $value, string|int|float|bool|null ...$pieces): string
+    {
+        $parts = [(string) $value];
+        foreach ($pieces as $p) {
+            $parts[] = (string) $p;
+        }
+        return implode('', $parts);
+    }
+
+    /**
+     * Wrapper around PHP's number_format() with sane defaults — Smarty's
+     * `|number_format` was registered as a plain passthrough, so
+     * Piwigo's templates either call it bare (`{$n|number_format}`)
+     * relying on the zero-decimal default, or with explicit args.
+     */
+    public static function numberFormat(int|float $number, int $decimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
+    {
+        return number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
     /**

@@ -11,7 +11,7 @@
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9  | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)  |
-| 1.2 | Templates pipeline            | 🟢 Active ▸ wave 1 done | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
+| 1.2 | Templates pipeline            | 🟢 Active ▸ W2 Phase B done · 1 / 137 .latte | XL | wave 1 hygiene done → wave 2 Latte foundation+plugin port done, bulk conversion next → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
 | 1.5 | Type correctness              | 🟡 **Not started**     | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
@@ -298,12 +298,34 @@ document.addEventListener('click', e => {
 
 #### Wave 2 — Smarty → Latte conversion
 
-**Status:** 🟡 Not started · **Effort:** XL · depends on Wave 1
+**Status:** 🟢 Active ▸ Phase A + B done · 1 / 137 .latte · **Effort:** XL · depends on Wave 1
+
+##### Phase progress
+
+| Phase | Scope                                                              | Status | Commit       |
+| ----- | ------------------------------------------------------------------ | ------ | ------------ |
+| A     | latte/latte 3.1, `TemplateEngine` interface, `LatteEngine`, `PiwigoExtension` (translate, translate_dec) + 7 unit tests | 🟢 Done | `df48487e0`  |
+| A.tooling | `composer lint:latte` wrapper around `Latte\Tools\Linter` + parallel CI job | 🟢 Done | `4006fe658` |
+| A.tooling+ | `efabrica/phpstan-latte` vendored fork (PHP 8.5 + Latte 3.1 patches), engine bootstrap, custom `PiwigoLatteEngineResolver` | 🟢 Done | `52711928b` |
+| B.1+B.2 | 18 PHP-passthrough filters + 8 stateless custom modifiers (l10n, explode, ternary, url_is_remote, is_admin, is_classic_user, get_device, get_gallery_home_url, get_extent) | 🟢 Done | `b438b50ec` |
+| B.3   | 8 stateful asset functions (combineScript, getCombinedScripts, combineCss, getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript) sharing `TemplateRegistry::current()` state | 🟢 Done | `2536ae99d` |
+| B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | 🟢 Done | `037d9bff3` |
+| B.5   | `LatteEngine::default()` factory using Piwigo's data location | 🟢 Done | `037d9bff3` |
+| B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | 🟢 Done | `037d9bff3` |
+| C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool | 🟡 Not started | — |
+| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟡 Not started · 1 / 70 done | — |
+| D.public | Convert ~50 public theme templates (`themes/_base/template/`) | 🟡 Not started · 0 / 55 done | — |
+| D.standard_pages | Convert 7 templates in `themes/standard_pages/` (login/register/password/profile + mail) | 🟡 Not started | — |
+| D.plugins | Convert ~31 templates across the 5 bundled plugins, one plugin per commit | 🟡 Not started | — |
+| E     | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates | 🟡 Not started | — |
+| F     | Drop `smarty/smarty` (gated on D.* + plugin deprecation window) | 🟡 Not started | — |
+
+Total .latte: 1 (help.latte) of 137 target.
 
 ##### Engine architecture
 
-`composer require latte/latte`. Define a `Piwigo\Template\TemplateEngine`
-interface both engines satisfy:
+`composer require latte/latte` ✅ (3.1.4). Define a
+`Piwigo\Template\TemplateEngine` interface both engines satisfy:
 
 ```php
 interface TemplateEngine
@@ -311,42 +333,79 @@ interface TemplateEngine
     public function assign(string $name, mixed $value): void;
     /** @param array<string, mixed> $params */
     public function render(string $template, array $params = []): string;
-    public function parse(string $template): string;
 }
 ```
 
-`Piwigo\Template\SmartyEngine` (the existing `Template.php` wrapper,
-renamed) and `Piwigo\Template\LatteEngine` (new) implement it. The
-existing `TemplateRegistry::current()` returns the interface; the
-dispatcher inside `current()` picks the engine based on file extension
-(`.latte` → Latte, `.tpl` → Smarty) so the two coexist during the
-conversion window.
+**Caveat from delivery:** the original spec included
+`parse(string $template): string` in the interface. It was dropped because
+Smarty's `Template::parse(string $handle)` operates on registered
+filename handles, not paths — wedging it into a path-shaped interface
+would have forced a no-op stub on `LatteEngine` that adds no value over
+`render()`. Revisit if a use case for "compile but don't execute" lands
+(e.g., precompile tooling in Wave 3).
 
-Latte configuration:
+**Caveat:** `Template` (the Smarty wrapper) does NOT yet implement
+`TemplateEngine`. The roadmap originally called for renaming Template →
+`SmartyEngine` and having both engines satisfy the interface; that
+rename touches every `TemplateRegistry::current()` caller in the
+codebase and was deferred. Until then `LatteEngine` is the sole
+implementer. The interface is the forward-compatible contract for
+controllers that move to engine-agnostic rendering.
+
+`Piwigo\Template\LatteEngine` is the new engine. The dispatcher
+originally specified inside `TemplateRegistry::current()` (returning the
+interface, routing by file extension) was replaced with a simpler
+`LatteEngine::default()` static factory that resolves the cache
+directory from Piwigo's data location. Controllers that want to render
+a `.latte` call `LatteEngine::default()->render($path, $params)`
+directly. The full extension-routing dispatcher lands once typed page-
+context DTOs flow through controllers — controllers will then call a
+`TemplateService` / engine-agnostic accessor instead.
+
+Latte configuration as actually shipped (Latte 3.1 deprecated
+`setStrictTypes()` and `setTempDirectory()` — the spec's calls were
+updated):
 
 ```php
 $engine = new Latte\Engine();
-$engine->setStrictTypes(true);
-$engine->setTempDirectory(PHPWG_DATA_LOCATION . 'templates_c/latte/');
+$engine->setFeature(Feature::StrictTypes);     // was: setStrictTypes(true)
+$engine->setCacheDirectory(PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte/');  // was: setTempDirectory(...)
 $engine->addExtension(new Piwigo\Template\Latte\PiwigoExtension());
 
-// Sandbox for plugin-supplied templates from untrusted sources
-$engine->setPolicy(new Piwigo\Template\Latte\PiwigoPolicy());
+// Sandbox not yet wired — see Phase E. The roadmap's setPolicy()
+// call lands once we draft the PiwigoPolicy whitelist.
+// $engine->setPolicy(new Piwigo\Template\Latte\PiwigoPolicy());
 ```
 
 ##### Smarty-plugin → Latte-extension port
 
-Map each registered Smarty plugin to a Latte filter/function/extension:
+Status of each Smarty registration in `Template.php` against
+`Piwigo\Template\Latte\PiwigoExtension`. All ports landed in
+`PiwigoExtension` (a single class) rather than the originally-planned
+`AssetExtension` / `DerivativeExtension` split — it kept import surface
+small and matched Latte's preferred extension-as-namespace pattern.
 
-| Smarty                                                                                                            | Latte equivalent                                                                                     | Notes                                                                   |
+| Smarty                                                                                                            | Latte equivalent                                                                                     | Status                                                                  |
 | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `\|translate`, `\|translate_dec`                                                                                  | filters in `Latte\Extension` backed by `Piwigo\Lang\Translator`                                      | The `\|translate` deferral lands here                                   |
-| `\|l10n`                                                                                                          | alias for `\|translate`                                                                              |                                                                         |
-| `\|sprintf`, `\|urlencode`, `\|intval`, `\|htmlspecialchars`, `\|trim`, `\|md5`, `\|stripslashes`, `\|ternary`, … | built-in Latte filters or one-line aliases                                                           | About 25 of the registered Smarty modifiers are already Latte built-ins |
-| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}`        | function tags in `AssetExtension` and `DerivativeExtension`                                          |                                                                         |
-| `{html_head}` block                                                                                               | Latte block-extension; only `themes/_base/template/notification.tpl` uses it                         |                                                                         |
-| `{html_style}`, `{footer_script}` blocks                                                                          | zero in-scope callers post-extraction; defer port until the `{html_style}` + nonce path materializes |                                                                         |
-| `prefilter_white_space` filter                                                                                    | Latte template-loader wrapper run before compile                                                     |                                                                         |
+| `\|translate`, `\|translate_dec`                                                                                  | filters in `PiwigoExtension` backed by `Piwigo\Core\Lang::t` / `Piwigo\Lang\Translator::plural`      | ✅ Phase A                                                              |
+| `\|l10n`                                                                                                          | filter alias for `\|translate` (same `Lang::t` callback)                                             | ✅ Phase B.2                                                            |
+| `\|sprintf`, `\|urlencode`, `\|intval`, `\|file_exists`, `\|constant`, `\|json_encode`, `\|json_decode`, `\|htmlspecialchars`, `\|stripslashes`, `\|in_array`, `\|ucfirst`, `\|trim`, `\|md5`, `\|strtolower`, `\|is_null`, `\|is_file`, `\|strpos`, `\|sizeOf` | filters dispatched directly to PHP first-class-callable functions | ✅ Phase B.1                                                            |
+| `\|implode`, `\|str_replace`, `\|str_ireplace`, `\|preg_match`, `\|strstr`, `\|stristr`, `\|array_key_exists` | **deliberately omitted** — Smarty pipes the value first, but PHP wants `$glue`/`$search`/`$pattern` first; PHP 8's deprecation of swapped args makes the legacy form a TypeError. Verified zero pipe usage in `themes/` + `plugins/`; templates using these in Latte call them as expressions: `{=implode(',', $arr)}`. | ✅ Phase B.1 (intentional non-port)                                     |
+| `\|explode`, `\|ternary`, `\|url_is_remote`, `\|is_admin`, `\|is_classic_user`, `\|get_device`, `\|get_gallery_home_url`, `\|get_extent` | one-line wrappers in `PiwigoExtension` delegating to existing services (`UrlService`, `PermissionService`, `Util`, `UrlGenerator`) | ✅ Phase B.2 + B.3 (get_extent)                                         |
+| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}`        | functions in `PiwigoExtension::getFunctions()`, called via `{do combineScript(...)}` (void) or `{var $x = defineDerivative(...)}` (returns); delegate to `TemplateRegistry::current()`'s `scriptLoader` / `cssLoader` so a `.latte` template's combine_script accumulates into the same bundle a `.tpl` template's would | ✅ Phase B.3                                                            |
+| `{html_head}`, `{html_style}`, `{footer_script}` blocks                                                           | functions in `PiwigoExtension::getFunctions()`, called as `{capture $x}…{/capture}{do htmlHead($x)}`; `htmlStyle` writes through `Template::appendHtmlStyle()` (added in Phase B.3 — the buffer is private and shared between the two engines) | ✅ Phase B.3                                                            |
+| `prefilter_white_space` filter                                                                                    | **deliberately omitted** — Smarty-specific source rewrite; Latte handles whitespace differently and provides `{spaceless}` for explicit zones. Revisit only if profiling shows need. | ✅ Phase B.4 (intentional non-port, documented in PiwigoExtension docblock) |
+| `postfilterLanguage` filter                                                                                       | **deliberately omitted** — Smarty constant-folds `<?php echo 'literal'?>` after `Lang::t('key')` resolution in `compiledTemplateCacheLanguage` mode. Latte equivalent would be a NodeVisitor compiler pass that rewrites `{=$x|translate}` to a literal when `$x` is a string-literal expression and language caching is enabled. Defer until profiling justifies the optimization. | ✅ Phase B.4 (intentional non-port, documented)                         |
+
+**Filter coverage shipped:** 27 filters (translate, translate_dec, l10n,
+explode, ternary, url_is_remote, is_admin, is_classic_user, get_device,
+get_gallery_home_url, get_extent, sprintf, urlencode, intval,
+file_exists, constant, json_encode, json_decode, htmlspecialchars,
+stripslashes, in_array, ucfirst, trim, md5, strtolower, is_null, is_file,
+strpos, sizeOf).
+
+**Functions shipped:** 8 (combineScript, getCombinedScripts, combineCss,
+getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript).
 
 ##### Latte partials and page-context DTOs
 
@@ -404,20 +463,34 @@ Templates convert in waves, low-risk first:
 
 ##### Mechanical conversion helpers
 
-Most Smarty syntax is regex-replaceable. Build
-`tools/smarty-to-latte/convert.php`:
+**Status:** 🟡 Not started (Phase C). The converter is pending. The
+single template converted to date (`help.latte`, Phase B.6) was
+hand-rewritten; the rewrite list below has been corrected against what
+actually worked in the Latte runtime, plus extra rows surfaced during
+the hand conversion.
 
-| Smarty                                                | Latte                                     |
-| ----------------------------------------------------- | ----------------------------------------- |
-| `{if $foo}`                                           | `{if $foo}` (compatible)                  |
-| `{foreach from=$arr item=x}`                          | `{foreach $arr as $x}`                    |
-| `{$x\|escape}`                                        | `{$x}` (Latte escapes by default)         |
-| `{$x\|escape:'none'}`                                 | `{$x\|noescape}`                          |
-| `{include file=foo.tpl}`                              | `{include 'foo.latte'}`                   |
-| `{$x\|@count}`                                        | `{count($x)}`                             |
-| `{section name=i loop=$arr}…{/section}`               | `{foreach $arr as $i => $val}…{/foreach}` |
-| `{capture name=foo}…{/capture}…{$smarty.capture.foo}` | `{capture $foo}…{/capture}…{$foo}`        |
-| `{literal}…{/literal}`                                | `{syntax off}…{syntax on}`                |
+Build `tools/smarty-to-latte/convert.php`:
+
+| Smarty                                                                | Latte                                                                                                               |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `{if $foo}`                                                           | `{if $foo}` (compatible)                                                                                            |
+| `{if not $foo}` / `{if !$foo}`                                        | `{if !$foo}` — Latte rejects `not`; Smarty accepts both                                                             |
+| `{foreach from=$arr item=x}`                                          | `{foreach $arr as $x}`                                                                                              |
+| `{$x\|escape}`                                                        | `{$x}` (Latte escapes by default)                                                                                   |
+| `{$x\|escape:'none'}` or `{$x}` under Smarty's `escape_html=false`    | `{$x\|noescape}` — **important**: Smarty ran with `escape_html=false`, so every `{$x}` was raw. Latte auto-escapes by default; preserving the existing render contract requires inserting `\|noescape` on every print that holds pre-rendered HTML. The converter must distinguish "raw HTML var" from "user data var" — for now, conservative is "treat as raw" and let security review tighten. |
+| `{'literal'\|translate}` (Smarty: bare prints with filter)            | `{='literal'\|translate}` — Latte requires the `=` prefix for printing string-literal expressions; bare `{'literal'\|translate}` is ambiguous with tag syntax |
+| `{include file=foo.tpl}`                                              | `{include 'foo.latte'}`                                                                                             |
+| `{$x\|@count}` (legacy `@` already stripped in Wave 1 Row 7)          | `{count($x)}`                                                                                                       |
+| `{section name=i loop=$arr}…{/section}`                               | `{foreach $arr as $i => $val}…{/foreach}`                                                                           |
+| `{capture name=foo}…{/capture}…{$smarty.capture.foo}`                 | `{capture $foo}…{/capture}…{$foo}`                                                                                  |
+| `{literal}…{/literal}`                                                | `{syntax off}…{syntax on}`                                                                                          |
+| `{combine_script id='x' load='footer' path='y.js'}`                   | `{do combineScript(id: 'x', load: 'footer', path: 'y.js')}` — uses Latte's PHP 8 named-args syntax inside `{do}`    |
+| `{combine_css path='x.css' order=-10}`                                | `{do combineCss(path: 'x.css', order: -10)}`                                                                        |
+| `{define_derivative name='thumb' type='thumb'}` (Smarty mutates scope) | `{var $thumb = defineDerivative(type: 'thumb')}` — Latte function returns the value; caller assigns                 |
+| `{html_head}…{/html_head}` (block)                                    | `{capture $head}…{/capture}{do htmlHead($head)}` — Latte has no equivalent block-tag in `PiwigoExtension`; the converter rewrites to capture + function call |
+| `{html_style}…{/html_style}` (block)                                  | `{capture $style}…{/capture}{do htmlStyle($style)}`                                                                 |
+| `{footer_script require='common'}…{/footer_script}` (block)           | `{capture $script}…{/capture}{do footerScript($script, require: 'common')}`                                         |
+| `\|implode:','` (and other arg-reversed PHP fns)                      | `=implode(',', $arr)` — these aren't registered as filters (see plugin port table); the converter rewrites pipe form to function form |
 
 The converter applies the rewrites file-by-file; hand-fix the residue
 (custom modifiers, complex assignments, broken-on-purpose constructs).
@@ -442,11 +515,104 @@ Out of scope (informational — leave alone): HTML4 mail attributes
 tab/space indentation in template files (`.editorconfig` covers new
 edits).
 
+##### Static-analysis tooling (Phase A.tooling, A.tooling+)
+
+Two CI checkpoints catch Latte issues at PR time.
+
+**`composer lint:latte`** — wrapper at `tools/latte-lint.php` around
+`Latte\Tools\Linter`. The bundled linter validates every `\|filter`,
+`function()`, class reference, and method call against a configured
+engine; pointing it at the Piwigo engine (with `PiwigoExtension`
+loaded) means it knows about our `\|translate`, `\|combineScript`,
+etc. instead of warning "Unknown filter".
+
+Two-process design: the linter is `final`, its `writeError()` writes
+warnings to STDERR (not STDOUT), and its `lintLatte()` installs a
+private per-file `set_error_handler` that suppresses E_USER_WARNING
+propagation. None of those hooks let us cleanly fail the run on an
+unknown filter from inside the same process — so `tools/latte-lint.php`
+spawns `tools/_latte-lint-inner.php` as a subprocess and inspects its
+stderr for `[WARNING]` / `[DEPRECATED]` markers; any hit fails the
+build. CI job `latte` in `.github/workflows/ci.yml`.
+
+**`vendor/bin/phpstan analyse`** — gains type-aware Latte coverage via
+`efabrica/phpstan-latte`. The published versions cap PHP at `<8.5` and
+Latte at `~3.0.25` (we run PHP 8.5.4 + Latte 3.1.4), so the package is
+**vendored as a path-repo fork at `tools/phpstan-latte/`**. Two patches:
+
+  1. `composer.json`: relax `latte/latte` to `^3.0.25` and pin a
+     synthetic `0.99.0` version so the path repo doesn't inherit the
+     parent repo's git branch name.
+  2. `src/Compiler/Compiler/Latte3Compiler.php`: Latte 3.1 split the old
+     single-call `TemplateGenerator::generate()` into `buildClass()` +
+     `generateCode()`; adapt the call site.
+
+`tools/phpstan/PiwigoLatteEngineResolver.php` is a custom
+`NodeLatteTemplateResolverInterface` implementation. Out-of-the-box,
+phpstan-latte's resolvers expect Nette presenter conventions and don't
+detect Piwigo's bespoke `LatteEngine::render()` calls. Our resolver
+catches `$engine->render(string $path, array $params)` on
+`Piwigo\Template\TemplateEngine` implementations and registers
+string-literal `.latte` paths with the analyser.
+
+`tools/phpstan-latte-engine.php` is the engine bootstrap: it returns
+the same configured `Latte\Engine` production uses (PiwigoExtension,
+StrictTypes feature) so the analyser recognizes our filter set.
+
+**Caveats baked into `phpstan.neon`:**
+
+  - `latte.errorPatternsToIgnore` silences three categorically-expected
+    error families:
+      1. Latte 3.1 runtime-side `iterable`/`array` shape comments on
+         `$__filters__` / `$__functions__` / `$__variables__` (Latte's
+         compiled output uses bare types in some signatures; not user
+         template code).
+      2. "Cannot automatically resolve latte template from expression"
+         on `LatteEngine::render()` itself — the wrapper forwards a
+         `$template` parameter, which phpstan-latte's built-in
+         collector flags as unresolvable; resolution happens upstream
+         on call sites that PiwigoLatteEngineResolver picks up.
+      3. "Undefined variable: $X" + "Parameter (mixed) of echo cannot
+         be converted to string" in `.latte` files —
+         PiwigoLatteEngineResolver doesn't yet extract typed params
+         from the call-site array, so every `{$varName}` appears
+         undefined. Lifts once typed page-context DTOs flow through
+         controllers (Phase D contracts).
+  - `tools/phpstan/StrictTypesRequiredRule.php` skips `.latte` files
+    and the analyser's temp dir (`sys_get_temp_dir()/phpstan-latte/`),
+    so the strict-types declaration rule doesn't fire on compiled
+    template artefacts.
+
+**Bug-injection probe (verify silencing didn't hide signal):**
+replacing `\|translate` with `\|nosuchfilter` in `help.latte` still
+produces `Undefined latte filter "nosuchfilter"` from phpstan-latte.
+
 ##### Plugin compatibility shim
 
-Plugins that haven't migrated their `.tpl` files keep getting rendered by
-`SmartyEngine`. The dispatcher in `TemplateRegistry::current()` picks the
-engine based on file extension:
+**Caveat from delivery:** the spec called for the dispatcher inside
+`TemplateRegistry::current()` (returning the engine interface, routing
+by file extension). What actually shipped is a `LatteEngine::default()`
+static factory that resolves the cache directory from
+`Config::dataLocation()`. Callers wanting a `.latte` render call
+`LatteEngine::default()->render($path, $params)`; callers staying on
+Smarty go through the existing `Template::pparse()` + handle-based
+flow.
+
+This is a deliberate scope reduction:
+
+  - The full extension-routing dispatcher needs `Template` (Smarty) to
+    implement `TemplateEngine`. That requires aligning Template's
+    `assign(string|array, mixed)` signature with the interface's
+    `assign(string, mixed)`, which would break every Smarty-array-form
+    caller in the codebase. Deferred.
+  - During the migration, no controller calls render() with a runtime-
+    chosen extension — the engine choice is known statically per call
+    site (a `.tpl` site stays Smarty, a `.latte` site uses LatteEngine
+    directly). The static-factory pattern fits the actual call shape.
+
+Once typed page-context DTOs flow through controllers and the rename
+of `Template` → `SmartyEngine` lands, the dispatcher takes the form
+the spec originally described:
 
 ```php
 public function render(string $template, array $params = []): string

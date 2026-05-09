@@ -23,6 +23,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Smarty\Debug;
 use Smarty\Smarty;
+use Smarty\Template as SmartyTemplate;
 use Smarty\TemplateBase;
 
 /** default rank for buttons */
@@ -1093,15 +1094,10 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         }
     }
 
-    /**
-     * @toto : description of Template::prefilter_white_space
-     */
-    public static function prefilterWhiteSpace(string $source, Smarty $smarty): string|null
+    public static function prefilterWhiteSpace(string $source, SmartyTemplate $template): string|null
     {
-        $ld = $smarty->getLeftDelimiter();
-        $rd = $smarty->getRightDelimiter();
-        // $ld = $smarty->left_delimiter;
-        // $rd = $smarty->right_delimiter;
+        $ld = $template->getLeftDelimiter();
+        $rd = $template->getRightDelimiter();
         $ldq = preg_quote($ld, '#');
         $rdq = preg_quote($rd, '#');
 

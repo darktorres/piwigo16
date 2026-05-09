@@ -49,6 +49,19 @@ abstract class IntegrationTestCase extends TestCase
         $this->baseUrl = rtrim((string) getenv('PIWIGO_BASE_URL'), '/');
     }
 
+    /**
+     * Tests that drive the HTTP entrypoint (install.php, /ws, etc.) call
+     * this in setUp so they fail loudly with a clear message — not with a
+     * cryptic curl HTTP 0 — when .env.test omits PIWIGO_BASE_URL.
+     * DB-only integration tests do not need this guard.
+     */
+    protected function requireBaseUrl(): void
+    {
+        if ($this->baseUrl === '') {
+            self::fail('PIWIGO_BASE_URL is not set in .env.test — integration tests need a running web server.');
+        }
+    }
+
     protected function resetDatabase(): void
     {
         $db = $this->newMysqli('');

@@ -13,6 +13,7 @@ final class UpgradeChainTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
+        $this->requireBaseUrl();
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
         $this->markTestInstalled();

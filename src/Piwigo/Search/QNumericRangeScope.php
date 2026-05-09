@@ -86,10 +86,10 @@ final class QNumericRangeScope extends QSearchScope
         $range = $sd['range'];
         $strict = $sd['strict'];
         if (($range[0] ?? '') !== '') {
-            $clauses[] = $field.' >'.($strict[0] ? '' : '=').(is_string($range[0]) ? $range[0] : '').' ';
+            $clauses[] = $field.' >'.($strict[0] ? '' : '=').(is_numeric($range[0]) ? (string) $range[0] : '').' ';
         }
         if (($range[1] ?? '') !== '') {
-            $clauses[] = $field.' <'.($strict[1] ? '' : '=').(is_string($range[1]) ? $range[1] : '').' ';
+            $clauses[] = $field.' <'.($strict[1] ? '' : '=').(is_numeric($range[1]) ? (string) $range[1] : '').' ';
         }
 
         if (empty($clauses)) {

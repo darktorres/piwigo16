@@ -13,6 +13,7 @@ final class InstallChainTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
+        $this->requireBaseUrl();
         $this->resetDatabase();
         if (file_exists(self::INSTALLED_STAMP)) {
             unlink(self::INSTALLED_STAMP);

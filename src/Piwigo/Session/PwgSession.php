@@ -40,7 +40,7 @@ final class PwgSession implements \SessionHandlerInterface
     }
 
     #[\Override]
-    public function gc(int $max_lifetime): int
+    public function gc(int $max_lifetime): int|false
     {
         ServiceLocator::get(SessionService::class)->sessionGc();
         return 1;

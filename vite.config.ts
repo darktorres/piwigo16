@@ -24,7 +24,6 @@ export default defineConfig({
                 popuphelp: r('themes/_base/js/popuphelp.ts'),
                 picture_nav_keys: r('themes/_base/js/picture_nav_keys.ts'),
                 mcs: r('themes/_base/js/mcs.ts'),
-                pngfix: r('themes/_base/js/pngfix.ts'),
                 rating: r('themes/_base/js/rating.ts'),
                 'thumbnails.loader': r('themes/_base/js/thumbnails.loader.ts'),
                 // ── Standard pages ────────────────────────────────────────

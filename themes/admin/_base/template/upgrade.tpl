@@ -14,10 +14,6 @@
 {/if}
 {/foreach}
 
-<!--[if IE 7]>
-  <link rel="stylesheet" type="text/css" href="{$ROOT_URL}themes/admin/_base/fix-ie7.css">
-<![endif]-->
-
 {combine_script id='install' load='footer' path='themes/admin/_base/js/install.js'}
 
 <!-- BEGIN get_combined_scripts -->

@@ -105,6 +105,42 @@ imagedestroy($img);`;
     await execAsync(`php ${tmpScript}`);
     fs.unlinkSync(tmpScript);
 
+    // Redirect fixture photo paths from upload/ to galleries/Wallpapers/
+    // so source files are always present (generated above) regardless of
+    // which machine the fixture was built on.
+    const fixtureImageIds: string[] = (
+        await execAsync(
+            `mysql -h${host} -P${port} -u${user} -p${pass} ${db} -sN -e "SELECT id FROM piwigo_images ORDER BY id"`
+        )
+    ).stdout.trim().split('\n').filter(Boolean);
+
+    for (let i = 0; i < fixtureImageIds.length; i++) {
+        const id = fixtureImageIds[i];
+        const galleryPath = `./galleries/Wallpapers/${String(i + 1).padStart(3, '0')}.jpg`;
+        await execAsync(
+            `mysql -h${host} -P${port} -u${user} -p${pass} ${db} -e "UPDATE piwigo_images SET path='${galleryPath}', file='${path.basename(galleryPath)}', storage_category_id=NULL WHERE id=${id}"`
+        );
+    }
+
+    // Trigger on-demand derivative generation for each galleries/ image
+    // by hitting the /i/ route for each derivative size.
+    const baseUrl = (process.env.PIWIGO_BASE_URL ?? 'http://localhost/piwigo16').replace(/\/$/, '');
+    const derivSuffixes = ['th', 'sq', 'sm', 'me'];
+    for (let i = 0; i < fixtureImageIds.length; i++) {
+        const relPath = `galleries/Wallpapers/${String(i + 1).padStart(3, '0')}.jpg`;
+        const ext = path.extname(relPath);
+        const base = relPath.slice(0, -ext.length);
+        for (const suffix of derivSuffixes) {
+            const url = `${baseUrl}/index.php?/i/${base}-${suffix}${ext}`;
+            const { stdout, stderr } = await execAsync(
+                `curl -s -o /dev/null -w "%{http_code}" "${url}" -H "X-Piwigo-Env: test"`
+            );
+            if (stdout !== '200') {
+                console.warn(`  derivative ${suffix} for image ${i + 1}: HTTP ${stdout} ${stderr}`);
+            }
+        }
+    }
+
     // Mark the test install as installed. InstallSentinel checks
     // local/.installed.test in test mode (TestMode); without this the
     // first request would 302 to install.php.

@@ -660,7 +660,7 @@ final class Updates
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
-                            Util::get()->redirect(PHPWG_ROOT_PATH.'index.php?/upgrade&now=');
+                            Util::get()->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);

@@ -109,12 +109,12 @@
                 {else} <span class="tooltip-details-title"> {$cat|translate} </span> {/if}
 
                 {foreach from=$actions item=number key=action}
-                  {if $action == "Edit"} <span class="icon-pencil tooltip-detail" title="{"%s editions"|@translate:$number}">{$number}</span>
-                  {elseif $action == "Add"} <span class="icon-plus tooltip-detail" title="{"%s additions"|@translate:$number}">{$number}</span>
-                  {elseif $action == "Delete"} <span class="icon-trash tooltip-detail" title="{"%s deletions"|@translate:$number}">{$number}</span>
-                  {elseif $action == "Login"} <span class="icon-key tooltip-detail" title="{"%s login"|@translate:$number}">{$number}</span>
-                  {elseif $action == "Logout"} <span class="icon-logout tooltip-detail" title="{"%s logout"|@translate:$number}">{$number} </span>
-                  {elseif $action == "Move"} <span class="icon-move tooltip-detail" title="{"%s movement"|@translate:$number}">{$number} </span>
+                  {if $action == "Edit"} <span class="icon-pencil tooltip-detail" title="{$number|translate_dec:'%d edition':'%d editions'}">{$number}</span>
+                  {elseif $action == "Add"} <span class="icon-plus tooltip-detail" title="{$number|translate_dec:'%d addition':'%d additions'}">{$number}</span>
+                  {elseif $action == "Delete"} <span class="icon-trash tooltip-detail" title="{$number|translate_dec:'%d deletion':'%d deletions'}">{$number}</span>
+                  {elseif $action == "Login"} <span class="icon-key tooltip-detail" title="{$number|translate_dec:'%d login':'%d logins'}">{$number}</span>
+                  {elseif $action == "Logout"} <span class="icon-logout tooltip-detail" title="{$number|translate_dec:'%d logout':'%d logouts'}">{$number} </span>
+                  {elseif $action == "Move"} <span class="icon-move tooltip-detail" title="{$number|translate_dec:'%d movement':'%d movements'}">{$number} </span>
                   {else} <span> ({$action|translate}) {$number} </span> 
                   {/if}  
                 {/foreach}

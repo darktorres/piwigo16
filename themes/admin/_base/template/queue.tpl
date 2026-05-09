@@ -56,7 +56,7 @@
     </tbody>
   </table>
   <p style="margin-top:8px">
-    <a href="{$U_PURGE_FAILED}" class="icon-trash-1" onclick="return confirm('{'"Are you sure you want to delete all failed jobs?"|translate}')">
+    <a href="{$U_PURGE_FAILED}" class="icon-trash-1" data-confirm="{'"Are you sure you want to delete all failed jobs?"|translate}">
       {'Purge Failed Queue'|translate}
     </a>
   </p>

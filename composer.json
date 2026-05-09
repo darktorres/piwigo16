@@ -70,6 +70,9 @@
       "Piwigo\\Tools\\PhpStan\\": "tools/phpstan/"
     }
   },
+  "scripts": {
+    "lint:latte": "@php tools/latte-lint.php"
+  },
   "config": {
     "optimize-autoloader": true,
     "classmap-authoritative": true,

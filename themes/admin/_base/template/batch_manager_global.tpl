@@ -24,11 +24,9 @@
 
   {if !empty($thumbnails)}
   <p id="checkActions">
+    <a href="#" id="selectAll">{if $nb_thumbs_set > $nb_thumbs_page}{'The whole page'|@translate}{else}{'All'|@translate}{/if}</a>
 {if $nb_thumbs_set > $nb_thumbs_page}
-    <a href="#" id="selectAll">{'The whole page'|@translate}</a>
     <a href="#" id="selectSet">{'The whole set'|@translate}</a>
-{else}
-    <a href="#" id="selectAll">{'All'|@translate}</a>
 {/if}
     <a href="#" id="selectNone">{'None'|@translate}</a>
     <a href="#" id="selectInvert">{'Invert'|@translate}</a>

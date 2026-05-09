@@ -10,7 +10,7 @@
 
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
-| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 8  | S         | 1 left: search cat-id gap (couldn't repro post psalm-level2 sweep)     |
+| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9  | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)  |
 | 1.2 | Templates pipeline            | 🟡 **Not started**     | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
@@ -71,10 +71,15 @@ Most sections are independent. The chains that aren't:
 
 ### 1.1 Concrete bugs
 
-**Status:** 🟢 Active ▸ 7 of 8 done · **Effort:** S · 1 item left
+**Status:** 🟢 Active ▸ 7 of 9 done · **Effort:** S (1 left) + M (1 left)
 
 The 7 fixes shipped 2026-05-09 as separate commits on `16.x-rewrite`.
 Verified by `vendor/bin/phpunit` (386 tests, 2041 assertions green).
+
+The PERF history pagination item from the original audit was split in
+two while sweeping: the cheap part (push sort to SQL) shipped; the
+deeper part (separate COUNT + LIMIT/OFFSET + summary aggregate split)
+needs more design and is tracked below as its own item.
 
 #### Shipped
 
@@ -109,23 +114,72 @@ Verified by `vendor/bin/phpunit` (386 tests, 2041 assertions green).
   dispatch on hot pages like Tags, Search, Menubar).
 - ✅ **PERF — history sort to SQL.** Pushed `ORDER BY date, time` into
   the SQL query and removed the now-unused `historyCompare` PHP
-  comparator. The deeper LIMIT/OFFSET pagination is **still deferred**
-  because it requires splitting the summary aggregates (filesize sum,
-  distinct guest IPs, member counts) out of the row-formatting loop
-  into separate queries — a real refactor with regression risk on
-  summary numbers, no test coverage to lean on.
+  comparator. (Originally one item with the LIMIT/OFFSET refactor — the
+  deeper part is now tracked separately below.)
 
 #### Still open
 
-- 🟡 **Search cat-id access gap.** Description was: "A search code path
-  reads category IDs from a request shape that may be absent on
-  first-load, returning empty results without an error. Fix: explicit
-  `?? []` and guard the empty case." Couldn't reproduce a specific
-  unguarded site after tracing all `cat_id` / `cat_words` reads in
-  `src/` — every one is already guarded with `is_array(...)` and `?? []`
-  patterns from the recent psalm-level2 sweep. Likely already fixed by
-  that sweep; needs a concrete file:line repro from the original audit
-  to act on. Drop or revisit.
+- 🟡 **Search cat-id access gap** · _S, blocked on info_. Original
+  description: "A search code path reads category IDs from a request
+  shape that may be absent on first-load, returning empty results
+  without an error. Fix: explicit `?? []` and guard the empty case."
+  Couldn't reproduce a specific unguarded site after tracing all
+  `cat_id` / `cat_words` reads in `src/` — every one is already guarded
+  with `is_array(...)` and `?? []` patterns, almost certainly added by
+  the recent psalm-level2 sweep. Likely already fixed by that sweep.
+  **Action:** drop unless the original audit notes can be located, or a
+  user reports the symptom (first-load search returning empty without
+  an error) against the current branch.
+
+- 🟡 **PERF — history pagination refactor (LIMIT/OFFSET path)** ·
+  _Effort: M_. The hot WS endpoint
+  `Piwigo\Ws\Method\GeneralEndpoints::historySearch` still loads every
+  matching history row into PHP and slices in memory. Sort moved to SQL
+  (commit `0d87baba0`); the row-volume reduction is not done because
+  the same loop that builds display rows also computes the summary
+  aggregates shown above the table:
+  - `summary.total_filesize` — sum of `images.filesize` for `image_type
+    = 'high'` rows.
+  - `summary.guests_IP` — `IP → count` map for `user_id = guest`.
+  - `summary.nb_members` — distinct non-guest user_ids.
+
+  To paginate the row fetch, those aggregates have to come from
+  separate queries that scan the full filtered result set. Sketch:
+  ```sql
+  -- 1. nb_lines
+  SELECT COUNT(*) FROM history WHERE <where>;
+
+  -- 2. total_filesize (only for high-image-type rows)
+  SELECT SUM(i.filesize)
+    FROM history h JOIN images i ON i.id = h.image_id
+   WHERE h.image_type = 'high' AND <where>;
+
+  -- 3. guest IP histogram
+  SELECT IP, COUNT(*) FROM history
+   WHERE user_id = :guest_id AND <where>
+   GROUP BY IP;
+
+  -- 4. distinct non-guest member ids
+  SELECT DISTINCT user_id FROM history
+   WHERE user_id <> :guest_id AND <where>;
+
+  -- 5. paginated detail rows
+  SELECT … FROM history
+   WHERE <where> ORDER BY date, time
+   LIMIT 300 OFFSET :pageNumber * 300;
+  ```
+  Risk: the existing endpoint has no unit-test coverage, so summary
+  numbers must be cross-checked against the current implementation
+  before/after on a representative dataset. Recommended sequence:
+
+  1. Land basic pest-coverage for `historySearch` summary numbers
+     (depends on §1.6.1 Pest landing, or write standalone PHPUnit for
+     this method).
+  2. Refactor to the 5-query shape above.
+  3. Confirm summary rendering unchanged on staging fixture.
+
+  Until then the endpoint is correct but slow on installs with large
+  history tables (>~50 K rows).
 
 #### Verification
 

@@ -58,6 +58,7 @@ test.describe('tag management', () => {
             wsUrl({ format: 'json', method: 'pwg.tags.getImages', tag_id: String(tagId) }),
             { headers: { Cookie: cookie } }
         );
+        expect(tagImages.status(), 'pwg.tags.getImages HTTP status').toBe(200);
         const tagImagesBody = (await tagImages.json()) as {
             stat: string;
             result: {
@@ -79,6 +80,7 @@ test.describe('tag management', () => {
             headers: { Cookie: cookie },
             form: { method: 'pwg.tags.delete', tag_id: String(tagId), pwg_token: pwgToken },
         });
+        expect(deleteTag.status(), 'pwg.tags.delete HTTP status').toBe(200);
         expect(((await deleteTag.json()) as { stat: string }).stat, 'pwg.tags.delete stat').toBe(
             'ok'
         );
@@ -87,6 +89,7 @@ test.describe('tag management', () => {
         const tagList = await request.get(wsUrl({ format: 'json', method: 'pwg.tags.getList' }), {
             headers: { Cookie: cookie },
         });
+        expect(tagList.status(), 'pwg.tags.getList HTTP status').toBe(200);
         const tagListBody = (await tagList.json()) as {
             result: { tags: { _content?: Array<{ id: number }> } };
         };

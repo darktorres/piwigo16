@@ -43,6 +43,7 @@ test.describe('user management', () => {
         const listRes = await request.get(wsUrl({ format: 'json', method: 'pwg.users.getList' }), {
             headers: { Cookie: cookie },
         });
+        expect(listRes.status(), 'pwg.users.getList HTTP status').toBe(200);
         const listBody = (await listRes.json()) as {
             stat: string;
             result: {
@@ -65,6 +66,7 @@ test.describe('user management', () => {
             headers: { Cookie: cookie },
             form: { method: 'pwg.users.delete', user_id: String(userId), pwg_token: pwgToken },
         });
+        expect(deleteRes.status(), 'pwg.users.delete HTTP status').toBe(200);
         expect(((await deleteRes.json()) as { stat: string }).stat, 'pwg.users.delete stat').toBe(
             'ok'
         );
@@ -76,6 +78,7 @@ test.describe('user management', () => {
                 headers: { Cookie: cookie },
             }
         );
+        expect(afterDelete.status(), 'pwg.users.getList (after delete) HTTP status').toBe(200);
         const afterBody = (await afterDelete.json()) as {
             result: { users: { _content?: Array<{ username: string }> } };
         };

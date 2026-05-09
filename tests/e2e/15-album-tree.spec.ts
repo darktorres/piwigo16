@@ -12,6 +12,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { loginAsAdmin } from './helpers/admin-login';
 import { wsUrl, adminUrl } from './helpers/url';
+import { gotoOk } from './helpers/strict-assertions';
 
 interface CreatedAlbums {
     ids: number[];
@@ -73,7 +74,7 @@ async function setupTest(page: Page): Promise<CreatedAlbums> {
 }
 
 async function gotoAlbums(page: Page): Promise<void> {
-    await page.goto(adminUrl('albums'));
+    await gotoOk(page, adminUrl('albums'), 'admin albums');
     await expect(page.locator('.tree')).toBeVisible();
     // The tree renders asynchronously; wait for at least one node to appear.
     await expect(page.locator('.move-cat-container').first()).toBeVisible();

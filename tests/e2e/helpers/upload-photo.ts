@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { APIRequestContext, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { wsUrl } from './url';
 
 type MultipartValue = string | { name: string; mimeType: string; buffer: Buffer };
@@ -20,6 +21,7 @@ export async function getPwgToken(
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.session.getStatus' },
     });
+    expect(res.status(), 'pwg.session.getStatus HTTP status').toBe(200);
     const body = (await res.json()) as { result: { pwg_token: string } };
     return body.result.pwg_token;
 }
@@ -33,6 +35,7 @@ export async function createAlbum(
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.categories.add', name },
     });
+    expect(res.status(), 'pwg.categories.add HTTP status').toBe(200);
     const body = (await res.json()) as { result: { id: number } };
     return body.result.id;
 }
@@ -76,9 +79,10 @@ export async function uploadPhoto(
     // After enough photos accumulate in the gallery, Piwigo auto-activates the
     // "lounge" — uploads then sit pending and don't appear in getImages until
     // released. Flush it here so tests see what they just uploaded.
-    await request.post(wsUrl({ format: 'json' }), {
+    const loungeRes = await request.post(wsUrl({ format: 'json' }), {
         headers: { Cookie: cookieHeader },
         form: { method: 'pwg.images.emptyLounge' },
     });
+    expect(loungeRes.status(), 'pwg.images.emptyLounge HTTP status').toBe(200);
     return body.result!.image_id as number;
 }

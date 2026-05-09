@@ -29,6 +29,7 @@ test('uploaded photo appears in getInfo', async ({ page, request }) => {
             headers: { Cookie: cookie },
         }
     );
+    expect(info.status(), 'pwg.images.getInfo HTTP status').toBe(200);
     const infoBody = (await info.json()) as {
         stat: string;
         result: { id: number; width: number; height: number };
@@ -51,6 +52,7 @@ test('two uploaded photos both appear in album', async ({ page, request }) => {
         wsUrl({ format: 'json', method: 'pwg.categories.getImages', cat_id: String(albumId) }),
         { headers: { Cookie: cookie } }
     );
+    expect(listRes.status(), 'pwg.categories.getImages HTTP status').toBe(200);
     const listBody = (await listRes.json()) as {
         stat: string;
         result: { images: { _content?: unknown[] } | unknown[] };

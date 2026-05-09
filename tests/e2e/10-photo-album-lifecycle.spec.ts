@@ -23,6 +23,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         wsUrl({ format: 'json', method: 'pwg.categories.getImages', cat_id: String(albumId) }),
         { headers: { Cookie: cookie } }
     );
+    expect(listRes.status(), 'pwg.categories.getImages HTTP status').toBe(200);
     const listBody = (await listRes.json()) as {
         stat: string;
         result: { images: { _content?: Array<{ id: number }> } | Array<{ id: number }> };
@@ -46,12 +47,14 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
             single_value_mode: 'replace',
         },
     });
+    expect(updateRes.status(), 'pwg.images.setInfo HTTP status').toBe(200);
     expect(((await updateRes.json()) as { stat: string }).stat).toBe('ok');
 
     const infoRes = await request.get(
         wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
+    expect(infoRes.status(), 'pwg.images.getInfo HTTP status').toBe(200);
     const infoBody = (await infoRes.json()) as { stat: string; result: { name: string } };
     expect(infoBody.stat).toBe('ok');
     expect(infoBody.result.name).toBe('Updated Name');
@@ -61,13 +64,15 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         headers: { Cookie: cookie },
         form: { method: 'pwg.images.delete', image_id: String(imageId), pwg_token: pwgToken },
     });
+    expect(deletePhoto.status(), 'pwg.images.delete HTTP status').toBe(200);
     expect(((await deletePhoto.json()) as { stat: string }).stat).toBe('ok');
 
-    // Deleted photo getInfo must fail
+    // Deleted photo getInfo must fail (stat=fail, but HTTP is still 200)
     const afterDelete = await request.get(
         wsUrl({ format: 'json', method: 'pwg.images.getInfo', image_id: String(imageId) }),
         { headers: { Cookie: cookie } }
     );
+    expect(afterDelete.status(), 'deleted photo getInfo HTTP status').toBe(200);
     expect(((await afterDelete.json()) as { stat: string }).stat).toBe('fail');
 
     // --- Delete album ---
@@ -80,6 +85,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
             pwg_token: pwgToken,
         },
     });
+    expect(deleteAlbum.status(), 'pwg.categories.delete HTTP status').toBe(200);
     expect(((await deleteAlbum.json()) as { stat: string }).stat).toBe('ok');
 
     // Deleted album must not appear in admin list
@@ -87,6 +93,7 @@ test('photo and album full CRUD lifecycle', async ({ page, request }) => {
         wsUrl({ format: 'json', method: 'pwg.categories.getAdminList' }),
         { headers: { Cookie: cookie } }
     );
+    expect(catList.status(), 'pwg.categories.getAdminList HTTP status').toBe(200);
     const catBody = (await catList.json()) as {
         result: {
             categories: { _content?: Array<{ id: number }> } | Array<{ id: number }> | undefined;

@@ -13,6 +13,7 @@
     "endroid/qr-code": "^6.0",
     "gettext/gettext": "^5.7",
     "gettext/translator": "^1.2",
+    "latte/latte": "^3.1",
     "league/flysystem": "^3.33",
     "league/flysystem-local": "^3.31",
     "monolog/monolog": "^3.0",

@@ -188,6 +188,15 @@ final class InstallController implements ControllerInterface
                          . "PIWIGO_DB_PASSWORD={$dbpasswd}\n"
                          . "PIWIGO_DB_BASE={$dbname}\n"
                          . "PIWIGO_DB_PREFIX={$prefixeTable}\n";
+                // PIWIGO_BASE_URL is consumed only by the test runner (see
+                // .env.example). Write it in test mode so InstallChainTest
+                // doesn't clobber the URL line on every install.
+                if (TestMode::isActive()) {
+                    $baseUrl = rtrim(UrlService::getAbsoluteRootUrl(), '/');
+                    if ($baseUrl !== '') {
+                        $envBody .= "PIWIGO_BASE_URL={$baseUrl}\n";
+                    }
+                }
                 $envTmp = $envPath . '.tmp.' . bin2hex(random_bytes(4));
                 if (file_put_contents($envTmp, $envBody) === false || !rename($envTmp, $envPath)) {
                     Filesystem::tryUnlink($envTmp);

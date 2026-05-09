@@ -6,11 +6,11 @@
 
 ---
 
-## At a glance (2026-05-08)
+## At a glance (2026-05-09)
 
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
-| 1.1 | Concrete bugs                 | 🟡 **Not started**     | S         | 8 individual fixes (6 deferred markers + 2 perf notes)                 |
+| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 8  | S         | 1 left: search cat-id gap (couldn't repro post psalm-level2 sweep)     |
 | 1.2 | Templates pipeline            | 🟡 **Not started**     | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
@@ -71,55 +71,67 @@ Most sections are independent. The chains that aren't:
 
 ### 1.1 Concrete bugs
 
-**Status:** 🟡 Not started · **Effort:** S · 8 items
+**Status:** 🟢 Active ▸ 7 of 8 done · **Effort:** S · 1 item left
 
-8 individual bugs and perf notes from the in-code audit. Each is small
-enough to land as its own commit; ordering is opportunistic — work them in
-whatever sequence the wider work touches the affected files. None block
-each other.
+The 7 fixes shipped 2026-05-09 as separate commits on `16.x-rewrite`.
+Verified by `vendor/bin/phpunit` (386 tests, 2041 assertions green).
 
-#### 6 deferred markers (real bugs with no current owner)
+#### Shipped
 
-These are flagged as `// DEFERRED:` in the codebase. Each is a concrete
-bug, not a stylistic concern.
+- ✅ **`Updates.php` redirect target.** Used `PHPWG_ROOT_PATH` (filesystem
+  path) where a URL was needed, producing 404s when the path was
+  non-empty. Switched to `UrlService::getRootUrl() . 'index.php?/upgrade'`
+  to match `CommonBootstrap.php:162`. Note: roadmap originally suggested
+  `UrlGenerator::admin('plugins')`, but the redirect lives in the *core*
+  upgrade flow (post-zip-extraction, needs to run DB migrations) — going
+  to plugins admin would have skipped the migration step.
+- ✅ **Admin URL leaking into the gallery filter.** Public-gallery
+  `SearchFilterRenderer` passed `UrlGenerator::admin() . '&page=album-'`
+  to `getCatDisplayNameCache`, which 403'd guests. Passed `''` instead
+  so the helper falls through to `makeIndexUrl(['category' => $cat])` —
+  the public gallery URL.
+- ✅ **Category position persistence.** Root cause: `Dml::massUpdates`
+  with ≥10 rows builds a temp table with `UNIQUE KEY (id)`. If the
+  caller passed the same id twice (e.g. UI double-fire), the
+  temp-INSERT failed on the unique key and *no* ranks persisted. Fixed
+  by deduping `$datas` while building it (later writes overwrite earlier
+  ones — user's final intended position wins).
+- ✅ **Stub `cache_size` returning 4242.** `getInfos` now walks
+  `_data/cache/` and memoizes via `PersistentCacheRegistry` for 5 min.
+- ✅ **Image-id / filename precedence.** `HistoryAdminService::getHistory`
+  ANDed both clauses when both were set, producing empty results when
+  the IDs didn't intersect. Now `image_id` wins (filename is unset when
+  image_id is present), matching the precedence already used in
+  `PictureController:91-100`.
+- ✅ **PERF — redundant `getAvailableTags()`.** Wrapped the no-args case
+  in `RequestCache::remember` so all callers within one request share
+  one result (eliminates redundant deserialize + render_tag_name event
+  dispatch on hot pages like Tags, Search, Menubar).
+- ✅ **PERF — history sort to SQL.** Pushed `ORDER BY date, time` into
+  the SQL query and removed the now-unused `historyCompare` PHP
+  comparator. The deeper LIMIT/OFFSET pagination is **still deferred**
+  because it requires splitting the summary aggregates (filesize sum,
+  distinct guest IPs, member counts) out of the row-formatting loop
+  into separate queries — a real refactor with regression risk on
+  summary numbers, no test coverage to lean on.
 
-- **`Updates.php` plugin-era redirect target.** The plugin-update flow
-  redirects to a route that no longer exists post-front-controller
-  migration. Symptom: 404 after applying a plugin update. Fix: redirect
-  through `UrlGenerator::admin('plugins')`.
-- **Search cat-id access gap.** A search code path reads category IDs from
-  a request shape that may be absent on first-load, returning empty
-  results without an error. Fix: explicit `?? []` and guard the empty case.
-- **Admin URL leaking into the gallery filter.** The filter UI on the
-  public gallery uses an admin-side URL helper for one of its links;
-  guests get a 403 when clicking. Fix: switch to `UrlGenerator::gallery()`.
-- **Category position persistence.** Drag-reordering categories in the
-  admin updates the order in the UI but doesn't always persist on refresh
-  due to a stale write in `CategoryAdminService`. Fix: order the UPDATEs
-  by id descending so the final write wins.
-- **Stub `cache_size` returning a placeholder.** The cache-size accessor
-  returns a hardcoded number instead of measuring `_data/cache/`. Fix:
-  walk the directory and sum file sizes; cache the result for 5 minutes.
-- **Image-id / filename precedence ambiguity.** When both an `image_id`
-  and a `filename` are present in a request, the resolution order varies
-  per controller. Pick one (`image_id` wins) and document.
+#### Still open
 
-#### 2 perf notes (advisory, not bug-fix urgency)
-
-- **Redundant `get_available_tags()` call.** The tag-cloud renderer calls
-  this twice per request when the result is already cached. Replace the
-  second call with the `RequestCache` hit.
-- **All-rows-before-PHP-count in WS history pagination.** The WS history
-  endpoint loads every row and counts in PHP rather than running
-  `SELECT COUNT(*)`. Switch to a separate count query; the row fetch can
-  add `LIMIT/OFFSET`.
+- 🟡 **Search cat-id access gap.** Description was: "A search code path
+  reads category IDs from a request shape that may be absent on
+  first-load, returning empty results without an error. Fix: explicit
+  `?? []` and guard the empty case." Couldn't reproduce a specific
+  unguarded site after tracing all `cat_id` / `cat_words` reads in
+  `src/` — every one is already guarded with `is_array(...)` and `?? []`
+  patterns from the recent psalm-level2 sweep. Likely already fixed by
+  that sweep; needs a concrete file:line repro from the original audit
+  to act on. Drop or revisit.
 
 #### Verification
 
 ```bash
-grep -rn 'DEFERRED' src/ --include='*.php'   # zero matches when 1.1 is done
-grep -rn 'PERF:' src/ --include='*.php'      # zero matches
-vendor/bin/phpunit                            # green
+vendor/bin/phpunit            # 386 tests, 2041 assertions green ✅
+vendor/bin/phpstan analyse    # one pre-existing error unrelated to 1.1
 ```
 
 ---

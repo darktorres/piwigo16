@@ -6,6 +6,8 @@ namespace Piwigo\Template;
 
 use Latte\Engine;
 use Latte\Feature;
+use Piwigo\Config\Config;
+use Piwigo\Core\Util;
 use Piwigo\Template\Latte\PiwigoExtension;
 
 /**
@@ -30,6 +32,25 @@ final class LatteEngine implements TemplateEngine
         $this->engine->setFeature(Feature::StrictTypes);
         $this->engine->setCacheDirectory($cacheDirectory);
         $this->engine->addExtension(new PiwigoExtension());
+    }
+
+    /**
+     * Build a Latte engine wired to Piwigo's runtime cache directory —
+     * the same _data/templates_c/ root Smarty uses, with `latte/` as
+     * the Latte-side subdirectory so the two engines don't collide on
+     * filenames during the migration window.
+     *
+     * Phase B.5 dispatcher entry point: callers that want to render a
+     * `.latte` file from anywhere in the codebase can do
+     * `LatteEngine::default()->render($path, $params)` without
+     * threading the cache-directory configuration through.
+     */
+    public static function default(): self
+    {
+        $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte';
+        Util::mkgetdir($cacheDir);
+
+        return new self($cacheDir);
     }
 
     public function assign(string $name, mixed $value): void

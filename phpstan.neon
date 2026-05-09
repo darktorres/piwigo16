@@ -20,13 +20,32 @@ parameters:
         null_over_false: true
     latte:
         engineBootstrap: tools/phpstan-latte-engine.php
-        # phpstan-latte's compiler emits PHPDoc array shapes that mention
-        # bare `array` and `iterable` for some Latte 3.x runtime filter
-        # signatures (e.g. column, sort). Our strict rules flag those as
-        # missing iterable value type — the noise is in Latte runtime
-        # signatures, not in user template code, so silence the pattern.
         errorPatternsToIgnore:
+            # phpstan-latte's compiler emits PHPDoc array shapes that
+            # mention bare `array` and `iterable` for some Latte 3.x
+            # runtime filter signatures (e.g. column, sort). Our strict
+            # rules flag those as missing iterable value type — the
+            # noise is in Latte runtime signatures, not in user
+            # template code.
             - '/PHPDoc tag @var for variable \$__(filters|functions|variables)__ has no value type specified in iterable type/'
+
+            # LatteEngine itself is the dispatcher wrapper around
+            # Latte\Engine::renderToString — it forwards a $template
+            # parameter, which phpstan-latte's built-in collector flags
+            # as unresolvable. Resolution happens on the call sites
+            # OUTSIDE LatteEngine (PiwigoLatteEngineResolver picks up
+            # `$engine->render('foo.latte')` from controllers); the
+            # wrapper-internal forwarding is not a real bug.
+            - '/Cannot automatically resolve latte template from expression\./'
+
+            # PiwigoLatteEngineResolver registers .latte paths but
+            # doesn't yet extract typed variables from the params
+            # array — that lands once typed page-context DTOs flow
+            # through controllers. Until then, every `{$varName}` in a
+            # converted template appears as an undefined variable to
+            # phpstan-latte and casts to mixed.
+            - '/Undefined variable: \$/'
+            - '/Parameter #\d+ \(mixed\) of echo cannot be converted to string\./'
 rules:
     - Piwigo\Tools\PhpStan\ConfigKeyExistsRule
     - Piwigo\Tools\PhpStan\NoDynamicNewRule

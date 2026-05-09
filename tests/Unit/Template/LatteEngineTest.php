@@ -281,6 +281,52 @@ final class LatteEngineTest extends TestCase
     }
 
     /**
+     * Phase B.6 — first .tpl converted to .latte. Renders the actual
+     * production help.latte file (not a string fixture) and asserts the
+     * output structure: translated heading, conditional `class` on the
+     * div, and a raw {$HELP_CONTENT|noescape} block. Proves end-to-end
+     * that PiwigoExtension's filter set + asset functions reach a real
+     * .latte file under Piwigo's project layout.
+     */
+    public function test_phase_b6_help_latte_fixture_renders_end_to_end(): void
+    {
+        $this->stageTemplateWithLoaders();
+        Lang::loadArray(['Help' => 'Aide']);
+
+        $engine = new LatteEngine($this->tempDir);
+        $output = $engine->render('themes/admin/_base/template/help.latte', [
+            'HELP_SECTION_TITLE' => 'Configuration',
+            'HELP_CONTENT' => '<p>Configure your <strong>gallery</strong>.</p>',
+            'ENABLE_SYNCHRONIZATION' => false,
+        ]);
+
+        // Translated heading + raw section title + escaped HTML entity.
+        self::assertStringContainsString('<h2>Aide &raquo; Configuration</h2>', $output);
+        // Conditional class branch fires when sync is disabled.
+        self::assertStringContainsString('<div id="helpContent" class="sync-disabled">', $output);
+        // |noescape passes <strong> through verbatim — the original
+        // Smarty renders this raw because Template runs with
+        // escape_html=false; the converter relies on |noescape to
+        // preserve that contract under Latte's auto-escape default.
+        self::assertStringContainsString('<p>Configure your <strong>gallery</strong>.</p>', $output);
+    }
+
+    public function test_phase_b6_help_latte_drops_class_when_sync_enabled(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        $engine = new LatteEngine($this->tempDir);
+        $output = $engine->render('themes/admin/_base/template/help.latte', [
+            'HELP_SECTION_TITLE' => 'About',
+            'HELP_CONTENT' => 'body',
+            'ENABLE_SYNCHRONIZATION' => true,
+        ]);
+
+        self::assertStringContainsString('<div id="helpContent">', $output);
+        self::assertStringNotContainsString('sync-disabled', $output);
+    }
+
+    /**
      * Reflection-construct a Template with usable loaders but no Smarty
      * bootstrap. Registers it as the current template; the tearDown
      * calls TemplateRegistry::reset() to keep tests isolated.

@@ -1,0 +1,9 @@
+{do combineCss(path: 'themes/admin/_base/css/pages/help.css')}
+
+<h2>{='Help'|translate} &raquo; {$HELP_SECTION_TITLE}</h2>
+
+<div id="helpContent"{if !$ENABLE_SYNCHRONIZATION} class="sync-disabled"{/if}>
+
+{$HELP_CONTENT|noescape}
+
+</div>

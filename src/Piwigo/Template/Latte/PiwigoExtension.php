@@ -23,20 +23,37 @@ use Piwigo\Users\PermissionService;
 /**
  * Latte extension wiring Piwigo-specific filters/functions.
  *
- * §1.2 Wave 2 Phase B.1 + B.2: stateless port. Covers translate +
- * translate_dec (Phase A), the ~25 PHP-passthrough modifiers Smarty's
- * Template.php registered via `registerPlugin('modifier', name, fn)`,
- * and the 8 small custom modifiers (l10n alias, explode, ternary,
- * url_is_remote, is_admin, is_classic_user, get_device,
- * get_gallery_home_url).
+ * Coverage as of §1.2 Wave 2 Phase B (B.1 + B.2 + B.3):
+ *  - Translation pair: translate, translate_dec.
+ *  - PHP-passthrough modifiers whose first-arg matches Smarty's "pipe
+ *    value goes first" convention (sprintf, urlencode, intval, …).
+ *  - Custom stateless modifiers (l10n, explode, ternary, url_is_remote,
+ *    is_admin, is_classic_user, get_device, get_gallery_home_url,
+ *    get_extent).
+ *  - Stateful asset functions delegating to TemplateRegistry::current()
+ *    (combineScript, getCombinedScripts, combineCss, getCombinedCss,
+ *    defineDerivative, htmlHead, htmlStyle, footerScript).
  *
- * Out of scope for this commit: the asset functions (combine_script,
- * combine_css, define_derivative, get_combined_scripts,
- * get_combined_css, html_head, html_style, footer_script) and
- * get_extent — they touch Template's internal state (script/css
- * loaders, html_head_elements buffer, extension hook map) so they need
- * the state extracted into a service before the port can be stateless.
- * That's Phase B.3.
+ * Two Smarty filters from Template.php are intentionally not ported —
+ * neither maps cleanly onto Latte's compilation model:
+ *
+ *  - prefilter_white_space: a regex pass over Smarty SOURCE that
+ *    strips leading whitespace before specific Smarty tags ({if},
+ *    {foreach}, {include}, {else}, {combine_script}, {html_head},
+ *    {footer_script}, {section}). Latte preserves output whitespace
+ *    by default but provides {spaceless} for explicit zones; the
+ *    mechanical Smarty → Latte converter wraps tag-heavy blocks in
+ *    {spaceless} where the prefilter would have stripped them, so the
+ *    pass is unnecessary on the Latte side.
+ *
+ *  - postfilterLanguage: a regex pass over Smarty's COMPILED PHP that
+ *    constant-folds `<?php echo 'literal';?>` after `Lang::t('key')`
+ *    is bound at compile time when Config::compiledTemplateCacheLanguage()
+ *    is on. Latte compiles |translate to a runtime filter call, so
+ *    the constant-fold needs a Latte compiler pass (NodeVisitor) that
+ *    rewrites `{=$x|translate}` to a literal string when $x is a
+ *    string-literal expression and language caching is enabled. That's
+ *    a future optimization once profiling justifies it.
  */
 final class PiwigoExtension extends Extension
 {

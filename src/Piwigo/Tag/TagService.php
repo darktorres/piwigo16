@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
@@ -45,6 +46,19 @@ final readonly class TagService
      * @return array<mixed>
      */
     public function getAvailableTags(array $tagIds = []): array
+    {
+        if (count($tagIds) === 0) {
+            $cached = RequestCache::remember('tag', 'available', fn (): array => $this->fetchAvailableTags([]));
+            return is_array($cached) ? $cached : [];
+        }
+        return $this->fetchAvailableTags($tagIds);
+    }
+
+    /**
+     * @param int[] $tagIds
+     * @return array<mixed>
+     */
+    private function fetchAvailableTags(array $tagIds): array
     {
         $persistentCache = PersistentCacheRegistry::current();
         $user            = CurrentUser::get()->rawAttributes;

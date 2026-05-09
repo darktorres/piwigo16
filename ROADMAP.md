@@ -11,7 +11,7 @@
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9  | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)  |
-| 1.2 | Templates pipeline            | 🟡 **Not started**     | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
+| 1.2 | Templates pipeline            | 🟢 Active ▸ wave 1 done | XL        | wave 1 hygiene → wave 2 Latte → wave 3 precompile                      |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
 | 1.5 | Type correctness              | 🟡 **Not started**     | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
@@ -192,7 +192,7 @@ vendor/bin/phpstan analyse    # one pre-existing error unrelated to 1.1
 
 ### 1.2 Templates: hygiene → Latte → precompile
 
-**Status:** 🟡 Not started · **Effort:** XL · 3 sequential waves
+**Status:** 🟢 Active ▸ Wave 1 done · **Effort:** XL · 3 sequential waves
 
 **Why this is one section, not three.** The three waves operate on the
 same artefacts (the ~135 `.tpl` files under `themes/`) and can't be
@@ -219,7 +219,7 @@ covers Smarty during a transition window that's about to end.
 
 #### Wave 1 — Smarty hygiene on existing `.tpl`
 
-**Status:** 🟡 Not started · **Effort:** M · 8 actions
+**Status:** 🟢 Done · **Effort:** M · 8/8
 
 Eight ordered hygiene actions on the existing `.tpl` files, low-risk
 first. These run **before** the Latte conversion so the converter sees

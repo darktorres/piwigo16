@@ -58,6 +58,7 @@ use Piwigo\Users\PermissionService;
 final class PiwigoExtension extends Extension
 {
     /** @return array<string, callable> */
+    #[\Override]
     public function getFilters(): array
     {
         return [
@@ -130,6 +131,7 @@ final class PiwigoExtension extends Extension
      *
      * @return array<string, callable>
      */
+    #[\Override]
     public function getFunctions(): array
     {
         return [
@@ -141,6 +143,9 @@ final class PiwigoExtension extends Extension
             'htmlHead' => self::htmlHead(...),
             'htmlStyle' => self::htmlStyle(...),
             'footerScript' => self::footerScript(...),
+            'htmlOptions' => self::htmlOptions(...),
+            'htmlRadios' => self::htmlRadios(...),
+            'math' => self::math(...),
         ];
     }
 
@@ -323,12 +328,19 @@ final class PiwigoExtension extends Extension
         }
         // The `combined_script` event contract is "first arg is the URL,
         // mutated in place"; PHPStan's TriggerChangeDynamicReturnType
-        // extension narrows dispatch's return to the first-arg type.
-        $src = EventDispatcher::dispatch('combined_script', $src, $script);
+        // extension narrows dispatch's return to the first-arg type, but
+        // psalm sees `mixed`, hence the `(string)` cast — defensive against
+        // a misbehaving plugin and load-bearing for psalm narrowing.
+        $src = (string) EventDispatcher::dispatch('combined_script', $src, $script);
         $embellished = UrlService::embellishUrl($src);
-        // embellishUrl returns string|array, but is keyed by input shape
-        // (string→string, array→array). We always pass a string here.
-        return is_array($embellished) ? $src : $embellished;
+        // embellishUrl returns string|array, keyed by input shape
+        // (string→string, array→array). We always pass a string in,
+        // so the array branch is unreachable — guard explicitly so
+        // the static return type stays `string`.
+        if (is_array($embellished)) {
+            return $src;
+        }
+        return $embellished;
     }
 
     public static function combineCss(
@@ -423,5 +435,277 @@ final class PiwigoExtension extends Extension
             ? ($require === '' ? [] : explode(',', $require))
             : $require;
         TemplateRegistry::current()->scriptLoader->addInline($trimmed, $requireList);
+    }
+
+    /**
+     * Port of Smarty's `{html_options}` plugin. Emits a list of `<option>`
+     * tags from `options` (associative key=value) or from `values` paired
+     * with `output`. When `name` is provided, the result is wrapped in a
+     * `<select>` element. Any extra named arguments (id, class, plus
+     * arbitrary HTML attributes) are forwarded onto the wrapper.
+     *
+     * @param array<int|string, mixed>|null $options associative value→label map
+     * @param list<string|int>|null $values raw option values (used with $output)
+     * @param list<string>|null $output labels matching $values by index
+     * @param array<int|string, mixed>|string|int|float|bool|null $selected
+     * @param array<string, scalar> $extra forwarded HTML attributes
+     */
+    public static function htmlOptions(
+        ?array $options = null,
+        ?array $values = null,
+        ?array $output = null,
+        array|string|int|float|bool|null $selected = null,
+        ?string $name = null,
+        ?string $id = null,
+        ?string $class = null,
+        mixed ...$extra,
+    ): string {
+        if ($options === null && $values === null) {
+            return '';
+        }
+        $selectedNorm = self::normalizeSelected($selected);
+        $idx = 0;
+        $body = '';
+        if ($options !== null) {
+            foreach ($options as $optKey => $optVal) {
+                $body .= self::htmlOption($optKey, $optVal, $selectedNorm, $id, $class, $idx);
+            }
+        } else {
+            // When `$options` is null the early-return above guarantees
+            // `$values` is non-null; `$output` is optional in Smarty's
+            // plugin, so pair-by-index falls back to the empty string.
+            $output ??= [];
+            foreach ($values as $i => $optKey) {
+                $body .= self::htmlOption($optKey, $output[$i] ?? '', $selectedNorm, $id, $class, $idx);
+            }
+        }
+        if ($name === null || $name === '') {
+            return $body;
+        }
+        $extraAttrs = '';
+        if ($class !== null && $class !== '') {
+            $extraAttrs .= ' class="' . $class . '"';
+        }
+        if ($id !== null && $id !== '') {
+            $extraAttrs .= ' id="' . $id . '"';
+        }
+        /** @var mixed $val */
+        foreach ($extra as $key => $val) {
+            if (!is_scalar($val)) {
+                continue;
+            }
+            $extraAttrs .= ' ' . $key . '="' . htmlspecialchars((string) $val, ENT_QUOTES) . '"';
+        }
+        return '<select name="' . $name . '"' . $extraAttrs . '>' . "\n" . $body . '</select>' . "\n";
+    }
+
+    /**
+     * Port of Smarty's `{html_radios}` plugin. Emits a sequence of
+     * `<label><input type="radio">…</label>` rows, one per entry in
+     * `options` or `values`/`output`. The Smarty plugin shipped both
+     * `selected` and `checked` aliases; we accept both for fidelity.
+     *
+     * @param array<int|string, mixed>|null $options
+     * @param list<string|int>|null $values
+     * @param list<string>|null $output
+     * @param array<string, scalar> $extra forwarded HTML attributes
+     */
+    public static function htmlRadios(
+        ?array $options = null,
+        ?array $values = null,
+        ?array $output = null,
+        string|int|float|bool|null $selected = null,
+        string|int|float|bool|null $checked = null,
+        string $name = 'radio',
+        string $separator = '',
+        bool $escape = true,
+        bool $labels = true,
+        bool $label_ids = false,
+        mixed ...$extra,
+    ): string {
+        if ($options === null && $values === null) {
+            return '';
+        }
+        $sel = $selected ?? $checked;
+        $selectedStr = $sel === null ? null : (string) $sel;
+        $extraAttrs = '';
+        /** @var mixed $val */
+        foreach ($extra as $key => $val) {
+            if (!is_scalar($val)) {
+                continue;
+            }
+            $extraAttrs .= ' ' . $key . '="' . htmlspecialchars((string) $val, ENT_QUOTES) . '"';
+        }
+        $rows = [];
+        if ($options !== null) {
+            foreach ($options as $optKey => $optVal) {
+                $rows[] = self::htmlRadioRow($name, $optKey, $optVal, $selectedStr, $extraAttrs, $labels, $label_ids, $escape);
+            }
+        } else {
+            // Same `$values` non-null invariant as in `htmlOptions`.
+            $output ??= [];
+            foreach ($values as $i => $optKey) {
+                $rows[] = self::htmlRadioRow($name, $optKey, $output[$i] ?? '', $selectedStr, $extraAttrs, $labels, $label_ids, $escape);
+            }
+        }
+        return implode($separator === '' ? "\n" : $separator, $rows);
+    }
+
+    /**
+     * Port of Smarty's `{math}` plugin. Evaluates an arithmetic
+     * `equation` against named numeric vars passed via `...$vars`.
+     * Mirrors Smarty's whitelist of math functions, balanced-paren
+     * check, and `$`/backtick blocks.
+     *
+     * @param array<string, mixed>|float|int|string $vars values for free
+     *     identifiers in the equation (string-keyed via PHP 8.1 named-args
+     *     forwarding when called from Latte). May also include the `format`
+     *     and `assign` reserved keys, which are ignored at this layer.
+     */
+    public static function math(string $equation, mixed ...$vars): string
+    {
+        /** @var array<string, true> $allowed */
+        static $allowed = [
+            'int' => true, 'abs' => true, 'ceil' => true, 'acos' => true,
+            'acosh' => true, 'cos' => true, 'cosh' => true, 'deg2rad' => true,
+            'rad2deg' => true, 'exp' => true, 'floor' => true, 'log' => true,
+            'log10' => true, 'max' => true, 'min' => true, 'pi' => true,
+            'pow' => true, 'rand' => true, 'round' => true, 'asin' => true,
+            'asinh' => true, 'sin' => true, 'sinh' => true, 'sqrt' => true,
+            'srand' => true, 'atan' => true, 'atanh' => true, 'tan' => true,
+            'tanh' => true,
+        ];
+        $eq = preg_replace('/\s+/', '', $equation) ?? $equation;
+        $number = '-?(?:\d+(?:[,.]\d+)?|pi|π)';
+        $functionsOrVars = '((?:0x[a-fA-F0-9]+)|([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*))';
+        $operators = '[,+\/*\^%-]';
+        $regex = '/^((' . $number . '|' . $functionsOrVars . '|(' . $functionsOrVars . '\s*\((?1)*\)|\((?1)*\)))(?:' . $operators . '(?1))?)+$/';
+        if (preg_match($regex, $eq) !== 1
+            || substr_count($eq, '(') !== substr_count($eq, ')')
+            || str_contains($eq, '`')
+            || str_contains($eq, '$')
+        ) {
+            return '';
+        }
+        // `format` / `assign` are reserved in Smarty's plugin and not
+        // numeric vars; drop them so the regex-rewrite below doesn't see
+        // them as identifiers. Re-pin `$vars` so PHPStan tracks the
+        // remaining values as numeric scalars (needed for the eval below).
+        unset($vars['format'], $vars['assign']);
+        $numericVars = [];
+        foreach ($vars as $k => $v) {
+            if (is_string($k) && is_numeric($v)) {
+                $numericVars[$k] = $v;
+            }
+        }
+        preg_match_all('!(?:0x[a-fA-F0-9]+)|([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)!', $eq, $matches);
+        /** @var list<string> $idents */
+        $idents = $matches[1];
+        foreach ($idents as $ident) {
+            if ($ident === '' || isset($allowed[$ident])) {
+                continue;
+            }
+            if (!array_key_exists($ident, $numericVars)) {
+                return '';
+            }
+        }
+        foreach ($numericVars as $key => $val) {
+            $eq = preg_replace('/\b' . preg_quote($key, '/') . '\b/', '(' . (string) $val . ')', $eq) ?? $eq;
+        }
+        // The validated equation contains only digits, math operators and
+        // whitelisted PHP function names — eval is a deliberate match of
+        // Smarty's plugin behaviour, gated by the regex above.
+        $result = null;
+        eval('$result = ' . $eq . ';');
+        return (string) $result;
+    }
+
+    /**
+     * @param array<int|string, mixed>|string|int|float|bool|null $selected
+     * @return array<string, true>|string|null
+     */
+    private static function normalizeSelected(array|string|int|float|bool|null $selected): array|string|null
+    {
+        if ($selected === null) {
+            return null;
+        }
+        if (is_array($selected)) {
+            $map = [];
+            foreach ($selected as $val) {
+                if (is_scalar($val)) {
+                    $map[htmlspecialchars((string) $val, ENT_QUOTES)] = true;
+                }
+            }
+            return $map;
+        }
+        return htmlspecialchars((string) $selected, ENT_QUOTES);
+    }
+
+    /**
+     * @param array<string, true>|string|null $selected
+     */
+    private static function htmlOption(
+        int|string $optKey,
+        mixed $optVal,
+        array|string|null $selected,
+        ?string $id,
+        ?string $class,
+        int &$idx,
+    ): string {
+        if (is_array($optVal)) {
+            // Optgroup — emit a nested group with its own zeroed index.
+            $inner = 0;
+            $body = '<optgroup label="' . htmlspecialchars((string) $optKey, ENT_QUOTES) . '">' . "\n";
+            foreach ($optVal as $k => $v) {
+                $body .= self::htmlOption($k, $v, $selected, $id !== null ? $id . '-' . $idx : null, $class, $inner);
+            }
+            $idx++;
+            return $body . "</optgroup>\n";
+        }
+        $key = htmlspecialchars((string) $optKey, ENT_QUOTES);
+        $line = '<option value="' . $key . '"';
+        if (is_array($selected)) {
+            if (isset($selected[$key])) {
+                $line .= ' selected="selected"';
+            }
+        } elseif ($selected !== null && $key === $selected) {
+            $line .= ' selected="selected"';
+        }
+        if ($class !== null && $class !== '') {
+            $line .= ' class="' . $class . ' option"';
+        }
+        if ($id !== null && $id !== '') {
+            $line .= ' id="' . $id . '-' . $idx . '"';
+        }
+        $idx++;
+        $label = is_scalar($optVal) ? htmlspecialchars((string) $optVal, ENT_QUOTES) : '';
+        return $line . '>' . $label . '</option>' . "\n";
+    }
+
+    private static function htmlRadioRow(
+        string $name,
+        int|string $value,
+        mixed $label,
+        ?string $selected,
+        string $extraAttrs,
+        bool $labels,
+        bool $labelIds,
+        bool $escape,
+    ): string {
+        $valueStr = htmlspecialchars((string) $value, ENT_QUOTES);
+        $checked = ($selected !== null && $valueStr === $selected) ? ' checked="checked"' : '';
+        $labelStr = is_scalar($label) ? (string) $label : '';
+        if ($escape) {
+            $labelStr = htmlspecialchars($labelStr, ENT_QUOTES);
+        }
+        $idAttr = '';
+        if ($labelIds) {
+            $idAttr = ' id="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"';
+        }
+        $input = '<input type="radio" name="' . $name . '" value="' . $valueStr . '"' . $idAttr . $checked . $extraAttrs . '>' . $labelStr;
+        if ($labels) {
+            return '<label' . ($labelIds ? ' for="' . $name . '_' . preg_replace('/\W/', '_', $valueStr) . '"' : '') . '>' . $input . '</label>';
+        }
+        return $input;
     }
 }

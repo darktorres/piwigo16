@@ -23,7 +23,7 @@ use Piwigo\Template\TemplateRegistry;
  */
 final class LatteEngineTest extends TestCase
 {
-    private string $tempDir;
+    private string $tempDir = '';
 
     #[\Override]
     protected function setUp(): void
@@ -45,7 +45,8 @@ final class LatteEngineTest extends TestCase
         unset($GLOBALS['lang']);
         unset($GLOBALS['template']);
 
-        foreach (glob($this->tempDir . '/*') ?: [] as $f) {
+        $files = glob($this->tempDir . '/*');
+        foreach ($files === false ? [] : $files as $f) {
             if (is_file($f)) {
                 unlink($f);
             }

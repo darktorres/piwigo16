@@ -1,0 +1,19 @@
+<table class="doubleSelect">
+  <tr>
+    <td>
+      <h3>{$L_CAT_OPTIONS_TRUE}</h3>
+      <select class="categoryList" name="cat_true[]" multiple="multiple" size="30">
+        {=htmlOptions(options: $category_option_true, selected: $category_option_true_selected)|noescape}
+      </select>
+      <p><input class="submit u-fs-15" type="submit" value="&raquo;" name="falsify"></p>
+    </td>
+
+    <td>
+      <h3>{$L_CAT_OPTIONS_FALSE}</h3>
+      <select class="categoryList" name="cat_false[]" multiple="multiple" size="30">
+        {=htmlOptions(options: $category_option_false, selected: $category_option_false_selected)|noescape}
+      </select>
+      <p><input class="submit u-fs-15" type="submit" value="&laquo;" name="trueify"></p>
+    </td>
+  </tr>
+</table>

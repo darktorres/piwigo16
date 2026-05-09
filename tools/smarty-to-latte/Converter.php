@@ -43,21 +43,40 @@ final class Converter
         $source = $this->rewriteStripBlock($source);
         $source = $this->rewriteFunctionDefinition($source);
         $source = $this->rewriteElseIf($source);
+        // Strip nested `{$X}` print sub-tags before the keyword/operator
+        // passes — those passes can't see past an inner `}` byte, so the
+        // unwrap has to land first.
+        $source = $this->rewriteEmbeddedPrintInTag($source);
+        $source = $this->rewriteBacktickInterpolation($source);
+        // Resolve Smarty dot-access (`$x.foo` → `$x['foo']`) early so the
+        // pipe-in-if and other identifier-shaped rewrites below can match
+        // on the canonical bracket form rather than the dotted Smarty form.
+        $source = $this->rewriteSmartyDotAccess($source);
         $source = $this->rewriteOperatorKeywords($source);
         $source = $this->rewriteIfNotKeyword($source);
+        $source = $this->rewritePipeFilterInIf($source);
+        $source = $this->rewriteIteratorAttribute($source);
+        $source = $this->rewriteIfBreakIdiom($source);
         $source = $this->rewriteGetCombinedCssTag($source);
         $source = $this->rewriteEscapeFilters($source);
         $source = $this->rewriteCombineScript($source);
         $source = $this->rewriteCombineCss($source);
         $source = $this->rewriteDefineDerivative($source);
+        $source = $this->rewriteHtmlOptions($source);
+        $source = $this->rewriteHtmlRadios($source);
+        $source = $this->rewriteMath($source);
+        $source = $this->rewriteCounter($source);
         $source = $this->rewriteIncludePath($source);
+        // User-defined function call rewrite needs the {define} blocks
+        // already rewritten (the rewriteFunctionDefinition pass above).
+        $source = $this->rewriteUserDefinedFunctionCall($source);
+        $source = $this->rewriteFilterArgBraces($source);
         // regex_replace must rewrite before the generic multi-arg pipe
         // filter rule converts its colons to commas (the regex_replace
         // → replaceRe rename relies on the original colon shape).
         $source = $this->rewriteRegexReplaceFilter($source);
         $source = $this->rewriteMultiArgPipeFilters($source);
         $source = $this->rewriteSmartyForeachIterator($source);
-        $source = $this->rewriteSmartyDotAccess($source);
         $source = $this->rewritePrintedLiteralFilter($source);
 
         return $source;
@@ -134,9 +153,11 @@ final class Converter
                 foreach ($map as $smarty => $php) {
                     $tag = preg_replace('/\s' . preg_quote($smarty, '/') . '\s/', " $php ", $tag) ?? $tag;
                 }
-                // `<expr> is odd` / `<expr> is even` → `(<expr>) % 2 != 0` / `== 0`
+                // `<expr> is odd` / `<expr> is even` → `(<expr>) % 2 != 0` / `== 0`.
+                // The expr starts with `$` (variable) or a word char (function /
+                // bareword) so the regex doesn't mis-anchor on a trailing `]`.
                 $tag = preg_replace_callback(
-                    '/(\$?[\w\[\]\->\.\(\)]+)\s+is\s+(not\s+)?(odd|even)\b/',
+                    '/((?:\$\w+|\w+\()[\w\[\]\->\.\(\)\'"]*)\s+is\s+(not\s+)?(odd|even)\b/',
                     static function (array $im): string {
                         $expr = $im[1];
                         $parity = $im[3] === 'odd' ? '!=' : '==';
@@ -361,13 +382,282 @@ final class Converter
     }
 
     /**
+     * `{html_options name='x' options=$o selected=$s}` →
+     *   `{=htmlOptions(name: 'x', options: $o, selected: $s)|noescape}`.
+     *
+     * Smarty's `html_options` plugin emits `<option>` (or wrapped
+     * `<select>`) markup; the equivalent PiwigoExtension function
+     * returns the same HTML and therefore needs `|noescape` to keep
+     * Latte's auto-escape from double-encoding the angle brackets.
+     */
+    private function rewriteHtmlOptions(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{html_options\s+([^}]+)\}/',
+            fn (array $m): string => '{=htmlOptions(' . $this->parseSmartyArgs($m[1]) . ')|noescape}',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{html_radios name='x' options=$o selected=$s}` →
+     *   `{=htmlRadios(name: 'x', options: $o, selected: $s)|noescape}`.
+     */
+    private function rewriteHtmlRadios(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{html_radios\s+([^}]+)\}/',
+            fn (array $m): string => '{=htmlRadios(' . $this->parseSmartyArgs($m[1]) . ')|noescape}',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{math equation="abs(x)" x=$v}` → `{=math(equation: "abs(x)", x: $v)}`.
+     * The math result is a number, no escape concern; bare `{=…}` keeps
+     * it consistent with the other Smarty function ports.
+     */
+    private function rewriteMath(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{math\s+([^}]+)\}/',
+            fn (array $m): string => '{=math(' . $this->parseSmartyArgs($m[1]) . ')}',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * `{counter [start=N] [assign=X] [...]}` → drop. Smarty's `{counter}`
+     * was a stateful row-numbering helper; Piwigo only used it to assign
+     * an unread `$i` variable, so the converter strips it entirely.
+     * If a future template starts reading the counter value the rule
+     * would need to track per-name state.
+     */
+    private function rewriteCounter(string $source): string
+    {
+        return preg_replace(
+            '/\{counter(?:\s+[^}]*)?\}\s*(?:\{\*[^*]*\*\})?\s*\n?/',
+            '',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * Calls to user-defined functions become `{include funcName, k: v, …}`.
+     * Looks up `{define X}…{/define}` blocks already produced by
+     * `rewriteFunctionDefinition` above and rewrites every other
+     * `{X args…}` occurrence to `{include X[, k: v[, …]]}`. Latte's
+     * `{include}` for `{define}` blocks expects PHP-style named args
+     * (comma-separated, `:` between key and value).
+     */
+    private function rewriteUserDefinedFunctionCall(string $source): string
+    {
+        if (preg_match_all('/\{define\s+(\w+)\b/', $source, $defs) === false) {
+            return $source;
+        }
+        $names = array_unique($defs[1]);
+        if ($names === []) {
+            return $source;
+        }
+        foreach ($names as $name) {
+            // The call site can wrap onto multiple lines, so we anchor on
+            // `{name<ws>` and let the body run until the matching `}`.
+            $pattern = '/\{(?!define\b|include\b|call\b|\/)' . preg_quote($name, '/') . '(\s+[^}]*?)?\}/s';
+            $source = preg_replace_callback(
+                $pattern,
+                function (array $m) use ($name): string {
+                    $rawArgs = isset($m[1]) ? trim($m[1]) : '';
+                    if ($rawArgs === '') {
+                        return '{include ' . $name . '}';
+                    }
+                    $args = $this->parseSmartyArgs($rawArgs);
+                    if ($args === '') {
+                        // Couldn't recognise the args — surface as residue.
+                        return $m[0];
+                    }
+                    return '{include ' . $name . ', ' . $args . '}';
+                },
+                $source,
+            ) ?? $source;
+        }
+        return $source;
+    }
+
+    /**
+     * Smarty's backtick-in-string variable interpolation:
+     *   `"prefix`$expr`suffix"` → `"prefix" . $expr . "suffix"`.
+     * Only runs inside `{…}` tag bodies so we don't disturb literal
+     * backtick characters in HTML text (e.g. inside `<code>` blocks).
+     * Uses PHP's `.` concat operator — Latte accepts `~` too in some
+     * contexts but rejects it inside function-call argument positions
+     * (where the converter primarily lands these).
+     */
+    private function rewriteBacktickInterpolation(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{[^{}]*\}/',
+            static function (array $m): string {
+                $tag = $m[0];
+                if (!str_contains($tag, '`')) {
+                    return $tag;
+                }
+                return preg_replace_callback(
+                    '/(["\'])([^"\'`]*)`([^`]+)`([^"\'`]*)\1/',
+                    static function (array $sm): string {
+                        $q = $sm[1];
+                        $parts = [];
+                        if ($sm[2] !== '') {
+                            $parts[] = $q . $sm[2] . $q;
+                        }
+                        $parts[] = $sm[3];
+                        if ($sm[4] !== '') {
+                            $parts[] = $q . $sm[4] . $q;
+                        }
+                        return implode(' . ', $parts);
+                    },
+                    $tag,
+                ) ?? $tag;
+            },
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * Smarty 5 introduced `$item@index/@iteration/@first/@last/@total/@key`
+     * as the per-element iterator-attribute syntax (alongside the older
+     * `$smarty.foreach.NAME.x` form). Latte exposes the same data via
+     * the implicit `$iterator` object, identical to `rewriteSmarty­Foreach­Iterator`.
+     */
+    private function rewriteIteratorAttribute(string $source): string
+    {
+        $map = [
+            'index' => '($iterator->getCounter() - 1)',
+            'iteration' => '$iterator->getCounter()',
+            'first' => '$iterator->isFirst()',
+            'last' => '$iterator->isLast()',
+            'total' => '$iterator->getTotalCount()',
+            'key' => '$iterator->key',
+        ];
+        foreach ($map as $key => $replacement) {
+            $source = preg_replace(
+                '/\$\w+@' . $key . '\b/',
+                $replacement,
+                $source,
+            ) ?? $source;
+        }
+        return $source;
+    }
+
+    /**
+     * Latte rejects bare `{break}` inside `{foreach}`; the idiomatic
+     * shape is `{breakIf <expr>}`. Smarty's `{if X}{break}{/if}` block
+     * collapses cleanly to a single `{breakIf X}` tag — same for the
+     * `{continue}` counterpart, even though it isn't currently used.
+     */
+    private function rewriteIfBreakIdiom(string $source): string
+    {
+        $source = preg_replace(
+            '/\{if\s+([^{}]+?)\}\s*\{break\}\s*\{\/if\}/',
+            '{breakIf $1}',
+            $source,
+        ) ?? $source;
+        return preg_replace(
+            '/\{if\s+([^{}]+?)\}\s*\{continue\}\s*\{\/if\}/',
+            '{continueIf $1}',
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * Smarty allowed `{if $x|filter < N}`; Latte rejects pipes inside
+     * `{if}`. Rewrite the pipe to a function call by walking the tag
+     * body and converting each `$expr|filter` (no args) into `filter($expr)`.
+     * Multi-arg pipes are rare inside `{if}` and left as residue.
+     */
+    private function rewritePipeFilterInIf(string $source): string
+    {
+        return preg_replace_callback(
+            '/\{(if|elseif)\s+([^{}]*?)\}/s',
+            static function (array $m): string {
+                $body = $m[2];
+                $previous = '';
+                while ($previous !== $body) {
+                    $previous = $body;
+                    $body = preg_replace(
+                        '/(\$\w+(?:\[[^\]]+\]|\->\w+|\[\'\w+\'\])*)\|(\w+)(?![\w:])/',
+                        '$2($1)',
+                        $body,
+                    ) ?? $body;
+                }
+                return '{' . $m[1] . ' ' . $body . '}';
+            },
+            $source,
+        ) ?? $source;
+    }
+
+    /**
+     * Strip nested `{$X}` print sub-tags out of control-tag bodies:
+     *   `{if {$X} eq 1}` → `{if $X eq 1}`
+     *   `{if "first" == {$POS_PREF}}` → `{if "first" == $POS_PREF}`
+     *
+     * Smarty 5 tolerates the embedded print expression as syntactic
+     * sugar for a bare variable reference; Latte rejects it because
+     * `{` opens a new tag. The rewrite peels one nested `{$X}` at a
+     * time inside `{if|elseif|while|var}` openers (the unbalanced
+     * brace prevents a single greedy regex from spanning the body
+     * in one shot).
+     */
+    private function rewriteEmbeddedPrintInTag(string $source): string
+    {
+        $previous = '';
+        while ($previous !== $source) {
+            $previous = $source;
+            $source = preg_replace(
+                '/(\{(?:if|elseif|while|var)\b[^{}]*)\{(\$\w+(?:\.\w+|\[[^\]]+\])*)\}/',
+                '$1$2',
+                $source,
+            ) ?? $source;
+        }
+        return $source;
+    }
+
+    /**
+     * Strip `{…}` wrappers from expressions used inside filter args:
+     *   `{"%s"|translate:{round($x, 2)}}` → `{"%s"|translate:round($x, 2)}`
+     *
+     * Smarty parsed the inner `{round(...)}` as a sub-print and inlined
+     * its value into the filter argument; Latte's tag parser sees the
+     * unmatched `{` instead. This pass walks each `{…}` tag and unwraps
+     * `{round(...)}` / `{func(...)}` only when it follows a `:` argument
+     * separator, so we don't disturb literal braces in HTML text.
+     */
+    private function rewriteFilterArgBraces(string $source): string
+    {
+        // Operate globally — the wrapping tag has unbalanced braces from
+        // the perspective of `[^{}]*`, so peel one nested `:{…}` at a
+        // time until the source stabilises.
+        $previous = '';
+        while ($previous !== $source) {
+            $previous = $source;
+            $source = preg_replace(
+                '/(\|\w[\w]*(?::[^{}|]*)?:)\{([^{}]+)\}/',
+                '$1$2',
+                $source,
+            ) ?? $source;
+        }
+        return $source;
+    }
+
+    /**
      * `{include file='foo.tpl' [k=v] [...]}` → `{include 'foo.latte'[, k: v]}`.
      * Renames `.tpl` to `.latte` in path literals.
      */
     private function rewriteIncludePath(string $source): string
     {
+        // Body allows nested `{…}` once because Smarty include args of
+        // shape `title={'X'|translate}` carry an embedded print expression.
         return preg_replace_callback(
-            '/\{include\s+file=([^\s}]+)([^}]*)\}/',
+            '/\{include\s+file=([^\s}]+)((?:[^{}]|\{[^{}]*\})*)\}/s',
             function (array $m): string {
                 $path = preg_replace('/\.tpl([\'"])/', '.latte$1', $m[1]) ?? $m[1];
                 $rest = trim($m[2]);
@@ -375,6 +665,9 @@ final class Converter
                     return "{include $path}";
                 }
                 $extras = $this->parseSmartyArgs($rest);
+                if ($extras === '') {
+                    return "{include $path}";
+                }
                 return "{include $path, $extras}";
             },
             $source,
@@ -426,6 +719,13 @@ final class Converter
                 $previous = '';
                 while ($previous !== $tag) {
                     $previous = $tag;
+                    // `$arr.$key` → `$arr[$key]` (variable index).
+                    $tag = preg_replace(
+                        '/(\$\w+(?:\[[^\]]+\])*)\.(\$\w+)/',
+                        '$1[$2]',
+                        $tag,
+                    ) ?? $tag;
+                    // `$arr.foo` → `$arr['foo']` (literal-key dot access).
                     $tag = preg_replace(
                         '/(\$\w+(?:\[[^\]]+\])*)\.(\w+)/',
                         "$1['$2']",
@@ -510,8 +810,11 @@ final class Converter
      */
     private function rewriteCaptureBlock(string $source): string
     {
+        // Smarty wrote both `name=` and `assign=` to bind the captured
+        // body to a template variable; Latte exposes a single capture
+        // target via `{capture $var}…{/capture}`.
         $source = preg_replace_callback(
-            '/\{capture\s+name=[\'"]?(\w+)[\'"]?\s*\}/',
+            '/\{capture\s+(?:name|assign)=[\'"]?(\w+)[\'"]?\s*\}/',
             static fn (array $m): string => sprintf('{capture $%s}', $m[1]),
             $source,
         ) ?? $source;
@@ -633,13 +936,41 @@ final class Converter
     private function parseSmartyArgsAsArray(string $rawArgs): array
     {
         $args = [];
-        // Match either: key='quoted value' or key="quoted value" or key=bareword
-        $pattern = '/(\w+)=(\'[^\']*\'|"[^"]*"|-?[\w\.\$\[\]\->]+)/';
+        // Tokenise into `key = value` pairs. The value spans until the
+        // next `<ident>=` lookahead (or end of input), allowing values
+        // to contain whitespace, parens, pipes, colons and commas — all
+        // of which appear in real Piwigo template args.
+        $pattern = '/(\w+)\s*=\s*((?:\'[^\']*\'|"[^"]*"|\([^)]*\)|[^\s])+?)(?=\s+\w+\s*=|\s*$)/s';
         if (preg_match_all($pattern, $rawArgs, $matches, PREG_SET_ORDER) !== false) {
             foreach ($matches as $match) {
-                $args[$match[1]] = $match[2];
+                $args[$match[1]] = $this->normalizeArgValue($match[2]);
             }
         }
         return $args;
+    }
+
+    /**
+     * Strip Smarty's `{...}` print wrap from arg values: a Smarty author
+     * could write `title={'Title'|translate}` to "embed the rendered
+     * expression as the arg"; in Latte the same arg accepts the bare
+     * expression directly. The mechanical converter's print-literal pass
+     * promotes the inner pipe to `{=...|filter}` first, so here we peel
+     * either form off the value before quoting.
+     */
+    private function normalizeArgValue(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return $value;
+        }
+        if (preg_match('/^\{=(.+)\}$/s', $value, $m) === 1) {
+            return trim($m[1]);
+        }
+        if (preg_match('/^\{(.+)\}$/s', $value, $m) === 1
+            && (str_contains($m[1], '|') || str_contains($m[1], '$'))
+        ) {
+            return trim($m[1]);
+        }
+        return $value;
     }
 }

@@ -1,0 +1,97 @@
+{* 
+          Warning : This is the admin pages header only 
+          don't confuse with the public page header
+*}
+<!DOCTYPE html>
+<html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">
+<head>
+{if $SHOW_MOBILE_APP_BANNER}
+<meta name="apple-itunes-app" content="app-id=472225196">
+{/if}
+<meta charset="{$CONTENT_ENCODING}">
+<title>{$GALLERY_TITLE} :: {$PAGE_TITLE}</title>
+<link rel="icon" type="image/svg+xml" href="{$ROOT_URL}{$themeconf['icon_dir']}/piwigo.org-icon 1.svg">
+<link rel="stylesheet" type="text/css" href="{$ROOT_URL}themes/admin/_base/fonts/open-sans/open-sans.css">
+
+{spaceless}
+{do combineCss(path: "themes/admin/_base/fontello/css/fontello.css", order: -10)}
+{var $theme_id = ""}
+{foreach $themes as $theme}
+  {var $theme_id = $theme['id']}
+
+  {if $theme['load_css']}
+  {do combineCss(path: "themes/admin/" . $theme['id'] . "/theme.css", order: -10)}
+  {do combineCss(path: "themes/admin/" . $theme['id'] . "/css/components/general.css", order: -9)} {* Temporary solution *}
+  {/if}
+  {if !empty($theme['local_head'])}
+  {include $theme['local_head'], load_css: $theme['load_css']}
+  {/if}
+{/foreach}
+
+{/spaceless}
+
+<!-- BEGIN get_combined -->
+{=getCombinedCss()}
+
+{=getCombinedScripts(load: 'header')}
+<!-- END get_combined -->
+
+{if !empty($head_elements)}
+{foreach $head_elements as $elt}
+  {$elt}
+{/foreach}
+{/if}
+{* Post-conversion manual annotation: build the JSON via |json_encode so
+   Latte doesn't trip over `{…}` print statements inside JS string quotes
+   (and so the payload escapes correctly when the URLs contain `"`). *}
+<script id="pwg-config" type="application/json">{=['wsUrl' => $WS_URL, 'adminUrl' => $ADMIN_URL]|json_encode|noescape}</script>
+</head>
+
+<body id="{$BODY_ID}">
+
+<div id="the_page">
+
+{if !empty($header_msgs)}
+<div class="header_msgs">
+  {foreach $header_msgs as $elt}
+  {$elt}
+  {/foreach}
+</div>
+{/if}
+
+<div id="pwgHead">
+  <a href="{$U_RETURN}" class="visit-gallery tiptip" title="{='Visit Gallery'|translate}"><i class="icon-left-open"></i>{='Visit'|translate}</a>
+  <div class="pwgHead-gallery-title">{$GALLERY_TITLE}</div>
+
+  <div id="headActions">
+    <span class="admin-head-username"><i class="icon-user"></i>{$USERNAME}</span>
+{*
+    <a href="{$U_RETURN}" title="{='Visit Gallery'|translate}"><i class="icon-eye"></i><span>{='Visit Gallery'|translate}</span></a>
+*}
+
+{spaceless}
+    <a href="{$U_CHANGE_THEME}" class="tiptip" title="{='Switch to clear or dark colors for administration'|translate}">
+{if $theme_id == "clear"}
+      <i class="icon-moon-inv"></i><span>Dark</span>
+{elseif $theme_id == "roma"}
+      <i class="icon-sun-inv"></i><span>Light</span>
+{/if}
+</a>
+{/spaceless}
+
+    <a class="tiptip" href="{$U_FAQ}" title="{='Instructions to use Piwigo'|translate}"><i class="icon-help-circled"></i><span>{='Help Me'|translate}</span></a>
+    <a href="{$U_LOGOUT}"><i class="icon-logout"></i><span>{='Logout'|translate}</span></a>
+  </div>
+</div>
+
+<div class="u-clear-both"></div>
+
+{if !empty($header_notes)}
+<div class="header_notes">
+  {foreach $header_notes as $elt}
+  {$elt}
+  {/foreach}
+</div>
+{/if}
+
+<div id="pwgMain">

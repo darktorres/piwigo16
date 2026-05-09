@@ -53,6 +53,7 @@ final class LatteEngine implements TemplateEngine
         return new self($cacheDir);
     }
 
+    #[\Override]
     public function assign(string $name, mixed $value): void
     {
         $this->assigns[$name] = $value;
@@ -61,6 +62,7 @@ final class LatteEngine implements TemplateEngine
     /**
      * @param array<string, mixed> $params
      */
+    #[\Override]
     public function render(string $template, array $params = []): string
     {
         return $this->engine->renderToString($template, [...$this->assigns, ...$params]);

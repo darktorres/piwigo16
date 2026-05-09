@@ -482,7 +482,7 @@ SELECT DISTINCT f.image_id
                     $status = 'normal';
                 }
 
-                $insert    = array_merge(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $defaultUser), ['user_id' => $userId, 'status' => $status, 'registration_date' => $dbnow, 'level' => $level]);
+                $insert    = array_merge(array_map(static fn (mixed $v): mixed => is_scalar($v) ? (string) $v : $v, $defaultUser), ['user_id' => $userId, 'status' => $status, 'registration_date' => $dbnow, 'level' => $level]);
                 $inserts[] = $insert;
             }
 

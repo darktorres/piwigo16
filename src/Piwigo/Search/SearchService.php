@@ -151,7 +151,10 @@ final readonly class SearchService
         $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
         $allwordsFieldsFields = $allwordsFields['fields'] ?? null;
         $allwordsFilterAccess = $allwordsFilter['access'] ?? false;
-        if (isset($searchFields['allwords']) and isset($allwordsFields['words']) && $allwordsFields['words'] !== '' and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and ($allwordsFilterAccess === true || $allwordsFilterAccess === 1 || $allwordsFilterAccess === '1')) {
+        $allwordsWordsRaw = $allwordsFields['words'] ?? null;
+        $allwordsHasWords = (is_array($allwordsWordsRaw) && count($allwordsWordsRaw) > 0)
+            || (is_string($allwordsWordsRaw) && $allwordsWordsRaw !== '');
+        if (isset($searchFields['allwords']) and $allwordsHasWords and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and ($allwordsFilterAccess === true || $allwordsFilterAccess === 1 || $allwordsFilterAccess === '1')) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
             $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []);

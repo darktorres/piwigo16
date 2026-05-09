@@ -277,7 +277,7 @@ SELECT *
         }
 
         foreach ($need_update as $time_key => $summary) {
-            $time_tokens = explode('-', $time_key);
+            $time_tokens = explode('-', (string) $time_key);
             $inserts[] = [
                 'year'     => $time_tokens[0],
                 'month'    => $time_tokens[1] ?? null,

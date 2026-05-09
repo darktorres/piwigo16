@@ -14,7 +14,7 @@
 {'Please wait...'|translate}<br><img src="themes/admin/_base/images/ajax-loader-bar.gif">
 </div>
 
-<p id="up_to_date" hidden>{'All %s are up to date.'|@sprintf:$EXT_TYPE|translate}</p>
+<p id="up_to_date" hidden>{'All %s are up to date.'|translate|sprintf:$EXT_TYPE}</p>
 
 {foreach from=$UPDATES_EXTENSION key=type item=updates}
   {if not empty($updates)}

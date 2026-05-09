@@ -51,6 +51,18 @@ final class Template
     /** @var string - Runtime CSS rules */
     private string $html_style = '';
 
+    /**
+     * Append a CSS fragment to the runtime <style> block flushed before
+     * </head>. Public because Latte's `htmlStyle` function (via
+     * PiwigoExtension) shares this buffer with the Smarty `{html_style}`
+     * block — both engines accumulate into the same instance during a
+     * page render.
+     */
+    public function appendHtmlStyle(string $css): void
+    {
+        $this->html_style .= "\n" . $css;
+    }
+
     /** @const string */
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
     /** @var ScriptLoader */

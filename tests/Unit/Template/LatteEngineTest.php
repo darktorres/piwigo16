@@ -7,7 +7,12 @@ namespace Piwigo\Tests\Unit\Template;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
+use Piwigo\Template\CssLoader;
+use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\LatteEngine;
+use Piwigo\Template\ScriptLoader;
+use Piwigo\Template\Template;
+use Piwigo\Template\TemplateRegistry;
 
 /**
  * Phase A validation for §1.2 Wave 2: prove that LatteEngine + PiwigoExtension
@@ -36,7 +41,9 @@ final class LatteEngineTest extends TestCase
     {
         Lang::reset();
         Translator::reset();
+        TemplateRegistry::reset();
         unset($GLOBALS['lang']);
+        unset($GLOBALS['template']);
 
         foreach (glob($this->tempDir . '/*') ?: [] as $f) {
             if (is_file($f)) {
@@ -183,5 +190,108 @@ final class LatteEngineTest extends TestCase
             $engine->renderFromString('{=$key|l10n}', ['key' => 'Comment']),
             'l10n must be a strict alias of translate',
         );
+    }
+
+    /**
+     * Phase B.3 smoke — the asset functions are stateful: they read and
+     * write through TemplateRegistry::current()'s ScriptLoader / CssLoader
+     * and the html_head_elements buffer. The tests below stage a
+     * reflection-constructed Template (skipping its Smarty-bootstrapping
+     * constructor) with fresh loaders, run the function, and assert the
+     * loader received the entry.
+     */
+    public function test_phase_b3_combine_script_writes_to_registered_template(): void
+    {
+        $tpl = $this->stageTemplateWithLoaders();
+
+        PiwigoExtension::combineScript(
+            id: 'tags',
+            load: 'footer',
+            path: 'themes/admin/_base/js/tags.js',
+        );
+
+        // ScriptLoader::add runs the path through Vite's manifest, so we
+        // assert that the entry registered (under its id) and its path
+        // ends with `.js` — the Vite-rewrite shape is opaque here, the
+        // Piwigo-side guarantee is that the script is registered with
+        // the requested id.
+        $scripts = $tpl->scriptLoader->getAll();
+        self::assertArrayHasKey('tags', $scripts);
+        self::assertStringEndsWith('.js', $scripts['tags']->path);
+    }
+
+    public function test_phase_b3_combine_css_writes_to_registered_template(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        // CssLoader's registered_css is private and there's no public getter.
+        // The smoke we can run is: combineCss doesn't raise on a valid path,
+        // the auto-id branch (md5 of path when no id given) doesn't crash,
+        // and the order arg doesn't blow up CssLoader::add.
+        PiwigoExtension::combineCss(path: 'themes/_base/print.css', order: -10);
+        PiwigoExtension::combineCss(path: 'themes/admin/_base/explicit.css', id: 'explicit', order: 5);
+
+        $this->expectNotToPerformAssertions();
+    }
+
+    public function test_phase_b3_html_head_appends_to_buffer(): void
+    {
+        $tpl = $this->stageTemplateWithLoaders();
+
+        PiwigoExtension::htmlHead("<link rel='preload' href='/foo.js'>");
+        PiwigoExtension::htmlHead("   ");
+        PiwigoExtension::htmlHead("<meta name='x' content='y'>");
+
+        self::assertSame(
+            ["<link rel='preload' href='/foo.js'>", "<meta name='x' content='y'>"],
+            $tpl->html_head_elements,
+            'whitespace-only content must be skipped to mirror Template::blockHtmlHead',
+        );
+    }
+
+    public function test_phase_b3_get_extent_falls_back_to_filename_when_no_override(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        self::assertSame(
+            'fallback.tpl',
+            PiwigoExtension::getExtent('fallback.tpl', 'unknown_handle'),
+        );
+    }
+
+    public function test_phase_b3_get_extent_returns_override_when_present(): void
+    {
+        $tpl = $this->stageTemplateWithLoaders();
+        $tpl->extents['my_handle'] = '/abs/path/override.tpl';
+
+        self::assertSame(
+            '/abs/path/override.tpl',
+            PiwigoExtension::getExtent('original.tpl', 'my_handle'),
+        );
+    }
+
+    public function test_phase_b3_get_combined_scripts_header_returns_marker(): void
+    {
+        $this->stageTemplateWithLoaders();
+
+        self::assertSame(
+            Template::COMBINED_SCRIPTS_TAG,
+            PiwigoExtension::getCombinedScripts(load: 'header'),
+        );
+    }
+
+    /**
+     * Reflection-construct a Template with usable loaders but no Smarty
+     * bootstrap. Registers it as the current template; the tearDown
+     * calls TemplateRegistry::reset() to keep tests isolated.
+     */
+    private function stageTemplateWithLoaders(): Template
+    {
+        $tpl = (new \ReflectionClass(Template::class))->newInstanceWithoutConstructor();
+        $tpl->scriptLoader = new ScriptLoader();
+        $tpl->cssLoader = new CssLoader();
+        TemplateRegistry::set($tpl);
+
+        return $tpl;
     }
 }

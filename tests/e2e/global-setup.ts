@@ -90,16 +90,29 @@ async function globalSetup(): Promise<void> {
     // Generate test images in galleries/Wallpapers/ using PHP GD.
     const wallpapersDir = path.join(REPO_ROOT, 'galleries', 'Wallpapers');
     fs.mkdirSync(wallpapersDir, { recursive: true });
-    const colors = ['220,50,50', '50,180,80', '50,100,220', '230,200,50', '150,60,200', '200,120,50', '50,180,180', '180,50,180', '100,180,50', '50,50,180'];
-    const phpScript = '<?php\n' + TEST_PHOTOS.map((p, i) => {
-        const [r, g, b] = colors[i % colors.length]!.split(',');
-        const label = path.basename(p, '.jpg');
-        return `$img = imagecreatetruecolor(800, 600);
+    const colors = [
+        '220,50,50',
+        '50,180,80',
+        '50,100,220',
+        '230,200,50',
+        '150,60,200',
+        '200,120,50',
+        '50,180,180',
+        '180,50,180',
+        '100,180,50',
+        '50,50,180',
+    ];
+    const phpScript =
+        '<?php\n' +
+        TEST_PHOTOS.map((p, i) => {
+            const [r, g, b] = colors[i % colors.length]!.split(',');
+            const label = path.basename(p, '.jpg');
+            return `$img = imagecreatetruecolor(800, 600);
 imagefill($img, 0, 0, imagecolorallocate($img, ${r}, ${g}, ${b}));
 imagestring($img, 5, 350, 280, "${label}", imagecolorallocate($img, 255, 255, 255));
 imagejpeg($img, "${p.replace(/\\/g, '/')}", 90);
 imagedestroy($img);`;
-    }).join('\n');
+        }).join('\n');
     const tmpScript = path.join(REPO_ROOT, '_data', 'gen-test-images.php');
     fs.writeFileSync(tmpScript, phpScript);
     await execAsync(`php ${tmpScript}`);
@@ -112,7 +125,10 @@ imagedestroy($img);`;
         await execAsync(
             `mysql -h${host} -P${port} -u${user} -p${pass} ${db} -sN -e "SELECT id FROM piwigo_images ORDER BY id"`
         )
-    ).stdout.trim().split('\n').filter(Boolean);
+    ).stdout
+        .trim()
+        .split('\n')
+        .filter(Boolean);
 
     for (let i = 0; i < fixtureImageIds.length; i++) {
         const id = fixtureImageIds[i];

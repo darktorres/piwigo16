@@ -28,7 +28,7 @@
 
   {if not empty($theme.AUTHOR)}
     {if not empty($theme.AUTHOR_URL)}
-      {assign var='author' value="<a href='%s'>%s</a>"|@sprintf:$theme.AUTHOR_URL:$theme.AUTHOR}
+      {assign var='author' value="<a href='%s'>%s</a>"|sprintf:$theme.AUTHOR_URL:$theme.AUTHOR}
     {else}
       {assign var='author' value='<u>'|cat:$theme.AUTHOR|cat:'</u>'}
     {/if}
@@ -53,7 +53,7 @@
         {'Version'|translate} {$version}
       </div>
       <div class="showInfo-dropdown-content">
-        {$theme.DESC|@escape:'html'}
+        {$theme.DESC|escape:'html'}
       </div>
       {if $theme.STATE != "active" and $CONF_ENABLE_EXTENSIONS_INSTALL}
         {if $theme.DELETABLE}

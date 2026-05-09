@@ -173,7 +173,7 @@
       {/foreach}
       </div>
       <div class="pluginDesc" >
-      {$plugin.BIG_DESC|@nl2br}
+      {$plugin.BIG_DESC|nl2br}
       </div>
     </div>
   </div>

@@ -57,11 +57,11 @@
       <input type="checkbox" name="filter_category_use" class="useFilterCheckbox" {if isset($filter.category)}checked="checked"{/if}>
       <p>{'Album'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
-      {* <select data-selectize="categories" data-value="{$filter_category_selected|@json_encode|escape:html}"
+      {* <select data-selectize="categories" data-value="{$filter_category_selected|json_encode|escape:html}"
         data-default="first" name="filter_category"></select> *}
         <div id="selectedAlbumFilterArea" {if !$filter_category_selected}hidden{/if}>
           <div class="selectedAlbum" id="selectedAlbumFilter">
-            <input type="hidden" name="filter_category" id="filterCategoryValue" value="{$filter_category_selected|@json_encode|escape:html}">
+            <input type="hidden" name="filter_category" id="filterCategoryValue" value="{$filter_category_selected|json_encode|escape:html}">
             <span class="icon-sitemap" id="selectedAlbumNameFilter">{$filter_category_selected_name}</span>
             <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
           </div>
@@ -76,7 +76,7 @@
       <input type="checkbox" name="filter_tags_use" class="useFilterCheckbox" {if isset($filter.tags)}checked="checked"{/if}>
       <p>{'Tags'|translate}</p>
       <a href="#" class="removeFilter" title="{'remove this filter'|translate}"><span>[x]</span></a>
-      <select data-selectize="tags" data-value="{$filter_tags|@json_encode|escape:html}"
+      <select data-selectize="tags" data-value="{$filter_tags|json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
         name="filter_tags[]" multiple class="u-w-600"></select>
       <label class="font-checkbox"><span class="icon-circle-empty"></span><span><input type="radio" name="tag_mode" value="AND" {if !isset($filter.tag_mode) or $filter.tag_mode eq 'AND'}checked="checked"{/if}> {'All tags'|translate}</span></label>

@@ -101,7 +101,7 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
 <div class="loading hide"> 
   <span class="icon-spin6 animate-spin"> </span>
@@ -184,6 +184,6 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
 {combine_css path="themes/admin/_base/css/pages/history.css"}

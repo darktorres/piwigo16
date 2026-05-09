@@ -30,7 +30,7 @@
 
   {if not empty($plugin.AUTHOR)}
     {if not empty($plugin.AUTHOR_URL)}
-      {assign var='author' value="<a href='%s'>%s</a>"|@sprintf:$plugin.AUTHOR_URL:$plugin.AUTHOR}
+      {assign var='author' value="<a href='%s'>%s</a>"|sprintf:$plugin.AUTHOR_URL:$plugin.AUTHOR}
     {else}
       {assign var='author' value='<u>'|cat:$plugin.AUTHOR|cat:'</u>'}
     {/if}

@@ -36,7 +36,7 @@
 			<div class="pagination-reload">
 				{if !empty($navbar) }
 				<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
-				{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+				{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 			</div>
 		</div>
 	</div>
@@ -140,11 +140,11 @@
 				</div>
 				<div class="full-line-tag-box" id="action_add_tags">
 					<strong>{'Tags'|translate}</strong>
-					<select id="tags" data-selectize="tags" data-value="{$element.TAGS|@json_encode|escape:html}"placeholder="{'Type in a search term'|translate}"data-create="true" name="tags" id="tags-{$element.id}[]" multiple></select>
+					<select id="tags" data-selectize="tags" data-value="{$element.TAGS|json_encode|escape:html}"placeholder="{'Type in a search term'|translate}"data-create="true" name="tags" id="tags-{$element.id}[]" multiple></select>
 				</div>
 				<div class="full-line-box" id="{$element.ID}">
-					<strong>{'Linked albums'|translate} <span class="linked-albums-badge {if $element.related_categories|@count < 1 } badge-red {/if}"> {$element.related_categories|@count} </span></strong>
-					{if $element.related_categories|@count 
+					<strong>{'Linked albums'|translate} <span class="linked-albums-badge {if $element.related_categories|count < 1 } badge-red {/if}"> {$element.related_categories|count} </span></strong>
+					{if $element.related_categories|count 
 					< 1}
 					<span class="orphan-photo">{'This photo is an orphan'|translate}</span>
 					{else}
@@ -162,7 +162,7 @@
 						</div>
 						{/foreach}
 					</div>
-					<div class="breadcrumb-item linked-albums add-item {if $element.related_categories|@count < 1 } highlight {/if}">
+					<div class="breadcrumb-item linked-albums add-item {if $element.related_categories|count < 1 } highlight {/if}">
 						<span class="icon-plus-circled"></span>
 						{'Add'|translate}
 					</div>
@@ -218,7 +218,7 @@
 		  		<div class="pagination-reload">
 		{if !empty($navbar) }
 			  		<a class="button-reload tiptip" title="{'Pagination has changed and needs to be reloaded !'|translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
-		{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+		{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 		  		</div>
 	  		</div>
   		</div>

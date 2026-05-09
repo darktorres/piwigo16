@@ -24,7 +24,7 @@
 		{if isset($comment.U_DELETE) or isset($comment.U_VALIDATE) or isset($comment.U_EDIT)}
 		<div class="actions">
 		{if isset($comment.U_DELETE)}
-			<a href="{$comment.U_DELETE}" data-confirm="{'Are you sure?'|translate|@escape:'html'}">
+			<a href="{$comment.U_DELETE}" data-confirm="{'Are you sure?'|translate|escape:'html'}">
 				{'Delete'|translate}
 			</a>{if isset($comment.U_VALIDATE) or isset($comment.U_EDIT) or isset($comment.U_CANCEL)} | {/if}
 		{/if}
@@ -53,12 +53,12 @@
 		<a name="edit_comment"></a>
 		<form method="post" action="{$comment.U_EDIT}" id="editComment">
 			<p><label for="contenteditid">{'Edit a comment'|translate} :</label></p>
-			<p><textarea name="content" id="contenteditid" rows="5" cols="80">{$comment.CONTENT|@escape}</textarea></p>
+			<p><textarea name="content" id="contenteditid" rows="5" cols="80">{$comment.CONTENT|escape}</textarea></p>
 			<p><label for="website_url">{'Website'|translate} :</label></p>
 			<p><input type="text" name="website_url" id="website_url" value="{$comment.WEBSITE_URL}" size="40"></p>
 			<p><input type="hidden" name="key" value="{$comment.KEY}">
 				<input type="hidden" name="pwg_token" value="{$comment.PWG_TOKEN}">
-				<input type="hidden" name="image_id" value="{$comment.IMAGE_ID|@default:$current.id}">
+				<input type="hidden" name="image_id" value="{$comment.IMAGE_ID|default:$current.id}">
 				<input type="submit" value="{'Submit'|translate}">
 			</p>
 		</form>

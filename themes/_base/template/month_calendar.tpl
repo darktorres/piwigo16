@@ -14,7 +14,7 @@
 		{if !isset($item.URL)}
 		<span class="calItem">{$item.LABEL}</span>
 		{else}
-		<a class="calItem"{if isset($item.NB_IMAGES)} title="{$item.NB_IMAGES|@translate_dec:'%d photo':'%d photos'}"{/if} href="{$item.URL}">{$item.LABEL}</a>
+		<a class="calItem"{if isset($item.NB_IMAGES)} title="{$item.NB_IMAGES|translate_dec:'%d photo':'%d photos'}"{/if} href="{$item.URL}">{$item.LABEL}</a>
 		{/if}
 		{/foreach}
 	{/if}
@@ -59,7 +59,7 @@
 	 			<div class="calBackDate">{$day.DAY}</div><div class="calForeDate">{$day.DAY}</div>
 	 			<div class="calImg">
 					<a href="{$day.U_IMG_LINK}">
- 						<img src="{$day.IMAGE}" alt="{$day.IMAGE_ALT}" title="{$day.NB_ELEMENTS|@translate_dec:'%d photo':'%d photos'}">
+ 						<img src="{$day.IMAGE}" alt="{$day.IMAGE_ALT}" title="{$day.NB_ELEMENTS|translate_dec:'%d photo':'%d photos'}">
 					</a>
 				</div>
  		{else}

@@ -16,7 +16,7 @@
 
 <div id="imageToolBar">
 <div class="imageNumber">{$PHOTO}</div>
-{include file='picture_nav_buttons.tpl'|@get_extent:'picture_nav_buttons'}
+{include file='picture_nav_buttons.tpl'|get_extent:'picture_nav_buttons'}
 
 <div class="actionButtons">
 {if isset($current.unique_derivatives) && count($current.unique_derivatives)>1}
@@ -208,7 +208,7 @@
 		<dt>{'Rating score'|translate}</dt>
 		<dd>
 		{if $rate_summary.count}
-			<span id="ratingScore">{$rate_summary.score}</span> <span id="ratingCount">({$rate_summary.count|@translate_dec:'%d rate':'%d rates'})</span>
+			<span id="ratingScore">{$rate_summary.score}</span> <span id="ratingCount">({$rate_summary.count|translate_dec:'%d rate':'%d rates'})</span>
 		{else}
 			<span id="ratingScore">{'no rate'|translate}</span> <span id="ratingCount"></span>
 		{/if}
@@ -225,9 +225,9 @@
 			<form action="{$rating.F_ACTION}" method="post" id="rateForm"
 			      data-root-url="{$ROOT_URL|escape}"
 			      data-image-id="{$current.id}"
-			      data-str-update-your-rating="{'Update your rating'|translate|@escape:'html'}"
-			      data-str-rate="{'%d rate'|translate|@escape:'html'}"
-			      data-str-rates="{'%d rates'|translate|@escape:'html'}">
+			      data-str-update-your-rating="{'Update your rating'|translate|escape:'html'}"
+			      data-str-rate="{'%d rate'|translate|escape:'html'}"
+			      data-str-rates="{'%d rates'|translate|escape:'html'}">
 			<div>
 			{foreach from=$rating.marks item=mark name=rate_loop}
 			{if isset($rating.USER_RATE) && $mark==$rating.USER_RATE}
@@ -266,7 +266,7 @@
 
 {if isset($COMMENT_COUNT)}
 <div id="comments" {if (!isset($comment_add) && ($COMMENT_COUNT == 0))}class="noCommentContent"{else}class="commentContent"{/if}><div id="commentsSwitcher"></div>
-	<h3>{$COMMENT_COUNT|@translate_dec:'%d comment':'%d comments'}</h3>
+	<h3>{$COMMENT_COUNT|translate_dec:'%d comment':'%d comments'}</h3>
 
 	<div id="pictureComments">
 		{if isset($comment_add)}
@@ -299,7 +299,7 @@
 					{if $COMMENT_COUNT > 2}
 						<a href="{$COMMENTS_ORDER_URL}#comments" rel="nofollow" class="commentsOrder">{$COMMENTS_ORDER_TITLE}</a>
 					{/if}
-					{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+					{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 				</div>
 			{/if}
 			{$COMMENT_LIST}

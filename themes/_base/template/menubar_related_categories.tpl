@@ -8,7 +8,7 @@
   <ul>
   {else}
     </li>
-    {'</ul></li>'|@str_repeat:($ref_level-$cat.LEVEL)}
+    {'</ul></li>'|str_repeat:($ref_level-$cat.LEVEL)}
   {/if}
     <li>
   {if isset($cat.TITLE)}
@@ -24,5 +24,5 @@
   {/if}
   {assign var='ref_level' value=$cat.LEVEL}
 {/foreach}
-{'</li></ul>'|@str_repeat:$ref_level}
+{'</li></ul>'|str_repeat:$ref_level}
 </dd>

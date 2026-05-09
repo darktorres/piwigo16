@@ -39,7 +39,7 @@
 
 	<ul class="thumbnails" style="--bm-thumb-w:{$thumb_params->maxWidth()+2}px;--bm-thumb-h:{$thumb_params->maxHeight()+25}px">
 		{foreach from=$thumbnails item=thumbnail}
-		{assign var='isSelected' value=$thumbnail.id|@in_array:$selection}
+		{assign var='isSelected' value=$thumbnail.id|in_array:$selection}
 		<li{if $isSelected} class="thumbSelected"{/if}>
 			<span class="wrap1">
 				<label class="font-checkbox">
@@ -52,7 +52,7 @@
 						{if $thumbnail.level > 0}
 						<em class="levelIndicatorF" title="{'Who can see these photos?'|translate} : ">{'Level %d'|translate|sprintf:$thumbnail.level}</em>
 						{/if}
-						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|@escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
+						<img src="{$thumbnail.thumb->getUrl()}" alt="{$thumbnail.file}" title="{$thumbnail.TITLE|escape:'html'}" {$thumbnail.thumb->getSizeHtm()}>
 					</span>
 				</label>
 			</span>
@@ -70,7 +70,7 @@
       <a href="{$U_DISPLAY}&amp;display=all">{'all'|translate}</a>
     </div>
 
-    {include file='navigation_bar.tpl'|@get_extent:'navbar'}
+    {include file='navigation_bar.tpl'|get_extent:'navbar'}
   </div>
   {/if}
 

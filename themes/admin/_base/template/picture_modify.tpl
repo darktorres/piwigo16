@@ -59,7 +59,7 @@
     <p>
       <strong>{'Title'|translate}</strong>
       <br>
-      <input type="text" class="large" name="name" value="{$NAME|@escape}">
+      <input type="text" class="large" name="name" value="{$NAME|escape}">
     </p>
 
     <p>
@@ -80,8 +80,8 @@
     </p>
 
     <p>
-      <strong>{'Linked albums'|translate} <span class="linked-albums-badge {if $related_categories|@count < 1 } badge-red {/if}"> {$related_categories|@count} </span></strong>
-      {if $related_categories|@count < 1}
+      <strong>{'Linked albums'|translate} <span class="linked-albums-badge {if $related_categories|count < 1 } badge-red {/if}"> {$related_categories|count} </span></strong>
+      {if $related_categories|count < 1}
         <span class="orphan-photo">{'This photo is an orphan'|translate}</span>
       {else}
         <span class="orphan-photo"></span>
@@ -97,13 +97,13 @@
       <div class="breadcrumb-item"><span class="link-path">{$cat_path['name']}</span>{if $cat_path['unlinkable']}<span id="{$key}" class="icon-cancel-circled remove-item"></span>{else}<span id="{$key}" class="icon-help-circled help-item tiptip" title="{'This picture is physically linked to this album, you can\'t dissociate them'|translate}"></span>{/if}</div>
       {/foreach}
       </div>
-      <div class="breadcrumb-item linked-albums add-item {if $related_categories|@count < 1 } highlight {/if}"><span class="icon-plus-circled"></span>{'Add'|translate}</div>
+      <div class="breadcrumb-item linked-albums add-item {if $related_categories|count < 1 } highlight {/if}"><span class="icon-plus-circled"></span>{'Add'|translate}</div>
     </p>
 
     <p>
       <strong>{'Representation of albums'|translate}</strong>
       <br>
-      <select data-selectize="categories" data-value="{$represented_albums|@json_encode|escape:html}"
+      <select data-selectize="categories" data-value="{$represented_albums|json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
         name="represent[]" multiple class="picture-modify-tomselect"></select>
     </p>
@@ -111,7 +111,7 @@
     <p>
       <strong>{'Tags'|translate}</strong>
       <br>
-      <select data-selectize="tags" data-value="{$tag_selection|@json_encode|escape:html}"
+      <select data-selectize="tags" data-value="{$tag_selection|json_encode|escape:html}"
         placeholder="{'Type in a search term'|translate}"
         data-create="true" name="tags[]" multiple class="picture-modify-tomselect"></select>
     </p>

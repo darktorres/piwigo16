@@ -32,7 +32,7 @@
       {'Album'|translate}<a href="#" id="removeAlbumFilter" class="icon-cancel-circled"></a>
       <select
         data-selectize="categories"
-        data-value="{$category|@json_encode|escape:html}"
+        data-value="{$category|json_encode|escape:html}"
         placeholder="{'No filter on album. Select one or type to search'|translate}"
         name="cat"
         class="rating-album-filter-select"
@@ -50,7 +50,7 @@
   </fieldset>
 </form>
 
-{if !empty($navbar) }{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}
 
 <table class="rating-table">
 <tr class="throw">
@@ -86,4 +86,4 @@
 </table>
 {combine_script id='core.scripts' load='async' path='themes/_base/js/scripts.js'}
 
-{if !empty($navbar)}{include file='navigation_bar.tpl'|@get_extent:'navbar'}{/if}
+{if !empty($navbar)}{include file='navigation_bar.tpl'|get_extent:'navbar'}{/if}

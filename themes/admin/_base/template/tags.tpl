@@ -141,14 +141,14 @@
   </div>
 </div>
 
-<div class='tag-container' data-tags='{$data|@json_encode|escape:html}' data-per_page={$per_page}>
+<div class='tag-container' data-tags='{$data|json_encode|escape:html}' data-per_page={$per_page}>
   {foreach from=$first_tags item=tag}
   <div class='tag-box' data-id='{$tag.id}' data-selected='0'>
   {if isset($tag.counter)}
     {tagContent 
         tag_name = $tag.name
-        tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name']
-        tag_U_EDIT = '%s&amp;filter=tag-%s'|@sprintf:$BATCH_MANAGER_URL:$tag['id']
+        tag_U_VIEW = 'index.php?/tags/%s-%s'|sprintf:$tag['id']:$tag['url_name']
+        tag_U_EDIT = '%s&amp;filter=tag-%s'|sprintf:$BATCH_MANAGER_URL:$tag['id']
         has_image = ($tag.counter > 0)
         tag_count = $tag.counter
         tag_raw_name = $tag.raw_name
@@ -156,8 +156,8 @@
   {else}
     {tagContent 
         tag_name = $tag.name
-        tag_U_VIEW = 'index.php?/tags/%s-%s'|@sprintf:$tag['id']:$tag['url_name']
-        tag_U_EDIT = '%s&amp;filter=tag-%s'|@sprintf:$BATCH_MANAGER_URL:$tag['id']
+        tag_U_VIEW = 'index.php?/tags/%s-%s'|sprintf:$tag['id']:$tag['url_name']
+        tag_U_EDIT = '%s&amp;filter=tag-%s'|sprintf:$BATCH_MANAGER_URL:$tag['id']
         has_image = false
         tag_count = 0
         tag_raw_name = $tag.raw_name

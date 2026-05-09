@@ -44,7 +44,7 @@
                       {if $c13y.show_correction_success_fct or !empty($c13y.correction_error_fct) or $c13y.show_correction_fct or $c13y.show_correction_bad_fct }
                         <br>
                       {/if}
-                      {$c13y.correction_msg|@nl2br}
+                      {$c13y.correction_msg|nl2br}
                     {/if}
                   </label>
                 </td>

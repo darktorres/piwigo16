@@ -30,7 +30,7 @@
 {if count($groups) > 0}
     <strong>{'Permission granted for groups'|translate}</strong>
     <br>
-    <select data-selectize="groups" data-value="{$groups_selected|@json_encode|escape:html}"
+    <select data-selectize="groups" data-value="{$groups_selected|json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
       name="groups[]" multiple class="u-w-600"></select>
 {else}
@@ -41,7 +41,7 @@
   <p>
     <strong>{'Permission granted for users'|translate}</strong>
     <br>
-    <select data-selectize="users" data-value="{$users_selected|@json_encode|escape:html}"
+    <select data-selectize="users" data-value="{$users_selected|json_encode|escape:html}"
       placeholder="{'Type in a search term'|translate}"
       name="users[]" multiple class="u-w-600"></select>
   </p>

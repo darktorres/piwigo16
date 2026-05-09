@@ -3,7 +3,7 @@
 {if isset($block->data.qsearch) and  $block->data.qsearch==true}
 	<form action="{$ROOT_URL}qsearch.php" method="get" id="quicksearch">
 		<p class="u-reset-margin"{*this <p> is for html validation only - does not affect positioning*}>
-			<input type="text" name="q" id="qsearchInput" placeholder="{'Quick search'|translate|@escape:'html'}" required class="u-w-90p"{if !empty($QUERY_SEARCH)} value="{$QUERY_SEARCH}"{/if}>
+			<input type="text" name="q" id="qsearchInput" placeholder="{'Quick search'|translate|escape:'html'}" required class="u-w-90p"{if !empty($QUERY_SEARCH)} value="{$QUERY_SEARCH}"{/if}>
 		</p>
 	</form>
 {/if}

@@ -34,12 +34,12 @@ final class PwgSessionTest extends TestCase
         }
     }
 
-    public function test_gc_return_type_is_int_or_false(): void
+    public function test_gc_return_type_is_int(): void
     {
         $ref = new \ReflectionMethod(PwgSession::class, 'gc');
         $returnType = $ref->getReturnType();
         self::assertNotNull($returnType);
-        self::assertSame('int|false', (string) $returnType);
+        self::assertSame('int', (string) $returnType);
     }
 
     public function test_read_return_type_is_string(): void

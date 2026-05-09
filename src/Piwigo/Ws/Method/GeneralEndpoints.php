@@ -9,6 +9,7 @@ use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -65,6 +66,19 @@ final class GeneralEndpoints
                 $bytes += $entry->getSize();
             }
         }
+        return $bytes;
+    }
+
+    private function cacheSizeWithTtl(): int
+    {
+        $persistentCache = PersistentCacheRegistry::current();
+        $cacheKey        = $persistentCache->makeKey('ws_cache_size');
+        $value           = null;
+        if ($persistentCache->get($cacheKey, $value) && is_int($value)) {
+            return $value;
+        }
+        $bytes = $this->directorySizeBytes(Config::dataLocation() . 'cache') ?? 0;
+        $persistentCache->set($cacheKey, $bytes, 300);
         return $bytes;
     }
 
@@ -174,7 +188,7 @@ final class GeneralEndpoints
         if ($infos['nb_comments'] > 0) {
             $infos['nb_unvalidated_comments'] = $comRepo->countUnvalidated();
         }
-        $infos['cache_size'] = 4242;
+        $infos['cache_size'] = $this->cacheSizeWithTtl();
         $output = [];
         foreach ($infos as $name => $value) {
             $output[] = ['name' => $name, 'value' => $value];

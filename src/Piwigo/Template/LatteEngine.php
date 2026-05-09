@@ -6,9 +6,11 @@ namespace Piwigo\Template;
 
 use Latte\Engine;
 use Latte\Feature;
+use Latte\Policy;
 use Piwigo\Config\Config;
 use Piwigo\Core\Util;
 use Piwigo\Template\Latte\PiwigoExtension;
+use Piwigo\Template\Latte\PiwigoPolicy;
 
 /**
  * Latte template engine, paired with Smarty during the §1.2 Wave 2
@@ -26,12 +28,16 @@ final class LatteEngine implements TemplateEngine
     /** @var array<string, mixed> */
     private array $assigns = [];
 
-    public function __construct(string $cacheDirectory)
+    public function __construct(string $cacheDirectory, ?Policy $policy = null)
     {
         $this->engine = new Engine();
         $this->engine->setFeature(Feature::StrictTypes);
         $this->engine->setCacheDirectory($cacheDirectory);
         $this->engine->addExtension(new PiwigoExtension());
+        if ($policy !== null) {
+            $this->engine->setPolicy($policy);
+            $this->engine->setSandboxMode();
+        }
     }
 
     /**
@@ -51,6 +57,25 @@ final class LatteEngine implements TemplateEngine
         Util::mkgetdir($cacheDir);
 
         return new self($cacheDir);
+    }
+
+    /**
+     * Sandboxed engine for plugin-supplied templates. Renders under
+     * {@see PiwigoPolicy::createPluginPolicy()} — default-deny, allowing
+     * structural tags, escape filters, the translation pair, and a small
+     * set of read-only Piwigo helpers. Plugin templates that try to call
+     * `{php}`, `{include}`, the asset-pipeline functions, or the
+     * filesystem-touching filters fail at compile time.
+     *
+     * The cache directory is segregated from the trusted-engine cache so
+     * a malicious plugin can't poison the core compile cache.
+     */
+    public static function sandboxed(): self
+    {
+        $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte_plugin';
+        Util::mkgetdir($cacheDir);
+
+        return new self($cacheDir, PiwigoPolicy::createPluginPolicy());
     }
 
     #[\Override]

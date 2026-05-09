@@ -11,7 +11,7 @@
 | §   | Section                       | Status                 | Effort    | TL;DR                                                                  |
 | --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9  | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)  |
-| 1.2 | Templates pipeline            | 🟢 Active ▸ W2 D.admin 70/70 · 71/137 .latte | XL | wave 1 hygiene done → wave 2 Latte foundation + plugin port + converter iterating + admin fully converted → wave 3 precompile |
+| 1.2 | Templates pipeline            | 🟢 Active ▸ W2 D.admin 70/70 · 71/137 .latte | XL | wave 1 hygiene done → wave 2 Latte foundation + converter iterating + admin fully converted → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**     | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                      |
 | 1.5 | Type correctness              | 🟡 **Not started**     | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata |
@@ -20,7 +20,7 @@
 | 2.1 | TS `any` reduction            | 🟡 **Not started**     | M         | 478 → ≤250 patterns                                                    |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**     | M         | TS unit-test runner + first wave                                       |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**     | S         | per-entrypoint gzip limits in CI                                       |
-| 2.4 | Vendored library migration    | 🟢 **Active** ▸ 1 / 5  | L         | Tiers 1, 3, 4, 5 (Tier 2 shipped)                                      |
+| 2.4 | Vendored library migration    | 🟡 **Not started**     | S         | Open Sans webfonts → `@fontsource` (scope shrunk after bundled-plugin removal) |
 | 3.1 | CSS design tokens + Stylelint | 🟢 **Active** ▸ 3 / 13 | M         | 10 live steps remaining                                                |
 | 3.2 | A11y audit (axe-core)         | 🟡 **Not started**     | M         | WCAG 2.1 AA gating                                                     |
 
@@ -298,29 +298,26 @@ document.addEventListener('click', e => {
 
 #### Wave 2 — Smarty → Latte conversion
 
-**Status:** 🟢 Active ▸ Phase A + B done · 1 / 137 .latte · **Effort:** XL · depends on Wave 1
+**Status:** 🟢 Active ▸ Phase A + B + C + D.admin done · 71 / 137 .latte · **Effort:** XL · depends on Wave 1
 
 ##### Phase progress
 
-| Phase | Scope                                                              | Status | Commit       |
-| ----- | ------------------------------------------------------------------ | ------ | ------------ |
-| A     | latte/latte 3.1, `TemplateEngine` interface, `LatteEngine`, `PiwigoExtension` (translate, translate_dec) + 7 unit tests | 🟢 Done | `df48487e0`  |
-| A.tooling | `composer lint:latte` wrapper around `Latte\Tools\Linter` + parallel CI job | 🟢 Done | `4006fe658` |
-| A.tooling+ | `efabrica/phpstan-latte` vendored fork (PHP 8.5 + Latte 3.1 patches), engine bootstrap, custom `PiwigoLatteEngineResolver` | 🟢 Done | `52711928b` |
-| B.1+B.2 | 18 PHP-passthrough filters + 8 stateless custom modifiers (l10n, explode, ternary, url_is_remote, is_admin, is_classic_user, get_device, get_gallery_home_url, get_extent) | 🟢 Done | `b438b50ec` |
-| B.3   | 8 stateful asset functions (combineScript, getCombinedScripts, combineCss, getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript) sharing `TemplateRegistry::current()` state | 🟢 Done | `2536ae99d` |
-| B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | 🟢 Done | `037d9bff3` |
-| B.5   | `LatteEngine::default()` factory using Piwigo's data location | 🟢 Done | `037d9bff3` |
-| B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | 🟢 Done | `037d9bff3` |
-| C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool — 49 unit tests pin behavior. Covers: foreach (with optional `name=`), dot-access, if-not (any expression), Smarty operator keywords (`eq`/`neq`/`ne`/`gt`/`lt`/`gte`/`lte`/`is odd`/`is even`), `{else if}`→`{elseif}`, escape filter (any arg form), combine_script/css/get_combined_*, define_derivative, include path, printed-literal filter prefix, assign (named + positional, parenthesizes pipes), section→foreach, capture, literal, strip→spaceless, html_head/style/footer_script blocks, regex_replace→replaceRe, multi-arg pipe `:`→`,`, function definition (named + positional, dedupes Smarty 5 dual-form declarations), `$smarty.foreach.X.{index,iteration,first,last,total}`→`$iterator->*`. CLI driver gains `--force` flag (default skips existing `.latte` so manual `\|noescape` annotations aren't lost). | 🟢 Iterating | `4b4ac7d5f` + this commit |
-| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟢 Done · **70 / 70 lint-clean**. Iteration 3 lifted the remaining 32 templates by registering `htmlOptions` / `htmlRadios` / `math` as PiwigoExtension functions (Smarty plugin ports), adding converter rules for `{counter}` strip, user-defined function call → `{include NAME, k: v, …}` rewrite, embedded `{$X}` print sub-tags inside `{if}`/`{elseif}`/`{var}`, Smarty backtick string interpolation → `.` concat (Latte's `~` is rejected inside function-call args), Smarty 5 `$item@index/iteration/first/last/total/key` iterator-attribute syntax, `{if X}{break}{/if}` → `{breakIf X}` idiom, pipe-in-`{if}` (`$x|count` → `count($x)`), nested-`:{round(...)}` filter-arg unwrap, `$arr.$varname` (variable-index dot-access), `{capture assign=NAME}` keyword variant, and an extended args parser that accepts `key = value` (with whitespace) plus expressions containing `,` `:` `|` `()`. Two templates needed hand-fixes that don't generalise: `header.latte` (JSON config script tag rebuilt with `\|json_encode\|noescape` since Latte rejects `{$X}` print-statements inside JS string literals) and `queue.tpl` source (HTML attribute quoting flipped to single-quoted to escape inner `"` chars in the Smarty translate-string literal). | M |
-| D.public | Convert ~50 public theme templates (`themes/_base/template/`) | 🟡 Not started · 0 / 55 done | — |
-| D.standard_pages | Convert 7 templates in `themes/standard_pages/` (login/register/password/profile + mail) | 🟡 Not started | — |
-| D.plugins | Convert ~31 templates across the 5 bundled plugins, one plugin per commit | 🟡 Not started | — |
-| E     | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates | 🟡 Not started | — |
-| F     | Drop `smarty/smarty` (gated on D.* + plugin deprecation window) | 🟡 Not started | — |
-
-Total .latte: 1 (help.latte) of 137 target.
+| Phase | Scope                                                              | Status |
+| ----- | ------------------------------------------------------------------ | ------ |
+| A     | latte/latte 3.1, `TemplateEngine` interface, `LatteEngine`, `PiwigoExtension` (translate, translate_dec) + 7 unit tests | 🟢 Done |
+| A.tooling | `composer lint:latte` wrapper around `Latte\Tools\Linter` + parallel CI job | 🟢 Done |
+| A.tooling+ | `efabrica/phpstan-latte` vendored fork (PHP 8.5 + Latte 3.1 patches), engine bootstrap, custom `PiwigoLatteEngineResolver` | 🟢 Done |
+| B.1+B.2 | 18 PHP-passthrough filters + 8 stateless custom modifiers (l10n, explode, ternary, url_is_remote, is_admin, is_classic_user, get_device, get_gallery_home_url, get_extent) | 🟢 Done |
+| B.3   | 8 stateful asset functions (combineScript, getCombinedScripts, combineCss, getCombinedCss, defineDerivative, htmlHead, htmlStyle, footerScript) sharing `TemplateRegistry::current()` state | 🟢 Done |
+| B.4   | prefilter_white_space + postfilterLanguage documented as intentionally not ported | 🟢 Done |
+| B.5   | `LatteEngine::default()` factory using Piwigo's data location | 🟢 Done |
+| B.6   | First template conversion: `themes/admin/_base/template/help.latte` (parallel with the .tpl) + 2 integration tests | 🟢 Done |
+| C     | `tools/smarty-to-latte/convert.php` mechanical rewrite tool — 49 unit tests pin behavior. Covers: foreach (with optional `name=`), dot-access, if-not (any expression), Smarty operator keywords (`eq`/`neq`/`ne`/`gt`/`lt`/`gte`/`lte`/`is odd`/`is even`), `{else if}`→`{elseif}`, escape filter (any arg form), combine_script/css/get_combined_*, define_derivative, include path, printed-literal filter prefix, assign (named + positional, parenthesizes pipes), section→foreach, capture, literal, strip→spaceless, html_head/style/footer_script blocks, regex_replace→replaceRe, multi-arg pipe `:`→`,`, function definition (named + positional, dedupes Smarty 5 dual-form declarations), `$smarty.foreach.X.{index,iteration,first,last,total}`→`$iterator->*`. CLI driver gains `--force` flag (default skips existing `.latte` so manual `\|noescape` annotations aren't lost). | 🟢 Iterating |
+| D.admin | Convert ~55 admin templates (`themes/admin/_base/template/`) | 🟢 Done · **70 / 70 lint-clean**. Iteration 3 lifted the remaining 32 templates by registering `htmlOptions` / `htmlRadios` / `math` as PiwigoExtension functions (Smarty plugin ports), adding converter rules for `{counter}` strip, user-defined function call → `{include NAME, k: v, …}` rewrite, embedded `{$X}` print sub-tags inside `{if}`/`{elseif}`/`{var}`, Smarty backtick string interpolation → `.` concat (Latte's `~` is rejected inside function-call args), Smarty 5 `$item@index/iteration/first/last/total/key` iterator-attribute syntax, `{if X}{break}{/if}` → `{breakIf X}` idiom, pipe-in-`{if}` (`$x|count` → `count($x)`), nested-`:{round(...)}` filter-arg unwrap, `$arr.$varname` (variable-index dot-access), `{capture assign=NAME}` keyword variant, and an extended args parser that accepts `key = value` (with whitespace) plus expressions containing `,` `:` `|` `()`. Two templates needed hand-fixes that don't generalise: `header.latte` (JSON config script tag rebuilt with `\|json_encode\|noescape` since Latte rejects `{$X}` print-statements inside JS string literals) and `queue.tpl` source (HTML attribute quoting flipped to single-quoted to escape inner `"` chars in the Smarty translate-string literal). |
+| D.public | Convert ~50 public theme templates (`themes/_base/template/`) | 🟡 Not started · 0 / 55 done |
+| D.standard_pages | Convert 7 templates in `themes/standard_pages/` (login/register/password/profile + mail) | 🟡 Not started |
+| E     | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates | 🟡 Not started |
+| F     | Drop `smarty/smarty` (gated on D.* + plugin deprecation window) | 🟡 Not started |
 
 ##### Engine architecture
 
@@ -458,8 +455,6 @@ Templates convert in waves, low-risk first:
 2. **Public theme `_base`** — ~50 files in `themes/_base/template/`.
 3. **`standard_pages`** — 7 files (login, register, password, profile)
    plus mail templates.
-4. **Plugin templates** — ~31 files across the 5 bundled plugins. One
-   plugin per commit.
 
 ##### Mechanical conversion helpers
 
@@ -761,8 +756,8 @@ namespace Piwigo\Plugin;
 
 interface PluginInterface
 {
-    public function getId(): string;             // 'piwigo-openstreetmap'
-    public function getVersion(): string;        // '1.4.0'
+    public function getId(): string;             // e.g. 'my-plugin'
+    public function getVersion(): string;        // e.g. '1.4.0'
     public function getName(): string;           // human-readable
 
     public function boot(ContainerInterface $c): void;
@@ -880,13 +875,13 @@ No name constant is needed — there is only one fork, so the presence of
 
 ```json
 {
-  "id": "piwigo-openstreetmap",
+  "id": "my-plugin",
   "version": "1.4.0",
-  "name": "OpenStreetMap",
+  "name": "My Plugin",
   "minPiwigo": "16.0",
   "minForkVersion": "1.0",
-  "main": "Piwigo\\Plugin\\OpenStreetMap\\Plugin",
-  "autoload": { "psr-4": { "Piwigo\\Plugin\\OpenStreetMap\\": "src/" } }
+  "main": "Piwigo\\Plugin\\MyPlugin\\Plugin",
+  "autoload": { "psr-4": { "Piwigo\\Plugin\\MyPlugin\\": "src/" } }
 }
 ```
 
@@ -900,34 +895,27 @@ the migration window the legacy bridge loads old plugins that have no
 autoload, instantiates the main class, and calls `boot()`. The plugin
 admin UI reads `plugin.json` instead of parsing `main.inc.php` headers.
 
-##### Migration walkthrough — `LocalFilesEditor`
+##### Migration walkthrough — generic plugin
 
-Existing layout:
+Existing layout (legacy plugin):
 
 ```
-plugins/LocalFilesEditor/
+plugins/<id>/
   main.inc.php             # registers handlers via add_event_handler()
   maintain.inc.php         # extends PluginMaintain
   include/                 # tab handlers
-  codemirror/              # vendored library (Tier 5 of TS 2.4)
   template/                # Smarty .tpl files
 ```
 
 Post-migration:
 
 ```
-plugins/LocalFilesEditor/
+plugins/<id>/
   plugin.json              # declarative manifest
   src/
     Plugin.php             # implements PluginInterface
     Maintain.php           # implements lifecycle methods
-    Tab/
-      ConfigTab.php
-      CssTab.php
-      TplTab.php
-      LangTab.php
-      PluginTab.php
-  template/                # Latte .latte files (after 1.2 wave 4)
+  template/                # Latte .latte files
 ```
 
 Steps to migrate one plugin (one commit each, in order):
@@ -939,7 +927,7 @@ Steps to migrate one plugin (one commit each, in order):
 3. Convert `maintain.inc.php` to a `Maintain` class implementing the
    lifecycle methods.
 4. Add `plugin.json`.
-5. Convert templates to Latte (folded into 1.2 Wave 2).
+5. Convert templates to Latte using `tools/smarty-to-latte/convert.php`.
 
 ##### DI for plugins
 
@@ -958,16 +946,6 @@ public function boot(ContainerInterface $c): void
 Keep the legacy API working through one minor release with
 `E_USER_DEPRECATED`. Plan removal one major release later. Document the
 timeline in `docs/PLUGIN-DEVELOPMENT.md`.
-
-##### Bundled plugins to migrate
-
-One commit per plugin:
-
-- `LocalFilesEditor`
-- `nbc_ThemeChanger`
-- `piwigo-openstreetmap`
-- `piwigo-videojs`
-- `user_tags`
 
 #### Phase 2 — Themes
 
@@ -1080,9 +1058,8 @@ final readonly class ThemeChanged
 }
 ```
 
-Plugins (notably `nbc_ThemeChanger`) subscribe to this instead of using
-procedural hooks. `ThemeRegistry::activate($id)` dispatches it after the
-swap.
+Plugins subscribe to this instead of using procedural hooks.
+`ThemeRegistry::activate($id)` dispatches it after the swap.
 
 ##### Bundled themes to migrate
 
@@ -1099,7 +1076,7 @@ One commit per theme:
    `themes/admin/<id>/src/`).
 3. Move `themeconf.inc.php` side-effects into `boot()`.
 4. Convert `ThemeMaintain` callers to the new lifecycle methods.
-5. Convert templates to Latte (folded into 1.2 Wave 4).
+5. Convert templates to Latte (folded into 1.2 Wave 2 — D.public / D.standard_pages).
 6. Replace `themeconf.inc.php` with a one-liner that throws
    `E_USER_DEPRECATED` if any legacy code reaches for `$themeconf`
    directly.
@@ -1190,18 +1167,13 @@ curl -s 'http://localhost/index.php?/ws?_openapi=json' \
   | php -r 'echo json_decode(file_get_contents("php://stdin"))->info->title;'
 # → Piwigo Web Services
 
-# All bundled plugins use the new API:
-for p in plugins/*/; do
-  test -f "$p/plugin.json" || echo "MISSING: $p"
-done
-
-# Legacy bridge still works:
+# Legacy bridge still works for third-party plugins:
 vendor/bin/phpunit --filter LegacyEventBridgeTest
 
 # Event dispatcher conforms to PSR-14:
 php -r 'echo (new Piwigo\Event\EventDispatcher) instanceof Psr\EventDispatcher\EventDispatcherInterface ? "ok" : "fail";'
 
-# E2E with all plugins activated:
+# E2E with the empty plugins/ tree:
 npx playwright test
 ```
 
@@ -1741,17 +1713,17 @@ plugins can use short keys without colliding.
 ##### `--target=<path>` flag on `tools/build-config-accessors.php`
 
 The generator currently regenerates `src/Piwigo/Config/Config.php` only.
-Add a `--target=<path>` flag so per-plugin `Config` classes regenerate
-from the same tool:
+Add a `--target=<path>` flag so future per-plugin `Config` classes (or
+any other generated accessor target) regenerate from the same tool:
 
 ```bash
 php tools/build-config-accessors.php   # default — Piwigo Config
-php tools/build-config-accessors.php --target=plugins/LocalFilesEditor/src/Config.php
+php tools/build-config-accessors.php --target=plugins/<id>/src/Config.php
 php tools/build-config-accessors.php --check   # CI guard — no diff
 ```
 
-Running with `--check` in CI catches accessor/SCHEMA drift across all
-Config classes (Piwigo + the 4 plugin ones).
+Running with `--check` in CI catches accessor/SCHEMA drift across every
+target the build script knows about.
 
 ---
 
@@ -2305,41 +2277,32 @@ the PR description citing the trade-off."
 
 ### 2.4 Vendored library migration
 
-**Status:** 🟢 Active ▸ 1 of 5 tiers done · **Effort:** L · 4 tiers remain
+**Status:** 🟡 Not started · **Effort:** S · webfonts only after the bundled-plugin removal
 
-Replace third-party JS/CSS libraries currently checked into the repo
-under `plugins/`, `themes/admin/`, and `themes/standard_pages/fonts/`
-with versioned npm dependencies. Outcome: a single canonical version per
-library, no ~12 MB of stale `video-js-{4,5,6,7}` mirrors, and a clean
-Stylelint/ESLint scope (vendor stops appearing in lint output by virtue
-of being in `node_modules/`).
+The original scope of this section was the vendored libraries inside the
+five bundled plugins (video.js mirrors, Leaflet 0.7, CodeMirror v2,
+tablesorter, jquery.addtags). With those plugins removed from core, the
+only remaining vendored asset that warrants an npm migration is the Open
+Sans webfont, kept under `themes/`.
 
 ##### Inventory
 
-| Lib                     | Location                                                          | Pinned version                  | Approx size | npm package                                                                                                                                               |
-| ----------------------- | ----------------------------------------------------------------- | ------------------------------- | ----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| video.js (×4 mirrors)   | `plugins/piwigo-videojs/video-js-{4,5,6,7}/`                      | 4.12.15 / 5.x / 6.12.1 / 7.21.5 |      ~12 MB | `video.js`                                                                                                                                                |
-| Leaflet                 | `plugins/piwigo-openstreetmap/leaflet/leaflet.js`                 | **0.7.7** (2015)                |     ~135 KB | `leaflet`                                                                                                                                                 |
-| Leaflet plugins (×8)    | `plugins/piwigo-openstreetmap/leaflet/*`                          | all 0.7-era                     |     ~500 KB | `leaflet.markercluster`, `leaflet-search`, `leaflet.contextmenu`, `leaflet-providers`, `leaflet.elevation`, `leaflet-control-minimap`, `leaflet-omnivore` |
-| CodeMirror              | `plugins/LocalFilesEditor/codemirror/`                            | ~v2 (1915 LOC)                  |      ~70 KB | `codemirror`                                                                                                                                              |
-| Open Sans webfont       | `themes/admin/_base/fonts/open-sans/`                             | locally generated subset        |     ~250 KB | `@fontsource/open-sans`                                                                                                                                   |
-| Open Sans variable font | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf` | Google Fonts dump               |     ~340 KB | `@fontsource-variable/open-sans`                                                                                                                          |
-| jQuery tablesorter      | `plugins/nbc_ThemeChanger/include/jquery.tablesorter.js`          | ancient                         |      ~15 KB | `tablesorter`                                                                                                                                             |
-| jquery.addtags          | `plugins/user_tags/js/jquery.addtags.js`                          | packed/obfuscated               |       ~3 KB | replace with `tom-select` (drops jQuery dep)                                                                                                              |
+| Lib                     | Location                                                          | Pinned version           | Approx size | npm package                       |
+| ----------------------- | ----------------------------------------------------------------- | ------------------------ | ----------: | --------------------------------- |
+| Open Sans webfont       | `themes/admin/_base/fonts/open-sans/`                             | locally generated subset |     ~250 KB | `@fontsource/open-sans`           |
+| Open Sans variable font | `themes/standard_pages/fonts/OpenSans-VariableFont_wdth,wght.ttf` | Google Fonts dump        |     ~340 KB | `@fontsource-variable/open-sans`  |
 
 Stays as static asset (cannot move to npm):
 
-- Fontello custom-glyph subsets in `themes/admin/_base/fontello/`,
-  `themes/_base/vendor/fontello/`, `plugins/piwigo-openstreetmap/fontello/`
-  — project-specific glyph builds, not packageable.
+- Fontello custom-glyph subsets in `themes/admin/_base/fontello/` and
+  `themes/_base/vendor/fontello/` — project-specific glyph builds, not
+  packageable.
 - Bundled themes (`themes/elegant`, `themes/modus`, `themes/smartpocket`,
   `themes/bootstrap_darkroom`) — themes, not libs, out of 16.x core scope.
 - `themes/_base/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no
   maintenance burden.
 
-##### Tier 1 — Quick wins (S each)
-
-Each item is ≤1 day:
+##### Steps
 
 ```bash
 npm i @fontsource/open-sans
@@ -2347,86 +2310,31 @@ npm i @fontsource/open-sans
 git rm -r themes/admin/_base/fonts/open-sans/
 ```
 
-Same pattern for:
+Same pattern for `@fontsource-variable/open-sans` replacing the Google
+Fonts TTF dump in `themes/standard_pages/fonts/`.
 
-- `@fontsource-variable/open-sans` replacing the Google Fonts TTF dump.
-- `tablesorter` replacing the jQuery script in `nbc_ThemeChanger`.
-- `tom-select` swap for `user_tags/jquery.addtags.js`. tom-select is
-  already a Piwigo dep — converting `init.php`/templates to load the
-  shared bundle drops the jQuery dependency for that plugin entirely.
+##### Two-commit discipline
 
-##### Tier 3 — video.js consolidation (M)
+Per font:
 
-Drop `video-js-4` and `video-js-5` outright (vintage admins almost
-certainly absent in 16.x install base). Pin npm `video.js@7` (or `@8`
-if a smoke pass on the test gallery passes).
-
-Port the bundled add-ons to npm equivalents:
-
-- `videojs.thumbnails` → `videojs-thumbnails`
-- `videojs.watermark` → `videojs-watermark`
-- `videojs.zoomrotate` → `videojs-zoomrotate`
-- `videojs-resolution-switcher` → `videojs-hls-quality-selector`
-
-Net: ~12 MB removed from repo, single version to maintain.
-
-##### Tier 4 — Leaflet 0.7 → 1.9 (L, highest blast radius)
-
-Plan:
-
-1. Audit which Leaflet plugins `osmmap.php` / `osmmap2.php` /
-   `osmmap3.php` / `osmmap4.php` actually call. Some bundled plugins may
-   be dead weight.
-2. Stand up `leaflet@1.9` + `leaflet.markercluster` + `leaflet-search`
-   on a feature branch. The 0.7 → 1.x core-API delta is mostly
-   tile-layer/marker construction; plugin APIs vary.
-3. Replace:
-   - `Leaflet.Elevation-0.0.2` → `@raruto/leaflet-elevation`
-   - `Control.MiniMap.js` → `leaflet-control-minimap`
-   - `leaflet-omnivore.min.js` → `leaflet-omnivore`
-   - `qleaflet.jquery.js` is a thin jQuery wrapper — drop or rewrite
-     without jQuery.
-4. Smoke-test all four `osmmap*.php` entry pages and the gallery
-   picture-page map widget across a few sample galleries with multi-marker
-   clusters.
-
-##### Tier 5 — CodeMirror (M)
-
-Two paths:
-
-- **Low risk**: `codemirror@5` (still maintained as a legacy line). Drop-in
-  close to v2; `LocalFilesEditor`'s wiring needs minor edits.
-- **Long term**: `codemirror@6` — rewrite. Different module shape, separate
-  language packages (`@codemirror/lang-php`, etc.). Better future but full
-  editor re-init.
-
-Pick one based on appetite; v5 is the recommended default unless someone
-wants to invest.
-
-##### Two-commit-per-tier discipline
-
-Each tier produces two commits:
-
-1. Add the npm dep + glue.
+1. Add the npm dep + glue (Vite font import in the right entrypoint).
 2. Delete the vendor dir.
 
 Two commits make the actual replacement reviewable; the deletion commit
-is otherwise a 12 MB diff that hides the real change.
+is otherwise a 250 KB+ binary diff that hides the real change.
 
 ##### Verification
 
 ```bash
 # Vendor disappears
-git ls-files plugins/piwigo-videojs/video-js-{4,5}/        # empty after Tier 3
-git ls-files plugins/piwigo-openstreetmap/leaflet/         # only Piwigo glue after Tier 4
-git ls-files plugins/LocalFilesEditor/codemirror/          # empty after Tier 5
-git ls-files themes/admin/_base/fonts/open-sans/           # empty after Tier 1.1
+git ls-files themes/admin/_base/fonts/open-sans/           # empty
+git ls-files themes/standard_pages/fonts/                  # only the variable-font entry remains, then empty
 
-# Dependencies show up where they belong
-jq '.dependencies' package.json | grep -E 'video.js|leaflet|codemirror|@fontsource'
+# Dependency shows up where it belongs
+jq '.dependencies' package.json | grep -E '@fontsource'
 
-# Lint output stops mentioning vendor paths
-npm run lint:css 2>&1 | grep -E '(piwigo-videojs|piwigo-openstreetmap|codemirror|open-sans)'
+# Lint output stops mentioning the font path
+npm run lint:css 2>&1 | grep open-sans
 # empty
 
 # Bundle still builds + smoke-tests pass

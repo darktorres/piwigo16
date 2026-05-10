@@ -371,25 +371,36 @@ final class PwgImage
         }
 
         if (!isset($page['ext_imagick_command'])) {
-            $retval = null;
-            $cmd_out = null;
-            // check if magick is in path (command -v is bash-only; use where.exe on Windows)
+            // Probe magick (IM7) first, then convert (IM6); empty string means neither is available.
             $find_cmd = PHP_OS_FAMILY === 'Windows' ? 'where' : 'command -v';
-            exec($find_cmd.' '.Config::extImagickDir().'magick', $cmd_out, $retval);
-            if (0 == $retval) {
-                $page['ext_imagick_command'] = 'magick';
-            } else {
-                $page['ext_imagick_command'] = 'convert';
+            $page['ext_imagick_command'] = '';
+            foreach (['magick', 'convert'] as $candidate) {
+                $retval = null;
+                $cmd_out = null;
+                exec($find_cmd.' '.Config::extImagickDir().$candidate.' 2>'.(PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null'), $cmd_out, $retval);
+                if (0 == $retval) {
+                    $page['ext_imagick_command'] = $candidate;
+                    break;
+                }
             }
         }
 
-        return is_string($page['ext_imagick_command']) ? $page['ext_imagick_command'] : 'convert';
+        return is_string($page['ext_imagick_command']) ? $page['ext_imagick_command'] : '';
     }
 
     public static function isExtImagick(): bool
     {
-        if (!function_exists('exec')) {
-            return false;
+        $page = &$GLOBALS['page'];
+        if (!is_array($page)) {
+            $page = [];
+        }
+
+        if (isset($page['is_ext_imagick'])) {
+            return (bool) $page['is_ext_imagick'];
+        }
+
+        if (!function_exists('exec') || self::getExtImagickCommand() === '') {
+            return $page['is_ext_imagick'] = false;
         }
 
         $returnarray = [];
@@ -398,9 +409,9 @@ final class PwgImage
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }
-            return true;
+            return $page['is_ext_imagick'] = true;
         }
-        return false;
+        return $page['is_ext_imagick'] = false;
     }
 
     public static function isGd(): bool

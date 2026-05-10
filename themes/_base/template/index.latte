@@ -9,7 +9,7 @@
 </div>
 {/if}
 
-{if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE}{/if}
+{if !empty($PLUGIN_INDEX_CONTENT_BEFORE)}{$PLUGIN_INDEX_CONTENT_BEFORE|noescape}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
 <div class="titrePage{if isset($chronology['TITLE'])} calendarTitleBar{/if}">
 	<ul class="categoryActions">
@@ -109,8 +109,8 @@
 			<span class="pwg-icon pwg-icon-camera-calendar"></span><span class="pwg-button-text">{='Calendar'|translate}</span>
 		</a>{/spaceless}</li>
 {/if}
-{if !empty($PLUGIN_INDEX_BUTTONS)}{foreach $PLUGIN_INDEX_BUTTONS as $button}<li>{$button}</li>{/foreach}{/if}
-{if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS}{/if}
+{if !empty($PLUGIN_INDEX_BUTTONS)}{foreach $PLUGIN_INDEX_BUTTONS as $button}<li>{$button|noescape}</li>{/foreach}{/if}
+{if !empty($PLUGIN_INDEX_ACTIONS)}{$PLUGIN_INDEX_ACTIONS|noescape}{/if}
 	</ul>
 
 <div id="breadcrumb">
@@ -118,7 +118,7 @@
     {if $NB_ITEMS > 0}<span class="badge nb_items">{$NB_ITEMS}</span>{/if}
   </h2>
 
-{$SELECTED_TAGS_TEMPLATE}
+{if isset($SELECTED_TAGS_TEMPLATE)}{$SELECTED_TAGS_TEMPLATE}{/if}
 </div>
 
 {if isset($chronology_views)}
@@ -140,7 +140,7 @@
 
 </div>{* <!-- titrePage --> *}
 
-{if !empty($PLUGIN_INDEX_CONTENT_BEGIN)}{$PLUGIN_INDEX_CONTENT_BEGIN}{/if}
+{if !empty($PLUGIN_INDEX_CONTENT_BEGIN)}{$PLUGIN_INDEX_CONTENT_BEGIN|noescape}{/if}
 
 {if !empty($no_search_results)}
 <p class="search_results">{='No results for'|translate} :
@@ -199,7 +199,7 @@
 </div>
 {/if}
 
-{if !empty($CONTENT)}{$CONTENT}{/if}
+{if !empty($CONTENT)}{$CONTENT|noescape}{/if}
 
 {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
 
@@ -230,6 +230,6 @@
 	{include getExtent('navigation_bar.latte', 'navbar'), navbar: $thumb_navbar}
 {/if}
 
-{if !empty($PLUGIN_INDEX_CONTENT_END)}{$PLUGIN_INDEX_CONTENT_END}{/if}
+{if !empty($PLUGIN_INDEX_CONTENT_END)}{$PLUGIN_INDEX_CONTENT_END|noescape}{/if}
 </div>{* <!-- content --> *}
-{if !empty($PLUGIN_INDEX_CONTENT_AFTER)}{$PLUGIN_INDEX_CONTENT_AFTER}{/if}
+{if !empty($PLUGIN_INDEX_CONTENT_AFTER)}{$PLUGIN_INDEX_CONTENT_AFTER|noescape}{/if}

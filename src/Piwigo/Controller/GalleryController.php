@@ -242,7 +242,7 @@ final class GalleryController implements ControllerInterface
                     ));
                     $hints = [];
                     foreach ($cats as $cat) {
-                        $hints[] = ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], '');
+                        $hints[] = new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], ''));
                     }
                     $tpl->assign('category_search_results', $hints);
                 }
@@ -255,11 +255,11 @@ final class GalleryController implements ControllerInterface
                     $tpl->append('tag_search_results', $tag);
                 }
                 if (empty($items)) {
-                    $tpl->append('no_search_results', htmlspecialchars(is_string($qd['q'] ?? null) ? $qd['q'] : ''));
+                    $tpl->append('no_search_results', is_string($qd['q'] ?? null) ? $qd['q'] : '');
                 } elseif (!empty($qd['unmatched_terms'])) {
                     $unmatched = is_array($qd['unmatched_terms']) ? $qd['unmatched_terms'] : [];
                     $tpl->assign('no_search_results', array_map(
-                        static fn (mixed $t): string => htmlspecialchars(is_scalar($t) ? (string) $t : ''),
+                        static fn (mixed $t): string => is_scalar($t) ? (string) $t : '',
                         $unmatched
                     ));
                 }
@@ -302,7 +302,8 @@ final class GalleryController implements ControllerInterface
                 && !empty($page['comment'])
             ) {
                 $commentVal = $page['comment'];
-                $tpl->assign('CONTENT_DESCRIPTION', is_array($commentVal) || is_scalar($commentVal) ? $commentVal : null);
+                $commentText = is_scalar($commentVal) ? (string) $commentVal : '';
+                $tpl->assign('CONTENT_DESCRIPTION', $commentText !== '' ? new \Latte\Runtime\Html($commentText) : null);
             }
 
             if ($countCats === 0) {

@@ -56,24 +56,32 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `comments.tpl` ↔ `comments.latte` — `MENUBAR` and `COMMENT_LIST` auto-Html via `assignVarFromHandle`. `htmlOptions(...)` already gets `|noescape` from converter. Faithful.
 - [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓ (converter rule). `getCombinedScripts` returns Html ✓. `QUERIES_LIST` wrapped Html in `PageTailRenderer:57`. `{$elt}` from `$footer_elements` hand-fixed `|noescape` (plugin debug HTML payload — preserve on regen).
 - [~] `header.tpl` ↔ `header.latte` — `|strip_tags:false` handled by `PiwigoExtension::stripTags` wrapper ✓. `getCombinedCss/Scripts` return Html ✓. `PAGE_BANNER` wrapped Html in `PageHeaderRenderer:39`. `head_elements` push wrapped Html in `PageHeaderRenderer:64`. `header_msgs` upgrade-feed entry wrapped Html in `CommonBootstrap:310`. `header_notes` is plain l10n text (auto-escape neutral). JSON `<script>` data block hand-fixed `|noescape` (preserve on regen). `{strip}` → `{spaceless}` ✓.
-- [ ] `identification.tpl` ↔ `identification.latte`
-- [ ] `index.tpl` ↔ `index.latte`
-- [ ] `infos_errors.tpl` ↔ `infos_errors.latte`
-- [ ] `mainpage_categories.tpl` ↔ `mainpage_categories.latte`
-- [ ] `menubar.tpl` ↔ `menubar.latte`
-- [ ] `menubar_categories.tpl` ↔ `menubar_categories.latte`
-- [ ] `menubar_identification.tpl` ↔ `menubar_identification.latte`
-- [ ] `menubar_links.tpl` ↔ `menubar_links.latte`
-- [ ] `menubar_menu.tpl` ↔ `menubar_menu.latte`
-- [ ] `menubar_related_categories.tpl` ↔ `menubar_related_categories.latte`
-- [ ] `menubar_specials.tpl` ↔ `menubar_specials.latte`
-- [ ] `menubar_tags.tpl` ↔ `menubar_tags.latte`
-- [ ] `month_calendar.tpl` ↔ `month_calendar.latte`
-- [ ] `navigation_bar.tpl` ↔ `navigation_bar.latte`
-- [ ] `nbm.tpl` ↔ `nbm.latte`
-- [ ] `no_photo_yet.tpl` ↔ `no_photo_yet.latte`
-- [ ] `notification.tpl` ↔ `notification.latte`
-- [ ] `password.tpl` ↔ `password.latte`
+- [x] `identification.tpl` ↔ `identification.latte` — straight conversion. `MENUBAR` auto-Html.
+- [~] `index.tpl` ↔ `index.latte` — many HTML-payload vars; producer-side wraps + targeted `|noescape` hand-fixes:
+  - `TITLE` Html-wrapped in `GalleryController:133` (section_title HTML breadcrumb).
+  - `chronology['TITLE']` Html-wrapped in `CalendarService:203` (calendar HTML link).
+  - `CONTENT_DESCRIPTION` Html-wrapped in `GalleryController:305` (album description).
+  - `category_search_results[]` Html-wrapped in `GalleryController:245`.
+  - `no_search_results[]` was double-escaped (`htmlspecialchars`+Latte); dropped manual escape, Latte handles.
+  - `PLUGIN_INDEX_CONTENT_BEFORE/BEGIN/END/AFTER`, `PLUGIN_INDEX_ACTIONS`, `$button` (PLUGIN_INDEX_BUTTONS) hand-fixed `|noescape` in template (plugin HTML, faithful to Smarty escape_html=false).
+  - `CONTENT` hand-fixed `|noescape` (page-level HTML payload).
+  - `SELECTED_TAGS_TEMPLATE` undefined warning fixed by `{if isset(...)}` guard.
+- [x] `infos_errors.tpl` ↔ `infos_errors.latte` — straight foreach over plain l10n strings.
+- [x] `mainpage_categories.tpl` ↔ `mainpage_categories.latte` — `CAPTION_NB_IMAGES` and `DESCRIPTION` Html-wrapped in `CategoryCatsRenderer`. `NAME` plain text from `render_category_name`. `strip_tags:false` handled by extension wrapper.
+- [~] `menubar.tpl` ↔ `menubar.latte` — `{$block->raw_content}` hand-fixed `|noescape` (plugin-supplied raw HTML when block has no template).
+- [~] `menubar_categories.tpl` ↔ `menubar_categories.latte` — `'</ul></li>'|str_repeat` hand-fixed `|noescape` (×2). Faithful otherwise.
+- [x] `menubar_identification.tpl` ↔ `menubar_identification.latte` — `$smarty.server.REQUEST_URI` → `($_SERVER['REQUEST_URI'] ?? '')`. `{strip}` → `{spaceless}`.
+- [x] `menubar_links.tpl` ↔ `menubar_links.latte` — `|escape:'html'` dropped (Latte auto-escape covers).
+- [~] `menubar_menu.tpl` ↔ `menubar_menu.latte` — `{$link['REL']|noescape}` hand-fix (REL is HTML attribute fragment from MenubarRenderer).
+- [~] `menubar_related_categories.tpl` ↔ `menubar_related_categories.latte` — `'</ul></li>'|str_repeat` hand-fixed `|noescape` (×2).
+- [~] `menubar_specials.tpl` ↔ `menubar_specials.latte` — `{$link['REL']|noescape}` hand-fix (same REL pattern).
+- [x] `menubar_tags.tpl` ↔ `menubar_tags.latte` — straight conversion.
+- [x] `month_calendar.tpl` ↔ `month_calendar.latte` — straight conversion, plain text labels.
+- [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — `{foreach key=item}` → `as key => val`, `assign` → `var`.
+- [x] `nbm.tpl` ↔ `nbm.latte` — straight conversion.
+- [x] `no_photo_yet.tpl` ↔ `no_photo_yet.latte` — `$intro` is plain l10n text. Standalone HTML page (no menubar/footer).
+- [x] `notification.tpl` ↔ `notification.latte` — `{html_head}` Smarty block tag → `{capture}…{do htmlHead(...)}` rewrite.
+- [x] `password.tpl` ↔ `password.latte` — `eq`/`ne` → `==`/`!=`. Straight otherwise.
 - [ ] `picture.tpl` ↔ `picture.latte`
 - [ ] `picture_content.tpl` ↔ `picture_content.latte`
 - [ ] `picture_nav_buttons.tpl` ↔ `picture_nav_buttons.latte`

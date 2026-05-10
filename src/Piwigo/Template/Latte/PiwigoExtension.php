@@ -473,17 +473,17 @@ final class PiwigoExtension extends Extension
         return ImageStdParams::getCustom($width, $height, $cropFraction, $effMinW, $effMinH);
     }
 
-    public static function htmlHead(string $content): void
+    public static function htmlHead(string|Html $content): void
     {
-        $trimmed = trim($content);
+        $trimmed = trim((string) $content);
         if ($trimmed !== '') {
             TemplateRegistry::current()->html_head_elements[] = $trimmed;
         }
     }
 
-    public static function htmlStyle(string $content): void
+    public static function htmlStyle(string|Html $content): void
     {
-        $trimmed = trim($content);
+        $trimmed = trim((string) $content);
         if ($trimmed !== '') {
             $tpl = TemplateRegistry::current();
             // html_style is private on Template; the field's only mutator is
@@ -498,9 +498,9 @@ final class PiwigoExtension extends Extension
      * @param list<string>|string $require comma-separated string from the
      *     converter or list<string> from a hand-written Latte template.
      */
-    public static function footerScript(string $content, array|string $require = []): void
+    public static function footerScript(string|Html $content, array|string $require = []): void
     {
-        $trimmed = trim($content);
+        $trimmed = trim((string) $content);
         if ($trimmed === '') {
             return;
         }

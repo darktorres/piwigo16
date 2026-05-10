@@ -690,94 +690,138 @@ npx playwright test                                        # green (no visual re
 
 #### Wave 3 — Precompile at deploy
 
-**Status:** 🟡 Not started · **Effort:** S · depends on Wave 2
+**Status:** 🟡 Not started · **Effort:** S · depends on Wave 2 (closed)
 
-Once Latte is the primary engine, ship `tools/precompile_templates.php` —
-a CLI entrypoint that boots Piwigo without emitting output, then for each
-engine:
+Ship `tools/precompile_templates.php` — a CLI driver that walks the
+on-disk theme template roots, resolves each `*.latte` to an absolute
+path, and calls `LatteEngine::default()->warmupCache($abs)`. Latte
+writes its compile cache keyed on the path passed to the loader; that
+key matches what `Template::resolveLatteTemplatePath()` produces at
+runtime (`Template.php:373-385`), so the runtime hits the warmed entry
+directly with no extra resolution.
 
 ```php
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
-Piwigo\Bootstrap\CommonBootstrap::run();
-Piwigo\Core\Kernel::boot();
+if (!defined('PHPWG_ROOT_PATH')) {
+    define('PHPWG_ROOT_PATH', dirname(__DIR__) . '/');
+}
 
-$failed = [];
+use Piwigo\Template\LatteEngine;
 
-// Walk every active theme + admin context, push/pop the dir stack between runs
-foreach (Piwigo\Theme\ThemeRegistry::installed() as $theme) {
-    $tpls = TemplateDirStack::push($theme);
-    try {
-        // Latte (primary post-conversion)
-        foreach (glob_recursive($theme->getTemplateDir(), '*.latte') as $tpl) {
-            try {
-                $latte->warmupCache($tpl);
-            } catch (Throwable $e) {
-                $failed[] = "$tpl: {$e->getMessage()}";
-            }
+$roots = [
+    PHPWG_ROOT_PATH . 'themes/admin/_base/template',
+    PHPWG_ROOT_PATH . 'themes/_base/template',
+    PHPWG_ROOT_PATH . 'themes/standard_pages/template',
+];
+
+$engine  = LatteEngine::default();
+$failed  = [];
+$count   = 0;
+
+foreach ($roots as $root) {
+    $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
+    foreach ($iter as $file) {
+        if (!$file->isFile() || $file->getExtension() !== 'latte') {
+            continue;
         }
-        // Smarty (transition window only)
-        $smarty->compileAllTemplates('.tpl', force: true);
-    } finally {
-        TemplateDirStack::pop();
+        $abs = $file->getPathname();
+        try {
+            $engine->warmupCache($abs);
+            $count++;
+        } catch (Throwable $e) {
+            $failed[] = "$abs: " . $e->getMessage();
+        }
     }
 }
 
-if ($failed) {
+if ($failed !== []) {
     fwrite(STDERR, implode("\n", $failed) . "\n");
     exit(1);
 }
-echo "Compiled successfully.\n";
+echo "Compiled successfully: $count templates.\n";
 ```
+
+`LatteEngine` gains a thin `warmupCache(string $name): void` wrapper
+delegating to the private `Latte\Engine::warmupCache()` (matches the
+existing `assign() / render() / renderFromString()` surface; no public
+engine accessor leaks). The script does **not** call `Kernel::boot()` —
+it needs only `PHPWG_ROOT_PATH` and `Config::dataLocation()`
+(transitively, via `LatteEngine::default()`), and forcing a DB
+connection in CI would be unhelpful.
 
 Outcome:
 
-- First-request compile latency disappears; `_data/templates_c/` is warm
-  at deploy time.
+- First-request compile latency disappears for git-deploy / staging /
+  CI flows that run the script.
 - Enables flipping `template_compile_check = 0` in production. With
-  `compile_check` off, Smarty/Latte don't `stat()` source files on every
-  render — measurable wins on hot pages.
-- CI hook catches Latte syntax regressions in plugin templates that lack
-  unit-test coverage. Run on every PR; failure means the precompile script
-  reported a broken template.
-- Iterate per-theme (push/pop the dir stack between runs — compiled cache
-  keys are bound to the resolved `template_dir` stack) and per-plugin-set
-  (plugins inject Smarty prefilters and Latte extensions at boot, both of
-  which alter compiled output).
+  `compile_check` off, Latte doesn't `stat()` source files on every
+  render — measurable wins on hot pages. The flip itself is config-
+  schema work and lands with §1.5c, not here.
+- CI hook (new `precompile` job in `.github/workflows/ci.yml`,
+  parallel to the existing `latte` lint job) catches syntax regressions
+  at PR time. A precompile failure is a strictly stronger signal than
+  a lint warning, so the jobs stay distinct.
 
-##### Deploy integration
+##### Composer wiring
 
-Add to `INSTALL.md` after `composer install --no-dev`:
+`composer.json` gains a `precompile:templates` script entry, mirroring
+the `lint:latte` shape:
 
-```bash
-php tools/precompile_templates.php
+```json
+"precompile:templates": "@php tools/precompile_templates.php"
 ```
 
-Add a `make precompile-templates` target. Document in `CONTRIBUTING.md`
-that staging environments with different plugin sets need a separate
-warm.
+##### Deferred / out of scope here
 
-##### OPcache guidance
-
-`_data/templates_c/` holds plain PHP. Hosters should leave OPcache
-enabled with a generous `opcache.max_accelerated_files` (file count is
-~150 today, similar post-Latte). For truly hot files,
-`opcache.preload` of the precompiled templates yields another small win.
+- **Tarball-install integration.** `tools/` is `export-ignore`d from
+  `git archive`, so the script is dev/CI-only. The install/init flow
+  is slated for a larger rework — a tarball-friendly install-time
+  precompile hook folds in there, not here. Tarball end-users absorb
+  a one-time first-request compile until then.
+- **Plugin sandbox cache.** `LatteEngine::sandboxed()` warming
+  (`templates_c/latte_plugin/`) is parked until §1.3 introduces plugin
+  `.latte` templates; today there are zero in tree, so warming the
+  sandbox engine would be dead code.
+- **Makefile target.** No `Makefile` exists in the repo; introducing
+  one for a single target is over-build. `composer precompile:templates`
+  is the canonical entry.
+- **OPcache guidance.** Pure docs. `_data/templates_c/latte/` holds
+  plain PHP and benefits from OPcache; `opcache.max_accelerated_files`
+  needs only ~150 entries for the current tree, and `opcache.preload`
+  on the compiled templates yields a further small win. Capture in a
+  hosting/deployment doc when one lands.
+- **Theme iteration.** The three hard-coded roots
+  (`themes/admin/_base/template/`, `themes/_base/template/`,
+  `themes/standard_pages/template/`) cover all 133 `.latte` files
+  today. When §1.3 lands a theme registry for installed third-party
+  themes, swap the hard-coded list for a walk of `themes/*/template/`
+  (or the registry equivalent).
 
 ##### Verification
 
 ```bash
-rm -rf _data/templates_c/* _data/templates_c/latte/*
-php tools/precompile_templates.php          # exits 0; reports N templates compiled
-ls _data/templates_c/ | wc -l               # > 0, matches reported count
+# Clean cache, run precompiler, expect success.
+rm -rf _data/templates_c/latte/*
+composer precompile:templates
+# Expected: "Compiled successfully: 133 templates."
+# (matches `find themes -name '*.latte' -not -path '*/_data/*' | wc -l`)
 
-# After warming, the first request must not write to _data/templates_c/:
-mtime_before=$(stat -c %Y _data/templates_c/)
+# Compiled artifacts exist in the cache directory.
+find _data/templates_c/latte -name '*.php' | wc -l    # > 0
+
+# First HTTP request must not write to the cache (proves warm hit).
+mtime_before=$(stat -c %Y _data/templates_c/latte)
 curl -s http://localhost/ > /dev/null
-mtime_after=$(stat -c %Y _data/templates_c/)
+mtime_after=$(stat -c %Y _data/templates_c/latte)
 [ "$mtime_before" = "$mtime_after" ] && echo "no recompile on first hit"
+
+# Bug-injection probe: a syntactically-broken .latte must fail the run.
+echo '{nope blah' > themes/_base/template/_probe.latte
+composer precompile:templates    # exits 1; failed path on stderr
+rm themes/_base/template/_probe.latte
 ```
 
 ---

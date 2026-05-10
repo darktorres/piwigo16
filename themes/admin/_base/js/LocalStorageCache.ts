@@ -1,5 +1,5 @@
 import TomSelect from 'tom-select';
-import 'tom-select/dist/css/tom-select.bootstrap5.css';
+import 'tom-select/dist/css/tom-select.default.css';
 import { config } from './config';
 
 export interface CacheItem {

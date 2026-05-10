@@ -1,7 +1,7 @@
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { pwgDoubleSlider } from '../../../../themes/_base/js/doubleSlider';
-import 'tom-select/dist/css/tom-select.bootstrap5.css';
+import 'tom-select/dist/css/tom-select.default.css';
 import '../css/components/batch_manager.css';
 
 interface SliderConfig {

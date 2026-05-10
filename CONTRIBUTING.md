@@ -82,10 +82,12 @@ BEGIN/END sentinels.
 1. Add the entry to `Config::SCHEMA` (alphabetically, snake_case key, type +
    default + camelCase method name).
 2. Run the generator:
+
    ```bash
    php tools/build-config-accessors.php
    php tools/build-config-reference.php
    ```
+
 3. CI's `SchemaIntegrityTest` enforces SCHEMA ↔ generated-accessors sync;
    the build fails if you forget to re-run the generator.
 

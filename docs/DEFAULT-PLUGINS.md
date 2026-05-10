@@ -21,7 +21,7 @@ Also present at the top level:
 
 ## LocalFilesEditor (v16.3.0)
 
-- **Plugin URI:** http://piwigo.org/ext/extension_view.php?eid=144
+- **Plugin URI:** <http://piwigo.org/ext/extension_view.php?eid=144>
 - **Author:** Piwigo team
 - **Permission:** webmaster only
 
@@ -35,7 +35,7 @@ Many third-party plugins (notably `piwigo-videojs`) rely on this for one-time co
 
 ## nbc_ThemeChanger (v11.0.a)
 
-- **Plugin URI:** http://piwigo.org/ext/extension_view.php?eid=214
+- **Plugin URI:** <http://piwigo.org/ext/extension_view.php?eid=214>
 - **Author:** Datajulien
 - **Permission:** any user (per-category)
 
@@ -49,7 +49,7 @@ The plugin instance is parked in `LoadedPluginRegistry`. Note: this is the only 
 
 ## piwigo-openstreetmap (v16.b)
 
-- **Plugin URI:** https://piwigo.org/ext/extension_view.php?eid=701
+- **Plugin URI:** <https://piwigo.org/ext/extension_view.php?eid=701>
 - **Author:** xbgmsharp
 - **Permission:** webmaster (admin), public (rendering)
 
@@ -74,7 +74,7 @@ Boot wiring (`main.inc.php`):
 
 ## piwigo-videojs (v16.b)
 
-- **Plugin URI:** https://piwigo.org/ext/extension_view.php?eid=610
+- **Plugin URI:** <https://piwigo.org/ext/extension_view.php?eid=610>
 - **Author:** xbgmsharp
 - **Permission:** webmaster (admin), public (player)
 
@@ -96,7 +96,7 @@ Config (player choice + sync settings) is auto-deserialized lazily by `\Piwigo\P
 
 ## user_tags (v1.0.5)
 
-- **Plugin URI:** http://piwigo.org/ext/extension_view.php?eid=441
+- **Plugin URI:** <http://piwigo.org/ext/extension_view.php?eid=441>
 - **Author:** nikrou (Nicolas Roudaire) — independent of Piwigo team, fork-friendly GPLv2.
 - **Permission:** any user (subject to plugin permission map)
 

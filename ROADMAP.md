@@ -242,7 +242,7 @@ Suggested execution order (each row a separate commit):
 
 Concrete patterns for the trickier rows:
 
-**Row 1 — installer fork-private leak**
+#### Row 1 — installer fork-private leak
 
 ```smarty
 {* before *}
@@ -251,7 +251,7 @@ value="{if $F_ADMIN_EMAIL}{$F_ADMIN_EMAIL}{else}torres.dark@gmail.com{/if}"
 value="{if $F_ADMIN_EMAIL}{$F_ADMIN_EMAIL}{else}{$DEFAULT_ADMIN_EMAIL|default:''}{/if}"
 ```
 
-**Row 2 — translation order**
+#### Row 2 — translation order
 
 ```smarty
 {* before — calls sprintf first, then translates "Level 5" which doesn't exist *}
@@ -264,7 +264,7 @@ value="{if $F_ADMIN_EMAIL}{$F_ADMIN_EMAIL}{else}{$DEFAULT_ADMIN_EMAIL|default:''
 The `@` prefix is legacy "do not auto-escape" — redundant when
 `escape_html = false` already. Row 7 strips it everywhere.
 
-**Row 3 — plurals**
+#### Row 3 — plurals
 
 ```smarty
 {* before — same string for "1 edition" and "5 editions" *}
@@ -274,7 +274,7 @@ title="{'%s editions'|translate:$number}"
 title="{$number|translate_dec:'%s edition':'%s editions'}"
 ```
 
-**Row 8 — javascript: URLs**
+#### Row 8 — javascript: URLs
 
 ```smarty
 {* before *}
@@ -319,8 +319,8 @@ document.addEventListener('click', e => {
 | D.public         | Convert ~55 public theme templates (`themes/_base/template/` incl. `mail/`, `include/`, `help/` subtrees)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | ✅ Done · **55 / 55 lint-clean**. Iteration 4 added two converter rules (dot-access leading-expr now walks `->prop` PHP-property chains so `$block->data.qsearch` → `$block->data['qsearch']`; `combine_css` / `combine_script` regexes now allow nested `{...}` in path values for `path="…/{$themeconf.colorscheme}.css"`) and four PiwigoExtension filters (`count`, `strip_tags`, `str_repeat`, `default`, `date_format`) plus two functions (`url_is_remote` is now also exposed as a function, not just a filter; `l10n` likewise). Source-level hygiene fixes: `header.tpl` × 2 (`pwg-config` JSON now built via `[…]\|json_encode` array literal, working in both Smarty and Latte); `related_tags.inc.tpl` + `menubar_tags.tpl` (href-split-across-`{if}` rebalanced so each branch produces matching HTML — the original "split `<a … href=\\n{if}…\\n{/if}>`" idiom isn't representable in Latte's tag-aware parser). One hand-fix that doesn't generalise: `search.latte` blocks `{section name=day start=1 loop=32}` (one-off; .tpl source keeps Smarty form, .latte uses `{foreach range(1, 32) as $day}` and `--force` regen requires reapplying).                                                                                                                                                                                                                                      |
 | D.standard_pages | Convert 7 templates in `themes/standard_pages/template/` (footer, header, identification, password, profile, register, toaster) + the orphan `themes/_base/local_head.tpl`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ✅ Done · **8 / 8 lint-clean** on first conversion. The converter rules accumulated through D.admin + D.public covered every construct in this corpus — no rule additions, no source-level hygiene fixes, no hand-fixes required.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | E                | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `PiwigoPolicy` extends Latte's `Sandbox\SecurityPolicy` with two factory methods: `createPluginPolicy()` is the default-deny allowlist for plugin templates (permits structural tags, escape filters, the translation pair, read-only Piwigo helpers; denies `php`/`include`/`extends`/`do`, the asset-pipeline functions, filesystem-touching filters, `math()`, and opaque payload decoders); `createCorePolicy()` is the trusted-core superset that allows the asset-pipeline functions and `do`/`include`/`extends` while still keeping `{php}` denied. `LatteEngine` gained a `?Policy $policy` constructor arg + `LatteEngine::sandboxed()` factory that segregates the plugin compile cache (`templates_c/latte_plugin/`) from the trusted-engine cache so a malicious plugin can't poison core. 10 unit tests pin the allow/deny matrix and round-trip representative `SecurityViolationException` cases (`{php}`, `\|file_exists`, `combineScript()`) through a sandboxed engine. Plugin-loader integration lives in §1.3.                                                                                                                                                                                                                                                                                                                                                           |
-| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 🟢 Active ▸ 1 / 84 call-sites flipped. `Template::parse()` now dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.3. Proof-of-concept flip: `MiscController::help()` now points at `help.latte` instead of `help.tpl`; the Phase B.6 fixture coverage extends to the dispatch + var-threading path via `test_template_render_latte_threads_smarty_vars_into_latte`. **Hard-won lesson from a reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time() | ...}`and`{($\_SERVER['X'] ?? '')                                                                                                                                                                                                                              | ...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*` is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Remaining ~83 call-sites can flip one-by-one or in small per-controller batches — each flip needs e2e validation (not just lint), and `\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). |
-| F                | Drop `smarty/smarty` (gated on F.0 cutover + plugin deprecation window)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🟡 Not started                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 🟢 Active ▸ 1 / 84 call-sites flipped. `Template::parse()` now dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.3. Proof-of-concept flip: `MiscController::help()` now points at `help.latte` instead of `help.tpl`; the Phase B.6 fixture coverage extends to the dispatch + var-threading path via `test_template_render_latte_threads_smarty_vars_into_latte`. **Hard-won lesson from a reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time() | ...}`and`{($\_SERVER['X'] ?? '')                                                                                                                                                                                                                              | ...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*`is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Remaining ~83 call-sites can flip one-by-one or in small per-controller batches — each flip needs e2e validation (not just lint), and`\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). |
+| F                | Drop`smarty/smarty` (gated on F.0 cutover + plugin deprecation window)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 🟡 Not started                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ##### Engine architecture
 
@@ -902,7 +902,7 @@ admin UI reads `plugin.json` instead of parsing `main.inc.php` headers.
 
 Existing layout (legacy plugin):
 
-```
+```text
 plugins/<id>/
   main.inc.php             # registers handlers via add_event_handler()
   maintain.inc.php         # extends PluginMaintain
@@ -912,7 +912,7 @@ plugins/<id>/
 
 Post-migration:
 
-```
+```text
 plugins/<id>/
   plugin.json              # declarative manifest
   src/
@@ -1397,7 +1397,7 @@ occurrences; items 8–9 address the three remaining boundary categories
 
 ##### Concrete examples
 
-**ImageInterface::compose**
+###### ImageInterface::compose
 
 ```php
 // before
@@ -1413,7 +1413,7 @@ interface ImageInterface
 }
 ```
 
-**ID parameters**
+###### ID parameters
 
 ```php
 // before
@@ -1430,7 +1430,7 @@ public function getGroupname(int|string $groupId): string|false
 Callers already narrow internally with `(int)` casts; the union-type
 annotation just documents what's actually accepted.
 
-**Typed DB query helpers**
+###### Typed DB query helpers
 
 ```php
 // before — every caller writes the same lambda
@@ -1446,7 +1446,7 @@ $ids = $conn->fetchIntColumn('SELECT id FROM …');   // returns list<int>
 About 100 lambdas of the same shape disappear once `fetchIntColumn` and
 `fetchStringColumn` exist.
 
-**EventDispatcher generic**
+###### EventDispatcher generic
 
 ```php
 // before — every caller widens to mixed
@@ -1463,7 +1463,7 @@ $result = $dispatcher->dispatch('foo_event', ['k' => 1]);
 // $result is array{k: int}
 ```
 
-**Repository entity layer**
+###### Repository entity layer
 
 The goal: every repository method returns a typed object, never a raw
 `array<string, mixed>`. The `fromRow()` static constructor is the **one**
@@ -1535,7 +1535,7 @@ can be done repository-by-repository: start with `ImageRepository` since
 its row shape touches the most callers (`CategoryDefaultRenderer`,
 `PictureController`, `BatchManagerController`, photo-admin pages).
 
-**HTTP input boundary**
+###### HTTP input boundary
 
 No raw `$_POST`/`$_GET` access outside `StringUtil::input*`. The helpers
 already exist and are used in many places; the work is eliminating the
@@ -2027,7 +2027,7 @@ undermined by the existing 478 `any` patterns. Closing this item is what
 unlocks a clean `npm run lint` exit — currently the rule is enforced for
 new code via review only.
 
-##### Current concentration
+#### Current concentration
 
 Ordered for "biggest files first" attack:
 
@@ -2140,7 +2140,7 @@ Today the only JS test infrastructure is Playwright E2E — useful for
 end-to-end flows, slow and high-friction for testing pure functions like
 validators, formatters, URL builders, and state reducers.
 
-##### Install
+#### Install
 
 ```bash
 npm i -D vitest @vitest/coverage-v8 happy-dom
@@ -2226,7 +2226,7 @@ npm run test:unit -- --coverage    # ≥ 50% line coverage
 Per-entrypoint bundle size budgets gate every PR. Regressions block
 merge. Bundle composition is visualizable as a CI artifact for debugging.
 
-##### Install
+#### Install
 
 ```bash
 npm i -D size-limit @size-limit/file vite-bundle-visualizer
@@ -2288,7 +2288,7 @@ tablesorter, jquery.addtags). With those plugins removed from core, the
 only remaining vendored asset that warrants an npm migration is the Open
 Sans webfont, kept under `themes/`.
 
-##### Inventory
+#### Inventory
 
 | Lib                     | Location                                                          | Pinned version           | Approx size | npm package                      |
 | ----------------------- | ----------------------------------------------------------------- | ------------------------ | ----------: | -------------------------------- |
@@ -2353,7 +2353,7 @@ npx playwright test
 
 **Status:** 🟢 Active ▸ 3 of 13 steps done · **Effort:** M · 10 live steps remain
 
-##### Goal
+#### Goal
 
 - Stylelint passing for all first-party CSS with zero errors and no
   `!important` outside JS-toggled visibility rules.
@@ -2428,7 +2428,7 @@ are already in place. The remaining 10 live steps:
 
 ##### Concrete examples
 
-**Step 6 — token block at theme root**
+###### Step 6 — token block at theme root
 
 ```css
 :root {
@@ -2483,7 +2483,7 @@ button.primary {
 }
 ```
 
-**Step 10 — admin design tokens via Smarty**
+###### Step 10 — admin design tokens via Smarty
 
 ```smarty
 {* themes/admin/_base/css/base.css.tpl *}
@@ -2503,7 +2503,7 @@ Each child theme's `themeconf.inc.php` defines its `$admin_skin` array;
 
 `themes/admin/_base/css/`:
 
-```
+```text
 base/
   reset-defaults.css       ← "General defaults", forms, "Tables & forms"
   typography.css
@@ -2636,7 +2636,7 @@ index/category/picture, search popin (light + dark), at least 3
 
 **Status:** 🟡 Not started · **Effort:** M · soft dep on 3.1
 
-##### Goal
+#### Goal
 
 Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1
 AA violations of severity _moderate_ and above fail CI. Existing

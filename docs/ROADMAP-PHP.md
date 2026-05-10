@@ -415,18 +415,18 @@ a code-reading judgment.
 Deferred design surface — should be tracked as separate small items if we
 want them, not held against #5:
 
-6. ~~No single `ConfigLoader::load()` orchestrator.~~ **Resolved** — `CommonBootstrap::run()` now calls `applyDefaults()` → `loadEnv()` → `applyEnvOverrides()` in sequence, acting as the single boot-path orchestrator.
-7. No `MissingRequiredConfigException`, no `'required' => true` SCHEMA
+1. ~~No single `ConfigLoader::load()` orchestrator.~~ **Resolved** — `CommonBootstrap::run()` now calls `applyDefaults()` → `loadEnv()` → `applyEnvOverrides()` in sequence, acting as the single boot-path orchestrator.
+2. No `MissingRequiredConfigException`, no `'required' => true` SCHEMA
    field (Plan Step 4 step 5).
-8. No `'description'` or `'sensitive'` SCHEMA fields. `docs/config-
+3. No `'description'` or `'sensitive'` SCHEMA fields. `docs/config-
 reference.md` therefore has no descriptions, and there's no
    sensitive-masking for logging.
-9. `Config::dumpForLog(): array` (sensitive-masked) listed in Plan
+4. `Config::dumpForLog(): array` (sensitive-masked) listed in Plan
    Step 2 — doesn't exist.
-10. ~~DB-config-table overlay is in `load_conf_from_db()`.~~ **Resolved** — `load_conf_from_db()` and `common.inc.php` deleted; DB overlay migrated to `ConfigStorage::loadConfFromDb()` called from `CommonBootstrap::run()`.
-11. `ConfigStorage` doesn't take a namespace prefix for plugins (Plan
+5. ~~DB-config-table overlay is in `load_conf_from_db()`.~~ **Resolved** — `load_conf_from_db()` and `common.inc.php` deleted; DB overlay migrated to `ConfigStorage::loadConfFromDb()` called from `CommonBootstrap::run()`.
+6. `ConfigStorage` doesn't take a namespace prefix for plugins (Plan
     Step 5).
-12. `Config::raw()` semantic differs from plan. Plan said `raw(): array`
+7. `Config::raw()` semantic differs from plan. Plan said `raw(): array`
     for bulk read. Shipped: `raw(string $key, mixed $default = null): mixed`
     as the parametric escape hatch.
 
@@ -571,7 +571,7 @@ Zero `global $x;` declarations anywhere in `src/`. File-top globals in entry-scr
 
 ### What was done
 
-**Tier 1 — 5 typed-class refactors (33 function-internal sites)**
+#### Tier 1 — 5 typed-class refactors (33 function-internal sites)
 
 | New class                                     | Sites removed | Variables replaced                         |
 | --------------------------------------------- | ------------- | ------------------------------------------ |
@@ -584,7 +584,7 @@ Zero `global $x;` declarations anywhere in `src/`. File-top globals in entry-scr
 
 `add_event_handler()`, `trigger_change/notify()`, `set/get_plugin_data()`, `load_plugin/plugins()` were kept as thin wrappers during the transition. They were subsequently deleted with `include/functions_plugins.inc.php` — third-party plugins that call them directly will need to use `EventDispatcher`/`LoadedPluginRegistry` instead. `$GLOBALS['pwg_event_handlers']` and `$GLOBALS['pwg_loaded_plugins']` remain reference-bridged for plugins that read the globals directly.
 
-**Tier 2 — LanguageStack + redirect_html (16 function-internal sites)**
+#### Tier 2 — LanguageStack + redirect_html (16 function-internal sites)
 
 | New class / change                          | Sites removed | Variables replaced                                                    |
 | ------------------------------------------- | ------------- | --------------------------------------------------------------------- |
@@ -595,13 +595,13 @@ Zero `global $x;` declarations anywhere in `src/`. File-top globals in entry-scr
 
 `LanguageStack` reads/writes `$GLOBALS['lang']` and `$GLOBALS['lang_info']` in-place (not by rebinding) to preserve the `Lang::attachGlobals()` reference bridge. Push-down stack state (`$stack`, `$saved`) is held in private static properties — no `$switch_lang` global.
 
-**Supporting changes**
+#### Supporting changes
 
 - `src/Piwigo/Core/Kernel::reset()` now includes `LanguageStack::reset()`
 - `NoGlobalInSrcRule` REPLACEMENTS updated for all migrated variables
 - `unformat_email()` got a proper `@return array{email: string, name: string}` — a pre-existing type gap exposed when `$conf_mail` (which was `mixed`) stopped suppressing downstream inference
 
-**What remains**
+#### What remains
 
 None. All file-top globals in root entry-scripts, admin entry-scripts, and pre-boot includes were eliminated when those files were deleted or migrated as part of #22 and #17. The `tools/` dev scripts (`translation_analysis.php`, `test_piwigo.php`) that carried `global $lang, $user, $mysqli` were also deleted.
 
@@ -1193,7 +1193,7 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 
 ### What was done
 
-**Main repo (piwigo16)**
+#### Main repo (piwigo16)
 
 - **324 PO files generated** across 72 locales. All 324 `.lang.php` files deleted immediately after parity verification.
 - **Packages added:** `gettext/gettext` (PO parser) + `gettext/translator` (pure-PHP runtime — no `ext-gettext` required).
@@ -1217,7 +1217,7 @@ Translation files move from `$lang['key'] = 'value';` PHP arrays to gettext PO/M
 - Parity verified: 324 file pairs, 0 missing keys.
 - PHPStan level 10: **0 errors**.
 
-**Sibling repo (piwigo16-languages)**
+#### Sibling repo (piwigo16-languages)
 
 - All `.lang.php` files converted to PO and deleted (same toolchain as main repo).
 - `.zip` archives for each locale regenerated to contain only PO files.
@@ -1818,7 +1818,7 @@ Method groups:
 | `PicturePageContext`                   | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
 | `SearchPageContext`                    | `query`, `filters`, `results`, `pagination`                                     |
 | `TagsPageContext`                      | `tags`, `selectedTags`, `photos`, `displayMode`                                 |
-| `AdminPageContext` _(base, non-final)_ | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
+| `AdminPageContext` *(base, non-final)* | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
 
 No controllers populate them yet — that migration happens as each `.latte` partial is written in #23.
 
@@ -2231,8 +2231,8 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 4. **`Piwigo\Theme\ThemeRegistry`.** Parallel to `PluginRegistry`. Reads `theme.json`, resolves the parent chain, registers PSR-4 autoload, instantiates `Theme`, calls `boot()`. Caches the resolved chain to avoid re-walking on every request.
 
 5. **Inheritance via class hierarchy or composition.** Two viable approaches — pick one:
-   - _Class inheritance:_ `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
-   - _Composition:_ `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
+   - *Class inheritance:* `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
+   - *Composition:* `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
 
    Recommendation: composition. It mirrors how `themeconf.inc.php` currently works (array merge along the chain) and avoids forcing 3rd-party themes to extend a base class.
 
@@ -2291,7 +2291,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 ### What was done
 
-- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — _chore(phpstan): raise to level 10 — zero errors_).
+- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — *chore(phpstan): raise to level 10 — zero errors*).
 - The post-#6/#17 error count came in well below the original 1000+ estimate; cleanup landed across the same series of commits without a baseline carry-over.
 - Custom rules still registered: `ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, plus the dynamic-return-type extensions `TriggerChangeDynamicReturnType` and `PwgGetSessionVarDynamicReturnType`. The deprecation-rules pack is included.
 - Remaining `mixed` occurrences are catalogued in `docs/MIXED-TYPES.md` — most are legitimate (DB row results, event payloads, generic cache get/put). Reduction work continues opportunistically; the level-10 gate does not require eliminating them.

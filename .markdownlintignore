@@ -9,3 +9,5 @@ plugins/piwigo-videojs/video-js-5/
 plugins/piwigo-videojs/video-js-6/
 plugins/piwigo-videojs/video-js-7/
 themes/admin/_base/fonts/
+test-results/
+tools/phpstan-latte/

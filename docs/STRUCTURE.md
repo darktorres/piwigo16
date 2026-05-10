@@ -6,7 +6,7 @@ A map of every significant directory and file grouping in the 16.x-rewrite branc
 
 ## Root
 
-```
+```text
 index.php               Single HTTP entry point — handles `?/i/`, `?/install`,
                         `?/upgrade`, `?/upgrade_feed` fast paths inline, then
                         dispatches everything else through the full Kernel boot
@@ -54,7 +54,7 @@ remaining non-class top-level constant definitions. `autoload-dev` adds
 PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Response`.
 22 top-level + 10 admin = 32 controller files (one is the interface itself).
 
-**Gallery / public pages (21 controllers)**
+#### Gallery / public pages (21 controllers)
 
 | Class                       | Notes                                                                                                                                                                                                    |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -80,7 +80,7 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 | `UpgradeController`         | `/upgrade` — upgrader; `?/upgrade` fast path                                                                                                                                                             |
 | `UpgradeFeedController`     | `/upgrade_feed` — feed-based DB upgrade runner                                                                                                                                                           |
 
-**Admin (`src/Piwigo/Controller/Admin/`, 10 controllers)**
+#### Admin (`src/Piwigo/Controller/Admin/`, 10 controllers)
 
 | Class                     | Pages handled                                                                                                                             |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -195,7 +195,7 @@ config defaults, env loading, install/upgrade redirects, DB connect, `Kernel::bo
 
 ### `themes/_base/` — gallery theme
 
-```
+```text
 css/                    SCSS-compiled stylesheets
 icon/                   Theme icons
 images/                 Theme images
@@ -213,7 +213,7 @@ local_head.tpl themeconf.inc.php
 
 ### `themes/standard_pages/` — identification/register/password/profile
 
-```
+```text
 css/  fonts/  images/   Skin assets
 js/*.ts                  TypeScript entries: toaster_js, standard_pages_js, standard_profile_js
 template/                Login, register, password, profile templates
@@ -224,7 +224,7 @@ theme.css themeconf.inc.php
 
 ### `themes/admin/_base/` — admin theme
 
-```
+```text
 css/                    Admin SCSS (components, pages)
 js/*.ts                 ~30 TypeScript admin entries (albums, batchManagerGlobal,
                         tags, user_list, …)
@@ -250,7 +250,7 @@ by `npm run build`).
 
 ## `install/` — installer and DB upgrade scripts
 
-```
+```text
 config.sql                       Default config rows
 piwigo_structure-mysql.sql       Initial schema
 db/                              Incremental DB upgrade scripts (.php).
@@ -271,7 +271,7 @@ numbered-script convention.
 
 ## `tests/` — test suite
 
-```
+```text
 tests/Unit/             PHPUnit unit tests (no DB required)
   Auth/ Cache/ Config/ Controller/ Core/ Http/ Image/ Job/ Log/ Menu/
   Plugins/ Routing/ Search/ Session/ Storage/ Tag/ Template/ Url/ Users/ Ws/
@@ -313,7 +313,7 @@ Step 6 — already-executed; git history is canonical.
 
 ## `bin/` — CLI commands
 
-```
+```text
 bin/piwigo              Symfony Console application (e.g. `bin/piwigo messenger:consume async`)
 ```
 
@@ -321,7 +321,7 @@ bin/piwigo              Symfony Console application (e.g. `bin/piwigo messenger:
 
 ## `build/` — Vite build helpers
 
-```
+```text
 build/piwigo-manifest-plugin.ts     Custom Vite plugin generating Piwigo-format manifest.json
 ```
 
@@ -329,7 +329,7 @@ build/piwigo-manifest-plugin.ts     Custom Vite plugin generating Piwigo-format 
 
 ## `dev/` — development fixtures
 
-```
+```text
 dev/fixtures/piwigo-15.x.sql        15.x DB snapshot (UpgradeChainTest 409-refusal path)
 dev/fixtures/piwigo-16.x.sql        16.x DB snapshot for integration + E2E tests
 dev/vite-entries.json               Vite entry catalog
@@ -341,7 +341,7 @@ dev/vite-entries.json               Vite entry catalog
 
 ~110 language directories, each containing PO files:
 
-```
+```text
 language/<locale>/
   common.po              User-facing strings (frontend + shared admin)
   admin.po               Admin-only strings

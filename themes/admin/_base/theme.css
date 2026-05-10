@@ -7226,16 +7226,6 @@ a.group_users {
   margin-top: -20px;
 }
 
-.dataTables_info,
-.dataTables_length {
-  padding-left: 1em;
-}
-
-.dataTables_wrapper .dataTables_filter,
-.dataTables_wrapper .dataTables_paginate {
-  margin-right: 1em;
-}
-
 .userProperties {
   max-width: 730px;
 }

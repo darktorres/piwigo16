@@ -48,6 +48,7 @@
     "chart.js": "^4.5.1",
     "chartjs-adapter-dayjs-4": "^1.0.4",
     "datatables.net": "^2.3.8",
+    "datatables.net-dt": "^2.3.8",
     "dayjs": "^1.11.20",
     "flatpickr": "^4.6.13",
     "glightbox": "^3.3.1",

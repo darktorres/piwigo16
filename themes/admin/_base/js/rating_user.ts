@@ -1,4 +1,5 @@
 import DataTable from 'datatables.net';
+import 'datatables.net-dt/css/dataTables.dataTables.css';
 import { getPageData } from './page-data';
 
 interface RatingUserPageData {

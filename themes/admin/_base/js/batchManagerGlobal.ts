@@ -1,4 +1,5 @@
 import GLightbox from 'glightbox';
+import 'glightbox/dist/css/glightbox.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { AlbumSelector } from './album_selector';

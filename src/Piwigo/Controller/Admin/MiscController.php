@@ -575,7 +575,7 @@ final class MiscController
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', ServiceLocator::get(CommentRepository::class)->countAll());
@@ -850,7 +850,7 @@ final class MiscController
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
             'PWG_TOKEN'         => ServiceLocator::get(Util::class)->getPwgToken(),
             'COMMENTS_DISABLED' => !Config::activateComments(),
-            'U_CONFIGURATION'   => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=comments',
+            'U_CONFIGURATION'   => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&section=comments',
             'page_data_json'    => json_encode([
                 'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
                 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_delete' => Lang::t('Are you sure you want to delete comment #%s?'), 'str_deletes' => Lang::t('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => Lang::t('No comments selected, no actions possible.'), 'str_an_error_has' => Lang::t('An error has occured'), 'str_comment_validated' => Lang::t('The comment has been validated.'), 'str_comments_validated' => Lang::t('The comments have been validated.'), 'str_and_others' => Lang::t('and %s others'),
@@ -1110,7 +1110,7 @@ final class MiscController
         ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors);
 
         ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(
-            ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&amp;user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
+            ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
             ServiceLocator::get(UrlGenerator::class)->admin('user_list'),
             $edit_user
         );
@@ -1355,7 +1355,7 @@ final class MiscController
         $is_first = $base_url === ($url_components['path'] ?? '');
         foreach ($vars as $key => $value) {
             if (!in_array($key, $get_rejects ?? []) && $key != $get_param) {
-                $base_url .= $is_first ? '?' : '&amp;';
+                $base_url .= $is_first ? '?' : '&';
                 $is_first  = false;
                 if (!in_array($key, ['page', 'psf', 'dpsf', 'pwg_token'])) {
                     HtmlService::fatalError('unexpected URL get key');

@@ -270,7 +270,7 @@ final class ConfigurationController
         $tabsheet->select($section);
         $tabsheet->assign();
 
-        $action = ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&amp;section=' . $section;
+        $action = ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&section=' . $section;
 
         $tpl->assign([
             'U_HELP'    => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('configuration'),

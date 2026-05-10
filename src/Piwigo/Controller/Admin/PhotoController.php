@@ -283,9 +283,9 @@ SELECT id
         $tpl->assign([
             'tag_selection'      => $tag_selection,
             'U_DOWNLOAD'         => ServiceLocator::get(UrlGenerator::class)->actionDownload(is_numeric($image_id_str) ? (int) $image_id_str : 0, 'e', ServiceLocator::get(Util::class)->getPwgToken()),
-            'U_SYNC'             => $admin_url_start . '&amp;sync_metadata=1',
-            'U_DELETE'           => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
-            'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . $image_id_str,
+            'U_SYNC'             => $admin_url_start . '&sync_metadata=1',
+            'U_DELETE'           => $admin_url_start . '&delete=1&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+            'U_HISTORY'          => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_image_id=' . $image_id_str,
             'U_ACTIVITY'         => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $image_id_str,
             'PATH'               => $row['path'],
             'TN_SRC'             => DerivativeImage::url(DerivativeSize::Medium->value, $src_image),
@@ -345,7 +345,7 @@ SELECT id
         $tpl->assign('INTRO', $intro_vars);
 
         if (in_array(ServiceLocator::get(StringUtil::class)->getExtension(is_scalar($row['path'] ?? null) ? (string) $row['path'] : ''), Config::pictureExtensions())) {
-            $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&amp;image_id=' . $image_id_str);
+            $tpl->assign('U_COI', ServiceLocator::get(UrlGenerator::class)->admin('picture_coi') . '&image_id=' . $image_id_str);
         }
 
         $selected_level = $_POST['level'] ?? $row['level'];

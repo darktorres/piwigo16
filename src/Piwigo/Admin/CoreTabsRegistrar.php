@@ -58,13 +58,13 @@ final class CoreTabsRegistrar
                 break;
 
             case 'cat_options':
-                $sheets['status'] = ['caption' => '<span class="icon-lock"></span>'.Lang::t('Public / Private'), 'url' => $link_start.'cat_options&amp;section=status'];
-                $sheets['visible'] = ['caption' => '<span class="icon-block"></span>'.Lang::t('Lock'), 'url' => $link_start.'cat_options&amp;section=visible'];
+                $sheets['status'] = ['caption' => '<span class="icon-lock"></span>'.Lang::t('Public / Private'), 'url' => $link_start.'cat_options&section=status'];
+                $sheets['visible'] = ['caption' => '<span class="icon-block"></span>'.Lang::t('Lock'), 'url' => $link_start.'cat_options&section=visible'];
                 if (Config::activateComments()) {
-                    $sheets['comments'] = ['caption' => '<span class="icon-chat"></span>'.Lang::t('Comments'), 'url' => $link_start.'cat_options&amp;section=comments'];
+                    $sheets['comments'] = ['caption' => '<span class="icon-chat"></span>'.Lang::t('Comments'), 'url' => $link_start.'cat_options&section=comments'];
                 }
                 if (Config::allowRandomRepresentative()) {
-                    $sheets['representative'] = ['caption' => Lang::t('Representative'), 'url' => $link_start.'cat_options&amp;section=representative'];
+                    $sheets['representative'] = ['caption' => Lang::t('Representative'), 'url' => $link_start.'cat_options&section=representative'];
                 }
                 break;
 
@@ -99,10 +99,10 @@ final class CoreTabsRegistrar
                 break;
 
             case 'languages':
-                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&amp;tab=installed'];
+                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&tab=installed'];
                 if (Config::enableExtensionsInstall()) {
-                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
-                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Language'), 'url' => $my_base_url.'&amp;tab=new'];
+                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&tab=update'];
+                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Language'), 'url' => $my_base_url.'&tab=new'];
                 }
                 break;
 
@@ -111,9 +111,9 @@ final class CoreTabsRegistrar
                 break;
 
             case 'nbm':
-                $sheets['param'] = ['caption' => Lang::t('Parameter'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=param'];
-                $sheets['subscribe'] = ['caption' => Lang::t('Subscribe'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=subscribe'];
-                $sheets['send'] = ['caption' => Lang::t('Send'), 'url' => $base_url.'&amp;page=notification_by_mail&amp;mode=send'];
+                $sheets['param'] = ['caption' => Lang::t('Parameter'), 'url' => $base_url.'&page=notification_by_mail&mode=param'];
+                $sheets['subscribe'] = ['caption' => Lang::t('Subscribe'), 'url' => $base_url.'&page=notification_by_mail&mode=subscribe'];
+                $sheets['send'] = ['caption' => Lang::t('Send'), 'url' => $base_url.'&page=notification_by_mail&mode=send'];
                 break;
 
             case 'photo':
@@ -125,18 +125,18 @@ final class CoreTabsRegistrar
                 break;
 
             case 'photos_add':
-                $sheets['direct'] = ['caption' => '<span class="icon-upload"></span>'.Lang::t('Web Form'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=direct'];
-                $sheets['applications'] = ['caption' => '<span class="icon-network"></span>'.Lang::t('Applications'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=applications'];
+                $sheets['direct'] = ['caption' => '<span class="icon-upload"></span>'.Lang::t('Web Form'), 'url' => PHOTOS_ADD_BASE_URL.'&section=direct'];
+                $sheets['applications'] = ['caption' => '<span class="icon-network"></span>'.Lang::t('Applications'), 'url' => PHOTOS_ADD_BASE_URL.'&section=applications'];
                 if (Config::enableSynchronization()) {
-                    $sheets['ftp'] = ['caption' => '<span class="icon-exchange"></span>'.Lang::t('FTP + Synchronization'), 'url' => PHOTOS_ADD_BASE_URL.'&amp;section=ftp'];
+                    $sheets['ftp'] = ['caption' => '<span class="icon-exchange"></span>'.Lang::t('FTP + Synchronization'), 'url' => PHOTOS_ADD_BASE_URL.'&section=ftp'];
                 }
                 break;
 
             case 'plugins':
-                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&amp;tab=installed'];
+                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&tab=installed'];
                 if (Config::enableExtensionsInstall()) {
-                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
-                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Plugin'), 'url' => $my_base_url.'&amp;tab=new'];
+                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&tab=update'];
+                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Plugin'), 'url' => $my_base_url.'&tab=new'];
                 }
                 break;
 
@@ -146,12 +146,12 @@ final class CoreTabsRegistrar
                 break;
 
             case 'themes':
-                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&amp;tab=installed'];
+                $sheets['installed'] = ['caption' => '<span class="icon-menu"></span>'.Lang::t('List'), 'url' => $my_base_url.'&tab=installed'];
                 if (Config::enableExtensionsInstall()) {
-                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&amp;tab=update'];
-                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Theme'), 'url' => $my_base_url.'&amp;tab=new'];
+                    $sheets['update'] = ['caption' => '<span class="icon-arrows-cw"></span>'.Lang::t('Check for updates'), 'url' => $my_base_url.'&tab=update'];
+                    $sheets['new'] = ['caption' => '<span class="icon-plus-circled"></span>'.Lang::t('Add New Theme'), 'url' => $my_base_url.'&tab=new'];
                 }
-                $sheets['standard_pages'] = ['caption' => '<span class="icon-cog-alt"></span>'.Lang::t('Standard pages'), 'url' => $my_base_url.'&amp;tab=standard_pages'];
+                $sheets['standard_pages'] = ['caption' => '<span class="icon-cog-alt"></span>'.Lang::t('Standard pages'), 'url' => $my_base_url.'&tab=standard_pages'];
                 break;
 
             case 'updates':
@@ -159,7 +159,7 @@ final class CoreTabsRegistrar
                     $sheets['pwg'] = ['caption' => Lang::t('Piwigo core'), 'url' => $my_base_url];
                 }
                 if (Config::enableExtensionsInstall()) {
-                    $sheets['ext'] = ['caption' => Lang::t('Extensions'), 'url' => $my_base_url.'&amp;tab=ext'];
+                    $sheets['ext'] = ['caption' => Lang::t('Extensions'), 'url' => $my_base_url.'&tab=ext'];
                 }
                 break;
 

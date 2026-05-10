@@ -92,12 +92,9 @@ final class UrlService
     }
 
     /** @param array<mixed> $params */
-    public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
+    public function addUrlParams(string $url, array $params, string $argSeparator = '&'): string
     {
         if (!empty($params)) {
-            if (defined('IN_WS') and '&amp;' === $argSeparator) {
-                $argSeparator = '&';
-            }
 
             $isFirst = true;
             foreach ($params as $param => $val) {
@@ -706,7 +703,7 @@ final class UrlService
 
         $vars = array_diff_key($vars, array_flip($rejects));
 
-        return '?' . http_build_query($vars, '', $escape ? '&amp;' : '&');
+        return '?' . http_build_query($vars, '', '&');
     }
 
     public static function urlIsRemote(string $url): bool

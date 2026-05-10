@@ -50,7 +50,7 @@ final class NotificationController implements ControllerInterface
             $feed_url .= '?feed=' . $page['feed'];
         } else {
             $feed_url .= '?feed=' . $page['feed'];
-            $feed_image_only_url = $feed_url . '&amp;image_only';
+            $feed_image_only_url = $feed_url . '&image_only';
         }
 
         $title = Lang::t('Notification');

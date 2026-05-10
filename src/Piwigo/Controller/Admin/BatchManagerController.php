@@ -483,7 +483,7 @@ final class BatchManagerController
 
         // ── Tabs ──────────────────────────────────────────────────────────────
 
-        $GLOBALS['manager_link'] = $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;mode=';
+        $GLOBALS['manager_link'] = $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&mode=';
 
         if (isset($_GET['mode'])) {
             ServiceLocator::get(Util::class)->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
@@ -1135,7 +1135,7 @@ final class BatchManagerController
 
                 $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str);
                 $admin_url_start      = $admin_photo_base_url . '-properties';
-                $admin_url_start     .= isset($row['cat_id']) ? '&amp;cat_id=' . (is_string($row['cat_id']) ? $row['cat_id'] : '') : '';
+                $admin_url_start     .= isset($row['cat_id']) ? '&cat_id=' . (is_string($row['cat_id']) ? $row['cat_id'] : '') : '';
                 $selected_level       = $row['level'] ?? null;
 
                 $userLevel  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
@@ -1171,10 +1171,10 @@ final class BatchManagerController
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
                     'tag_selection'         => $tag_selection,
                     'U_DOWNLOAD'            => ServiceLocator::get(UrlGenerator::class)->actionDownload((int) $row_id_str, 'e', ServiceLocator::get(Util::class)->getPwgToken()),
-                    'U_HISTORY'             => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;filter_image_id=' . $row_id_str,
+                    'U_HISTORY'             => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_image_id=' . $row_id_str,
                     'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $row_id_str,
-                    'U_DELETE'              => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
-                    'U_SYNC'                => $admin_url_start . '&amp;sync_metadata=1',
+                    'U_DELETE'              => $admin_url_start . '&delete=1&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                    'U_SYNC'                => $admin_url_start . '&sync_metadata=1',
                     'PATH'                  => $row['path'],
                     'level_options_selected' => [$selected_level],
                 ]));

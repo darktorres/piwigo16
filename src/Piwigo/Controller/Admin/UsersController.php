@@ -295,7 +295,7 @@ final class UsersController
             'TITLE'              => Lang::t('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
             'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
-            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&amp;user_id=' . $pageUser,
+            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&user_id=' . $pageUser,
         ]);
 
         $group_authorized = [];

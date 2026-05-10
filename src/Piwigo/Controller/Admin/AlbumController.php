@@ -493,13 +493,13 @@ final class AlbumController
         if (isset($_GET['parent_id'])) {
             $navigation .= Config::levelSeparator();
             $raw_parent_id = $_GET['parent_id'];
-            $navigation   .= ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId(is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0, $base_url . '&amp;parent_id=');
+            $navigation   .= ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId(is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0, $base_url . '&parent_id=');
         }
 
         $tpl->setFilename('categories', 'cat_list.latte');
         $form_action = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
         if (isset($_GET['parent_id'])) {
-            $form_action .= '&amp;parent_id=' . (is_string($_GET['parent_id']) ? $_GET['parent_id'] : '');
+            $form_action .= '&parent_id=' . (is_string($_GET['parent_id']) ? $_GET['parent_id'] : '');
         }
         $sort_orders_checked = array_keys($sort_orders);
 
@@ -556,7 +556,7 @@ final class AlbumController
             $cat_list_url = $base_url . 'cat_list';
             $self_url     = $cat_list_url;
             if ($parentIdStr !== null) {
-                $self_url .= '&amp;parent_id=' . $parentIdStr;
+                $self_url .= '&parent_id=' . $parentIdStr;
             }
 
             $catIdStr = (string) (is_numeric($category['id']) ? (int) $category['id'] : 0);
@@ -568,19 +568,19 @@ final class AlbumController
                 'ID'               => $category['id'],
                 'RANK'             => (is_numeric($category['rank'] ?? null) ? (int) $category['rank'] : 0) * 10,
                 'U_JUMPTO'         => UrlService::get()->makeIndexUrl(['category' => $category]),
-                'U_CHILDREN'       => $cat_list_url . '&amp;parent_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
+                'U_CHILDREN'       => $cat_list_url . '&parent_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'U_EDIT'           => $base_url . 'album-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
-                'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
+                'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&album=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'U_MOVE'           => $base_url . 'albums#cat-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
                 'IS_VIRTUAL'       => empty($category['dir']),
                 'CAT_ADMIN_ACCESS' => ServiceLocator::get(UserAdminService::class)->catAdminAccess(is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0),
             ];
 
             if (empty($category['dir'])) {
-                $tpl_cat['U_DELETE']  = $self_url . '&amp;delete=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
-                $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+                $tpl_cat['U_DELETE']  = $self_url . '&delete=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
+                $tpl_cat['U_DELETE'] .= '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
             } elseif (Config::enableSynchronization()) {
-                $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
+                $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
             }
 
             $tpl->append('categories', $tpl_cat);
@@ -653,7 +653,7 @@ final class AlbumController
         $cat_list_url = $base_url . 'albums';
         $self_url     = $cat_list_url;
         if ($catUppercat !== '') {
-            $self_url .= '&amp;parent_id=' . $catUppercat;
+            $self_url .= '&parent_id=' . $catUppercat;
         }
 
         PageState::current()->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
@@ -669,9 +669,9 @@ final class AlbumController
             'CAT_ADMIN_ACCESS'      => ServiceLocator::get(UserAdminService::class)->catAdminAccess($catIntId),
             'U_DELETE'              => $base_url . 'albums',
             'U_JUMPTO'              => UrlService::get()->makeIndexUrl(['category' => $category]),
-            'U_ADD_PHOTOS_ALBUM'    => $base_url . 'photos_add&amp;album=' . $catId,
-            'U_CHILDREN'            => $cat_list_url . '&amp;parent_id=' . $catId,
-            'U_MOVE'                => $base_url . 'albums&amp;parent_id=' . $catId,
+            'U_ADD_PHOTOS_ALBUM'    => $base_url . 'photos_add&album=' . $catId,
+            'U_CHILDREN'            => $cat_list_url . '&parent_id=' . $catId,
+            'U_MOVE'                => $base_url . 'albums&parent_id=' . $catId,
             'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&album=' . $catId,
         ]);
 
@@ -682,7 +682,7 @@ final class AlbumController
         $image_count = 0;
         $info_title  = '';
         if ($category['has_images']) {
-            $tpl->assign('U_MANAGE_ELEMENTS', $base_url . 'batch_manager&amp;filter=album-' . $catId);
+            $tpl->assign('U_MANAGE_ELEMENTS', $base_url . 'batch_manager&filter=album-' . $catId);
             [$image_count, $min_date, $max_date] = ServiceLocator::get(CategoryRepository::class)->findImageStats($catIntId);
             $min_date = (string) $min_date;
             $max_date = (string) $max_date;
@@ -713,7 +713,7 @@ final class AlbumController
             'NB_SUBCATS'               => $category['nb_subcats'],
         ]);
 
-        $tpl->assign(['U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $catId, 'CACHE_KEYS' => ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories'])]);
+        $tpl->assign(['U_MANAGE_RANKS' => $base_url . 'element_set_ranks&cat_id=' . $catId, 'CACHE_KEYS' => ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories'])]);
 
         if (!$category['is_virtual']) {
             /** @phpstan-ignore-next-line argument.type */
@@ -724,7 +724,7 @@ final class AlbumController
             $tpl->assign('CAT_DIR_NAME', basename($category_full_dir));
             $tpl->assign('CAT_MIN_DIR', $this->getMinLocalDir($category_full_dir));
             if (Config::enableSynchronization()) {
-                $tpl->assign('U_SYNC', $base_url . 'site_update&amp;site=' . $catSiteId . '&amp;cat_id=' . $catId);
+                $tpl->assign('U_SYNC', $base_url . 'site_update&site=' . $catSiteId . '&cat_id=' . $catId);
             }
         }
 
@@ -817,7 +817,7 @@ final class AlbumController
 
         $get_section     = $_GET['section'] ?? null;
         $page['section'] = is_string($get_section) ? $get_section : 'status';
-        $base_url        = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&amp;section=';
+        $base_url        = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&section=';
 
         $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_options'), 'F_ACTION' => $base_url . $page['section']]);
 

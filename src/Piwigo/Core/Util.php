@@ -408,7 +408,7 @@ final readonly class Util
     {
         $navbar      = [];
         $pagesAround = Config::paginatePagesAround();
-        $startStr    = $cleanUrl ? '/' . $paramName . '-' : (!str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
+        $startStr    = $cleanUrl ? '/' . $paramName . '-' : (!str_contains($url, '?') ? '?' : '&') . $paramName . '=';
 
         if ($start < 0) {
             $start = 0;

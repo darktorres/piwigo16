@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
@@ -324,7 +325,7 @@ final class MaintenanceController
             'str_delete_all_sizes_confirm' => Lang::t('Are you sure you want to delete all sizes?'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&action=%s&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
         if (!PermissionService::get()->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
@@ -529,14 +530,14 @@ final class MaintenanceController
         $tpl->setFilenames(['maintenance' => 'maintenance_env.latte']);
         $tpl->assign('page_data_json', json_encode(['unit_MB' => Lang::t('%s MB'), 'no_time_elapsed' => Lang::t('right now'), 'no_active_plugin' => Lang::t('No plugin activated'), 'error_occured' => Lang::t('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&action=%s&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
 
         $purge_urls = [];
-        $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
+        $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&type=all';
         foreach (ImageStdParams::getDefinedTypeMap() as $params) {
-            $purge_urls[Lang::t($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
+            $purge_urls[Lang::t($params->type)] = sprintf($url_format, 'derivatives') . '&type=' . $params->type;
         }
-        $purge_urls[Lang::t(DerivativeSize::Custom->value)] = sprintf($url_format, 'derivatives') . '&amp;type=' . DerivativeSize::Custom->value;
+        $purge_urls[Lang::t(DerivativeSize::Custom->value)] = sprintf($url_format, 'derivatives') . '&type=' . DerivativeSize::Custom->value;
 
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
@@ -1074,8 +1075,8 @@ final class MaintenanceController
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
             $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '';
             $is_remote  = UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '');
-            $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&amp;site=' . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '&amp;action=';
-            $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&amp;site=' . $row_id_str;
+            $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '&action=';
+            $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
             $tpl_var = [
@@ -1145,7 +1146,7 @@ final class MaintenanceController
         }
 
         if (isset($page['no_md5sum_number'])) {
-            $tpl->assign(['save_error' => '<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>']);
+            $tpl->assign(['save_error' => new Html('<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);
         }
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';

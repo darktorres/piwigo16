@@ -141,7 +141,7 @@ final class AdminController implements ControllerInterface
         $qsRawVal = $_SERVER['QUERY_STRING'] ?? null;
         $qsRaw = is_string($qsRawVal) ? $qsRawVal : '';
         if (count($test_get) === 0 && $qsRaw !== '') {
-            $change_theme_url .= str_replace('&', '&amp;', $qsRaw) . '&amp;';
+            $change_theme_url .= $qsRaw . '&';
         }
         $change_theme_url .= 'change_theme=1';
 
@@ -205,7 +205,7 @@ final class AdminController implements ControllerInterface
         $wsBase     = ServiceLocator::get(UrlGenerator::class)->ws();
         $wsSep      = str_contains($wsBase, '?') ? '&' : '?';
         $GLOBALS['link_start'] = $link_start = $adminBase . $adminSep . 'page=';
-        $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&amp;section=';
+        $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&section=';
 
         Util::get()->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
@@ -223,7 +223,7 @@ final class AdminController implements ControllerInterface
             'USERNAME'               => $username,
             'ENABLE_SYNCHRONIZATION' => Config::enableSynchronization(),
             'U_SITE_MANAGER'         => $link_start . 'site_manager',
-            'U_HISTORY_STAT'         => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
+            'U_HISTORY_STAT'         => $link_start . 'stats&year=' . date('Y') . '&month=' . date('n'),
             'U_FAQ'                  => $link_start . 'help',
             'U_SITES'                => $link_start . 'remote_site',
             'U_MAINTENANCE'          => $link_start . 'maintenance',
@@ -238,9 +238,9 @@ final class AdminController implements ControllerInterface
             'U_ALBUMS'               => $link_start . 'albums',
             'U_CAT_OPTIONS'          => $link_start . 'cat_options',
             'U_CAT_SEARCH'           => $link_start . 'cat_search',
-            'U_CAT_UPDATE'           => $link_start . 'site_update&amp;site=1',
+            'U_CAT_UPDATE'           => $link_start . 'site_update&site=1',
             'U_RATING'               => $link_start . 'rating',
-            'U_RECENT_SET'           => $link_start . 'batch_manager&amp;filter=prefilter-last_import',
+            'U_RECENT_SET'           => $link_start . 'batch_manager&filter=prefilter-last_import',
             'U_BATCH'                => $link_start . 'batch_manager',
             'U_TAGS'                 => $link_start . 'tags',
             'U_USERS'                => $link_start . 'user_list',
@@ -278,7 +278,7 @@ final class AdminController implements ControllerInterface
         if ($nb_photos_in_caddie > 0) {
             $tpl->assign([
                 'NB_PHOTOS_IN_CADDIE' => $nb_photos_in_caddie,
-                'U_CADDIE'            => $link_start . 'batch_manager&amp;filter=prefilter-caddie',
+                'U_CADDIE'            => $link_start . 'batch_manager&filter=prefilter-caddie',
             ]);
         } else {
             $tpl->assign([
@@ -302,7 +302,7 @@ final class AdminController implements ControllerInterface
 
         $tpl->assign([
             'NB_ORPHANS' => $page['nb_orphans'],
-            'U_ORPHANS'  => $link_start . 'batch_manager&amp;filter=prefilter-no_album',
+            'U_ORPHANS'  => $link_start . 'batch_manager&filter=prefilter-no_album',
         ]);
 
         // ── Refresh permissions ───────────────────────────────────────────────

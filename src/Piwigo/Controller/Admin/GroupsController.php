@@ -100,10 +100,10 @@ final class GroupsController
         $userFields = Config::userFields();
 
         $admin_url             = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
-        $perm_url              = $admin_url . 'group_perm&amp;group_id=';
-        $users_url             = $admin_url . 'user_list&amp;group=';
-        $del_url               = $admin_url . 'group_list&amp;delete=';
-        $toggle_is_default_url = $admin_url . 'group_list&amp;toggle_is_default=';
+        $perm_url              = $admin_url . 'group_perm&group_id=';
+        $users_url             = $admin_url . 'user_list&group=';
+        $del_url               = $admin_url . 'group_list&delete=';
+        $toggle_is_default_url = $admin_url . 'group_list&toggle_is_default=';
         $group_counter         = 0;
 
         foreach ($groupRepo->findAllOrdered() as $row) {
@@ -116,10 +116,10 @@ final class GroupsController
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
-                'U_DELETE'   => $del_url . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
                 'U_PERM'     => $perm_url . $row_id_str,
                 'U_USERS'    => $users_url . $row_id_str,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
             ]);
             $group_counter++;
         }
@@ -183,7 +183,7 @@ final class GroupsController
             'TITLE'              => Lang::t('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
             'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
-            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&amp;group_id=' . $group_id,
+            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&group_id=' . $group_id,
         ]);
 
         $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';

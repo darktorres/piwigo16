@@ -54,7 +54,7 @@ final class TagsController implements ControllerInterface
         foreach (['cloud', 'letters'] as $mode) {
             $tpl->assign(
                 'U_' . strtoupper($mode),
-                ServiceLocator::get(UrlGenerator::class)->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&amp;display_mode=' . $mode)
+                ServiceLocator::get(UrlGenerator::class)->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&display_mode=' . $mode)
             );
         }
 

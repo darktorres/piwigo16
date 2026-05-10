@@ -223,12 +223,12 @@ final readonly class UrlGenerator
     /** URL for downloading original/representative image. */
     public function actionDownload(int $id, string $part, string $pwgToken): string
     {
-        return UrlService::getRootUrl() . 'index.php?/action&amp;id=' . $id . '&amp;part=' . $part . '&amp;pwg_token=' . $pwgToken . '&amp;download';
+        return UrlService::getRootUrl() . 'index.php?/action&id=' . $id . '&part=' . $part . '&pwg_token=' . $pwgToken . '&download';
     }
     /** URL for downloading a specific image format. */
     public function actionFormat(int $formatId): string
     {
-        return UrlService::getRootUrl() . 'index.php?/action&amp;format=' . $formatId . '&amp;download';
+        return UrlService::getRootUrl() . 'index.php?/action&format=' . $formatId . '&download';
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

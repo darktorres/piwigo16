@@ -139,7 +139,7 @@ final class ExtensionsController
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
         $pwg_token = ServiceLocator::get(Util::class)->getPwgToken();
-        $action_url = $base_url . '&amp;plugin=' . '%s' . '&amp;pwg_token=' . $pwg_token;
+        $action_url = $base_url . '&plugin=' . '%s' . '&pwg_token=' . $pwg_token;
 
         $plugins = new Plugins();
 
@@ -314,7 +314,7 @@ final class ExtensionsController
         if (isset($_GET['installstatus'])) {
             switch ($_GET['installstatus']) {
                 case 'ok':
-                    $activate_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins') . '&amp;filter=deactivated';
+                    $activate_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins') . '&filter=deactivated';
                     PageState::current()->addInfo(Lang::t('Plugin has been successfully copied'));
                     PageState::current()->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
                     $pluginIdRaw = $_GET['plugin_id'] ?? null;
@@ -353,7 +353,7 @@ final class ExtensionsController
                 [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
                 $revisionId    = is_scalar($plugin['revision_id'] ?? null) ? (string) $plugin['revision_id'] : '';
                 $extensionId   = is_scalar($plugin['extension_id'] ?? null) ? (string) $plugin['extension_id'] : '';
-                $url_auto_install = htmlentities($base_url) . '&amp;revision=' . $revisionId . '&amp;extension=' . $extensionId . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+                $url_auto_install = htmlentities($base_url) . '&revision=' . $revisionId . '&extension=' . $extensionId . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
 
                 $revisionDateRaw    = $plugin['revision_date'] ?? null;
                 $rev_date           = date_create(is_string($revisionDateRaw) ? $revisionDateRaw : '');
@@ -407,7 +407,7 @@ final class ExtensionsController
         }
 
         if (!$beta_test && preg_match('/(beta|RC)/', AppInfo::VERSION)) {
-            $tpl->assign('BETA_URL', $base_url . '&amp;beta-test=true');
+            $tpl->assign('BETA_URL', $base_url . '&beta-test=true');
         }
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         $tpl->assign('BETA_TEST', $beta_test);
@@ -571,10 +571,10 @@ final class ExtensionsController
         usort($tpl_themes, $this->cmpThemes(...));
 
         $tpl->assign([
-            'activate_baseurl'   => $base_url . '&amp;action=activate&amp;theme=',
-            'deactivate_baseurl' => $base_url . '&amp;action=deactivate&amp;theme=',
-            'set_default_baseurl' => $base_url . '&amp;action=set_default&amp;theme=',
-            'delete_baseurl'     => $base_url . '&amp;action=delete&amp;theme=',
+            'activate_baseurl'   => $base_url . '&action=activate&theme=',
+            'deactivate_baseurl' => $base_url . '&action=deactivate&theme=',
+            'set_default_baseurl' => $base_url . '&action=set_default&theme=',
+            'delete_baseurl'     => $base_url . '&action=delete&theme=',
             'tpl_themes'         => $tpl_themes,
         ]);
 
@@ -645,7 +645,7 @@ final class ExtensionsController
             foreach ($themes->server_themes as $theme) {
                 $theme_revision_id  = is_scalar($theme['revision_id'] ?? null) ? (string) $theme['revision_id'] : '';
                 $theme_extension_id = is_scalar($theme['extension_id'] ?? null) ? (string) $theme['extension_id'] : '';
-                $url_auto_install   = htmlentities($base_url) . '&amp;revision=' . $theme_revision_id . '&amp;extension=' . $theme_extension_id . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+                $url_auto_install   = htmlentities($base_url) . '&revision=' . $theme_revision_id . '&extension=' . $theme_extension_id . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
                 $tpl->append('new_themes', ['name' => $theme['extension_name'], 'thumbnail' => key_exists('thumbnail_src', $theme) ? $theme['thumbnail_src'] : '', 'screenshot' => key_exists('screenshot_url', $theme) ? $theme['screenshot_url'] : '', 'install_url' => $url_auto_install]);
             }
         } else {
@@ -927,8 +927,8 @@ final class ExtensionsController
                 $revId    = is_scalar($language['revision_id'] ?? null) ? (string) $language['revision_id'] : '';
                 $extId    = is_scalar($language['extension_id'] ?? null) ? (string) $language['extension_id'] : '';
                 $dlUrl    = is_scalar($language['download_url'] ?? null) ? (string) $language['download_url'] : '';
-                $url_auto_install = htmlentities($base_url) . '&amp;revision=' . $revId . '&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
-                $tpl->append('languages', ['EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '', 'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '', 'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extId, 'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '', 'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '', 'DATE' => $date, 'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '', 'URL_INSTALL' => $url_auto_install, 'URL_DOWNLOAD' => $dlUrl . '&amp;origin=piwigo_download']);
+                $url_auto_install = htmlentities($base_url) . '&revision=' . $revId . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+                $tpl->append('languages', ['EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '', 'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '', 'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extId, 'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '', 'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '', 'DATE' => $date, 'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '', 'URL_INSTALL' => $url_auto_install, 'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download']);
             }
         } else {
             PageState::current()->addError(Lang::t('Can\'t connect to server.'));
@@ -1036,7 +1036,7 @@ final class ExtensionsController
                         'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . (string) $extId . '#changelog',
                         'REV_DESC' => trim($revDesc, " \n\r"),
                         'CURRENT_VERSION' => $extVersion, 'NEW_VERSION' => $revName,
-                        'URL_DOWNLOAD' => $dlUrl . '&amp;origin=piwigo_download',
+                        'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download',
                         'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
                     ]);
                 }

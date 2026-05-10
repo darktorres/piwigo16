@@ -146,7 +146,7 @@ final class DirectPreparer
             }
             $tpl->assign([
                 'setup_warnings' => $setup_warnings,
-                'hide_warnings_link' => $photosAddBaseUrl . '&amp;hide_warnings=1',
+                'hide_warnings_link' => $photosAddBaseUrl . '&hide_warnings=1',
             ]);
         }
     }

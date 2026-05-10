@@ -173,7 +173,7 @@ final class UrlService
         $url = self::getRootUrl() . 'index.php?/picture/';
         switch (Config::pictureUrlStyle()) {
             case 'id-file':
-                $url .= is_string($params['image_id'] ?? null) ? $params['image_id'] : '';
+                $url .= is_scalar($params['image_id'] ?? null) ? (string) $params['image_id'] : '';
                 if (isset($params['image_file'])) {
                     $url .= '-' . ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
                 }
@@ -188,7 +188,7 @@ final class UrlService
                 }
                 // no break
             default:
-                $url .= is_string($params['image_id'] ?? null) ? $params['image_id'] : '';
+                $url .= is_scalar($params['image_id'] ?? null) ? (string) $params['image_id'] : '';
         }
         if (!isset($params['category'])) {
             unset($params['flat']);

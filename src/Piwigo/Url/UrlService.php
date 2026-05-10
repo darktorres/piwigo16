@@ -267,7 +267,7 @@ final class UrlService
 
                         $sectionString .= '/category/';
                         if (!isset($cat['permalink']) || $cat['permalink'] === '') {
-                            $sectionString .= is_string($cat['id'] ?? null) ? $cat['id'] : '';
+                            $sectionString .= is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
                                 $catNameRaw = $cat['name'] ?? null;
                                 $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($catNameRaw) ? $catNameRaw : '');
@@ -284,7 +284,7 @@ final class UrlService
                                 $sectionString .= '/';
 
                                 if (empty($category['permalink'])) {
-                                    $sectionString .= is_string($category['id'] ?? null) ? $category['id'] : '';
+                                    $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
                                     if (Config::categoryUrlStyle() == 'id-name') {
                                         $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
                                     }

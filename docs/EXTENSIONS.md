@@ -9,6 +9,10 @@ Inventory of every entry in each sibling repo's `manifest.json`.
 | [`piwigo16-languages`](#piwigo16-languages) |      62 |
 | [`piwigo16-tools`](#piwigo16-tools)         |      33 |
 
+The **Compatible with** column lists every Piwigo version upstream `piwigo.org/ext` marks the mirrored revision as compatible with, newest-first. It mirrors the `piwigo_compat` field on each entry in the sibling-repo `manifest.json`, which was backfilled once by querying `get_revision_list.php?category_id=X&version=Y` across all 22 known Piwigo versions and inverting the result. The data is a snapshot — see [`piwigo16-ext/README.md`](../../piwigo16-ext/README.md) for refresh instructions.
+
+Of the 636 entries here, only 321 (~50%) are actually compatible with Piwigo 16; the rest target older Piwigo versions (some as old as 1.5). The mirror keeps whatever revision was retrievable upstream regardless of declared compatibility, so `piwigo16-tools` in particular is largely a historical archive (only 1 of 33 entries works on Piwigo 16). Filter on the column when looking for currently-supported extensions.
+
 ## piwigo16-plugins
 
 405 entries.

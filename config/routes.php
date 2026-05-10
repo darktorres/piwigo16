@@ -37,6 +37,22 @@ $routes->add('gallery_cat', new Route(
     methods:      $get,
 ));
 
+// Bare /categories (all-albums view) and /categories/<chronology|flat|start-N>.
+// Plural form is emitted by makeSectionInUrl when section=categories has no
+// specific category id (chronology / flat / homepage variants).
+$routes->add('gallery_cats', new Route(
+    path:     '/categories',
+    defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'categories'],
+    methods:  $get,
+));
+
+$routes->add('gallery_cats_rest', new Route(
+    path:         '/categories/{rest}',
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'categories'],
+    requirements: ['rest' => '.+'],
+    methods:      $get,
+));
+
 // /picture/12-filename/category/7   → rest = "12-filename/category/7"
 $routes->add('gallery_pic', new Route(
     path:         '/picture/{rest}',

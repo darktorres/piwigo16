@@ -172,7 +172,7 @@
         </div>
       </div>
       <div class="photosUploader" id="uploader" {if !$can_upload}hidden{/if}>
-        <p>Your browser doesn't have HTML5 support.</p>
+        <noscript><p>{='Your browser doesn\'t have HTML5 support.'|translate}</p></noscript>
       </div>
       <div class="selectAlbumFirst" id="chooseAlbumFirst" {if $can_upload}hidden{/if}>
         <p>{="First choose an album, then add your files"|translate}</p>

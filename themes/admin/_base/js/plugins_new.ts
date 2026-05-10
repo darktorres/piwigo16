@@ -328,10 +328,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .getElementById('showBetaTestPlugin')
         ?.addEventListener('change', function (this: HTMLInputElement) {
             qs('.beta-test-plugin-switch .slider')?.classList.add('loading');
-            const queryParams = new URLSearchParams(window.location.search);
-            queryParams.set('beta-test', String(this.checked));
-            history.replaceState(null, '', '?' + queryParams.toString());
-            window.location.reload();
+            // URLSearchParams would percent-encode the leading "/admin" sentinel
+            // that Piwigo's router matches on, breaking the admin dispatch.
+            const search = window.location.search.replace(/[?&]beta-test=[^&]*/, '');
+            const sep = search.length > 1 ? '&' : '?';
+            window.location.search =
+                search + sep + 'beta-test=' + (this.checked ? 'true' : 'false');
         });
 });
 

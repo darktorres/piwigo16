@@ -38,13 +38,25 @@ final class ExceptionHandlerMiddleware implements MiddlewareInterface
                 throw $e;
             }
 
+            // Always forward to PHP's error_log so the message lands in
+            // Apache's error log (or whatever SAPI logs to). Piwigo's own
+            // Logger writes to _data/logs/, which is easy to overlook when
+            // triage starts at the standard server log.
+            error_log(sprintf(
+                '[Piwigo] %s: %s in %s:%d (uri=%s)%s',
+                $e::class,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine(),
+                (string) $request->getUri(),
+                "\n" . $e->getTraceAsString()
+            ));
+
             if (LoggerRegistry::isInitialized()) {
                 LoggerRegistry::current()->error('Unhandled exception', [
                     'exception' => $e,
                     'uri'       => (string) $request->getUri(),
                 ]);
-            } else {
-                error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             }
 
             return ResponseFactory::html(

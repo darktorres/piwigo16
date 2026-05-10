@@ -14,6 +14,21 @@ final class ExceptionHandler
 {
     public static function handle(\Throwable $e): void
     {
+        // Always forward to PHP's error_log so the message lands in Apache's
+        // error log (or whatever SAPI logs to) — Piwigo's own Logger writes
+        // to _data/logs/, which is easy to overlook when triage starts at
+        // the standard server log. Also covers the early-bootstrap window
+        // before LoggerRegistry is initialised, where the file logger
+        // doesn't exist yet.
+        error_log(sprintf(
+            '[Piwigo] %s: %s in %s:%d%s',
+            $e::class,
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            "\n" . $e->getTraceAsString()
+        ));
+
         if (LoggerRegistry::isInitialized()) {
             LoggerRegistry::current()->error(
                 $e->getMessage(),

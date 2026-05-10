@@ -280,6 +280,12 @@ SELECT id, name, permalink
 $btraceMsg
 </pre>\n";
 
+        // Server-side log of the fatal so the message reaches the standard
+        // SAPI error log, not just the HTML response. ExceptionHandler will
+        // log again from the rethrow below if it propagates that far, but
+        // some callers wrap the throw — log here to be safe.
+        error_log('[Piwigo] fatalError: ' . trim(strip_tags($msg)) . ($btraceMsg !== '' ? "\n" . $btraceMsg : ''));
+
         if (!headers_sent()) {
             header('HTTP/1.0 500 Server error', true, 500);
         }

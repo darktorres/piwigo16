@@ -1,6 +1,6 @@
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
 {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 {do combineScript(id: 'ajax', load: 'footer', require: 'common', path: 'themes/admin/_base/js/maintenance.js')}
 
 {if $isWebmaster == 1}

@@ -1,5 +1,5 @@
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-<script id="pwg-group-list-data" type="application/json">{$group_list_page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
+<script id="pwg-group-list-data" type="application/json">{$group_list_page_data_json|noescape}</script>
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
 {do combineScript(id: 'group_list', load: 'footer', path: 'themes/admin/_base/js/group_list.js')}

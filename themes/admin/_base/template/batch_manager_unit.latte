@@ -3,8 +3,8 @@
 
 
 {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)}
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
-<script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
+<script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json|noescape}</script>
 
 {do combineScript(id: 'batchManagerUnit', load: 'footer', path: 'themes/admin/_base/js/batchManagerUnit.js')}
 <div id="batchManagerGlobal">

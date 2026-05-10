@@ -1,4 +1,4 @@
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 {do combineScript(id: 'updates_pwg', load: 'footer', path: 'themes/admin/_base/js/updates_pwg.js')}
 
 {do combineCss(path: "themes/admin/_base/css/pages/updates-pwg.css")}

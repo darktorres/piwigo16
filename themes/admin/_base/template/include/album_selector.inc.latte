@@ -5,7 +5,7 @@
 {do combineCss(path: "themes/admin/_base/css/components/album_selector.css")}
 {do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-<script id="pwg-album-selector-data" type="application/json">{$album_selector_page_data_json}</script>
+<script id="pwg-album-selector-data" type="application/json">{$album_selector_page_data_json|noescape}</script>
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">

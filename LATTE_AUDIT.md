@@ -88,21 +88,21 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `popuphelp.tpl` ↔ `popuphelp.latte` — `HELP_CONTENT` Html-wrapped at producer (PopuphelpController).
 - [x] `profile.tpl` ↔ `profile.latte` — `PROFILE_CONTENT` auto-Html via `assignVarFromHandle`.
 - [~] `profile_content.tpl` ↔ `profile_content.latte` — `name=theme`/`name=language` Smarty barewords incorrectly converted to bare identifiers in Latte; converter `normalizeArgValue` updated to quote barewords. Existing files hand-fixed (×3 sites).
-- [ ] `redirect.tpl` ↔ `redirect.latte`
-- [ ] `register.tpl` ↔ `register.latte`
-- [ ] `search.tpl` ↔ `search.latte`
-- [ ] `search_rules.tpl` ↔ `search_rules.latte`
-- [ ] `slideshow.tpl` ↔ `slideshow.latte`
-- [ ] `tags.tpl` ↔ `tags.latte`
-- [ ] `thumbnails.tpl` ↔ `thumbnails.latte`
+- [x] `redirect.tpl` ↔ `redirect.latte` — `REDIRECT_MSG` is plain text from callers; faithful.
+- [x] `register.tpl` ↔ `register.latte` — translate-rewrite + `not` → `!`. Faithful.
+- [x] `search.tpl` ↔ `search.latte` — `{section start=N loop=M}` → `{foreach range(N, N+M-1)}`. `$smarty.now` → `time()`. `{html_options}` → `htmlOptions()`. `|strip_tags:false` handled.
+- [x] `search_rules.tpl` ↔ `search_rules.latte` — straight conversion.
+- [x] `slideshow.tpl` ↔ `slideshow.latte` — `ELEMENT_CONTENT` and `COMMENT_IMG` already wrapped at producer (PictureController).
+- [x] `tags.tpl` ↔ `tags.latte` — straight conversion.
+- [x] `thumbnails.tpl` ↔ `thumbnails.latte` — `assign` → `var`. Faithful.
 
 ## themes/_base/template/include (5)
 
-- [ ] `autosize.inc.tpl` ↔ `autosize.inc.latte`
-- [ ] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
-- [ ] `related_tags.inc.tpl` ↔ `related_tags.inc.latte`
-- [ ] `search_filters.inc.tpl` ↔ `search_filters.inc.latte`
-- [ ] `selected_tags.inc.tpl` ↔ `selected_tags.inc.latte`
+- [x] `autosize.inc.tpl` ↔ `autosize.inc.latte` — comment-only file; faithful.
+- [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte` — combine_script/css → do.
+- [x] `related_tags.inc.tpl` ↔ `related_tags.inc.latte` — straight conversion.
+- [~] `search_filters.inc.tpl` ↔ `search_filters.inc.latte` — `<script type="application/json">{$page_data_json}</script>` got `|noescape` (converter rule added in `addNoescapeToJsonScriptBlocks` pass).
+- [x] `selected_tags.inc.tpl` ↔ `selected_tags.inc.latte` — straight conversion.
 
 ## themes/_base/template/help (1)
 
@@ -327,6 +327,16 @@ containing `<` chars piped through repeat-style filters, but heuristic.
 `SectionInitializer:435` builds `$page['section_title']` as raw HTML
 (`<a href="...">Home</a> / Albums`). `GalleryController:133` assigns it
 to `TITLE`. Wrapped Html at the assign site.
+
+### Systemic — `<script type="application/json">` JSON blocks need `|noescape`
+
+Latte's auto-escape inside `<script>` is JS-context: it turns valid JSON
+quotes into `\"`-escaped JS literals, breaking
+`JSON.parse(document.querySelector(...).textContent)` consumers.
+`type="application/json"` data blocks need the JSON output emitted raw.
+Fixed in converter: new `addNoescapeToJsonScriptBlocks` pass detects
+the pattern and appends `|noescape` to the inner expression. Affected
+~40 .latte files across themes/_base, themes/admin, and themes/standard_pages.
 
 ### Systemic — Smarty bareword args become bare identifiers in Latte
 

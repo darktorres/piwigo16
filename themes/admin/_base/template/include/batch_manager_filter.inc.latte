@@ -1,4 +1,4 @@
-<script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json}</script>
+<script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json|noescape}</script>
 
 {do combineScript(id: 'batchManagerFilter', load: 'footer', path: 'themes/admin/_base/js/batchManagerFilter.js')}
 <fieldset>

@@ -1,4 +1,4 @@
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 {do combineScript(id: 'permalinks', load: 'footer', path: 'themes/admin/_base/js/permalinks.js')}
 
 {do combineCss(path: "themes/admin/_base/css/pages/permalinks.css")}

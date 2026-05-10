@@ -3,7 +3,7 @@
 
 {do combineCss(path: "themes/admin/_base/css/pages/rating.css")}
 
-<script id="pwg-rating-data" type="application/json">{$rating_page_data_json}</script>
+<script id="pwg-rating-data" type="application/json">{$rating_page_data_json|noescape}</script>
 
 <form action="{$F_ACTION}" method="GET" class="filter">
   <fieldset>

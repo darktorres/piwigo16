@@ -2,8 +2,8 @@
 {do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
 {do combineCss(path: "themes/admin/_base/fontello/css/fontello.css", order: -11)}
 
-<script id="pwg-std-pages-data" type="application/json">{$std_pages_data_json}</script>
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-std-pages-data" type="application/json">{$std_pages_data_json|noescape}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 {do combineScript(id: 'standard_pages_js', load: 'async', path: 'themes/standard_pages/js/standard_pages.js')}
 {do combineScript(id: 'standard_profile_js', load: 'footer', path: 'themes/standard_pages/js/profile.js')}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}

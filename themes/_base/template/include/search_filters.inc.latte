@@ -3,6 +3,6 @@
 {do combineCss(path: "themes/_base/css/{$themeconf['colorscheme']}-search.css", order: -100)}
 {do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
 
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
 {do combineScript(id: 'mcs', load: 'async', path: 'themes/_base/js/mcs.js')}

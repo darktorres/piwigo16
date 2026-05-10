@@ -2,7 +2,7 @@
 {do combineScript(id: 'picture_formats', load: 'footer', path: 'themes/admin/_base/js/picture_formats.js')}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
 
-<script id="pwg-page-data" type="application/json">{$page_data_json}</script>
+<script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
 <div class="formats-header">
     <a class="{if (count($FORMATS) != 0)}head-button-1{else}head-button-2{/if} icon-plus-circled" href="{$ADD_FORMATS_URL}">{="Add formats"|translate}</a>

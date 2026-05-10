@@ -5,7 +5,7 @@
 
 {do combineScript(id: 'batchManagerGlobal', load: 'async', require: 'datepicker,addAlbum', path: 'themes/admin/_base/js/batchManagerGlobal.js')}
 
-<script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json}</script>
+<script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json|noescape}</script>
 
 
 {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}

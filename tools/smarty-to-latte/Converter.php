@@ -79,8 +79,39 @@ final class Converter
         $source = $this->rewriteSmartyForeachIterator($source);
         $source = $this->rewritePrintedLiteralFilter($source);
         $source = $this->passForeachLocalsToIncludes($source);
+        $source = $this->addNoescapeToJsonScriptBlocks($source);
 
         return $source;
+    }
+
+    /**
+     * `<script type="application/json">{$VAR}</script>` —
+     *
+     * Latte applies JS-context auto-escape inside `<script>` tags by
+     * default; for `application/json` data blocks that turns valid
+     * JSON quotes into `\"`-escaped JS literals and breaks
+     * `JSON.parse(document.querySelector(...).textContent)`. The fix
+     * is to bypass auto-escape on the JSON expression with `|noescape`.
+     */
+    private function addNoescapeToJsonScriptBlocks(string $source): string
+    {
+        return preg_replace_callback(
+            '@(<script[^>]*type=[\'"]application/json[\'"][^>]*>)\{([^}]+)\}(</script>)@',
+            static function (array $m): string {
+                $body = trim($m[2]);
+                if (str_contains($body, '|noescape')) {
+                    return $m[0];
+                }
+                // `{$VAR}` — print of a single variable. Append filter.
+                if (preg_match('/^\$[A-Za-z_][A-Za-z0-9_]*$/', $body) === 1) {
+                    return $m[1] . '{' . $body . '|noescape}' . $m[3];
+                }
+                // Generic expression — wrap with `=` print prefix.
+                $expr = str_starts_with($body, '=') ? substr($body, 1) : $body;
+                return $m[1] . '{=' . trim($expr) . '|noescape}' . $m[3];
+            },
+            $source
+        ) ?? $source;
     }
 
     /**

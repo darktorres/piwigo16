@@ -1,7 +1,7 @@
 {include 'include/autosize.inc.latte'}
 {include 'include/datepicker.inc.latte'}
 
-<script id="pwg-picture-modify-data" type="application/json">{$picture_modify_page_data_json}</script>
+<script id="pwg-picture-modify-data" type="application/json">{$picture_modify_page_data_json|noescape}</script>
 
 {do combineScript(id: 'picture_modify', load: 'footer', path: 'themes/admin/_base/js/picture_modify.js')}
 {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}

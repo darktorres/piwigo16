@@ -13,7 +13,11 @@ function sbFunc(link: string, box: string): void {
             const top = triggerRect.top - parentRect.top;
             elt.style.left = Math.min(left, window.innerWidth - elt.offsetWidth - 5) + 'px';
             elt.style.top = top + trigger.offsetHeight + 'px';
-            elt.style.display = elt.style.display === 'none' ? '' : 'none';
+            // Use computed display so the first click on a CSS-hidden box
+            // (display: none in stylesheet, no inline style yet) opens it
+            // instead of redundantly setting display:none again.
+            const isHidden = getComputedStyle(elt).display === 'none';
+            elt.style.display = isHidden ? 'block' : 'none';
         });
     });
 

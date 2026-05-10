@@ -1,7 +1,7 @@
 {if !$inc_album_selector}
 {capture $inc_album_selector}1{/capture}
 {if empty($load_mode)}{$load_mode='footer'}{/if}
-{include 'include/colorbox.inc.latte', load_mode: $load_mode}
+{include 'colorbox.inc.latte', load_mode: $load_mode}
 {do combineCss(path: "themes/admin/_base/css/components/album_selector.css")}
 {do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}

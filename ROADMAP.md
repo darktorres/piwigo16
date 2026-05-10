@@ -6,7 +6,7 @@
 
 ---
 
-## At a glance (2026-05-09)
+## At a glance (2026-05-10)
 
 | §   | Section                       | Status                                        | Effort    | TL;DR                                                                                                                               |
 | --- | ----------------------------- | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -14,9 +14,10 @@
 | 1.2 | Templates pipeline            | 🟢 Active ▸ W2 D.\* 133/133 .latte lint-clean | XL        | wave 1 hygiene done → wave 2 Latte foundation + converter iterating + admin/public/standard_pages all converted → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**                            | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                                                                             |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                                                                                   |
-| 1.5 | Type correctness              | 🟡 **Not started**                            | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata                                                              |
-| 1.6 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
-| 1.7 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                  |
+| 1.5 | Type correctness              | 🟡 **Not started**                            | M         | mixed-types · globals · schema metadata                                                                                             |
+| 1.6 | Typed boundaries              | 🟡 **Not started**                            | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                     |
+| 1.7 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
+| 1.8 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                  |
 | 2.1 | TS `any` reduction            | 🟡 **Not started**                            | M         | 478 → ≤250 patterns                                                                                                                 |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**                            | M         | TS unit-test runner + first wave                                                                                                    |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**                            | S         | per-entrypoint gzip limits in CI                                                                                                    |
@@ -48,9 +49,13 @@ Most sections are independent. The chains that aren't:
 - **1.5b globals cleanup.** Gated by direct `$GLOBALS[...]` reads in `src/`
   being eliminated first. Both halves (bridge cleanup + renderer residuals)
   land together.
-- **1.6 test infrastructure.** Pest (1.6.1) lands first because it changes
-  the runner that 1.6.2 and 1.6.3 measure. Coverage (1.6.2) feeds Infection
-  (1.6.3) — mutation testing's MSI is meaningful only once enough tests
+- **1.6 typed boundaries.** Phase 1 (HTTP request DTOs) ↔ §1.3 WS endpoints
+  — coordinate `PwgServer::addMethod()` migration so plugin authors meet one
+  new pattern, not two. Phase 2 (repository entity layer) closes out the
+  globals work in §1.5b — `$user`, `$page` etc. become typed entity reads.
+- **1.7 test infrastructure.** Pest (1.7.1) lands first because it changes
+  the runner that 1.7.2 and 1.7.3 measure. Coverage (1.7.2) feeds Infection
+  (1.7.3) — mutation testing's MSI is meaningful only once enough tests
   exist to mutate.
 - **3.1 → 3.2.** CSS design tokens before a11y audit — color-contrast
   violations dissolve when tokens land, so most of the violation list
@@ -175,7 +180,7 @@ needs more design and is tracked below as its own item.
   numbers must be cross-checked against the current implementation
   before/after on a representative dataset. Recommended sequence:
   1. Land basic pest-coverage for `historySearch` summary numbers
-     (depends on §1.6.1 Pest landing, or write standalone PHPUnit for
+     (depends on §1.7.1 Pest landing, or write standalone PHPUnit for
      this method).
   2. Refactor to the 5-query shape above.
   3. Confirm summary rendering unchanged on staging fixture.
@@ -1377,46 +1382,40 @@ curl -sw '%{http_code}\n' -o /dev/null \
 
 ---
 
-### 1.5 Type correctness — three converging streams
+### 1.5 Type correctness — three tactical streams
 
-**Status:** 🟡 Not started · **Effort:** M · 3 streams (7 + 2 + 5 items)
+**Status:** 🟡 Not started · **Effort:** M · 3 streams (6 + 2 + 5 items)
 
-After PHPStan level 10 landed, three threads describe the remaining
-type-tightening surface:
+After PHPStan level 10 landed, three threads tighten the remaining
+mixed-type surface that doesn't require new architectural patterns:
 
-- **5a** — finite list of high-ROI mixed-type fixes from the codebase
-  audit (the audit catalogues ~879 unique `mixed` lines across 160 files;
-  these 7 fixes eliminate ~880 of ~1272 occurrences).
+- **5a** — six high-ROI mixed-type fixes from the codebase audit.
 - **5b** — `$GLOBALS` cleanup that's been deferred since the
   modernization phases that retired the procedural layer. Gated by direct
   `$GLOBALS[...]` reads in `src/` being eliminated first.
 - **5c** — five `Config::SCHEMA` enhancements left as deferred design
   surface from the schema work.
 
-Same gating constraint, same review effort — tackle as one section, work
-the streams in parallel where possible.
+Architectural boundary work — typed entities for DB rows and typed DTOs
+for HTTP input — was originally drafted under 1.5a (items 8–9) but lives
+in §1.6 now. Same gating constraint, same review effort — tackle 1.5
+as one section, work the streams in parallel where possible.
 
 #### 1.5a Mixed-type fixes
 
-**Status:** 🟡 Not started · 9 items
+**Status:** 🟡 Not started · 6 items
 
-Nine items from the codebase mixed-type audit, ordered by effort.
-Estimated reduction: the first 7 eliminate ~880 of ~1272 mixed
-occurrences; items 8–9 address the three remaining boundary categories
-(DB rows, HTTP input, global state) that the original audit deferred as
-"architectural decisions".
+Six fixes ordered by effort. None require behavior changes — all are
+type narrowings supported by existing runtime invariants.
 
-| Item                                                                                                                                                 |              Files | Effort           |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | -----------------: | ---------------- |
-| `ImageInterface::compose(mixed $overlay)` → `ImageInterface $overlay`                                                                                |                  4 | trivial          |
-| `CookieService::getCookieVar()` → `string\|null` (cookies are always strings)                                                                        |                  1 | low              |
-| ID parameters `mixed $id` / `$userId` → `int\|string`                                                                                                |        ~25 methods | low              |
-| `Config::raw()` typed return — `string\|int\|bool\|array<mixed>\|null`                                                                               |                  1 | low (annotation) |
-| `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s                                                          |                  1 | medium           |
-| Typed DB query helpers (`DbConnection::fetchIntColumn`, `fetchStringColumn`) — removes ~100 `fn (mixed $v)` lambdas                                  |            several | medium           |
-| `RequestCache` / `PersistentCache` → `@template T` generic — typed cache reads                                                                       |                  2 | medium           |
-| **Repository entity layer** — repositories return typed `*Entity` objects instead of `array<string, mixed>`; `fromRow()` is the single cast boundary | 20 repos + callers | high             |
-| **HTTP input boundary** — route all remaining raw `$_POST`/`$_GET` reads through `StringUtil::input*`; no raw superglobal access outside that helper |          ~30 sites | medium           |
+| Item                                                                                                | Files | Effort           |
+| --------------------------------------------------------------------------------------------------- | ----: | ---------------- |
+| `ImageInterface::compose(mixed $overlay)` → `ImageInterface $overlay`                               |     4 | trivial          |
+| `CookieService::getCookieVar()` → `?string` (cookies are always strings)                            |     1 | low              |
+| `CategoryAdminService::deleteSite(mixed $id)` → `int\|string`                                       |     1 | trivial          |
+| `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                       |     1 | low (annotation) |
+| `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s         |     1 | medium           |
+| `RequestCache` / `PersistentCache` → `@template T` generic on `remember()` / templated value types  |     2 | medium           |
 
 ##### Concrete examples
 
@@ -1436,38 +1435,22 @@ interface ImageInterface
 }
 ```
 
-###### ID parameters
+###### CategoryAdminService::deleteSite
 
 ```php
 // before
-public function deleteUser(mixed $userId): void
 public function deleteSite(mixed $id): void
-public function getGroupname(mixed $groupId): string|false
 
 // after
-public function deleteUser(int|string $userId): void
 public function deleteSite(int|string $id): void
-public function getGroupname(int|string $groupId): string|false
 ```
 
 Callers already narrow internally with `(int)` casts; the union-type
-annotation just documents what's actually accepted.
-
-###### Typed DB query helpers
-
-```php
-// before — every caller writes the same lambda
-$ids = array_map(
-    fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-    $conn->fetchFirstColumn('SELECT id FROM …')
-);
-
-// after — DbConnection wraps the cast
-$ids = $conn->fetchIntColumn('SELECT id FROM …');   // returns list<int>
-```
-
-About 100 lambdas of the same shape disappear once `fetchIntColumn` and
-`fetchStringColumn` exist.
+annotation just documents what's actually accepted. The other
+`mixed $id`-shaped sites the original audit catalogued live inside
+`array_map(fn (mixed $v) => …)` lambdas at DB call boundaries — those
+get removed naturally as queries move into typed repository methods
+under §1.6 Phase 2.
 
 ###### EventDispatcher generic
 
@@ -1476,109 +1459,35 @@ About 100 lambdas of the same shape disappear once `fetchIntColumn` and
 $result = $dispatcher->dispatch('foo_event', $someArray);
 // $result is array<mixed>
 
-// after — @template T preserves the input type
+// after — @template T preserves the input type, variadic split for templating
 /** @template T */
 class EventDispatcher {
-    /** @param T $data @return T */
-    public function dispatch(string $event, mixed $data): mixed { /* … */ }
+    /**
+     * @param T $data
+     * @return T
+     */
+    public static function dispatch(string $event, mixed $data = null, mixed ...$extraArgs): mixed { /* … */ }
 }
-$result = $dispatcher->dispatch('foo_event', ['k' => 1]);
+$result = EventDispatcher::dispatch('foo_event', ['k' => 1]);
 // $result is array{k: int}
 ```
 
-###### Repository entity layer
+The variadic split is BC: the existing body already extracted
+`$args[0] ?? null` as `$data` and passed the rest to handlers via
+`call_user_func_array`. The new body reassembles `[$data, ...$extraArgs]`
+before dispatch so handlers see identical positional arguments.
 
-The goal: every repository method returns a typed object, never a raw
-`array<string, mixed>`. The `fromRow()` static constructor is the **one**
-place in the codebase where `is_scalar`/`is_numeric` guards appear — at
-the DB boundary — and nowhere else.
+##### Sequencing
 
-```php
-// Entity definition
-final readonly class ImageEntity
-{
-    public function __construct(
-        public int     $id,
-        public string  $file,
-        public int     $hit,
-        public ?float  $ratingScore,
-        public ?string $dateAvailable,
-        public int     $width,
-        public int     $height,
-        public int     $filesize,
-        // … all columns
-    ) {}
+Land in this order, smallest blast radius first:
 
-    /** @param array<string, mixed> $row */
-    public static function fromRow(array $row): self
-    {
-        return new self(
-            id:            (int)   ($row['id']            ?? 0),
-            file:          is_string($row['file']   ?? null) ? $row['file']   : '',
-            hit:           is_numeric($row['hit']   ?? null) ? (int) $row['hit']   : 0,
-            ratingScore:   is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
-            dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
-            width:         is_numeric($row['width']  ?? null) ? (int) $row['width']  : 0,
-            height:        is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0,
-            filesize:      is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
-        );
-    }
-}
-
-// Repository — returns typed object, not array
-final class ImageRepository extends AbstractRepository
-{
-    public function findById(int $id): ?ImageEntity
-    {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')->from($this->table('images'))
-            ->where('id = :id')->setParameter('id', $id)
-            ->executeQuery()->fetchAssociative();
-        return $row !== false ? ImageEntity::fromRow($row) : null;
-    }
-
-    /** @return list<ImageEntity> */
-    public function findByIds(array $ids): array
-    {
-        // …
-        return array_map(ImageEntity::fromRow(...), $rows);
-    }
-}
-
-// Caller — accesses typed properties, no guards needed
-$image = ServiceLocator::get(ImageRepository::class)->findById($id);
-if ($image === null) { /* not found */ }
-Lang::t('Visited %d times', $image->hit);          // int, no is_numeric guard
-Lang::t('%s', $image->file);                        // string, no is_string guard
-Lang::t('%d Kb', $image->filesize);                 // int, no is_numeric guard
-```
-
-One entity class per table (20 repositories → 20 entities). The migration
-can be done repository-by-repository: start with `ImageRepository` since
-its row shape touches the most callers (`CategoryDefaultRenderer`,
-`PictureController`, `BatchManagerController`, photo-admin pages).
-
-###### HTTP input boundary
-
-No raw `$_POST`/`$_GET` access outside `StringUtil::input*`. The helpers
-already exist and are used in many places; the work is eliminating the
-remaining ~30 sites that still reach into the superglobals directly:
-
-```php
-// before — type is mixed, no length/pattern validation
-$action   = $_POST['action'] ?? '';
-$imageId  = $_GET['image_id'] ?? 0;
-$count    = $_POST['regenerateSuccess'] ?? '0';
-
-// after — typed at the boundary, validated by the helper
-$action   = StringUtil::get()->inputString('action',   '',  $_POST);
-$imageId  = StringUtil::get()->inputInt(   'image_id', 0,   $_GET);
-$count    = StringUtil::get()->inputString('regenerateSuccess', '0', $_POST);
-```
-
-After this, every value that crosses the HTTP boundary is a `string`,
-`int`, `float`, or `bool` — never `mixed` — before it reaches any service
-or controller logic.
+1. `CategoryAdminService::deleteSite` (1 line).
+2. `ImageInterface::compose` (4 files, no caller updates).
+3. `CookieService::getCookieVar` (1 file + 2 callers).
+4. `Config::raw` — first tighten `Config::src()` phpdoc to the typed
+   union, then annotate `raw()` (1 file + 23 callers verified by PHPStan).
+5. `RequestCache` / `PersistentCache` templates (2 files + 13 callers).
+6. `EventDispatcher::dispatch` (1 file + 217 callers verified by PHPStan).
 
 #### 1.5b Globals cleanup
 
@@ -1588,7 +1497,7 @@ Both items below are gated by the same precondition — direct
 `$GLOBALS[...]` reads in `src/` being eliminated first — so tackle them
 together as one closing pass.
 
-**Relationship to the entity layer (1.5a item 8).** The `$user` global is
+**Relationship to the entity layer (§1.6 Phase 2).** The `$user` global is
 itself a raw DB row (`array<string, mixed>`). Once `UserRepository` returns
 a typed `UserEntity`, `CurrentUser::get()` can expose typed properties
 (`->id`, `->username`, `->status`) instead of routing through
@@ -1753,13 +1662,232 @@ target the build script knows about.
 
 ---
 
-### 1.6 Test infrastructure
+### 1.6 Typed boundaries — HTTP input and DB rows
+
+**Status:** 🟡 Not started · **Effort:** L · 2 phases
+
+The codebase has two boundaries where untyped data crosses into the
+domain: HTTP input (`$_POST`/`$_GET` is `array<string, mixed>`) and DB
+rows (`fetchAssociative()` returns `array<string, mixed>`). Both are
+solved by the same architectural pattern: a single-cast factory at the
+boundary that produces a typed object, and business logic that consumes
+typed properties without `is_*` guards.
+
+This section was extracted from §1.5 because it's no longer tactical
+type tightening — it introduces new patterns, new vocabulary, and (for
+HTTP) new dependencies. It's comparable in scope to §1.2 (templates) or
+§1.3 (plugins).
+
+#### Phase 1 — Request DTO layer (HTTP boundary)
+
+**Status:** 🟡 Not started · ~30–50 DTOs · adds `symfony/serializer` + `symfony/validator`
+
+Per-action Request DTO classes with typed properties.
+`symfony/serializer` denormalizes `$_POST + $_GET` (or PSR-7 parsed
+body) into the DTO; `symfony/validator` runs attribute-based
+constraints. A small `PayloadFactory` glues them together — no
+HttpKernel required.
+
+```php
+final readonly class CommentSubmitRequest
+{
+    public function __construct(
+        #[Assert\NotBlank]
+        #[Assert\Length(max: 5000)]
+        public string $content,
+
+        #[Assert\Length(max: 100)]
+        public ?string $author,
+
+        #[Assert\Email]
+        public ?string $email,
+
+        #[Assert\Url]
+        public ?string $website,
+
+        #[Assert\NotBlank]
+        public string $key,
+    ) {}
+}
+
+final class PayloadFactory
+{
+    public function __construct(
+        private readonly DenormalizerInterface $serializer,
+        private readonly ValidatorInterface    $validator,
+    ) {}
+
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @param array<string, mixed> $source
+     * @return T
+     */
+    public function create(string $class, array $source): object
+    {
+        $payload = $this->serializer->denormalize($source, $class);
+        $violations = $this->validator->validate($payload);
+        if (count($violations) > 0) {
+            throw new InvalidPayloadException($violations);
+        }
+        return $payload;
+    }
+}
+
+// Controller usage
+$req = $this->payloads->create(CommentSubmitRequest::class, $_POST + $_GET);
+$this->comments->submit($req);
+```
+
+##### Hybrid scope
+
+DTOs only for multi-field endpoints (admin forms, comment submission,
+picture upload, maintenance, batch manager). Keep `StringUtil::input*`
+for one-shot reads (`?image_id=42`) where a DTO is ceremony.
+
+Realistic estimate: 30–50 DTOs covering ~80% of the 626 raw `$_POST` /
+`$_GET` reads concentrated in 45 files; the long tail stays on the
+helpers.
+
+##### Optional follow-on: attribute auto-resolution
+
+A ~30-line ArgumentResolver in the existing dispatcher reads a
+`#[MapRequestPayload]` attribute on the controller signature and calls
+`PayloadFactory::create()` automatically. Pure ergonomics — same DTOs,
+same Serializer + Validator. Zero new dependencies.
+
+##### Deferred — HttpKernel adoption
+
+Full Symfony HttpKernel adoption (PSR-7 → HttpFoundation, kernel
+events, standard ArgumentResolver pipeline, exception → response flow)
+is a separate architectural decision. Not in scope for §1.6; revisit
+when §1.3 (plugin/theme system) is far enough along to know whether
+the codebase wants one event bus or two. The DTOs and `PayloadFactory`
+from Phase 1 carry over unchanged if that adoption ever happens.
+
+##### Migration order
+
+1. Land `PayloadFactory` + first DTO (probably `CommentSubmitRequest`
+   in `PictureCommentRenderer`) as proof-of-pattern.
+2. Sweep multi-field admin endpoints (forms in `MaintenanceController`,
+   `BatchManagerController`, etc.).
+3. Sweep WS endpoint payloads (`ImagesEndpoints`, etc.) — coordinate
+   with §1.3's `PwgServer::addMethod()` migration so plugin authors
+   see one new pattern, not two.
+4. Decide whether to add the optional attribute resolver based on how
+   repetitive `PayloadFactory::create()` calls feel in practice.
+
+#### Phase 2 — Repository entity layer (DB boundary)
+
+**Status:** 🟡 Not started · 21 entities
+
+Every repository method returns a typed `*Entity` object instead of
+`array<string, mixed>`. `fromRow()` is the one place in the codebase
+where `is_scalar`/`is_numeric` guards appear — at the DB boundary —
+and nowhere else.
+
+```php
+final readonly class ImageEntity
+{
+    public function __construct(
+        public int     $id,
+        public string  $file,
+        public int     $hit,
+        public ?float  $ratingScore,
+        public ?string $dateAvailable,
+        public int     $width,
+        public int     $height,
+        public int     $filesize,
+        // … all columns
+    ) {}
+
+    /** @param array<string, mixed> $row */
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            id:            (int)   ($row['id']            ?? 0),
+            file:          is_string($row['file']   ?? null) ? $row['file']   : '',
+            hit:           is_numeric($row['hit']   ?? null) ? (int) $row['hit']   : 0,
+            ratingScore:   is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
+            dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
+            width:         is_numeric($row['width']  ?? null) ? (int) $row['width']  : 0,
+            height:        is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0,
+            filesize:      is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+        );
+    }
+}
+
+final class ImageRepository extends AbstractRepository
+{
+    public function findById(int $id): ?ImageEntity
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')->from($this->table('images'))
+            ->where('id = :id')->setParameter('id', $id)
+            ->executeQuery()->fetchAssociative();
+        return $row !== false ? ImageEntity::fromRow($row) : null;
+    }
+
+    /** @return list<ImageEntity> */
+    public function findByIds(array $ids): array
+    {
+        // …
+        return array_map(ImageEntity::fromRow(...), $rows);
+    }
+}
+
+// Caller — accesses typed properties, no guards needed
+$image = ServiceLocator::get(ImageRepository::class)->findById($id);
+if ($image === null) { /* not found */ }
+Lang::t('Visited %d times', $image->hit);          // int, no is_numeric guard
+Lang::t('%s', $image->file);                        // string, no is_string guard
+Lang::t('%d Kb', $image->filesize);                 // int, no is_numeric guard
+```
+
+##### Migration order
+
+One entity per table, repository-by-repository. Start with
+`ImageRepository` since its row shape touches the most callers
+(`CategoryDefaultRenderer`, `PictureController`, `BatchManagerController`,
+photo-admin pages). Each migration is a single PR: entity class,
+repository methods returning typed entities, callers updated to access
+typed properties, baseline diff committed.
+
+The 257 `fn (mixed $v)` lambdas at DB call sites get removed naturally
+as queries move into typed repository methods (`findIdsByCategory(): list<int>`,
+etc.). No transitional helper API.
+
+#### Cross-references
+
+- §1.5a — tactical type tightening; lands first because it has no
+  blockers.
+- §1.5b — globals cleanup closes once `UserRepository` returns a typed
+  `UserEntity` and `CurrentUser::get()` exposes typed properties.
+- §1.3 — plugin/theme system; coordinate Phase 1 sequencing with the
+  WS endpoint migration there.
+- §1.7 (test infrastructure) — entity factories and DTO fixtures are
+  good candidates for the early Pest/PHPUnit suite.
+
+#### Verification
+
+Per phase:
+- PHPStan/Psalm baseline diff per DTO or per repository; removed
+  baseline lines are direct evidence.
+- Snapshot test of one full request path through the new boundary
+  (e.g., comment submission round-trip for Phase 1; a typed
+  `ImageRepository::findById()` consumer for Phase 2).
+- `composer analyse && composer test && composer lint` clean after
+  each migration.
+
+---
+
+### 1.7 Test infrastructure
 
 **Status:** 🟡 Not started · **Effort:** M + L + S · 3 chained items
 
 Three coupled items, sequenced because each enables the next.
 
-#### 1.6.1 Pest — first
+#### 1.7.1 Pest — first
 
 **Status:** 🟡 Not started · **Effort:** M
 
@@ -1845,7 +1973,7 @@ find tests/e2e -name '*.spec.ts' | wc -l     # 0 — all ported
 find tests/Browser -name '*.php' | wc -l     # 16 — one per original spec
 ```
 
-#### 1.6.2 Unit-test coverage 13% → ≥40%
+#### 1.7.2 Unit-test coverage 13% → ≥40%
 
 **Status:** 🔵 Continuous · **Effort:** L · depends on Pest landing
 
@@ -1889,9 +2017,9 @@ vendor/bin/pest --coverage-text | grep 'Lines:'
 # Target: ≥ 40.00%
 ```
 
-#### 1.6.3 Mutation testing — Infection — last
+#### 1.7.3 Mutation testing — Infection — last
 
-**Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.6.2
+**Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.7.2
 
 Mutation testing complements coverage % — high coverage with weak
 assertions still scores low MSI, surfacing tests that exercise but don't
@@ -1960,7 +2088,7 @@ open build/infection/report.html   # visualize surviving mutants per file
 
 ---
 
-### 1.7 Deferred / on-demand
+### 1.8 Deferred / on-demand
 
 **Status:** 🟠 On-demand · 5 items · no scheduled effort
 
@@ -2263,7 +2391,7 @@ first wave. Track in `vitest.config.ts` so CI fails on regression.
 
 ##### Boundary with PHP test infra
 
-1.6.1 Pest absorbs the _browser_ tests (Playwright →
+1.7.1 Pest absorbs the _browser_ tests (Playwright →
 `pest-plugin-browser`); Vitest stays for TS unit tests. Non-overlapping —
 no item to merge across tracks.
 

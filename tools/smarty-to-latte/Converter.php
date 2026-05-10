@@ -573,8 +573,8 @@ final class Converter
     }
 
     /**
-     * `{combine_script id='x' load='y' path='z' [require='r'] [version=v] [template=t]}`
-     * → `{do combineScript(id: 'x', load: 'y', path: 'z'[, require: 'r'][, version: v][, template: t])}`
+     * `{combine_script id='x' load='y' path='z' [require='r'] [version=v]}`
+     * → `{do combineScript(id: 'x', load: 'y', path: 'z'[, require: 'r'][, version: v])}`
      */
     private function rewriteCombineScript(string $source): string
     {
@@ -586,8 +586,8 @@ final class Converter
     }
 
     /**
-     * `{combine_css path='x' [id='y'] [version=v] [order=o] [template=t]}`
-     * → `{do combineCss(path: 'x'[, id: 'y'][, version: v][, order: o][, template: t])}`
+     * `{combine_css path='x' [id='y'] [version=v] [order=o]}`
+     * → `{do combineCss(path: 'x'[, id: 'y'][, version: v][, order: o])}`
      */
     private function rewriteCombineCss(string $source): string
     {

@@ -43,29 +43,31 @@ final class CssLoader
     }
 
     /**
-     * Adds a new file, if a file with the same $id already exsists, the one with
+     * Adds a new file, if a file with the same $id already exists, the one with
      * the higher $order or higher $version is kept.
      *
      * @param string $id
      * @param string $path
      * @param string|int $version
      * @param int $order
-     * @param bool $is_template
      */
-    public function add($id, $path, $version = 0, $order = 0, $is_template = false): void
+    public function add($id, $path, $version = 0, $order = 0): void
     {
         if (!isset($this->registered_css[$id])) {
-            // costum order as an higher impact than declaration order
-            $css = new Css($id, $path, $version, $order * 1000 + $this->counter);
-            $css->is_template = $is_template;
-            $this->registered_css[$id] = $css;
+            // custom order has a higher impact than declaration order
+            $this->registered_css[$id] = new Css($id, $path, $version, $order * 1000 + $this->counter);
             $this->counter++;
-        } else {
-            $css = $this->registered_css[$id];
-            if ($css->order < $order * 1000 || version_compare((string) $css->version, (string) $version) < 0) {
-                unset($this->registered_css[$id]);
-                $this->add($id, $path, $version, $order, $is_template);
-            }
+            return;
+        }
+        $css = $this->registered_css[$id];
+        $effectiveOrder = $order * 1000 + $this->counter;
+        if ($css->order < $effectiveOrder) {
+            $css->order = $effectiveOrder;
+            $css->path = $path;
+        }
+        if (version_compare((string) $css->version, (string) $version) < 0) {
+            $css->version = $version;
+            $css->path = $path;
         }
     }
 }

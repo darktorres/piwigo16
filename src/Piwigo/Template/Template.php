@@ -426,7 +426,9 @@ final class Template
             if (!is_string($href)) {
                 $href = UrlService::getRootUrl().$combi->path;
             }
-            $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
+            if (!str_starts_with($combi->path, 'dist/')) {
+                $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
+            }
             // trigger the event for eventual use of a cdn
             $href = EventDispatcher::dispatch('combined_css', $href, $combi);
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
@@ -466,7 +468,11 @@ final class Template
             $ret = $script->path;
         } else {
             $ret = UrlService::getRootUrl().$script->path;
-            $ret .= '?v'. ($script->version ?: AppInfo::VERSION);
+            // Vite manifest filenames already carry a content hash; keep
+            // ?v= only for legacy/plugin-supplied paths.
+            if (!str_starts_with($script->path, 'dist/')) {
+                $ret .= '?v'. ($script->version ?: AppInfo::VERSION);
+            }
         }
         // trigger the event for eventual use of a cdn
         $ret = EventDispatcher::dispatch('combined_script', $ret, $script);

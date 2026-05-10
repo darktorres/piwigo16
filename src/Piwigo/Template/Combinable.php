@@ -12,20 +12,12 @@ use Piwigo\Url\UrlService;
 class Combinable
 {
     public string $path = '';
-    /** @var bool */
-    public $is_template;
 
     /**
      * @param string $id
      * @param string|int $version
      */
     public function __construct(public $id, ?string $path, public $version = 0)
-    {
-        $this->setPath($path);
-        $this->is_template = false;
-    }
-
-    public function setPath(?string $path): void
     {
         if ($path !== null && $path !== '') {
             $this->path = $path;

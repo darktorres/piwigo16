@@ -23,11 +23,6 @@ final class ScriptLoader
     private array $head_done_scripts = [];
     private ?bool $did_footer = null;
 
-    /** @var array<string, string> */
-    private static array $known_paths = [
-        'core.scripts' => 'themes/_base/js/scripts.js',
-      ];
-
     public function __construct()
     {
         $this->clear();
@@ -64,7 +59,7 @@ final class ScriptLoader
         if (!empty($require)) {
             foreach ($require as $id) {
                 if (!isset($this->registered_scripts[$id])) {
-                    $this->loadKnownRequiredScript($id, 1) or HtmlService::fatalError("inline script not found require $id");
+                    HtmlService::fatalError("inline script not found require $id");
                 }
                 $s = $this->registered_scripts[$id];
                 if ($s->load_mode == 2) {
@@ -83,52 +78,28 @@ final class ScriptLoader
      * @param string|int $version
      */
     /** @param string[] $require */
-    public function add(string $id, int|string $load_mode, array $require, ?string $path, string|int $version = 0, bool $is_template = false): void
+    public function add(string $id, int|string $load_mode, array $require, ?string $path, string|int $version = 0): void
     {
         if ($this->did_head && $load_mode == 0) {
             trigger_error("Attempt to add script $id but the head has been written", E_USER_WARNING);
         } elseif ($this->did_footer) {
             trigger_error("Attempt to add script $id but the footer has been written", E_USER_WARNING);
         }
+        if (($manifest = self::manifest()) !== null) {
+            $entry = $manifest[$id] ?? null;
+            if (is_array($entry) && is_string($entry['file'] ?? null)) {
+                $path = 'dist/' . $entry['file'];
+            }
+        }
         if (! isset($this->registered_scripts[$id])) {
-            if (($manifest = self::manifest()) !== null) {
-                $entry = $manifest[$id] ?? null;
-                if (is_array($entry) && is_string($entry['file'] ?? null)) {
-                    $path = 'dist/' . $entry['file'];
-                    // Do NOT clear $require — required scripts (legacy plugins and other Vite
-                    // entries) are not encoded in manifest chunks; they still load separately.
-                }
-            }
-            $script = new Script((int) $load_mode, $id, $path, $version, $require);
-            $script->is_template = $is_template;
-            self::fillWellKnown($id, $script);
-            $this->registered_scripts[$id] = $script;
-
-            // Try to load undefined required script
-            foreach ($script->precedents as $script_id) {
-                if (! isset($this->registered_scripts[$script_id])) {
-                    $this->loadKnownRequiredScript($script_id, (int) $load_mode);
-                }
-            }
+            $this->registered_scripts[$id] = new Script((int) $load_mode, $id, $path, $version, $require);
         } else {
-            // Re-registration: resolve manifest path so a second combine_script call with
-            // a legacy path does not overwrite the already-resolved dist/ path.
-            if (($manifest = self::manifest()) !== null) {
-                $entry = $manifest[$id] ?? null;
-                if (is_array($entry) && is_string($entry['file'] ?? null)) {
-                    $path = 'dist/' . $entry['file'];
-                }
-            }
             $script = $this->registered_scripts[$id];
-            if (count($require)) {
+            if ($path !== null && $path !== '') {
+                $script->path = $path;
+            }
+            if ($require !== []) {
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
-            }
-            $script->setPath($path);
-            if ($version && version_compare((string) $script->version, (string) $version) < 0) {
-                $script->version = $version;
-            }
-            if ($load_mode < $script->load_mode) {
-                $script->load_mode = (int) $load_mode;
             }
         }
     }
@@ -158,7 +129,7 @@ final class ScriptLoader
             }
         }
         $this->did_head = true;
-        return self::doCombine($this->head_done_scripts, 0);
+        return array_values($this->head_done_scripts);
     }
 
     /**
@@ -189,16 +160,7 @@ final class ScriptLoader
         foreach ($todo as $id => $script) {
             $result[$script->load_mode - 1][$id] = $script;
         }
-        return [ self::doCombine($result[0], 1), self::doCombine($result[1], 2) ];
-    }
-
-    /**
-     * @param Script[] $scripts
-     * @return Combinable[]
-     */
-    private static function doCombine(array $scripts, int $load_mode): array
-    {
-        return array_values($scripts);
+        return [ array_values($result[0]), array_values($result[1]) ];
     }
 
     /**
@@ -231,34 +193,8 @@ final class ScriptLoader
     }
 
     /**
-     * Fill a script path from known_paths if not already set.
-     *
-     * @param string $id in ScriptLoader::$known_paths
-     */
-    private static function fillWellKnown(string $id, Script $script): void
-    {
-        if (empty($script->path) && isset(self::$known_paths[$id])) {
-            $script->path = self::$known_paths[$id];
-        }
-    }
-
-    /**
-     * Add a known script to loaded scripts if it appears in known_paths.
-     *
-     * @param string $id in ScriptLoader::$known_paths
-     */
-    private function loadKnownRequiredScript($id, int $load_mode): bool
-    {
-        if (isset(self::$known_paths[$id])) {
-            $this->add($id, $load_mode, [], null);
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Compute script order depending on dependencies.
-     * Assigned to $script->extra['order'].
+     * Assigned to $script->order.
      */
     private function computeScriptTopologicalOrder(string $script_id, int $recursion_limiter = 0): int
     {
@@ -268,11 +204,11 @@ final class ScriptLoader
         }
         $recursion_limiter < 5 or HtmlService::fatalError('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];
-        if (isset($script->extra['order'])) {
-            return is_int($script->extra['order']) ? $script->extra['order'] : 0;
+        if ($script->order !== null) {
+            return $script->order;
         }
         if (count($script->precedents) == 0) {
-            $script->extra['order'] = 0;
+            $script->order = 0;
             return 0;
         }
         $max = 0;
@@ -280,7 +216,7 @@ final class ScriptLoader
             $max = max($max, $this->computeScriptTopologicalOrder($precedent, $recursion_limiter + 1));
         }
         $max++;
-        $script->extra['order'] = $max;
+        $script->order = $max;
         return $max;
     }
 
@@ -324,8 +260,8 @@ final class ScriptLoader
             return $ret;
         }
 
-        $order1 = is_int($s1->extra['order'] ?? null) ? $s1->extra['order'] : 0;
-        $order2 = is_int($s2->extra['order'] ?? null) ? $s2->extra['order'] : 0;
+        $order1 = $s1->order ?? 0;
+        $order2 = $s2->order ?? 0;
         $ret = $order1 - $order2;
         if ($ret) {
             return $ret;

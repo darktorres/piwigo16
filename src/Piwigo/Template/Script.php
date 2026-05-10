@@ -9,9 +9,7 @@ namespace Piwigo\Template;
  */
 final class Script extends Combinable
 {
-    /** @var array */
-    /** @var array<mixed> */
-    public array $extra = [];
+    public ?int $order = null;
 
     /**
      * @param int $load_mode 0, 1, or 2
@@ -27,6 +25,5 @@ final class Script extends Combinable
         public array $precedents = []
     ) {
         parent::__construct($id, $path, $version);
-        $this->extra = [];
     }
 }

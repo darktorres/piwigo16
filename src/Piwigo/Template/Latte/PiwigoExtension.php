@@ -305,7 +305,6 @@ final class PiwigoExtension extends Extension
         ?string $path = null,
         array|string $require = [],
         string|int $version = 0,
-        bool $template = false,
     ): void {
         $loadMode = match ($load) {
             'header' => 0,
@@ -324,7 +323,6 @@ final class PiwigoExtension extends Extension
             $requireList,
             $path,
             $version,
-            $template,
         );
 
         // Auto-register stylesheets bundled into this entry by Vite.
@@ -406,7 +404,12 @@ final class PiwigoExtension extends Extension
             $src = $script->path;
         } else {
             $src = UrlService::getRootUrl() . $script->path;
-            $src .= '?v' . ($script->version !== 0 && $script->version !== '' ? $script->version : AppInfo::VERSION);
+            // Vite manifest filenames already carry a content hash, so the
+            // ?v= query string is redundant for dist/ paths; keep it for
+            // legacy/plugin-supplied paths.
+            if (!str_starts_with($script->path, 'dist/')) {
+                $src .= '?v' . ($script->version !== 0 && $script->version !== '' ? $script->version : AppInfo::VERSION);
+            }
         }
         // The `combined_script` event contract is "first arg is the URL,
         // mutated in place"; PHPStan's TriggerChangeDynamicReturnType
@@ -430,14 +433,12 @@ final class PiwigoExtension extends Extension
         ?string $id = null,
         string|int $version = 0,
         int $order = 0,
-        bool $template = false,
     ): void {
         TemplateRegistry::current()->cssLoader->add(
             $id ?? md5($path),
             $path,
             $version,
             $order,
-            $template,
         );
     }
 

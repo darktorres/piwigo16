@@ -426,7 +426,14 @@ SELECT
             return $smtp !== '' && strtolower($smtp) !== 'localhost';
         }
         $sendmailPath = ini_get('sendmail_path');
-        return $sendmailPath !== false && $sendmailPath !== '';
+        if ($sendmailPath === false || $sendmailPath === '') {
+            return false;
+        }
+        // sendmail_path is "binary [args]" — only the binary needs to exist.
+        // Without this check, PHP mail() spawns /bin/sh which prints
+        // "sendmail: not found" to stderr on hosts where the binary is absent.
+        $bin = explode(' ', trim($sendmailPath), 2)[0];
+        return $bin !== '' && is_executable($bin);
     }
 
     /**

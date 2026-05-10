@@ -15,6 +15,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Combinable;
+use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -328,7 +329,8 @@ final class PiwigoExtension extends Extension
             ? ($require === '' ? [] : explode(',', $require))
             : $require;
 
-        TemplateRegistry::current()->scriptLoader->add(
+        $tpl = TemplateRegistry::current();
+        $tpl->scriptLoader->add(
             $id,
             $loadMode,
             $requireList,
@@ -336,6 +338,25 @@ final class PiwigoExtension extends Extension
             $version,
             $template,
         );
+
+        // Auto-register stylesheets bundled into this entry by Vite.
+        // Mirrors Template::funcCombineScript — without this, side-effect
+        // CSS imports like `import './tree.css'` never reach the page.
+        $manifest = ScriptLoader::getManifest();
+        $manifestEntry = ($manifest !== null && is_array($manifest[$id] ?? null)) ? $manifest[$id] : null;
+        if ($manifestEntry !== null) {
+            $cssList = is_array($manifestEntry['css'] ?? null) ? $manifestEntry['css'] : [];
+            foreach ($cssList as $i => $cssPath) {
+                $cssPathStr = is_scalar($cssPath) ? (string) $cssPath : '';
+                if ($cssPathStr !== '') {
+                    $tpl->cssLoader->add(
+                        $id . '-vite-css-' . $i,
+                        'dist/' . $cssPathStr,
+                        $version,
+                    );
+                }
+            }
+        }
     }
 
     /**

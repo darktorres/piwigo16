@@ -273,7 +273,11 @@ SELECT *
         }
 
         foreach ($need_update as $time_key => $summary) {
-            $time_tokens = explode('-', $time_key);
+            // PHP coerces numeric-string array keys to int (e.g. '2026' → 2026),
+            // so the key can be int at runtime even though the docblock types
+            // it as string. explode() requires a string in PHP 8.
+            /** @psalm-suppress RedundantCastGivenDocblockType */
+            $time_tokens = explode('-', (string) $time_key);
             $inserts[] = [
                 'year'     => $time_tokens[0],
                 'month'    => $time_tokens[1] ?? null,

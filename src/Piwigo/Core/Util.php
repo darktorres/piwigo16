@@ -601,6 +601,9 @@ final readonly class Util
         }
 
         $objectIds = is_array($objectId) ? $objectId : [$objectId];
+        if (count($objectIds) === 0) {
+            return;
+        }
 
         if (isset($_REQUEST['method'])) {
             $details['method'] = $_REQUEST['method'];

@@ -417,7 +417,7 @@
           <i class="gallery-icon-up-open display-btn close" ></i>
         </div>
         <div class="form plugins" id="{$k_block}-display">
-          {include $plugin_block['template']}
+          {include $plugin_block['template'], plugin_block: $plugin_block, k_block: $k_block}
           {if $plugin_block['standard_show_save']}
             <div class="save">
               <button class="btn btn-main" id="save_{$k_block}" data-standard-save="{$k_block}">{='Submit'|translate}</button>

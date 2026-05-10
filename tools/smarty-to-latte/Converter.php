@@ -280,12 +280,22 @@ final class Converter
             static function (array $m): string {
                 $filter = $m[1];
                 $args = $m[2];
+                // Stop at a Latte tag-named-arg boundary like `, foo: $bar`
+                // — the multi-arg pipe rewrite belongs only inside the
+                // filter's own arg list, not the surrounding tag's named
+                // args. Without this, an `{include 'x'|get_extent:'y',
+                // navbar: $v}` would have its `navbar:` colon clobbered.
+                $rest = '';
+                if (preg_match('/^(.*?)(,\s+\w+\s*:.*)$/s', $args, $bm) === 1) {
+                    $args = $bm[1];
+                    $rest = $bm[2];
+                }
                 $rewritten = preg_replace_callback(
                     '/(\'(?:\\\\.|[^\'])*\'|"(?:\\\\.|[^"])*"|:)/',
                     static fn (array $mm): string => $mm[1] === ':' ? ',' : $mm[1],
                     $args,
                 ) ?? $args;
-                return '|' . $filter . ':' . $rewritten;
+                return '|' . $filter . ':' . $rewritten . $rest;
             },
             $source,
         ) ?? $source;

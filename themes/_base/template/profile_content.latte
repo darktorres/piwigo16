@@ -89,7 +89,7 @@
     <fieldset>
       <legend>{$plugin_block['name']}</legend>
       <div class="plugins fields">
-        {include $plugin_block['template']}
+        {include $plugin_block['template'], plugin_block: $plugin_block}
       </div>
     </fieldset>
   {/foreach}

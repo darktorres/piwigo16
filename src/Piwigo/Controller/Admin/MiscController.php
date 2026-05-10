@@ -441,8 +441,9 @@ final class MiscController
         EventDispatcher::notify('loc_end_help');
 
         $tpl->setFilenames(['help' => 'help.latte']);
+        $helpContent = LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]);
         $tpl->assign([
-            'HELP_CONTENT'       => LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]),
+            'HELP_CONTENT'       => new \Latte\Runtime\Html(is_string($helpContent) ? $helpContent : ''),
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',
         ]);
 
@@ -488,7 +489,7 @@ final class MiscController
         }
 
         $tpl->setFilename('popuphelp', 'popuphelp.latte');
-        $tpl->assign(['HELP_CONTENT' => $help_content]);
+        $tpl->assign(['HELP_CONTENT' => new \Latte\Runtime\Html($help_content)]);
 
         if (isset($_GET['output']) && 'content_only' == $_GET['output']) {
             echo $help_content;

@@ -277,7 +277,7 @@ final class LatteEngineTest extends TestCase
 
         self::assertSame(
             Template::COMBINED_SCRIPTS_TAG,
-            PiwigoExtension::getCombinedScripts(load: 'header'),
+            (string) PiwigoExtension::getCombinedScripts(load: 'header'),
         );
     }
 
@@ -297,7 +297,7 @@ final class LatteEngineTest extends TestCase
         $engine = new LatteEngine($this->tempDir);
         $output = $engine->render('themes/admin/_base/template/help.latte', [
             'HELP_SECTION_TITLE' => 'Configuration',
-            'HELP_CONTENT' => '<p>Configure your <strong>gallery</strong>.</p>',
+            'HELP_CONTENT' => new \Latte\Runtime\Html('<p>Configure your <strong>gallery</strong>.</p>'),
             'ENABLE_SYNCHRONIZATION' => false,
         ]);
 
@@ -393,7 +393,7 @@ final class LatteEngineTest extends TestCase
         $smarty->setCompileDir($this->tempDir);
         $smarty->setTemplateDir([dirname(__DIR__, 3) . '/themes/admin/_base/template']);
         $smarty->assign('HELP_SECTION_TITLE', 'Configuration');
-        $smarty->assign('HELP_CONTENT', '<p>body</p>');
+        $smarty->assign('HELP_CONTENT', new \Latte\Runtime\Html('<p>body</p>'));
         $smarty->assign('ENABLE_SYNCHRONIZATION', false);
         $tpl->smarty = $smarty;
 

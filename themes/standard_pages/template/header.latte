@@ -17,7 +17,7 @@
   {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
   {/if}
   {if !empty($theme['local_head'])}
-  {include $theme['local_head'], load_css: $theme['load_css']}
+  {include $theme['local_head'], theme: $theme, load_css: $theme['load_css']}
   {/if}
 {/foreach}
 {/spaceless}

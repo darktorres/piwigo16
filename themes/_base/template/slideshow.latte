@@ -10,7 +10,7 @@
 
 	<div id="imageToolBar">
 	  <div class="imageNumber">{$PHOTO}</div>
-	  {include 'picture_nav_buttons.latte'|get_extent:'picture_nav_buttons'}
+	  {include getExtent('picture_nav_buttons.latte', 'picture_nav_buttons')}
 	</div>
 
 	<div id="content">

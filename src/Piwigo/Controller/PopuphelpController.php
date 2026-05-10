@@ -51,7 +51,7 @@ final class PopuphelpController implements ControllerInterface
 
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['popuphelp' => 'popuphelp.latte']);
-        $tpl->assign(['HELP_CONTENT' => $helpContent]);
+        $tpl->assign(['HELP_CONTENT' => new \Latte\Runtime\Html($helpContent)]);
 
         PageHeaderRenderer::render($title);
         $tpl->pparse('popuphelp');

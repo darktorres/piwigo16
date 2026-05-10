@@ -50,7 +50,7 @@
   </fieldset>
 </form>
 
-{if !empty($navbar) }{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 
 <table class="rating-table">
 <tr class="throw">
@@ -86,4 +86,4 @@
 </table>
 {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
 
-{if !empty($navbar)}{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+{if !empty($navbar)}{include getExtent('navigation_bar.latte', 'navbar')}{/if}

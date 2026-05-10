@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Template\Latte;
 
 use Latte\Extension;
+use Latte\Runtime\Html;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
@@ -104,7 +105,7 @@ final class PiwigoExtension extends Extension
             'number_format' => self::numberFormat(...),
             'cat' => self::cat(...),
             'count' => count(...),
-            'strip_tags' => strip_tags(...),
+            'strip_tags' => self::stripTags(...),
             'str_repeat' => str_repeat(...),
             'default' => self::defaultFilter(...),
             'date_format' => self::dateFormat(...),
@@ -153,6 +154,13 @@ final class PiwigoExtension extends Extension
             'math' => self::math(...),
             'url_is_remote' => UrlService::urlIsRemote(...),
             'l10n' => self::translate(...),
+            // get_extent is also exposed as a function so converted
+            // templates can use it inline in `{include}` template-name
+            // expressions where Latte's parser doesn't accept a pipe-
+            // filter chain alongside named-arg payloads. Templates that
+            // want the filter shape (`{$file|get_extent:$handle}`) keep
+            // working via the filter registration above.
+            'getExtent' => self::getExtent(...),
         ];
     }
 
@@ -163,6 +171,25 @@ final class PiwigoExtension extends Extension
     public static function defaultFilter(mixed $value, mixed $fallback): mixed
     {
         return empty($value) ? $fallback : $value;
+    }
+
+    /**
+     * Smarty's `|strip_tags[:bool]` modifier:
+     *   - `|strip_tags` (default `true`) — replaces every tag with a single
+     *     space, so `<b>x</b><i>y</i>` becomes ` x  y `.
+     *   - `|strip_tags:false` — removes tags without replacement, identical
+     *     to PHP's bare `strip_tags($string)`.
+     *
+     * PHP 8 native `strip_tags($string, $allowed)` rejects a `bool` second
+     * argument with a TypeError, so we cannot bind the filter directly to
+     * `strip_tags(...)`. This wrapper preserves Smarty semantics.
+     */
+    public static function stripTags(mixed $value, bool $replaceWithSpace = true): string
+    {
+        $s = is_scalar($value) ? (string) $value : '';
+        return $replaceWithSpace
+            ? (preg_replace('/<[^>]*>/', ' ', $s) ?? $s)
+            : strip_tags($s);
     }
 
     /**
@@ -315,11 +342,14 @@ final class PiwigoExtension extends Extension
      * Returns the marker the ScriptLoader rewrites to <script> tags at
      * flush time for the header pass; for the footer pass, returns the
      * already-serialised <script> markup. Mirrors Template::funcGetCombinedScripts.
+     *
+     * Returns `Latte\Runtime\Html` so the HTML payload propagates through
+     * Latte's auto-escape without needing `|noescape` at every call site.
      */
-    public static function getCombinedScripts(string $load = 'header'): string
+    public static function getCombinedScripts(string $load = 'header'): Html
     {
         if ($load === 'header') {
-            return Template::COMBINED_SCRIPTS_TAG;
+            return new Html(Template::COMBINED_SCRIPTS_TAG);
         }
 
         $tpl = TemplateRegistry::current();
@@ -353,7 +383,7 @@ final class PiwigoExtension extends Extension
             $content[] = '</script>';
         }
 
-        return implode("\n", $content);
+        return new Html(implode("\n", $content));
     }
 
     private static function isModuleScript(Combinable $script): bool
@@ -402,9 +432,9 @@ final class PiwigoExtension extends Extension
         );
     }
 
-    public static function getCombinedCss(): string
+    public static function getCombinedCss(): Html
     {
-        return Template::COMBINED_CSS_TAG;
+        return new Html(Template::COMBINED_CSS_TAG);
     }
 
     /**
@@ -502,9 +532,9 @@ final class PiwigoExtension extends Extension
         ?string $id = null,
         ?string $class = null,
         mixed ...$extra,
-    ): string {
+    ): Html {
         if ($options === null && $values === null) {
-            return '';
+            return new Html('');
         }
         $selectedNorm = self::normalizeSelected($selected);
         $idx = 0;
@@ -523,7 +553,7 @@ final class PiwigoExtension extends Extension
             }
         }
         if ($name === null || $name === '') {
-            return $body;
+            return new Html($body);
         }
         $extraAttrs = '';
         if ($class !== null && $class !== '') {
@@ -539,7 +569,7 @@ final class PiwigoExtension extends Extension
             }
             $extraAttrs .= ' ' . $key . '="' . htmlspecialchars((string) $val, ENT_QUOTES) . '"';
         }
-        return '<select name="' . $name . '"' . $extraAttrs . '>' . "\n" . $body . '</select>' . "\n";
+        return new Html('<select name="' . $name . '"' . $extraAttrs . '>' . "\n" . $body . '</select>' . "\n");
     }
 
     /**
@@ -565,9 +595,9 @@ final class PiwigoExtension extends Extension
         bool $labels = true,
         bool $label_ids = false,
         mixed ...$extra,
-    ): string {
+    ): Html {
         if ($options === null && $values === null) {
-            return '';
+            return new Html('');
         }
         $sel = $selected ?? $checked;
         $selectedStr = $sel === null ? null : (string) $sel;
@@ -591,7 +621,7 @@ final class PiwigoExtension extends Extension
                 $rows[] = self::htmlRadioRow($name, $optKey, $output[$i] ?? '', $selectedStr, $extraAttrs, $labels, $label_ids, $escape);
             }
         }
-        return implode($separator === '' ? "\n" : $separator, $rows);
+        return new Html(implode($separator === '' ? "\n" : $separator, $rows));
     }
 
     /**

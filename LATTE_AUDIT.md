@@ -47,15 +47,15 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/_base (1)
 
-- [ ] `local_head.tpl` ↔ `local_head.latte`
+- [x] `local_head.tpl` ↔ `local_head.latte`
 
 ## themes/_base/template (36)
 
-- [ ] `about.tpl` ↔ `about.latte`
-- [ ] `comment_list.tpl` ↔ `comment_list.latte`
-- [ ] `comments.tpl` ↔ `comments.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
+- [~] `about.tpl` ↔ `about.latte` — HTML-payload prints lack `|noescape` (`{$MENUBAR}`, `{$ABOUT_MESSAGE}`, `{$THEME_ABOUT}`, `{$elt}` from `$about_msgs` foreach)
+- [~] `comment_list.tpl` ↔ `comment_list.latte` — Latte auto-escape semantics apply at the textarea body (`{$comment['CONTENT']}` line 56) — Smarty's `|escape` was explicit; Latte does it too, so functionally equivalent. Faithful otherwise.
+- [~] `comments.tpl` ↔ `comments.latte` — `{$MENUBAR}` (line 1) and `{$COMMENT_LIST}` (line 107) need `|noescape`
+- [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` dropped (line 15); `{=getCombinedScripts(load: 'footer')}` (line 36) lacks `|noescape`; `{$elt}` from `$footer_elements` is plugin HTML
+- [~] `header.tpl` ↔ `header.latte` — `|strip_tags:false` (lines 12, 18) becomes PHP `strip_tags($x, false)` → TypeError under PHP 8; `{=getCombinedCss()}` (line 55) and `{=getCombinedScripts(load: 'header')}` (line 57) lack `|noescape`; `{$elt}` from `$head_elements` and `$header_msgs` and `$header_notes` foreach are plugin HTML; `{$PAGE_BANNER|default:''}` (line 80) is admin-set HTML; `<script type="application/json">{['wsUrl' => $WS_URL]|json_encode}</script>` (line 65) — under Latte's `<script>` JS-context auto-escape, the JSON output may get re-escaped (verify at runtime, may need `|noescape`); `{strip}` → `{spaceless}` correct
 - [ ] `identification.tpl` ↔ `identification.latte`
 - [ ] `index.tpl` ↔ `index.latte`
 - [ ] `infos_errors.tpl` ↔ `infos_errors.latte`
@@ -209,5 +209,93 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## Findings log
 
-(append per-pair notes here as the audit progresses; reference the
-checkbox above by directory + filename)
+### Systemic — HTML-payload vars need `|noescape` under Latte auto-escape
+
+The converter is intentionally faithful and does NOT add `|noescape`. But
+several Smarty assigns hold pre-rendered HTML, and Smarty ran with
+`escape_html=false` so `{$VAR}` printed raw. Latte auto-escapes by
+default — those bare prints now render as escaped HTML text in the
+browser.
+
+Sources of HTML payloads (enumerated from `assignVarFromHandle()` and
+notable `assign()` sites in `src/`):
+
+| Var | Source | Found in templates |
+|---|---|---|
+| `MENUBAR` | `BlockManager::apply` ← `menubar` handle | `about.latte:1`, `comments.latte:1`, others (header/index will surface when reviewed) |
+| `ADMIN_CONTENT` | every admin controller's `assignVarFromHandle('ADMIN_CONTENT', '<page>')` | likely `admin.latte` |
+| `CATEGORIES` | `CategoryCatsRenderer` ← `index_category_thumbnails` | likely `index.latte` |
+| `THUMBNAILS` | `CategoryDefaultRenderer` ← `index_thumbnails` | likely `index.latte` |
+| `COMMENT_LIST` | `PictureCommentRenderer`/`CommentsController` ← `comment_list` | `comments.latte:107`, `picture.latte:305` |
+| `DOUBLE_SELECT` | various ← `double_select` | likely group/user perm pages |
+| `PROFILE_CONTENT` | `ProfileController` ← `profile_content` | `profile.latte` |
+| `SELECTED_TAGS_TEMPLATE` | `SelectedTagsRenderer` ← `selected_tags` | tag pages |
+| `GLOBAL_MAIL_CSS`, `MAIL_CSS` | `MailService` ← `global-css` / `css` | mail/header.latte |
+| `CONTENT` (mail context) | `MailService::540ish` `assign('CONTENT', $mailContent)` | mail templates only |
+| Tabsheet output | `Tabsheet::assignVarFromHandle($this->name, 'tabsheet')` | wherever `{$tabsheet_name}` is printed |
+
+Plus less obvious but commonly HTML-bearing:
+
+- `ABOUT_MESSAGE`, `THEME_ABOUT`, `$elt` in `$about_msgs` (free-form admin-set HTML)
+- `HELP_CONTENT` (help.latte already has `|noescape`)
+- `LEVEL_SEPARATOR` — default ` / ` is plain text, but admins can configure `&raquo;` etc. Conservative: add `|noescape`.
+- `PLUGIN_INDEX_*`, `PLUGIN_*_CONTENT_*` — plugin-supplied raw HTML
+
+**Action**: tag every bare `{$VAR}` print of one of these payloads with
+`|noescape`. The audit will flag each occurrence per pair. The converter
+is deliberately not changed — adding heuristic `|noescape` to every bare
+print would be unsafe; the rule is per-var.
+
+### Systemic — `|escape:url` dropped instead of mapped to URL-encoder
+
+`Converter::rewriteEscapeFilters` drops every `|escape:<arg>` because
+"Latte's auto-escape covers the common cases (html, htmlall, url,
+javascript)" per the docblock — but that's wrong: Latte's auto-escape
+is HTML-context only, not URL-encoding. `|escape:url` should map to
+Latte's `|escapeUrl` filter (or a `urlencode` shim), not be dropped.
+Affected `.tpl` sites: `themes/_base/template/footer.tpl:15`,
+`themes/_base/template/mail/text/html/footer.tpl:15`,
+`themes/admin/_base/template/footer.tpl:34`.
+
+### Systemic — custom-fn HTML returns need `|noescape` on call site
+
+Two PiwigoExtension functions return HTML strings but the converter
+emits them as `{=fn()}` without `|noescape`:
+- `getCombinedScripts(load: 'footer')` — returns `<script>` tags
+- `getCombinedCss()` — returns `<link>` / inline `<style>`
+
+Result: HTML markup gets escaped to `&lt;script&gt;...` text in the
+page. `htmlOptions` and `htmlRadios` already get `|noescape` in the
+converter (correct); `getCombinedScripts`/`getCombinedCss` need the
+same treatment, OR the PHP functions should return
+`Latte\Runtime\Html` objects so the trust travels with the value.
+
+### Systemic — `|strip_tags:false` semantics break under PHP 8
+
+Smarty's modifier signature is `strip_tags($string, $replace_with_space = true)` —
+`:false` means "remove tags without space replacement". The current
+`PiwigoExtension::filters` registers `'strip_tags' => strip_tags(...)` which
+points at PHP's native `strip_tags($string, $allowed_tags = null)`. Calling
+that with `(false)` as the second arg is a TypeError in PHP 8
+(`$allowed_tags` is `string|array|null`).
+
+Affected `.tpl` sites: `header.tpl:12,18`, `mainpage_categories.tpl:13`,
+`search.tpl:47` (×2), `picture_content.tpl:10`. All five inherit the
+breakage in their `.latte` siblings.
+
+Two fixes possible:
+
+1. Converter: drop the `:false` arg (since PHP's no-arg `strip_tags` matches
+   Smarty's `:false` semantic — both strip without space-replacement).
+2. Wrap the filter in PiwigoExtension to mimic Smarty's two-arg behavior:
+   `function ($s, bool $replaceWithSpace = true) { return $replaceWithSpace
+   ? preg_replace('/<[^>]*>/', ' ', (string) $s) : strip_tags((string) $s); }`.
+
+Option 2 is safer because Smarty's bare `|strip_tags` (no arg, default true =
+"replace with space") would then keep working for any plugin templates that
+use the defaulted form.
+
+### Per-pair findings
+
+(prepend new entries here as the audit progresses)
+

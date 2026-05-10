@@ -36,7 +36,7 @@
 			<div class="pagination-reload">
 				{if !empty($navbar) }
 				<a class="button-reload tiptip" title="{='Pagination has changed and needs to be reloaded !'|translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
-				{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+				{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 			</div>
 		</div>
 	</div>
@@ -173,7 +173,7 @@
 				</div>
 {if isset($PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE)}
 {foreach $PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE as $PATH}
-	{include $PATH}
+	{include $PATH, element: $element, PATH: $PATH}
 {/foreach} 
 {/if} 
 				{* Plugins anchor 1 *}
@@ -218,7 +218,7 @@
 		  		<div class="pagination-reload">
 		{if !empty($navbar) }
 			  		<a class="button-reload tiptip" title="{='Pagination has changed and needs to be reloaded !'|translate}" hidden href="{$F_ACTION}"><i class="icon-cw"></i></a>
-		{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+		{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 		  		</div>
 	  		</div>
   		</div>

@@ -78,8 +78,138 @@ final class Converter
         $source = $this->rewriteMultiArgPipeFilters($source);
         $source = $this->rewriteSmartyForeachIterator($source);
         $source = $this->rewritePrintedLiteralFilter($source);
+        $source = $this->passForeachLocalsToIncludes($source);
 
         return $source;
+    }
+
+    /**
+     * Smarty's `{include}` propagates the parent template's local
+     * variables (including foreach iterator vars) into the included
+     * template; Latte's `{include}` only propagates the original
+     * `render()` params, NOT the parent's local scope. Templates that
+     * include a sub-template from inside a foreach and expect the
+     * iterator vars to be visible break at runtime ("Undefined
+     * variable" warnings).
+     *
+     * This pass walks the converted source, tracks the open `{foreach}`
+     * scope stack, and appends the iterator vars as named args to any
+     * `{include EXPR}` (or `{include EXPR, …}`) found inside one. The
+     * iterator vars are taken from `{foreach $arr as $v}` (single-arg)
+     * or `{foreach $arr as $k => $v}` (key+value).
+     *
+     * If the include already explicitly passes a var of the same name,
+     * the explicit form wins (we don't override it).
+     */
+    private function passForeachLocalsToIncludes(string $source): string
+    {
+        // Tokenise on {foreach …}, {/foreach}, and {include …}; preserve
+        // everything else as literal pass-through.
+        $pattern = '/(\{foreach\s+\$[\w\[\]\->\']+\s+as\s+(?:\$(\w+)\s*=>\s*)?\$(\w+)\s*\})|(\{\/foreach\})|(\{include\s+(?:[^{}]|\{[^{}]*\})*\})/s';
+        $stack = [];
+        $result = preg_replace_callback(
+            $pattern,
+            function (array $m) use (&$stack): string {
+                /** @var list<array{0: string, 1: string}> $stack */
+                if ($m[1] !== '') {
+                    // {foreach $arr as [$k =>] $v}
+                    array_push($stack, [$m[2], $m[3]]); // [$k, $v] — $k may be ''
+                    return $m[1];
+                }
+                if (($m[4] ?? '') !== '') {
+                    array_pop($stack);
+                    return $m[4];
+                }
+                if (($m[5] ?? '') === '') {
+                    return $m[0];
+                }
+                $tag = $m[5];
+                if ($stack === []) {
+                    return $tag;
+                }
+                // Strip the wrapping `{include …}` so we can inspect the args.
+                $inner = substr($tag, strlen('{include'), -1);
+                $inner = ltrim($inner);
+                // Split on the first top-level comma to separate the
+                // template-name expression from existing named args.
+                [$head, $existing] = $this->splitFirstTopLevelComma($inner);
+                $existingVars = [];
+                if ($existing !== '') {
+                    if (preg_match_all('/(\w+)\s*:/', $existing, $em) === 1 && isset($em[1]) && is_array($em[1])) {
+                        foreach ($em[1] as $name) {
+                            if (is_string($name)) {
+                                $existingVars[$name] = true;
+                            }
+                        }
+                    }
+                }
+                $additions = [];
+                /** @var list<array{0: string, 1: string}> $stack */
+                foreach ($stack as [$k, $v]) {
+                    if ($v !== '' && !isset($existingVars[$v])) {
+                        $additions[] = "$v: \$$v";
+                    }
+                    if ($k !== '' && !isset($existingVars[$k])) {
+                        $additions[] = "$k: \$$k";
+                    }
+                }
+                if ($additions === []) {
+                    return $tag;
+                }
+                $extra = implode(', ', $additions);
+                if ($existing === '') {
+                    return '{include ' . trim($head) . ', ' . $extra . '}';
+                }
+                return '{include ' . trim($head) . ', ' . $extra . ', ' . trim($existing) . '}';
+            },
+            $source,
+        );
+        return is_string($result) ? $result : $source;
+    }
+
+    /**
+     * Split a string at the first top-level (non-paren-nested) comma.
+     * Used to separate `{include EXPR, args…}` into `EXPR` and `args…`.
+     *
+     * @return array{0: string, 1: string} `[head, rest]` — `rest` is `''`
+     *     if no top-level comma exists.
+     */
+    private function splitFirstTopLevelComma(string $s): array
+    {
+        $depth = 0;
+        $inSingle = false;
+        $inDouble = false;
+        $len = strlen($s);
+        for ($i = 0; $i < $len; $i++) {
+            $c = $s[$i];
+            if ($c === '\\' && $i + 1 < $len) {
+                $i++;
+                continue;
+            }
+            if (!$inDouble && $c === "'") {
+                $inSingle = !$inSingle;
+                continue;
+            }
+            if (!$inSingle && $c === '"') {
+                $inDouble = !$inDouble;
+                continue;
+            }
+            if ($inSingle || $inDouble) {
+                continue;
+            }
+            if ($c === '(' || $c === '[' || $c === '{') {
+                $depth++;
+                continue;
+            }
+            if ($c === ')' || $c === ']' || $c === '}') {
+                $depth--;
+                continue;
+            }
+            if ($depth === 0 && $c === ',') {
+                return [substr($s, 0, $i), substr($s, $i + 1)];
+            }
+        }
+        return [$s, ''];
     }
 
     /**
@@ -305,10 +435,17 @@ final class Converter
      * `{$x|escape}` → `{$x}` (Latte auto-escapes), `{$x|escape:'none'}` →
      * `{$x|noescape}`. The `escape` filter is reserved by Latte (its
      * compiler throws if you try to register one), so it must be removed
-     * or replaced; the converter handles all argumented forms — both
-     * quoted (`|escape:'html'`) and unquoted (`|escape:html`) — by
-     * dropping them, since Latte's auto-escape covers the common cases
-     * (html, htmlall, url, javascript).
+     * or replaced.
+     *
+     * Smarty's escape:url maps to URL-percent-encoding, NOT Latte's HTML
+     * auto-escape — Latte auto-escapes for HTML/JS/CSS contexts but does
+     * NOT URL-encode automatically when emitting into URL contexts. So
+     * `|escape:url` is rewritten to `|urlencode`, which is registered in
+     * PiwigoExtension as the PHP `urlencode()` function.
+     *
+     * Other argumented forms (`|escape:'html'`, `|escape:htmlall`,
+     * `|escape:'javascript'`) and the bare `|escape` are dropped, since
+     * Latte's auto-escape covers those cases contextually.
      */
     private function rewriteEscapeFilters(string $source): string
     {
@@ -316,6 +453,13 @@ final class Converter
         $source = preg_replace(
             "/\\|escape:['\"]none['\"]/",
             '|noescape',
+            $source,
+        ) ?? $source;
+        // {$x|escape:'url'} or |escape:url → |urlencode (URL-percent-encoding,
+        // not the same as HTML auto-escape).
+        $source = preg_replace(
+            "/\\|escape:['\"]?url['\"]?/",
+            '|urlencode',
             $source,
         ) ?? $source;
         // {$x|escape:'html'} or |escape:html or |escape:'htmlall' etc. — drop.
@@ -661,6 +805,14 @@ final class Converter
     /**
      * `{include file='foo.tpl' [k=v] [...]}` → `{include 'foo.latte'[, k: v]}`.
      * Renames `.tpl` to `.latte` in path literals.
+     *
+     * The template-name expression is rewritten to function-call shape
+     * `getExtent(EXPR, ARG)` when the original used the
+     * `EXPR|get_extent:ARG` pipe filter — Latte's parser conflates
+     * trailing `, name: $value` named args with extra arguments to the
+     * filter (the `parser swallows named args into the filter` regression
+     * we hit in §1.2 Wave 2 Phase F.0). Function-call shape is
+     * paren-bounded, so trailing tag-named-args stay outside.
      */
     private function rewriteIncludePath(string $source): string
     {
@@ -670,6 +822,7 @@ final class Converter
             '/\{include\s+file=([^\s}]+)((?:[^{}]|\{[^{}]*\})*)\}/s',
             function (array $m): string {
                 $path = preg_replace('/\.tpl([\'"])/', '.latte$1', $m[1]) ?? $m[1];
+                $path = $this->rewriteGetExtentFilterToCall($path);
                 $rest = trim($m[2]);
                 if ($rest === '') {
                     return "{include $path}";
@@ -682,6 +835,22 @@ final class Converter
             },
             $source,
         ) ?? $source;
+    }
+
+    /**
+     * `EXPR|get_extent:ARG` → `getExtent(EXPR, ARG)`. ARG is captured
+     * by `[^|}]+?` to allow embedded function calls or quoted strings;
+     * EXPR is the chunk that precedes the pipe.
+     */
+    private function rewriteGetExtentFilterToCall(string $expr): string
+    {
+        return preg_replace_callback(
+            '/^(.+?)\|get_extent:([^|}]+)$/s',
+            static function (array $m): string {
+                return 'getExtent(' . trim($m[1]) . ', ' . trim($m[2]) . ')';
+            },
+            $expr,
+        ) ?? $expr;
     }
 
     /**
@@ -845,16 +1014,55 @@ final class Converter
      * `{section name=NAME loop=$ARR}…{/section}` →
      *   `{foreach $ARR as $NAME => $val}…{/foreach}`.
      *
-     * The conversion is approximate. Smarty's `{section}` exposes
-     * `$smarty.section.NAME.index/iteration/total/...` inside the body;
-     * those references won't survive automated rewriting and need
-     * hand-fix. The roadmap calls this out as expected residue.
+     * Numeric-range form `{section name=NAME start=N loop=M}` →
+     *   `{foreach range(N, N + M - 1) as $NAME}…{/foreach}`. In Smarty,
+     *   `start=N loop=M` produces M iterations with index N, N+1, …,
+     *   N+M-1. `range()` matches that 1:1. The body's
+     *   `$smarty.section.NAME.index` → `$NAME` rewrite is handled by the
+     *   block below.
+     *
+     * Smarty's `{section}` also exposes `iteration/total/first/last/...`
+     * via `$smarty.section.NAME.X`; only `.index` has a clean Latte
+     * equivalent in the numeric-range form (the loop var IS the index).
+     * The other counters land in the residue check.
      */
     private function rewriteSection(string $source): string
     {
+        // Array iteration form: `loop=$arr`.
         $source = preg_replace_callback(
             '/\{section\s+name=(\w+)\s+loop=(\$[\w\[\]\->]+)\s*\}/',
             static fn (array $m): string => sprintf('{foreach %s as $%s => $val}', $m[2], $m[1]),
+            $source,
+        ) ?? $source;
+        // Numeric-range form: `start=N loop=M` (or `loop=M start=N`).
+        $rangeCb = static function (array $m): string {
+            $name = $m['name'];
+            $start = (int) $m['start'];
+            $count = (int) $m['count'];
+            return sprintf('{foreach range(%d, %d) as $%s}', $start, $start + $count - 1, $name);
+        };
+        $source = preg_replace_callback(
+            '/\{section\s+name=(?<name>\w+)\s+start=(?<start>\d+)\s+loop=(?<count>\d+)\s*\}/',
+            $rangeCb,
+            $source,
+        ) ?? $source;
+        $source = preg_replace_callback(
+            '/\{section\s+name=(?<name>\w+)\s+loop=(?<count>\d+)\s+start=(?<start>\d+)\s*\}/',
+            $rangeCb,
+            $source,
+        ) ?? $source;
+        // Body: `$smarty.section.NAME.index` (or its bracketed form left
+        // by rewriteSmartyDotAccess) → `$NAME`. Only valid for the
+        // numeric-range form, but it's also a no-op when no matching
+        // `{section}` exists, so the rewrite is safe to apply blindly.
+        $source = preg_replace(
+            '/\$smarty\.section\.(\w+)\.index\b/',
+            '\$\1',
+            $source,
+        ) ?? $source;
+        $source = preg_replace(
+            "/\\\$smarty\\['section'\\]\\['(\\w+)'\\]\\['index'\\]/",
+            '\$\1',
             $source,
         ) ?? $source;
         return str_replace('{/section}', '{/foreach}', $source);

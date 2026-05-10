@@ -31,7 +31,7 @@
     {/if}
 
     {='Contact'|translate}
-    <a href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate}">{='Webmaster'|translate}</a>
+    <a href="mailto:{$CONTACT_MAIL}?subject={='A comment on your site'|translate|urlencode}">{='Webmaster'|translate}</a>
   </div>{* <!-- pageInfos --> *}
 
 </div>{* <!-- footer --> *}

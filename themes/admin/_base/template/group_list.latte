@@ -148,7 +148,7 @@
     {if !empty($groups)}
     {foreach $groups as $group}
       {var $color_id = $group['ID']%5}
-      {include groupContent, grp_id: $group['ID'], grp_name: $group['NAME'], grp_members: $group['MEMBERS'], grp_color: $color_tab[$color_id], grp_is_default: $group['IS_DEFAULT']}
+      {include groupContent, group: $group, grp_id: $group['ID'], grp_name: $group['NAME'], grp_members: $group['MEMBERS'], grp_color: $color_tab[$color_id], grp_is_default: $group['IS_DEFAULT']}
       
     {/foreach}
     {/if}

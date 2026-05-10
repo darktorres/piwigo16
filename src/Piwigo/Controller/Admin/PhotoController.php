@@ -715,7 +715,8 @@ SELECT id
 
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
-        $tpl->assign('FTP_HELP_CONTENT', LangService::get()->loadLanguage('help/photos_add_ftp.html', '', ['return' => true]));
+        $ftpHelp = LangService::get()->loadLanguage('help/photos_add_ftp.html', '', ['return' => true]);
+        $tpl->assign('FTP_HELP_CONTENT', new \Latte\Runtime\Html(is_string($ftpHelp) ? $ftpHelp : ''));
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }

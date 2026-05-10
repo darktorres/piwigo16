@@ -24,7 +24,7 @@
   {do combineCss(path: "themes/admin/" . $theme['id'] . "/css/components/general.css", order: -9)} {* Temporary solution *}
   {/if}
   {if !empty($theme['local_head'])}
-  {include $theme['local_head'], load_css: $theme['load_css']}
+  {include $theme['local_head'], theme: $theme, load_css: $theme['load_css']}
   {/if}
 {/foreach}
 

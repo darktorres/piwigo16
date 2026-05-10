@@ -101,7 +101,7 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 
 <div class="loading hide"> 
   <span class="icon-spin6 animate-spin"> </span>
@@ -184,6 +184,6 @@
   </div>
 </div>
 
-{if !empty($navbar) }{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 
 {do combineCss(path: "themes/admin/_base/css/pages/history.css")}

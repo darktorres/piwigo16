@@ -409,11 +409,21 @@ final class Template
      * This can be used to effectively include a template in another template.
      * This is equivalent to assign($varname, $this->parse($handle, true)).
      *
+     * When the handle resolves to a `.latte` file, the rendered HTML is
+     * wrapped in `Latte\Runtime\Html` so it propagates through Latte's
+     * auto-escape unmolested at every `{$VAR}` print site (the legacy
+     * Smarty side ran with `escape_html=false`, so a raw string was the
+     * right shape there). The `.tpl` Smarty path keeps the bare-string
+     * shape — Smarty doesn't recognise the `Html` wrapper.
+     *
      * @return true
      */
     public function assignVarFromHandle(string $varname, string $handle): bool
     {
-        $this->assign($varname, $this->parse($handle, true));
+        $rendered = $this->parse($handle, true);
+        $isLatte = isset($this->files[$handle]) && str_ends_with($this->files[$handle], '.latte');
+        $value = $isLatte ? new \Latte\Runtime\Html((string) $rendered) : $rendered;
+        $this->assign($varname, $value);
         return true;
     }
 

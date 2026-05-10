@@ -100,7 +100,7 @@
 
 </form>
 
-{if !empty($navbar) }{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 
 {if isset($COMMENT_LIST)}
 <div id="comments">

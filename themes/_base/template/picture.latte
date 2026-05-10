@@ -16,7 +16,7 @@
 
 <div id="imageToolBar">
 <div class="imageNumber">{$PHOTO}</div>
-{include 'picture_nav_buttons.latte'|get_extent:'picture_nav_buttons'}
+{include getExtent('picture_nav_buttons.latte', 'picture_nav_buttons')}
 
 <div class="actionButtons">
 {if isset($current['unique_derivatives']) && count($current['unique_derivatives'])>1}
@@ -299,7 +299,7 @@
 					{if $COMMENT_COUNT > 2}
 						<a href="{$COMMENTS_ORDER_URL}#comments" rel="nofollow" class="commentsOrder">{$COMMENTS_ORDER_TITLE}</a>
 					{/if}
-					{if !empty($navbar) }{include 'navigation_bar.latte'|get_extent:'navbar'}{/if}
+					{if !empty($navbar) }{include getExtent('navigation_bar.latte', 'navbar')}{/if}
 				</div>
 			{/if}
 			{$COMMENT_LIST}

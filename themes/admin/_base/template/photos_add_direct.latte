@@ -1,4 +1,4 @@
-{if isset($ADD_TO_ALBUM) or isset($selected_category_name)}{$can_upload=true}{else}{$can_upload=false}{/if}
+{var $can_upload = isset($ADD_TO_ALBUM) || isset($selected_category_name)}
 
 {do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
 {include 'include/colorbox.inc.latte'}

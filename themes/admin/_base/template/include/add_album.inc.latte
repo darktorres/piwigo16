@@ -1,4 +1,4 @@
-{if empty($load_mode)}{$load_mode='footer'}{/if}
+{if empty($load_mode)}{var $load_mode = 'footer'}{/if}
 {include 'colorbox.inc.latte', load_mode: $load_mode}
 
 {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}

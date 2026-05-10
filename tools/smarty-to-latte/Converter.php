@@ -1071,6 +1071,17 @@ final class Converter
             $source,
         ) ?? $source;
 
+        // Smarty 3+ shorthand: {$foo = value} or {$foo='value'}.
+        // Latte interprets {$expr} as a print, so a literal `{$foo='bar'}`
+        // emits 'bar'. Disambiguate from comparisons (==, !=, <=, >=) and
+        // attribute fragments by requiring a single `=` immediately after
+        // the variable name.
+        $source = preg_replace_callback(
+            '/\{\$(\w+)\s*=(?![=])\s*([^}]+?)\}/',
+            static fn (array $m): string => $wrap($m[1], $m[2]),
+            $source,
+        ) ?? $source;
+
         return $source;
     }
 

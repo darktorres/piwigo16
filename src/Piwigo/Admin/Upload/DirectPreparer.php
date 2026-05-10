@@ -15,6 +15,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
+use Latte\Runtime\Html;
 
 final class DirectPreparer
 {
@@ -80,10 +81,10 @@ final class DirectPreparer
             $cat = ServiceLocator::get(CategoryRepository::class)->findCategoryById($album_id_int);
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
-                $tpl->assign('ADD_TO_ALBUM', ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
+                $tpl->assign('ADD_TO_ALBUM', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
                     is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '',
                     null
-                ));
+                )));
             } else {
                 $rawAlbum = $_GET['album'];
                 $album_id = is_string($rawAlbum) ? $rawAlbum : '';
@@ -94,7 +95,7 @@ final class DirectPreparer
             if ($last_cat !== null) {
                 $selected_category = [$last_cat['category_id']];
                 $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($last_cat['uppercats'], null);
-                $tpl->assign('selected_category_name', $selected_category_name);
+                $tpl->assign('selected_category_name', new Html($selected_category_name));
             }
         }
 

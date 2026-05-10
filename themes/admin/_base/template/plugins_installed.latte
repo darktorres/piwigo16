@@ -112,9 +112,9 @@
       </div>
       
       <div class="PluginOptionsBlock dropdown">
-        <div class="dropdown-option-content"> {if !empty($author)}{='By %s'|translate:$author} | {/if}{='Version'|translate} {$version}</div>
+        <div class="dropdown-option-content"> {if !empty($author)}{='By %s'|translate:$author|noescape} | {/if}{='Version'|translate} {$version|noescape}</div>
         <div class="pluginDescCompact">
-          {$plugin['DESC']}
+          {$plugin['DESC']|noescape}
         </div>
           <a class="dropdown-option icon-back-in-time plugin-restore separator-top tiptip" title="{='While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset'|translate}">{='Restore'|translate}</a>
   {if $CONF_ENABLE_EXTENSIONS_INSTALL}
@@ -125,7 +125,7 @@
         {$plugin['NAME']}
       </div>
       <div class="pluginDesc">
-        {$plugin['DESC']}
+        {$plugin['DESC']|noescape}
       </div>
       <div class="pluginActions">
         {if $plugin['STATE'] == 'active'}

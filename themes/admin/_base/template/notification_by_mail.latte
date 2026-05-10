@@ -88,7 +88,7 @@
           <td><label for="send_selection-{$u['ID']}">{$u['USERNAME']}</label></td>
           <td><label for="send_selection-{$u['ID']}">{$u['EMAIL']}</label></td>
           <td><label for="send_selection-{$u['ID']}">{$u['LAST_SEND']}</label></td>
-          <td><input type="checkbox" name="send_selection[]" value="{$u['ID']}" {$u['CHECKED']} id="send_selection-{$u['ID']}"></td>
+          <td><input type="checkbox" name="send_selection[]" value="{$u['ID']}" {$u['CHECKED']|noescape} id="send_selection-{$u['ID']}"></td>
         </tr>
         {/foreach}
       </table>

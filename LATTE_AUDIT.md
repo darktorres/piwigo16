@@ -139,15 +139,13 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/admin/_base/template (64)
 
-> NOT properly profiled. The pairs below got a structural diff scan +
-> a broad grep over the converted `.latte` files for residual Smarty
-> constructs (`{section}`, `$smarty.*`, `|escape:*`, `not`/`eq`/`ne`,
-> `{strip}`, `{html_options}` etc.) — zero hits. That confirms the
-> converter rules covered every Smarty construct present, but it does
-> NOT verify per-pair runtime correctness: HTML-payload vars assigned
-> in admin controllers may still need `Latte\Runtime\Html` wrapping,
-> and admin pages were not live-smoked (would require auth setup).
-> All 64 pairs left unchecked pending end-to-end review.
+> All 64 pairs reviewed end-to-end. Producer-side `Latte\Runtime\Html`
+> wraps applied where the var holds pre-rendered HTML (sort indicators,
+> category breadcrumbs, integrity HTML messages, install help link with
+> email, etc.). Template-side `|noescape` hand-fixes applied where HTML
+> originates from translate-arg splice or attribute-fragment payloads.
+> Live admin smoke not performed (would require auth setup) — flagged
+> as residual risk.
 
 - [x] `admin.tpl` ↔ `admin.latte` — full read. Sidebar nav. `$ADMIN_PAGE_TITLE` Html-wrapped at producer. `$TABSHEET`, `$ADMIN_CONTENT` auto-Html via assignVarFromHandle. errors/infos/warnings/messages from PageState are plain l10n text.
 - [x] `album_notification.tpl` ↔ `album_notification.latte` — full read. `htmlOptions|noescape` ✓. `$MAIL_CONTENT` is textarea text input. `$save_success` plain text from controller.
@@ -155,29 +153,28 @@ the `.tpl` source would produce the same `.latte` we have.
 - [~] `batch_manager_global.tpl` ↔ `batch_manager_global.latte` — full read. `$thumbnail['TITLE']` Html-wrapped at producer (BatchManagerController:909). `htmlOptions|noescape` ✓. `$action['CONTENT']` (plugin payload) hand-fixed `|noescape` (line 242).
 - [x] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte` — full read. Per-image edit form. `htmlOptions|noescape` ✓. `url_is_remote(…)` is registered function. PLUGIN_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE foreach with dynamic `{include $PATH, …}`.
 - [~] `cat_list.tpl` ↔ `cat_list.latte` — full read. `$smarty.cookies.X` → `$_COOKIE['X']` ✓. `CATEGORIES_NAV` Html-wrapped at producer (AlbumController). `$category['NAME']` is rendered name (usually plain text, plugin-overridable). `assign` → `var`. Faithful.
-- [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
+- [x] `cat_modify.tpl` ↔ `cat_modify.latte` — full read. `$CATEGORIES_NAV` and `$CATEGORIES_PARENT_NAV` Html-wrapped at AlbumController. `$INFO_*` all plain Lang::t/timeSince output. `$INFO_TITLE` plain text Lang::t (no HTML, just sentence). `$CAT_NAME`/`$CAT_COMMENT` plain admin input.
 - [x] `cat_options.tpl` ↔ `cat_options.latte` — full read both. `$DOUBLE_SELECT` auto-Html. Faithful.
-- [ ] `cat_perm.tpl` ↔ `cat_perm.latte`
-- [ ] `check_integrity.tpl` ↔ `check_integrity.latte`
-- [ ] `comments.tpl` ↔ `comments.latte`
-- [ ] `configuration_comments.tpl` ↔ `configuration_comments.latte`
+- [x] `cat_perm.tpl` ↔ `cat_perm.latte` — full read. JSON script `|noescape` ✓. `$group_details['group_name']`/`['group_users']` plain. `$save_success` plain Lang::t. `groups_selected|json_encode` in single-quoted attr ✓.
+- [~] `check_integrity.tpl` ↔ `check_integrity.latte` — full read. `$c13y['anomaly']` plain Lang::t. `$c13y['correction_msg']` and `$c13y['correction_error_fct']` Html-wrapped at producer (CheckIntegrity:196,213) — sources contain `<br>` + getHtlmLinksMoreInfo() HTML.
+- [x] `comments.tpl` ↔ `comments.latte` — full read. JS-driven UI; only translates and config flags. JSON script `|noescape` ✓. Faithful.
+- [x] `configuration_comments.tpl` ↔ `configuration_comments.latte` — full read. Checkbox form, plain settings. `htmlOptions|noescape` ✓.
 - [x] `configuration_default.tpl` ↔ `configuration_default.latte` — full read. `htmlRadios|noescape` ✓. Faithful.
-- [ ] `configuration_display.tpl` ↔ `configuration_display.latte`
-- [ ] `configuration_main.tpl` ↔ `configuration_main.latte`
-- [ ] `configuration_search.tpl` ↔ `configuration_search.latte`
-- [ ] `configuration_sizes.tpl` ↔ `configuration_sizes.latte`
-- [ ] `configuration_watermark.tpl` ↔ `configuration_watermark.latte`
+- [x] `configuration_display.tpl` ↔ `configuration_display.latte` — full read. Checkbox-only UI with translate filter chains `('Edit album'|translate|ucfirst)`. Plain.
+- [x] `configuration_main.tpl` ↔ `configuration_main.latte` — full read. JSON script `|noescape` ✓. `$main['CONF_PAGE_BANNER']` in textarea (plain context). `$main['mail_theme_options']` foreach over theme name strings. Tooltip title uses literal `<br><img>` (template literal, not var; Latte does not escape).
+- [x] `configuration_search.tpl` ↔ `configuration_search.latte` — full read. JSON script `|noescape` ✓. Filter view config form; checkboxes/radios/selects. Plain.
+- [x] `configuration_sizes.tpl` ↔ `configuration_sizes.latte` — full read. JSON script `|noescape` ✓. Derivative size config; plain numeric inputs.
+- [x] `configuration_watermark.tpl` ↔ `configuration_watermark.latte` — full read. JSON script `|noescape` ✓. `htmlOptions|noescape` ✓. Watermark config form; plain.
 - [x] `double_select.tpl` ↔ `double_select.latte` — full read. `htmlOptions(...)|noescape` ✓.
-- [ ] `element_set_ranks.tpl` ↔ `element_set_ranks.latte`
+- [x] `element_set_ranks.tpl` ↔ `element_set_ranks.latte` — full read. `$thumbnail['NAME']` plain (filename). `htmlOptions|noescape` ✓. `$save_success` plain.
 - [x] `extend_for_templates.tpl` ↔ `extend_for_templates.latte` — full read. `htmlOptions(...)|noescape` ✓ (×3).
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `group_list.tpl` ↔ `group_list.latte`
-- [x] `group_perm.tpl` ↔ `group_perm.latte` — full read. `$TITLE` plain text Lang::t (auto-escape correct), `$DOUBLE_SELECT` auto-Html.
-- [ ] `header.tpl` ↔ `header.latte`
+- [~] `footer.tpl` ↔ `footer.latte` — full read. `{$elt}` foreach over `$footer_elements` hand-fixed `|noescape` (admin maintenance/search controllers push HTML comment payloads, same pattern as public footer). `$debug['QUERIES_LIST']` Html-wrapped at PageTailRenderer:57.
+- [~] `group_list.tpl` ↔ `group_list.latte` — full read. JSON scripts `|noescape` ✓ (×2). Translate args with HTML literal `'<span>0</span>'` and `'<strong>39</strong>','<strong>251</strong>'` hand-fixed `|noescape` (lines 107, 177). `$grp_*` from include args plain.
+- [x] `header.tpl` ↔ `header.latte` — full read. `head_elements` push wrapped Html in PageHeaderRenderer:64; `header_msgs` upgrade entry wrapped Html in CommonBootstrap:310 (passthrough auto-escape since trust marker). JSON config block `|noescape` ✓.
 - [x] `help.tpl` ↔ `help.latte` — full read. `$HELP_CONTENT` Html-wrapped at producer (MiscController). `$HELP_SECTION_TITLE` plain text.
-- [ ] `history.tpl` ↔ `history.latte`
-- [ ] `install.tpl` ↔ `install.latte`
-- [ ] `intro.tpl` ↔ `intro.latte`
+- [x] `history.tpl` ↔ `history.latte` — full read. JSON script `|noescape` ✓. `$search_summary['NB_LINES'/'FILESIZE'/'USERS'/'MEMBERS'/'GUESTS']` plain Translator plurals from GeneralEndpoints. JS-driven activity table.
+- [~] `install.tpl` ↔ `install.latte` — full read. `$L_INSTALL_HELP` Html-wrapped at InstallController:274 (contains `<a href>`). `$EMAIL` Html-wrapped with `htmlspecialchars($admin_mail)` to prevent XSS. Subscribe translate body line hand-fixed `|noescape`. `htmlOptions|noescape` ✓.
+- [x] `intro.tpl` ↔ `intro.latte` — full read. JSON script `|noescape` ✓. Stats counts `$NB_*` plain. `$ACTIVITY_CHART_DATA`/`$STORAGE_CHART_DATA` numeric arrays. `translate_dec` plurals plain.
 - [x] `languages_installed.tpl` ↔ `languages_installed.latte` — full read. Language metadata; `name`, `deactivate_tooltip` plain. Faithful.
 - [x] `languages_new.tpl` ↔ `languages_new.latte` — full read. cluetip title `|htmlspecialchars|nl2br` preserved (attribute context). Faithful.
 - [x] `maintenance_actions.tpl` ↔ `maintenance_actions.latte` — full read. Maintenance action buttons. Plain text labels. Faithful.
@@ -185,33 +182,33 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `maintenance_sys.tpl` ↔ `maintenance_sys.latte` — full read. Static activity table. Faithful.
 - [x] `menubar.tpl` ↔ `menubar.latte` — full read. Admin menu block ordering form. `$block['reg']->getName()|translate` plain, `=math(equation: "abs(pos)", pos: ...)` rewritten. Faithful.
 - [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — full read. Plain pagination markup. Faithful.
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
-- [ ] `permalinks.tpl` ↔ `permalinks.latte`
-- [ ] `photos_add_applications.tpl` ↔ `photos_add_applications.latte`
-- [ ] `photos_add_direct.tpl` ↔ `photos_add_direct.latte`
+- [~] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — full read. `$DOUBLE_SELECT` auto-Html. `$u['CHECKED']` ('checked="checked"' attribute fragment) hand-fixed `|noescape` in tag context (line 91). `$u['USERNAME']`/`$u['EMAIL']`/`$u['LAST_SEND']` plain.
+- [~] `permalinks.tpl` ↔ `permalinks.latte` — full read. `$SORT_*` and `$SORT_OLD_*` Html-wrapped at producer (MiscController::parseSortVariables — builds `<a href>...<em>↓</em></a>`). JSON script `|noescape` ✓. `$permalink[*]` plain DB values.
+- [~] `photos_add_applications.tpl` ↔ `photos_add_applications.latte` — full read. `<em>Piwigo for iOS/Android</em>` translate strings hand-fixed `|noescape` (lines 25, 37) — converter pass `addNoescapeToHtmlBearingTranslations` covers on regen.
+- [~] `photos_add_direct.tpl` ↔ `photos_add_direct.latte` — full read. `$ADD_TO_ALBUM` and `$selected_category_name` Html-wrapped at producer (DirectPreparer:83,96 — getCatDisplayNameCache returns HTML breadcrumb). JSON script `|noescape` ✓. `$FORMATS_ORIGINAL_INFO['name'/'formats'/'ext']` plain Lang::t. `$setup_errors`/`$setup_warnings` plain text.
 - [x] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte` — full read. `$FTP_HELP_CONTENT` Html-wrapped at PhotoController:719.
 - [x] `picture_coi.tpl` ↔ `picture_coi.latte` — full read. COI form, plain markup. Faithful.
 - [x] `picture_formats.tpl` ↔ `picture_formats.latte` — full read. `$page_data_json|noescape` ✓. `$FORMATS` data array. Faithful.
-- [ ] `picture_modify.tpl` ↔ `picture_modify.latte`
-- [ ] `plugins_installed.tpl` ↔ `plugins_installed.latte`
-- [ ] `plugins_new.tpl` ↔ `plugins_new.latte`
+- [~] `picture_modify.tpl` ↔ `picture_modify.latte` — full read. `$INTRO['size']` Html-wrapped at producer (PhotoController:322 — splices literal `&times;` HTML entity). `$related_categories[*]['name']` and `$STORAGE_CATEGORY` Html-wrapped at producer (PhotoController:357,361 — getCatDisplayNameCache HTML breadcrumb). JSON script `|noescape` ✓. `htmlOptions|noescape` ✓. `$INTRO` other fields plain.
+- [~] `plugins_installed.tpl` ↔ `plugins_installed.latte` — full read. `$author` and `$version` built via `|sprintf:`/`|cat:` produce HTML (`<a>...</a>`, `<u>...</u>`). Print sites hand-fixed `|noescape` (line 115, 117, 128) — covers translate-arg HTML splice + plugin DESC HTML markup. `htmlOptions|noescape` ✓. JSON script `|noescape` ✓.
+- [x] `plugins_new.tpl` ↔ `plugins_new.latte` — full read. `$plugin['BIG_DESC']|nl2br` — Latte's nl2br htmlspecialchars-escapes input first (safer than Smarty's escape_html=false; plugin-author-controlled descriptions correctly not trusted). Plain text otherwise. `htmlOptions|noescape` ✓.
 - [x] `popuphelp.tpl` ↔ `popuphelp.latte` — full read. `$HELP_CONTENT` Html-wrapped at MiscController.
 - [x] `queue.tpl` ↔ `queue.latte` — full read. Queue status/failed-jobs table. `data-confirm='{"\"...\""|translate}'` (escaped-quote translation literal) preserved verbatim from .tpl. Faithful.
-- [ ] `rating.tpl` ↔ `rating.latte`
+- [x] `rating.tpl` ↔ `rating.latte` — full read. `$image[*]` and `$rate[*]` all plain numeric/text. `htmlOptions|noescape` ✓ (×2). JSON script `|noescape` ✓.
 - [~] `rating_user.tpl` ↔ `rating_user.latte` — full read. `|replace:' ','<br>'` produces `<br>` HTML; hand-fixed `|noescape` (×2, lines 45, 46). `{capture $rate_over}{foreach … {breakIf …}…}{/capture}` for thumbnail tooltip ✓.
 - [x] `site_manager.tpl` ↔ `site_manager.latte` — full read. Site list with synchronize/delete actions. Faithful.
-- [ ] `site_update.tpl` ↔ `site_update.latte`
+- [x] `site_update.tpl` ↔ `site_update.latte` — full read. `$L_RESULT_*` plain Lang::t. `$update_result[*]`/`$metadata_result[*]` plain numeric stats. `$sync_errors[*]` plain labels. `$METADATA_LIST` comma-list of metadata field names. `htmlOptions|noescape` ✓ (×2).
 - [x] `stats.tpl` ↔ `stats.latte` — full read. JSON encode in single-quoted attributes (`data-hours='{json_encode(...)}'`); attribute escape preserves `"` as `&quot;`, browser dataset returns decoded — JSON.parse works.
 - [x] `tabsheet.tpl` ↔ `tabsheet.latte` — full read. `$tabsheet[*]['caption']` plain l10n text, `['url']` plain.
-- [ ] `tags.tpl` ↔ `tags.latte`
-- [ ] `themes_installed.tpl` ↔ `themes_installed.latte`
+- [~] `tags.tpl` ↔ `tags.latte` — full read. `$warning_tags` Html-wrapped at producer (MiscController:383 — orphan-tag review link). `$message_tags` plain Lang::t. JSON `data-tags` ✓. `{$tag_name}`, `{$tag_raw_name}`, `{$tag_count|translate_dec:...}` plain.
+- [~] `themes_installed.tpl` ↔ `themes_installed.latte` — full read. `$author`/`$version` HTML produced via `|sprintf:`/`|cat:` (same pattern as plugins_installed). Print sites hand-fixed `|noescape` (lines 51, 53, 56). `$theme['DESC']` `|noescape` (theme description may contain HTML).
 - [x] `themes_new.tpl` ↔ `themes_new.latte` — full read. theme metadata from API; plain.
-- [ ] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
+- [x] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte` — full read. Checkbox/radio config form. `$std_pgs_skin_options` foreach over skin id strings. Plain.
 - [x] `updates_ext.tpl` ↔ `updates_ext.latte` — full read. Extension update list. Faithful.
-- [ ] `updates_pwg.tpl` ↔ `updates_pwg.latte`
-- [ ] `upgrade.tpl` ↔ `upgrade.latte`
-- [ ] `user_activity.tpl` ↔ `user_activity.latte`
-- [ ] `user_list.tpl` ↔ `user_list.latte`
+- [~] `updates_pwg.tpl` ↔ `updates_pwg.latte` — full read. `<a href="%s">` HTML translate strings hand-fixed `|noescape` (lines 54, 99). JSON script `|noescape` ✓. `$STEP`/`$DEV_VERSION`/version strings plain.
+- [~] `upgrade.tpl` ↔ `upgrade.latte` — full read. `<strong>release %s</strong>` HTML translate hand-fixed `|noescape` (line 59). `htmlOptions|noescape` ✓. `$introduction['F_ACTION']`/version strings plain.
+- [x] `user_activity.tpl` ↔ `user_activity.latte` — full read. JSON scripts `|noescape` ✓ (×2). `$ulist[*]`, `$ACTIONS[*]`, `$ADDITIONAL_FILT['name']` plain. JS-driven detail rendering.
+- [x] `user_list.tpl` ↔ `user_list.latte` — full read (1069 lines). Mostly JS-rendered UI templates with placeholder text. JSON script `|noescape` ✓. `htmlOptions|noescape` ✓ (×6). All variable interpolations are plain text. Tooltip titles with literal HTML inside attributes (lines 509-515, 963-969) are template literals, not vars — Latte does not escape them.
 - [~] `user_perm.tpl` ↔ `user_perm.latte` — full read. `$TITLE` plain Lang::t. `$categories_because_of_groups` entries Html-wrapped at producer (UsersController:312, getCatDisplayNameCache returns HTML breadcrumb).
 
 ## themes/admin/_base/template/include (6)
@@ -359,5 +356,35 @@ then evaluates `theme` as an undefined constant or variable. Fixed in
 
 ### Per-pair findings
 
-(prepend new entries here as the audit progresses)
+**Admin producer-side Html wraps applied during the end-to-end pass:**
+
+- `MiscController::parseSortVariables` (used by permalinks) — `SORT_*`/`SORT_OLD_*`
+  built as `<a href="...">↓</a>` link markup. Wrapped Html.
+- `CheckIntegrity::display` — `correction_msg` and `correction_error_fct`
+  contain `<br>` + `getHtlmLinksMoreInfo()` HTML. Wrapped Html at producer.
+- `DirectPreparer::prepare` — `ADD_TO_ALBUM` and `selected_category_name`
+  (HTML breadcrumb from `getCatDisplayNameCache()`). Wrapped Html.
+- `PhotoController::picture_modify` — `INTRO['size']` (literal `&times;`),
+  `related_categories[*]['name']`, `STORAGE_CATEGORY` (HTML breadcrumb).
+  Wrapped Html.
+- `MiscController::tags` — `warning_tags` (orphan-tag review link sprintf'd
+  with HTML). Wrapped Html.
+- `InstallController::displayForm` — `EMAIL` (`<span class="adminEmail">…`,
+  user input htmlspecialchars-escaped before splicing) and `L_INSTALL_HELP`
+  (`<a href>` link). Wrapped Html.
+
+**Admin template-side `|noescape` hand-fixes applied during the end-to-end pass:**
+
+- `themes/admin/_base/template/footer.latte:9` — `{$elt|noescape}` for
+  `$footer_elements` foreach (admin maintenance/search controllers push
+  HTML comment debug payloads).
+- `themes/admin/_base/template/notification_by_mail.latte:91` — `{$u['CHECKED']|noescape}`
+  (HTML attribute fragment `'checked="checked"'` in tag context).
+- `themes/admin/_base/template/install.latte:155` — `{='Subscribe %s …'|translate:$EMAIL|noescape}`
+  (translate sprintf substitutes Html as plain string; trust must be re-marked).
+- `themes/admin/_base/template/plugins_installed.latte:115,117,128` —
+  `|noescape` on `{$author}`/`{$version}`/`$plugin['DESC']` print sites
+  (sprintf/cat-built HTML, plus plugin-author-controlled description).
+- `themes/admin/_base/template/themes_installed.latte:51,53,56` — same
+  pattern as plugins_installed.
 

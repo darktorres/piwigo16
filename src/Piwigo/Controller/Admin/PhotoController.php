@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -319,7 +320,7 @@ SELECT id
             'date'    => Lang::t('Posted the %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, ['day', 'month', 'year'])),
             'age'     => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available'] ?? null) ? $row['date_available'] : null, 'year'))),
             'added_by' => Lang::t('Added by %s', is_string($row['added_by'] ?? null) ? $row['added_by'] : ''),
-            'size'    => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024.0),
+            'size'    => new Html(Lang::t('%s pixels, %.2f MB', (is_scalar($row['width'] ?? null) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height'] ?? null) ? (string) $row['height'] : ''), (is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0) / 1024.0)),
             'stats'   => Lang::t('Visited %d times', is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0),
             'id'      => Lang::t(is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''),
             'ext'     => Lang::t('%s file type', strtoupper(end($extTab))),
@@ -355,10 +356,11 @@ SELECT id
         foreach (ServiceLocator::get(CategoryRepository::class)
             ->findCategoryInfosByImageId($getImageIdInt) as $catRow) {
             $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($catRow['uppercats'] ?? null) ? (string) $catRow['uppercats'] : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+            $nameHtml = new Html($name);
             if ($catRow['category_id'] == $storage_category_id) {
-                $tpl->assign('STORAGE_CATEGORY', $name);
+                $tpl->assign('STORAGE_CATEGORY', $nameHtml);
             }
-            $related_categories[is_scalar($catRow['category_id'] ?? null) ? (string) $catRow['category_id'] : ''] = ['name' => $name, 'unlinkable' => $catRow['category_id'] != $storage_category_id];
+            $related_categories[is_scalar($catRow['category_id'] ?? null) ? (string) $catRow['category_id'] : ''] = ['name' => $nameHtml, 'unlinkable' => $catRow['category_id'] != $storage_category_id];
             $related_categories_ids[] = $catRow['category_id'];
         }
         $tpl->assign('related_categories', $related_categories);

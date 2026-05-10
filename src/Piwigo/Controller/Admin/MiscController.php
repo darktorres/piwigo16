@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -379,7 +380,7 @@ final class MiscController
 
         $orphan_tag_names_array = '[]';
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '">' . Lang::t('Review') . '</a>');
+            $warning_tags = new Html(sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '">' . htmlspecialchars(Lang::t('Review')) . '</a>'));
             $orphan_tag_names_array = '["' . implode('" ,"', array_map(htmlentities(...), $orphan_tag_names, array_fill(0, count($orphan_tag_names), ENT_QUOTES))) . '"]';
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
@@ -1378,7 +1379,7 @@ final class MiscController
                 $disp = '<em>' . $disp . '</em>';
             }
             if (isset($template_var)) {
-                $tpl->assign($template_var . strtoupper($field), '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>');
+                $tpl->assign($template_var . strtoupper($field), new Html('<a href="' . $url . $anchor . '" title="' . htmlspecialchars(Lang::t('Sort order')) . '">' . $disp . '</a>'));
             }
         }
         return $ret;

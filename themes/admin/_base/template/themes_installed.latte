@@ -48,12 +48,12 @@
     <div class="showInfo-dropdown dropdown">
       <div class="showInfo-dropdown-header">
         {if !empty($author)}
-          {='By %s'|translate:$author} | 
+          {='By %s'|translate:$author|noescape} |
         {/if}
-        {='Version'|translate} {$version}
+        {='Version'|translate} {$version|noescape}
       </div>
       <div class="showInfo-dropdown-content">
-        {$theme['DESC']}
+        {$theme['DESC']|noescape}
       </div>
       {if $theme['STATE'] != "active" and $CONF_ENABLE_EXTENSIONS_INSTALL}
         {if $theme['DELETABLE']}

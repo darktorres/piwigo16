@@ -29,6 +29,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Latte\Runtime\Html;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PreferencesService;
@@ -269,9 +270,9 @@ final class InstallController implements ControllerInterface
             'F_ADMIN'                => $admin_name,
             'F_ADMIN_PASS'           => $admin_pass1,
             'F_ADMIN_EMAIL'          => $admin_mail,
-            'EMAIL'                  => '<span class="adminEmail">' . $admin_mail . '</span>',
+            'EMAIL'                  => new Html('<span class="adminEmail">' . htmlspecialchars($admin_mail) . '</span>'),
             'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,
-            'L_INSTALL_HELP'         => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+            'L_INSTALL_HELP'         => new Html(Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum')),
         ]);
 
         if ($step == 1) {

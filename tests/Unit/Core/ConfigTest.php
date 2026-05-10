@@ -164,7 +164,7 @@ final class ConfigTest extends TestCase
 
         self::assertSame('medium', Config::derivativeDefaultSize());
         self::assertSame(256000, Config::derivativesStripMetadataThreshold());
-        self::assertSame(0755, Config::chmodValue());
+        self::assertSame(0o775, Config::chmodValue());
         self::assertSame('png', Config::tiffRepresentativeExt());
         self::assertSame(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'], Config::formatExtensions());
     }

@@ -71,7 +71,7 @@ final class InstallChainTest extends IntegrationTestCase
         $version = $this->queryScalar(
             "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
-        self::assertSame('16', $version, 'install must write piwigo_db_version = 16');
+        self::assertSame('17', $version, 'install must write piwigo_db_version = 17');
 
         self::assertFileExists(self::INSTALLED_STAMP, 'index.php?/install must create the .installed.test sentinel');
     }

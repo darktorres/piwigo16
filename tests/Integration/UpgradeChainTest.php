@@ -65,7 +65,7 @@ final class UpgradeChainTest extends IntegrationTestCase
         $version = $this->queryScalar(
             "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
-        // AppInfo::branchFromVersion('16.3.0') returns '16' (first segment only, per Piwigo ≥ 11 convention)
-        self::assertSame('16', $version, 'index.php?/upgrade must land on current branch version');
+        // AppInfo::branchFromVersion('17.0.0') returns '17' (first segment only, per Piwigo ≥ 11 convention)
+        self::assertSame('17', $version, 'index.php?/upgrade must land on current branch version');
     }
 }

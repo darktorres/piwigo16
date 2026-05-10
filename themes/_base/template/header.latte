@@ -12,7 +12,7 @@
 <meta name="author" content="{$INFO_AUTHOR|strip_tags:false|replace:'"',' '}">
 {/if}
 {if isset($related_tags)}
-<meta name="keywords" content="{foreach $related_tags as $tag}{if !$smarty['foreach']['tag_loop']['first']}, {/if}{$tag['name']}{/foreach}">
+<meta name="keywords" content="{foreach $related_tags as $tag}{if !$iterator->isFirst()}, {/if}{$tag['name']}{/foreach}">
 {/if}
 {if isset($COMMENT_IMG)}
 <meta name="description" content="{$COMMENT_IMG|strip_tags:false|replace:'"',' '}{if isset($INFO_FILE)} - {$INFO_FILE}{/if}">

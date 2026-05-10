@@ -84,7 +84,7 @@
   <div class="chart-title"> {="Activity peak in the last weeks"|translate}</div>
   <div class="activity-chart" style="--chart-rows:{count($ACTIVITY_CHART_DATA) + 1}">
     {foreach $ACTIVITY_CHART_DATA as $WEEK_NUMBER => $WEEK_ACTIVITY}
-      <div id="week-{$WEEK_NUMBER}-legend" class="row-legend"><div>{'Week %d'|translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div></div>
+      <div id="week-{$WEEK_NUMBER}-legend" class="row-legend"><div>{='Week %d'|translate:$ACTIVITY_WEEK_NUMBER[$WEEK_NUMBER]}</div></div>
       {foreach $WEEK_ACTIVITY as $DAY_NUMBER => $SIZE}
         <span class="activity_tooltips">
           {if $SIZE != 0}
@@ -132,7 +132,7 @@
     {/foreach}
   </div>
 
-  <div id="chart-title-storage" class="chart-title"> {='Storage'|translate} <span class="chart-title-infos"> {'%s MB used'|translate:(round($STORAGE_TOTAL/1000, 0))} </span></div>
+  <div id="chart-title-storage" class="chart-title"> {='Storage'|translate} <span class="chart-title-infos"> {='%s MB used'|translate:(round($STORAGE_TOTAL/1000, 0))} </span></div>
 
   <div class="storage-chart">
     {foreach $STORAGE_CHART_DATA as $type => $details}

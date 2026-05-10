@@ -43,7 +43,7 @@
 	{/if}
 
 	<div>
-	<input type="hidden" name="redirect" value="{$smarty['server']['REQUEST_URI']|urlencode}">
+	<input type="hidden" name="redirect" value="{=($_SERVER['REQUEST_URI'] ?? '')|urlencode}">
 	<input type="submit" name="login" value="{='Submit'|translate}">
 	<span class="categoryActions">
 {if isset($U_REGISTER)}

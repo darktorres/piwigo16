@@ -15,7 +15,7 @@
     <div class="formats-list" {if (count($FORMATS) == 0)}hidden{/if}>
         {foreach $FORMATS as $format}
             <div class="format-card" data-id="{$format["format_id"]}" style="--bg-image:url('{$IMG_SQUARE_SRC}')">
-                <span class="format-card-size">{'%s MB'|translate:$format["filesize"]}</span>
+                <span class="format-card-size">{='%s MB'|translate:$format["filesize"]}</span>
                 <div class="format-card-ext"><span>{$format["label"]}</span></div>
                 <div class="format-card-actions">
                     <a href="{$format["download_url"]}" rel="nofollow"> <i class="icon-download"></i> </a>

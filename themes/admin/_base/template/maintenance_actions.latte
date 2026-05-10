@@ -54,7 +54,7 @@
         <span class="cache-size-text">{='Cache size'|translate}</span>
         <span class="cache-size-value">
 {if isset($cache_sizes)}
-          {"%s MB"|translate:round($cache_sizes[0]['value']/1024/1024, 2)}
+          {="%s MB"|translate:round($cache_sizes[0]['value']/1024/1024, 2)}
 {else}
           {='N/A'|translate}
 {/if}
@@ -66,7 +66,7 @@
     <a href="{$U_MAINT_COMPILED_TEMPLATES}" class="{$maint_actions['compiled-templates']['icon']} maintenance-action">{$maint_actions['compiled-templates']['label']} 
       <span class="multiple-compiledTemplate-sizes">
 {if isset($cache_sizes)}
-        {"%s MB"|translate:round($cache_sizes[2]['value']/1024/1024, 2)}  
+        {="%s MB"|translate:round($cache_sizes[2]['value']/1024/1024, 2)}  
 {else}
         {='N/A'|translate}
 {/if}
@@ -78,7 +78,7 @@
     <span id="label-delete-size-checkbox">{$maint_actions['derivatives']['label']}
       <span class="multiple-pictures-sizes">
 {if isset($cache_sizes)}
-        {"%s MB"|translate:round($cache_sizes[1]['value']['all']/1024/1024, 2)}
+        {="%s MB"|translate:round($cache_sizes[1]['value']['all']/1024/1024, 2)}
 {else}
         {='N/A'|translate}
 {/if}
@@ -86,7 +86,7 @@
     </span>
     <div class="delete-check-container">
 {foreach $purge_derivatives as $name => $url}
-      <div class="delete-size-check" title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{'%s MB'|translate:round($cache_sizes[1]['value'][$url]/1024/1024, 2)}{else}{='N/A'|translate}{/if}" data-selected="0" name="{$url}">
+      <div class="delete-size-check" title="{if isset($cache_sizes) and isset($cache_sizes[1]['value'][$url])}{='%s MB'|translate:round($cache_sizes[1]['value'][$url]/1024/1024, 2)}{else}{='N/A'|translate}{/if}" data-selected="0" name="{$url}">
           <span class="select-checkbox"><i class="icon-ok"></i></span>
           <span class="picture-deletion-size">{$name}</span>
       </div>

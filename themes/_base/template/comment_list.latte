@@ -4,7 +4,7 @@
 {/if}
 <ul class="commentsList"{if isset($comment_derivative_params)} style="--comment-illu-w:{$comment_derivative_params->maxWidth()+5}px;--comment-desc-h:{$comment_derivative_params->maxHeight()+5}px"{/if}>
 {foreach $comments as $comment}
-<li class="commentElement {if ($smarty['foreach']['comment_loop']['index']) % 2 != 0}odd{else}even{/if}">
+<li class="commentElement {if (($iterator->getCounter() - 1)) % 2 != 0}odd{else}even{/if}">
 	{if isset($comment['src_image'])}
 	{if isset($comment_derivative_params)}
 	{var $derivative = $pwg->derivative($comment_derivative_params, $comment['src_image'])}

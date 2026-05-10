@@ -55,6 +55,7 @@ final class LatteEngine implements TemplateEngine
     {
         $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte';
         Util::mkgetdir($cacheDir);
+        self::ensureGroupWritable($cacheDir);
 
         return new self($cacheDir);
     }
@@ -74,8 +75,26 @@ final class LatteEngine implements TemplateEngine
     {
         $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte_plugin';
         Util::mkgetdir($cacheDir);
+        self::ensureGroupWritable($cacheDir);
 
         return new self($cacheDir, PiwigoPolicy::createPluginPolicy());
+    }
+
+    /**
+     * Make `$cacheDir` group-writable so it can be shared between Apache
+     * (typically `www-data`) and CLI (the developer's user) without one
+     * locking the other out. The parent `_data/templates_c/` typically
+     * carries an ACL granting both, but the per-engine subdir is created
+     * with `Config::chmodValue()` (0o755 by default), and the resulting
+     * mask clamps the ACL effective bits to read+exec — neither user can
+     * write through the other's create. Forcing 0o775 unclamps the mask.
+     */
+    private static function ensureGroupWritable(string $dir): void
+    {
+        $perms = fileperms($dir);
+        if ($perms !== false && ($perms & 0o775) !== 0o775) {
+            chmod($dir, ($perms & 0o7000) | 0o775);
+        }
     }
 
     #[\Override]

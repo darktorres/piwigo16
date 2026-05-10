@@ -43,7 +43,7 @@
 		<td>{='Permalink'|translate} {$SORT_PERMALINK}</td>
 	</tr>
 {foreach $permalinks as $permalink}
-	<tr class="{if ($smarty['foreach']['permalink_loop']['index']) % 2 != 0}row1{else}row2{/if}">
+	<tr class="{if (($iterator->getCounter() - 1)) % 2 != 0}row1{else}row2{/if}">
 		<td class="u-text-center">{$permalink['id']}</td>
 		<td>{$permalink['name']}</td>
 		<td>{$permalink['permalink']}</td>

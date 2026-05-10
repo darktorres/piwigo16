@@ -30,7 +30,7 @@
                         <option value="{$user['id']}">
                             <span class='username_filter'>{$user['username']}</span>
                             <span class='nb_lines_str'>
-                                {'(%d)'|translate:$user['nb_lines']}
+                                {='(%d)'|translate:$user['nb_lines']}
                             </span>
                         </option>
                     {/foreach}
@@ -47,14 +47,14 @@
                     {foreach $ACTIONS as $action}
                         <option value="{$action['value']}">
                             <span class='action_filter'>
-                                {ucfirst($action['object'])|translate}
+                                {=ucfirst($action['object'])|translate}
                                 /
                                 {if $action['action'] == 'delete'}
-                                    {'deletion'|translate : $action['object']}
+                                    {='deletion'|translate : $action['object']}
                                 {else}
                                     {$action['action']|translate}
                                 {/if}
-                                {' (%d)'|translate : $action['counter']}
+                                {=' (%d)'|translate : $action['counter']}
                             </span>
                         </option>
                     {/foreach}

@@ -42,16 +42,16 @@
           <img src="https://sandbox.piwigo.com/uploads/4/y/1/4y1zzhnrnw//2023/01/24/20230124175152-015bc1e3.png">
         </div>
         <div class="promote-text">
-          <span>{"Piwigo is also on mobile."|translate|escape:javascript}</span>
-          <span>{"Try now !"|translate|escape:javascript}</span>
+          <span>{="Piwigo is also on mobile."|translate}</span>
+          <span>{="Try now !"|translate}</span>
         </div>
         <div class="right-side">
           <div>
-            <a href="{$PHPWG_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{"Discover"|translate|escape:javascript}</span></a>
+            <a href="{$PHPWG_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{="Discover"|translate}</span></a>
           </div>
         </div>
       </div>
-      <span class="dont-show-again icon-cancel tiptip" title="{'Understood, do not show again'|translate|escape:javascript}"></span>
+      <span class="dont-show-again icon-cancel tiptip" title="{='Understood, do not show again'|translate}"></span>
     </div>
   {/if}
 
@@ -120,7 +120,7 @@
       <legend>{='Who can see these photos?'|translate}</legend>
 
       <select name="level" size="1">
-        {html_options options=$level_options selected=$level_options_selected}
+        {=htmlOptions(options: $level_options, selected: $level_options_selected)|noescape}
       </select>
     </fieldset>
 *}

@@ -172,7 +172,7 @@
 	<div id="Tags" class="imageInfo">
 		<dt>{='Tags'|translate}</dt>
 		<dd>
-		{foreach $related_tags as $tag}{if !$smarty['foreach']['tag_loop']['first']}, {/if}<a href="{$tag['URL']}">{$tag['name']}</a>{/foreach}
+		{foreach $related_tags as $tag}{if !$iterator->isFirst()}, {/if}<a href="{$tag['URL']}">{$tag['name']}</a>{/foreach}
 		</dd>
 	</div>
 	{/if}

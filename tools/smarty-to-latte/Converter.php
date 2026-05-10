@@ -691,12 +691,56 @@ final class Converter
             'total' => '$iterator->getTotalCount()',
         ];
         foreach ($map as $key => $replacement) {
+            // Raw dotted form (in case dot-access didn't run yet — tests
+            // call convert() in isolation).
             $source = preg_replace(
                 '/\$smarty\.foreach\.\w+\.' . $key . '\b/',
                 $replacement,
                 $source,
             ) ?? $source;
+            // Bracketed form left behind by `rewriteSmartyDotAccess`,
+            // which runs before this rule in the convert() pipeline.
+            $source = preg_replace(
+                "/\\\$smarty\\['foreach'\\]\\['\\w+'\\]\\['" . $key . "'\\]/",
+                $replacement,
+                $source,
+            ) ?? $source;
         }
+
+        // Other documented residues that the dot-access pass leaves as
+        // `$smarty['X']['Y']` — Latte has no implicit `$smarty` global.
+        // - `$smarty.now` → `time()`. Used by `|date_format` to render
+        //   "today" links; the filter itself accepts an int timestamp.
+        $source = str_replace("\$smarty['now']", 'time()', $source);
+        // - `$smarty.server.X` → `$_SERVER['X'] ?? ''`. Smarty's
+        //   `$smarty.server` exposes the superglobal verbatim; in Latte
+        //   we route through PHP's superglobal directly.
+        $source = preg_replace(
+            "/\\\$smarty\\['server'\\]\\['(\\w+)'\\]/",
+            "(\$_SERVER['$1'] ?? '')",
+            $source,
+        ) ?? $source;
+        // - `$smarty.cookies.X` → `$_COOKIE['X']`. The `?? null` shape
+        //   would seem safer for missing-cookie reads, but Latte rejects
+        //   `isset(($x ?? null))` — and the affected templates lean on
+        //   `isset($smarty.cookies.X)` to guard reads. Bare `$_COOKIE['X']`
+        //   keeps the isset() callers working; the templates that read
+        //   without a guard would have raised the same notice under
+        //   Smarty (it returns null for missing keys).
+        $source = preg_replace(
+            "/\\\$smarty\\['cookies'\\]\\['(\\w+)'\\]/",
+            "\$_COOKIE['$1']",
+            $source,
+        ) ?? $source;
+        // - `$smarty.capture.NAME` → `$NAME`. Latte's `{capture $NAME}`
+        //   binds the result to a regular template-var, no `$smarty`
+        //   indirection needed.
+        $source = preg_replace(
+            "/\\\$smarty\\['capture'\\]\\['(\\w+)'\\]/",
+            '\$$1',
+            $source,
+        ) ?? $source;
+
         return $source;
     }
 
@@ -749,7 +793,7 @@ final class Converter
     private function rewritePrintedLiteralFilter(string $source): string
     {
         return preg_replace(
-            "/\\{(?!=)((?:'[^']*'|\"[^\"]*\")\\|\\w[\\w:'\",\\s\\$]*)\\}/",
+            "/\\{(?!=)((?:'[^']*'|\"[^\"]*\"|\\w+\\([^()]*\\)|\\([^()]*\\))\\|\\w[^}]*)\\}/",
             '{=$1}',
             $source,
         ) ?? $source;

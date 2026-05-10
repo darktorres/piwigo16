@@ -9,7 +9,7 @@
       <th>{='Bound Theme'|translate}</th>
     </tr>
     {foreach $extents as $tpl}
-    <tr class="{if ($smarty['foreach']['extent_loop']['index']) % 2 != 0}row1{else}row2{/if}">
+    <tr class="{if (($iterator->getCounter() - 1)) % 2 != 0}row1{else}row2{/if}">
       <td>
         <input type="hidden" name="reptpl[]" value="{$tpl['replacer']}">
         {$tpl['replacer']}

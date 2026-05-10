@@ -101,7 +101,7 @@
         <div data-slider="widths" class="dimensionSlidersBlocks">
           <div class="dimensionSlidersTitleButtons">
             <div>
-              {='Width'|translate} <span class="slider-info">{'between %d and %d pixels'|translate:$dimensions['selected']['min_width'],$dimensions['selected']['max_width']}</span>
+              {='Width'|translate} <span class="slider-info">{='between %d and %d pixels'|translate:$dimensions['selected']['min_width'],$dimensions['selected']['max_width']}</span>
             </div>
             <a class="slider-choice dimension-cancel" data-min="{$dimensions['bounds']['min_width']}" data-max="{$dimensions['bounds']['max_width']}">{='Reset'|translate}</a>
           </div>
@@ -114,7 +114,7 @@
         <div data-slider="heights" class="dimensionSlidersBlocks">
           <div class="dimensionSlidersTitleButtons">
             <div>
-              {='Height'|translate} <span class="slider-info">{'between %d and %d pixels'|translate:$dimensions['selected']['min_height'],$dimensions['selected']['max_height']}</span>
+              {='Height'|translate} <span class="slider-info">{='between %d and %d pixels'|translate:$dimensions['selected']['min_height'],$dimensions['selected']['max_height']}</span>
             </div>
             <a class="slider-choice dimension-cancel" data-min="{$dimensions['bounds']['min_height']}" data-max="{$dimensions['bounds']['max_height']}">{='Reset'|translate}</a>
           </div>
@@ -127,7 +127,7 @@
         <div data-slider="ratios" class="dimensionSlidersBlocks">
             <div>
               <span>{='Ratio'|translate} ({='Width'|translate}/{='Height'|translate})</span>
-              <span class="slider-info">{'between %.2f and %.2f'|translate:$dimensions['selected']['min_ratio'],$dimensions['selected']['max_ratio']}</span>
+              <span class="slider-info">{='between %.2f and %.2f'|translate:$dimensions['selected']['min_ratio'],$dimensions['selected']['max_ratio']}</span>
             </div>
             <div class="dimensionSlidersRatioButtons">
               <div>
@@ -177,7 +177,7 @@
       <a href="#" class="removeFilter" title="{='remove this filter'|translate}"><span>[x]</span></a>
       <blockquote>
         <div data-slider="filesizes">
-          <span class="slider-info">{'between %s and %s MB'|translate:$filesize['selected']['min'],$filesize['selected']['max']}</span>
+          <span class="slider-info">{='between %s and %s MB'|translate:$filesize['selected']['min'],$filesize['selected']['max']}</span>
           <a class="slider-choice dimension-cancel" data-min="{$filesize['bounds']['min']}" data-max="{$filesize['bounds']['max']}">{='Reset'|translate}</a>
           <div class="slider-slider"></div>
 

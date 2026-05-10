@@ -42,7 +42,7 @@
 		</a>
 		<div id="sortOrderBox" class="switchBox">
 			<div class="switchBoxTitle">{='Sort order'|translate}</div>
-			{foreach $image_orders as $image_order}{if !$smarty['foreach']['loop']['first']}<br>{/if}
+			{foreach $image_orders as $image_order}{if !$iterator->isFirst()}<br>{/if}
 			{if $image_order['SELECTED']}
 			<span>&#x2714; </span>{$image_order['DISPLAY']}
 			{else}
@@ -58,7 +58,7 @@
 		</a>
 		<div id="derivativeSwitchBox" class="switchBox">
 			<div class="switchBoxTitle">{='Photo sizes'|translate}</div>
-			{foreach $image_derivatives as $image_derivative}{if !$smarty['foreach']['loop']['first']}<br>{/if}
+			{foreach $image_derivatives as $image_derivative}{if !$iterator->isFirst()}<br>{/if}
 			{if $image_derivative['SELECTED']}
 			<span>&#x2714; </span>{$image_derivative['DISPLAY']}
 			{else}
@@ -127,7 +127,7 @@
 	{foreach $chronology_views as $view}{if $view['SELECTED']}{$view['CONTENT']}{/if}{/foreach}
 	</a>
 	<div id="calendarViewSwitchBox" class="switchBox">
-		{foreach $chronology_views as $view}{if !$smarty['foreach']['loop']['first']}<br>{/if}
+		{foreach $chronology_views as $view}{if !$iterator->isFirst()}<br>{/if}
 		<span{if !$view['SELECTED']} class="u-invisible"{/if}>&#x2714; </span><a href="{$view['VALUE']}">{$view['CONTENT']}</a>
 		{/foreach}
 	</div>
@@ -157,7 +157,7 @@
 <p class="search_results">{='Album results for'|translate} <strong>{$QUERY_SEARCH}</strong> :
 	<em><strong>
 	{foreach $category_search_results as $res}
-	{if !$smarty['foreach']['res_loop']['first']} &mdash; {/if}
+	{if !$iterator->isFirst()} &mdash; {/if}
 	{$res}
 	{/foreach}
 	</strong></em>
@@ -168,7 +168,7 @@
 <p class="search_results">{='Tag results for'|translate} <strong>{$QUERY_SEARCH}</strong> :
 	<em><strong>
 	{foreach $tag_search_results as $tag}
-	{if !$smarty['foreach']['res_loop']['first']} &mdash; {/if} <a href="{$tag['URL']}">{$tag['name']}</a>
+	{if !$iterator->isFirst()} &mdash; {/if} <a href="{$tag['URL']}">{$tag['name']}</a>
 	{/foreach}
 	</strong></em>
 </p>

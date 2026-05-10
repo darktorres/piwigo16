@@ -615,9 +615,11 @@ final class SmartyToLatteConverterTest extends TestCase
     {
         // Smarty allowed `{round(...)}` as a sub-print inside a filter
         // arg; Latte rejects the inner `{`. The converter strips the
-        // wrapper while leaving non-filter braces alone.
+        // wrapper while leaving non-filter braces alone, and the
+        // resulting literal-prefix print picks up the `{=...}` print
+        // marker from `rewritePrintedLiteralFilter`.
         self::assertSame(
-            '{"%s MB"|translate:round($cache_sizes[1][\'value\'][$url] / 1024 / 1024, 2)}',
+            '{="%s MB"|translate:round($cache_sizes[1][\'value\'][$url] / 1024 / 1024, 2)}',
             $this->converter()->convert('{"%s MB"|translate:{round($cache_sizes[1][\'value\'][$url] / 1024 / 1024, 2)}}'),
         );
     }
@@ -652,6 +654,56 @@ final class SmartyToLatteConverterTest extends TestCase
             $this->converter()->convert(
                 '{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css" order=-100}'
             ),
+        );
+    }
+
+    public function test_smarty_foreach_iterator_bracket_form_after_dot_access(): void
+    {
+        // The dot-access pass runs before the iterator rewrite, so by the
+        // time the latter sees the input the dotted shape `$smarty.foreach.X.first`
+        // has been promoted to bracket access. The rule must match the
+        // bracket form too — otherwise `$smarty['foreach']['X']['first']`
+        // leaks into the output and fails at render with "Undefined
+        // variable $smarty".
+        self::assertSame(
+            '{if !$iterator->isFirst()}',
+            $this->converter()->convert("{if !\$smarty.foreach.tag_loop.first}"),
+        );
+        // Outer parens come from the source; inner from the rewrite — the
+        // double-wrapping is harmless under PHP/Latte.
+        self::assertSame(
+            '{if (($iterator->getCounter() - 1)) % 2 != 0}',
+            $this->converter()->convert("{if (\$smarty.foreach.cat_loop.index) % 2 != 0}"),
+        );
+    }
+
+    public function test_smarty_other_residues_rewritten_to_php_equivalents(): void
+    {
+        // `$smarty.now` is the current Unix timestamp.
+        self::assertSame(
+            '{=time()|date_format:"%d"}',
+            $this->converter()->convert('{$smarty.now|date_format:"%d"}'),
+        );
+        // `$smarty.server.X` → PHP superglobal.
+        self::assertSame(
+            "{=(\$_SERVER['REQUEST_URI'] ?? '')|urlencode}",
+            $this->converter()->convert('{$smarty.server.REQUEST_URI|urlencode}'),
+        );
+        // `$smarty.cookies.X` → `$_COOKIE['X']` (no `?? null` so
+        // surrounding `isset(...)` keeps working).
+        self::assertSame(
+            "{if \$_COOKIE['pwg_album_manager_view'] == 'compact'}",
+            $this->converter()->convert("{if \$smarty.cookies.pwg_album_manager_view == 'compact'}"),
+        );
+        self::assertSame(
+            "{if !isset(\$_COOKIE['pwg_tags_per_page'])}",
+            $this->converter()->convert("{if !isset(\$smarty.cookies.pwg_tags_per_page)}"),
+        );
+        // `$smarty.capture.NAME` → `$NAME`. Latte's {capture $name}
+        // binds the result to a normal variable.
+        self::assertSame(
+            '{if !$inc_album_selector}',
+            $this->converter()->convert('{if !$smarty.capture.inc_album_selector}'),
         );
     }
 

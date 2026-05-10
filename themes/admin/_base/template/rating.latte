@@ -63,7 +63,7 @@
   <td></td>
 </tr>
 {foreach $images as $image}
-<tr valign="top" class="{if ($smarty['foreach']['image']['index']) % 2 != 0}row1{else}row2{/if}">
+<tr valign="top" class="{if (($iterator->getCounter() - 1)) % 2 != 0}row1{else}row2{/if}">
 	<td><a href="{$image['U_URL']}"><img src="{$image['U_THUMB']}" alt="{$image['FILE']}" title="{$image['FILE']}"></a></td>
 	<td><strong>{$image['NB_RATES']}/{$image['NB_RATES_TOTAL']}</strong></td>
 	<td><strong>{$image['SCORE_RATE']}</strong></td>

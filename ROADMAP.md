@@ -300,7 +300,7 @@ document.addEventListener('click', e => {
 
 #### Wave 2 — Smarty → Latte conversion
 
-**Status:** 🟢 Active ▸ Phases A + B + C + D.\* + E done · 133 / 133 .latte (second-pass audit walkthrough complete) · F.0 routing facade live (~83 / 85 controller call-sites flipped — 2 mail-template paths remain in `MailService.php`) · **Effort:** XL · depends on Wave 1
+**Status:** 🟢 Active ▸ Phases A + B + C + D.\* + E + F.0 done · 133 / 133 .latte · all in-tree controller call-sites flipped · F (drop `smarty/smarty`) is the only remaining work · **Effort:** XL · depends on Wave 1
 
 ##### Phase progress
 
@@ -319,8 +319,8 @@ document.addEventListener('click', e => {
 | D.public         | Convert ~55 public theme templates (`themes/_base/template/` incl. `mail/`, `include/`, `help/` subtrees)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | ✅ Done · **55 / 55 lint-clean**. Iteration 4 added two converter rules (dot-access leading-expr now walks `->prop` PHP-property chains so `$block->data.qsearch` → `$block->data['qsearch']`; `combine_css` / `combine_script` regexes now allow nested `{...}` in path values for `path="…/{$themeconf.colorscheme}.css"`) and four PiwigoExtension filters (`count`, `strip_tags`, `str_repeat`, `default`, `date_format`) plus two functions (`url_is_remote` is now also exposed as a function, not just a filter; `l10n` likewise). Source-level hygiene fixes: `header.tpl` × 2 (`pwg-config` JSON now built via `[…]\|json_encode` array literal, working in both Smarty and Latte); `related_tags.inc.tpl` + `menubar_tags.tpl` (href-split-across-`{if}` rebalanced so each branch produces matching HTML — the original "split `<a … href=\\n{if}…\\n{/if}>`" idiom isn't representable in Latte's tag-aware parser). One hand-fix that doesn't generalise: `search.latte` blocks `{section name=day start=1 loop=32}` (one-off; .tpl source keeps Smarty form, .latte uses `{foreach range(1, 32) as $day}` and `--force` regen requires reapplying).                                                                                                                                                                                                                                      |
 | D.standard_pages | Convert 7 templates in `themes/standard_pages/template/` (footer, header, identification, password, profile, register, toaster) + the orphan `themes/_base/local_head.tpl`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ✅ Done · **8 / 8 lint-clean** on first conversion. The converter rules accumulated through D.admin + D.public covered every construct in this corpus — no rule additions, no source-level hygiene fixes, no hand-fixes required.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | E                | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `PiwigoPolicy` extends Latte's `Sandbox\SecurityPolicy` with two factory methods: `createPluginPolicy()` is the default-deny allowlist for plugin templates (permits structural tags, escape filters, the translation pair, read-only Piwigo helpers; denies `php`/`include`/`extends`/`do`, the asset-pipeline functions, filesystem-touching filters, `math()`, and opaque payload decoders); `createCorePolicy()` is the trusted-core superset that allows the asset-pipeline functions and `do`/`include`/`extends` while still keeping `{php}` denied. `LatteEngine` gained a `?Policy $policy` constructor arg + `LatteEngine::sandboxed()` factory that segregates the plugin compile cache (`templates_c/latte_plugin/`) from the trusted-engine cache so a malicious plugin can't poison core. 10 unit tests pin the allow/deny matrix and round-trip representative `SecurityViolationException` cases (`{php}`, `\|file_exists`, `combineScript()`) through a sandboxed engine. Plugin-loader integration lives in §1.3.                                                                                                                                                                                                                                                                                                                                                           |
-| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 🟢 Active ▸ ~83 / 85 controller call-sites flipped. `Template::parse()` dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.3. **Hard-won lesson from an early reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time()\|...}`and`{($\_SERVER['X'] ?? '') \|...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*`is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Each controller flip got e2e validation, not just lint;`\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). **Remaining 2 sites** are in`src/Piwigo/Mail/MailService.php`: line 567-568 (`mail-css-{theme}.tpl`theme-overlay CSS — the global`global-mail-css.latte`is already flipped) and line 603-604 (`{tplFilename}.tpl`dynamic mail-content selector — direct callers like`NotificationAdminService`already pass`.latte`via`setFilename`, so this only fires for legacy plugin extensions). |
-| F                | Drop`smarty/smarty` (gated on F.0 cutover + plugin deprecation window)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 🟡 Not started                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `Template::parse()` dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.3. All in-tree controller and service call-sites now register `.latte` filenames (last two flips landed in `MailService.php`: the `mail-css-{theme}` theme-overlay CSS check at line 567 and the dynamic `{tplFilename}` mail-content selector at line 603). The Smarty branch of the dispatcher is now unreachable from in-tree code; Phase F removes it along with the `smarty/smarty` dependency. **Hard-won lesson from an early reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time()\|...}`and`{($\_SERVER['X'] ?? '') \|...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*`is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Each controller flip got e2e validation, not just lint;`\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). |
+| F                | Drop`smarty/smarty` (unblocked: F.0 done, fork ships no plugins so no deprecation window needed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | 🟡 Not started                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ##### Engine architecture
 
@@ -344,23 +344,22 @@ would have forced a no-op stub on `LatteEngine` that adds no value over
 `render()`. Revisit if a use case for "compile but don't execute" lands
 (e.g., precompile tooling in Wave 3).
 
-**Caveat:** `Template` (the Smarty wrapper) does NOT yet implement
-`TemplateEngine`. The roadmap originally called for renaming Template →
-`SmartyEngine` and having both engines satisfy the interface; that
-rename touches every `TemplateRegistry::current()` caller in the
-codebase and was deferred. Until then `LatteEngine` is the sole
-implementer. The interface is the forward-compatible contract for
-controllers that move to engine-agnostic rendering.
+**Caveat:** `Template` (the Smarty wrapper) does NOT implement
+`TemplateEngine`. `LatteEngine` is the sole implementer. The
+interface is the forward-compatible contract for controllers that
+move to engine-agnostic rendering; with Phase F set to delete the
+Smarty wrapper entirely, the originally-planned `Template` →
+`SmartyEngine` rename is moot.
 
-`Piwigo\Template\LatteEngine` is the new engine. The dispatcher
-originally specified inside `TemplateRegistry::current()` (returning the
-interface, routing by file extension) was replaced with a simpler
-`LatteEngine::default()` static factory that resolves the cache
-directory from Piwigo's data location. Controllers that want to render
-a `.latte` call `LatteEngine::default()->render($path, $params)`
-directly. The full extension-routing dispatcher lands once typed page-
-context DTOs flow through controllers — controllers will then call a
-`TemplateService` / engine-agnostic accessor instead.
+`Piwigo\Template\LatteEngine` is the new engine. Two entry shapes are
+in active use: `LatteEngine::default()->render($path, $params)` for a
+small number of direct callers (the call-shape that doesn't need
+Smarty's handle indirection), and the dispatcher inside
+`Template::parse()` (delivered in Phase F.0) — when a `.latte` file
+is registered via `setFilename()`, `parse()` routes to a private
+`renderLatte()` that threads Smarty's accumulated template-vars
+through `LatteEngine::default()` and resolves the bare filename
+against Smarty's `template_dir`.
 
 Latte configuration as actually shipped (Latte 3.1 deprecated
 `setStrictTypes()` and `setTempDirectory()` — the spec's calls were
@@ -645,59 +644,22 @@ StrictTypes feature) so the analyser recognizes our filter set.
 replacing `\|translate` with `\|nosuchfilter` in `help.latte` still
 produces `Undefined latte filter "nosuchfilter"` from phpstan-latte.
 
-##### Plugin compatibility shim
-
-**Caveat from delivery:** the spec called for the dispatcher inside
-`TemplateRegistry::current()` (returning the engine interface, routing
-by file extension). What actually shipped is a `LatteEngine::default()`
-static factory that resolves the cache directory from
-`Config::dataLocation()`. Callers wanting a `.latte` render call
-`LatteEngine::default()->render($path, $params)`; callers staying on
-Smarty go through the existing `Template::pparse()` + handle-based
-flow.
-
-This is a deliberate scope reduction:
-
-- The full extension-routing dispatcher needs `Template` (Smarty) to
-  implement `TemplateEngine`. That requires aligning Template's
-  `assign(string|array, mixed)` signature with the interface's
-  `assign(string, mixed)`, which would break every Smarty-array-form
-  caller in the codebase. Deferred.
-- During the migration, no controller calls render() with a runtime-
-  chosen extension — the engine choice is known statically per call
-  site (a `.tpl` site stays Smarty, a `.latte` site uses LatteEngine
-  directly). The static-factory pattern fits the actual call shape.
-
-Once typed page-context DTOs flow through controllers and the rename
-of `Template` → `SmartyEngine` lands, the dispatcher takes the form
-the spec originally described:
-
-```php
-public function render(string $template, array $params = []): string
-{
-    $engine = str_ends_with($template, '.latte') ? $this->latte : $this->smarty;
-    return $engine->render($template, $params);
-}
-```
-
 ##### When to drop Smarty
 
-Drop `smarty/smarty` from `composer.json` once:
+Drop `smarty/smarty` from `composer.json` once all bundled `.tpl` are
+converted (0 `.tpl` under `themes/_base/`, `themes/admin/_base/`,
+`themes/standard_pages/`). The fork ships no plugins, so plugin-shim
+and deprecation-window gating no longer applies.
 
-- All bundled `.tpl` are converted (0 `.tpl` under `themes/_base/`,
-  `themes/admin/_base/`, `themes/standard_pages/`).
-- The top-3 plugins by usage ship Latte versions.
-- A deprecation notice has run for one minor release for plugins still
-  using Smarty.
-
-Then: delete `Piwigo\Template\SmartyEngine`; remove the dispatcher
-fallback in `TemplateRegistry::current()`.
+Then: delete `Piwigo\Template\SmartyEngine`; remove the Smarty branch
+from `Template::parse()` and the `$template->smarty` accessor.
 
 ##### Verification
 
 ```bash
 find . -name '*.tpl' -not -path '*/_data/*' -not -path '*/vendor/*' -not -path '*/node_modules/*' | wc -l
-# baseline: 135 today; target: 0 (all converted to .latte)
+# 137 today (133 paired with .latte + 4 sample template-extension files);
+# Phase F target: 0 once .tpl sources are deleted alongside smarty/smarty.
 
 composer show smarty/smarty 2>&1 | grep 'not installed'   # after final removal
 vendor/bin/phpunit                                         # green

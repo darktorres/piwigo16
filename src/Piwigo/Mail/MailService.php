@@ -564,8 +564,8 @@ SELECT
                     }
 
                     $mailTheme = is_string($args['theme']) ? $args['theme'] : '';
-                    if ($mailTpl->smarty->templateExists('mail-css-' . $mailTheme . '.tpl')) {
-                        $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.tpl');
+                    if ($mailTpl->smarty->templateExists('mail-css-' . $mailTheme . '.latte')) {
+                        $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.latte');
                         $mailTpl->assignVarFromHandle('MAIL_CSS', 'css');
                     }
                 }
@@ -600,8 +600,8 @@ SELECT
                     $template->setTemplateDir((is_string($tpl['dirname']) ? $tpl['dirname'] : '') . '/' . $contentType);
                 }
                 $tplFilename = is_string($tpl['filename']) ? $tpl['filename'] : '';
-                if ($template->smarty->templateExists($tplFilename . '.tpl')) {
-                    $template->setFilename($tplFilename, $tplFilename . '.tpl');
+                if ($template->smarty->templateExists($tplFilename . '.latte')) {
+                    $template->setFilename($tplFilename, $tplFilename . '.latte');
                     if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
                         $safeAssign = [];
                         foreach ($tpl['assign'] as $k => $v) {

@@ -92,7 +92,8 @@ final class UpgradeController implements ControllerInterface
         } else {
             define('PHPWG_DOMAIN', 'piwigo.org');
         }
-        define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
+        // Fork policy — see CommonBootstrap.php for the rationale.
+        define('PHPWG_URL', '');
 
         LangService::get()->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
         LangService::get()->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);

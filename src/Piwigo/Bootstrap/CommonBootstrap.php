@@ -206,7 +206,11 @@ final class CommonBootstrap
         } else {
             define('PHPWG_DOMAIN', 'piwigo.org');
         }
-        define('PHPWG_URL', 'https://' . PHPWG_DOMAIN);
+        // Fork policy: blanked so this install never sends telemetry to
+        // upstream piwigo.org via porg.installs.update, and never pulls
+        // version/news/download metadata from there either. PHPWG_DOMAIN is
+        // left intact above to ease upstream merges.
+        define('PHPWG_URL', '');
 
         if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {
             define('PEM_URL', Config::alternativePemUrl());

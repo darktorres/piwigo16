@@ -90,7 +90,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [~] `profile_content.tpl` ↔ `profile_content.latte` — `name=theme`/`name=language` Smarty barewords incorrectly converted to bare identifiers in Latte; converter `normalizeArgValue` updated to quote barewords. Existing files hand-fixed (×3 sites).
 - [x] `redirect.tpl` ↔ `redirect.latte` — `REDIRECT_MSG` is plain text from callers; faithful.
 - [x] `register.tpl` ↔ `register.latte` — translate-rewrite + `not` → `!`. Faithful.
-- [x] `search.tpl` ↔ `search.latte` — `{section start=N loop=M}` → `{foreach range(N, N+M-1)}`. `$smarty.now` → `time()`. `{html_options}` → `htmlOptions()`. `|strip_tags:false` handled.
+- [ ] `search.tpl` ↔ `search.latte` — diff scanned (head + tail only); 135 lines not fully read. Patterns observed are mechanical: `{section start=N loop=M}` → `{foreach range(N, N+M-1)}`, `$smarty.now` → `time()`, `{html_options}` → `htmlOptions()`, `|strip_tags:false` handled.
 - [x] `search_rules.tpl` ↔ `search_rules.latte` — straight conversion.
 - [x] `slideshow.tpl` ↔ `slideshow.latte` — `ELEMENT_CONTENT` and `COMMENT_IMG` already wrapped at producer (PictureController).
 - [x] `tags.tpl` ↔ `tags.latte` — straight conversion.
@@ -106,7 +106,7 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/_base/template/help (1)
 
-- [x] `quick_search.tpl` ↔ `quick_search.latte` — translate-rewrite. Faithful.
+- [ ] `quick_search.tpl` ↔ `quick_search.latte` — diff scanned (head 40 lines only); 305 lines not fully read.
 
 ## themes/_base/template/mail/text/html (8)
 
@@ -129,97 +129,101 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/standard_pages/template (7)
 
-- [x] `footer.tpl` ↔ `footer.latte` — `getCombinedScripts` returns Html.
-- [x] `header.tpl` ↔ `header.latte` — `{strip}` → `{spaceless}`. `combine_css/script` → `do …()`. Backtick-string-interpolation rewritten.
-- [x] `identification.tpl` ↔ `identification.latte` — JSON script `|noescape` ✓.
-- [x] `password.tpl` ↔ `password.latte` — JSON script `|noescape` ✓.
-- [~] `profile.tpl` ↔ `profile.latte` — bareword args (`name=theme`, `name=language`, `name=api_expiration`) hand-fixed (3 sites). JSON scripts `|noescape` ✓.
-- [x] `register.tpl` ↔ `register.latte` — JSON script `|noescape` ✓.
-- [x] `toaster.tpl` ↔ `toaster.latte` — straight conversion.
+- [x] `footer.tpl` ↔ `footer.latte` — small file; full diff visible. `getCombinedScripts` returns Html.
+- [ ] `header.tpl` ↔ `header.latte` — diff scanned (head only). 102 diff lines.
+- [ ] `identification.tpl` ↔ `identification.latte` — diff scanned (head only). 25-ish diff lines.
+- [ ] `password.tpl` ↔ `password.latte` — diff scanned (head only).
+- [~] `profile.tpl` ↔ `profile.latte` — diff scanned (head only); bareword fixes applied during this session at lines 95, 104, 305 (`name=theme`, `name=language`, `name=api_expiration`). JSON scripts `|noescape` ✓ from converter pass. Body NOT fully read.
+- [ ] `register.tpl` ↔ `register.latte` — diff scanned (head only).
+- [x] `toaster.tpl` ↔ `toaster.latte` — small file; full diff visible.
 
 ## themes/admin/_base/template (64)
 
-> Method: each pair was diffed and the `+`-side scanned for residual
-> Smarty constructs (`{section}`, `$smarty.*`, `|escape:*`, `not`/`eq`/
-> `ne`, `{strip}`, `{html_options}` etc.) — none found. Producer-side
-> HTML payload audit deferred for admin pages: live smoke would require
-> auth setup; if a specific page renders with escaped HTML in production,
-> the fix follows the established pattern (Html-wrap at controller
-> assign site, or `|noescape` on plugin-payload prints).
+> NOT properly profiled. The pairs below got a structural diff scan +
+> a broad grep over the converted `.latte` files for residual Smarty
+> constructs (`{section}`, `$smarty.*`, `|escape:*`, `not`/`eq`/`ne`,
+> `{strip}`, `{html_options}` etc.) — zero hits. That confirms the
+> converter rules covered every Smarty construct present, but it does
+> NOT verify per-pair runtime correctness: HTML-payload vars assigned
+> in admin controllers may still need `Latte\Runtime\Html` wrapping,
+> and admin pages were not live-smoked (would require auth setup).
+> All 64 pairs left unchecked pending end-to-end review.
 
-- [x] `admin.tpl` ↔ `admin.latte`
-- [x] `album_notification.tpl` ↔ `album_notification.latte`
-- [x] `albums.tpl` ↔ `albums.latte`
-- [x] `batch_manager_global.tpl` ↔ `batch_manager_global.latte`
-- [x] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
-- [x] `cat_list.tpl` ↔ `cat_list.latte` — `$smarty.cookies.X` → `$_COOKIE['X']` ✓.
-- [x] `cat_modify.tpl` ↔ `cat_modify.latte`
-- [x] `cat_options.tpl` ↔ `cat_options.latte` — `{$DOUBLE_SELECT}` auto-Html via assignVarFromHandle.
-- [x] `cat_perm.tpl` ↔ `cat_perm.latte`
-- [x] `check_integrity.tpl` ↔ `check_integrity.latte`
-- [x] `comments.tpl` ↔ `comments.latte`
-- [x] `configuration_comments.tpl` ↔ `configuration_comments.latte`
-- [x] `configuration_default.tpl` ↔ `configuration_default.latte`
-- [x] `configuration_display.tpl` ↔ `configuration_display.latte`
-- [x] `configuration_main.tpl` ↔ `configuration_main.latte`
-- [x] `configuration_search.tpl` ↔ `configuration_search.latte`
-- [x] `configuration_sizes.tpl` ↔ `configuration_sizes.latte`
-- [x] `configuration_watermark.tpl` ↔ `configuration_watermark.latte`
-- [x] `double_select.tpl` ↔ `double_select.latte`
-- [x] `element_set_ranks.tpl` ↔ `element_set_ranks.latte`
-- [x] `extend_for_templates.tpl` ↔ `extend_for_templates.latte`
-- [x] `footer.tpl` ↔ `footer.latte`
-- [x] `group_list.tpl` ↔ `group_list.latte`
-- [x] `group_perm.tpl` ↔ `group_perm.latte`
-- [x] `header.tpl` ↔ `header.latte`
-- [x] `help.tpl` ↔ `help.latte`
-- [x] `history.tpl` ↔ `history.latte`
-- [x] `install.tpl` ↔ `install.latte`
-- [x] `intro.tpl` ↔ `intro.latte`
-- [x] `languages_installed.tpl` ↔ `languages_installed.latte`
-- [x] `languages_new.tpl` ↔ `languages_new.latte`
-- [x] `maintenance_actions.tpl` ↔ `maintenance_actions.latte`
-- [x] `maintenance_env.tpl` ↔ `maintenance_env.latte`
-- [x] `maintenance_sys.tpl` ↔ `maintenance_sys.latte`
-- [x] `menubar.tpl` ↔ `menubar.latte`
-- [x] `navigation_bar.tpl` ↔ `navigation_bar.latte`
-- [x] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
-- [x] `permalinks.tpl` ↔ `permalinks.latte`
-- [x] `photos_add_applications.tpl` ↔ `photos_add_applications.latte`
-- [x] `photos_add_direct.tpl` ↔ `photos_add_direct.latte`
-- [x] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte`
-- [x] `picture_coi.tpl` ↔ `picture_coi.latte`
-- [x] `picture_formats.tpl` ↔ `picture_formats.latte`
-- [x] `picture_modify.tpl` ↔ `picture_modify.latte`
-- [x] `plugins_installed.tpl` ↔ `plugins_installed.latte`
-- [x] `plugins_new.tpl` ↔ `plugins_new.latte`
-- [x] `popuphelp.tpl` ↔ `popuphelp.latte`
-- [x] `queue.tpl` ↔ `queue.latte`
-- [x] `rating.tpl` ↔ `rating.latte`
-- [x] `rating_user.tpl` ↔ `rating_user.latte`
-- [x] `site_manager.tpl` ↔ `site_manager.latte`
-- [x] `site_update.tpl` ↔ `site_update.latte`
-- [x] `stats.tpl` ↔ `stats.latte`
-- [x] `tabsheet.tpl` ↔ `tabsheet.latte`
-- [x] `tags.tpl` ↔ `tags.latte`
-- [x] `themes_installed.tpl` ↔ `themes_installed.latte`
-- [x] `themes_new.tpl` ↔ `themes_new.latte`
-- [x] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
-- [x] `updates_ext.tpl` ↔ `updates_ext.latte`
-- [x] `updates_pwg.tpl` ↔ `updates_pwg.latte`
-- [x] `upgrade.tpl` ↔ `upgrade.latte`
-- [x] `user_activity.tpl` ↔ `user_activity.latte`
-- [x] `user_list.tpl` ↔ `user_list.latte`
-- [x] `user_perm.tpl` ↔ `user_perm.latte`
+- [ ] `admin.tpl` ↔ `admin.latte`
+- [ ] `album_notification.tpl` ↔ `album_notification.latte`
+- [ ] `albums.tpl` ↔ `albums.latte`
+- [ ] `batch_manager_global.tpl` ↔ `batch_manager_global.latte`
+- [ ] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
+- [ ] `cat_list.tpl` ↔ `cat_list.latte`
+- [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
+- [ ] `cat_options.tpl` ↔ `cat_options.latte`
+- [ ] `cat_perm.tpl` ↔ `cat_perm.latte`
+- [ ] `check_integrity.tpl` ↔ `check_integrity.latte`
+- [ ] `comments.tpl` ↔ `comments.latte`
+- [ ] `configuration_comments.tpl` ↔ `configuration_comments.latte`
+- [ ] `configuration_default.tpl` ↔ `configuration_default.latte`
+- [ ] `configuration_display.tpl` ↔ `configuration_display.latte`
+- [ ] `configuration_main.tpl` ↔ `configuration_main.latte`
+- [ ] `configuration_search.tpl` ↔ `configuration_search.latte`
+- [ ] `configuration_sizes.tpl` ↔ `configuration_sizes.latte`
+- [ ] `configuration_watermark.tpl` ↔ `configuration_watermark.latte`
+- [ ] `double_select.tpl` ↔ `double_select.latte`
+- [ ] `element_set_ranks.tpl` ↔ `element_set_ranks.latte`
+- [ ] `extend_for_templates.tpl` ↔ `extend_for_templates.latte`
+- [ ] `footer.tpl` ↔ `footer.latte`
+- [ ] `group_list.tpl` ↔ `group_list.latte`
+- [ ] `group_perm.tpl` ↔ `group_perm.latte`
+- [ ] `header.tpl` ↔ `header.latte`
+- [ ] `help.tpl` ↔ `help.latte`
+- [ ] `history.tpl` ↔ `history.latte`
+- [ ] `install.tpl` ↔ `install.latte`
+- [ ] `intro.tpl` ↔ `intro.latte`
+- [ ] `languages_installed.tpl` ↔ `languages_installed.latte`
+- [ ] `languages_new.tpl` ↔ `languages_new.latte`
+- [ ] `maintenance_actions.tpl` ↔ `maintenance_actions.latte`
+- [ ] `maintenance_env.tpl` ↔ `maintenance_env.latte`
+- [ ] `maintenance_sys.tpl` ↔ `maintenance_sys.latte`
+- [ ] `menubar.tpl` ↔ `menubar.latte`
+- [ ] `navigation_bar.tpl` ↔ `navigation_bar.latte`
+- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
+- [ ] `permalinks.tpl` ↔ `permalinks.latte`
+- [ ] `photos_add_applications.tpl` ↔ `photos_add_applications.latte`
+- [ ] `photos_add_direct.tpl` ↔ `photos_add_direct.latte`
+- [ ] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte`
+- [ ] `picture_coi.tpl` ↔ `picture_coi.latte`
+- [ ] `picture_formats.tpl` ↔ `picture_formats.latte`
+- [ ] `picture_modify.tpl` ↔ `picture_modify.latte`
+- [ ] `plugins_installed.tpl` ↔ `plugins_installed.latte`
+- [ ] `plugins_new.tpl` ↔ `plugins_new.latte`
+- [ ] `popuphelp.tpl` ↔ `popuphelp.latte`
+- [ ] `queue.tpl` ↔ `queue.latte`
+- [ ] `rating.tpl` ↔ `rating.latte`
+- [ ] `rating_user.tpl` ↔ `rating_user.latte`
+- [ ] `site_manager.tpl` ↔ `site_manager.latte`
+- [ ] `site_update.tpl` ↔ `site_update.latte`
+- [ ] `stats.tpl` ↔ `stats.latte`
+- [ ] `tabsheet.tpl` ↔ `tabsheet.latte`
+- [ ] `tags.tpl` ↔ `tags.latte`
+- [ ] `themes_installed.tpl` ↔ `themes_installed.latte`
+- [ ] `themes_new.tpl` ↔ `themes_new.latte`
+- [ ] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
+- [ ] `updates_ext.tpl` ↔ `updates_ext.latte`
+- [ ] `updates_pwg.tpl` ↔ `updates_pwg.latte`
+- [ ] `upgrade.tpl` ↔ `upgrade.latte`
+- [ ] `user_activity.tpl` ↔ `user_activity.latte`
+- [ ] `user_list.tpl` ↔ `user_list.latte`
+- [ ] `user_perm.tpl` ↔ `user_perm.latte`
 
 ## themes/admin/_base/template/include (6)
 
-- [x] `add_album.inc.tpl` ↔ `add_album.inc.latte`
-- [x] `album_selector.inc.tpl` ↔ `album_selector.inc.latte`
-- [x] `autosize.inc.tpl` ↔ `autosize.inc.latte`
-- [x] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte`
-- [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
-- [x] `datepicker.inc.tpl` ↔ `datepicker.inc.latte`
+> NOT properly profiled — never opened.
+
+- [ ] `add_album.inc.tpl` ↔ `add_album.inc.latte`
+- [ ] `album_selector.inc.tpl` ↔ `album_selector.inc.latte`
+- [ ] `autosize.inc.tpl` ↔ `autosize.inc.latte`
+- [ ] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte`
+- [ ] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
+- [ ] `datepicker.inc.tpl` ↔ `datepicker.inc.latte`
 
 ---
 

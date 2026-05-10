@@ -10,7 +10,7 @@
 
 | §   | Section                       | Status                                        | Effort    | TL;DR                                                                                                                               |
 | --- | ----------------------------- | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 7 / 9                         | S + M     | 2 left: cat-id gap (likely a no-op) · history pagination refactor (M)                                                               |
+| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 8 / 9                         | M         | 1 left: history pagination refactor (M); cat-id gap closed without code change                                                      |
 | 1.2 | Templates pipeline            | 🟢 Active ▸ W2 D.\* 133/133 .latte lint-clean | XL        | wave 1 hygiene done → wave 2 Latte foundation + converter iterating + admin/public/standard_pages all converted → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**                            | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                                                                             |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                                                                                   |
@@ -77,10 +77,13 @@ Most sections are independent. The chains that aren't:
 
 ### 1.1 Concrete bugs
 
-**Status:** 🟢 Active ▸ 7 of 9 done · **Effort:** S (1 left) + M (1 left)
+**Status:** 🟢 Active ▸ 8 of 9 done · **Effort:** M (1 left)
 
 The 7 fixes shipped 2026-05-09 as separate commits on `16.x-rewrite`.
 Verified by `vendor/bin/phpunit` (386 tests, 2041 assertions green).
+The cat-id access gap was closed without code change on 2026-05-10
+after an audit confirmed the psalm-level2 sweep had already resolved it
+(see _Closed without code change_ below).
 
 The PERF history pagination item from the original audit was split in
 two while sweeping: the cheap part (push sort to SQL) shipped; the
@@ -123,19 +126,32 @@ needs more design and is tracked below as its own item.
   comparator. (Originally one item with the LIMIT/OFFSET refactor — the
   deeper part is now tracked separately below.)
 
-#### Still open
+#### Closed without code change
 
-- 🟡 **Search cat-id access gap** · _S, blocked on info_. Original
+- 📕 **Search cat-id access gap** · _closed 2026-05-10_. Original
   description: "A search code path reads category IDs from a request
   shape that may be absent on first-load, returning empty results
-  without an error. Fix: explicit `?? []` and guard the empty case."
-  Couldn't reproduce a specific unguarded site after tracing all
-  `cat_id` / `cat_words` reads in `src/` — every one is already guarded
-  with `is_array(...)` and `?? []` patterns, almost certainly added by
-  the recent psalm-level2 sweep. Likely already fixed by that sweep.
-  **Action:** drop unless the original audit notes can be located, or a
-  user reports the symptom (first-load search returning empty without
-  an error) against the current branch.
+  without an error. Fix: explicit `?? []` and guard the empty case." A
+  full audit of every `cat_id` / `cat_words` / `categories` /
+  `category_ids` read across search-related code on 2026-05-10
+  confirmed every access path is already guarded with
+  `is_array(...) ? : []` plus an emptiness check before SQL — so no
+  silent empty-result path remains:
+  - `src/Piwigo/Search/SearchController.php:94` — `inputInt('cat_id',
+    null, $_GET)` then explicit `if ($cat_id !== null)`; line 110
+    `if (count($cat_ids) > 0 || in_array('cat', $fields))`.
+  - `src/Piwigo/Search/SearchService.php:261-263` — `is_array(...) ?
+    ... : []` on `searchFields['cat']` and `['cat']['words']`; line
+    263 gates the SQL with `if (isset(...) and !empty($catWords)
+    and ...)`.
+  - `src/Piwigo/Search/SearchFilterRenderer.php:449-452` — same guards
+    plus `if (count($cat_words) > 0)` before any rendering.
+
+  The psalm-level2 sweep landed the guards. Reopen only if a user
+  reports first-load search returning empty silently against
+  `16.x-rewrite`.
+
+#### Still open
 
 - 🟡 **PERF — history pagination refactor (LIMIT/OFFSET path)** ·
   _Effort: M_. The hot WS endpoint

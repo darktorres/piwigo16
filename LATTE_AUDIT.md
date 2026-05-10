@@ -154,14 +154,14 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `albums.tpl` ↔ `albums.latte`
 - [ ] `batch_manager_global.tpl` ↔ `batch_manager_global.latte`
 - [ ] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
-- [ ] `cat_list.tpl` ↔ `cat_list.latte`
+- [~] `cat_list.tpl` ↔ `cat_list.latte` — full read. `$smarty.cookies.X` → `$_COOKIE['X']` ✓. `CATEGORIES_NAV` Html-wrapped at producer (AlbumController). `$category['NAME']` is rendered name (usually plain text, plugin-overridable). `assign` → `var`. Faithful.
 - [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
 - [x] `cat_options.tpl` ↔ `cat_options.latte` — full read both. `$DOUBLE_SELECT` auto-Html. Faithful.
 - [ ] `cat_perm.tpl` ↔ `cat_perm.latte`
 - [ ] `check_integrity.tpl` ↔ `check_integrity.latte`
 - [ ] `comments.tpl` ↔ `comments.latte`
 - [ ] `configuration_comments.tpl` ↔ `configuration_comments.latte`
-- [ ] `configuration_default.tpl` ↔ `configuration_default.latte`
+- [x] `configuration_default.tpl` ↔ `configuration_default.latte` — full read. `htmlRadios|noescape` ✓. Faithful.
 - [ ] `configuration_display.tpl` ↔ `configuration_display.latte`
 - [ ] `configuration_main.tpl` ↔ `configuration_main.latte`
 - [ ] `configuration_search.tpl` ↔ `configuration_search.latte`
@@ -180,9 +180,9 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `intro.tpl` ↔ `intro.latte`
 - [x] `languages_installed.tpl` ↔ `languages_installed.latte` — full read. Language metadata; `name`, `deactivate_tooltip` plain. Faithful.
 - [x] `languages_new.tpl` ↔ `languages_new.latte` — full read. cluetip title `|htmlspecialchars|nl2br` preserved (attribute context). Faithful.
-- [ ] `maintenance_actions.tpl` ↔ `maintenance_actions.latte`
+- [x] `maintenance_actions.tpl` ↔ `maintenance_actions.latte` — full read. Maintenance action buttons. Plain text labels. Faithful.
 - [x] `maintenance_env.tpl` ↔ `maintenance_env.latte` — full read. System info display, plain text vars. Faithful.
-- [ ] `maintenance_sys.tpl` ↔ `maintenance_sys.latte`
+- [x] `maintenance_sys.tpl` ↔ `maintenance_sys.latte` — full read. Static activity table. Faithful.
 - [x] `menubar.tpl` ↔ `menubar.latte` — full read. Admin menu block ordering form. `$block['reg']->getName()|translate` plain, `=math(equation: "abs(pos)", pos: ...)` rewritten. Faithful.
 - [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — full read. Plain pagination markup. Faithful.
 - [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
@@ -196,10 +196,10 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `plugins_installed.tpl` ↔ `plugins_installed.latte`
 - [ ] `plugins_new.tpl` ↔ `plugins_new.latte`
 - [x] `popuphelp.tpl` ↔ `popuphelp.latte` — full read. `$HELP_CONTENT` Html-wrapped at MiscController.
-- [ ] `queue.tpl` ↔ `queue.latte`
+- [x] `queue.tpl` ↔ `queue.latte` — full read. Queue status/failed-jobs table. `data-confirm='{"\"...\""|translate}'` (escaped-quote translation literal) preserved verbatim from .tpl. Faithful.
 - [ ] `rating.tpl` ↔ `rating.latte`
-- [ ] `rating_user.tpl` ↔ `rating_user.latte`
-- [ ] `site_manager.tpl` ↔ `site_manager.latte`
+- [~] `rating_user.tpl` ↔ `rating_user.latte` — full read. `|replace:' ','<br>'` produces `<br>` HTML; hand-fixed `|noescape` (×2, lines 45, 46). `{capture $rate_over}{foreach … {breakIf …}…}{/capture}` for thumbnail tooltip ✓.
+- [x] `site_manager.tpl` ↔ `site_manager.latte` — full read. Site list with synchronize/delete actions. Faithful.
 - [ ] `site_update.tpl` ↔ `site_update.latte`
 - [x] `stats.tpl` ↔ `stats.latte` — full read. JSON encode in single-quoted attributes (`data-hours='{json_encode(...)}'`); attribute escape preserves `"` as `&quot;`, browser dataset returns decoded — JSON.parse works.
 - [x] `tabsheet.tpl` ↔ `tabsheet.latte` — full read. `$tabsheet[*]['caption']` plain l10n text, `['url']` plain.
@@ -207,7 +207,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `themes_installed.tpl` ↔ `themes_installed.latte`
 - [x] `themes_new.tpl` ↔ `themes_new.latte` — full read. theme metadata from API; plain.
 - [ ] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
-- [ ] `updates_ext.tpl` ↔ `updates_ext.latte`
+- [x] `updates_ext.tpl` ↔ `updates_ext.latte` — full read. Extension update list. Faithful.
 - [ ] `updates_pwg.tpl` ↔ `updates_pwg.latte`
 - [ ] `upgrade.tpl` ↔ `upgrade.latte`
 - [ ] `user_activity.tpl` ↔ `user_activity.latte`

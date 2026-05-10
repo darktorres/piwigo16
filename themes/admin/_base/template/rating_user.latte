@@ -42,8 +42,8 @@
 	<th class="dtc_stat">{='Number of rates'|translate}</th>
 	<th class="dtc_stat">{='Average rate'|translate}</th>
 	<th class="dtc_stat">{='Variation'|translate}</th>
-	<th class="dtc_stat">{='Consensus deviation'|translate|replace:' ','<br>'}</th>
-	<th class="dtc_stat">{='Consensus deviation'|translate|replace:' ','<br>'} {$CONSENSUS_TOP_NUMBER}</th>
+	<th class="dtc_stat">{='Consensus deviation'|translate|replace:' ','<br>'|noescape}</th>
+	<th class="dtc_stat">{='Consensus deviation'|translate|replace:' ','<br>'|noescape} {$CONSENSUS_TOP_NUMBER}</th>
 {foreach $available_rates as $rate}
 	<th class="dtc_rate">{$rate}</th>
 {/foreach}

@@ -227,7 +227,7 @@ final class SectionInitializer
                 if (isset($page['flat'])) {
                     if ($category !== null) {
                         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
-                        $catId        = is_string($category['id'] ?? null) ? $category['id'] : '0';
+                        $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
                         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
@@ -243,7 +243,7 @@ SELECT id
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
                         $forbidden   = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
-                        $userId    = is_string($user['id'] ?? null) ? $user['id'] : '0';
+                        $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
                         $cacheKey  = PersistentCacheRegistry::current()->makeKey(
                             'all_iids' . $userId . $cacheTime . Config::orderBy()
@@ -252,7 +252,7 @@ SELECT id
                         $whereSql = '1=1';
                     }
                 } else {
-                    $catId    = $category !== null && is_string($category['id'] ?? null) ? $category['id'] : '0';
+                    $catId    = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
                     $whereSql = 'category_id = ' . $catId;
                 }
 
@@ -328,7 +328,7 @@ SELECT DISTINCT(image_id)
                 ServiceLocator::get(UserRepository::class)->deleteAllFavoritesByUserId($userId);
                 Util::get()->redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
             } else {
-                $userId = is_string($user['id'] ?? null) ? $user['id'] : '0';
+                $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
 SELECT image_id
   FROM ' . Tables::favorites() . '
@@ -512,7 +512,7 @@ SELECT DISTINCT(id)
         $bodyData['section'] = $section;
 
         if ($section === 'categories' && $category !== null) {
-            $catId = is_string($category['id'] ?? null) ? $category['id'] : '0';
+            $catId = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
             $bodyClasses[] = 'category-' . $catId;
             $bodyData['category_id'] = $catId;
 
@@ -526,7 +526,7 @@ SELECT DISTINCT(id)
                     if (!is_array($combinedCat)) {
                         continue;
                     }
-                    $combinedId = is_string($combinedCat['id'] ?? null) ? $combinedCat['id'] : '0';
+                    $combinedId = is_scalar($combinedCat['id'] ?? null) ? (string) $combinedCat['id'] : '0';
                     $bodyClasses[] = 'category-' . $combinedId;
                     $bodyData['combined_category_ids'][] = $combinedId;
                 }

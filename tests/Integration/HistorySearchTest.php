@@ -126,8 +126,8 @@ final class HistorySearchTest extends IntegrationTestCase
 
     public function test_history_search_pagination_returns_distinct_pages(): void
     {
-        // Page size is hardcoded to 300 in current historySearch (lines 746
-        // and 749). Seed 305 rows so page 0 has 300 and page 1 has 5.
+        // Page size is Config::nbLogsPage() (default 300). Seed 305 rows
+        // so page 0 has 300 and page 1 has 5.
         $this->seedPaginationDataset(305);
         $this->loginAsAdmin();
 
@@ -181,11 +181,11 @@ final class HistorySearchTest extends IntegrationTestCase
         // Set deterministic filesize for fixture images 1..5.
         self::assertTrue($db->query(
             'UPDATE piwigo_images SET filesize = CASE id'
-            . " WHEN 1 THEN 1024"
-            . " WHEN 2 THEN 2048"
-            . " WHEN 3 THEN 4096"
-            . " WHEN 4 THEN 8192"
-            . " WHEN 5 THEN 16384"
+            . ' WHEN 1 THEN 1024'
+            . ' WHEN 2 THEN 2048'
+            . ' WHEN 3 THEN 4096'
+            . ' WHEN 4 THEN 8192'
+            . ' WHEN 5 THEN 16384'
             . ' END WHERE id BETWEEN 1 AND 5'
         ));
         // 12 rows. Columns: date, time, user_id, IP, section, category_id,

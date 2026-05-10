@@ -10,7 +10,7 @@
 
 | §   | Section                       | Status                                        | Effort    | TL;DR                                                                                                                               |
 | --- | ----------------------------- | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1.1 | Concrete bugs                 | 🟢 **Active** ▸ 8 / 9                         | M         | 1 left: history pagination refactor (M); cat-id gap closed without code change                                                      |
+| 1.1 | Concrete bugs                 | ✅ **Done** ▸ 9 / 9                            | —         | history pagination refactor shipped 2026-05-10 (6-query split + snapshot tests); cat-id gap closed without code change               |
 | 1.2 | Templates pipeline            | 🟢 Active ▸ W2 D.\* 133/133 .latte lint-clean | XL        | wave 1 hygiene done → wave 2 Latte foundation + converter iterating + admin/public/standard_pages all converted → wave 3 precompile |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**                            | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                                                                             |
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                                                                                   |
@@ -77,18 +77,16 @@ Most sections are independent. The chains that aren't:
 
 ### 1.1 Concrete bugs
 
-**Status:** 🟢 Active ▸ 8 of 9 done · **Effort:** M (1 left)
+**Status:** ✅ Done ▸ 9 of 9 · **Effort:** —
 
-The 7 fixes shipped 2026-05-09 as separate commits on `16.x-rewrite`.
-Verified by `vendor/bin/phpunit` (386 tests, 2041 assertions green).
-The cat-id access gap was closed without code change on 2026-05-10
-after an audit confirmed the psalm-level2 sweep had already resolved it
-(see _Closed without code change_ below).
+All 9 audit items closed. The cat-id access gap was closed without code
+change on 2026-05-10 after an audit confirmed the psalm-level2 sweep
+had already resolved it (see _Closed without code change_ below); the
+history pagination refactor shipped on 2026-05-10 as Commits 2 + 3 on
+`16.x-rewrite` (snapshot tests + 6-query split).
 
-The PERF history pagination item from the original audit was split in
-two while sweeping: the cheap part (push sort to SQL) shipped; the
-deeper part (separate COUNT + LIMIT/OFFSET + summary aggregate split)
-needs more design and is tracked below as its own item.
+Verified by `vendor/bin/phpunit` (499 tests, 2419 assertions green) and
+`vendor/bin/phpstan analyse` (clean).
 
 #### Shipped
 
@@ -125,6 +123,20 @@ needs more design and is tracked below as its own item.
   the SQL query and removed the now-unused `historyCompare` PHP
   comparator. (Originally one item with the LIMIT/OFFSET refactor — the
   deeper part is now tracked separately below.)
+- ✅ **PERF — history pagination refactor (LIMIT/OFFSET path)** ·
+  _shipped 2026-05-10_. Split `historySearch` into 6 dedicated SQL
+  queries: `getHistoryCount`, `getHistoryTotalFilesizeForHigh` (INNER
+  JOIN images), `getHistoryGuestIpHistogram`, `getHistoryUserHitCounts`,
+  `getHistoryDistinctSearchIds`, `getHistoryPage` (`ORDER BY date DESC,
+  time DESC LIMIT/OFFSET`). The full filtered set used to be loaded
+  into PHP per request (>~50 K rows on busy installs) — now only the
+  current 300-row page is materialized. Page size is read from
+  `Config::nbLogsPage()` (300 default) instead of the previous hardcoded
+  `300` literal. Dead code removed: the `firstLine`/`lastLine` filter at
+  `historySearch` line 678 (impossible AND, never fired) plus the
+  post-loop `array_reverse + array_slice` pagination. Summary numbers
+  are byte-identical to pre-refactor (locked down by 3 integration
+  tests in `tests/Integration/HistorySearchTest.php`, 100 assertions).
 
 #### Closed without code change
 
@@ -151,64 +163,11 @@ needs more design and is tracked below as its own item.
   reports first-load search returning empty silently against
   `16.x-rewrite`.
 
-#### Still open
-
-- 🟡 **PERF — history pagination refactor (LIMIT/OFFSET path)** ·
-  _Effort: M_. The hot WS endpoint
-  `Piwigo\Ws\Method\GeneralEndpoints::historySearch` still loads every
-  matching history row into PHP and slices in memory. Sort moved to SQL
-  (commit `0d87baba0`); the row-volume reduction is not done because
-  the same loop that builds display rows also computes the summary
-  aggregates shown above the table:
-  - `summary.total_filesize` — sum of `images.filesize` for `image_type
-= 'high'` rows.
-  - `summary.guests_IP` — `IP → count` map for `user_id = guest`.
-  - `summary.nb_members` — distinct non-guest user_ids.
-
-  To paginate the row fetch, those aggregates have to come from
-  separate queries that scan the full filtered result set. Sketch:
-
-  ```sql
-  -- 1. nb_lines
-  SELECT COUNT(*) FROM history WHERE <where>;
-
-  -- 2. total_filesize (only for high-image-type rows)
-  SELECT SUM(i.filesize)
-    FROM history h JOIN images i ON i.id = h.image_id
-   WHERE h.image_type = 'high' AND <where>;
-
-  -- 3. guest IP histogram
-  SELECT IP, COUNT(*) FROM history
-   WHERE user_id = :guest_id AND <where>
-   GROUP BY IP;
-
-  -- 4. distinct non-guest member ids
-  SELECT DISTINCT user_id FROM history
-   WHERE user_id <> :guest_id AND <where>;
-
-  -- 5. paginated detail rows
-  SELECT … FROM history
-   WHERE <where> ORDER BY date, time
-   LIMIT 300 OFFSET :pageNumber * 300;
-  ```
-
-  Risk: the existing endpoint has no unit-test coverage, so summary
-  numbers must be cross-checked against the current implementation
-  before/after on a representative dataset. Recommended sequence:
-  1. Land basic pest-coverage for `historySearch` summary numbers
-     (depends on §1.7.1 Pest landing, or write standalone PHPUnit for
-     this method).
-  2. Refactor to the 5-query shape above.
-  3. Confirm summary rendering unchanged on staging fixture.
-
-  Until then the endpoint is correct but slow on installs with large
-  history tables (>~50 K rows).
-
 #### Verification
 
 ```bash
-vendor/bin/phpunit            # 386 tests, 2041 assertions green ✅
-vendor/bin/phpstan analyse    # one pre-existing error unrelated to 1.1
+vendor/bin/phpunit            # 499 tests, 2419 assertions green ✅
+vendor/bin/phpstan analyse    # clean ✅
 ```
 
 ---

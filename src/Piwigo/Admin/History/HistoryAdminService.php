@@ -31,16 +31,16 @@ final class HistoryAdminService
     }
 
     /**
-     * @param array<array<string, mixed>> $data
+     * Resolves filename-pattern matches into concrete image_ids and
+     * applies the documented image_id-wins-over-filename precedence.
+     * Idempotent: callers can chain this once per request and reuse the
+     * prepared array across the aggregate methods below.
+     *
      * @param array<mixed> $search
-     * @param string[]|string $types
-     * @return array<array<string, mixed>>
+     * @return array<mixed>
      */
-    public function getHistory(array $data, array $search, array|string $types): array
+    public function prepareSearch(array $search): array
     {
-        if (!is_array($types)) {
-            $types = [$types];
-        }
         /** @var array<string, mixed> $fields */
         $fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
 
@@ -58,14 +58,36 @@ SELECT
             $search['image_ids'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
         }
 
+        $search['fields'] = $fields;
+        return $search;
+    }
+
+    /**
+     * Returns the WHERE fragment for a `history` query (joined with
+     * `AND`, each clause already wrapped in parens). When `$alias` is
+     * non-empty, columns are emitted as `<alias>.<col>` so the fragment
+     * works inside a JOIN (see getHistoryTotalFilesizeForHigh).
+     *
+     * @param array<mixed> $search must already be passed through prepareSearch()
+     * @param string[]|string $types image_type enum values to keep
+     */
+    private function buildHistoryWhereSql(array $search, array|string $types, string $alias = ''): string
+    {
+        if (!is_array($types)) {
+            $types = [$types];
+        }
+        /** @var array<string, mixed> $fields */
+        $fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
+        $p = $alias === '' ? '' : $alias . '.';
+
         $clauses = [];
 
         if (isset($fields['date-after'])) {
-            $clauses[] = "date >= '" . (is_string($fields['date-after']) ? $fields['date-after'] : '') . "'";
+            $clauses[] = "{$p}date >= '" . (is_string($fields['date-after']) ? $fields['date-after'] : '') . "'";
         }
 
         if (isset($fields['date-before'])) {
-            $clauses[] = "date <= '" . (is_string($fields['date-before']) ? $fields['date-before'] : '') . "'";
+            $clauses[] = "{$p}date <= '" . (is_string($fields['date-before']) ? $fields['date-before'] : '') . "'";
         }
 
         if (isset($fields['types'])) {
@@ -74,7 +96,7 @@ SELECT
 
             foreach ($types as $type) {
                 if (in_array($type, $types_field)) {
-                    $clause = 'image_type ';
+                    $clause = "{$p}image_type ";
                     if ($type == 'none') {
                         $clause .= 'IS NULL';
                     } else {
@@ -90,11 +112,11 @@ SELECT
         }
 
         if (isset($fields['user']) && $fields['user'] != -1) {
-            $clauses[] = 'user_id = ' . (is_scalar($fields['user']) ? (string) $fields['user'] : '0');
+            $clauses[] = "{$p}user_id = " . (is_scalar($fields['user']) ? (string) $fields['user'] : '0');
         }
 
         if (isset($fields['image_id'])) {
-            $clauses[] = 'image_id = ' . (is_scalar($fields['image_id']) ? (string) $fields['image_id'] : '0');
+            $clauses[] = "{$p}image_id = " . (is_scalar($fields['image_id']) ? (string) $fields['image_id'] : '0');
         }
 
         if (isset($fields['filename'])) {
@@ -102,18 +124,125 @@ SELECT
             if (count($image_ids) == 0) {
                 $clauses[] = '1 = 2 ';
             } else {
-                $clauses[] = 'image_id IN (' . implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')';
+                $clauses[] = "{$p}image_id IN (" . implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')';
             }
         }
 
         if (isset($fields['ip'])) {
-            $clauses[] = 'IP LIKE ' . DbConnection::get()->quote(is_string($fields['ip']) ? $fields['ip'] : '');
+            $clauses[] = "{$p}IP LIKE " . DbConnection::get()->quote(is_string($fields['ip']) ? $fields['ip'] : '');
         }
 
         $clauses = ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($clauses, '(', ')');
-        $where_separator = implode("\n    AND ", $clauses);
+        return implode("\n    AND ", $clauses);
+    }
 
-        $query = '
+    /**
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     */
+    public function getHistoryCount(array $search, array|string $types): int
+    {
+        $where = $this->buildHistoryWhereSql($search, $types);
+        $sql   = 'SELECT COUNT(*) AS c FROM ' . Tables::history() . ' WHERE ' . $where . ';';
+        $row   = ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAssociative();
+        return is_array($row) && is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
+    }
+
+    /**
+     * Sum of `images.filesize` (KiB) over filtered history rows whose
+     * image_type='high' and whose image_id still resolves to an existing
+     * image — the inner join replicates the original PHP behavior of
+     * skipping deleted images.
+     *
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     */
+    public function getHistoryTotalFilesizeForHigh(array $search, array|string $types): int
+    {
+        $where = $this->buildHistoryWhereSql($search, $types, 'h');
+        $sql   = 'SELECT COALESCE(SUM(i.filesize), 0) AS s'
+               . ' FROM ' . Tables::history() . ' h'
+               . ' INNER JOIN ' . Tables::images() . ' i ON i.id = h.image_id'
+               . " WHERE h.image_type = 'high' AND " . $where . ';';
+        $row   = ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAssociative();
+        return is_array($row) && is_numeric($row['s'] ?? null) ? (int) $row['s'] : 0;
+    }
+
+    /**
+     * IP → hit-count map for guest rows in the filtered set.
+     *
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     * @return array<string, int>
+     */
+    public function getHistoryGuestIpHistogram(array $search, array|string $types, int $guestId): array
+    {
+        $where = $this->buildHistoryWhereSql($search, $types);
+        $sql   = 'SELECT IP, COUNT(*) AS c FROM ' . Tables::history()
+               . ' WHERE user_id = ' . $guestId . ' AND ' . $where
+               . ' GROUP BY IP;';
+        $out = [];
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+            $ip  = is_string($row['IP'] ?? null) ? $row['IP'] : '';
+            $out[$ip] = is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * user_id → hit-count map across the filtered set (includes guest;
+     * caller decides whether to filter it out).
+     *
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     * @return array<int, int>
+     */
+    public function getHistoryUserHitCounts(array $search, array|string $types): array
+    {
+        $where = $this->buildHistoryWhereSql($search, $types);
+        $sql   = 'SELECT user_id, COUNT(*) AS c FROM ' . Tables::history()
+               . ' WHERE ' . $where
+               . ' GROUP BY user_id;';
+        $out = [];
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+            if (!is_numeric($row['user_id'] ?? null)) {
+                continue;
+            }
+            $out[(int) $row['user_id']] = is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     * @return list<int>
+     */
+    public function getHistoryDistinctSearchIds(array $search, array|string $types): array
+    {
+        $where = $this->buildHistoryWhereSql($search, $types);
+        $sql   = 'SELECT DISTINCT search_id FROM ' . Tables::history()
+               . ' WHERE search_id IS NOT NULL AND ' . $where . ';';
+        $out = [];
+        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+            if (is_numeric($row['search_id'] ?? null)) {
+                $out[] = (int) $row['search_id'];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Paginated detail rows, newest first.
+     *
+     * @param array<mixed> $search prepared search array
+     * @param string[]|string $types image_type enum values to keep
+     * @return array<array<string, mixed>>
+     */
+    public function getHistoryPage(array $search, array|string $types, int $offset, int $limit): array
+    {
+        $where = $this->buildHistoryWhereSql($search, $types);
+        $sql   = '
 SELECT
     date,
     time,
@@ -126,16 +255,11 @@ SELECT
     image_id,
     image_type
   FROM ' . Tables::history() . '
-  WHERE ' . $where_separator . '
-  ORDER BY date ASC, time ASC
+  WHERE ' . $where . '
+  ORDER BY date DESC, time DESC
+  LIMIT ' . $limit . ' OFFSET ' . $offset . '
 ;';
-
-        foreach (ServiceLocator::get(Connection::class)
-            ->executeQuery($query)->fetchAllAssociative() as $row) {
-            $data[] = $row;
-        }
-
-        return $data;
+        return ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative();
     }
 
     public function historySummarize(?int $max_lines = null): void

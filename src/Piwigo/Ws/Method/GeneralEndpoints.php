@@ -552,23 +552,31 @@ final class GeneralEndpoints
         $serializedRules = $searchRepo->findRulesById($searchId);
         $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
         $search = is_array($page['search'] ?? null) ? $page['search'] : [];
-        $data = ServiceLocator::get(HistoryAdminService::class)->getHistory([], $search, $types);
-        $page['nb_lines'] = count($data);
-        $historyLines     = [];
-        $userIds          = [];
-        $usernameOf       = [];
-        $categoryIds      = [];
-        $imageIds         = [];
-        $hasTags          = false;
-        $searchIds        = [];
-        foreach ($data as $row) {
-            $rowUserId    = $row['user_id'] ?? null;
-            $rowUserIdKey = is_scalar($rowUserId) ? (string) $rowUserId : '';
-            if ($rowUserIdKey !== '') {
-                $userIds[$rowUserIdKey] = 1;
-            }
+        $historyService = ServiceLocator::get(HistoryAdminService::class);
+        $search         = $historyService->prepareSearch($search);
+
+        $pageNumber = is_numeric($param['pageNumber']) ? (int) $param['pageNumber'] : 0;
+        $pageSize   = Config::nbLogsPage();
+
+        $nbLines       = $historyService->getHistoryCount($search, $types);
+        $totalFilesize = $historyService->getHistoryTotalFilesizeForHigh($search, $types);
+        $guestIpHist   = $historyService->getHistoryGuestIpHistogram($search, $types, Config::guestId());
+        $userHitCounts = $historyService->getHistoryUserHitCounts($search, $types);
+        $searchIds     = $historyService->getHistoryDistinctSearchIds($search, $types);
+        $pageRows      = $historyService->getHistoryPage($search, $types, $pageNumber * $pageSize, $pageSize);
+
+        $page['nb_lines'] = $nbLines;
+
+        $userIds = [];
+        foreach (array_keys($userHitCounts) as $uid) {
+            $userIds[(string) $uid] = 1;
+        }
+        $categoryIds = [];
+        $imageIds    = [];
+        $hasTags     = false;
+        foreach ($pageRows as $row) {
             if (isset($row['category_id'])) {
-                array_push($categoryIds, $row['category_id']);
+                $categoryIds[] = $row['category_id'];
             }
             if (isset($row['image_id'])) {
                 $rowImageId    = $row['image_id'];
@@ -580,15 +588,11 @@ final class GeneralEndpoints
             if (isset($row['tag_ids'])) {
                 $hasTags = true;
             }
-            if (isset($row['search_id'])) {
-                array_push($searchIds, $row['search_id']);
-            }
-            $historyLines[] = $row;
         }
+        $usernameOf    = [];
         $searchDetails = [];
         if (count($searchIds) > 0) {
-            $searchIdsStr  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $searchIds);
-            $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', $searchIdsStr) . ');';
+            $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', array_map(intval(...), $searchIds)) . ');';
             $searchDetails = array_column(DbConnection::get()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
                 $rulesArr    = StringUtil::safeUnserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
@@ -647,13 +651,8 @@ final class GeneralEndpoints
                 }
             }
         }
-        $i            = 0;
-        $firstLine    = $page['start'] + 1;
-        $lastLine     = $page['start'] + Config::nbLogsPage();
-        $summary      = ['total_filesize' => 0, 'guests_IP' => []];
-        $result       = [];
-        $sortedMembers = [];
-        foreach ($historyLines as $line) {
+        $result = [];
+        foreach ($pageRows as $line) {
             $lineImageType  = is_string($line['image_type'] ?? null) ? $line['image_type'] : '';
             $lineImageId    = $line['image_id'] ?? null;
             $lineImageIdStr = is_scalar($lineImageId) ? (string) $lineImageId : '';
@@ -665,19 +664,6 @@ final class GeneralEndpoints
             $lineSearchId   = $line['search_id'] ?? null;
             $lineSearchIdStr = is_scalar($lineSearchId) ? (string) $lineSearchId : '';
             $lineSection    = is_string($line['section'] ?? null) ? $line['section'] : '';
-            if ($lineImageType === 'high' && $lineImageIdStr !== '') {
-                $summary['total_filesize'] += is_numeric($imageInfos[$lineImageIdStr]['filesize'] ?? null) ? (int) $imageInfos[$lineImageIdStr]['filesize'] : 0;
-            }
-            if ($lineUserIdStr === (string) Config::guestId()) {
-                if (!isset($summary['guests_IP'][$lineIP])) {
-                    $summary['guests_IP'][$lineIP] = 0;
-                }
-                $summary['guests_IP'][$lineIP]++;
-            }
-            $i++;
-            if ($i <= $firstLine && $i >= $lastLine) {
-                continue;
-            }
             $userName   = '#unknown';
             $userString = '';
             if ($lineUserIdStr !== '' && isset($usernameOf[$lineUserIdStr])) {
@@ -739,28 +725,28 @@ final class GeneralEndpoints
                 $sdAddedBy       = is_array($sd['added_by'] ?? null) ? $sd['added_by'] : [];
                 $searchDetail = ['allwords' => (count($sdAllwordsWords) > 0) ? $sdAllwordsWords : null, 'tags' => (count($sdTagsWords) > 0) ? array_intersect_key($nameOfTag, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdTagsWords))) : null, 'date_posted' => (isset($sd['date_posted']) && $sd['date_posted'] !== '') ? $sd['date_posted'] : null, 'cat' => (count($sdCatWords) > 0) ? array_intersect_key($nameOfCategory, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdCatWords))) : null, 'author' => (count($sdAuthorWords) > 0) ? $sdAuthorWords : null, 'added_by' => (count($sdAddedBy) > 0) ? array_intersect_key($usernameOf, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdAddedBy))) : null, 'filetypes' => (isset($sd['filetypes']) && $sd['filetypes'] !== '') ? $sd['filetypes'] : null];
             }
-            $sortedMembers[$userName] = ($sortedMembers[$userName] ?? 0) + 1;
-            $lineDate                 = is_scalar($line['date'] ?? null) ? $line['date'] : null;
+            $lineDate = is_scalar($line['date'] ?? null) ? $line['date'] : null;
             array_push($result, ['DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
         }
-        $maxPage = ceil(count($result) / 300);
-        $result  = array_reverse($result, true);
-        $pageNumber = is_numeric($param['pageNumber']) ? (int) $param['pageNumber'] : 0;
-        $result     = array_slice($result, $pageNumber * 300, 300);
-        $summary['nb_guests'] = 0;
-        if (count(array_keys($summary['guests_IP'])) > 0) {
-            $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
+        $sortedMembers = [];
+        foreach ($userHitCounts as $uid => $hits) {
+            $uidStr = (string) $uid;
+            $name   = $usernameOf[$uidStr] ?? '#unknown';
+            $sortedMembers[$name] = ($sortedMembers[$name] ?? 0) + $hits;
+        }
+        $nbGuests = count($guestIpHist);
+        if ($nbGuests > 0) {
             unset($usernameOf[(string) Config::guestId()]);
         }
-        $summary['nb_members'] = count($usernameOf);
-        $memberStrings         = [];
+        $nbMembers     = count($usernameOf);
+        $memberStrings = [];
         foreach ($usernameOf as $userId => $userName) {
             $memberStrings[] = [$userName => $userId];
         }
         arsort($sortedMembers);
         unset($sortedMembers['guest']);
-        $searchSummary = ['NB_LINES' => Translator::get()->plural('%d line filtered', '%d lines filtered', $page['nb_lines']), 'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize'] / 1024) : 0, 'USERS' => Translator::get()->plural('%d user', '%d users', $summary['nb_members'] + $summary['nb_guests']), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => Translator::get()->plural('%d guest', '%d guests', $summary['nb_guests'])];
-        unset($nameOfTag);
+        $maxPage = (int) ceil($nbLines / $pageSize);
+        $searchSummary = ['NB_LINES' => Translator::get()->plural('%d line filtered', '%d lines filtered', $page['nb_lines']), 'FILESIZE' => $totalFilesize != 0 ? ceil($totalFilesize / 1024) : 0, 'USERS' => Translator::get()->plural('%d user', '%d users', $nbMembers + $nbGuests), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => Translator::get()->plural('%d guest', '%d guests', $nbGuests)];
         return ['lines' => $result, 'params' => $param, 'maxPage' => ($maxPage == 0) ? 1 : $maxPage, 'summary' => $searchSummary];
     }
 }

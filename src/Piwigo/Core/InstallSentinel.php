@@ -36,12 +36,7 @@ final class InstallSentinel
         $path = self::stampFile();
         $dir  = dirname($path);
         if (!is_dir($dir)) {
-            set_error_handler(static fn (): bool => true);
-            try {
-                mkdir($dir, 0o755, true);
-            } finally {
-                restore_error_handler();
-            }
+            Util::mkgetdir($dir, MKGETDIR_RECURSIVE);
         }
         set_error_handler(static fn (): bool => true);
         try {

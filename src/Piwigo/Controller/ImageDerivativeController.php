@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativePipeline;
@@ -149,7 +150,8 @@ SELECT *
             $params->sharpen = (int) round($sharpen / (float) count(ImageStdParams::getDefinedTypeMap()));
         }
 
-        if (!is_dir(dirname($ctx->derivativePath)) && !mkdir(dirname($ctx->derivativePath), 0755, true)) {
+        $derivativeDir = dirname($ctx->derivativePath);
+        if (!is_dir($derivativeDir) && !Util::mkgetdir($derivativeDir, MKGETDIR_RECURSIVE)) {
             DerivativePipeline::ierror('dir create error', 500);
         }
 

@@ -618,7 +618,7 @@ final class ImagesEndpoints
         $originalType = $pTypeAf === 'high' ? 'high' : 'file';
         $filePath     = Config::uploadDir() . '/buffer/' . $imageMd5sum . '-original';
         $this->mergeChunks($filePath, $imageMd5sum, $originalType);
-        chmod($filePath, 0644);
+        chmod($filePath, Config::chmodValue() & 0o666);
         if ($pTypeAf === 'file') {
             $infos = ServiceLocator::get(UploadService::class)->pwgImageInfos($filePath);
             $doUpdate = false;
@@ -672,7 +672,7 @@ final class ImagesEndpoints
         }
         $filePath = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-original';
         $this->mergeChunks($filePath, $pOriginalSum, $originalType);
-        chmod($filePath, 0644);
+        chmod($filePath, Config::chmodValue() & 0o666);
         $imageId = ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
         $update  = [];
         foreach (['name', 'author', 'comment', 'date_creation'] as $key) {

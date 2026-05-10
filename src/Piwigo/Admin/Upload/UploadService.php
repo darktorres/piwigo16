@@ -486,17 +486,7 @@ final class UploadService
     public function prepareDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
-            if (str_starts_with(PHP_OS, 'WIN')) {
-                $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
-            }
-            umask(0000);
-            set_error_handler(static fn (): bool => true);
-            try {
-                $ok = mkdir($directory, 0777, true);
-            } finally {
-                restore_error_handler();
-            }
-            if (!$ok) {
+            if (!Util::mkgetdir($directory, MKGETDIR_RECURSIVE)) {
                 throw new ConfigException('[prepareDirectory] cannot create "' . $directory . '"');
             }
         }

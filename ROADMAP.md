@@ -13,7 +13,7 @@
 | 1.1 | Concrete bugs                 | ✅ **Done** ▸ 9 / 9                            | —         | history pagination refactor shipped 2026-05-10 (6-query split + snapshot tests); cat-id gap closed without code change               |
 | 1.2 | Templates pipeline            | ✅ **Done**                                   | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate |
 | 1.3 | Plugin / theme + WS           | 🟡 **Not started**                            | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                                                                             |
-| 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                                                                                   |
+| 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                        |
 | 1.5 | Type correctness              | 🟡 **Not started**                            | M         | mixed-types · globals · schema metadata                                                                                             |
 | 1.6 | Typed boundaries              | 🟡 **Not started**                            | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                     |
 | 1.7 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
@@ -1173,12 +1173,129 @@ during the front-controller work). It validates `pwg_token` on POST
 requests, with a small allow-list for endpoints that don't carry CSRF
 state (`/ws`, `/install`, `/upgrade`, `/identification`, `/register`).
 
-The remaining five hardening sub-tasks:
+The five remaining sub-tasks are sequenced into four PR-sized waves.
+Each merge keeps CI green and improves the security posture
+monotonically. Wave order is set so the docs (Wave D) describe the
+final posture on first publish, and so the no-DB changes (Wave A) land
+before the migration-bearing wave (Wave B).
 
-#### `SecurityHeadersMiddleware`
+#### Wave A — Session cookie hardening + `SECURITY.md` skeleton
 
-A PSR-15 middleware sitting near the top of the pipeline that decorates
-every response with security headers:
+**Status:** 🟡 Not started · **Effort:** XS
+
+Lock down the session cookie at bootstrap time and seed
+`docs/SECURITY.md` so the later waves have a place to append.
+
+`session_regenerate_id(true)` (rotation on successful login) is
+**already** in `AuthService::logUser()` line 146 — settled during the
+front-controller work, contrary to the original sub-task drafting.
+The remaining gap is bootstrap-time cookie params.
+
+In `src/Piwigo/Bootstrap/SessionBootstrap.php`, replace the two-arg
+`session_set_cookie_params(0, CookieService::cookiePath())` (line 44)
+with the array form:
+
+```php
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => (string) CookieService::cookiePath(),
+    'samesite' => 'Lax',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+]);
+```
+
+`SameSite=Lax` (not `Strict`) preserves the "click a Piwigo link in
+email/Slack and stay logged in" UX while still blocking cross-site
+POST. `secure` is conditional on the request scheme — hard-coding
+`true` would break local plain-HTTP dev.
+
+#### Wave B — Brute-force lockout + login rate limiting (paired)
+
+**Status:** 🟡 Not started · **Effort:** M
+
+Two defenses ship together because each is partial in isolation:
+lockout without rate limiting still allows a flood that wastes DB
+cycles; rate limit without lockout means a slow-and-low attacker
+eventually guesses passwords.
+
+**Schema.** First real migration in tree — `migrations.php` and
+`MigrationRunner` are wired but `src/Piwigo/Migrations/` is empty, so
+this migration also sets the project's migration-file pattern:
+
+```sql
+CREATE TABLE phpwg_user_failed_logins (
+    user_id INT UNSIGNED NULL,
+    ip VARCHAR(45) NOT NULL,
+    attempted_at DATETIME NOT NULL,
+    KEY idx_user_time (user_id, attempted_at),
+    KEY idx_ip_time (ip, attempted_at)
+);
+```
+
+`user_id` is nullable so failures against unknown usernames still
+inform rate-limit decisions without contributing to per-user lockout.
+
+**Service.** New `Piwigo\Users\LoginThrottle`:
+
+```php
+final class LoginThrottle
+{
+    public function __construct(
+        private Connection $conn,
+        private int $threshold = 5,
+        private int $windowSeconds = 900,
+    ) {}
+    public function isLockedOut(int $userId): bool;
+    public function recordFailure(?int $userId, string $ip): void;
+    public function clearFailures(int $userId): void;
+    public function purgeExpired(): void;  // GC, hooked into sessionGc
+}
+```
+
+Integrated in `AuthService::pwgLogin()` (line 187): pre-check
+`isLockedOut()` after `findUserByUsernameOrEmail`; call
+`recordFailure()` on `password_verify` miss; `clearFailures()` on
+success.
+
+**Rate limiter.** `composer require symfony/rate-limiter ^8.0`.
+Storage uses the existing `symfony/cache` pool (already in
+`composer.json`). Two policies:
+
+| Policy           | Limit       | Reset window |
+| ---------------- | ----------- | ------------ |
+| `login_ip`       | 5 attempts  | 1 minute     |
+| `login_account`  | 10 attempts | 10 minutes   |
+
+Consumed in `IdentificationController` (line 68 POST branch) before
+the `AuthService::tryLogUser` call. Hitting either limit surfaces as
+a `$page['errors']` message — same UX channel as a bad-password
+error. (The roadmap's `return new Response(429)` shape doesn't fit
+the existing form-rendering controller; the WS-API path gets a
+proper exception via the named constructors below.)
+
+**Lockout-reason surfacing.** `pwgLogin()` keeps its `bool` return.
+A new `AuthService::getLastFailureReason()` lets the controller
+distinguish lockout from bad-credentials for the user-facing
+message. Restructuring to an explicit result-DTO belongs to §1.6
+(typed boundaries), not this wave.
+
+**`AuthException` gains** `accountLocked()` and `rateLimited()` named
+constructors for the WS-API login path, where exceptions are the
+natural channel (the form path uses error strings).
+
+**Configuration deferred.** Thresholds are hard-coded in the service
+constructors with the values above. Config keys
+(`login_throttle_*`, `login_rate_*`) come **after** §1.5c
+config-schema metadata lands — premature now would produce keys that
+need re-shaping when the schema work happens.
+
+#### Wave C — `SecurityHeadersMiddleware` + nonce wiring + CI guard
+
+**Status:** 🟡 Not started · **Effort:** S
+
+PSR-15 middleware inserted at position 0 of the pipeline (before
+`ExceptionHandlerMiddleware`, so error pages also get the headers):
 
 ```php
 public function process(ServerRequestInterface $req, RequestHandlerInterface $next): ResponseInterface
@@ -1188,16 +1305,17 @@ public function process(ServerRequestInterface $req, RequestHandlerInterface $ne
 
     $response = $next->handle($req);
 
+    $csp = "default-src 'self'; "
+         . "img-src 'self' data: blob:; "
+         . "style-src 'self'; "
+         . "style-src-elem 'self'; "
+         . "style-src-attr 'unsafe-inline'; "
+         . "script-src 'self' 'nonce-{$nonce}'; "
+         . "frame-ancestors 'self'; "
+         . "form-action 'self'";
+
     return $response
-        ->withHeader('Content-Security-Policy',
-            "default-src 'self'; "
-          . "img-src 'self' data: blob:; "
-          . "style-src 'self'; "                    // 0 <style> blocks remain
-          . "style-src-elem 'self'; "               // explicit; matches style-src
-          . "style-src-attr 'unsafe-inline'; "      // 13 PHP-driven '--var: value' attrs
-          . "script-src 'self' 'nonce-{$nonce}'; "
-          . "frame-ancestors 'self'; "
-          . "form-action 'self'")
+        ->withHeader('Content-Security-Policy', $csp)
         ->withHeader('X-Frame-Options', 'SAMEORIGIN')
         ->withHeader('X-Content-Type-Options', 'nosniff')
         ->withHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -1206,132 +1324,96 @@ public function process(ServerRequestInterface $req, RequestHandlerInterface $ne
 }
 ```
 
-The per-request `$nonce` is also injected into the template engine so
-`<script>` tags in templates can render `nonce="{$nonce}"`. The 13
-surviving inline `style="…"` attributes are uniform `--var: value` shape
-(CSS custom properties) and are covered by `style-src-attr`.
+**Why strict `script-src` works without template refactoring.** All
+45 `<script>` tags across the 41 `.latte` files using them are
+`<script type="application/json">` data islands — PHP-rendered JSON
+consumed by external JS via `combineScript()`. Per CSP3 §6.1.5,
+`script-src` does **not** apply to non-executable script types, so
+these tags need no nonce and don't break the policy. Wave 2's
+conversion was thorough: zero executable inline JS remains.
 
-If a future stricter policy demands `style-src-attr 'none'`, resurrect
-the existing `{html_style}` mechanism (implementation in `Template.php`
-is intact, callers were removed) to emit a single nonce'd `<style>` tag
-per request with the runtime CSS rules keyed by data-attribute selectors.
+**`style-src-attr 'unsafe-inline'`** covers the 15 files with inline
+`style="…"` attributes. All are PHP-driven `--var: value`
+custom-property bridges (e.g. `style="--thumb-w:{$thumbW}px"`) —
+uniform shape, no event handlers or dangerous content.
 
-#### Login rate limiting
+**CI guard against regressions.**
+`tools/check-no-executable-inline-scripts.php` walks
+`themes/**/*.latte` and fails the build if any `<script>` tag is
+missing a `type=` attribute or uses a `type` outside the allow-list
+of non-executable types (`application/json`, `application/ld+json`,
+`importmap`, `speculationrules`). Composer script entry
+`lint:no-inline-scripts`; new CI job mirrors the `latte` lint job.
 
-`composer require symfony/rate-limiter`. Configure two policies:
+**Nonce wiring** prefers the no-engine-change variant: a
+controller-base helper reads `$request->getAttribute('csp_nonce')`
+and assigns to the template via `LatteEngine::assign()`. Settled
+during implementation; if a wider change makes sense (e.g. a
+template-extension-level binding), revisit then.
 
-```php
-// config/security.php
-return [
-    'limiters' => [
-        'login_ip' => [
-            'policy' => 'token_bucket',
-            'limit' => 5,
-            'rate' => ['interval' => '1 minute', 'amount' => 5],
-        ],
-        'login_account' => [
-            'policy' => 'token_bucket',
-            'limit' => 10,
-            'rate' => ['interval' => '10 minutes', 'amount' => 10],
-        ],
-    ],
-];
-```
+#### Wave D — `docs/SECURITY.md` finalize
 
-Apply in the login controller:
+**Status:** 🟡 Not started · **Effort:** XS
 
-```php
-$ipLimiter = $factory->create('login_ip', $request->getClientIp());
-if (!$ipLimiter->consume()->isAccepted()) {
-    return new Response(429);
-}
-$accountLimiter = $factory->create('login_account', $username);
-if (!$accountLimiter->consume()->isAccepted()) {
-    $this->lockoutAndEmail($username);
-    return new Response(429);
-}
-```
+Replace the Wave A skeleton with the real content once the posture
+is locked:
 
-#### Brute-force lockout
+- **Threat model.** Anonymous attackers (credential stuffing, CSRF,
+  XSS, clickjacking), authenticated low-priv attackers (privilege
+  escalation, IDOR), supply chain (composer/npm). Map each to the
+  defense in tree.
+- **CSP override procedure.** Documented as "not yet supported, file
+  an issue"; the §1.3 plugin work is the proper home for relaxation
+  hooks.
+- **Account-lockout admin runbook.** Manual unlock via
+  `DELETE FROM phpwg_user_failed_logins WHERE user_id = …` until
+  the §1.3 admin-UX work lands a button.
+- **Vulnerability reporting.** Private channel + SLA. Channel choice
+  confirmed before merge.
 
-Schema:
+##### Deferred to follow-ups
 
-```sql
-CREATE TABLE phpwg_user_failed_logins (
-    user_id INT UNSIGNED NOT NULL,
-    ip VARCHAR(45) NOT NULL,
-    attempted_at DATETIME NOT NULL,
-    KEY idx_user_time (user_id, attempted_at)
-);
-```
-
-`AuthService::login()` checks the threshold before verifying the
-password — even a correct password is rejected while the user is locked
-out:
-
-```php
-public function login(string $username, string $password): User
-{
-    $user = $this->userRepo->findByUsername($username);
-    if ($user !== null && $this->isLockedOut($user->id)) {
-        throw AuthException::accountLocked();
-    }
-    if ($user === null || !$this->verifyPassword($password, $user->passwordHash)) {
-        $this->recordFailure($user?->id, $this->request->getClientIp());
-        throw AuthException::invalidCredentials();
-    }
-    $this->clearFailures($user->id);
-    return $user;
-}
-```
-
-Admin "Unlock account" action clears `phpwg_user_failed_logins` for the
-target user.
-
-#### Session hardening
-
-`SessionMiddleware` sets cookie params before `session_start()`:
-
-```php
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path'     => '/',
-    'samesite' => 'Strict',
-    'secure'   => true,
-    'httponly' => true,
-]);
-```
-
-On successful login: `session_regenerate_id(true)` to rotate the session
-ID and prevent session fixation.
-
-#### `docs/SECURITY.md` threat model
-
-Document:
-
-- Threat model (who's attacking what).
-- CSP override procedure (when a plugin needs `unsafe-inline`).
-- Account-lockout admin actions.
-- Vulnerability reporting (private email, response SLA).
+- **WS-API login lockout.** `/ws` bypasses `IdentificationController`.
+  Wave B should also wire the limiter + throttle into
+  `WsAuthMethods::login()`; confirm scope during Wave B
+  implementation.
+- **Config keys for thresholds.** Gated on §1.5c (config-schema
+  metadata).
+- **Admin UI for unlocking users.** Gated on §1.3 admin-UX work.
+- **CSP `report-uri` / `report-to`.** No reporting endpoint to design
+  yet; revisit if violations appear in production.
+- **Per-plugin CSP relaxation hook.** §1.3 territory.
+- **`secure => true` unconditional + cookie prefix
+  (`__Host-` / `__Secure-`).** Gated on a future "force HTTPS"
+  config flag.
+- **Nonce on `<style>` tags.** No inline `<style>` blocks remain in
+  tree (Wave 2 cleanup), so `style-src-elem 'self'` is enough.
 
 ##### Verification
 
 ```bash
-curl -sI http://localhost/ | grep -i content-security-policy
-curl -sI http://localhost/ | grep -i x-frame-options
-curl -sI http://localhost/ | grep -i strict-transport-security
+# Headers present on every response (Wave C)
+curl -sI http://localhost/ | grep -iE 'content-security-policy|x-frame-options|strict-transport-security'
 
-# 6th login attempt within a minute returns 429
+# Per-IP rate limit kicks in at the 6th attempt (Wave B)
 for i in $(seq 1 6); do
-  curl -sw '%{http_code}\n' -o /dev/null \
+  curl -sw '%{http_code} ' -o /dev/null \
     -X POST http://localhost/identification \
-    -d 'username=test&password=wrong'
-done   # expect: 200,200,200,200,200,429
+    -d 'username=test&password=wrong&login=1'
+done   # 6th request renders the limit error in $page['errors']
 
-# CSRF without token (should already be blocking)
+# CSRF without token (already blocking via CsrfMiddleware)
 curl -sw '%{http_code}\n' -o /dev/null \
   -X POST http://localhost/admin/category_delete \
   -d 'cat_id=1'   # expect: 403
+
+# Session cookie params (Wave A) — confirm SameSite=Lax + HttpOnly
+curl -sI http://localhost/ | grep -i set-cookie
+
+# CI guard against executable inline scripts (Wave C)
+echo '<script>alert(1)</script>' > themes/_base/template/_probe.latte
+composer lint:no-inline-scripts ; echo $?   # exit 1
+rm themes/_base/template/_probe.latte
 ```
 
 ---

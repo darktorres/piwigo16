@@ -425,10 +425,10 @@ reference.md` therefore has no descriptions, and there's no
    Step 2 — doesn't exist.
 5. ~~DB-config-table overlay is in `load_conf_from_db()`.~~ **Resolved** — `load_conf_from_db()` and `common.inc.php` deleted; DB overlay migrated to `ConfigStorage::loadConfFromDb()` called from `CommonBootstrap::run()`.
 6. `ConfigStorage` doesn't take a namespace prefix for plugins (Plan
-    Step 5).
+   Step 5).
 7. `Config::raw()` semantic differs from plan. Plan said `raw(): array`
-    for bulk read. Shipped: `raw(string $key, mixed $default = null): mixed`
-    as the parametric escape hatch.
+   for bulk read. Shipped: `raw(string $key, mixed $default = null): mixed`
+   as the parametric escape hatch.
 
 ### Verification of what shipped
 

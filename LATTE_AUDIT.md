@@ -208,4 +208,4 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## Findings log
 
-_(empty — populate as the audit progresses)_
+(empty — populate as the audit progresses)

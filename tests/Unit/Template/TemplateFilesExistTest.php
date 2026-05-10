@@ -7,16 +7,12 @@ namespace Piwigo\Tests\Unit\Template;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Validates that every template filename referenced in set_filename() /
- * set_filenames() / setFilenames() / $block->template / similar in src/
- * actually exists on disk.
- *
- * Both `.tpl` (Smarty) and `.latte` (Latte) suffixes are covered. After
- * the §1.2 Wave 2 F.0 flip, every core/admin call-site names `.latte`,
- * but a few `.tpl` references survive on the plugin-compat surface
- * (`ExtensionsController::eligible_templates`, `MailService` dynamic
- * plugin templates) — the parallel `.tpl` source files still ship for
- * the migration window, so both extensions resolve.
+ * Validates that every `.latte` template filename referenced in
+ * setFilename() / setFilenames() / $block->template / similar under
+ * src/ actually exists on disk. `.tpl` references in the `extends for
+ * templates` admin UI's hardcoded list (`ExtensionsController::
+ * eligible_templates`) are skipped — Phase F deleted the source files;
+ * those keys remain as legacy identifiers in the config row format.
  *
  * Template search path mirrors Template::setTheme():
  *   admin pages  → themes/admin/_base/template/
@@ -46,8 +42,6 @@ final class TemplateFilesExistTest extends TestCase
         ];
 
         // Build a flat index keyed by bare filename and by relative path.
-        // Both .tpl and .latte files are indexed — a Smarty reference and
-        // a Latte reference are equally valid against the same template dir.
         foreach (self::$searchDirs as $dir) {
             if (!is_dir($dir)) {
                 continue;
@@ -57,8 +51,7 @@ final class TemplateFilesExistTest extends TestCase
                 if (!($file instanceof \SplFileInfo) || !$file->isFile()) {
                     continue;
                 }
-                $ext = $file->getExtension();
-                if ($ext !== 'tpl' && $ext !== 'latte') {
+                if ($file->getExtension() !== 'latte') {
                     continue;
                 }
                 $bare = $file->getFilename();
@@ -83,17 +76,12 @@ final class TemplateFilesExistTest extends TestCase
 
             $phpFileContent = file_get_contents($phpFile->getPathname());
             $content = $phpFileContent !== false ? $phpFileContent : '';
-            // Skip Template.php's own psalm @psalm-param docblock — it
-            // pins a stale literal-string union to the legacy .tpl
-            // extension space; not a runtime reference.
-            $content = preg_replace('/@psalm-param[^*]+(?:\*(?!\/)[^*]+)*\*\//', '', $content) ?? $content;
 
-            // Match any single- or double-quoted literal ending in `.tpl`
-            // or `.latte`. The path body is restricted to filename-safe
-            // chars to avoid false positives on prose like
-            // `'inside the .tpl file'`.
+            // Match any single- or double-quoted literal ending in
+            // `.latte`. The path body is restricted to filename-safe
+            // chars to avoid false positives on prose.
             preg_match_all(
-                '/[\'"]([a-zA-Z0-9_.\/\-]+\.(?:tpl|latte))[\'"]/',
+                '/[\'"]([a-zA-Z0-9_.\/\-]+\.latte)[\'"]/',
                 $content,
                 $matches
             );

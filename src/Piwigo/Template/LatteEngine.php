@@ -14,9 +14,10 @@ use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Latte\PiwigoPolicy;
 
 /**
- * Latte template engine, paired with Smarty during the §1.2 Wave 2
- * conversion window. The dispatcher in TemplateRegistry routes `.latte`
- * files here; `.tpl` files continue through Template.php (Smarty).
+ * Latte template engine — the only engine after Phase F dropped
+ * `smarty/smarty`. `Template::parse()` resolves bare filenames against
+ * the registered template directories and renders through here; direct
+ * callers can also obtain the engine via {@see self::default()}.
  *
  * Strict types are enabled so accidental nullables surface at compile-time
  * rather than printing "Notice: Trying to access array offset on null" into

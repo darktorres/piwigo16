@@ -7,10 +7,9 @@ namespace Piwigo\Template;
 /**
  * Engine-agnostic contract for rendering Piwigo page templates.
  *
- * Both the Smarty wrapper (Template.php) and the Latte wrapper (LatteEngine)
- * satisfy this interface. The dispatcher in TemplateRegistry routes a request
- * to the right engine based on the template-file extension (`.tpl` → Smarty,
- * `.latte` → Latte) so the two coexist during the §1.2 conversion window.
+ * Phase F dropped `smarty/smarty`; {@see LatteEngine} is currently the
+ * only implementer. The interface remains as the forward-compatible
+ * shape for direct callers and any future engine.
  */
 interface TemplateEngine
 {

@@ -10,8 +10,10 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Combinable;
@@ -147,6 +149,7 @@ final class PiwigoExtension extends Extension
             'combineCss' => self::combineCss(...),
             'getCombinedCss' => self::getCombinedCss(...),
             'defineDerivative' => self::defineDerivative(...),
+            'derivative' => self::derivative(...),
             'htmlHead' => self::htmlHead(...),
             'htmlStyle' => self::htmlStyle(...),
             'footerScript' => self::footerScript(...),
@@ -492,6 +495,20 @@ final class PiwigoExtension extends Extension
             throw new \InvalidArgumentException('defineDerivative: min_height > height');
         }
         return ImageStdParams::getCustom($width, $height, $cropFraction, $effMinW, $effMinH);
+    }
+
+    /**
+     * Builds a `DerivativeImage` from a type/params object and a
+     * source-image array (or SrcImage). Replaces the legacy
+     * `$pwg->derivative(...)` accessor that Smarty made available via
+     * the global `$pwg` template var.
+     *
+     * @param array<mixed>|SrcImage $img
+     */
+    public static function derivative(string|DerivativeParams $type, array|SrcImage $img): DerivativeImage
+    {
+        $src_image = ($img instanceof SrcImage) ? $img : new SrcImage($img);
+        return new DerivativeImage($type, $src_image);
     }
 
     public static function htmlHead(string|Html $content): void

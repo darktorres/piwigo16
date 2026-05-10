@@ -7,7 +7,7 @@
 {elseif $derivative_params->maxWidth() > 400}{var $thumbLegendFs = '110%'}
 {else}{var $thumbLegendFs = '90%'}{/if}
 {foreach $thumbnails as $thumbnail}
-{var $derivative = $pwg->derivative($derivative_params, $thumbnail['src_image'])}
+{var $derivative = derivative($derivative_params, $thumbnail['src_image'])}
 {if !$derivative->isCached()}
 {do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}
 {/if}

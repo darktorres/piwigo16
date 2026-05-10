@@ -7,9 +7,9 @@
 <li class="commentElement {if (($iterator->getCounter() - 1)) % 2 != 0}odd{else}even{/if}">
 	{if isset($comment['src_image'])}
 	{if isset($comment_derivative_params)}
-	{var $derivative = $pwg->derivative($comment_derivative_params, $comment['src_image'])}
+	{var $derivative = derivative($comment_derivative_params, $comment['src_image'])}
 	{else}
-	{var $derivative = $pwg->derivative($derivative_params, $comment['src_image'])}
+	{var $derivative = derivative($derivative_params, $comment['src_image'])}
 	{/if}
 	{if !$derivative->isCached()}
   {do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}

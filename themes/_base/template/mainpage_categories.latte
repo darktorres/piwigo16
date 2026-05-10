@@ -2,7 +2,7 @@
 <div class="loader"><img src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"></div>
 <ul class="thumbnailCategories" style="--cat-illu-w:{$derivative_params->maxWidth()+5}px;--cat-desc-h:{$derivative_params->maxHeight()+5}px">
 {foreach $category_thumbnails as $cat}
-{var $derivative = $pwg->derivative($derivative_params, $cat['representative']['src_image'])}
+{var $derivative = derivative($derivative_params, $cat['representative']['src_image'])}
 {if !$derivative->isCached()}
 {do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}
 {/if}

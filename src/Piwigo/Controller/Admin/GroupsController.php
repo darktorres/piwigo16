@@ -124,7 +124,7 @@ final class GroupsController
             $group_counter++;
         }
 
-        $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
+        $tpl->assign('ADMIN_PAGE_TITLE', new \Latte\Runtime\Html(Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
     }
 

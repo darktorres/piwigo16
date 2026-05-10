@@ -450,9 +450,9 @@ final class MiscController
 
         $language_prefix = substr(is_scalar($user['language'] ?? null) ? (string) $user['language'] : '', 0, 3);
         if ('en_' == $language_prefix) {
-            PageState::current()->addMessage(sprintf('Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !', 'https://doc.piwigo.org/'));
+            PageState::current()->addMessage(new Html(sprintf('Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !', 'https://doc.piwigo.org/')));
         } elseif ('fr_' == $language_prefix) {
-            PageState::current()->addMessage(sprintf('Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !', 'https://doc-fr.piwigo.org/'));
+            PageState::current()->addMessage(new Html(sprintf('Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !', 'https://doc-fr.piwigo.org/')));
         }
 
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'help');
@@ -587,7 +587,7 @@ final class MiscController
                 $newsUrl     = $latest_news['url'] ?? null;
                 $newsPosted  = $latest_news['posted'] ?? null;
                 $newsSubject = $latest_news['subject'] ?? null;
-                PageState::current()->addMessage(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_string($newsUrl) ? $newsUrl : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_string($newsPosted) ? $newsPosted : '') . ')', is_string($newsSubject) ? $newsSubject : ''));
+                PageState::current()->addMessage(new Html(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_string($newsUrl) ? $newsUrl : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_string($newsPosted) ? $newsPosted : '') . ')', is_string($newsSubject) ? $newsSubject : '')));
             }
         }
 

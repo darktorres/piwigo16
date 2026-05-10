@@ -20,7 +20,7 @@
 
 {if $is_standard_pages_used and !$use_standard_pages}
       <div class="std_pgs_theme_info warnings">
-        <p class="">{'Standard pages aren\'t activated, however you have %d active themes that will still use them. These themes are:'|translate:count($standard_pages_used_by)} </p>
+        <p class="">{='Standard pages aren\'t activated, however you have %d active themes that will still use them. These themes are:'|translate:count($standard_pages_used_by)} </p>
         <ul>
   {foreach $standard_pages_used_by as $theme_name}
           <li>{$theme_name}</li>

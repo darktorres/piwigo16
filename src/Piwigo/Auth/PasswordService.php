@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
@@ -239,7 +240,7 @@ final class PasswordService
 
         ServiceLocator::get(Util::class)->pwgActivity('user', $user_id, 'reset_password_success');
         PageState::current()->addInfo(Lang::t('Your password has been reset'));
-        PageState::current()->addInfo('<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . Lang::t('Login') . '</a>');
+        PageState::current()->addInfo(new Html('<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . Lang::t('Login') . '</a>'));
 
         return true;
     }

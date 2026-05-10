@@ -81,8 +81,39 @@ final class Converter
         $source = $this->passForeachLocalsToIncludes($source);
         $source = $this->addNoescapeToJsonScriptBlocks($source);
         $source = $this->addNoescapeToHtmlBearingTranslations($source);
+        $source = $this->addNoescapeToHtmlLiteralRepeats($source);
 
         return $source;
+    }
+
+    /**
+     * `{='</ul></li>'|str_repeat:N}` — Smarty (escape_html=false) printed
+     * the repeated HTML raw; Latte auto-escapes the filter output. Detect
+     * a string literal containing an HTML start- or end-tag piped through
+     * `str_repeat` and append `|noescape`. Kept narrow on purpose: only
+     * fires when the source literal contains an HTML tag, so plain-text
+     * `'-'|str_repeat:5` is left alone.
+     */
+    private function addNoescapeToHtmlLiteralRepeats(string $source): string
+    {
+        return preg_replace_callback(
+            "/\\{=((?:'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")\\|str_repeat(?:[^|}]*)?(?:\\|[^|}]+)*?)\\}/",
+            static function (array $m): string {
+                $body = $m[1];
+                if (str_contains($body, '|noescape')) {
+                    return $m[0];
+                }
+                if (preg_match("/'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"/", $body, $litM) !== 1) {
+                    return $m[0];
+                }
+                $htmlTagPattern = '#</?[a-zA-Z][a-zA-Z0-9]*(?:\\s[^>]*)?>#';
+                if (preg_match($htmlTagPattern, $litM[0]) !== 1) {
+                    return $m[0];
+                }
+                return '{=' . $body . '|noescape}';
+            },
+            $source
+        ) ?? $source;
     }
 
     /**

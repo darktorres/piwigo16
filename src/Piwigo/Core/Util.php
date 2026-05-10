@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
@@ -149,7 +150,7 @@ final readonly class Util
         PageHeaderRenderer::render($title, $refresh, $url_link);
 
         $tpl->setFilenames(['redirect' => 'redirect.latte']);
-        $tpl->assign('REDIRECT_MSG', $msg);
+        $tpl->assign('REDIRECT_MSG', new Html($msg));
         $tpl->parse('redirect');
 
         PageTailRenderer::render();

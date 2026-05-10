@@ -191,7 +191,7 @@ final class UsersController
         $tpl->assign('pagination', $pagination);
 
         if ($this->webmasterIdIsLocal()) {
-            PageState::current()->addWarning(Lang::t('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+            PageState::current()->addWarning(new Html(Lang::t('You have specified <i>' . '$' . 'conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!')));
         }
 
         $groups_arr_json = [];

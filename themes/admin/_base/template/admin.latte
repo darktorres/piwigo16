@@ -103,7 +103,7 @@
     <i class="eiw-icon icon-cancel"></i>
     <ul>
       {foreach $errors as $error}
-      <li>{$error|noescape}</li>
+      <li>{$error}</li>
       {/foreach}
     </ul>
   </div>
@@ -114,7 +114,7 @@
     <i class="eiw-icon icon-ok"></i>
     <ul>
       {foreach $infos as $info}
-      <li>{$info|noescape}</li>
+      <li>{$info}</li>
       {/foreach}
     </ul>
   </div>
@@ -125,7 +125,7 @@
     <i class="eiw-icon icon-attention"></i>
     <ul>
       {foreach $warnings as $warning}
-      <li>{$warning|noescape}</li>
+      <li>{$warning}</li>
       {/foreach}
     </ul>
   </div>
@@ -136,7 +136,7 @@
     <i class="eiw-icon icon-info-circled-1"></i>
     <ul>
       {foreach $messages as $message}
-      <li>{$message|noescape}</li>
+      <li>{$message}</li>
       {/foreach}
     </ul>
   </div>

@@ -519,7 +519,7 @@ final class MaintenanceController
                     } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                         PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
                         $update_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
-                        PageState::current()->addInfo('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>');
+                        PageState::current()->addInfo(new Html('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>'));
                     } else {
                         PageState::current()->addInfo(Lang::t('You are running the latest version of Piwigo.'));
                     }

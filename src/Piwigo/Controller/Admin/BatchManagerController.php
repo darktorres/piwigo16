@@ -795,7 +795,7 @@ final class BatchManagerController
                     PageState::current()->addError(Lang::t('You need to confirm deletion'));
                 }
             } elseif ('metadata' == $action) {
-                PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>');
+                PageState::current()->addInfo(new Html(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>'));
             } elseif ('delete_derivatives' == $action && isset($_POST['del_derivatives_type']) && $_POST['del_derivatives_type'] !== '') {
                 foreach (ServiceLocator::get(ImageRepository::class)->findPathsAndRepresentativesByIds($collection_int) as $info) {
                     $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];

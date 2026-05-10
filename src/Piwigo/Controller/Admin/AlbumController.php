@@ -487,7 +487,7 @@ final class AlbumController
                 PageState::current()->addError(is_string($output_create['error']) ? $output_create['error'] : '');
             } else {
                 $edit_url = ServiceLocator::get(UrlGenerator::class)->admin('album-' . (is_scalar($output_create['id'] ?? '') ? (string) ($output_create['id'] ?? '') : ''));
-                PageState::current()->addInfo((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
+                PageState::current()->addInfo(new Html((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>'));
             }
         }
 
@@ -657,7 +657,7 @@ final class AlbumController
             $self_url .= '&parent_id=' . $catUppercat;
         }
 
-        PageState::current()->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
+        PageState::current()->addWarning(new Html(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>'));
 
         $tpl->assign([
             'CATEGORIES_NAV'        => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
@@ -316,7 +317,7 @@ final class ExtensionsController
                 case 'ok':
                     $activate_url = ServiceLocator::get(UrlGenerator::class)->admin('plugins') . '&filter=deactivated';
                     PageState::current()->addInfo(Lang::t('Plugin has been successfully copied'));
-                    PageState::current()->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
+                    PageState::current()->addInfo(new Html('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>'));
                     $pluginIdRaw = $_GET['plugin_id'] ?? null;
                     $getPluginId = is_string($pluginIdRaw) ? $pluginIdRaw : '';
                     if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {

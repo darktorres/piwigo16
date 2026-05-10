@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Latte\Runtime\Html;
+
 /**
  * Typed DTO wrapping the $page global array.
  *
@@ -12,20 +14,27 @@ namespace Piwigo\Core;
  * are PHP references to the corresponding properties of this singleton. Code that
  * writes $page['errors'][] = 'msg' pushes into self::$instance->errors and vice
  * versa — no data divergence between the global and the typed reader.
+ *
+ * Entries may be plain `string` (auto-escape applies — safe for Lang::t output)
+ * or `Latte\Runtime\Html` (already-trusted HTML — links, icons, formatted text).
+ * Callers that splice HTML into a message must wrap it with `new Html(...)` or
+ * use `addInfoHtml`/`addErrorHtml`/`addMessageHtml`/`addWarningHtml`. The
+ * `admin.latte`/`infos_errors.latte` foreach prints do bare `{$x}` — Html
+ * passes through, plain strings get auto-escaped as expected.
  */
 final class PageState
 {
     private static ?self $instance = null;
 
-    /** @var list<string> */
+    /** @var list<string|Html> */
     public array $errors = [];
     /** @var array<string, string> */
     public array $keyedErrors = [];
-    /** @var list<string> */
+    /** @var list<string|Html> */
     public array $warnings = [];
-    /** @var list<string> */
+    /** @var list<string|Html> */
     public array $messages = [];
-    /** @var list<string> */
+    /** @var list<string|Html> */
     public array $infos = [];
     /** @var list<string> */
     public array $bodyClasses = [];
@@ -60,14 +69,10 @@ final class PageState
         /** @var array<string,mixed> $p */
         $p = is_array($raw) ? $raw : [];
 
-        $errors = $p['errors'] ?? [];
-        $inst->errors = is_array($errors) ? array_values(array_filter($errors, is_string(...))) : [];
-        $warnings = $p['warnings'] ?? [];
-        $inst->warnings = is_array($warnings) ? array_values(array_filter($warnings, is_string(...))) : [];
-        $messages = $p['messages'] ?? [];
-        $inst->messages = is_array($messages) ? array_values(array_filter($messages, is_string(...))) : [];
-        $infos = $p['infos'] ?? [];
-        $inst->infos = is_array($infos) ? array_values(array_filter($infos, is_string(...))) : [];
+        $inst->errors = self::filterStringOrHtmlList($p['errors'] ?? []);
+        $inst->warnings = self::filterStringOrHtmlList($p['warnings'] ?? []);
+        $inst->messages = self::filterStringOrHtmlList($p['messages'] ?? []);
+        $inst->infos = self::filterStringOrHtmlList($p['infos'] ?? []);
         $bodyClasses = $p['body_classes'] ?? [];
         $inst->bodyClasses = is_array($bodyClasses) ? array_values(array_filter($bodyClasses, is_string(...))) : [];
         $bodyData = $p['body_data'] ?? [];
@@ -111,7 +116,7 @@ final class PageState
         return self::$instance ??= new self();
     }
 
-    public function addError(string $msg): void
+    public function addError(string|Html $msg): void
     {
         $this->errors[] = $msg;
     }
@@ -128,15 +133,15 @@ final class PageState
     {
         return $this->keyedErrors;
     }
-    public function addWarning(string $msg): void
+    public function addWarning(string|Html $msg): void
     {
         $this->warnings[] = $msg;
     }
-    public function addMessage(string $msg): void
+    public function addMessage(string|Html $msg): void
     {
         $this->messages[] = $msg;
     }
-    public function addInfo(string $msg): void
+    public function addInfo(string|Html $msg): void
     {
         $this->infos[] = $msg;
     }
@@ -153,13 +158,35 @@ final class PageState
      * Merges \Piwigo\Config\Config::headerNotes() (informational strings set by plugins or config)
      * into the infos bucket so they appear in the page output.
      *
-     * @param list<string> $headerNotes
+     * @param list<string|Html> $headerNotes
      */
     public function mergeFromConf(array $headerNotes): void
     {
         foreach ($headerNotes as $note) {
             $this->infos[] = $note;
         }
+    }
+
+    /**
+     * Coerce an arbitrary `$page['…']` value (typically the pre-boot global
+     * array, which PHP types as `mixed`) into a clean
+     * `list<string|Html>`. Anything that isn't already a string or `Html`
+     * instance is dropped.
+     *
+     * @return list<string|Html>
+     */
+    private static function filterStringOrHtmlList(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $v) {
+            if (is_string($v) || $v instanceof Html) {
+                $out[] = $v;
+            }
+        }
+        return $out;
     }
 
     // ---- Test helpers ----------------------------------------------------

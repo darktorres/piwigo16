@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\Config\SizesProcessor;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -283,7 +284,7 @@ final class ConfigurationController
         switch ($section) {
             case 'main':
                 if ($this->orderByIsLocal()) {
-                    PageState::current()->addWarning(Lang::t('You have specified <i>' . '$' . 'conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>' . '$' . 'conf[\'order_by_custom\']</i> !'));
+                    PageState::current()->addWarning(new Html(Lang::t('You have specified <i>' . '$' . 'conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>' . '$' . 'conf[\'order_by_custom\']</i> !')));
                 }
 
                 if (Config::has('order_by_custom') || Config::has('order_by_inside_category_custom')) {

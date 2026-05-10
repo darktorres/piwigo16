@@ -63,10 +63,12 @@ final class PictureCommentRenderer
             ];
 
             $post_key = $_POST['key'] ?? '';
-            $pageStateErrors = PageState::current()->errors;
-            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_string($post_key) ? $post_key : '', $pageStateErrors);
-            /** @var list<string> $pageStateErrors */
-            PageState::current()->errors = $pageStateErrors;
+            /** @var list<string> $commentErrors */
+            $commentErrors = [];
+            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_string($post_key) ? $post_key : '', $commentErrors);
+            foreach ($commentErrors as $err) {
+                PageState::current()->addError($err);
+            }
 
             switch ($comment_action) {
                 case 'moderate':

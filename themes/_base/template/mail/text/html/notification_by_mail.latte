@@ -24,13 +24,13 @@
 {if !empty($global_new_lines)}
 <ul id="nbm_new_line">
 {foreach $global_new_lines as $line}
-  <li>{$line}</li>
+  <li>{$line|noescape}</li>
 {/foreach}
 </ul>
 {/if}
 
 {if !empty($custom_mail_content)}
-<p>{$custom_mail_content}</p>
+<p>{$custom_mail_content|noescape}</p>
 {/if}
 
 {if !empty($GOTO_GALLERY_TITLE)}
@@ -50,7 +50,7 @@
 <div id="nbm_recent_post">
   {foreach $recent_posts as $recent_post}
   <h2>{$recent_post['TITLE']}</h2>
-  {$recent_post['HTML_DATA']}
+  {$recent_post['HTML_DATA']|noescape}
   {/foreach}
 {/if}
 </div>

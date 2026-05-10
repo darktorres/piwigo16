@@ -84,6 +84,7 @@
       "@analyse:phpstan",
       "@analyse:psalm"
     ],
+    "precompile:templates": "@php tools/precompile_templates.php",
     "test": "@php vendor/bin/phpunit"
   },
   "scripts-descriptions": {
@@ -93,6 +94,7 @@
     "analyse": "Run static analysis (phpstan + psalm)",
     "analyse:phpstan": "Run PHPStan",
     "analyse:psalm": "Run Psalm",
+    "precompile:templates": "Warm Latte compile cache for every bundled .latte (deploy/CI)",
     "test": "Run PHPUnit"
   },
   "repositories": [

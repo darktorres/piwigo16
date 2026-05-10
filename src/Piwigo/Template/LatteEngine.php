@@ -126,4 +126,18 @@ final class LatteEngine implements TemplateEngine
         $this->engine->setLoader(new StringLoader());
         return $this->engine->renderToString($source, [...$this->assigns, ...$params]);
     }
+
+    /**
+     * Compile `$name` and write the cached PHP to the configured cache
+     * directory without rendering. Used by the deploy-time warmer at
+     * `tools/precompile_templates.php` so the runtime first-request hit
+     * does not pay the compile cost. Latte's compile cache keys on
+     * `$name` as passed; the warmer must use the same path shape
+     * `Template::resolveLatteTemplatePath()` produces at runtime
+     * (absolute paths under the default FileLoader).
+     */
+    public function warmupCache(string $name): void
+    {
+        $this->engine->warmupCache($name);
+    }
 }

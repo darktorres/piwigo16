@@ -388,6 +388,34 @@ final class LatteEngineTest extends TestCase
         self::assertStringContainsString('<p>body</p>', $output);
     }
 
+    /**
+     * Wave 3 (§1.2 precompile) — warmupCache() compiles a template into
+     * the cache directory without rendering. The deploy-time warmer at
+     * `tools/precompile_templates.php` iterates every `.latte` through
+     * this method so the runtime first-request hit doesn't pay the
+     * compile cost; the same engine then renders the warmed entry.
+     */
+    public function test_wave3_warmup_cache_writes_compiled_template_without_rendering(): void
+    {
+        $sourcePath = $this->tempDir . '/probe.latte';
+        file_put_contents($sourcePath, 'hello {$name}');
+
+        $engine = new LatteEngine($this->tempDir);
+
+        $compiledBefore = glob($this->tempDir . '/*.php');
+        self::assertSame([], $compiledBefore === false ? [] : $compiledBefore);
+
+        $engine->warmupCache($sourcePath);
+
+        $compiledAfter = glob($this->tempDir . '/*.php');
+        self::assertNotEmpty($compiledAfter, 'warmupCache must write a compiled .php file');
+        self::assertSame(
+            'hello world',
+            $engine->render($sourcePath, ['name' => 'world']),
+            'warmed cache must serve the same source it compiled',
+        );
+    }
+
 
     /**
      * Reflection-construct a Template with usable loaders but no Smarty

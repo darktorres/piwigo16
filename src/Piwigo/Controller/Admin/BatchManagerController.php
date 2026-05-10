@@ -906,7 +906,7 @@ final class BatchManagerController
 
                 $tpl->append('thumbnails', array_merge($row, [
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
-                    'TITLE'    => $ttitle,
+                    'TITLE'    => new \Latte\Runtime\Html($ttitle),
                     'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_string($row['id'] ?? null) ? $row['id'] : '')),
                 ]));

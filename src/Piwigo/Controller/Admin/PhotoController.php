@@ -116,7 +116,7 @@ final class PhotoController
         $tabsheet->assign();
 
         $tpl->assign([
-            'ADMIN_PAGE_TITLE' => Lang::t('Edit photo') . ' <span class="image-id">#' . $image_id_str . '</span>',
+            'ADMIN_PAGE_TITLE' => new \Latte\Runtime\Html(Lang::t('Edit photo') . ' <span class="image-id">#' . htmlspecialchars($image_id_str) . '</span>'),
         ]);
 
         $tab = $page['tab'];

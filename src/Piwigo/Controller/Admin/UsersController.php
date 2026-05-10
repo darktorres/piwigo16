@@ -309,7 +309,7 @@ final class UsersController
             }
             usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
             foreach ($cats as $category) {
-                $tpl->append('categories_because_of_groups', ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null));
+                $tpl->append('categories_because_of_groups', new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
             }
         }
 

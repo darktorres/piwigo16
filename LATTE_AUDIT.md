@@ -156,7 +156,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
 - [ ] `cat_list.tpl` ↔ `cat_list.latte`
 - [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
-- [ ] `cat_options.tpl` ↔ `cat_options.latte`
+- [x] `cat_options.tpl` ↔ `cat_options.latte` — full read both. `$DOUBLE_SELECT` auto-Html. Faithful.
 - [ ] `cat_perm.tpl` ↔ `cat_perm.latte`
 - [ ] `check_integrity.tpl` ↔ `check_integrity.latte`
 - [ ] `comments.tpl` ↔ `comments.latte`
@@ -167,52 +167,52 @@ the `.tpl` source would produce the same `.latte` we have.
 - [ ] `configuration_search.tpl` ↔ `configuration_search.latte`
 - [ ] `configuration_sizes.tpl` ↔ `configuration_sizes.latte`
 - [ ] `configuration_watermark.tpl` ↔ `configuration_watermark.latte`
-- [ ] `double_select.tpl` ↔ `double_select.latte`
+- [x] `double_select.tpl` ↔ `double_select.latte` — full read. `htmlOptions(...)|noescape` ✓.
 - [ ] `element_set_ranks.tpl` ↔ `element_set_ranks.latte`
-- [ ] `extend_for_templates.tpl` ↔ `extend_for_templates.latte`
+- [x] `extend_for_templates.tpl` ↔ `extend_for_templates.latte` — full read. `htmlOptions(...)|noescape` ✓ (×3).
 - [ ] `footer.tpl` ↔ `footer.latte`
 - [ ] `group_list.tpl` ↔ `group_list.latte`
-- [ ] `group_perm.tpl` ↔ `group_perm.latte`
+- [x] `group_perm.tpl` ↔ `group_perm.latte` — full read. `$TITLE` plain text Lang::t (auto-escape correct), `$DOUBLE_SELECT` auto-Html.
 - [ ] `header.tpl` ↔ `header.latte`
-- [ ] `help.tpl` ↔ `help.latte`
+- [x] `help.tpl` ↔ `help.latte` — full read. `$HELP_CONTENT` Html-wrapped at producer (MiscController). `$HELP_SECTION_TITLE` plain text.
 - [ ] `history.tpl` ↔ `history.latte`
 - [ ] `install.tpl` ↔ `install.latte`
 - [ ] `intro.tpl` ↔ `intro.latte`
-- [ ] `languages_installed.tpl` ↔ `languages_installed.latte`
-- [ ] `languages_new.tpl` ↔ `languages_new.latte`
+- [x] `languages_installed.tpl` ↔ `languages_installed.latte` — full read. Language metadata; `name`, `deactivate_tooltip` plain. Faithful.
+- [x] `languages_new.tpl` ↔ `languages_new.latte` — full read. cluetip title `|htmlspecialchars|nl2br` preserved (attribute context). Faithful.
 - [ ] `maintenance_actions.tpl` ↔ `maintenance_actions.latte`
-- [ ] `maintenance_env.tpl` ↔ `maintenance_env.latte`
+- [x] `maintenance_env.tpl` ↔ `maintenance_env.latte` — full read. System info display, plain text vars. Faithful.
 - [ ] `maintenance_sys.tpl` ↔ `maintenance_sys.latte`
-- [ ] `menubar.tpl` ↔ `menubar.latte`
-- [ ] `navigation_bar.tpl` ↔ `navigation_bar.latte`
+- [x] `menubar.tpl` ↔ `menubar.latte` — full read. Admin menu block ordering form. `$block['reg']->getName()|translate` plain, `=math(equation: "abs(pos)", pos: ...)` rewritten. Faithful.
+- [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — full read. Plain pagination markup. Faithful.
 - [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
 - [ ] `permalinks.tpl` ↔ `permalinks.latte`
 - [ ] `photos_add_applications.tpl` ↔ `photos_add_applications.latte`
 - [ ] `photos_add_direct.tpl` ↔ `photos_add_direct.latte`
-- [ ] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte`
-- [ ] `picture_coi.tpl` ↔ `picture_coi.latte`
-- [ ] `picture_formats.tpl` ↔ `picture_formats.latte`
+- [x] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte` — full read. `$FTP_HELP_CONTENT` Html-wrapped at PhotoController:719.
+- [x] `picture_coi.tpl` ↔ `picture_coi.latte` — full read. COI form, plain markup. Faithful.
+- [x] `picture_formats.tpl` ↔ `picture_formats.latte` — full read. `$page_data_json|noescape` ✓. `$FORMATS` data array. Faithful.
 - [ ] `picture_modify.tpl` ↔ `picture_modify.latte`
 - [ ] `plugins_installed.tpl` ↔ `plugins_installed.latte`
 - [ ] `plugins_new.tpl` ↔ `plugins_new.latte`
-- [ ] `popuphelp.tpl` ↔ `popuphelp.latte`
+- [x] `popuphelp.tpl` ↔ `popuphelp.latte` — full read. `$HELP_CONTENT` Html-wrapped at MiscController.
 - [ ] `queue.tpl` ↔ `queue.latte`
 - [ ] `rating.tpl` ↔ `rating.latte`
 - [ ] `rating_user.tpl` ↔ `rating_user.latte`
 - [ ] `site_manager.tpl` ↔ `site_manager.latte`
 - [ ] `site_update.tpl` ↔ `site_update.latte`
-- [ ] `stats.tpl` ↔ `stats.latte`
-- [ ] `tabsheet.tpl` ↔ `tabsheet.latte`
+- [x] `stats.tpl` ↔ `stats.latte` — full read. JSON encode in single-quoted attributes (`data-hours='{json_encode(...)}'`); attribute escape preserves `"` as `&quot;`, browser dataset returns decoded — JSON.parse works.
+- [x] `tabsheet.tpl` ↔ `tabsheet.latte` — full read. `$tabsheet[*]['caption']` plain l10n text, `['url']` plain.
 - [ ] `tags.tpl` ↔ `tags.latte`
 - [ ] `themes_installed.tpl` ↔ `themes_installed.latte`
-- [ ] `themes_new.tpl` ↔ `themes_new.latte`
+- [x] `themes_new.tpl` ↔ `themes_new.latte` — full read. theme metadata from API; plain.
 - [ ] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
 - [ ] `updates_ext.tpl` ↔ `updates_ext.latte`
 - [ ] `updates_pwg.tpl` ↔ `updates_pwg.latte`
 - [ ] `upgrade.tpl` ↔ `upgrade.latte`
 - [ ] `user_activity.tpl` ↔ `user_activity.latte`
 - [ ] `user_list.tpl` ↔ `user_list.latte`
-- [ ] `user_perm.tpl` ↔ `user_perm.latte`
+- [~] `user_perm.tpl` ↔ `user_perm.latte` — full read. `$TITLE` plain Lang::t. `$categories_because_of_groups` entries Html-wrapped at producer (UsersController:312, getCatDisplayNameCache returns HTML breadcrumb).
 
 ## themes/admin/_base/template/include (6)
 

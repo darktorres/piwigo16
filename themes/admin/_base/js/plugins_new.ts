@@ -173,9 +173,6 @@ function applyFilter(changed: string, value: string | number) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const betaTestPlugins = document.getElementById('showBetaTestPlugin')!.hasAttribute('checked');
-    const minCertification = betaTestPlugins ? -1 : 0;
-
     document
         .querySelector<HTMLSelectElement>('select[name="selectOrder"]')
         ?.addEventListener('change', function (this: HTMLSelectElement) {
@@ -288,8 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const certSliderEl = qs<HTMLElement>('.certification-filter-slider')!;
     const certSlider = noUiSlider.create(certSliderEl, {
-        range: { min: minCertification, max: 3 },
-        start: minCertification,
+        range: { min: 0, max: 3 },
+        start: 0,
         step: 1,
         connect: [true, false],
     });
@@ -300,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateRatingFilterLabel(0);
-    updateCertificationFilterLabel(minCertification);
+    updateCertificationFilterLabel(0);
     updateRevisionFilterLabel(0);
 
     filters = {
@@ -308,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         author: '',
         tag: '',
         rating: 0,
-        certification: minCertification,
+        certification: 0,
         revision: value_to_month(0)[0],
     };
     void certValue;
@@ -323,18 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = el.textContent;
         if (text.length > 30) el.textContent = text.slice(0, 30) + '...';
     });
-
-    document
-        .getElementById('showBetaTestPlugin')
-        ?.addEventListener('change', function (this: HTMLInputElement) {
-            qs('.beta-test-plugin-switch .slider')?.classList.add('loading');
-            // URLSearchParams would percent-encode the leading "/admin" sentinel
-            // that Piwigo's router matches on, breaking the admin dispatch.
-            const search = window.location.search.replace(/[?&]beta-test=[^&]*/, '');
-            const sep = search.length > 1 ? '&' : '?';
-            window.location.search =
-                search + sep + 'beta-test=' + (this.checked ? 'true' : 'false');
-        });
 });
 
 export {};

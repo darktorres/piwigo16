@@ -2758,16 +2758,6 @@ div.jGrowl div.jGrowl-notification {
   position: relative;
 }
 
-.beta-test-plugin-switch {
-  position: absolute;
-  left: 0;
-}
-
-.beta-test-plugin-switch label {
-  font-weight: bold;
-  margin-left: 5px;
-}
-
 #availablePlugins {
   display: flex;
   flex-wrap: wrap;

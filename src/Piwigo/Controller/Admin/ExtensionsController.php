@@ -334,9 +334,7 @@ final class ExtensionsController
 
         $tpl->assign('order_options', ['date' => Lang::t('Post date'), 'revision' => Lang::t('Last revisions'), 'name' => Lang::t('Name'), 'author' => Lang::t('Author'), 'downloads' => Lang::t('Number of downloads')]);
 
-        $beta_test = (isset($_GET['beta-test']) && $_GET['beta-test'] == 'true');
-
-        if ($plugins->getServerPlugins(true, $beta_test)) {
+        if ($plugins->getServerPlugins(true)) {
             if (ServiceLocator::get(SessionService::class)->getSessionVar('plugins_new_order') != null) {
                 $order_selected = ServiceLocator::get(SessionService::class)->getSessionVar('plugins_new_order');
                 $plugins->sortServerPlugins(is_string($order_selected) ? $order_selected : 'date');
@@ -358,21 +356,8 @@ final class ExtensionsController
                 $now_date           = date_create();
                 $last_revision_diff = ($rev_date !== false && $now_date !== false) ? date_diff($rev_date, $now_date) : new \DateInterval('P0D');
 
-                $certification       = 1;
-                $has_compatible_version = false;
-                if ($beta_test) {
-                    $compatVersions = is_array($plugin['compatible_with_versions'] ?? null) ? $plugin['compatible_with_versions'] : [];
-                    foreach ($compatVersions as $vers) {
-                        if (AppInfo::branchFromVersion(is_string($vers) ? $vers : '') == AppInfo::branchFromVersion(AppInfo::VERSION)) {
-                            $has_compatible_version = true;
-                        }
-                    }
-                } else {
-                    $has_compatible_version = true;
-                }
-                if (!$has_compatible_version) {
-                    $certification = -1;
-                } elseif ($last_revision_diff->days < 90) {
+                $certification = 1;
+                if ($last_revision_diff->days < 90) {
                     $certification = 3;
                 } elseif ($last_revision_diff->days < 180) {
                     $certification = 2;
@@ -404,16 +389,12 @@ final class ExtensionsController
             PageState::current()->addError(Lang::t('Can\'t connect to server.'));
         }
 
-        if (!$beta_test && preg_match('/(beta|RC)/', AppInfo::VERSION)) {
-            $tpl->assign('BETA_URL', $base_url . '&beta-test=true');
-        }
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
-        $tpl->assign('BETA_TEST', $beta_test);
         $tpl->assign('page_data_json', json_encode([
             'str_confirm_msg'   => Lang::t('Yes, I am sure'), 'str_cancel_msg' => Lang::t('No, I have changed my mind'), 'str_install_title' => Lang::t('Are you sure you want to install the plugin "%s"?'),
             'str_x_month' => Lang::t('%d month'), 'str_x_months' => Lang::t('%d months'), 'str_x_year' => Lang::t('%d year'), 'str_x_years' => Lang::t('%d years'),
             'str_from_begining' => Lang::t('since the beginning'),
-            'strs_certification' => ['-1' => Lang::t('This plugin is incompatible with your version'), '0' => Lang::t('This plugin have no update since 3 years ! It may be outdated'), '1' => Lang::t('This plugin has no recent update'), '2' => Lang::t('This plugin was updated less than 6 months ago'), '3' => Lang::t('This plugin have been updated recently')],
+            'strs_certification' => ['0' => Lang::t('This plugin have no update since 3 years ! It may be outdated'), '1' => Lang::t('This plugin has no recent update'), '2' => Lang::t('This plugin was updated less than 6 months ago'), '3' => Lang::t('This plugin have been updated recently')],
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_new.latte');
     }

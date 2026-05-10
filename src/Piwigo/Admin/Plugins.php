@@ -348,51 +348,24 @@ final class Plugins
         }
     }
 
-    // Retrieve PEM versions
-    // Beta test : return last version on PEM if the current version isn't known or else return the current and the last version
     /**
+     * Return the PEM version id matching the current Piwigo branch, or empty if not on PEM yet.
+     *
      * @return string[]
      */
-    public function getVersionsToCheck(bool $beta_test = false): array
+    public function getVersionsToCheck(): array
     {
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
         $result = '';
         if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
-            $i = 0;
-
-            // If the actual version exist, put the PEM id in $versions_to_check
-            while ($i < count($pem_versions) && count($versions_to_check) == 0) {
-                if (!is_array($pem_versions[$i]) || !isset($pem_versions[$i]['name'], $pem_versions[$i]['id'])) {
-                    $i++;
+            foreach ($pem_versions as $entry) {
+                if (!is_array($entry) || !isset($entry['name'], $entry['id'])) {
                     continue;
                 }
-                if (AppInfo::branchFromVersion(is_scalar($pem_versions[$i]['name']) ? (string) $pem_versions[$i]['name'] : '') == AppInfo::branchFromVersion(AppInfo::VERSION)) {
-                    $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
-                }
-                $i++;
-            }
-
-            // If $beta_test is true, search the previous version
-            if ($beta_test) {
-                // If the actual version is not in PEM, put the latest PEM version
-                if (count($versions_to_check) == 0) {
-                    if (is_array($pem_versions[0]) && isset($pem_versions[0]['id'])) {
-                        $versions_to_check[] = is_scalar($pem_versions[0]['id']) ? (string) $pem_versions[0]['id'] : '';
-                    }
-                } else { // Else search the next version in PEM
-                    $has_found_previous_version = false;
-                    while ($i < count($pem_versions) && !$has_found_previous_version) {
-                        if (!is_array($pem_versions[$i]) || !isset($pem_versions[$i]['id'])) {
-                            $i++;
-                            continue;
-                        }
-                        if ($pem_versions[$i]['id'] != $versions_to_check[0]) {
-                            $versions_to_check[] = is_scalar($pem_versions[$i]['id']) ? (string) $pem_versions[$i]['id'] : '';
-                            $has_found_previous_version = true;
-                        }
-                        $i++;
-                    }
+                if (AppInfo::branchFromVersion(is_scalar($entry['name']) ? (string) $entry['name'] : '') == AppInfo::branchFromVersion(AppInfo::VERSION)) {
+                    $versions_to_check[] = is_scalar($entry['id']) ? (string) $entry['id'] : '';
+                    break;
                 }
             }
         }
@@ -400,12 +373,11 @@ final class Plugins
     }
 
     /**
-     * Retrieve PEM server datas to $server_plugins
-     * $beta_test parameter add plugins compatible with the previous version
+     * Retrieve PEM server datas to $server_plugins.
      */
-    public function getServerPlugins(bool $new = false, bool $beta_test = false): bool
+    public function getServerPlugins(bool $new = false): bool
     {
-        $versions_to_check = $this->getVersionsToCheck($beta_test);
+        $versions_to_check = $this->getVersionsToCheck();
         if (empty($versions_to_check)) {
             return true;
         }

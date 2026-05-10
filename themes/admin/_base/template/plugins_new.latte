@@ -6,14 +6,6 @@
 <div class="titrePage">
   <div class="sort">
     <div class="sort-actions">
-      <div class="beta-test-plugin-switch tiptip" title="{='Show plugins compatible with previous version of Piwigo'|translate}">
-        <label class="switch">
-          <input type="checkbox" id="showBetaTestPlugin" {if $BETA_TEST}checked{/if}>
-          <span class="slider round"></span>
-        </label>
-        <label for='showBetaTestPlugin'>{='Show beta test plugins'|translate}</label>
-      </div>
-      
       <div class="sort-by">
       <label>{='Sort order'|translate}</label>
       <div class="select-container">
@@ -136,8 +128,6 @@
               title="{='This plugin has no recent update'|translate}"
             {elseif $plugin['CERTIFICATION'] == 0}
               title="{='This plugin have no update since 3 years ! It may be outdated'|translate}"
-            {elseif $plugin['CERTIFICATION'] == -1}
-              title="{='This plugin is incompatible with your version'|translate}"
             {/if}
           ></i>
         </div>
@@ -181,9 +171,5 @@
 {/foreach}
 </div>
 {else}
-<p>{='There is no other plugin available.'|translate}
-{if isset($BETA_URL)}
-  <a href="{$BETA_URL}" class="buttonLike icon-fire">{='Show beta test plugins'|translate}</a>
-{/if}
-</p>
+<p>{='There is no other plugin available.'|translate}</p>
 {/if}

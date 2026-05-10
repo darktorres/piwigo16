@@ -210,9 +210,19 @@ final class PiwigoExtension extends Extension
         return date(strtr($format, $map), $timestamp);
     }
 
-    public static function translate(string $key, string|int|float|bool|null ...$args): string
+    public static function translate(string $key, string|int|float|bool|null|Html ...$args): string
     {
-        return Lang::t($key, ...$args);
+        // Html-wrapped substitution args are common when the surrounding
+        // template does `|translate:$VAR|noescape` and $VAR was assigned
+        // by a controller wrapping pre-escaped HTML (e.g. InstallController's
+        // $EMAIL). Cast to string so sprintf's %s substitution works; the
+        // template's `|noescape` (or an outer Html wrap) controls whether
+        // the result is auto-escaped.
+        $stringArgs = array_map(
+            static fn (string|int|float|bool|null|Html $a): string|int|float|bool|null => $a instanceof Html ? (string) $a : $a,
+            $args,
+        );
+        return Lang::t($key, ...$stringArgs);
     }
 
     public static function translateDec(int $count, string $singular, string $plural): string

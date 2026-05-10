@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { TEST_PHOTOS } from './helpers/test-data.js';
 
@@ -113,10 +114,13 @@ imagestring($img, 5, 350, 280, "${label}", imagecolorallocate($img, 255, 255, 25
 imagejpeg($img, "${p.replace(/\\/g, '/')}", 90);
 imagedestroy($img);`;
         }).join('\n');
-    const tmpScript = path.join(REPO_ROOT, '_data', 'gen-test-images.php');
+    const tmpScript = path.join(os.tmpdir(), `piwigo-gen-test-images-${process.pid}.php`);
     fs.writeFileSync(tmpScript, phpScript);
-    await execAsync(`php ${tmpScript}`);
-    fs.unlinkSync(tmpScript);
+    try {
+        await execAsync(`php ${tmpScript}`);
+    } finally {
+        fs.unlinkSync(tmpScript);
+    }
 
     // Redirect fixture photo paths from upload/ to galleries/Wallpapers/
     // so source files are always present (generated above) regardless of

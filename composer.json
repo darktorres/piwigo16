@@ -50,6 +50,8 @@
     "rector/swiss-knife": "^2.3",
     "rector/type-perfect": "^2.1",
     "symfony/process": "^8.0",
+    "symplify/coding-standard": "^13.0",
+    "symplify/easy-coding-standard": "^13.1",
     "vimeo/psalm": "^6.16"
   },
   "suggest": {

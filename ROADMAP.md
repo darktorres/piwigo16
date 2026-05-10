@@ -16,7 +16,7 @@
 | 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | CSP, rate limit, lockout, sessions, `SECURITY.md`                                                                                   |
 | 1.5 | Type correctness              | 🟡 **Not started**                            | M–L       | mixed-types · entity layer · HTTP boundary · globals · schema metadata                                                              |
 | 1.6 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
-| 1.7 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate                                                                                           |
+| 1.7 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                  |
 | 2.1 | TS `any` reduction            | 🟡 **Not started**                            | M         | 478 → ≤250 patterns                                                                                                                 |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**                            | M         | TS unit-test runner + first wave                                                                                                    |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**                            | S         | per-entrypoint gzip limits in CI                                                                                                    |
@@ -1962,7 +1962,7 @@ open build/infection/report.html   # visualize surviving mutants per file
 
 ### 1.7 Deferred / on-demand
 
-**Status:** 🟠 On-demand · 4 items · no scheduled effort
+**Status:** 🟠 On-demand · 5 items · no scheduled effort
 
 Real backlog — passive, executed only when a deployment or audit demands.
 Each item has a clear trigger condition; do nothing until that condition
@@ -2036,6 +2036,40 @@ Dependabot (current) ships no built-in auto-merge. Today's manual review
 is fine for the cadence we see (a handful of PRs/week, all reviewable in
 minutes). If churn grows or the team scales, port the auto-merge
 workflow from the original Renovate spec.
+
+#### Drop ScriptLoader dependency machinery
+
+**Trigger:** next asset-pipeline change that touches `ScriptLoader::add()`
+or `getFooterScripts()`, or when adding an entry whose declaration order
+is non-obvious.
+
+Follow-up to commit `9dcc8b15b` (concat-era cleanup). With every JS entry
+now a Vite manifest entry, `<script type="module">` execution is
+document-ordered, so the `require:` / `precedents` /
+`computeScriptTopologicalOrder` / `checkLoadDep` plumbing in
+`src/Piwigo/Template/ScriptLoader.php` is largely redundant. Its one
+load-bearing job is the rule "predecessor of an `async` script must be
+`footer`," which has 2 callers today
+(`themes/_base/template/picture.latte` rating chain;
+`themes/admin/_base/template/batch_manager_global.latte`). The other 13
+`require:` uses are `footer` → `footer` chains where the Latte template
+already declares the predecessor lexically first.
+
+To remove:
+
+1. Audit all 15 `require:`-using `.latte` templates; confirm the
+   predecessor's `combineScript()` precedes the dependent's lexically.
+   Reorder where needed.
+2. Convert the 2 async-with-`require:` cases to plain `footer`, or split
+   the chain so the predecessor stays in `footer` and the dependent's
+   `async` doesn't need to wait.
+3. Drop the `require:` parameter from `combineScript()` /
+   `ScriptLoader::add()`, the `precedents` field on `Script`, and
+   `computeScriptTopologicalOrder` / `checkLoadDep`.
+4. Reduce `cmpByModeAndOrder` to a `load_mode` + `id` sort.
+
+Net delta: another ~80 lines off `ScriptLoader.php` plus one named arg
+gone from the public asset-pipeline surface.
 
 ---
 

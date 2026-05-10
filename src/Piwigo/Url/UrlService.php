@@ -307,7 +307,7 @@ final class UrlService
                         }
                         switch (Config::tagUrlStyle()) {
                             case 'id':
-                                $sectionString .= '/' . (is_string($tag['id'] ?? null) ? $tag['id'] : '');
+                                $sectionString .= '/' . (is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '');
                                 break;
                             case 'tag':
                                 if (isset($tag['url_name'])) {
@@ -316,7 +316,7 @@ final class UrlService
                                 }
                                 // no break
                             default:
-                                $sectionString .= '/' . (is_string($tag['id'] ?? null) ? $tag['id'] : '');
+                                $sectionString .= '/' . (is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '');
                                 if (isset($tag['url_name'])) {
                                     $sectionString .= '-' . (is_string($tag['url_name']) ? $tag['url_name'] : '');
                                 }

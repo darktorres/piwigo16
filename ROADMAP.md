@@ -722,7 +722,7 @@ rm themes/_base/template/_probe.latte
 
 ### 1.3 Plugin / theme system + WS plugin surface
 
-**Status:** 🟡 Not started · **Effort:** XL · 4 sub-items
+**Status:** 🟢 Active ▸ foundation partial · **Effort:** L · 3 phases
 
 **Prerequisite landed.** `AppInfo::VERSION` was bumped from `16.3.0` to
 `17.0.0` (commit `26377fe07`) so PEM's branch-16 entries no longer match
@@ -731,11 +731,49 @@ flagged incompatible — the rewrite below replaces them on the fork's
 own branch. See the **Fork identity** subsection for the runtime
 implications.
 
-**Why one section, not four.** The same plugin contract drives all four
-sub-items: typed event dispatching, declarative manifests, lifecycle
-methods, and reflection-based WS handler discovery. Phase 1 plugins lay
-the foundation; Phase 2 themes reuse it for theme-specific concerns; the
-WS-side work is the same plugin migration viewed from the WS layer.
+**Strategy.** Three phases share one contract:
+
+- **Phase 1 — Plugins.** `PluginInterface`, `plugin.json`, PSR-14 typed
+  events, lifecycle methods, DI hookup.
+- **Phase 2 — Themes.** Mirrors Phase 1 with `ThemeInterface`,
+  `theme.json`, side-effect → `boot()` refactor.
+- **Phase 3 — WS API enrichment.** Reflection-driven `#[ApiMethod]`
+  reading and OpenAPI CI gate, riding on the registry Phase 1 builds.
+
+Languages are out of scope — they're `.po` + `.lang` + `index.php` with
+no behavior to gate; no manifest needed. **No bridges, no deprecation
+window** — the 17.0 bump is the deprecation. Plugins or themes without
+a valid `plugin.json` / `theme.json` declaring `minPiwigo: "17.0"` are
+refused at load time and listed under admin → Plugins → Incompatible.
+
+**Foundation already landed:**
+
+- `src/Piwigo/Plugins/EventDispatcher.php` — static priority-bucketed
+  event dispatcher with `addListener` / `dispatch` / `notify`. Maintains
+  a `$GLOBALS['pwg_event_handlers']` bridge so legacy plugin code that
+  writes the global directly still works.
+- `src/Piwigo/Plugins/LoadedPluginRegistry.php` — replaces the legacy
+  `$pwg_loaded_plugins` global.
+- `src/Piwigo/Plugin/PluginRepository.php` + `PluginService.php` — DB
+  persistence and current loader orchestration (loads `main.inc.php`
+  directly; no `plugin.json` yet).
+- `src/Piwigo/Theme/ThemeRepository.php` — DB persistence; no theme
+  domain model yet.
+- `src/Piwigo/Ws/OpenApi/ApiMethod.php` — `#[ApiMethod]` attribute is
+  declared, no endpoint method uses it yet.
+- `PwgServer::register(MethodDefinition)` is the only WS-method
+  registration path; `addMethod()` was removed during the front
+  controller migration.
+
+**Still missing:**
+
+- `Piwigo\Plugin\PluginInterface` + `Piwigo\Plugin\PluginRegistry`.
+- `Piwigo\Theme\ThemeInterface` + `Piwigo\Theme\ThemeRegistry`.
+- Typed event DTOs under `src/Piwigo/Event/`.
+- A PSR-14 instance dispatcher (the existing one is static and tied to
+  the `$GLOBALS` bridge — see Phase 1 "PSR-14 typed events").
+- `plugin.json` and `theme.json` schema readers.
+- Per-plugin and per-theme migration commits.
 
 #### Phase 1 — Plugins
 
@@ -767,8 +805,17 @@ interface PluginInterface
 
 ##### PSR-14 typed events
 
-`composer require psr/event-dispatcher symfony/event-dispatcher`. Replace
-string event names with typed event objects under `src/Piwigo/Event/`:
+The existing `Piwigo\Plugins\EventDispatcher` is **static** and routes
+through `$GLOBALS['pwg_event_handlers']` — it can't be retrofitted into
+PSR-14 cleanly because PSR-14 dispatchers are instance methods. The
+plan is to build a new instance dispatcher alongside it and migrate
+callers, not extend the existing one.
+
+1. `composer require psr/event-dispatcher`.
+2. Add `Piwigo\Event\EventDispatcher` implementing
+   `Psr\EventDispatcher\EventDispatcherInterface` and
+   `Psr\EventDispatcher\ListenerProviderInterface`.
+3. Add typed event DTOs under `src/Piwigo/Event/`:
 
 ```php
 namespace Piwigo\Event;
@@ -782,8 +829,9 @@ final readonly class PictureRendered
 }
 ```
 
-Subscribers receive the typed object and can mutate output via clone-and-modify
-methods for the `trigger_change` use case:
+Subscribers receive the typed object and can mutate output via clone-
+and-modify methods (the `trigger_change` use case from the old
+dispatcher):
 
 ```php
 final readonly class TemplateAssigned
@@ -800,45 +848,10 @@ final readonly class TemplateAssigned
 }
 ```
 
-`Piwigo\Event\EventDispatcher` is registered in the DI container as the
-`Psr\EventDispatcher\EventDispatcherInterface` implementation.
-
-##### Legacy compatibility bridge
-
-`add_event_handler('user_login', $callback)` keeps working — both for
-plugins and for themes that register handlers from `themeconf.inc.php`.
-The bridge in `src/Piwigo/Compat/LegacyEvents.php` maps string event
-names to the new typed events; when a typed `UserAuthenticated` is
-dispatched, registered legacy listeners are also invoked with the bridged
-args:
-
-```php
-final class LegacyEvents
-{
-    /** @var array<string, list<callable>> */
-    private static array $handlers = [];
-
-    public static function bridge(string $oldName, callable $cb): void
-    {
-        if (!isset(self::$bridged[$oldName])) {
-            trigger_error(
-                "add_event_handler('$oldName') is deprecated; use PSR-14 typed events.",
-                E_USER_DEPRECATED
-            );
-        }
-        self::$handlers[$oldName][] = $cb;
-    }
-
-    public static function dispatchLegacy(object $event): void
-    {
-        $oldName = self::EVENT_MAP[$event::class] ?? null;
-        if ($oldName === null) return;
-        foreach (self::$handlers[$oldName] ?? [] as $cb) {
-            $cb(...self::flatten($event));
-        }
-    }
-}
-```
+4. Bind `Piwigo\Event\EventDispatcher` in the DI container under
+   `Psr\EventDispatcher\EventDispatcherInterface`.
+5. Once all callers have migrated, delete `Piwigo\Plugins\EventDispatcher`
+   and the `$GLOBALS['pwg_event_handlers']` bridge with it.
 
 ##### Fork identity
 
@@ -882,14 +895,38 @@ applied locally at load time.
 `AppInfo::branchFromVersion(AppInfo::VERSION)` and rejects anything that
 doesn't match — so a manifest with `minPiwigo: "16.0"` (the stock line)
 is refused by design, while `"17.0"` (or later, once the fork advances
-its branch) is accepted. During the migration window the legacy bridge
-still loads old plugins that have no `plugin.json` at all; once the
-bridge is removed, `plugin.json` with `minPiwigo` is required for
-everything.
+its branch) is accepted. Directories without `plugin.json` at all are
+refused for the same reason: stock-16 plugins have no manifest and are
+not loaded.
 
 `Piwigo\Plugin\PluginRegistry` reads the manifest, registers PSR-4
 autoload, instantiates the main class, and calls `boot()`. The plugin
 admin UI reads `plugin.json` instead of parsing `main.inc.php` headers.
+
+##### WS-method registration
+
+Plugins that expose Web Service methods do so by subscribing to a
+`WsServerBoot` typed event and calling `register(MethodDefinition)` on
+the provided server. (`PwgServer::addMethod()` was removed during the
+front controller migration; it no longer exists.)
+
+```php
+public function onWsServerBoot(WsServerBoot $event): void
+{
+    $event->server->register(new MethodDefinition(
+        name:         'pwg.my.method',
+        callback:     ServiceLocator::get(MyEndpoints::class)->myMethod(...),
+        description:  'Description shown in the API browser',
+        params:       [
+            ParamDefinition::required(name: 'photo_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
+        ],
+        tags:         ['my'],
+        requiresAuth: true,
+    ));
+}
+```
+
+The handler shows up in `subscribedEvents()` keyed by `WsServerBoot::class`.
 
 ##### Migration walkthrough — generic plugin
 
@@ -937,11 +974,20 @@ public function boot(ContainerInterface $c): void
 }
 ```
 
-##### Deprecation timeline
+`ContainerInterface` here is `Psr\Container\ContainerInterface`. The
+codebase currently uses the static `Piwigo\Core\ServiceLocator` — Phase 1
+introduces a PSR-11 facade around `ServiceLocator` (or replaces it with
+a real PSR-11 container) so plugin `boot()` has a typed handle without
+forcing every internal callsite to migrate at once.
 
-Keep the legacy API working through one minor release with
-`E_USER_DEPRECATED`. Plan removal one major release later. Document the
-timeline in `docs/PLUGIN-DEVELOPMENT.md`.
+##### Removal note
+
+Old plugins are not deprecated — they're refused. `PluginRegistry::load()`
+skips any directory lacking a valid `plugin.json` and lists it under
+admin → Plugins → Incompatible. No `E_USER_DEPRECATED`, no carry-over
+release: the 17.0 version bump is the removal signal. The rewrite
+cookbook for plugin authors goes in `docs/PLUGIN-DEVELOPMENT.md` (to be
+added alongside this section's first commit).
 
 #### Phase 2 — Themes
 
@@ -1032,14 +1078,6 @@ forcing third-party themes to extend a base class. (Alternative
 considered: class inheritance via `extends DefaultTheme`. Rejected
 because it forces a brittle hierarchy on third-party authors.)
 
-##### Legacy `themeconf.inc.php` shim
-
-For themes that haven't migrated, the registry detects a missing
-`theme.json`, falls back to including `themeconf.inc.php`, and synthesizes
-a `LegacyTheme` instance from the resulting `$themeconf` array. The
-synthesized instance routes any registered legacy event handlers through
-the Phase 1 bridge.
-
 ##### Theme switch event
 
 ```php
@@ -1073,9 +1111,8 @@ One commit per theme:
 3. Move `themeconf.inc.php` side-effects into `boot()`.
 4. Convert `ThemeMaintain` callers to the new lifecycle methods.
 5. Convert templates to Latte (folded into 1.2 Wave 2 — D.public / D.standard_pages).
-6. Replace `themeconf.inc.php` with a one-liner that throws
-   `E_USER_DEPRECATED` if any legacy code reaches for `$themeconf`
-   directly.
+6. Delete `themeconf.inc.php`. Themes without `theme.json` are refused
+   by `ThemeRegistry`; there is no `$themeconf` array to reach for.
 
 ##### Soft dependency on 3.1
 
@@ -1083,49 +1120,19 @@ The CSS skin refactor in 3.1 step 8 presumes the `theme.json` layout —
 specifically the per-skin `assets:` map. Whichever lands first sets the
 layout the other adopts.
 
-#### Migrate plugins off `PwgServer::addMethod()`
-
-**Status:** 🟡 Not started · folded into Phase 1 work
-
-`PwgServer::addMethod()` was retired during the front-controller migration;
-`register(MethodDefinition)` is the only WS-method registration path now.
-The registration moved from anonymous-callback to typed-definition:
-
-```php
-// before — addMethod (no longer exists)
-$service->addMethod('pwg.my.method', 'my_handler', [
-    'photo_id' => ['default' => null],
-]);
-
-// after — register
-$service->register(new MethodDefinition(
-    name:         'pwg.my.method',
-    callback:     ServiceLocator::get(MyEndpoints::class)->myMethod(...),
-    description:  'Description shown in the API browser',
-    params:       [
-        ParamDefinition::required(name: 'photo_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
-    ],
-    tags:         ['my'],
-    requiresAuth: true,
-));
-```
-
-Plugins still calling `addMethod` will fatal at runtime. Same work as
-Phase 1 — the `register()` migration happens inside each plugin's
-`PluginInterface` conversion (specifically inside `subscribedEvents()`
-on the `WsServerBoot` event).
-
-#### OpenAPI follow-ups
+#### Phase 3 — WS API enrichment
 
 **Status:** 🟡 Not started · depends on Phase 1
 
-Once plugin handlers are reflection-accessible controller classes (which
-they become as part of Phase 1), two follow-ups land:
+Once plugin handlers are reflection-accessible classes (which they
+become as part of Phase 1), two follow-ups land.
 
 ##### `#[ApiMethod]` attribute reading
 
-Teach `SpecBuilder` to read the existing `#[ApiMethod]` attribute for
-per-method enrichment:
+The attribute class at `src/Piwigo/Ws/OpenApi/ApiMethod.php` is already
+defined but dormant — no endpoint method uses it yet. Phase 3 work:
+
+1. Decorate every endpoint method with `#[ApiMethod(...)]`:
 
 ```php
 final class ImagesEndpoints
@@ -1139,9 +1146,9 @@ final class ImagesEndpoints
 }
 ```
 
-`SpecBuilder` walks the registered endpoint classes via reflection, reads
-the attribute, and emits richer OpenAPI metadata than what
-`MethodDefinition` carries today.
+2. Teach `SpecBuilder` to walk registered endpoint classes via
+   reflection, read the attribute, and emit richer OpenAPI metadata
+   than what `MethodDefinition` carries today.
 
 ##### CI gate validating the generated spec
 
@@ -1162,9 +1169,6 @@ Three options, pick one when the work lands:
 curl -s 'http://localhost/index.php?/ws?_openapi=json' \
   | php -r 'echo json_decode(file_get_contents("php://stdin"))->info->title;'
 # → Piwigo Web Services
-
-# Legacy bridge still works for third-party plugins:
-vendor/bin/phpunit --filter LegacyEventBridgeTest
 
 # Event dispatcher conforms to PSR-14:
 php -r 'echo (new Piwigo\Event\EventDispatcher) instanceof Psr\EventDispatcher\EventDispatcherInterface ? "ok" : "fail";'

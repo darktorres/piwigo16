@@ -165,6 +165,7 @@ final class CommonBootstrap
 
         ImageStdParams::loadFromDb();
 
+        SessionBootstrap::bootstrap();
         session_start();
         UserBootstrap::bootstrap();
         EventDispatcher::init();

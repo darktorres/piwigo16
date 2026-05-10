@@ -8,7 +8,7 @@ use Piwigo\Admin\AdminService;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\UpgradeService;
-use Piwigo\Auth\CookieService;
+use Piwigo\Bootstrap\SessionBootstrap;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\TestMode;
@@ -26,7 +26,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
-use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Latte\Runtime\Html;
@@ -282,16 +281,7 @@ final class InstallController implements ControllerInterface
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {
-                session_set_save_handler(new PwgSession());
-                if (function_exists('ini_set')) {
-                    ini_set('session.use_cookies', Config::sessionUseCookies());
-                    ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies());
-                    ini_set('session.use_trans_sid', intval(Config::sessionUseTransSid()));
-                    ini_set('session.cookie_httponly', 1);
-                }
-                session_name(Config::sessionName());
-                session_set_cookie_params(0, CookieService::cookiePath());
-                register_shutdown_function(session_write_close(...));
+                SessionBootstrap::bootstrap();
 
                 $user = UserService::get()->buildUser(1, false);
                 $GLOBALS['user'] = $user;

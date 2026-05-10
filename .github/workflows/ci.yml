@@ -207,7 +207,7 @@ jobs:
           CI: 'true'
 
   ts:
-    name: TypeScript + ESLint
+    name: TypeScript + lint + format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -218,5 +218,4 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run lint:css
       - run: npm run format

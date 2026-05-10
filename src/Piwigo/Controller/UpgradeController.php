@@ -21,6 +21,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\PreferencesService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -58,16 +59,12 @@ final class UpgradeController implements ControllerInterface
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
-            $language = 'en_UK';
-            foreach ($languages->fs_languages as $language_code => $fs_language) {
-                /** @var mixed $httpAccLangRaw */
-                $httpAccLangRaw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-                $httpAccLang = is_string($httpAccLangRaw) ? $httpAccLangRaw : '';
-                if (substr($language_code, 0, 2) == substr($httpAccLang, 0, 2)) {
-                    $language = $language_code;
-                    break;
-                }
-            }
+            $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+            $matched       = PreferencesService::pickFromAcceptLanguage(
+                array_keys($languages->fs_languages),
+                is_string($rawAcceptLang) ? $rawAcceptLang : '',
+            );
+            $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }
 
         if ('fr_FR' == $language) {

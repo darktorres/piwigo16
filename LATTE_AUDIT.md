@@ -90,7 +90,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [~] `profile_content.tpl` ↔ `profile_content.latte` — `name=theme`/`name=language` Smarty barewords incorrectly converted to bare identifiers in Latte; converter `normalizeArgValue` updated to quote barewords. Existing files hand-fixed (×3 sites).
 - [x] `redirect.tpl` ↔ `redirect.latte` — `REDIRECT_MSG` is plain text from callers; faithful.
 - [x] `register.tpl` ↔ `register.latte` — translate-rewrite + `not` → `!`. Faithful.
-- [ ] `search.tpl` ↔ `search.latte` — diff scanned (head + tail only); 135 lines not fully read. Patterns observed are mechanical: `{section start=N loop=M}` → `{foreach range(N, N+M-1)}`, `$smarty.now` → `time()`, `{html_options}` → `htmlOptions()`, `|strip_tags:false` handled.
+- [x] `search.tpl` ↔ `search.latte` — full read both. `{section start=1 loop=32}` → `{foreach range(1, 32) as $day}` ✓ (×2 day dropdowns). `$smarty.now|date_format` → `time()|date_format` ✓ (×6 onclick handlers). `{html_options}` → `htmlOptions()|noescape` ✓ (×3). `|strip_tags:false|escape:html` → `|strip_tags:false` (escape dropped, Latte auto-escapes attribute) ✓. `$AUTHORS`, `$TAGS`, `$month_list`, `$category_options` are plain data structures from controller, no HTML payload. Faithful.
 - [x] `search_rules.tpl` ↔ `search_rules.latte` — straight conversion.
 - [x] `slideshow.tpl` ↔ `slideshow.latte` — `ELEMENT_CONTENT` and `COMMENT_IMG` already wrapped at producer (PictureController).
 - [x] `tags.tpl` ↔ `tags.latte` — straight conversion.
@@ -106,7 +106,7 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/_base/template/help (1)
 
-- [ ] `quick_search.tpl` ↔ `quick_search.latte` — diff scanned (head 40 lines only); 305 lines not fully read.
+- [x] `quick_search.tpl` ↔ `quick_search.latte` — full read both. Pure static help content; only `$is_dark_mode` boolean and translate filters. No HTML-payload vars, no foreach. Faithful.
 
 ## themes/_base/template/mail/text/html (8)
 
@@ -130,11 +130,11 @@ the `.tpl` source would produce the same `.latte` we have.
 ## themes/standard_pages/template (7)
 
 - [x] `footer.tpl` ↔ `footer.latte` — small file; full diff visible. `getCombinedScripts` returns Html.
-- [ ] `header.tpl` ↔ `header.latte` — diff scanned (head only). 102 diff lines.
-- [ ] `identification.tpl` ↔ `identification.latte` — diff scanned (head only). 25-ish diff lines.
-- [ ] `password.tpl` ↔ `password.latte` — diff scanned (head only).
-- [~] `profile.tpl` ↔ `profile.latte` — diff scanned (head only); bareword fixes applied during this session at lines 95, 104, 305 (`name=theme`, `name=language`, `name=api_expiration`). JSON scripts `|noescape` ✓ from converter pass. Body NOT fully read.
-- [ ] `register.tpl` ↔ `register.latte` — diff scanned (head only).
+- [x] `header.tpl` ↔ `header.latte` — full read both. `{strip}` → `{spaceless}`, foreach themes, backtick-string-interp rewritten. `head_elements` push wrapped Html in `PageHeaderRenderer`. Faithful.
+- [~] `identification.tpl` ↔ `identification.latte` — full read both. Converter previously missed adding `=` print prefix to `{'Don\'t have an account yet ?'|translate}` (line 91) due to escaped apostrophe in regex; converter `rewritePrintedLiteralFilter` regex updated to handle `\'`. Latte 3 still accepts the unprefixed form, so existing rendering works. Other content is mechanical translates.
+- [~] `password.tpl` ↔ `password.latte` — full read both. Three sites with HTML inside translate strings hand-fixed `|noescape` (lines 72 `Hello <em>%s</em>...`, 134 `Return to <a href...>`, 151 `An error has occured ... <a href...>`). Converter now has `addNoescapeToHtmlBearingTranslations` pass to apply this rule on regen.
+- [~] `profile.tpl` ↔ `profile.latte` — full read both. Bareword args (`name=theme`, `name=language`, `name=api_expiration`) hand-fixed (3 sites). `API_EMAIL_INFOS` (HTML `<em>%s</em>` translation, ProfileService:235) Html-wrapped at producer; user-email arg htmlspecialchars-escaped before splicing. JSON scripts `|noescape` ✓ from converter pass.
+- [x] `register.tpl` ↔ `register.latte` — full read both. `not` → `!` ✓. Plain text translates only, JSON script `|noescape` ✓.
 - [x] `toaster.tpl` ↔ `toaster.latte` — small file; full diff visible.
 
 ## themes/admin/_base/template (64)

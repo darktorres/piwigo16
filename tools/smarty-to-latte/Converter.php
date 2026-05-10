@@ -80,8 +80,41 @@ final class Converter
         $source = $this->rewritePrintedLiteralFilter($source);
         $source = $this->passForeachLocalsToIncludes($source);
         $source = $this->addNoescapeToJsonScriptBlocks($source);
+        $source = $this->addNoescapeToHtmlBearingTranslations($source);
 
         return $source;
+    }
+
+    /**
+     * Translation strings that embed HTML (`<a href="%s">...`,
+     * `<em>...</em>`, `<strong>...`) must render raw — Smarty's
+     * `escape_html=false` printed them raw; Latte auto-escapes the
+     * filter return and produces visible markup-as-text. Detect
+     * `{=...|translate...}` whose source string literal contains
+     * an HTML start tag and append `|noescape`.
+     */
+    private function addNoescapeToHtmlBearingTranslations(string $source): string
+    {
+        return preg_replace_callback(
+            "/\\{=((?:'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")\\|translate(?:[^|}]*)?(?:\\|[^|}]+)*?)\\}/",
+            static function (array $m): string {
+                $body = $m[1];
+                // Pull the leading string literal.
+                if (preg_match("/^('(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")/", $body, $litMatch) !== 1) {
+                    return $m[0];
+                }
+                $lit = $litMatch[1];
+                // Look for an HTML start tag inside the literal.
+                if (preg_match('/<[a-zA-Z][a-zA-Z0-9]*(?:\\s[^>]*)?>/', $lit) !== 1) {
+                    return $m[0];
+                }
+                if (str_contains($body, '|noescape')) {
+                    return $m[0];
+                }
+                return '{=' . $body . '|noescape}';
+            },
+            $source
+        ) ?? $source;
     }
 
     /**
@@ -1003,7 +1036,7 @@ final class Converter
     private function rewritePrintedLiteralFilter(string $source): string
     {
         return preg_replace(
-            "/\\{(?!=)((?:'[^']*'|\"[^\"]*\"|\\w+\\([^()]*\\)|\\([^()]*\\))\\|\\w[^}]*)\\}/",
+            "/\\{(?!=)((?:'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"|\\w+\\([^()]*\\)|\\([^()]*\\))\\|\\w[^}]*)\\}/",
             '{=$1}',
             $source,
         ) ?? $source;

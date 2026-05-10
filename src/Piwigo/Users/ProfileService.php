@@ -232,9 +232,9 @@ final class ProfileService
 
         $userEmail = is_scalar($user['email'] ?? null) ? (string) $user['email'] : '';
         $email_notifications_infos = $userEmail
-            ? Lang::t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $userEmail)
+            ? Lang::t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', htmlspecialchars($userEmail))
             : Lang::t('You have no email address, so you will not be notified when your API key is about to expire.');
-        $tpl->assign('API_EMAIL_INFOS', $email_notifications_infos);
+        $tpl->assign('API_EMAIL_INFOS', new \Latte\Runtime\Html($email_notifications_infos));
 
         EventDispatcher::notify('load_profile_in_template', $userdata);
         $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());

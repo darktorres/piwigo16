@@ -20,7 +20,7 @@
   
   {if isset($footer_elements)}
   {foreach $footer_elements as $elt}
-    {$elt}
+    {$elt|noescape}
   {/foreach}
   {/if}
 </div>{* <!-- copyright --> *}

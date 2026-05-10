@@ -54,7 +54,7 @@ final class PageTailRenderer
 
         if (Config::showQueries()) {
             $debug = $GLOBALS['debug'] ?? '';
-            $debug_vars['QUERIES_LIST'] = $debug;
+            $debug_vars['QUERIES_LIST'] = new \Latte\Runtime\Html(is_string($debug) ? $debug : '');
         }
 
         if (Config::showGt()) {

@@ -51,11 +51,11 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/_base/template (36)
 
-- [~] `about.tpl` ↔ `about.latte` — HTML-payload prints lack `|noescape` (`{$MENUBAR}`, `{$ABOUT_MESSAGE}`, `{$THEME_ABOUT}`, `{$elt}` from `$about_msgs` foreach)
-- [~] `comment_list.tpl` ↔ `comment_list.latte` — Latte auto-escape semantics apply at the textarea body (`{$comment['CONTENT']}` line 56) — Smarty's `|escape` was explicit; Latte does it too, so functionally equivalent. Faithful otherwise.
-- [~] `comments.tpl` ↔ `comments.latte` — `{$MENUBAR}` (line 1) and `{$COMMENT_LIST}` (line 107) need `|noescape`
-- [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` dropped (line 15); `{=getCombinedScripts(load: 'footer')}` (line 36) lacks `|noescape`; `{$elt}` from `$footer_elements` is plugin HTML
-- [~] `header.tpl` ↔ `header.latte` — `|strip_tags:false` (lines 12, 18) becomes PHP `strip_tags($x, false)` → TypeError under PHP 8; `{=getCombinedCss()}` (line 55) and `{=getCombinedScripts(load: 'header')}` (line 57) lack `|noescape`; `{$elt}` from `$head_elements` and `$header_msgs` and `$header_notes` foreach are plugin HTML; `{$PAGE_BANNER|default:''}` (line 80) is admin-set HTML; `<script type="application/json">{['wsUrl' => $WS_URL]|json_encode}</script>` (line 65) — under Latte's `<script>` JS-context auto-escape, the JSON output may get re-escaped (verify at runtime, may need `|noescape`); `{strip}` → `{spaceless}` correct
+- [x] `about.tpl` ↔ `about.latte` — `MENUBAR` auto-Html via `assignVarFromHandle`. `ABOUT_MESSAGE`/`THEME_ABOUT` wrapped Html in AboutController. `$about_msgs` is plugin territory (no current producer); plugins must wrap entries Html.
+- [x] `comment_list.tpl` ↔ `comment_list.latte` — Display `CONTENT` (rendered HTML) wrapped Html in `PictureCommentRenderer:182` and `CommentsController:352`. Edit-mode `CONTENT` left raw (textarea text input — auto-escape correct).
+- [x] `comments.tpl` ↔ `comments.latte` — `MENUBAR` and `COMMENT_LIST` auto-Html via `assignVarFromHandle`. `htmlOptions(...)` already gets `|noescape` from converter. Faithful.
+- [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓ (converter rule). `getCombinedScripts` returns Html ✓. `QUERIES_LIST` wrapped Html in `PageTailRenderer:57`. `{$elt}` from `$footer_elements` hand-fixed `|noescape` (plugin debug HTML payload — preserve on regen).
+- [~] `header.tpl` ↔ `header.latte` — `|strip_tags:false` handled by `PiwigoExtension::stripTags` wrapper ✓. `getCombinedCss/Scripts` return Html ✓. `PAGE_BANNER` wrapped Html in `PageHeaderRenderer:39`. `head_elements` push wrapped Html in `PageHeaderRenderer:64`. `header_msgs` upgrade-feed entry wrapped Html in `CommonBootstrap:310`. `header_notes` is plain l10n text (auto-escape neutral). JSON `<script>` data block hand-fixed `|noescape` (preserve on regen). `{strip}` → `{spaceless}` ✓.
 - [ ] `identification.tpl` ↔ `identification.latte`
 - [ ] `index.tpl` ↔ `index.latte`
 - [ ] `infos_errors.tpl` ↔ `infos_errors.latte`
@@ -294,6 +294,31 @@ Two fixes possible:
 Option 2 is safer because Smarty's bare `|strip_tags` (no arg, default true =
 "replace with space") would then keep working for any plugin templates that
 use the defaulted form.
+
+### Systemic — REL attribute fragments need `|noescape` in tag context
+
+`MenubarRenderer` populates `$block->data[*]['REL']` with HTML attribute
+fragments (`'rel="nofollow"'`, `'rel="search"'`). Templates print these
+between `<a` and `>` (tag context). Latte's tag-context escaper escapes
+`=` and `"` even on `Html` objects, breaking the attribute. The producer
+side cannot fix this — the data shape is intentionally an attribute
+fragment. Hand-fix in templates: `{$link['REL']|noescape}`. Affected:
+`menubar_specials.latte:5`, `menubar_menu.latte:13`. (Cleaner long-term:
+refactor producer to emit `'rel' => 'nofollow'` and template does
+`rel="{$link['rel']}"`. Out of scope for the audit.)
+
+### Systemic — HTML literals piped through `str_repeat` need `|noescape`
+
+`{='</ul></li>'|str_repeat:N}` — Smarty (escape_html=false) printed raw;
+Latte auto-escapes the str_repeat output. Hand-fix `|noescape`. Affected:
+`menubar_categories.latte:17,29`. Converter could detect string literals
+containing `<` chars piped through repeat-style filters, but heuristic.
+
+### Systemic — section_title is HTML, must be wrapped Html
+
+`SectionInitializer:435` builds `$page['section_title']` as raw HTML
+(`<a href="...">Home</a> / Albums`). `GalleryController:133` assigns it
+to `TITLE`. Wrapped Html at the assign site.
 
 ### Per-pair findings
 

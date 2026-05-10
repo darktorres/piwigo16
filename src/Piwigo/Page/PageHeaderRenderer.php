@@ -36,10 +36,10 @@ final class PageHeaderRenderer
         $pageBanner = $page['page_banner'] ?? Config::pageBanner();
         $template->assign([
             'GALLERY_TITLE'          => $page['gallery_title'] ?? Config::galleryTitle(),
-            'PAGE_BANNER'            => EventDispatcher::dispatch(
+            'PAGE_BANNER'            => new \Latte\Runtime\Html((string) EventDispatcher::dispatch(
                 'render_page_banner',
                 str_replace('%gallery_title%', Config::galleryTitle(), is_string($pageBanner) ? $pageBanner : '')
-            ),
+            )),
             'BODY_ID'                => $page['body_id'] ?? '',
             'CONTENT_ENCODING'       => ServiceLocator::get(StringUtil::class)->getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
@@ -61,7 +61,7 @@ final class PageHeaderRenderer
 
         $metaRobots = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : null;
         if ($metaRobots !== null && !empty($metaRobots)) {
-            $template->append('head_elements', '<meta name="robots" content="' . implode(',', array_keys($metaRobots)) . '">');
+            $template->append('head_elements', new \Latte\Runtime\Html('<meta name="robots" content="' . implode(',', array_keys($metaRobots)) . '">'));
         }
         if (!is_array($metaRobots) || !isset($metaRobots['noindex'])) {
             $template->assign('meta_ref', 1);

@@ -349,7 +349,7 @@ SELECT *
                     'AUTHOR'      => EventDispatcher::dispatch('render_comment_author', (string) ($comment['author'] ?? '')),
                     'WEBSITE_URL' => $comment['website_url'],
                     'DATE'        => ServiceLocator::get(DateService::class)->formatDate($cDate, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT'     => EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? '')),
+                    'CONTENT'     => new \Latte\Runtime\Html((string) EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? ''))),
                 ];
 
                 if (PermissionService::get()->isAdmin()) {

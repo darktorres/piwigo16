@@ -130,7 +130,7 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
 
         // Page title
-        $tpl->assign('TITLE', is_string($page['section_title'] ?? null) ? $page['section_title'] : '');
+        $tpl->assign('TITLE', new \Latte\Runtime\Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''));
         $tpl->assign('NB_ITEMS', count($items));
 
         // Menubar

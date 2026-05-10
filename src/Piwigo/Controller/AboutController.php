@@ -40,12 +40,13 @@ final class AboutController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['about' => 'about.latte']);
 
-        $tpl->assign('ABOUT_MESSAGE', LangService::get()->loadLanguage('about.html', '', ['return' => true]));
+        $aboutMessage = LangService::get()->loadLanguage('about.html', '', ['return' => true]);
+        $tpl->assign('ABOUT_MESSAGE', new \Latte\Runtime\Html(is_string($aboutMessage) ? $aboutMessage : ''));
 
         $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
         $themeAbout = LangService::get()->loadLanguage('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
-            $tpl->assign('THEME_ABOUT', $themeAbout);
+            $tpl->assign('THEME_ABOUT', new \Latte\Runtime\Html(is_string($themeAbout) ? $themeAbout : ''));
         }
 
         $themeconf    = $tpl->getTemplateVars('themeconf');

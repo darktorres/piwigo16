@@ -307,8 +307,10 @@ final class CommonBootstrap
 
         if (Config::checkUpgradeFeed()) {
             if (UpgradeService::checkUpgradeFeed()) {
-                $GLOBALS['header_msgs'][] = 'Some database upgrades are missing, '
-                    . '<a href="' . UrlService::getAbsoluteRootUrl(false) . 'index.php?/upgrade_feed">upgrade now</a>';
+                $GLOBALS['header_msgs'][] = new \Latte\Runtime\Html(
+                    'Some database upgrades are missing, '
+                    . '<a href="' . UrlService::getAbsoluteRootUrl(false) . 'index.php?/upgrade_feed">upgrade now</a>'
+                );
             }
         }
 

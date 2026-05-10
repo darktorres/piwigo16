@@ -4,8 +4,14 @@ parameters:
         - src
         - tests
         - tools/phpstan
+        - tools/phpstan-latte/src
         - index.php
     excludePaths:
+        analyse:
+            # Scan-only: cache invalidation tracks edits to the local
+            # phpstan-latte package, but its third-party source isn't
+            # held to our project's rules.
+            - tools/phpstan-latte/src/*
         analyseAndScan:
             - install/db/*.php
             - language/*.php

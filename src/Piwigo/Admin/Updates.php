@@ -614,7 +614,7 @@ final class Updates
                         $extractFilename = is_string($extract['filename'] ?? null) ? $extract['filename'] : '';
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            if (Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, 0777)
+                            if (Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, Config::chmodValue())
                               and is_array($res = $zip->extract(
                                   PCLZIP_OPT_BY_NAME,
                                   $remove_path.'/'.$extractFilename,

@@ -184,7 +184,7 @@ final class UploadService
                 Filesystem::tryUnlink($sourceFilepath);
             }
         }
-        Filesystem::tryChmod($filePath, 0644);
+        Filesystem::tryChmod($filePath, Config::chmodValue() & 0o666);
 
         $representativeExt = EventDispatcher::dispatch('upload_file', '', $filePath);
         $logger->info('Handling ' . $filePath . ' got ' . $representativeExt);
@@ -295,7 +295,7 @@ final class UploadService
                 Filesystem::tryUnlink($sourceFilepath);
             }
         }
-        Filesystem::tryChmod($formatPath, 0644);
+        Filesystem::tryChmod($formatPath, Config::chmodValue() & 0o666);
         $fileInfos = $this->pwgImageInfos($formatPath);
         $insert    = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
         $formats   = DbConnection::get()->executeQuery(
@@ -491,7 +491,7 @@ final class UploadService
             }
         }
         if (!is_writable($directory)) {
-            Filesystem::tryChmod($directory, 0777);
+            Filesystem::tryChmod($directory, Config::chmodValue());
         }
         if (!is_writable($directory)) {
             throw new ConfigException('[prepareDirectory] directory "' . $directory . '" has no write access');
@@ -586,7 +586,7 @@ final class UploadService
         } else {
             $uploadDir = Config::uploadDir();
             if (!is_writable($uploadDir)) {
-                Filesystem::tryChmod($uploadDir, 0777);
+                Filesystem::tryChmod($uploadDir, Config::chmodValue());
             }
             if (!is_writable(Config::uploadDir())) {
                 return sprintf(Lang::t('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'), $relativeDir);

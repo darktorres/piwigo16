@@ -118,7 +118,7 @@ final class DerivativeService
 
         $image->write($derivPath);
         $image->destroy();
-        Filesystem::tryChmod($derivPath, 0644);
+        Filesystem::tryChmod($derivPath, Config::chmodValue() & 0o666);
     }
 
     /** @return string[] All currently-enabled derivative type names */

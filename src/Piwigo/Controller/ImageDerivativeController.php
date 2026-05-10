@@ -249,7 +249,7 @@ SELECT *
 
         $image->write($ctx->derivativePath);
         $image->destroy();
-        Filesystem::tryChmod($ctx->derivativePath, 0644);
+        Filesystem::tryChmod($ctx->derivativePath, Config::chmodValue() & 0o666);
         $timing['save'] = DerivativePipeline::timeStep($step);
 
         DerivativePipeline::sendDerivative($expires, $ctx);

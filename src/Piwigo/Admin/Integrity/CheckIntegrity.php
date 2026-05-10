@@ -14,6 +14,7 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Latte\Runtime\Html;
 
 final class CheckIntegrity
 {
@@ -193,7 +194,7 @@ final class CheckIntegrity
                             if ($c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
                             } else {
-                                $c13y_display['correction_error_fct'] = $this->getHtlmLinksMoreInfo();
+                                $c13y_display['correction_error_fct'] = new Html($this->getHtlmLinksMoreInfo());
                             }
                         } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
@@ -210,7 +211,8 @@ final class CheckIntegrity
                     }
 
                     if (!empty($c13y['correction_msg']) and !isset($c13y['corrected'])) {
-                        $c13y_display['correction_msg'] = $c13y['correction_msg'];
+                        $msg = $c13y['correction_msg'];
+                        $c13y_display['correction_msg'] = is_string($msg) ? new Html($msg) : $msg;
                     }
                 }
 

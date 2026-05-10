@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\CollectedData;
 
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\Reflection\ClassReflection;
 use ReturnTypeWillChange;
-use function in_array;
 
 final class CollectedMethodCall extends CollectedLatteContextObject
 {

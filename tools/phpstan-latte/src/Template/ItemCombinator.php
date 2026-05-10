@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template;
 
+use function array_values;
+
 use Efabrica\PHPStanLatte\Type\TypeHelper;
 use PHPStan\Type\TypeCombinator;
-use function array_values;
 
 final class ItemCombinator
 {

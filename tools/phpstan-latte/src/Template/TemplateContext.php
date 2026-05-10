@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template;
 
+use function array_map;
+
 use Efabrica\PHPStanLatte\Template\Form\Form;
+
+use function json_encode;
+
 use JsonSerializable;
+
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use ReturnTypeWillChange;
-use function array_map;
-use function json_encode;
-use function md5;
 
 final class TemplateContext implements JsonSerializable
 {
@@ -179,10 +184,10 @@ final class TemplateContext implements JsonSerializable
     public function getSignatureHash(): string
     {
         return md5((string)json_encode([
-            'variables' => array_map(fn(Variable $variable) => $variable->getSignatureHash(), $this->variables),
-            'components' => array_map(fn(Component $component) => $component->getSignatureHash(), $this->components),
-            'forms' => array_map(fn(Form $form) => $form->getSignatureHash(), $this->forms),
-            'filters' => array_map(fn(Filter $filter) => $filter->getSignatureHash(), $this->filters),
+            'variables' => array_map(fn (Variable $variable) => $variable->getSignatureHash(), $this->variables),
+            'components' => array_map(fn (Component $component) => $component->getSignatureHash(), $this->components),
+            'forms' => array_map(fn (Form $form) => $form->getSignatureHash(), $this->forms),
+            'filters' => array_map(fn (Filter $filter) => $filter->getSignatureHash(), $this->filters),
         ]));
     }
 
@@ -190,10 +195,10 @@ final class TemplateContext implements JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'variables' => array_map(fn(Variable $variable) => $variable->jsonSerialize(), $this->variables),
-            'components' => array_map(fn(Component $component) => $component->jsonSerialize(), $this->components),
-            'forms' => array_map(fn(Form $form) => $form->jsonSerialize(), $this->forms),
-            'filters' => array_map(fn(Filter $filter) => $filter->jsonSerialize(), $this->filters),
+            'variables' => array_map(fn (Variable $variable) => $variable->jsonSerialize(), $this->variables),
+            'components' => array_map(fn (Component $component) => $component->jsonSerialize(), $this->components),
+            'forms' => array_map(fn (Form $form) => $form->jsonSerialize(), $this->forms),
+            'filters' => array_map(fn (Filter $filter) => $filter->jsonSerialize(), $this->filters),
         ];
     }
 

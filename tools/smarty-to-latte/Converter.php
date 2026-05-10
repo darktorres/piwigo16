@@ -1255,10 +1255,10 @@ final class Converter
         ) ?? $source;
     }
 
-/**
-     * Parse Smarty's `key=value key2='value2'` named-arg form into a
-     * Latte/PHP-8 named-arg list: `key: value, key2: 'value2'`.
-     */
+    /**
+         * Parse Smarty's `key=value key2='value2'` named-arg form into a
+         * Latte/PHP-8 named-arg list: `key: value, key2: 'value2'`.
+         */
     private function parseSmartyArgs(string $rawArgs): string
     {
         $args = $this->parseSmartyArgsAsArray($rawArgs);

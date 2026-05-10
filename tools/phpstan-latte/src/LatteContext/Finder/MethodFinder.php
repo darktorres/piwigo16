@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Finder;
 
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedMethod;
-use function array_merge;
+
 use function in_array;
 
 final class MethodFinder

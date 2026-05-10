@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_combine;
+
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
@@ -20,7 +22,7 @@ use PhpParser\Node\Stmt\Unset_;
 use PhpParser\NodeVisitorAbstract;
 use PHPStan\Parser\Parser;
 use PHPStan\Parser\ParserErrorsException;
-use function array_combine;
+
 use function preg_match;
 use function preg_match_all;
 use function preg_replace;

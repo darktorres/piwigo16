@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LinkProcessor;
 
-use Nette\Application\PresenterFactory;
-use Nette\InvalidStateException;
 use function count;
 use function is_array;
 use function is_string;
+
+use Nette\Application\PresenterFactory;
+use Nette\InvalidStateException;
+
 use function preg_match;
 use function preg_replace;
 use function str_replace;

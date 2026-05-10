@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Collector\Collector;
 
-use Efabrica\PHPStanLatte\Collector\CollectedData\CollectedValueObject;
-use PhpParser\Node;
-use PHPStan\Collectors\Collector;
-use PHPStan\Node\CollectedDataNode;
 use function array_filter;
 use function array_merge;
 use function array_values;
 use function count;
+
+use Efabrica\PHPStanLatte\Collector\CollectedData\CollectedValueObject;
+use PhpParser\Node;
+use PHPStan\Collectors\Collector;
+use PHPStan\Node\CollectedDataNode;
 
 /**
  * @template N of Node

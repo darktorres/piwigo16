@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Latte\Runtime\Html;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
@@ -130,7 +131,7 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
 
         // Page title
-        $tpl->assign('TITLE', new \Latte\Runtime\Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''));
+        $tpl->assign('TITLE', new Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''));
         $tpl->assign('NB_ITEMS', count($items));
 
         // Menubar
@@ -242,7 +243,7 @@ final class GalleryController implements ControllerInterface
                     ));
                     $hints = [];
                     foreach ($cats as $cat) {
-                        $hints[] = new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], ''));
+                        $hints[] = new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], ''));
                     }
                     $tpl->assign('category_search_results', $hints);
                 }
@@ -303,7 +304,7 @@ final class GalleryController implements ControllerInterface
             ) {
                 $commentVal = $page['comment'];
                 $commentText = is_scalar($commentVal) ? (string) $commentVal : '';
-                $tpl->assign('CONTENT_DESCRIPTION', $commentText !== '' ? new \Latte\Runtime\Html($commentText) : null);
+                $tpl->assign('CONTENT_DESCRIPTION', $commentText !== '' ? new Html($commentText) : null);
             }
 
             if ($countCats === 0) {

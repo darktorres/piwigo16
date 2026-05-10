@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Efabrica\PHPStanLatte\Resolver\CallResolver;
 
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
+
+use function is_string;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
 use PHPStan\Analyser\Scope;
-use function is_string;
 
 final class CalledClassResolver
 {

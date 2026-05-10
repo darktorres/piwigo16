@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior;
 
+use function array_shift;
+use function constant;
+use function count;
+
 use Efabrica\PHPStanLatte\Template\Component;
+
+use function explode;
+use function implode;
+use function is_string;
+
 use PhpParser\ConstExprEvaluationException;
 use PhpParser\ConstExprEvaluator;
 use PhpParser\Node\Expr;
@@ -12,12 +21,6 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\InterpolatedStringPart;
 use PhpParser\Node\Scalar\Encapsed;
-use function array_shift;
-use function constant;
-use function count;
-use function explode;
-use function implode;
-use function is_string;
 
 trait ComponentsNodeVisitorBehavior
 {

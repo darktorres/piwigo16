@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Rule;
 
+use function count;
+
 use Efabrica\PHPStanLatte\Error\Error;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
@@ -13,7 +15,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleError;
 use PHPStan\Rules\RuleErrorBuilder;
-use function count;
+
 use function strtolower;
 
 /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -14,7 +15,6 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
-use Latte\Runtime\Html;
 
 final class CheckIntegrity
 {

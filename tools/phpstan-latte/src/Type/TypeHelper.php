@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Type;
 
+use function count;
+
 use InvalidArgumentException;
 use LogicException;
 use PHPStan\PhpDocParser\Printer\Printer;
@@ -14,7 +16,6 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\StaticType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeTraverser;
-use function count;
 
 final class TypeHelper
 {

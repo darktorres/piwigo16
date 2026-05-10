@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Finder;
 
+use function array_filter;
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplatePath;
 use Efabrica\PHPStanLatte\Resolver\ValueResolver\PathResolver;
-use PHPStan\Reflection\ReflectionProvider;
-use function array_filter;
-use function array_merge;
+
 use function implode;
+
+use PHPStan\Reflection\ReflectionProvider;
 
 final class TemplatePathFinder
 {

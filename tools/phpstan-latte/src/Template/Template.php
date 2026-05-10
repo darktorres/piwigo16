@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Efabrica\PHPStanLatte\Template;
 
 use Efabrica\PHPStanLatte\Template\Form\Form;
+
+use function json_encode;
+
 use JsonSerializable;
+
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use ReturnTypeWillChange;
-use function json_encode;
-use function md5;
 
 final class Template implements JsonSerializable
 {

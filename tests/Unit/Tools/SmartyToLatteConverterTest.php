@@ -191,21 +191,21 @@ final class SmartyToLatteConverterTest extends TestCase
 
     public function test_literal_block(): void
     {
-        $smarty = "{literal}{ raw braces }{/literal}";
-        $latte = "{syntax off}{ raw braces }{syntax on}";
+        $smarty = '{literal}{ raw braces }{/literal}';
+        $latte = '{syntax off}{ raw braces }{syntax on}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
     public function test_html_head_block(): void
     {
-        $smarty = "{html_head}<link rel=\"x\" href=\"y\">{/html_head}";
+        $smarty = '{html_head}<link rel="x" href="y">{/html_head}';
         $latte = '{capture $_pwgHead1}<link rel="x" href="y">{/capture}{do htmlHead($_pwgHead1)}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
     public function test_html_head_block_unique_per_occurrence(): void
     {
-        $smarty = "{html_head}A{/html_head}{html_head}B{/html_head}";
+        $smarty = '{html_head}A{/html_head}{html_head}B{/html_head}';
         $latte =
             '{capture $_pwgHead1}A{/capture}{do htmlHead($_pwgHead1)}'
             . '{capture $_pwgHead2}B{/capture}{do htmlHead($_pwgHead2)}';
@@ -214,14 +214,14 @@ final class SmartyToLatteConverterTest extends TestCase
 
     public function test_html_style_block(): void
     {
-        $smarty = "{html_style}.foo { color: red }{/html_style}";
+        $smarty = '{html_style}.foo { color: red }{/html_style}';
         $latte = '{capture $_pwgStyle1}.foo { color: red }{/capture}{do htmlStyle($_pwgStyle1)}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
     public function test_footer_script_block_no_args(): void
     {
-        $smarty = "{footer_script}init();{/footer_script}";
+        $smarty = '{footer_script}init();{/footer_script}';
         $latte = '{capture $_pwgFooter1}init();{/capture}{do footerScript($_pwgFooter1)}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
@@ -667,13 +667,13 @@ final class SmartyToLatteConverterTest extends TestCase
         // variable $smarty".
         self::assertSame(
             '{if !$iterator->isFirst()}',
-            $this->converter()->convert("{if !\$smarty.foreach.tag_loop.first}"),
+            $this->converter()->convert('{if !$smarty.foreach.tag_loop.first}'),
         );
         // Outer parens come from the source; inner from the rewrite — the
         // double-wrapping is harmless under PHP/Latte.
         self::assertSame(
             '{if (($iterator->getCounter() - 1)) % 2 != 0}',
-            $this->converter()->convert("{if (\$smarty.foreach.cat_loop.index) % 2 != 0}"),
+            $this->converter()->convert('{if ($smarty.foreach.cat_loop.index) % 2 != 0}'),
         );
     }
 
@@ -697,7 +697,7 @@ final class SmartyToLatteConverterTest extends TestCase
         );
         self::assertSame(
             "{if !isset(\$_COOKIE['pwg_tags_per_page'])}",
-            $this->converter()->convert("{if !isset(\$smarty.cookies.pwg_tags_per_page)}"),
+            $this->converter()->convert('{if !isset($smarty.cookies.pwg_tags_per_page)}'),
         );
         // `$smarty.capture.NAME` → `$NAME`. Latte's {capture $name}
         // binds the result to a normal variable.

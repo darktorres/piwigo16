@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
@@ -15,7 +16,6 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
-use Latte\Runtime\Html;
 
 final class DirectPreparer
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -906,7 +907,7 @@ final class BatchManagerController
 
                 $tpl->append('thumbnails', array_merge($row, [
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
-                    'TITLE'    => new \Latte\Runtime\Html($ttitle),
+                    'TITLE'    => new Html($ttitle),
                     'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_string($row['id'] ?? null) ? $row['id'] : '')),
                 ]));

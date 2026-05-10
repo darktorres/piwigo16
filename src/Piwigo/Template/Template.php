@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Piwigo\Image\DerivativeImage;
-use Piwigo\Image\SrcImage;
-use Piwigo\Menu\RegisteredBlock;
+use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
@@ -15,8 +13,11 @@ use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 use Piwigo\Lang\LangService;
+use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -422,7 +423,7 @@ final class Template
     {
         $rendered = $this->parse($handle, true);
         $isLatte = isset($this->files[$handle]) && str_ends_with($this->files[$handle], '.latte');
-        $value = $isLatte ? new \Latte\Runtime\Html((string) $rendered) : $rendered;
+        $value = $isLatte ? new Html((string) $rendered) : $rendered;
         $this->assign($varname, $value);
         return true;
     }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Collector\CollectedData;
 
-use PHPStan\ShouldNotHappenException;
 use function array_key_exists;
+
+use PHPStan\ShouldNotHappenException;
 
 /**
  * @phpstan-type CollectedResolvedNodeArray array{resolver: string, analysedFile: string, params: array<string, string>}
@@ -19,9 +20,9 @@ final class CollectedResolvedNode extends CollectedValueObject
     /** @var array<string, string> */
     protected array $params;
 
-   /**
-    * @param array<string, string> $params
-    */
+    /**
+     * @param array<string, string> $params
+     */
     final public function __construct(string $resolver, string $analysedFile, array $params)
     {
         $this->resolver = $resolver;
@@ -39,9 +40,9 @@ final class CollectedResolvedNode extends CollectedValueObject
         return $this->analysedFile;
     }
 
-  /**
-   * @return array<string|string>
-   */
+    /**
+     * @return array<string|string>
+     */
     public function getParams(): array
     {
         return $this->params;

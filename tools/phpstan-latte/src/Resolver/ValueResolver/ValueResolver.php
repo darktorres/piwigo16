@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Resolver\ValueResolver;
 
+use function array_filter;
+use function call_user_func_array;
+use function constant;
+use function count;
+use function dirname;
+use function function_exists;
+use function implode;
+use function is_callable;
+use function is_string;
+use function method_exists;
+
 use PhpParser\ConstExprEvaluationException;
 use PhpParser\ConstExprEvaluator;
 use PhpParser\Node\Expr;
@@ -21,16 +32,6 @@ use PhpParser\Node\Scalar\MagicConst\File;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\UnionType;
 use ReflectionMethod;
-use function array_filter;
-use function call_user_func_array;
-use function constant;
-use function count;
-use function dirname;
-use function function_exists;
-use function implode;
-use function is_callable;
-use function is_string;
-use function method_exists;
 
 final class ValueResolver
 {

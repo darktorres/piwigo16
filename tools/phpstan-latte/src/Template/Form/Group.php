@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template\Form;
 
+use function array_map;
+
 use Efabrica\PHPStanLatte\Template\Form\Behavior\ControlHolderBehavior;
 use Efabrica\PHPStanLatte\Template\NameItem;
+
+use function json_encode;
+
 use JsonSerializable;
+
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use ReturnTypeWillChange;
-use function array_map;
-use function json_encode;
-use function md5;
 
 final class Group implements NameItem, ControlHolderInterface, JsonSerializable
 {
@@ -37,7 +42,7 @@ final class Group implements NameItem, ControlHolderInterface, JsonSerializable
     {
         return md5((string)json_encode([
             'name' => $this->name,
-            'controls' => array_map(fn(ControlInterface $control) => $control->getSignatureHash(), $this->controls),
+            'controls' => array_map(fn (ControlInterface $control) => $control->getSignatureHash(), $this->controls),
         ]));
     }
 
@@ -46,7 +51,7 @@ final class Group implements NameItem, ControlHolderInterface, JsonSerializable
     {
         return [
             'name' => $this->name,
-            'controls' => array_map(fn(ControlInterface $control) => $control->jsonSerialize(), $this->controls),
+            'controls' => array_map(fn (ControlInterface $control) => $control->jsonSerialize(), $this->controls),
         ];
     }
 

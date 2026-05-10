@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Collector\Collector;
 
+use function array_merge;
+use function count;
+
 use Efabrica\PHPStanLatte\Collector\CollectedData\CollectedResolvedNode;
 use Efabrica\PHPStanLatte\LatteTemplateResolver\NodeLatteTemplateResolverInterface;
 use Efabrica\PHPStanLatte\PhpDoc\LattePhpDocResolver;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
-use function array_merge;
-use function count;
 
 /**
  * @phpstan-import-type CollectedResolvedNodeArray from CollectedResolvedNode

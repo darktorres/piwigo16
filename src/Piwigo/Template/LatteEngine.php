@@ -6,6 +6,7 @@ namespace Piwigo\Template;
 
 use Latte\Engine;
 use Latte\Feature;
+use Latte\Loaders\StringLoader;
 use Latte\Policy;
 use Piwigo\Config\Config;
 use Piwigo\Core\Util;
@@ -121,7 +122,7 @@ final class LatteEngine implements TemplateEngine
      */
     public function renderFromString(string $source, array $params = []): string
     {
-        $this->engine->setLoader(new \Latte\Loaders\StringLoader());
+        $this->engine->setLoader(new StringLoader());
         return $this->engine->renderToString($source, [...$this->assigns, ...$params]);
     }
 }

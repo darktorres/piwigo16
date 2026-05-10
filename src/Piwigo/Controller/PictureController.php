@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -487,7 +488,7 @@ SELECT *
         }
 
         $tpl->assign([
-            'SECTION_TITLE'        => new \Latte\Runtime\Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''),
+            'SECTION_TITLE'        => new Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''),
             'PHOTO'                => $title_nb,
             'IS_HOME'              => ('categories' == $page['section'] && !isset($page['category'])),
             'LEVEL_SEPARATOR'      => Config::levelSeparator(),
@@ -525,7 +526,7 @@ SELECT *
         if (isset($picture['current']['comment']) && $picture['current']['comment'] !== '') {
             /** @var mixed $commentValue */
             $commentValue = $picture['current']['comment'];
-            $tpl->assign('COMMENT_IMG', new \Latte\Runtime\Html((string) EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description')));
+            $tpl->assign('COMMENT_IMG', new Html((string) EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description')));
         }
         if (isset($currentPic['author']) && $currentPic['author'] !== '') {
             /** @var mixed $authorValue */
@@ -536,12 +537,12 @@ SELECT *
             $dc   = (is_string($currentPic['date_creation']) || is_int($currentPic['date_creation'])) ? $currentPic['date_creation'] : null;
             $val  = ServiceLocator::get(DateService::class)->formatDate($dc);
             $url  = UrlService::get()->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
-            $infos['INFO_CREATION_DATE'] = new \Latte\Runtime\Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
+            $infos['INFO_CREATION_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
         }
         $da  = (isset($currentPic['date_available']) && (is_string($currentPic['date_available']) || is_int($currentPic['date_available']))) ? $currentPic['date_available'] : null;
         $val = ServiceLocator::get(DateService::class)->formatDate($da);
         $url = UrlService::get()->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
-        $infos['INFO_POSTED_DATE'] = new \Latte\Runtime\Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
+        $infos['INFO_POSTED_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
 
         if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
             $picHeightRaw = $currentPic['height'] ?? null;
@@ -567,7 +568,7 @@ SELECT *
         // Related categories
         if (count($related_categories) == 1 && $category !== null && $related_categories[0]['id'] == $catId) {
             $upperNames = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
-            $tpl->append('related_categories', new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($upperNames)));
+            $tpl->append('related_categories', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($upperNames)));
         } else {
             $ids = [];
             foreach ($related_categories as $category) {
@@ -581,7 +582,7 @@ SELECT *
                 foreach (explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') as $id) {
                     $cats[] = $catMap[$id];
                 }
-                $tpl->append('related_categories', new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($cats)));
+                $tpl->append('related_categories', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($cats)));
             }
         }
 
@@ -590,7 +591,7 @@ SELECT *
         }
 
         $element_content = EventDispatcher::dispatch('render_element_content', '', $picture['current']);
-        $tpl->assign('ELEMENT_CONTENT', new \Latte\Runtime\Html((string) $element_content));
+        $tpl->assign('ELEMENT_CONTENT', new Html((string) $element_content));
 
         $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
         $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;

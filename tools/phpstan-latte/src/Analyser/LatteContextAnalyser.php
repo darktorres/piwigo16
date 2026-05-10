@@ -4,13 +4,41 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Analyser;
 
+use function array_diff;
+use function array_merge;
+use function array_unique;
+use function basename;
+use function class_exists;
+
 use Composer\InstalledVersions;
+
+use function count;
+
 use Efabrica\PHPStanLatte\LatteContext\Collector\AbstractLatteContextCollector;
 use Efabrica\PHPStanLatte\Temp\TempDirResolver;
 use Exception;
+
+use function file_exists;
+use function get_class;
+
 use InvalidArgumentException;
+
+use function is_array;
+use function is_dir;
+use function is_file;
+use function is_string;
+use function json_encode;
+
+use const JSON_OBJECT_AS_ARRAY;
+use const JSON_PRETTY_PRINT;
+
+use function md5;
+
 use Nette\Utils\FileSystem;
 use Nette\Utils\Json;
+
+use const PHP_VERSION_ID;
+
 use PhpParser\Node;
 use PhpParser\Node\Stmt\TraitUse;
 use PHPStan\Analyser\NodeScopeResolver;
@@ -23,26 +51,11 @@ use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\RuleErrorBuilder;
 use RuntimeException;
-use Throwable;
-use function array_diff;
-use function array_merge;
-use function array_unique;
-use function basename;
-use function class_exists;
-use function count;
-use function file_exists;
-use function get_class;
-use function is_array;
-use function is_dir;
-use function is_file;
-use function is_string;
-use function json_encode;
-use function md5;
+
 use function sha1;
 use function sprintf;
-use const JSON_OBJECT_AS_ARRAY;
-use const JSON_PRETTY_PRINT;
-use const PHP_VERSION_ID;
+
+use Throwable;
 
 final class LatteContextAnalyser
 {

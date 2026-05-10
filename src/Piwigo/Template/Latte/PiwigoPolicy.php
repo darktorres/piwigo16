@@ -36,7 +36,7 @@ final class PiwigoPolicy extends SecurityPolicy
      * `import`, `sandbox`, `snippet*`, `dump`, `debugbreak`,
      * `templatePrint`, `varPrint`, `contentType`.
      */
-    private const PLUGIN_TAGS = [
+    private const array PLUGIN_TAGS = [
         '_', '=', 'l', 'r',
         'if', 'else', 'elseif', 'elseifset', 'ifset',
         'for', 'foreach', 'iterateWhile', 'while',
@@ -56,7 +56,7 @@ final class PiwigoPolicy extends SecurityPolicy
      * (`constant`), or decodes opaque payloads (`json_decode`,
      * `stripslashes`).
      */
-    private const PLUGIN_FILTERS = [
+    private const array PLUGIN_FILTERS = [
         // Latte built-ins (subset of createSafePolicy)
         'batch', 'breaklines', 'breakLines', 'bytes', 'capitalize', 'ceil', 'clamp', 'date',
         'escapeCss', 'escapeHtml', 'escapeHtmlComment', 'escapeICal', 'escapeJs', 'escapeUrl',
@@ -87,7 +87,7 @@ final class PiwigoPolicy extends SecurityPolicy
      * implementation regex-validates against a function whitelist before
      * eval, exposing it to plugin templates needs a deliberate decision.
      */
-    private const PLUGIN_FUNCTIONS = [
+    private const array PLUGIN_FUNCTIONS = [
         'htmlOptions', 'htmlRadios',
         'url_is_remote', 'l10n',
     ];

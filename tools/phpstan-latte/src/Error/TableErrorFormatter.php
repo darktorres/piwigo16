@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Error;
 
+use function array_map;
+use function count;
+use function getenv;
+use function is_string;
+
 use PHPStan\Analyser\Error;
 use PHPStan\Command\AnalyseCommand;
 use PHPStan\Command\AnalysisResult;
@@ -12,10 +17,7 @@ use PHPStan\Command\ErrorFormatter\ErrorFormatter;
 use PHPStan\Command\Output;
 use PHPStan\File\RelativePathHelper;
 use PHPStan\File\SimpleRelativePathHelper;
-use function array_map;
-use function count;
-use function getenv;
-use function is_string;
+
 use function realpath;
 use function sprintf;
 use function str_replace;

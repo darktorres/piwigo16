@@ -8,8 +8,10 @@ use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\Form\CollectedFormControl;
 use Efabrica\PHPStanLatte\Template\Form\ControlInterface;
 use Efabrica\PHPStanLatte\Template\ItemCombinator;
-use PHPStan\Reflection\ReflectionProvider;
+
 use function implode;
+
+use PHPStan\Reflection\ReflectionProvider;
 
 final class FormControlFinder
 {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Collector;
 
+use function array_merge;
+use function array_unique;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedError;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplatePath;
 use Efabrica\PHPStanLatte\LatteContext\Collector\TemplatePathCollector\TemplatePathCollectorInterface;
@@ -12,8 +15,6 @@ use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
-use function array_merge;
-use function array_unique;
 
 /**
  * @extends AbstractLatteContextCollector<CollectedTemplatePath|CollectedError>

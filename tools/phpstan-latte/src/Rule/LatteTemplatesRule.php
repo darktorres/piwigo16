@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Rule;
 
+use function array_filter;
+use function array_key_exists;
+use function array_merge;
+use function array_values;
+use function count;
+
+use const DIRECTORY_SEPARATOR;
+
+use function dirname;
+
 use Efabrica\PHPStanLatte\Analyser\AnalysedTemplatesRegistry;
 use Efabrica\PHPStanLatte\Analyser\FileAnalyserFactory;
 use Efabrica\PHPStanLatte\Analyser\LatteContextAnalyser;
@@ -18,8 +28,20 @@ use Efabrica\PHPStanLatte\LatteContext\LatteContextFactory;
 use Efabrica\PHPStanLatte\LatteTemplateResolver\LatteTemplateResolverInterface;
 use Efabrica\PHPStanLatte\Temp\TempDirResolver;
 use Efabrica\PHPStanLatte\Template\Template;
+
+use function get_class;
+use function is_dir;
+use function is_file;
+use function is_string;
+use function json_decode;
+
 use Latte\CompileException;
 use Nette\Utils\FileSystem;
+
+use function pathinfo;
+
+use const PATHINFO_BASENAME;
+
 use PhpParser\Node;
 use PHPStan\Analyser\Error;
 use PHPStan\Analyser\Scope;
@@ -30,27 +52,15 @@ use PHPStan\Rules\Registry as RuleRegistry;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\ShouldNotHappenException;
-use Throwable;
-use function array_filter;
-use function array_key_exists;
-use function array_merge;
-use function array_values;
-use function count;
-use function dirname;
-use function get_class;
-use function is_dir;
-use function is_file;
-use function is_string;
-use function json_decode;
-use function pathinfo;
+
 use function realpath;
 use function shell_exec;
 use function str_replace;
 use function strlen;
 use function strpos;
 use function substr;
-use const DIRECTORY_SEPARATOR;
-use const PATHINFO_BASENAME;
+
+use Throwable;
 
 /**
  * @implements Rule<CollectedDataNode>

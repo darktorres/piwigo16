@@ -8,10 +8,12 @@ use Efabrica\PHPStanLatte\LatteContext\Collector\AbstractLatteContextSubCollecto
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Resolver\TypeResolver\TemplateTypeResolver;
 use Efabrica\PHPStanLatte\Resolver\ValueResolver\PathResolver;
+
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
-use function in_array;
 
 /**
  * @extends AbstractLatteContextSubCollector<string>

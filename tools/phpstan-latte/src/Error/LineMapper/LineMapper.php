@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Error\LineMapper;
 
-use InvalidArgumentException;
 use function explode;
 use function file_exists;
 use function file_get_contents;
 use function file_put_contents;
+
+use InvalidArgumentException;
+
 use function json_decode;
 use function json_encode;
 use function preg_match;

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template\Form;
 
+use function array_map;
+
 use Efabrica\PHPStanLatte\Template\Form\Behavior\ControlHolderBehavior;
 use Efabrica\PHPStanLatte\Type\TypeHelper;
+
+use function json_encode;
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\PhpDocParser\Printer\Printer;
 use PHPStan\Type\Type;
 use PHPStan\Type\VerbosityLevel;
 use ReturnTypeWillChange;
-use function array_map;
-use function json_encode;
-use function md5;
 
 final class Container implements ControlHolderInterface, ControlInterface
 {
@@ -61,7 +64,7 @@ final class Container implements ControlHolderInterface, ControlInterface
             'class' => self::class,
             'name' => $this->name,
             'type' => $this->type->describe(VerbosityLevel::precise()),
-            'controls' => array_map(fn(ControlInterface $control) => $control->getSignatureHash(), $this->controls),
+            'controls' => array_map(fn (ControlInterface $control) => $control->getSignatureHash(), $this->controls),
         ]));
     }
 
@@ -72,7 +75,7 @@ final class Container implements ControlHolderInterface, ControlInterface
             'class' => self::class,
             'name' => $this->name,
             'type' => TypeHelper::serializeType($this->type),
-            'controls' => array_map(fn(ControlInterface $control) => $control->jsonSerialize(), $this->controls),
+            'controls' => array_map(fn (ControlInterface $control) => $control->jsonSerialize(), $this->controls),
         ];
     }
 

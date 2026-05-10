@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Finder;
 
+use function array_merge;
+use function count;
+
 use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplateRender;
 use Efabrica\PHPStanLatte\Resolver\ValueResolver\PathResolver;
-use function array_merge;
-use function count;
 
 final class TemplateRenderFinder
 {

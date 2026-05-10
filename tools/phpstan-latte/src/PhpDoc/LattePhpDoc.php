@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\PhpDoc;
 
-use PHPStan\ShouldNotHappenException;
-use PHPStan\Type\Type;
 use function array_filter;
 use function array_merge;
 use function count;
+
+use PHPStan\ShouldNotHappenException;
+use PHPStan\Type\Type;
 
 final class LattePhpDoc
 {

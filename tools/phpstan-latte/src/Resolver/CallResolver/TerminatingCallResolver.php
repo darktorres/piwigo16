@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Resolver\CallResolver;
 
+use function array_key_exists;
+use function array_merge;
+use function in_array;
+
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Exit_;
 use PhpParser\Node\Expr\FuncCall;
@@ -15,9 +19,7 @@ use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\NeverType;
-use function array_key_exists;
-use function array_merge;
-use function in_array;
+
 use function strtolower;
 
 final class TerminatingCallResolver

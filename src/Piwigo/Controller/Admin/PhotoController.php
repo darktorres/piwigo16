@@ -117,7 +117,7 @@ final class PhotoController
         $tabsheet->assign();
 
         $tpl->assign([
-            'ADMIN_PAGE_TITLE' => new \Latte\Runtime\Html(Lang::t('Edit photo') . ' <span class="image-id">#' . htmlspecialchars($image_id_str) . '</span>'),
+            'ADMIN_PAGE_TITLE' => new Html(Lang::t('Edit photo') . ' <span class="image-id">#' . htmlspecialchars($image_id_str) . '</span>'),
         ]);
 
         $tab = $page['tab'];
@@ -718,7 +718,7 @@ SELECT id
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $ftpHelp = LangService::get()->loadLanguage('help/photos_add_ftp.html', '', ['return' => true]);
-        $tpl->assign('FTP_HELP_CONTENT', new \Latte\Runtime\Html(is_string($ftpHelp) ? $ftpHelp : ''));
+        $tpl->assign('FTP_HELP_CONTENT', new Html(is_string($ftpHelp) ? $ftpHelp : ''));
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
     }

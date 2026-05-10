@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Collector\Finder;
 
+use function array_merge;
+use function array_unique;
+
 use Efabrica\PHPStanLatte\Collector\CollectedData\CollectedResolvedNode;
 use Efabrica\PHPStanLatte\Collector\Collector\ResolvedNodeCollector;
 use Efabrica\PHPStanLatte\LatteTemplateResolver\CustomLatteTemplateResolverInterface;
 use Efabrica\PHPStanLatte\LatteTemplateResolver\LatteTemplateResolverInterface;
 use PHPStan\Node\CollectedDataNode;
-use function array_merge;
-use function array_unique;
 
 /**
  * @phpstan-import-type CollectedResolvedNodeArray from CollectedResolvedNode

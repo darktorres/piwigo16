@@ -4,7 +4,17 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\Compiler;
 
+use function class_exists;
+use function date;
+use function get_class;
+use function gettype;
+use function is_callable;
+use function is_object;
+
 use Latte\Engine;
+
+use function md5;
+
 use PHPStan\Reflection\Native\NativeParameterReflection;
 use PHPStan\Reflection\PassedByReference;
 use PHPStan\Type\ArrayType;
@@ -16,13 +26,7 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\VerbosityLevel;
 use PHPStan\Type\VoidType;
-use function class_exists;
-use function date;
-use function get_class;
-use function gettype;
-use function is_callable;
-use function is_object;
-use function md5;
+
 use function uniqid;
 
 abstract class AbstractCompiler implements CompilerInterface

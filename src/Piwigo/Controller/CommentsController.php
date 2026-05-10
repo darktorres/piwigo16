@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -349,7 +350,7 @@ SELECT *
                     'AUTHOR'      => EventDispatcher::dispatch('render_comment_author', (string) ($comment['author'] ?? '')),
                     'WEBSITE_URL' => $comment['website_url'],
                     'DATE'        => ServiceLocator::get(DateService::class)->formatDate($cDate, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT'     => new \Latte\Runtime\Html((string) EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? ''))),
+                    'CONTENT'     => new Html((string) EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? ''))),
                 ];
 
                 if (PermissionService::get()->isAdmin()) {

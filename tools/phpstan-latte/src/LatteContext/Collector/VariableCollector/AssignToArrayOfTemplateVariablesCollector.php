@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Collector\VariableCollector;
 
+use function array_merge;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedVariable;
 use Efabrica\PHPStanLatte\LatteContext\Collector\AbstractLatteContextSubCollector;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
@@ -17,7 +19,6 @@ use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\MixedType;
-use function array_merge;
 
 /**
  * @extends AbstractLatteContextSubCollector<CollectedVariable>

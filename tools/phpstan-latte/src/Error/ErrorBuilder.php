@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Error;
 
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Error\Error as LatteError;
 use Efabrica\PHPStanLatte\Error\LineMapper\LineMap;
 use Efabrica\PHPStanLatte\Error\LineMapper\LineMapper;
 use Efabrica\PHPStanLatte\Error\Transformer\ErrorTransformerInterface;
 use Efabrica\PHPStanLatte\LinkProcessor\PresenterFactoryFaker;
+
+use function json_encode;
+use function md5;
+
 use PHPStan\Analyser\Error;
 use PHPStan\Rules\FileRuleError;
 use PHPStan\Rules\IdentifierRuleError;
@@ -17,9 +23,7 @@ use PHPStan\Rules\MetadataRuleError;
 use PHPStan\Rules\NonIgnorableRuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\Rules\TipRuleError;
-use function array_merge;
-use function json_encode;
-use function md5;
+
 use function preg_match;
 
 final class ErrorBuilder

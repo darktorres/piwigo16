@@ -7,22 +7,24 @@ namespace Efabrica\PHPStanLatte\LatteTemplateResolver;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplateRender;
 use Efabrica\PHPStanLatte\Template\Template;
 use Efabrica\PHPStanLatte\Template\TemplateContext;
+
+use function is_file;
+
 use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\RuleErrorBuilder;
-use function is_file;
 
 final class LatteTemplateResolverResult
 {
-  /** @var array<string, Template>  */
+    /** @var array<string, Template>  */
     private array $templates = [];
 
-  /** @var IdentifierRuleError[]  */
+    /** @var IdentifierRuleError[]  */
     private array $errors = [];
 
-  /**
-   * @param Template[] $templates
-   * @param IdentifierRuleError[] $errors
-   */
+    /**
+     * @param Template[] $templates
+     * @param IdentifierRuleError[] $errors
+     */
     public function __construct(array $templates = [], array $errors = [])
     {
         foreach ($templates as $template) {
@@ -31,17 +33,17 @@ final class LatteTemplateResolverResult
         $this->errors = $errors;
     }
 
-  /**
-   * @return array<string, Template>
-   */
+    /**
+     * @return array<string, Template>
+     */
     public function getTemplates(): array
     {
         return $this->templates;
     }
 
-  /**
-   * @return IdentifierRuleError[]
-   */
+    /**
+     * @return IdentifierRuleError[]
+     */
     public function getErrors(): array
     {
         return $this->errors;

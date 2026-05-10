@@ -4,20 +4,25 @@ declare (strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Analyser;
 
+use function array_merge;
+use function array_unique;
+use function class_exists;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedError;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedLatteContextObject;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedRelatedFiles;
+
+use function get_class;
+
 use InvalidArgumentException;
+
+use function is_array;
+
 use JsonSerializable;
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 use ReturnTypeWillChange;
-use function array_merge;
-use function array_unique;
-use function class_exists;
-use function get_class;
-use function is_array;
 
 final class LatteContextData implements JsonSerializable
 {

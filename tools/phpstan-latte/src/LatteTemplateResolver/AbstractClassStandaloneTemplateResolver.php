@@ -11,8 +11,11 @@ use Efabrica\PHPStanLatte\Template\Template;
 use Nette\Utils\Finder;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
-use SplFileInfo;
+
 use function preg_match;
+
+use SplFileInfo;
+
 use function str_contains;
 
 abstract class AbstractClassStandaloneTemplateResolver extends AbstractClassTemplateResolver

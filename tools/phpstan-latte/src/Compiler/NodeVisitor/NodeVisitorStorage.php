@@ -7,8 +7,10 @@ namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ExprTypeNodeVisitorInterface;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ScopeNodeVisitorInterface;
 use InvalidArgumentException;
-use PhpParser\NodeVisitor;
+
 use function ksort;
+
+use PhpParser\NodeVisitor;
 
 final class NodeVisitorStorage
 {

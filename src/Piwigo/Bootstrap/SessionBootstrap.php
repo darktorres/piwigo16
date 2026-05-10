@@ -33,11 +33,11 @@ final class SessionBootstrap
         }
 
         if (function_exists('ini_set')) {
-            ini_set('session.use_cookies',      Config::sessionUseCookies()     ? '1' : '0');
+            ini_set('session.use_cookies', Config::sessionUseCookies() ? '1' : '0');
             ini_set('session.use_only_cookies', Config::sessionUseOnlyCookies() ? '1' : '0');
-            ini_set('session.use_trans_sid',    Config::sessionUseTransSid()    ? '1' : '0');
-            ini_set('session.cookie_httponly',  '1');
-            ini_set('session.gc_probability',   (string) Config::sessionGcProbability());
+            ini_set('session.use_trans_sid', Config::sessionUseTransSid() ? '1' : '0');
+            ini_set('session.cookie_httponly', '1');
+            ini_set('session.gc_probability', (string) Config::sessionGcProbability());
         }
 
         session_name(Config::sessionName());

@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\Compiler;
 
-use Latte\CompileException;
-use Latte\Engine;
-use Latte\Runtime\Defaults;
-use Latte\Runtime\FilterExecutor;
-use Nette\Bridges\ApplicationLatte\UIMacros;
-use Nette\Bridges\FormsLatte\FormMacros;
-use ReflectionClass;
-use ReflectionException;
 use function array_change_key_case;
 use function array_keys;
 use function array_merge;
@@ -21,8 +13,22 @@ use function explode;
 use function implode;
 use function is_callable;
 use function is_int;
+
+use Latte\CompileException;
+use Latte\Engine;
+use Latte\Runtime\Defaults;
+use Latte\Runtime\FilterExecutor;
+
 use function md5;
+
+use Nette\Bridges\ApplicationLatte\UIMacros;
+use Nette\Bridges\FormsLatte\FormMacros;
+
 use function preg_replace;
+
+use ReflectionClass;
+use ReflectionException;
+
 use function strtolower;
 
 final class Latte2Compiler extends AbstractCompiler

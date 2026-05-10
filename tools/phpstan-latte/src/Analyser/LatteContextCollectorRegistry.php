@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Analyser;
 
-use Efabrica\PHPStanLatte\LatteContext\Collector\AbstractLatteContextCollector;
-use PhpParser\Node;
 use function class_implements;
 use function class_parents;
+
+use Efabrica\PHPStanLatte\LatteContext\Collector\AbstractLatteContextCollector;
+
 use function get_class;
+
+use PhpParser\Node;
 
 final class LatteContextCollectorRegistry
 {

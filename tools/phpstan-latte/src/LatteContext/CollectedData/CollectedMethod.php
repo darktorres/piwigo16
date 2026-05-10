@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\CollectedData;
 
+use function array_filter;
+use function count;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\VerbosityLevel;
 use ReturnTypeWillChange;
-use function array_filter;
-use function count;
 
 final class CollectedMethod extends CollectedLatteContextObject
 {

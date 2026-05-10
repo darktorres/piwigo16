@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
@@ -179,7 +180,7 @@ SELECT
                         'ID' => $row['id'],
                         'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
                         'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => new \Latte\Runtime\Html((string) EventDispatcher::dispatch('render_comment_content', $row['content'])),
+                        'CONTENT' => new Html((string) EventDispatcher::dispatch('render_comment_content', $row['content'])),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 

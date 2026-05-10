@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_merge;
+use function array_slice;
+
 use Closure;
 use Efabrica\PHPStanLatte\Compiler\LatteVersion;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ExprTypeNodeVisitorBehavior;
@@ -15,6 +18,12 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ScopeNodeVisitorInterfac
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Template\Variable;
 use Efabrica\PHPStanLatte\Type\TypeHelper;
+
+use function explode;
+use function get_class;
+use function is_array;
+use function is_string;
+
 use Latte\Runtime\Template;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
@@ -47,12 +56,7 @@ use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ClosureTypeFactory;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
-use function array_merge;
-use function array_slice;
-use function explode;
-use function get_class;
-use function is_array;
-use function is_string;
+
 use function str_contains;
 use function str_starts_with;
 use function strtolower;

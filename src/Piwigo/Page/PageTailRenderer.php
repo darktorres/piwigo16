@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
@@ -54,7 +55,7 @@ final class PageTailRenderer
 
         if (Config::showQueries()) {
             $debug = $GLOBALS['debug'] ?? '';
-            $debug_vars['QUERIES_LIST'] = new \Latte\Runtime\Html(is_string($debug) ? $debug : '');
+            $debug_vars['QUERIES_LIST'] = new Html(is_string($debug) ? $debug : '');
         }
 
         if (Config::showGt()) {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler;
 
+use function array_change_key_case;
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Compiler\Compiler\CompilerInterface;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ActualClassNodeVisitorInterface;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ComponentsNodeVisitorInterface;
@@ -17,6 +20,11 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\NodeVisitorStorage;
 use Efabrica\PHPStanLatte\Exception\ParseException;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Template\Template;
+
+use function file_put_contents;
+use function get_class;
+use function md5;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Class_;
@@ -32,11 +40,7 @@ use PHPStan\Analyser\ScopeFactory;
 use PHPStan\Parser\Parser;
 use PHPStan\Parser\ParserErrorsException;
 use PHPStan\Type\ObjectType;
-use function array_change_key_case;
-use function array_merge;
-use function file_put_contents;
-use function get_class;
-use function md5;
+
 use function preg_match;
 use function preg_replace;
 use function realpath;

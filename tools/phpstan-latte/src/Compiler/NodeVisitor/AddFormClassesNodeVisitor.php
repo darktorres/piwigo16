@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_merge;
+use function array_reverse;
+
 use Efabrica\PHPStanLatte\Compiler\Helper\FormHelper;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\FormsNodeVisitorBehavior;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\FormsNodeVisitorInterface;
@@ -14,6 +17,11 @@ use Efabrica\PHPStanLatte\Template\Form\ControlHolderInterface;
 use Efabrica\PHPStanLatte\Template\Form\ControlInterface;
 use Efabrica\PHPStanLatte\Template\Form\Form;
 use Efabrica\PHPStanLatte\Template\Form\Group;
+
+use function end;
+use function explode;
+use function in_array;
+
 use PhpParser\Builder\Class_;
 use PhpParser\Builder\Method;
 use PhpParser\Builder\Param;
@@ -52,11 +60,7 @@ use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\VerbosityLevel;
-use function array_merge;
-use function array_reverse;
-use function end;
-use function explode;
-use function in_array;
+
 use function spl_object_hash;
 use function str_replace;
 

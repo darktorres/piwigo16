@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -41,12 +42,12 @@ final class AboutController implements ControllerInterface
         $tpl->setFilenames(['about' => 'about.latte']);
 
         $aboutMessage = LangService::get()->loadLanguage('about.html', '', ['return' => true]);
-        $tpl->assign('ABOUT_MESSAGE', new \Latte\Runtime\Html(is_string($aboutMessage) ? $aboutMessage : ''));
+        $tpl->assign('ABOUT_MESSAGE', new Html(is_string($aboutMessage) ? $aboutMessage : ''));
 
         $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
         $themeAbout = LangService::get()->loadLanguage('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
-            $tpl->assign('THEME_ABOUT', new \Latte\Runtime\Html(is_string($themeAbout) ? $themeAbout : ''));
+            $tpl->assign('THEME_ABOUT', new Html(is_string($themeAbout) ? $themeAbout : ''));
         }
 
         $themeconf    = $tpl->getTemplateVars('themeconf');

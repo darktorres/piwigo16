@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Collector;
 
+use function array_filter;
+use function array_unique;
+use function class_exists;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedRelatedFiles;
 use Efabrica\PHPStanLatte\Resolver\CallResolver\CalledClassResolver;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Resolver\ValueResolver\ValueResolver;
+
+use function file_exists;
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\CallLike;
@@ -16,11 +24,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Node\InClassNode;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
-use function array_filter;
-use function array_unique;
-use function class_exists;
-use function file_exists;
-use function in_array;
+
 use function realpath;
 use function str_starts_with;
 
@@ -69,7 +73,7 @@ final class RelatedFilesCollector extends AbstractLatteContextCollector
         return [
             InClassNode::class,
             New_::class,
-            CallLike:: class,
+            CallLike::class,
         ];
     }
 

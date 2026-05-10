@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Analyser;
 
-use Nette\Utils\Finder;
-use PHPStan\File\FileExcluder;
-use SplFileInfo;
 use function array_filter;
 use function array_keys;
 use function array_unique;
 use function is_dir;
+
+use Nette\Utils\Finder;
+use PHPStan\File\FileExcluder;
+
 use function realpath;
 use function sort;
+
+use SplFileInfo;
 
 final class AnalysedTemplatesRegistry
 {

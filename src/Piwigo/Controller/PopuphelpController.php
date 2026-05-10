@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Exception\AuthException;
@@ -51,7 +52,7 @@ final class PopuphelpController implements ControllerInterface
 
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['popuphelp' => 'popuphelp.latte']);
-        $tpl->assign(['HELP_CONTENT' => new \Latte\Runtime\Html($helpContent)]);
+        $tpl->assign(['HELP_CONTENT' => new Html($helpContent)]);
 
         PageHeaderRenderer::render($title);
         $tpl->pparse('popuphelp');

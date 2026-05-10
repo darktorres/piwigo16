@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\Compiler;
 
-use Latte\Compiler\TemplateGenerator;
-use Latte\Engine;
-use Latte\Essential\RawPhpExtension;
-use Latte\Extension;
-use Nette\Bridges\ApplicationLatte\UIExtension;
-use Nette\Bridges\FormsLatte\FormsExtension;
 use function array_keys;
 use function array_map;
 use function array_merge;
@@ -18,7 +12,17 @@ use function get_class;
 use function implode;
 use function is_array;
 use function is_object;
+
+use Latte\Compiler\TemplateGenerator;
+use Latte\Engine;
+use Latte\Essential\RawPhpExtension;
+use Latte\Extension;
+
 use function md5;
+
+use Nette\Bridges\ApplicationLatte\UIExtension;
+use Nette\Bridges\FormsLatte\FormsExtension;
+
 use function preg_replace;
 
 final class Latte3Compiler extends AbstractCompiler

@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template;
 
+use function array_map;
+
 use Efabrica\PHPStanLatte\Type\TypeHelper;
+
+use function json_encode;
+
 use JsonSerializable;
+
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\PhpDocParser\Printer\Printer;
 use PHPStan\Type\Type;
 use PHPStan\Type\VerbosityLevel;
 use ReturnTypeWillChange;
-use function array_map;
-use function json_encode;
-use function md5;
 
 final class Component implements NameTypeItem, JsonSerializable
 {
@@ -78,7 +83,7 @@ final class Component implements NameTypeItem, JsonSerializable
           'name' => $this->name,
           'type' => $this->type->describe(VerbosityLevel::precise()),
           'subcomponents' => array_map(
-              static fn(Component $component): string => $component->getSignatureHash(),
+              static fn (Component $component): string => $component->getSignatureHash(),
               $this->subcomponents
           ),
         ]));
@@ -94,7 +99,7 @@ final class Component implements NameTypeItem, JsonSerializable
           'name' => $this->name,
           'type' => TypeHelper::serializeType($this->type),
           'subcomponents' => array_map(
-              static fn(Component $component): array => $component->jsonSerialize(),
+              static fn (Component $component): array => $component->jsonSerialize(),
               $this->subcomponents
           ),
         ];
@@ -109,7 +114,7 @@ final class Component implements NameTypeItem, JsonSerializable
             $data['name'],
             $typeStringResolver->resolve($data['type']),
             array_map(
-                static fn(array $componentData): Component => Component::fromJson($componentData, $typeStringResolver),
+                static fn (array $componentData): Component => Component::fromJson($componentData, $typeStringResolver),
                 $data['subcomponents'] ?? []
             )
         );

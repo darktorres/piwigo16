@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
@@ -28,7 +29,6 @@ use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
-use Latte\Runtime\Html;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\PreferencesService;

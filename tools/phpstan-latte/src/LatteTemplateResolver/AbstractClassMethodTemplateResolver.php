@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteTemplateResolver;
 
+use function array_filter;
+use function count;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplateRender;
 use Efabrica\PHPStanLatte\LatteContext\LatteContext;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\RuleErrorBuilder;
-use function array_filter;
-use function count;
 
 abstract class AbstractClassMethodTemplateResolver extends AbstractClassTemplateResolver
 {

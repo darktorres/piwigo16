@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Resolver\CallResolver;
 
+use function count;
+
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
@@ -13,7 +15,6 @@ use PhpParser\Node\Expr\Print_;
 use PhpParser\Node\Stmt\Echo_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\ObjectType;
-use function count;
 
 final class OutputCallResolver
 {
@@ -30,13 +31,13 @@ final class OutputCallResolver
             return true;
         }
         if ($node instanceof FuncCall && $this->nameResolver->resolve($node) === 'print_r' && (
-                (count($node->args) < 2) ||
+            (count($node->args) < 2) ||
                 ($node->args[1] instanceof Arg && $scope->getType($node->args[1]->value)->toBoolean()->isTrue()->no())
         )) {
             return true;
         }
         if ($node instanceof FuncCall && $this->nameResolver->resolve($node) === 'var_dump' && (
-                (count($node->args) < 2) ||
+            (count($node->args) < 2) ||
                 ($node->args[1] instanceof Arg && $scope->getType($node->args[1]->value)->toBoolean()->isTrue()->no())
         )) {
             return true;

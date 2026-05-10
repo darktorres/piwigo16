@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Resolver\ValueResolver;
 
+use function array_merge;
+use function count;
+
 use Efabrica\PHPStanLatte\LatteContext\Finder\MethodFinder;
+
+use function is_string;
+
 use Nette\Utils\Finder;
 use Nette\Utils\Strings;
 use PhpParser\ConstExprEvaluationException;
@@ -17,13 +23,13 @@ use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Constant\ConstantStringType;
-use SplFileInfo;
-use function array_merge;
-use function count;
-use function is_string;
+
 use function preg_match;
 use function preg_quote;
 use function preg_replace;
+
+use SplFileInfo;
+
 use function strlen;
 use function strpos;
 use function substr;

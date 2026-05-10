@@ -8,13 +8,16 @@ use Efabrica\PHPStanLatte\LatteContext\CollectedData\Form\CollectedForm;
 use Efabrica\PHPStanLatte\PhpDoc\LattePhpDocResolver;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Template\Form\Form;
+
+use function lcfirst;
+
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use function lcfirst;
+
 use function str_replace;
 use function str_starts_with;
 

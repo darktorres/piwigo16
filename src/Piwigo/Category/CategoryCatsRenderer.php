@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\LoggerRegistry;
@@ -253,14 +254,14 @@ SELECT *
                     'representative' => $representative_infos,
                     'TN_ALT' => strip_tags((string) $category['name']),
                     'URL' => UrlService::get()->makeIndexUrl(['category' => $category]),
-                    'CAPTION_NB_IMAGES' => new \Latte\Runtime\Html(ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
+                    'CAPTION_NB_IMAGES' => new Html(ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
                         is_numeric($category['nb_images']) ? (int) $category['nb_images'] : 0,
                         is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
                         is_numeric($category['count_categories']) ? (int) $category['count_categories'] : 0,
                         true,
                         '<br>'
                     )),
-                    'DESCRIPTION' => new \Latte\Runtime\Html((string) EventDispatcher::dispatch(
+                    'DESCRIPTION' => new Html((string) EventDispatcher::dispatch(
                         'render_category_literal_description',
                         EventDispatcher::dispatch('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
                     )),

@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_slice;
+use function count;
+
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ActualClassNodeVisitorBehavior;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ActualClassNodeVisitorInterface;
 use Efabrica\PHPStanLatte\Error\Error;
 use Efabrica\PHPStanLatte\LinkProcessor\LinkProcessorFactory;
 use Efabrica\PHPStanLatte\LinkProcessor\LinkProcessorInterface;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
+
+use function in_array;
+use function is_string;
+use function ltrim;
+
 use Nette\Application\InvalidPresenterException;
 use PhpParser\ConstExprEvaluationException;
 use PhpParser\ConstExprEvaluator;
@@ -24,14 +32,11 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\NodeVisitorAbstract;
-use Throwable;
-use function array_slice;
-use function count;
-use function in_array;
-use function is_string;
-use function ltrim;
+
 use function strpos;
 use function substr;
+
+use Throwable;
 
 /**
  * changed output from:

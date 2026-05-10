@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -309,7 +310,7 @@ final class UsersController
             }
             usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
             foreach ($cats as $category) {
-                $tpl->append('categories_because_of_groups', new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
+                $tpl->append('categories_because_of_groups', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
             }
         }
 

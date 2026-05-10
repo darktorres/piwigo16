@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Resolver\TypeResolver;
 
+use function count;
+
 use Efabrica\PHPStanLatte\Resolver\ValueResolver\ValueResolver;
+
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_null;
+use function is_string;
+
 use PhpParser\Node\Expr;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\Constant\ConstantBooleanType;
@@ -14,12 +23,6 @@ use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
-use function count;
-use function is_bool;
-use function is_float;
-use function is_int;
-use function is_null;
-use function is_string;
 
 final class TypeResolver
 {

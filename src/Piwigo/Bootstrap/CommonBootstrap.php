@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCacheRegistry;
@@ -308,7 +309,7 @@ final class CommonBootstrap
 
         if (Config::checkUpgradeFeed()) {
             if (UpgradeService::checkUpgradeFeed()) {
-                $GLOBALS['header_msgs'][] = new \Latte\Runtime\Html(
+                $GLOBALS['header_msgs'][] = new Html(
                     'Some database upgrades are missing, '
                     . '<a href="' . UrlService::getAbsoluteRootUrl(false) . 'index.php?/upgrade_feed">upgrade now</a>'
                 );

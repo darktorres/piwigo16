@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteTemplateResolver\Nette;
 
+use function array_merge;
+use function count;
+
+use const DIRECTORY_SEPARATOR;
+
+use function dirname;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplateRender;
 use Efabrica\PHPStanLatte\LatteContext\LatteContext;
 use Efabrica\PHPStanLatte\LatteContext\Resolver\LatteContextResolverInterface;
@@ -14,20 +21,19 @@ use Efabrica\PHPStanLatte\PhpDoc\LattePhpDocResolver;
 use Efabrica\PHPStanLatte\Resolver\LayoutResolver\LayoutPathResolver;
 use Efabrica\PHPStanLatte\Template\Template;
 use Efabrica\PHPStanLatte\Template\TemplateContext;
+
+use function file_exists;
+use function is_dir;
+use function lcfirst;
+
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\RuleErrorBuilder;
-use function array_merge;
-use function count;
-use function dirname;
-use function file_exists;
-use function is_dir;
-use function lcfirst;
+
 use function preg_replace;
 use function str_replace;
 use function ucfirst;
-use const DIRECTORY_SEPARATOR;
 
 /**
  * @uses TemplateContext

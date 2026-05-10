@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
+
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\New_;
@@ -12,7 +15,6 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\NodeVisitorAbstract;
-use function in_array;
 
 /**
  * changed output from:

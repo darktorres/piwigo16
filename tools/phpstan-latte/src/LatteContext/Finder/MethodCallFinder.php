@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Finder;
 
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedMethodCall;
 use Efabrica\PHPStanLatte\PhpDoc\LattePhpDocResolver;
-use PHPStan\Reflection\ReflectionProvider;
-use function array_merge;
+
 use function in_array;
+
+use PHPStan\Reflection\ReflectionProvider;
 
 final class MethodCallFinder
 {

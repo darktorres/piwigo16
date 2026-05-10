@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Efabrica\PHPStanLatte\LatteContext;
 
 use Efabrica\PHPStanLatte\Template\Variable;
+
+use function in_array;
+use function is_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
@@ -15,8 +19,6 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
-use function in_array;
-use function is_array;
 
 final class LatteContextHelper
 {

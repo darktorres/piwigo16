@@ -10,13 +10,16 @@ use Efabrica\PHPStanLatte\Resolver\NameResolver\FormControlNameResolver;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Template\Form\Container;
 use Efabrica\PHPStanLatte\Template\Form\Field;
+
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use function in_array;
+
 use function trim;
 
 /**

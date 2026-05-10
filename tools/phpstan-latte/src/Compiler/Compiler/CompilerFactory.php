@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\Compiler;
 
+use function count;
+
 use Efabrica\PHPStanLatte\Compiler\LatteVersion;
 use InvalidArgumentException;
 use Latte\Engine;
 use Latte\Extension;
-use function count;
 
 final class CompilerFactory
 {

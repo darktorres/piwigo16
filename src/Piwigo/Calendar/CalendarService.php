@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Latte\Runtime\Html;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
@@ -200,7 +201,7 @@ WHERE id IN (' . implode(',', $items) . ')';
             $url           = UrlService::get()->duplicateIndexUrl([], ['start', 'chronology_date']);
             $calendarTitle = '<a href="' . $url . '">' . $fields[$chronologyField]['label'] . '</a>';
             $calendarTitle .= $calendar->getDisplayName();
-            $template->assign('chronology', ['TITLE' => new \Latte\Runtime\Html($calendarTitle)]);
+            $template->assign('chronology', ['TITLE' => new Html($calendarTitle)]);
         }
 
         if ($mustShowList) {

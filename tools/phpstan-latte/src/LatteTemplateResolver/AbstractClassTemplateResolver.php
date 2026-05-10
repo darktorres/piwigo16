@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteTemplateResolver;
 
+use function dirname;
+
 use Efabrica\PHPStanLatte\Collector\CollectedData\CollectedResolvedNode;
 use Efabrica\PHPStanLatte\LatteContext\LatteContext;
 use Efabrica\PHPStanLatte\LatteContext\Resolver\ClassLatteContextResolver;
@@ -22,9 +24,10 @@ use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use ReflectionException;
-use function dirname;
+
 use function preg_match;
+
+use ReflectionException;
 
 abstract class AbstractClassTemplateResolver implements NodeLatteTemplateResolverInterface
 {

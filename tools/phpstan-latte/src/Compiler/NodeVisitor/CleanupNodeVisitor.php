@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_shift;
+use function count;
+
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
+
+use function implode;
+use function in_array;
+
 use InvalidArgumentException;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
@@ -26,10 +33,6 @@ use PhpParser\Node\Stmt\Nop;
 use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
-use function array_shift;
-use function count;
-use function implode;
-use function in_array;
 
 final class CleanupNodeVisitor extends NodeVisitorAbstract
 {

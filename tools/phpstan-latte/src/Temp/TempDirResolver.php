@@ -4,21 +4,30 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Temp;
 
-use FilesystemIterator;
-use Nette\Utils\FileSystem;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RuntimeException;
-use SplFileInfo;
+use const DIRECTORY_SEPARATOR;
+
 use function filemtime;
+
+use FilesystemIterator;
+
 use function is_dir;
 use function is_writable;
+
+use Nette\Utils\FileSystem;
+
 use function realpath;
+
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
 use function rtrim;
+
+use RuntimeException;
+use SplFileInfo;
+
 use function sprintf;
 use function sys_get_temp_dir;
 use function time;
-use const DIRECTORY_SEPARATOR;
 
 final class TempDirResolver
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Template;
 
+use Latte\Runtime\Html;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
@@ -13,6 +14,7 @@ use Piwigo\Template\LatteEngine;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
+use Smarty\Smarty;
 
 /**
  * Phase A validation for §1.2 Wave 2: prove that LatteEngine + PiwigoExtension
@@ -240,7 +242,7 @@ final class LatteEngineTest extends TestCase
         $tpl = $this->stageTemplateWithLoaders();
 
         PiwigoExtension::htmlHead("<link rel='preload' href='/foo.js'>");
-        PiwigoExtension::htmlHead("   ");
+        PiwigoExtension::htmlHead('   ');
         PiwigoExtension::htmlHead("<meta name='x' content='y'>");
 
         self::assertSame(
@@ -297,7 +299,7 @@ final class LatteEngineTest extends TestCase
         $engine = new LatteEngine($this->tempDir);
         $output = $engine->render('themes/admin/_base/template/help.latte', [
             'HELP_SECTION_TITLE' => 'Configuration',
-            'HELP_CONTENT' => new \Latte\Runtime\Html('<p>Configure your <strong>gallery</strong>.</p>'),
+            'HELP_CONTENT' => new Html('<p>Configure your <strong>gallery</strong>.</p>'),
             'ENABLE_SYNCHRONIZATION' => false,
         ]);
 
@@ -385,15 +387,15 @@ final class LatteEngineTest extends TestCase
     {
         Lang::loadArray(['Help' => 'Aide']);
 
-        $tpl = (new \ReflectionClass(Template::class))->newInstanceWithoutConstructor();
+        $tpl = new \ReflectionClass(Template::class)->newInstanceWithoutConstructor();
         $tpl->scriptLoader = new ScriptLoader();
         $tpl->cssLoader = new CssLoader();
 
-        $smarty = new \Smarty\Smarty();
+        $smarty = new Smarty();
         $smarty->setCompileDir($this->tempDir);
         $smarty->setTemplateDir([dirname(__DIR__, 3) . '/themes/admin/_base/template']);
         $smarty->assign('HELP_SECTION_TITLE', 'Configuration');
-        $smarty->assign('HELP_CONTENT', new \Latte\Runtime\Html('<p>body</p>'));
+        $smarty->assign('HELP_CONTENT', new Html('<p>body</p>'));
         $smarty->assign('ENABLE_SYNCHRONIZATION', false);
         $tpl->smarty = $smarty;
 
@@ -416,7 +418,7 @@ final class LatteEngineTest extends TestCase
      */
     private function stageTemplateWithLoaders(): Template
     {
-        $tpl = (new \ReflectionClass(Template::class))->newInstanceWithoutConstructor();
+        $tpl = new \ReflectionClass(Template::class)->newInstanceWithoutConstructor();
         $tpl->scriptLoader = new ScriptLoader();
         $tpl->cssLoader = new CssLoader();
         TemplateRegistry::set($tpl);

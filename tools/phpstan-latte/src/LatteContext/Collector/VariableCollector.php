@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Collector;
 
+use function array_keys;
+use function array_merge;
+use function array_unique;
+use function array_values;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedError;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedVariable;
 use Efabrica\PHPStanLatte\LatteContext\Collector\VariableCollector\VariableCollectorInterface;
@@ -13,10 +18,6 @@ use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\TypeCombinator;
-use function array_keys;
-use function array_merge;
-use function array_unique;
-use function array_values;
 
 /**
  * @extends AbstractLatteContextCollector<CollectedVariable>

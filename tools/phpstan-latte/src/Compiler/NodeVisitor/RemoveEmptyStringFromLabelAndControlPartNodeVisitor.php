@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function count;
+
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ExprTypeNodeVisitorBehavior;
 use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ExprTypeNodeVisitorInterface;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
+
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\NodeVisitorAbstract;
-use function count;
-use function in_array;
 
 final class RemoveEmptyStringFromLabelAndControlPartNodeVisitor extends NodeVisitorAbstract implements ExprTypeNodeVisitorInterface
 {

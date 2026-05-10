@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteTemplateResolver\Nette;
 
+use function count;
+use function dirname;
+
 use Efabrica\PHPStanLatte\LatteContext\LatteContext;
 use Efabrica\PHPStanLatte\LatteContext\Resolver\LatteContextResolverInterface;
 use Efabrica\PHPStanLatte\LatteContext\Resolver\Nette\NetteApplicationUIPresenterLatteContextResolver;
 use Efabrica\PHPStanLatte\LatteTemplateResolver\AbstractClassStandaloneTemplateResolver;
-use PHPStan\Reflection\ClassReflection;
-use function count;
-use function dirname;
+
 use function is_dir;
 use function is_string;
+
+use PHPStan\Reflection\ClassReflection;
+
 use function preg_quote;
 use function str_replace;
 

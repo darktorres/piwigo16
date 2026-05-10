@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Collector;
 
+use function array_merge;
+use function count;
+
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedError;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedTemplateRender;
 use Efabrica\PHPStanLatte\LatteContext\Collector\TemplateRenderCollector\TemplateRenderCollectorInterface;
@@ -20,8 +23,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use function array_merge;
-use function count;
 
 /**
  * @extends AbstractLatteContextCollector<CollectedTemplateRender|CollectedError>
@@ -109,7 +110,7 @@ final class TemplateRenderCollector extends AbstractLatteContextCollector
         if ($includeTemplateParamsArgument !== null &&
              $includeTemplateParamsArgument->value instanceof Plus &&
              $includeTemplateParamsArgument->value->left instanceof Array_
-         ) {
+        ) {
             $variables = LatteContextHelper::variablesFromExpr($includeTemplateParamsArgument->value->left, $scope);
         } else {
             $variables = [];

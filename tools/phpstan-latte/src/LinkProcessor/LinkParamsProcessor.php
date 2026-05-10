@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LinkProcessor;
 
+use function array_filter;
+use function array_flip;
+use function array_key_exists;
+use function array_replace;
+use function count;
+
 use Efabrica\PHPStanLatte\Type\TypeHelper;
+
+use function in_array;
+
 use InvalidArgumentException;
 use PhpParser\BuilderHelpers;
 use PhpParser\Node\Arg;
@@ -12,12 +21,6 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Reflection\ReflectionProvider;
-use function array_filter;
-use function array_flip;
-use function array_key_exists;
-use function array_replace;
-use function count;
-use function in_array;
 
 final class LinkParamsProcessor
 {

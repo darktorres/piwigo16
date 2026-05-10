@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Template\Form;
 
+use function array_map;
+
 use Efabrica\PHPStanLatte\Template\Form\Behavior\ControlHolderBehavior;
 use Efabrica\PHPStanLatte\Template\ItemCombinator;
 use Efabrica\PHPStanLatte\Template\NameTypeItem;
 use Efabrica\PHPStanLatte\Type\TypeHelper;
 use InvalidArgumentException;
+
+use function json_encode;
+
 use JsonSerializable;
+
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\PhpDocParser\Printer\Printer;
 use PHPStan\Type\Type;
 use ReturnTypeWillChange;
-use function array_map;
-use function json_encode;
-use function md5;
+
 use function sprintf;
 
 final class Form implements NameTypeItem, ControlHolderInterface, JsonSerializable
@@ -108,8 +114,8 @@ final class Form implements NameTypeItem, ControlHolderInterface, JsonSerializab
         return md5((string)json_encode([
             'name' => $this->name,
             'type' => TypeHelper::serializeType($this->type),
-            'controls' => array_map(fn(ControlInterface $control) => $control->getSignatureHash(), $this->controls),
-            'groups' => array_map(fn(Group $group) => $group->getSignatureHash(), $this->groups),
+            'controls' => array_map(fn (ControlInterface $control) => $control->getSignatureHash(), $this->controls),
+            'groups' => array_map(fn (Group $group) => $group->getSignatureHash(), $this->groups),
         ]));
     }
 
@@ -119,8 +125,8 @@ final class Form implements NameTypeItem, ControlHolderInterface, JsonSerializab
         return [
             'name' => $this->name,
             'type' => TypeHelper::serializeType($this->type),
-            'controls' => array_map(fn(ControlInterface $control) => $control->jsonSerialize(), $this->controls),
-            'groups' => array_map(fn(Group $group) => $group->jsonSerialize(), $this->groups),
+            'controls' => array_map(fn (ControlInterface $control) => $control->jsonSerialize(), $this->controls),
+            'groups' => array_map(fn (Group $group) => $group->jsonSerialize(), $this->groups),
         ];
     }
 

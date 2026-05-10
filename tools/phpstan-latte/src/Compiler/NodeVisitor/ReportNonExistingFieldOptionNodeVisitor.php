@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\Compiler\NodeVisitor;
 
+use function array_key_exists;
+
 use Efabrica\PHPStanLatte\Error\Error;
 use Efabrica\PHPStanLatte\Resolver\NameResolver\NameResolver;
 use Efabrica\PHPStanLatte\Template\Form\ControlInterface;
 use Efabrica\PHPStanLatte\Template\Form\Field;
+
+use function in_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
@@ -17,8 +22,6 @@ use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\NodeVisitorAbstract;
 use PHPStan\Type\ObjectType;
-use function array_key_exists;
-use function in_array;
 
 final class ReportNonExistingFieldOptionNodeVisitor extends NodeVisitorAbstract
 {

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Efabrica\PHPStanLatte\LatteContext\Finder;
 
+use function array_merge;
+
 use Efabrica\PHPStanLatte\Analyser\LatteContextData;
 use Efabrica\PHPStanLatte\LatteContext\CollectedData\CollectedComponent;
 use Efabrica\PHPStanLatte\Template\Component;
 use Efabrica\PHPStanLatte\Template\ItemCombinator;
+
+use function implode;
+
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
-use function array_merge;
-use function implode;
 
 final class ComponentFinder
 {

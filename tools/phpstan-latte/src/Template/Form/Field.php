@@ -6,13 +6,15 @@ namespace Efabrica\PHPStanLatte\Template\Form;
 
 use Efabrica\PHPStanLatte\Template\NameTypeItem;
 use Efabrica\PHPStanLatte\Type\TypeHelper;
+
+use function json_encode;
+use function md5;
+
 use PHPStan\PhpDoc\TypeStringResolver;
 use PHPStan\PhpDocParser\Printer\Printer;
 use PHPStan\Type\Type;
 use PHPStan\Type\VerbosityLevel;
 use ReturnTypeWillChange;
-use function json_encode;
-use function md5;
 
 final class Field implements NameTypeItem, ControlInterface
 {

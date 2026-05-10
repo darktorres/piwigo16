@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\PageState;
@@ -36,7 +37,7 @@ final class PageHeaderRenderer
         $pageBanner = $page['page_banner'] ?? Config::pageBanner();
         $template->assign([
             'GALLERY_TITLE'          => $page['gallery_title'] ?? Config::galleryTitle(),
-            'PAGE_BANNER'            => new \Latte\Runtime\Html((string) EventDispatcher::dispatch(
+            'PAGE_BANNER'            => new Html((string) EventDispatcher::dispatch(
                 'render_page_banner',
                 str_replace('%gallery_title%', Config::galleryTitle(), is_string($pageBanner) ? $pageBanner : '')
             )),
@@ -61,7 +62,7 @@ final class PageHeaderRenderer
 
         $metaRobots = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : null;
         if ($metaRobots !== null && !empty($metaRobots)) {
-            $template->append('head_elements', new \Latte\Runtime\Html('<meta name="robots" content="' . implode(',', array_keys($metaRobots)) . '">'));
+            $template->append('head_elements', new Html('<meta name="robots" content="' . implode(',', array_keys($metaRobots)) . '">'));
         }
         if (!is_array($metaRobots) || !isset($metaRobots['noindex'])) {
             $template->assign('meta_ref', 1);

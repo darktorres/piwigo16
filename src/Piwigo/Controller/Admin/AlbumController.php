@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -109,7 +110,7 @@ final class AlbumController
 
         $category_name = EventDispatcher::dispatch('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
         $tpl->assign([
-            'ADMIN_PAGE_TITLE'     => new \Latte\Runtime\Html(Lang::t('Edit album') . ' <strong>' . htmlspecialchars(is_scalar($category_name) ? (string) $category_name : '') . '</strong>'),
+            'ADMIN_PAGE_TITLE'     => new Html(Lang::t('Edit album') . ' <strong>' . htmlspecialchars(is_scalar($category_name) ? (string) $category_name : '') . '</strong>'),
             'ADMIN_PAGE_OBJECT_ID' => '#' . (is_scalar($this->albumCategory['id']) ? (string) $this->albumCategory['id'] : ''),
         ]);
 
@@ -381,7 +382,7 @@ final class AlbumController
         $catIdScalar = is_string($page['cat'] ?? null) ? $page['cat'] : '';
         $tpl->setFilename('album_notification', 'album_notification.latte');
         $tpl->assign([
-            'CATEGORIES_NAV' => new \Latte\Runtime\Html(trim(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'))),
+            'CATEGORIES_NAV' => new Html(trim(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'))),
             'F_ACTION'       => $admin_album_base_url . '-notification',
             'PWG_TOKEN'      => ServiceLocator::get(Util::class)->getPwgToken(),
         ]);
@@ -505,7 +506,7 @@ final class AlbumController
 
         $tpl->assign([
             'ADMIN_PAGE_TITLE'    => Lang::t('Album list management'),
-            'CATEGORIES_NAV'      => new \Latte\Runtime\Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),
+            'CATEGORIES_NAV'      => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),
             'F_ACTION'            => $form_action,
             'PWG_TOKEN'           => ServiceLocator::get(Util::class)->getPwgToken(),
             'sort_orders'         => $sort_orders,
@@ -659,8 +660,8 @@ final class AlbumController
         PageState::current()->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
 
         $tpl->assign([
-            'CATEGORIES_NAV'        => new \Latte\Runtime\Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),
-            'CATEGORIES_PARENT_NAV' => new \Latte\Runtime\Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation))),
+            'CATEGORIES_NAV'        => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),
+            'CATEGORIES_PARENT_NAV' => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation))),
             'PARENT_CAT_ID'         => $catUppercat !== '' ? $catUppercat : 0,
             'CAT_ID'                => $catId,
             'CAT_NAME'              => htmlspecialchars($catName),
@@ -941,7 +942,7 @@ final class AlbumController
 
         $tpl->setFilename('cat_perm', 'cat_perm.latte');
         $tpl->assign([
-            'CATEGORIES_NAV' => new \Latte\Runtime\Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
+            'CATEGORIES_NAV' => new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
             'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_perm'),
             'F_ACTION'       => $admin_album_base_url . '-permissions',
             'private'        => ('private' == $category['status']),
@@ -1076,7 +1077,7 @@ final class AlbumController
 
         $categoryUppercats = $category !== null ? ($category['uppercats'] ?? null) : null;
         $navigation = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($categoryUppercats) ? (string) $categoryUppercats : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
-        $tpl->assign(['CATEGORIES_NAV' => new \Latte\Runtime\Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
+        $tpl->assign(['CATEGORIES_NAV' => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         $imgRows = ServiceLocator::get(ImageRepository::class)->findByCategoryIdOrdered((int) $page['category_id']);
         if (count($imgRows) > 0) {

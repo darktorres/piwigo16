@@ -136,57 +136,10 @@ final class UpgradeController implements ControllerInterface
             exit();
         }
 
-        $tables     = $this->getTables();
-        $columns_of = $this->getColumnsOf($tables);
-
-        $applied_upgrades = in_array(PREFIX_TABLE . 'upgrade', $tables, true)
-            ? array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id')
-            : [];
-
-        if (!in_array('181', $applied_upgrades, true)) {
-            header('Content-Type: text/html; charset=UTF-8', true, 409);
-            echo '<h1>Upgrade refused</h1>';
-            echo '<p>This Piwigo build only upgrades from <strong>Piwigo 16.x</strong> sources. ';
-            echo 'Your database appears to be older than Piwigo 15.0.0 ';
-            echo '(applied_upgrades does not contain id 181). ';
-            echo 'Please upgrade to Piwigo 16.x through the upstream project first, ';
-            echo 'then run this upgrade.</p>';
-            exit;
-        }
-
         ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
         header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();
-    }
-
-    /** @return string[] */
-    private function getTables(): array
-    {
-        $tables = [];
-        foreach (DbConnection::get()->executeQuery('SHOW TABLES')->fetchFirstColumn() as $tableName) {
-            $tableNameStr = is_scalar($tableName) ? (string) $tableName : '';
-            if (preg_match('/^' . PREFIX_TABLE . '/', $tableNameStr)) {
-                $tables[] = $tableNameStr;
-            }
-        }
-        return $tables;
-    }
-
-    /**
-     * @param string[] $tables
-     * @return array<string, string[]>
-     */
-    private function getColumnsOf(array $tables): array
-    {
-        $columns_of = [];
-        foreach ($tables as $table) {
-            $columns_of[$table] = array_map(
-                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                DbConnection::get()->executeQuery('DESC `' . $table . '`')->fetchFirstColumn()
-            );
-        }
-        return $columns_of;
     }
 }

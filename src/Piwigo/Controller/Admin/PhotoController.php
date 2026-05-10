@@ -271,8 +271,6 @@ SELECT id
 
         $image_file = $row['file'];
 
-        $tpl->setFilenames(['picture_modify' => 'picture_modify.latte']);
-
         $admin_url_start = $admin_photo_base_url . '-properties';
         $src_image       = new SrcImage($row);
 
@@ -412,7 +410,7 @@ SELECT id
         ]);
 
         EventDispatcher::notify('loc_end_picture_modify');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_modify');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'picture_modify.latte');
     }
 
     // ── picture_coi ───────────────────────────────────────────────────────────
@@ -496,8 +494,7 @@ SELECT id
         }
 
         $tpl->assign($tpl_var);
-        $tpl->setFilename('picture_coi', 'picture_coi.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_coi');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'picture_coi.latte');
     }
 
     // ── picture_formats ───────────────────────────────────────────────────────
@@ -544,8 +541,7 @@ SELECT id
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->setFilename('picture_formats', 'picture_formats.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_formats');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'picture_formats.latte');
     }
 
     // ── photos_add ────────────────────────────────────────────────────────────
@@ -574,8 +570,6 @@ SELECT id
         $tabsheet->setId('photos_add');
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
-
-        $tpl->setFilenames(['photos_add' => 'photos_add_' . $page['tab'] . '.latte']);
 
         $tab = $page['tab'];
         if ($tab === 'direct') {
@@ -706,7 +700,7 @@ SELECT id
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_direct.latte');
     }
 
     // ── photos_add_ftp ────────────────────────────────────────────────────────
@@ -720,7 +714,7 @@ SELECT id
         $ftpHelp = LangService::get()->loadLanguage('help/photos_add_ftp.html', '', ['return' => true]);
         $tpl->assign('FTP_HELP_CONTENT', new Html(is_string($ftpHelp) ? $ftpHelp : ''));
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_ftp.latte');
     }
 
     // ── photos_add_applications ───────────────────────────────────────────────
@@ -732,6 +726,6 @@ SELECT id
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', ServiceLocator::get(UrlGenerator::class)->admin('photos_add'));
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'photos_add');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_applications.latte');
     }
 }

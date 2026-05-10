@@ -54,7 +54,6 @@ final class NbmController implements ControllerInterface
         $page['body_id'] = 'theNBMPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['nbm' => 'nbm.latte']);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
@@ -65,7 +64,7 @@ final class NbmController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->parse('nbm');
+        $tpl->parse('nbm.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

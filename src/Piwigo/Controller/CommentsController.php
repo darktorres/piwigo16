@@ -228,7 +228,6 @@ final class CommentsController implements ControllerInterface
         $page['body_id'] = 'theCommentsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['comments' => 'comments.latte', 'comment_list' => 'comment_list.latte']);
         $tpl->assign([
             'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
             'F_KEYWORD' => ($get_keyword !== null && $get_keyword !== '') ? htmlspecialchars(stripslashes($get_keyword)) : '',
@@ -392,9 +391,9 @@ SELECT *
         EventDispatcher::notify('loc_end_comments');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
         if (count($comments) > 0) {
-            $tpl->assignVarFromHandle('COMMENT_LIST', 'comment_list');
+            $tpl->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
         }
-        $tpl->pparse('comments');
+        $tpl->pparse('comments.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

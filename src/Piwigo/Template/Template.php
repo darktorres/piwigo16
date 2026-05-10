@@ -24,22 +24,20 @@ define('BUTTONS_RANK_NEUTRAL', 50);
 
 /**
  * Page-rendering coordinator: holds the per-request output buffer, the
- * JS/CSS asset registries, the per-handle filename map and the assigned
- * template-variable bag. Renders `.latte` templates through
+ * JS/CSS asset registries, the registered template-variable bag, and
+ * the theme search path. Renders `.latte` templates through
  * {@see LatteEngine::default()}.
  *
- * Until Phase F.1 lands, callers continue to use the handle-based API
- * (`setFilename` + `assign` + `parse`/`pparse`) — Phase F.1 will migrate
- * them to compose with `LatteEngine` directly and reduce this class to
- * the page-coordination state.
+ * After Phase F.1, the engine surface is direct: `parse($file)` /
+ * `pparse($file)` / `assignVarFromTemplate($var, $file)` take the
+ * `.latte` path directly — the prior handle indirection
+ * (`setFilename` + `parse(handle)`) was an inheritance from the Smarty
+ * era and added no value over the path.
  */
 final class Template
 {
     /** @var string */
     public $output = '';
-
-    /** @var string[] - Hash of filenames for each template handle. */
-    public $files = [];
 
     /** @var array<string, mixed> - Assigned template variables. */
     private array $vars = [];
@@ -254,30 +252,6 @@ final class Template
     }
 
     /**
-     * Sets the template filename for handle.
-     *
-     * @param string $handle
-     * @param string $filename
-     */
-    public function setFilename($handle, $filename): bool
-    {
-        return $this->setFilenames([$handle => $filename]);
-    }
-
-    /**
-     * Sets the template filenames for handles.
-     *
-     * @param string[] $filename_array hashmap of handle=>filename
-     */
-    public function setFilenames($filename_array): bool
-    {
-        foreach ($filename_array as $handle => $filename) {
-            $this->files[$handle] = $filename;
-        }
-        return true;
-    }
-
-    /**
      * Assigns a template variable.
      *
      * @param string|array<string,mixed> $tpl_var can be a var name or a hashmap of variables
@@ -296,20 +270,14 @@ final class Template
     }
 
     /**
-     * Defines _$varname_ as the rendered result of _$handle_.
-     * Equivalent to assign($varname, $this->parse($handle, true)).
-     *
-     * The rendered HTML is wrapped in `Latte\Runtime\Html` so it
-     * propagates through Latte's auto-escape unmolested at every `{$VAR}`
-     * print site.
-     *
-     * @return true
+     * Renders `$file` and assigns the result to `$varname` as
+     * `Latte\Runtime\Html` so it propagates through Latte's auto-escape
+     * unmolested at every `{$VAR}` print site downstream.
      */
-    public function assignVarFromHandle(string $varname, string $handle): bool
+    public function assignVarFromTemplate(string $varname, string $file): void
     {
-        $rendered = $this->parse($handle, true);
+        $rendered = $this->parse($file, true);
         $this->assign($varname, new Html((string) $rendered));
-        return true;
     }
 
     /**
@@ -364,23 +332,20 @@ final class Template
     }
 
     /**
-     * Renders the template registered for `$handle` and either appends
-     * the result to the output buffer or returns it.
+     * Renders `$file` (a bare `.latte` filename resolved against the
+     * registered template directories, or an absolute path) and either
+     * appends the result to the output buffer or returns it.
      *
      * @return null|string
      */
-    public function parse(string $handle, bool $return = false)
+    public function parse(string $file, bool $return = false)
     {
-        if (!isset($this->files[$handle])) {
-            HtmlService::fatalError("Template->parse(): Couldn't load template file for handle $handle");
-        }
-
         $this->assign('ROOT_URL', UrlService::getRootUrl());
         $wsBase = ServiceLocator::get(UrlGenerator::class)->ws();
         $this->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
         $this->assign('U_SEARCH', ServiceLocator::get(UrlGenerator::class)->searchPage());
 
-        $v = $this->renderLatte($this->files[$handle]);
+        $v = $this->renderLatte($file);
 
         if ($return) {
             return $v;
@@ -400,11 +365,10 @@ final class Template
     }
 
     /**
-     * `.latte` paths registered via {@see setFilenames()} land here as
-     * the controller passed them — usually a bare filename
-     * (`help.latte`) resolved against the registered template
-     * directories. Latte expects an absolute (or cwd-relative) path;
-     * walk the registered dirs to find the first hit.
+     * Bare filenames (`help.latte`) are resolved against the registered
+     * template directories; absolute paths pass through unchanged. Latte
+     * expects an absolute (or cwd-relative) path so the dispatcher walks
+     * the registered dirs to find the first hit.
      */
     private function resolveLatteTemplatePath(string $file): string
     {
@@ -421,12 +385,12 @@ final class Template
     }
 
     /**
-     * Renders the handle and immediately flushes accumulated output to
-     * the browser.
+     * Renders `$file` and immediately flushes accumulated output to the
+     * browser.
      */
-    public function pparse(string $handle): void
+    public function pparse(string $file): void
     {
-        $this->parse($handle, false);
+        $this->parse($file, false);
         $this->flush();
     }
 

@@ -264,8 +264,6 @@ final class ConfigurationController
 
         // ── Template init ─────────────────────────────────────────────────────
 
-        $tpl->setFilename('config', 'configuration_' . $section . '.latte');
-
         $tabsheet = new Tabsheet();
         $tabsheet->setId('configuration');
         $tabsheet->select($section);
@@ -500,7 +498,7 @@ final class ConfigurationController
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'config');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $section . '.latte');
     }
 
     private function orderByIsLocal(): bool

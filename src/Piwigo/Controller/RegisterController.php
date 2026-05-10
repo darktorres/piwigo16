@@ -96,7 +96,6 @@ final class RegisterController implements ControllerInterface
         $email = ($post_mail !== null && $post_mail !== '') ? htmlspecialchars(stripslashes($post_mail)) : '';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['register' => 'register.latte']);
         $tpl->assign([
             'U_HOME'                      => UrlService::get()->makeIndexUrl(),
             'F_KEY'                       => $registration_post_key,
@@ -143,7 +142,7 @@ final class RegisterController implements ControllerInterface
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_register');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->parse('register');
+        $tpl->parse('register.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

@@ -39,7 +39,6 @@ final class AboutController implements ControllerInterface
         $page['body_id'] = 'theAboutPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['about' => 'about.latte']);
 
         $aboutMessage = LangService::get()->loadLanguage('about.html', '', ['return' => true]);
         $tpl->assign('ABOUT_MESSAGE', new Html(is_string($aboutMessage) ? $aboutMessage : ''));
@@ -60,7 +59,7 @@ final class AboutController implements ControllerInterface
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_about');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->pparse('about');
+        $tpl->pparse('about.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

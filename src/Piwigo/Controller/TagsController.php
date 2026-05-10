@@ -43,7 +43,6 @@ final class TagsController implements ControllerInterface
         $page['body_id'] = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['tags' => 'tags.latte']);
 
         $page['display_mode'] = Config::tagsDefaultDisplayMode();
         $display_mode         = StringUtil::get()->inputString('display_mode', null, $_GET);
@@ -125,7 +124,7 @@ final class TagsController implements ControllerInterface
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_tags');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->pparse('tags');
+        $tpl->pparse('tags.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

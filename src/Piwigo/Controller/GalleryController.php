@@ -137,8 +137,6 @@ final class GalleryController implements ControllerInterface
         // Menubar
         ServiceLocator::get(MenubarRenderer::class)->render();
 
-        $tpl->setFilename('index', 'index.latte');
-
         if (empty($page['is_external'])) {
             $page['body_id'] = 'theCategoryPage';
 
@@ -374,7 +372,7 @@ final class GalleryController implements ControllerInterface
         EventDispatcher::notify('loc_end_index');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
         $tpl->parseIndexButtons();
-        $tpl->pparse('index');
+        $tpl->pparse('index.latte');
 
         ServiceLocator::get(Util::class)->pwgLog();
         PageTailRenderer::render();

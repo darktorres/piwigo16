@@ -69,9 +69,6 @@ final class ProfileController implements ControllerInterface
 
         $title = Lang::t('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
-        $tpl->setFilename('profile', 'profile.latte');
-        $tpl->setFilename('profile_content', 'profile_content.latte');
-
         ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), UrlService::get()->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
@@ -113,7 +110,7 @@ final class ProfileController implements ControllerInterface
             'str_hide_expired'     => Lang::t('Hide expired keys'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assignVarFromHandle('PROFILE_CONTENT', 'profile_content');
+        $tpl->assignVarFromTemplate('PROFILE_CONTENT', 'profile_content.latte');
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
@@ -155,7 +152,7 @@ final class ProfileController implements ControllerInterface
 
         EventDispatcher::notify('loc_end_profile');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->pparse('profile');
+        $tpl->pparse('profile.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

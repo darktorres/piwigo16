@@ -36,7 +36,6 @@ final class SelectedTagsRenderer
         }
 
         $template->assign(['SELECT_RELATED_TAGS' => $selected_related_tags_info]);
-        $template->setFilename('selected_tags', 'include/selected_tags.inc.latte');
-        $template->assignVarFromHandle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
+        $template->assignVarFromTemplate('SELECTED_TAGS_TEMPLATE', 'include/selected_tags.inc.latte');
     }
 }

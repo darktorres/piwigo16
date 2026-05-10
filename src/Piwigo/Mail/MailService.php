@@ -540,9 +540,6 @@ SELECT
                 RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
                 EventDispatcher::notify('before_parse_mail_template', $cacheKey, $contentType);
 
-                $mailTpl->setFilename('mail_header', 'header.latte');
-                $mailTpl->setFilename('mail_footer', 'footer.latte');
-
                 $addUrlParams = [];
                 if (isset($args['auth_key']) && $args['auth_key'] !== '') {
                     $addUrlParams['auth'] = $args['auth_key'];
@@ -559,14 +556,12 @@ SELECT
 
                 if ($contentType == 'text/html') {
                     if ($mailTpl->templateExists('global-mail-css.latte')) {
-                        $mailTpl->setFilename('global-css', 'global-mail-css.latte');
-                        $mailTpl->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
+                        $mailTpl->assignVarFromTemplate('GLOBAL_MAIL_CSS', 'global-mail-css.latte');
                     }
 
                     $mailTheme = is_string($args['theme']) ? $args['theme'] : '';
                     if ($mailTpl->templateExists('mail-css-' . $mailTheme . '.latte')) {
-                        $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.latte');
-                        $mailTpl->assignVarFromHandle('MAIL_CSS', 'css');
+                        $mailTpl->assignVarFromTemplate('MAIL_CSS', 'mail-css-' . $mailTheme . '.latte');
                     }
                 }
             }
@@ -577,7 +572,7 @@ SELECT
                 : throw new \LogicException('mail template not in cache for key ' . $cacheKey);
             $template->assign(['MAIL_TITLE' => $args['mail_title'], 'MAIL_SUBTITLE' => $args['mail_subtitle']]);
 
-            $contents[$contentType] = $template->parse('mail_header', true) ?? '';
+            $contents[$contentType] = $template->parse('header.latte', true) ?? '';
 
             $contentStr = is_string($args['content']) ? $args['content'] : '';
             if ($args['content_format'] == 'text/plain' and $contentType == 'text/html') {
@@ -601,7 +596,6 @@ SELECT
                 }
                 $tplFilename = is_string($tpl['filename']) ? $tpl['filename'] : '';
                 if ($template->templateExists($tplFilename . '.latte')) {
-                    $template->setFilename($tplFilename, $tplFilename . '.latte');
                     if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
                         $safeAssign = [];
                         foreach ($tpl['assign'] as $k => $v) {
@@ -612,7 +606,7 @@ SELECT
                         $template->assign($safeAssign);
                     }
                     $template->assign('CONTENT', $mailContent);
-                    $contents[$contentType] .= $template->parse($tplFilename, true) ?? '';
+                    $contents[$contentType] .= $template->parse($tplFilename . '.latte', true) ?? '';
                 } else {
                     $contents[$contentType] .= $mailContent;
                 }
@@ -620,7 +614,7 @@ SELECT
                 $contents[$contentType] .= $mailContent;
             }
 
-            $contents[$contentType] .= $template->parse('mail_footer', true) ?? '';
+            $contents[$contentType] .= $template->parse('footer.latte', true) ?? '';
         }
 
         UrlService::get()->unsetMakeFullUrl();

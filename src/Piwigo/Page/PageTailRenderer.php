@@ -23,8 +23,6 @@ final class PageTailRenderer
     {
         $template = TemplateRegistry::current();
 
-        $template->setFilenames(['tail' => 'footer.latte']);
-
         EventDispatcher::notify('loc_begin_page_tail');
 
         $template->assign([
@@ -81,7 +79,7 @@ final class PageTailRenderer
 
         EventDispatcher::notify('loc_end_page_tail');
 
-        $template->parse('tail');
+        $template->parse('footer.latte');
         $template->p();
     }
 }

@@ -60,8 +60,6 @@ final class GroupsController
             ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
-        $tpl->setFilenames(['group_list' => 'group_list.latte']);
-
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
             'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
@@ -126,7 +124,7 @@ final class GroupsController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', new Html(Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_list');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'group_list.latte');
     }
 
     // ── group_perm ────────────────────────────────────────────────────────────
@@ -179,7 +177,6 @@ final class GroupsController
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
-        $tpl->setFilenames(['group_perm' => 'group_perm.latte', 'double_select' => 'double_select.latte']);
         $tpl->assign([
             'TITLE'              => Lang::t('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
@@ -200,7 +197,7 @@ final class GroupsController
         ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
         $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
-        $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'group_perm');
+        $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'group_perm.latte');
     }
 }

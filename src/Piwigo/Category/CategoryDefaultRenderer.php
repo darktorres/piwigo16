@@ -80,7 +80,6 @@ SELECT image_id, COUNT(*) AS nb_comments
             }
         }
 
-        $template->setFilenames(['index_thumbnails' => 'thumbnails.latte']);
 
         EventDispatcher::notify('loc_begin_index_thumbnails', $pictures);
         $tpl_thumbnails_var = [];
@@ -147,7 +146,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         $tpl_thumbnails_var = EventDispatcher::dispatch('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
-        $template->assignVarFromHandle('THUMBNAILS', 'index_thumbnails');
+        $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');
         unset($pictures, $selection, $tpl_thumbnails_var);
         $template->clearAssign('thumbnails');
         ServiceLocator::get(Util::class)->pwgDebug('end CategoryDefaultRenderer');

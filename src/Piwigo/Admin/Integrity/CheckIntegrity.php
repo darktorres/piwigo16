@@ -167,8 +167,6 @@ final class CheckIntegrity
         $submit_ignore = false;
 
         if (count($this->retrieve_list) > 0) {
-            $template->setFilenames(['check_integrity' => 'check_integrity.latte']);
-
             foreach ($this->retrieve_list as $i => $c13y) {
                 $can_select = false;
                 $c13y_display = [
@@ -227,7 +225,7 @@ final class CheckIntegrity
             $template->assign('c13y_show_submit_automatic_correction', $submit_automatic_correction);
             $template->assign('c13y_show_submit_ignore', $submit_ignore);
 
-            $template->concat('ADMIN_CONTENT', (string) $template->parse('check_integrity', true));
+            $template->concat('ADMIN_CONTENT', (string) $template->parse('check_integrity.latte', true));
 
         }
     }

@@ -7,9 +7,9 @@ namespace Piwigo\Tests\Unit\Template;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Validates that every `.latte` template filename referenced in
- * setFilename() / setFilenames() / $block->template / similar under
- * src/ actually exists on disk. `.tpl` references in the `extends for
+ * Validates that every `.latte` template filename referenced under
+ * `src/` (parse/pparse/assignVarFromTemplate calls, $block->template,
+ * etc.) actually exists on disk. `.tpl` references in the `extends for
  * templates` admin UI's hardcoded list (`ExtensionsController::
  * eligible_templates`) are skipped — Phase F deleted the source files;
  * those keys remain as legacy identifiers in the config row format.

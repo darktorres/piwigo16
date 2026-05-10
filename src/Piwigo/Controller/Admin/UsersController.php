@@ -92,8 +92,6 @@ final class UsersController
             'ACTIVATE_COMMENTS'  => Config::activateComments(),
             'Double_Password'    => Config::doublePasswordTypeInAdmin(),
         ]);
-        $tpl->setFilenames(['user_list' => 'user_list.latte']);
-
         $default_user = UserService::get()->getDefaultUserInfo(true);
         $userId       = is_numeric($user['id']) ? (int) $user['id'] : 0;
         $userStatus   = is_string($user['status']) ? $user['status'] : '';
@@ -254,7 +252,7 @@ final class UsersController
             'validLinkWithoutMail'     => Lang::t('Copy the link below and send it to the user so the password can be set.'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_list');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'user_list.latte');
     }
 
     // ── user_perm ─────────────────────────────────────────────────────────────
@@ -291,7 +289,6 @@ final class UsersController
             ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
-        $tpl->setFilenames(['user_perm' => 'user_perm.latte', 'double_select' => 'double_select.latte']);
         $tpl->assign([
             'TITLE'              => Lang::t('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
@@ -334,8 +331,8 @@ final class UsersController
         ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
         $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
-        $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_perm');
+        $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'user_perm.latte');
     }
 
     // ── user_activity ─────────────────────────────────────────────────────────
@@ -381,7 +378,6 @@ final class UsersController
             exit();
         }
 
-        $tpl->setFilename('user_activity', 'user_activity.latte');
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Users'));
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['users']);
@@ -511,7 +507,7 @@ final class UsersController
             'actionInfos_tags_moved'        => Lang::t('%d tags moved'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'user_activity');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'user_activity.latte');
     }
 
     private function webmasterIdIsLocal(): bool

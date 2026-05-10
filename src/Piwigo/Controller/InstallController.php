@@ -143,7 +143,6 @@ final class InstallController implements ControllerInterface
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
-        $tpl->setFilenames(['install' => 'install.latte']);
         $step = 1;
 
         if (isset($_POST['install'])) {
@@ -332,7 +331,7 @@ final class InstallController implements ControllerInterface
             $tpl->assign('infos', $infos);
         }
 
-        $tpl->pparse('install');
+        $tpl->pparse('install.latte');
 
         return ResponseFactory::create(200);
     }

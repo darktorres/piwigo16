@@ -115,7 +115,6 @@ final class Tabsheet
     {
         $template = TemplateRegistry::current();
 
-        $template->setFilename('tabsheet', 'tabsheet.latte');
         $template->assign('tabsheet', $this->sheets);
         $template->assign('tabsheet_selected', $this->selected);
 
@@ -128,7 +127,7 @@ final class Tabsheet
             );
         }
 
-        $template->assignVarFromHandle($this->name, 'tabsheet');
+        $template->assignVarFromTemplate($this->name, 'tabsheet.latte');
         $template->clearAssign('tabsheet');
     }
 }

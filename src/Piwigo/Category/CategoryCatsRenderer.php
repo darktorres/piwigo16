@@ -222,7 +222,6 @@ SELECT *
         if (count($categories) > 0) {
             ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($categories);
 
-            $template->setFilename('index_category_thumbnails', 'mainpage_categories.latte');
             EventDispatcher::notify('loc_begin_index_category_thumbnails', $categories);
             $tpl_thumbnails_var = [];
 
@@ -304,7 +303,7 @@ SELECT *
                 'derivative_params' => $derivative_params,
             ]);
 
-            $template->assignVarFromHandle('CATEGORIES', 'index_category_thumbnails');
+            $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
 
             $page['cats_navigation_bar'] = [];
             if ($page['total_categories'] > Config::nbCategoriesPage()) {

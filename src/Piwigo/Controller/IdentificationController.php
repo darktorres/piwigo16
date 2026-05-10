@@ -98,7 +98,6 @@ final class IdentificationController implements ControllerInterface
         $user = &$GLOBALS['user'];
         $tpl  = TemplateRegistry::current();
 
-        $tpl->setFilenames(['identification' => 'identification.latte']);
         $tpl->assign([
             'U_REDIRECT'           => $redirect_to,
             'F_LOGIN_ACTION'       => ServiceLocator::get(UrlGenerator::class)->identification(),
@@ -148,7 +147,7 @@ final class IdentificationController implements ControllerInterface
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_identification');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->pparse('identification');
+        $tpl->pparse('identification.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

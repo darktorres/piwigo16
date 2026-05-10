@@ -25,8 +25,6 @@ final class PageHeaderRenderer
         $pageState = PageState::current();
         $page      = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
-        $template->setFilenames(['header' => 'header.latte']);
-
         EventDispatcher::notify('loc_begin_page_header');
 
         $show_mobile_app_banner = ServiceLocator::get(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
@@ -75,7 +73,7 @@ final class PageHeaderRenderer
         EventDispatcher::notify('loc_end_page_header');
 
         header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
-        $template->parse('header');
+        $template->parse('header.latte');
 
         EventDispatcher::notify('loc_after_page_header');
     }

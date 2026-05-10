@@ -48,11 +48,10 @@ final class PopuphelpController implements ControllerInterface
         $helpContent = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['popuphelp' => 'popuphelp.latte']);
         $tpl->assign(['HELP_CONTENT' => new Html($helpContent)]);
 
         PageHeaderRenderer::render($title);
-        $tpl->pparse('popuphelp');
+        $tpl->pparse('popuphelp.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

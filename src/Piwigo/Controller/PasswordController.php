@@ -131,7 +131,6 @@ final class PasswordController implements ControllerInterface
         }
 
         $page['body_id'] = 'thePasswordPage';
-        $tpl->setFilenames(['password' => 'password.latte']);
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'          => $title,
@@ -178,7 +177,7 @@ final class PasswordController implements ControllerInterface
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_password');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
-        $tpl->pparse('password');
+        $tpl->pparse('password.latte');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

@@ -156,7 +156,6 @@ final class BlockManager
     {
         $template = TemplateRegistry::current();
 
-        $template->setFilename('menubar', $file);
         EventDispatcher::notify('blockmanager_apply', [$this]);
 
         foreach ($this->display_blocks as $id => $block) {
@@ -166,6 +165,6 @@ final class BlockManager
         }
         $this->sortBlocks();
         $template->assign('blocks', $this->display_blocks);
-        $template->assignVarFromHandle($var, 'menubar');
+        $template->assignVarFromTemplate($var, $file);
     }
 }

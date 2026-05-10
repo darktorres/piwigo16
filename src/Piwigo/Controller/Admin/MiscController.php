@@ -188,7 +188,6 @@ final class MiscController
                 break;
         }
 
-        $tpl->setFilenames(['double_select' => 'double_select.latte', 'notification_by_mail' => 'notification_by_mail.latte']);
         $tpl->assign(['PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
@@ -238,7 +237,7 @@ final class MiscController
                     }
                 }
                 $tpl->assign(['category_option_true' => $opt_true, 'category_option_true_selected' => $opt_true_selected, 'category_option_false' => $opt_false, 'category_option_false_selected' => $opt_false_selected]);
-                $tpl->assignVarFromHandle('DOUBLE_SELECT', 'double_select');
+                $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
                 break;
             case 'send':
                 $tpl_var    = ['users' => []];
@@ -267,7 +266,7 @@ final class MiscController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Send mail to users'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'notification_by_mail');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'notification_by_mail.latte');
     }
 
     // ── permalinks ────────────────────────────────────────────────────────────
@@ -302,7 +301,6 @@ final class MiscController
             }
         }
 
-        $tpl->setFilename('permalinks', 'permalinks.latte');
         $page['tab'] = 'permalinks';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
@@ -342,7 +340,7 @@ final class MiscController
         }
 
         $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => Lang::t('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'permalinks');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'permalinks.latte');
     }
 
     // ── tags ──────────────────────────────────────────────────────────────────
@@ -364,7 +362,6 @@ final class MiscController
             Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
 
-        $tpl->setFilenames(['tags' => 'tags.latte']);
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
@@ -421,7 +418,7 @@ final class MiscController
             'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
             'str_already_exist' => Lang::t('Tag "%s" already exists'), 'str_and_others_tags' => Lang::t('and %s others'), 'str_clear_selection' => Lang::t('Clear Selection'), 'str_copy' => Lang::t(' (copy)'), 'str_delete' => Lang::t('Delete tag "%s"?'), 'str_delete_orphan_tags' => Lang::t('Delete orphan tags ?'), 'str_delete_tags' => Lang::t('Delete tags {%s}?'), 'str_delete_them' => Lang::t('Delete them'), 'str_keep_them' => Lang::t('Keep them'), 'str_merged_into' => Lang::t('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_no_photos' => Lang::t('no photo'), 'str_number_photos' => Lang::t('%d photos'), 'str_orphan_tags' => Lang::t('You have %s1 orphan : %s2'), 'str_other_copy' => Lang::t(' (copy %s)'), 'str_select_all_tag' => Lang::t('Select all %d tags'), 'str_selection_done' => Lang::t('The %d tags on this page are selected'), 'str_tag_created' => Lang::t('Tag "%s" created'), 'str_tag_deleted' => Lang::t('Tag "%s" succesfully deleted'), 'str_tag_found' => Lang::t('<b>%d</b> tag found'), 'str_tag_rename' => Lang::t('Rename "%s"'), 'str_tag_selected' => Lang::t('<b>%d</b> tag selected'), 'str_tags_deleted' => Lang::t('Tags {%s} succesfully deleted'), 'str_tags_found' => Lang::t('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_yes_rename_confirmation' => Lang::t('Yes, rename'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'tags');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'tags.latte');
     }
 
     // ── help ──────────────────────────────────────────────────────────────────
@@ -441,7 +438,6 @@ final class MiscController
 
         EventDispatcher::notify('loc_end_help');
 
-        $tpl->setFilenames(['help' => 'help.latte']);
         $helpContent = LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]);
         $tpl->assign([
             'HELP_CONTENT'       => new Html(is_string($helpContent) ? $helpContent : ''),
@@ -455,7 +451,7 @@ final class MiscController
             PageState::current()->addMessage(new Html(sprintf('Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !', 'https://doc-fr.piwigo.org/')));
         }
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'help');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'help.latte');
     }
 
     // ── popuphelp ─────────────────────────────────────────────────────────────
@@ -487,7 +483,6 @@ final class MiscController
             throw new AuthException('Hacking attempt!');
         }
 
-        $tpl->setFilename('popuphelp', 'popuphelp.latte');
         $tpl->assign(['HELP_CONTENT' => new Html($help_content)]);
 
         if (isset($_GET['output']) && 'content_only' == $_GET['output']) {
@@ -495,7 +490,7 @@ final class MiscController
             exit();
         }
 
-        $tpl->pparse('popuphelp');
+        $tpl->pparse('popuphelp.latte');
         PageTailRenderer::render();
     }
 
@@ -551,7 +546,6 @@ final class MiscController
 
         ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
 
-        $tpl->setFilenames(['intro' => 'intro.latte']);
 
         $intro_newsletter_data = null;
         if (Config::showNewsletterSubscription() && PreferencesService::get()->userprefsGetParam('show_newsletter_subscription', true)) {
@@ -746,7 +740,7 @@ final class MiscController
         }
 
         $tpl->assign('page_data_json', json_encode(['storage_details' => $data_storage, 'str_gb' => Lang::t('%sGB'), 'str_mb' => Lang::t('%sMB'), 'translate_type' => $translate_type, 'translate_files' => Lang::t('%d files'), 'dashboard' => $intro_dashboard_extras], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'intro');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte');
 
         $c13y = new CheckIntegrity();
         new C13yInternal();
@@ -822,8 +816,7 @@ final class MiscController
         $tpl->assign(['F_ACTION' => $action]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
-        $tpl->setFilename('menubar_admin_content', 'menubar.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'menubar_admin_content');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'menubar.latte');
     }
 
     // ── index ─────────────────────────────────────────────────────────────────
@@ -843,7 +836,6 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $tpl->setFilenames(['comments' => 'comments.latte']);
         $tpl->assign([
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
             'PWG_TOKEN'         => ServiceLocator::get(Util::class)->getPwgToken(),
@@ -862,7 +854,7 @@ final class MiscController
         $tabsheet->assign();
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('User comments'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'comments');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'comments.latte');
     }
 
     // ── rating ────────────────────────────────────────────────────────────────
@@ -916,7 +908,6 @@ final class MiscController
         $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
         $nb_elements   = ServiceLocator::get(ImageRepository::class)->countRatings();
 
-        $tpl->setFilename('rating', 'rating.latte');
         $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
 
@@ -959,7 +950,7 @@ final class MiscController
             }
             $tpl->append('images', $tpl_image);
         }
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'rating.latte');
     }
 
     // ── rating_user ───────────────────────────────────────────────────────────
@@ -1082,8 +1073,7 @@ final class MiscController
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
-        $tpl->setFilename('rating', 'rating_user.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'rating_user.latte');
     }
 
     // ── profile ───────────────────────────────────────────────────────────────
@@ -1116,8 +1106,7 @@ final class MiscController
         $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['errors'] = array_merge($pageErrors, $errors);
 
-        $tpl->setFilename('profile', 'profile.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'profile');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'profile.latte');
     }
 
     // ── private helpers ───────────────────────────────────────────────────────
@@ -1286,7 +1275,7 @@ final class MiscController
 
                                 $nbmUsernameRaw    = $nbm_user['username']     ?? null;
                                 $nbmMailAddressRaw = $nbm_user['mail_address'] ?? null;
-                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
+                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
                                 if ($ret) {
                                     ServiceLocator::get(NotificationAdminService::class)->incMailSentSuccess($nbm_user);

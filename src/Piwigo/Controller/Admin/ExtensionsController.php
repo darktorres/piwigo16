@@ -128,7 +128,6 @@ final class ExtensionsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        $tpl->setFilenames(['plugins' => 'plugins_installed.latte']);
 
         if (isset($_GET['show_details'])) {
             $show_details = (1 == $_GET['show_details']);
@@ -279,7 +278,7 @@ final class ExtensionsController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_installed.latte');
     }
 
     // ── plugins_new ───────────────────────────────────────────────────────────
@@ -293,8 +292,6 @@ final class ExtensionsController
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
-
-        $tpl->setFilenames(['plugins' => 'plugins_new.latte']);
 
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
@@ -418,7 +415,7 @@ final class ExtensionsController
             'str_from_begining' => Lang::t('since the beginning'),
             'strs_certification' => ['-1' => Lang::t('This plugin is incompatible with your version'), '0' => Lang::t('This plugin have no update since 3 years ! It may be outdated'), '1' => Lang::t('This plugin has no recent update'), '2' => Lang::t('This plugin was updated less than 6 months ago'), '3' => Lang::t('This plugin have been updated recently')],
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugins');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'plugins_new.latte');
     }
 
     // ── plugin ────────────────────────────────────────────────────────────────
@@ -584,8 +581,7 @@ final class ExtensionsController
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_theme_confirm' => Lang::t('Are you sure you want to delete the theme "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->setFilenames(['themes' => 'themes_installed.latte']);
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'themes_installed.latte');
     }
 
     // ── themes_new ────────────────────────────────────────────────────────────
@@ -599,8 +595,6 @@ final class ExtensionsController
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
-
-        $tpl->setFilenames(['themes' => 'themes_new.latte']);
 
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
@@ -656,7 +650,7 @@ final class ExtensionsController
         $adminTheme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
         $tpl->assign('default_screenshot', UrlService::getRootUrl() . 'themes/admin/' . (is_scalar($adminTheme) ? (string) $adminTheme : 'dark') . '/images/missing_screenshot.png');
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'themes_new.latte');
     }
 
     // ── themes_standard_pages ─────────────────────────────────────────────────
@@ -740,9 +734,8 @@ final class ExtensionsController
             'PWG_TOKEN'                     => ServiceLocator::get(Util::class)->getPwgToken(),
         ]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->setFilenames(['themes' => 'themes_standard_pages.latte']);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'themes');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'themes_standard_pages.latte');
     }
 
     // ── theme ─────────────────────────────────────────────────────────────────
@@ -814,7 +807,6 @@ final class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $tpl->setFilenames(['languages' => 'languages_installed.latte']);
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr);
 
@@ -873,7 +865,7 @@ final class ExtensionsController
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());
         $tpl->assign('page_data_json', json_encode(['str_delete_language_confirm' => Lang::t('Are you sure you want to delete the language "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'languages');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'languages_installed.latte');
     }
 
     // ── languages_new ─────────────────────────────────────────────────────────
@@ -888,7 +880,6 @@ final class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $tpl->setFilenames(['languages' => 'languages_new.latte']);
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin($pageStr) . '&tab=' . $tabStr;
@@ -937,7 +928,7 @@ final class ExtensionsController
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'languages');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'languages_new.latte');
     }
 
     // ── updates ───────────────────────────────────────────────────────────────
@@ -1054,8 +1045,7 @@ final class ExtensionsController
         $tpl->assign('EXT_TYPE', $ext_type);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('page_data_json', json_encode(['pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(), 'ext_type' => $ext_type, 'str_error_head' => Lang::t('ERROR'), 'str_error_msg' => Lang::t('an error happened'), 'str_restore' => Lang::t('Reset ignored updates'), 'str_confirm_update_all' => Lang::t('Are you sure you want to update all extensions?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->setFilename('plugin_admin_content', 'updates_ext.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'updates_ext.latte');
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
     }
 
@@ -1158,8 +1148,7 @@ final class ExtensionsController
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
         $tpl->assign('page_data_json', json_encode(['str_are_you_sure' => Lang::t('Are you sure?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
-        $tpl->setFilename('plugin_admin_content', 'updates_pwg.latte');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'plugin_admin_content');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'updates_pwg.latte');
     }
 
     // ── extend_for_templates ──────────────────────────────────────────────────
@@ -1228,7 +1217,6 @@ final class ExtensionsController
             $tpl_extension[$file] = ['N/A', 'N/A', 'N/A'];
         }
 
-        $tpl->setFilenames(['extend_for_templates' => 'extend_for_templates.latte']);
         $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('extend_for_templates')]);
 
         ksort($tpl_extension);
@@ -1243,7 +1231,7 @@ final class ExtensionsController
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Extend for templates'));
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'extend_for_templates');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'extend_for_templates.latte');
     }
 
     // ── private helpers ───────────────────────────────────────────────────────

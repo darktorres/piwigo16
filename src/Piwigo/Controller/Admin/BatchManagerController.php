@@ -826,7 +826,6 @@ final class BatchManagerController
 
         // ── Template ──────────────────────────────────────────────────────────
 
-        $tpl->setFilenames(['batch_manager_global' => 'batch_manager_global.latte']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
@@ -939,7 +938,7 @@ final class BatchManagerController
         ]);
 
         EventDispatcher::notify('loc_end_element_set_global');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
     }
 
     // ── batch_manager_unit ────────────────────────────────────────────────────
@@ -1013,7 +1012,6 @@ final class BatchManagerController
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
         }
 
-        $tpl->setFilenames(['batch_manager_unit' => 'batch_manager_unit.latte']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         $tpl->assign([
@@ -1197,7 +1195,7 @@ final class BatchManagerController
         ]);
 
         EventDispatcher::notify('loc_end_element_set_unit');
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
     }
 
     // ── queue ─────────────────────────────────────────────────────────────────
@@ -1247,7 +1245,6 @@ final class BatchManagerController
             $tableExists = false;
         }
 
-        $tpl->setFilenames(['queue' => 'queue.latte']);
 
         $pwg_token     = ServiceLocator::get(Util::class)->getPwgToken();
         $pendingAsync  = $stats['piwigo_async'] ?? 0;
@@ -1269,6 +1266,6 @@ final class BatchManagerController
             'worker_command' => 'bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M',
         ]);
 
-        $tpl->assignVarFromHandle('ADMIN_CONTENT', 'queue');
+        $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'queue.latte');
     }
 }

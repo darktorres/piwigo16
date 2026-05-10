@@ -393,12 +393,6 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $page['slideshow'] = false;
         }
 
-        if ($page['slideshow'] === true && Config::lightSlideshow()) {
-            $tpl->setFilenames(['slideshow' => 'slideshow.latte']);
-        } else {
-            $tpl->setFilenames(['picture' => 'picture.latte']);
-        }
-
         $title    = $picture['current']['TITLE'];
         $title_nb = ($currentRank + 1) . '/' . count($items);
 
@@ -636,10 +630,10 @@ SELECT *
         EventDispatcher::notify('loc_end_picture');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
         if ($page['slideshow'] === true && Config::lightSlideshow()) {
-            $tpl->pparse('slideshow');
+            $tpl->pparse('slideshow.latte');
         } else {
             $tpl->parsePictureButtons();
-            $tpl->pparse('picture');
+            $tpl->pparse('picture.latte');
         }
 
         $picIdRaw = $currentPic['id'] ?? null;

@@ -106,7 +106,6 @@ final class NotificationAdminService
         ServiceLocator::get(MailService::class)->switchLangTo(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
         if ($isActionSend) {
             $ctx->mailTemplate = ServiceLocator::get(MailService::class)->getMailTemplate($ctx->emailFormat);
-            $ctx->mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.latte');
         }
     }
 
@@ -203,7 +202,7 @@ final class NotificationAdminService
                     $tpl->assign([$sectionActionBy => true, 'GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->getGalleryHomeUrl()]);
                     $ret = ServiceLocator::get(MailService::class)->pwgMail(
                         ['name' => stripslashes((string) $nbmUser['username']), 'email' => $nbmUser['mail_address']],
-                        ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $tpl->parse('notification_by_mail', true), 'content_format' => $ctx->emailFormat]
+                        ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $tpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat]
                     );
                     if ($ret) {
                         $this->incMailSentSuccess($nbmUser);

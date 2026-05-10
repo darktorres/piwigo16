@@ -74,9 +74,8 @@ final class PictureContentRenderer
             $tpl->assign('U_ORIGINAL', $elementInfo['element_url']);
         }
         $tpl->append('current', ['selected_derivative' => $selectedDerivative, 'unique_derivatives' => $uniqueDerivatives], true);
-        $tpl->setFilenames(['default_content' => 'picture_content.latte']);
         $tpl->assign(['ALT_IMG' => $elementInfo['file'], 'COOKIE_PATH' => CookieService::cookiePath()]);
 
-        return (string) $tpl->parse('default_content', true);
+        return (string) $tpl->parse('picture_content.latte', true);
     }
 }

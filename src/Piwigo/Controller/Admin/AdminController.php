@@ -216,7 +216,6 @@ final class AdminController implements ControllerInterface
         $page['body_id']     = 'theAdminPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['admin' => 'admin.latte']);
 
         $username = is_scalar($user['username'] ?? null) ? (string) $user['username'] : '';
         $tpl->assign([
@@ -394,7 +393,7 @@ final class AdminController implements ControllerInterface
 
         ServiceLocator::get(HtmlService::class)->flushPageMessages();
 
-        $tpl->pparse('admin');
+        $tpl->pparse('admin.latte');
 
         PageTailRenderer::render();
 

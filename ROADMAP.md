@@ -724,6 +724,13 @@ rm themes/_base/template/_probe.latte
 
 **Status:** 🟡 Not started · **Effort:** XL · 4 sub-items
 
+**Prerequisite landed.** `AppInfo::VERSION` was bumped from `16.3.0` to
+`17.0.0` (commit `26377fe07`) so PEM's branch-16 entries no longer match
+`getVersionsToCheck()`. All currently-installed extensions are now
+flagged incompatible — the rewrite below replaces them on the fork's
+own branch. See the **Fork identity** subsection for the runtime
+implications.
+
 **Why one section, not four.** The same plugin contract drives all four
 sub-items: typed event dispatching, declarative manifests, lifecycle
 methods, and reflection-based WS handler discovery. Phase 1 plugins lay
@@ -835,26 +842,28 @@ final class LegacyEvents
 
 ##### Fork identity
 
-`AppInfo` carries a `FORK_VERSION` constant alongside the upstream
-`VERSION`. Its presence is the signal that this is the rewrite fork;
-stock Piwigo 16 does not define it.
+`AppInfo::VERSION` was bumped to `17.0.0` as preparation for this
+section's work. Upstream Piwigo has no 17.x line, so the major version
+alone is sufficient to signal "this is the rewrite fork" — no separate
+`FORK_VERSION` constant is needed.
 
 ```php
 // src/Piwigo/Core/AppInfo.php
-public const string VERSION       = '16.3.0';  // upstream traceability
-public const string FORK_VERSION  = '1.0.0';   // rewrite fork's own release line
+public const string VERSION = '17.0.0';
 ```
 
-Plugins and themes detect the fork with:
+The bump immediately marks every existing PEM extension as incompatible
+(see 1.3 intro): `getVersionsToCheck()` queries PEM for a version whose
+branch matches ours, finds nothing for branch 17, and returns empty.
+That is the whole point of the bump — it lets us rewrite plugins,
+themes, and languages one at a time against the fork's branch instead
+of carrying along thousands of stock-16-only extensions.
 
-```php
-if (!defined('Piwigo\Core\AppInfo::FORK_VERSION')) {
-    // running on stock Piwigo — bail or degrade gracefully
-}
-```
-
-No name constant is needed — there is only one fork, so the presence of
-`FORK_VERSION` is sufficient.
+Plugins and themes that target the fork declare `minPiwigo: "17.0"` in
+their manifest (see below). The registry compares the manifest's branch
+against `AppInfo::branchFromVersion(VERSION)` and rejects everything
+that doesn't match — which is exactly the same gate as the PEM check,
+applied locally at load time.
 
 ##### Declarative `plugin.json`
 
@@ -863,18 +872,20 @@ No name constant is needed — there is only one fork, so the presence of
   "id": "my-plugin",
   "version": "1.4.0",
   "name": "My Plugin",
-  "minPiwigo": "16.0",
-  "minForkVersion": "1.0",
+  "minPiwigo": "17.0",
   "main": "Piwigo\\Plugin\\MyPlugin\\Plugin",
   "autoload": { "psr-4": { "Piwigo\\Plugin\\MyPlugin\\": "src/" } }
 }
 ```
 
-`minForkVersion` is optional. Omitting it means the plugin targets stock
-Piwigo and will be rejected by `PluginRegistry` on the rewrite. During
-the migration window the legacy bridge loads old plugins that have no
-`plugin.json` at all; once the bridge is removed, `plugin.json` with
-`minForkVersion` is required.
+`minPiwigo` is required. `PluginRegistry` compares its branch against
+`AppInfo::branchFromVersion(AppInfo::VERSION)` and rejects anything that
+doesn't match — so a manifest with `minPiwigo: "16.0"` (the stock line)
+is refused by design, while `"17.0"` (or later, once the fork advances
+its branch) is accepted. During the migration window the legacy bridge
+still loads old plugins that have no `plugin.json` at all; once the
+bridge is removed, `plugin.json` with `minPiwigo` is required for
+everything.
 
 `Piwigo\Plugin\PluginRegistry` reads the manifest, registers PSR-4
 autoload, instantiates the main class, and calls `boot()`. The plugin

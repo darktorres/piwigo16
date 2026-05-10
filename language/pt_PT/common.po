@@ -76,13 +76,13 @@ msgid "Close this window"
 msgstr "Fechar a janela"
 
 msgid "Complete RSS feed (photos, comments)"
-msgstr "RSS completo (fotos e coment·rios)"
+msgstr "RSS completo (fotos e coment√°rios)"
 
 msgid "Confirm Password"
 msgstr "Confirmar a senha"
 
 msgid "Connection settings"
-msgstr "DefiniÁıes de ligaÁ„o"
+msgstr "Defini√ß√µes de liga√ß√£o"
 
 msgid "Login"
 msgstr "Entrar"
@@ -100,7 +100,7 @@ msgid "Creation date"
 msgstr "Data de abertura"
 
 msgid "Current password is wrong"
-msgstr "A Senha actual est· errada"
+msgstr "A Senha actual est√° errada"
 
 msgid "Dimensions"
 msgstr "Dimens√µes"
@@ -109,7 +109,7 @@ msgid "Display"
 msgstr "Mostrar"
 
 msgid "Email address is missing. Please specify an email address."
-msgstr "Esqueceu o endereÁo de email. Por favor indique um email."
+msgstr "Esqueceu o endere√ßo de email. Por favor indique um email."
 
 msgid "Email address"
 msgstr "Endere√ßo de email"

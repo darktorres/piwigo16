@@ -14,7 +14,7 @@
   <form action="{$F_ACTION}" method="post">
   <input type="hidden" name="start" value="{$START}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
-  {include 'include/batch_manager_filter.inc.latte', title: 'Batch Manager Filter'|translate, searchPlaceholder: 'Filters'|translate}
+  {include 'include/batch_manager_filter.inc.latte', title: ('Batch Manager Filter'|translate), searchPlaceholder: ('Filters'|translate)}
   <fieldset>
 
     <legend><span class='icon-check icon-blue '></span>{='Selection'|translate}</legend>

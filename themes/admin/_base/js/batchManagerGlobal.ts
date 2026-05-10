@@ -905,10 +905,18 @@ document.addEventListener('click', (e) => {
     if (!a) return;
     e.preventDefault();
     switch (a.dataset['derivSelect']) {
-        case 'generate-all':  selectGenerateDerivAll(); break;
-        case 'generate-none': selectGenerateDerivNone(); break;
-        case 'delete-all':    selectDelDerivAll(); break;
-        case 'delete-none':   selectDelDerivNone(); break;
+        case 'generate-all':
+            selectGenerateDerivAll();
+            break;
+        case 'generate-none':
+            selectGenerateDerivNone();
+            break;
+        case 'delete-all':
+            selectDelDerivAll();
+            break;
+        case 'delete-none':
+            selectDelDerivNone();
+            break;
     }
 });
 

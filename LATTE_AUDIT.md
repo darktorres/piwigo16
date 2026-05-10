@@ -2,8 +2,8 @@
 
 133 template pairs (`.tpl` Smarty source ↔ `.latte` converter output). Each
 pair gets a manual diff to confirm the conversion is faithful and the
-runtime payload reaches Latte intact. Items are reviewed *without
-skimming* — read the full Smarty source, read the full Latte source,
+runtime payload reaches Latte intact. Items are reviewed _without
+skimming_ — read the full Smarty source, read the full Latte source,
 flag any rewrite that is wrong, missing, or unsafe.
 
 ## What "review" means here
@@ -45,11 +45,11 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ---
 
-## themes/_base (1)
+## themes/\_base (1)
 
 - [x] `local_head.tpl` ↔ `local_head.latte`
 
-## themes/_base/template (36)
+## themes/\_base/template (36)
 
 - [x] `about.tpl` ↔ `about.latte` — `MENUBAR` auto-Html via `assignVarFromHandle`. `ABOUT_MESSAGE`/`THEME_ABOUT` wrapped Html in AboutController. `$about_msgs` is plugin territory (no current producer); plugins must wrap entries Html.
 - [x] `comment_list.tpl` ↔ `comment_list.latte` — Display `CONTENT` (rendered HTML) wrapped Html in `PictureCommentRenderer:182` and `CommentsController:352`. Edit-mode `CONTENT` left raw (textarea text input — auto-escape correct).
@@ -96,7 +96,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `tags.tpl` ↔ `tags.latte` — straight conversion.
 - [x] `thumbnails.tpl` ↔ `thumbnails.latte` — `assign` → `var`. Faithful.
 
-## themes/_base/template/include (5)
+## themes/\_base/template/include (5)
 
 - [x] `autosize.inc.tpl` ↔ `autosize.inc.latte` — comment-only file; faithful.
 - [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte` — combine_script/css → do.
@@ -104,11 +104,11 @@ the `.tpl` source would produce the same `.latte` we have.
 - [~] `search_filters.inc.tpl` ↔ `search_filters.inc.latte` — `<script type="application/json">{$page_data_json}</script>` got `|noescape` (converter rule added in `addNoescapeToJsonScriptBlocks` pass).
 - [x] `selected_tags.inc.tpl` ↔ `selected_tags.inc.latte` — straight conversion.
 
-## themes/_base/template/help (1)
+## themes/\_base/template/help (1)
 
 - [x] `quick_search.tpl` ↔ `quick_search.latte` — full read both. Pure static help content; only `$is_dark_mode` boolean and translate filters. No HTML-payload vars, no foreach. Faithful.
 
-## themes/_base/template/mail/text/html (8)
+## themes/\_base/template/mail/text/html (8)
 
 - [x] `cat_group_info.tpl` ↔ `cat_group_info.latte` — faithful. `$CPL_CONTENT` is admin-input mail content; plain-text default expected.
 - [x] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓.
@@ -119,7 +119,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `notification_admin.tpl` ↔ `notification_admin.latte` — faithful.
 - [x] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — faithful.
 
-## themes/_base/template/mail/text/plain (5)
+## themes/\_base/template/mail/text/plain (5)
 
 - [x] `cat_group_info.tpl` ↔ `cat_group_info.latte` — faithful. (Plain-text mail; auto-escape NOT broken because translated text contains no `<`/`>`.)
 - [x] `footer.tpl` ↔ `footer.latte` — `{literal}` → `{syntax off}` ✓.
@@ -137,7 +137,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `register.tpl` ↔ `register.latte` — full read both. `not` → `!` ✓. Plain text translates only, JSON script `|noescape` ✓.
 - [x] `toaster.tpl` ↔ `toaster.latte` — small file; full diff visible.
 
-## themes/admin/_base/template (64)
+## themes/admin/\_base/template (64)
 
 > All 64 pairs reviewed end-to-end. Producer-side `Latte\Runtime\Html`
 > wraps applied where the var holds pre-rendered HTML (sort indicators,
@@ -211,7 +211,7 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `user_list.tpl` ↔ `user_list.latte` — full read (1069 lines). Mostly JS-rendered UI templates with placeholder text. JSON script `|noescape` ✓. `htmlOptions|noescape` ✓ (×6). All variable interpolations are plain text. Tooltip titles with literal HTML inside attributes (lines 509-515, 963-969) are template literals, not vars — Latte does not escape them.
 - [~] `user_perm.tpl` ↔ `user_perm.latte` — full read. `$TITLE` plain Lang::t. `$categories_because_of_groups` entries Html-wrapped at producer (UsersController:312, getCatDisplayNameCache returns HTML breadcrumb).
 
-## themes/admin/_base/template/include (6)
+## themes/admin/\_base/template/include (6)
 
 - [x] `add_album.inc.tpl` ↔ `add_album.inc.latte` — full read. Form for add-album popin. Faithful.
 - [x] `album_selector.inc.tpl` ↔ `album_selector.inc.latte` — full read. `{capture $inc_album_selector}1{/capture}` idempotency guard. JSON script `|noescape` ✓.
@@ -235,25 +235,25 @@ browser.
 Sources of HTML payloads (enumerated from `assignVarFromHandle()` and
 notable `assign()` sites in `src/`):
 
-| Var | Source | Found in templates |
-|---|---|---|
-| `MENUBAR` | `BlockManager::apply` ← `menubar` handle | `about.latte:1`, `comments.latte:1`, others (header/index will surface when reviewed) |
-| `ADMIN_CONTENT` | every admin controller's `assignVarFromHandle('ADMIN_CONTENT', '<page>')` | likely `admin.latte` |
-| `CATEGORIES` | `CategoryCatsRenderer` ← `index_category_thumbnails` | likely `index.latte` |
-| `THUMBNAILS` | `CategoryDefaultRenderer` ← `index_thumbnails` | likely `index.latte` |
-| `COMMENT_LIST` | `PictureCommentRenderer`/`CommentsController` ← `comment_list` | `comments.latte:107`, `picture.latte:305` |
-| `DOUBLE_SELECT` | various ← `double_select` | likely group/user perm pages |
-| `PROFILE_CONTENT` | `ProfileController` ← `profile_content` | `profile.latte` |
-| `SELECTED_TAGS_TEMPLATE` | `SelectedTagsRenderer` ← `selected_tags` | tag pages |
-| `GLOBAL_MAIL_CSS`, `MAIL_CSS` | `MailService` ← `global-css` / `css` | mail/header.latte |
-| `CONTENT` (mail context) | `MailService::540ish` `assign('CONTENT', $mailContent)` | mail templates only |
-| Tabsheet output | `Tabsheet::assignVarFromHandle($this->name, 'tabsheet')` | wherever `{$tabsheet_name}` is printed |
+| Var                           | Source                                                                    | Found in templates                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `MENUBAR`                     | `BlockManager::apply` ← `menubar` handle                                  | `about.latte:1`, `comments.latte:1`, others (header/index will surface when reviewed) |
+| `ADMIN_CONTENT`               | every admin controller's `assignVarFromHandle('ADMIN_CONTENT', '<page>')` | likely `admin.latte`                                                                  |
+| `CATEGORIES`                  | `CategoryCatsRenderer` ← `index_category_thumbnails`                      | likely `index.latte`                                                                  |
+| `THUMBNAILS`                  | `CategoryDefaultRenderer` ← `index_thumbnails`                            | likely `index.latte`                                                                  |
+| `COMMENT_LIST`                | `PictureCommentRenderer`/`CommentsController` ← `comment_list`            | `comments.latte:107`, `picture.latte:305`                                             |
+| `DOUBLE_SELECT`               | various ← `double_select`                                                 | likely group/user perm pages                                                          |
+| `PROFILE_CONTENT`             | `ProfileController` ← `profile_content`                                   | `profile.latte`                                                                       |
+| `SELECTED_TAGS_TEMPLATE`      | `SelectedTagsRenderer` ← `selected_tags`                                  | tag pages                                                                             |
+| `GLOBAL_MAIL_CSS`, `MAIL_CSS` | `MailService` ← `global-css` / `css`                                      | mail/header.latte                                                                     |
+| `CONTENT` (mail context)      | `MailService::540ish` `assign('CONTENT', $mailContent)`                   | mail templates only                                                                   |
+| Tabsheet output               | `Tabsheet::assignVarFromHandle($this->name, 'tabsheet')`                  | wherever `{$tabsheet_name}` is printed                                                |
 
 Plus less obvious but commonly HTML-bearing:
 
 - `ABOUT_MESSAGE`, `THEME_ABOUT`, `$elt` in `$about_msgs` (free-form admin-set HTML)
 - `HELP_CONTENT` (help.latte already has `|noescape`)
-- `LEVEL_SEPARATOR` — default ` / ` is plain text, but admins can configure `&raquo;` etc. Conservative: add `|noescape`.
+- `LEVEL_SEPARATOR` — default `/` is plain text, but admins can configure `&raquo;` etc. Conservative: add `|noescape`.
 - `PLUGIN_INDEX_*`, `PLUGIN_*_CONTENT_*` — plugin-supplied raw HTML
 
 **Action**: tag every bare `{$VAR}` print of one of these payloads with
@@ -276,6 +276,7 @@ Affected `.tpl` sites: `themes/_base/template/footer.tpl:15`,
 
 Two PiwigoExtension functions return HTML strings but the converter
 emits them as `{=fn()}` without `|noescape`:
+
 - `getCombinedScripts(load: 'footer')` — returns `<script>` tags
 - `getCombinedCss()` — returns `<link>` / inline `<style>`
 
@@ -304,7 +305,7 @@ Two fixes possible:
    Smarty's `:false` semantic — both strip without space-replacement).
 2. Wrap the filter in PiwigoExtension to mimic Smarty's two-arg behavior:
    `function ($s, bool $replaceWithSpace = true) { return $replaceWithSpace
-   ? preg_replace('/<[^>]*>/', ' ', (string) $s) : strip_tags((string) $s); }`.
+? preg_replace('/<[^>]*>/', ' ', (string) $s) : strip_tags((string) $s); }`.
 
 Option 2 is safer because Smarty's bare `|strip_tags` (no arg, default true =
 "replace with space") would then keep working for any plugin templates that
@@ -343,7 +344,7 @@ quotes into `\"`-escaped JS literals, breaking
 `type="application/json"` data blocks need the JSON output emitted raw.
 Fixed in converter: new `addNoescapeToJsonScriptBlocks` pass detects
 the pattern and appends `|noescape` to the inner expression. Affected
-~40 .latte files across themes/_base, themes/admin, and themes/standard_pages.
+~40 .latte files across themes/\_base, themes/admin, and themes/standard_pages.
 
 ### Systemic — Smarty bareword args become bare identifiers in Latte
 
@@ -387,4 +388,3 @@ then evaluates `theme` as an undefined constant or variable. Fixed in
   (sprintf/cat-built HTML, plus plugin-author-controlled description).
 - `themes/admin/_base/template/themes_installed.latte:51,53,56` — same
   pattern as plugins_installed.
-

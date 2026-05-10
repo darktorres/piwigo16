@@ -3,25 +3,29 @@
 There are cases that cannot be resolved automatically by static analysis. In these cases annotations could be used to guide resolvers to analyse latte templates correctly.
 
 You can use these annotations:
-* [`@phpstan-latte-ignore`](#phpstan-latte-ignore)
-* [`@phpstan-latte-template`](#phpstan-latte-template)
-* [`@phpstan-latte-var`](#phpstan-latte-var)
-* [`@phpstan-latte-component`](#phpstan-latte-component)
+
+- [`@phpstan-latte-ignore`](#phpstan-latte-ignore)
+- [`@phpstan-latte-template`](#phpstan-latte-template)
+- [`@phpstan-latte-var`](#phpstan-latte-var)
+- [`@phpstan-latte-component`](#phpstan-latte-component)
 
 Note: Annotations affects only class in which they are written. If child class overwrittes something by annotations it will not affect inherited methods because they are evaluated in context of parent class.
 
 NOte: Annotations are evaluated only in allowed contexts. Annotation used in wrong context is silently ignored.
+
 ## `@phpstan-latte-ignore`
+
 Allowed context: variable assign, method call, render call, method, class
 
 Annotated part of code is not analysed. Analyser acts as if the annotated code (class/method/statement) does not exists at all.
 
 ### Examples
+
 ```php
 class MyControl extends Control
 {
     public function render(string $param): void {
-        if ($param) {   
+        if ($param) {
             /** @phpstan-latte-ignore */
             $this->template->something = $param; // <-- this variable will not be collected (by default all template variables assigned inside method are collected)
         } else {
@@ -35,8 +39,8 @@ class MyControl extends Control
 class MyControl extends Control
 {
     public function render(string $param): void {
-        if ($param) {       
-            /** @phpstan-latte-ignore */   
+        if ($param) {
+            /** @phpstan-latte-ignore */
             $this->template->render(__DIR__ . $param); // <-- this will not be attepted to resolve (reported as expression that cannot be resolved)
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte');
@@ -51,7 +55,7 @@ class MyControl extends Control
     /** @phpstan-latte-ignore */ // <-- whole method is ignored by resolvers and collectors
     public function render(string $param): void {
         $this->template->something = $param; // <-- this variable will not be collected
-        if ($param) {       
+        if ($param) {
             $this->template->render(__DIR__ . $param); // <-- this will not be resolved
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte'); // <-- this will not be resolved
@@ -64,13 +68,13 @@ class MyControl extends Control
 class MyControl extends Control
 {
     public function render(string $param): void {
-        /** @phpstan-latte-ignore */         
+        /** @phpstan-latte-ignore */
         $this->doRender(); // <-- this method call wil not be followed by resolvers (resolving renders or collecting variables inside called method)
     }
 
     private function doRender(): void {
         $this->template->something = $param; // <-- this variable will not be collected when resolving render()
-        if ($param) {       
+        if ($param) {
             $this->template->render(__DIR__ . $param); // <-- this will not be resolved when resolving render()
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte'); // <-- this will not be resolved when resolving render()
@@ -85,7 +89,7 @@ class MyControl extends Control
 {
     public function render(string $param): void {
         $this->template->something = $param; // <-- this variable will not be collected
-        if ($param) {       
+        if ($param) {
             $this->template->render(__DIR__ . $param); // <-- this will not be resolved
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte'); // <-- this will not be resolved
@@ -94,7 +98,7 @@ class MyControl extends Control
 
     public function renderAlternative(string $param): void {
         $this->template->something = $param; // <-- this variable will not be collected
-        if ($param) {       
+        if ($param) {
             $this->template->render(__DIR__ . $param); // <-- this will not be resolved
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte'); // <-- this will not be resolved
@@ -104,6 +108,7 @@ class MyControl extends Control
 ```
 
 ## `@phpstan-latte-template`
+
 Allowed context: render call, method, class
 
 Value specifies what template or templates should be resolved and checked in given context.
@@ -123,6 +128,7 @@ When annotation is used on class it acts like it was added to all methods in cla
 Wildcard `*` can be used to match multiple files.
 
 Can use placeholders:
+
 - `{dir}` = `__DIR__` (example `/app/dir/controls`)
 - `{file}` = `__FILE__` (example `/app/dir/controls/MyControl.php`)
 - `{baseName}` = `pathinfo(__FILE__, PATHINFO_BASENAME)` - file name including extension (example `MyControl.php`)
@@ -147,7 +153,7 @@ class MyControl extends Control
 {
     /** @phpstan-latte-template {dir}/templates/{className}.*.latte */ // <-- will resolve all templates matching given pattern + anything resolved from method body
     public function render(string $param = null): void {
-        if($param !== null) {     
+        if($param !== null) {
             $this->template->render($this->getTemplatePath($param)); // <-- will be resolved normally (will report error of unresolved expression)
         } else {
             $this->template->render(__DIR__ . '/MyControl.latte'); // <-- will be resolved normally
@@ -160,7 +166,7 @@ class MyControl extends Control
 {
     /** @phpstan-latte-template {dir}/templates/{className}.*.latte */ // <-- will resolve all templates matching given pattern + anything resolved from method body
     public function render(string $param = null): void {
-        if($param !== null) {     
+        if($param !== null) {
             /** @phpstan-latte-ignore */
             $this->template->render($this->getTemplatePath($param)); // <-- will be ignored so no error now
         } else {
@@ -175,7 +181,7 @@ class MyControl extends Control
 class MyControl extends Control
 {
     public function render(string $param = null): void {
-        if($param !== null) {     
+        if($param !== null) {
             /** @phpstan-latte-ignore */
             $this->template->render($this->getTemplatePath($param)); // <-- will be ignored so no error now
         } else {
@@ -190,6 +196,7 @@ class MyControl extends Control
 ```
 
 ## `@phpstan-latte-var`
+
 Allowed context: variable assign, render call, method, class
 
 Value specifies variables and their types in given context.
@@ -198,7 +205,7 @@ Multiple annotations can be used on single element or at different levels to set
 
 ### Behaviour
 
-When is used on template variable assign it will rewrite how this one assign statement is evaluated. 
+When is used on template variable assign it will rewrite how this one assign statement is evaluated.
 
 When annotation is used on method it will add/change variables collected from assignments in that method and methods called from this method. This has higher priority than annotation over assignment itself.
 
@@ -248,7 +255,7 @@ class MyControl extends Control
 {
     /** @phpstan-latte-var string $myVar */ // <-- myVar in template will have type string
     public function render(mixed $param): void {
-        $this->template->myVar = $param; 
+        $this->template->myVar = $param;
         $this->template->render(__DIR__ . '/MyControl.latte');
     }
 }
@@ -257,12 +264,12 @@ class MyControl extends Control
 ```php
 class MyControl extends Control
 {
-    /** 
+    /**
      * @phpstan-latte-var string $myVar // <-- myVar in template will have type string
      * @phpstan-latte-var string $secondVar // <-- secondVar in template will have type string
-     */ 
+     */
     public function render(mixed $param): void {
-        $this->template->myVar = $param; 
+        $this->template->myVar = $param;
         $this->template->render(__DIR__ . '/MyControl.latte');
     }
 }
@@ -274,14 +281,14 @@ class MyControl extends Control
     /** @phpstan-latte-var string $myVar */ // <-- myVar in template will have type string (method annotation overrides annotations on assignments)
     public function render(mixed $param): void {
         /** @phpstan-latte-var int $myVar */ // <-- this is ignored
-        $this->template->myVar = $param; 
+        $this->template->myVar = $param;
         $this->template->render(__DIR__ . '/MyControl.latte');
     }
 }
 ```
 
 ```php
-/** @phpstan-latte-var string $myVar */ 
+/** @phpstan-latte-var string $myVar */
 class MyControl extends Control
 {
     public function render(mixed $param): void { // <-- myVar in template will have type string
@@ -295,7 +302,7 @@ class MyControl extends Control
 ```
 
 ```php
-/** @phpstan-latte-var string $myVar */ 
+/** @phpstan-latte-var string $myVar */
 class MyControl extends Control
 {
     /** @phpstan-latte-var int $myVar */ // <-- this has higher priority that class annotation
@@ -335,6 +342,7 @@ class MyControl extends Control
 ```
 
 ## `@phpstan-latte-component`
+
 Allowed context: call to `addComponent`, component assign, render call, method, class
 
 Value specifies components and their types in given context.
@@ -357,7 +365,6 @@ class MyControl extends Control
     }
 }
 ```
-
 
 ```php
 class MyControl extends Control

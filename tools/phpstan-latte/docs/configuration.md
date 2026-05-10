@@ -1,16 +1,17 @@
 # Configuration
+
 You can also add some parameters for phpstan-latte extension. All of them are under `latte` key in `parameters` section.
 
-* [Latte engine configuration](#latte-engine-configuration)
-* [Analyser configuration](#analyser-configuration)
-* [Ignoring errors](#ignoring-errors)
-* [Link checking](#link-checking)
-* [Other configuration options](#other-configuration-options)
+- [Latte engine configuration](#latte-engine-configuration)
+- [Analyser configuration](#analyser-configuration)
+- [Ignoring errors](#ignoring-errors)
+- [Link checking](#link-checking)
+- [Other configuration options](#other-configuration-options)
 
 ## Latte engine configuration
 
-
 ### engineBootstrap
+
 Type: `string`
 
 If provided this return value of this php file is used as Latte Engine.
@@ -18,6 +19,7 @@ If provided this return value of this php file is used as Latte Engine.
 If not provided default Latte Engine is used.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -43,13 +45,15 @@ return App\Bootstrap::boot()->createContainer()->getService("latte.templateFacto
 ```
 
 ### macros (Latte 2 only)
+
 Type: `array`
 
 List of methods to register macros in format `Class::method`.
 
-Macros known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually. 
+Macros known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -58,13 +62,15 @@ parameters:
 ```
 
 ### extensions (Latte 3 only)
+
 Type: `array`
 
 List of Latte extension classes.
 
-Extensions known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually. 
+Extensions known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -73,13 +79,15 @@ parameters:
 ```
 
 ### filters
+
 Type: `array`
 
 List of filters used in your apps. Name of filter is used as key, callback or function name is value.
 
-Filters known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually. 
+Filters known to Latte engine are added by default. If you use `engineBootstrap` you probably do not need to set this up manually.
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -88,6 +96,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -100,9 +109,11 @@ parameters:
 ```
 
 ### functions
+
 Type: `array`
 
 List of functions used in your apps. They are configured in same way as filters. Different is only usage in latte:
+
 ```latte
 {$foo|fooFilter}
 {fooFunction($foo)}
@@ -111,11 +122,13 @@ List of functions used in your apps. They are configured in same way as filters.
 ## Analyser configuration
 
 ### collectedPaths
+
 Type: `array`
 
 List of paths outside of analysedPaths that are scanned when latte context (variables, components, ...) is collected for template analysis.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -124,11 +137,13 @@ parameters:
 ```
 
 ### globalVariables
+
 Type: `array`
 
 List of variables and their types which are always defined in all your templates.
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -136,6 +151,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -145,13 +161,15 @@ parameters:
 ```
 
 ### resolveAllPossiblePaths
+
 Type: `bool`
 
-When expression containing variables is used as template path it is not resolved becase we do not know value of variable. 
+When expression containing variables is used as template path it is not resolved becase we do not know value of variable.
 
 With this option set to true we will search for all potentional templates that could match given expression. May lead to false positives.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -159,11 +177,13 @@ parameters:
 ```
 
 ### reportUnanalysedTemplates
+
 Type: `bool`
 
-When set to true all *.latte files in analysed paths that were not checked (because no render call of them was resolved) are reported as errors.
+When set to true all \*.latte files in analysed paths that were not checked (because no render call of them was resolved) are reported as errors.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -173,11 +193,13 @@ parameters:
 ## Errors
 
 ### errorPatternsToIgnore
+
 Type: `array`
 
 List of patterns which can be found in compiled latte specific error message. These errors are ignored, and they are not sent back to phpstan.
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -185,6 +207,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -193,11 +216,13 @@ parameters:
 ```
 
 ### warningPatterns
+
 Type: `array`
 
-With our TableErrorFormatter, warnings are not count as errors, they are just printed to output. If you want to transform some errors to warnings, you can use this parameter. It is list of pattern strings.  
+With our TableErrorFormatter, warnings are not count as errors, they are just printed to output. If you want to transform some errors to warnings, you can use this parameter. It is list of pattern strings.
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -205,6 +230,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -218,11 +244,13 @@ If you want to check links in your application, we need to know how links are tr
 You have two options how to configure it. If no one is set, link calls are not checked.
 
 ### presenterFactoryBootstrap
+
 Type: `string`
 
 Path to file where IPresenterFactory is set up.
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -238,11 +266,13 @@ return App\Bootstrap::boot()->createContainer()->getByType(IPresenterFactory::cl
 ```
 
 ### applicationMapping
+
 Type: `array`
 
 Sometimes you don't have IPresenterFactory available (e.g. for some libraries or packages). You can add application mapping to configuration. Application mapping should be the same as the mapping used in application. Default PresenterFactory is created.
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -250,6 +280,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -261,11 +292,13 @@ parameters:
 ## Other configuration options
 
 ### strictMode
+
 Type: `bool`
 
 Defines if compiled template is declared as strict (`declare(strict_types=1);`).
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -273,6 +306,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:
@@ -280,11 +314,13 @@ parameters:
 ```
 
 ### debugMode
+
 Type: `bool`
 
 Enables debugMode that disables cache usage
 
 Default:
+
 ```neon
 parameters:
     latte:
@@ -292,6 +328,7 @@ parameters:
 ```
 
 Example:
+
 ```neon
 parameters:
     latte:

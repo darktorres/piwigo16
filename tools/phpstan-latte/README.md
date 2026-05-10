@@ -1,4 +1,5 @@
 # PHPStan Latte extension
+
 PHPStan extension to check compiled Latte templates in context of a Presenter or a Component etc. Templates are compiled to PHP code which is then analyzed with PHPStan rules according to a configured [rule level](https://phpstan.org/user-guide/rule-levels) and rules from loaded extensions.
 
 The extension is based on Tomas Votruba's [blog series](https://tomasvotruba.com/blog/stamp-static-analysis-of-templates/) and his packages symplify and reveal.
@@ -36,6 +37,7 @@ If you also install [phpstan/extension-installer](https://github.com/phpstan/ext
   <summary>Manual installation</summary>
 
 Add this line to your phpstan.neon:
+
 ```neon
 includes:
     - vendor/efabrica/phpstan-latte/rules.neon
@@ -47,17 +49,17 @@ It is recommended to use this extension with [phpstan-nette](https://github.com/
 
 ## Configuration
 
-* [Latte engine configuration](docs/configuration.md#latte-engine-configuration)
-* [Analyser configuration](docs/configuration.md#analyser-configuration)
-* [Ignoring errors](docs/configuration.md#ignoring-errors)
-* [Link checking](docs/configuration.md#link-checking)
-* [Other configuration options](docs/configuration.md#other-configuration-options)
+- [Latte engine configuration](docs/configuration.md#latte-engine-configuration)
+- [Analyser configuration](docs/configuration.md#analyser-configuration)
+- [Ignoring errors](docs/configuration.md#ignoring-errors)
+- [Link checking](docs/configuration.md#link-checking)
+- [Other configuration options](docs/configuration.md#other-configuration-options)
 
 If analysis reports errors about missing context (variables/components, ...) set in external packages you need to set option `latte.collectedPaths` as descibed in [Analyser configuration](docs/configuration.md#analyser-configuration).
 
 ## Annotations
 
-There are cases that cannot be resolved automatically by static analysis. 
+There are cases that cannot be resolved automatically by static analysis.
 
 In these cases annotations line `@phpstan-latte-ignore` or `@phpstan-latte-var` could be used to guide resolvers to analyse latte templates correctly.
 
@@ -74,6 +76,6 @@ However, we know that in a wild there are applications which use their own metho
 
 If you want to contribute your PR are welcomed. If you want to discuss your idea first then create issue.
 
------
+---
 
 Thank you for using this package. Let us know if it helped you or what could be improved.

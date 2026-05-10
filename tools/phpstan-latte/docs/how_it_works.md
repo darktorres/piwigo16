@@ -21,7 +21,9 @@ Variables are collected from PHP classes (e.g. Presenters or Controls) and they 
 
 7) $this->template->render('path_to_latte.latte', new SomeControlTemplateType());
 ```
+
 It has to be done in correspondent methods like `actionFoo`, `renderFoo` in Presenters or `render`, `renderSomething` in Controls. Assigning in called methods, parent methods and / or global methods like `__construct`, `startup`, `beforeRender` are also accepted:
+
 ```php
 class SomeControlExtendsControl
 {
@@ -29,12 +31,12 @@ class SomeControlExtendsControl
     {
         $this->assignToTemplate();
     }
-    
+
     private function assignToTemplate(): void
     {
         $this->template->foo = 'bar';   // $foo will be available in the Latte template because this method is called from render
     }
-    
+
     private function neverCalledMethod(): void
     {
         $this->template->baz = 'bar';   // $baz will not be available in the template because this method is never called
@@ -44,34 +46,38 @@ class SomeControlExtendsControl
 
 If you use some non-standard way of assigning of variables to template, you have to create your own [VariableCollector](extension.md#variable-collectors).
 
-
 ### Common errors
+
 #### Variable $baz might not be defined
+
 This error can have several reasons. The PHPStan Latte extension checks Latte templates with some context. One Latte template can be used in several components or methods of Presenter.
 It is important to check the context first (text after path of Latte file - rendered from, included in etc.)
 
-1) Missing assignment
-    ```
-    ------ ------------------------------------------------------------------------------------------ 
-     Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter::bar
-    ------ ------------------------------------------------------------------------------------------
-     5      Variable $baz might not be defined.                      
-    ------ ------------------------------------------------------------------------------------------
-    ```
-    Here we have to check FooPresenter and its method(s) actionBar and/or renderBar. If there is no `$baz` sent to template, you have to add it and this error will disappear.  
+1. Missing assignment
 
-2) Missing action/render, but variable is used in template
-    ```
-    ------ ------------------------------------------------------------------------------------- 
-     Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter
-    ------ -------------------------------------------------------------------------------------
-     5      Variable $baz might not be defined.                      
-    ------ ------------------------------------------------------------------------------------- 
-    ```
-    Nette is sometimes tricky how it handles Latte templates. All Latte files in `templates` directory can be visited even without Presenter's action/render method (see more details [here](https://doc.nette.org/en/application/presenters#toc-life-cycle-of-presenter)).
-    In the example above we can see there is no `::bar` action after FooPresenter so this is exactly the case when `bar.latte` exists but `actionBar` neither `renderBar` exists, so no variables are sent to this template in `bar` context.
+   ```
+   ------ ------------------------------------------------------------------------------------------
+    Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter::bar
+   ------ ------------------------------------------------------------------------------------------
+    5      Variable $baz might not be defined.
+   ------ ------------------------------------------------------------------------------------------
+   ```
+
+   Here we have to check FooPresenter and its method(s) actionBar and/or renderBar. If there is no `$baz` sent to template, you have to add it and this error will disappear.
+
+2. Missing action/render, but variable is used in template
+   ```
+   ------ -------------------------------------------------------------------------------------
+    Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter
+   ------ -------------------------------------------------------------------------------------
+    5      Variable $baz might not be defined.
+   ------ -------------------------------------------------------------------------------------
+   ```
+   Nette is sometimes tricky how it handles Latte templates. All Latte files in `templates` directory can be visited even without Presenter's action/render method (see more details [here](https://doc.nette.org/en/application/presenters#toc-life-cycle-of-presenter)).
+   In the example above we can see there is no `::bar` action after FooPresenter so this is exactly the case when `bar.latte` exists but `actionBar` neither `renderBar` exists, so no variables are sent to this template in `bar` context.
 
 #### If condition is always true./If condition is always false.
+
 This is a similar case as in "Variable $baz might not be defined", a single template may be used in several places, like components or Presenter methods.
 You may also see the same message when including the template with `{include}` with parameters, for example: `{include "list.latte", show: true}` in one place, `{include "list.latte", show: 'false'}` in another.
 
@@ -79,13 +85,16 @@ The template may contain `{if $foo}` and `$foo` may be set in one of those place
 The PHPStan extension sees a specific type `true`/`false` instead of `bool` in those.
 
 The solution is to make the PHPStan Latte extension see `bool` instead. There may be several ways how to achieve that, you may for example set the variable in a method:
+
 ```php
 function setTemplateVars(bool $foo)
 {
   $this->template->foo = $foo;
 }
 ```
+
 Another option is to create a method that will return the value in the presenter:
+
 ```php
 $this->template->foo = $this->isFoo();
 
@@ -94,7 +103,9 @@ private function isFoo(): bool
     return false;
 }
 ```
+
 You can also use a typed property:
+
 ```php
 private bool $foo;
 
@@ -102,64 +113,72 @@ $this->template->foo = $this->foo;
 ```
 
 #### Variable $baz in isset() always exists and is not nullable
-1) Variable is conditionally assigned
-    ```php
-    public function actionBar(): void
-    {
-        if ($someCondition) {
-            $this->template->baz = 'bar';
-        }
-    }
-    ```
-    Then in the Latte template:
-    ```latte
-    {ifset $baz}
-        do something
-    {/ifset}
-    ```
 
-    This extension is using phpdoc for type hinting variables in compiled templates. So even if you assign variable in some condition, variable is always assigned, because PHP has no type like `undefined`.
-    Compiled template looks as follows:
-    ```php
-    public function main() : array
-    {
-        extract($this->params);
-        /** @var 'bar' $baz */
+1. Variable is conditionally assigned
 
-        /* line 1 */
-        if (isset($baz)) {
-            echo 'do something';
-        }
-    }
-    ```
+   ```php
+   public function actionBar(): void
+   {
+       if ($someCondition) {
+           $this->template->baz = 'bar';
+       }
+   }
+   ```
 
-    PHPStan will report error:
-    ```
-    ------ ------------------------------------------------------------------------------------------ 
-     Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter::bar
-    ------ ------------------------------------------------------------------------------------------
-     1      Variable $baz in isset() always exists and is not nullable.                     
-    ------ ------------------------------------------------------------------------------------------
-    ```
+   Then in the Latte template:
 
-    The easiest way how to fix this error is to assign `$baz` in all branches of your code. Type of variable will be union.
-    ```php
-    public function actionBar(): void
-    {
-        $this->template->baz = null;
-        if ($someCondition) {
-            $this->template->baz = 'bar';
-        }
-    }
-    ```
+   ```latte
+   {ifset $baz}
+       do something
+   {/ifset}
+   ```
 
-    Now the type of `$baz` will be `'bar'|null` and isset() in condition will be valid.
+   This extension is using phpdoc for type hinting variables in compiled templates. So even if you assign variable in some condition, variable is always assigned, because PHP has no type like `undefined`.
+   Compiled template looks as follows:
+
+   ```php
+   public function main() : array
+   {
+       extract($this->params);
+       /** @var 'bar' $baz */
+
+       /* line 1 */
+       if (isset($baz)) {
+           echo 'do something';
+       }
+   }
+   ```
+
+   PHPStan will report error:
+
+   ```
+   ------ ------------------------------------------------------------------------------------------
+    Line   modules/Presenters/templates/Foo/bar.latte rendered from App\Presenters\FooPresenter::bar
+   ------ ------------------------------------------------------------------------------------------
+    1      Variable $baz in isset() always exists and is not nullable.
+   ------ ------------------------------------------------------------------------------------------
+   ```
+
+   The easiest way how to fix this error is to assign `$baz` in all branches of your code. Type of variable will be union.
+
+   ```php
+   public function actionBar(): void
+   {
+       $this->template->baz = null;
+       if ($someCondition) {
+           $this->template->baz = 'bar';
+       }
+   }
+   ```
+
+   Now the type of `$baz` will be `'bar'|null` and isset() in condition will be valid.
 
 ## Components
 
 Components are collected from PHP classes (e.g. Presenters or Controls) when using one of these ways:
 
-1) class method createComponent()
+1. class method createComponent()
+
 ```php
 protected function createComponentSomething(): SomeControl
 {
@@ -167,7 +186,8 @@ protected function createComponentSomething(): SomeControl
 }
 ```
 
-2) calling method addComponent()
+2. calling method addComponent()
+
 ```php
 public function actionDefault(): void
 {
@@ -175,7 +195,8 @@ public function actionDefault(): void
 }
 ```
 
-3) assign to `$this`:
+3. assign to `$this`:
+
 ```php
 public function actionDefault(): void
 {
@@ -184,6 +205,7 @@ public function actionDefault(): void
 ```
 
 Subcomponents of components are also collected, so it is possible to use this:
+
 ```latte
 {control someControl}
 {control someControl-header}
@@ -193,8 +215,8 @@ Subcomponents of components are also collected, so it is possible to use this:
 ### Common errors
 
 #### Component with name "xxx" probably doesn't exist.
-First of all, check if your component is registered in Presenter / Control using one of way described above and if the name fits.
 
+First of all, check if your component is registered in Presenter / Control using one of way described above and if the name fits.
 
 ## Forms
 
@@ -204,6 +226,7 @@ Form fields, containers, groups and fields options are also collected and can be
 ### Common errors
 
 #### Form control with name "xxx" probably does not exist.
+
 Let's say you register form like this:
 
 ```php
@@ -228,6 +251,7 @@ protected function createComponentContainerForm(): Form
 ```
 
 Then you can access all registered fields in latte this way:
+
 ```latte
 {form containerForm}
     {$form[part1][text1]->getHtmlId()}
@@ -239,32 +263,36 @@ Then you can access all registered fields in latte this way:
 
     {input checkbox:}
 
-    {input xxx} <-- this field is not registered in createComponent method therefore it is marked as non-existing 
+    {input xxx} <-- this field is not registered in createComponent method therefore it is marked as non-existing
 {/form}
 ```
 
 ### Features
+
 By default, controls with dynamic names which can't be resolved as constant string or integer are not collected.
 
 Example:
+
 ```php
 $form->addText('text1', 'Text 1'); // <- this is collected
-$text2 = 'text2'; 
+$text2 = 'text2';
 $form->addText($text2, 'Text 2'); // <- this is collected
-$text3 = $this->name; // some dynamic name 
-$form->addText($text3, 'Text 3'); // <- this is not collected 
+$text3 = $this->name; // some dynamic name
+$form->addText($text3, 'Text 3'); // <- this is not collected
 ```
 
 With feature flag `transformDynamicFormControlNamesToString` it is collected. Try it:
+
 ```neon
 parameters:
     latte:
         features:
-            transformDynamicFormControlNamesToString: true    
+            transformDynamicFormControlNamesToString: true
 ```
 
 Form field is collected and if it is used with the same name in latte, it will be identified as TextInput.
 For Form above use latte:
+
 ```latte
 {input text1}
 {input text2}

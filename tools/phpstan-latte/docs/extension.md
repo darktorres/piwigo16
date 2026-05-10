@@ -4,25 +4,25 @@ This extension supports only common built-in methods for resolving paths to latt
 However, we know that in a wild there are applications which use their own methods for these purposes. That's why we create this extension extensible.
 
 - [Template resolvers](#template-resolvers)
-    - [Class method template resolvers](#class-method-template-resolvers)
-    - [Class standalone template resolvers](#class-standalone-template-resolvers)
-    - [Class template resolvers](#class-template-resolvers)
-    - [Node template resolvers](#node-template-resolvers)
-    - [Custom template resolvers](#custom-template-resolvers)
+  - [Class method template resolvers](#class-method-template-resolvers)
+  - [Class standalone template resolvers](#class-standalone-template-resolvers)
+  - [Class template resolvers](#class-template-resolvers)
+  - [Node template resolvers](#node-template-resolvers)
+  - [Custom template resolvers](#custom-template-resolvers)
 - [Latte context collectors](#latte-context-collectors)
-    - [Variable collectors](#variable-collectors)
-    - [Template path collectors](#template-path-collectors)
+  - [Variable collectors](#variable-collectors)
+  - [Template path collectors](#template-path-collectors)
 - [Node visitors](#node-visitors)
-    - [Actual class](#actual-class)
-    - [Forms](#forms)
+  - [Actual class](#actual-class)
+  - [Forms](#forms)
 
 ## Template resolvers
 
-Template resolvers are used to resolve what templates to analyse with what context (variables, components, ...). 
+Template resolvers are used to resolve what templates to analyse with what context (variables, components, ...).
 
 Built-in resolvers are:
 
-- [`NetteApplicationUIControl`](../src/LatteTemplateResolver/Nette/NetteApplicationUIControl.php) - resolves templates in context of Control render* methods
+- [`NetteApplicationUIControl`](../src/LatteTemplateResolver/Nette/NetteApplicationUIControl.php) - resolves templates in context of Control render\* methods
 - [`NetteApplicationUIPresenter`](../src/LatteTemplateResolver/Nette/NetteApplicationUIPresenter.php) - resolves templates in context of Presenter actions (based on action/render methods)
 - [`NetteApplicationUIPresenterStandalone`](../src/LatteTemplateResolver/Nette/NetteApplicationUIPresenterStandalone.php) - resolves templates in context of Presenter standalone templates (without action/render methods)
 
@@ -57,25 +57,25 @@ final class MyTemplateResolver extends AbstractClassMethodTemplateResolver
     // resolver will be used only for this class and its children
     public function getSupportedClasses(): array
     {
-        return ['App\MyControl']; 
+        return ['App\MyControl'];
     }
 
     // resolver will not be used for this class and its children
     public function getIgnoredClasses(): array
     {
-        return ['App\AnotherControl']; 
+        return ['App\AnotherControl'];
     }
 
     // resolver will be used only for methods which name starts with "view"
     protected function getClassMethodPattern(): string
     {
-        return '/^view.*/'; 
+        return '/^view.*/';
     }
 
     // you can use your own LatteContextResolver or use built-in one to resolve basic context
     protected function getClassContextResolver(ReflectionClass $reflectionClass, LatteContext $latteContext): LatteContextResolverInterface
     {
-        return new NetteApplicationUIControlLatteContextResolver($reflectionClass, $latteContext);            
+        return new NetteApplicationUIControlLatteContextResolver($reflectionClass, $latteContext);
     }
 
     // you can modify template context before it is used to resolve templates for example by adding context collected from methods
@@ -118,13 +118,13 @@ final class MyTemplateResolver extends AbstractClassStandaloneTemplateResolver
     // resolver will be used only for this class and its children
     public function getSupportedClasses(): array
     {
-        return ['App\MyControl']; 
+        return ['App\MyControl'];
     }
 
     // resolver will not be used for this class and its children
     public function getIgnoredClasses(): array
     {
-        return ['App\AnotherControl']; 
+        return ['App\AnotherControl'];
     }
 
     // define regex patterns for standalone template paths
@@ -223,7 +223,6 @@ abstract class AbstractClassTemplateResolver implements NodeLatteTemplateResolve
 }
 ```
 
-
 ### Custom template resolvers
 
 If you need fully custom resolver you can implement [`CustomLatteTemplateResolverInterface`](../src/LatteTemplateResolver/CustomLatteTemplateResolverInterface.php).
@@ -284,8 +283,10 @@ They also collects render calls and changes of rendered template path, which all
 And they can collect other information which can be used by other collectors or template resolvers like method calls, etc.
 
 ### Variable collectors
+
 VariableCollector is a service used to collect variables which can be used in compiled template.
 It uses several sub collectors which basically finds:
+
 - assigns to [$this->template->foo = 'bar';](../src/LatteContext/Collector/VariableCollector/AssignToTemplateVariableCollector.php)
 - calls [$this->template->setParameters([...]);](../src/LatteContext/Collector/VariableCollector/SetParametersToTemplateVariableCollector.php)
 - and more, see all [variable collectors](../src/LatteContext/Collector/VariableCollector)
@@ -294,14 +295,17 @@ You can implement your own variable collector implementing [`VariableCollectorIn
 Then register it as a new service in config file.
 
 ### Template path collectors
+
 TemplatePathCollector is a service which is used to find path to latte templates.
 Now there is only one collector which finds `$template->setFile($path)`. So if you use some other way how to tell where the latte template is, feel free to implement [`TemplatePathCollectorInterface`](../src/LatteContext/Collector/TemplatePathCollector/TemplatePathCollectorInterface.php). Don't forget to register this new service in config file.
 
 ## Node visitors
+
 Last but not least, we have to prepare code for PHPStan to analyse it. When Nette compiles the latte template to PHP, the final class is little messy. We use [PHP parser](https://github.com/nikic/PHP-Parser/) and its [NodeVisitor](https://github.com/nikic/PHP-Parser/blob/4.x/doc/component/Walking_the_AST.markdown#node-visitors) to clean it up.
 All NodeVisitors are registered to service called `phpstanLatteNodeVisitorStorage` where they have their priority specified. The priority means when the NodeVisitor is executed (sorting in ascending order) and also which NodeVisitors are executed together (NodeVisitors with same priority are executed together). See more about this topic [here](https://github.com/nikic/PHP-Parser/blob/4.x/doc/component/Walking_the_AST.markdown#multiple-visitors).
 Also see how this extension use NodeVisitors in [src/Compiler/NodeVisitor](../src/Compiler/NodeVisitor) and in [extension.neon](../extension.neon).
 You can implement your own NodeVisitor and register it to `phpstanLatteNodeVisitorStorage`.
+
 ```neon
 services:
     phpstanLatteNodeVisitorStorage:
@@ -312,6 +316,7 @@ services:
 This extension also allows several behaviors which can be added to the NodeVisitor to enrich it with some additional data. These behaviors can be combined as desired.
 
 ### Actual class
+
 If you need to use actual class name (e.g. actual Presenter or Control) in compiled template, you can use `ActualClassNodeVisitorInterface` in you NodeVisitor. We also prepared trait `ActualClassNodeVisitorBehavior` which can be used together with the interface.
 
 ```php
@@ -321,17 +326,18 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ActualClassNodeVisitorIn
 final class MyNodeVisitor extends NodeVisitorAbstract implements ActualClassNodeVisitorInterface
 {
     use ActualClassNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         // ...
         $this->doSomethingWithActualClass($this->actualClass);
         // ...
-    }    
+    }
 }
 ```
 
 ### Variables
+
 With `VariablesNodeVisitorInterface` and `VariablesNodeVisitorBehavior` you will get all collected variables with global variables to your NodeVisitor.
 
 ```php
@@ -341,7 +347,7 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\VariablesNodeVisitorInte
 final class MyNodeVisitor extends NodeVisitorAbstract implements VariablesNodeVisitorInterface
 {
     use VariablesNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         foreach ($this->variables as $variable) {
@@ -352,6 +358,7 @@ final class MyNodeVisitor extends NodeVisitorAbstract implements VariablesNodeVi
 ```
 
 ### Components
+
 Collected components are available with `ComponentsNodeVisitorInterface` and with `ComponentsNodeVisitorBehavior` you will also can use method `findComponentByName` which returns you component matching name or null if component is not found.
 
 ```php
@@ -361,13 +368,13 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\ComponentsNodeVisitorInt
 final class MyNodeVisitor extends NodeVisitorAbstract implements ComponentsNodeVisitorInterface
 {
     use ComponentsNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         foreach ($this->components as $component) {
             $this->doSomethingWithComponent($component);
         }
-        
+
         $this->findComponentByName('componentName');
         $this->findComponentByName('componentName-subcomponentName');
     }
@@ -375,6 +382,7 @@ final class MyNodeVisitor extends NodeVisitorAbstract implements ComponentsNodeV
 ```
 
 ### Filters
+
 Global and collected filters are sent to NodeVisitor via `FiltersNodeVisitorInterface` and `FiltersNodeVisitorBehavior`.
 
 ```php
@@ -384,7 +392,7 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\FiltersNodeVisitorInterf
 final class MyNodeVisitor extends NodeVisitorAbstract implements FiltersNodeVisitorInterface
 {
     use FiltersNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         foreach ($this->filters as $filter) {
@@ -395,6 +403,7 @@ final class MyNodeVisitor extends NodeVisitorAbstract implements FiltersNodeVisi
 ```
 
 ### Functions
+
 Global and collected functions are sent to NodeVisitor via `FunctionsNodeVisitorInterface` and `FunctionsNodeVisitorBehavior`.
 
 ```php
@@ -404,7 +413,7 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\FunctionsNodeVisitorInte
 final class MyNodeVisitor extends NodeVisitorAbstract implements FunctionsNodeVisitorInterface
 {
     use FunctionsNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         foreach ($this->functions as $function) {
@@ -415,6 +424,7 @@ final class MyNodeVisitor extends NodeVisitorAbstract implements FunctionsNodeVi
 ```
 
 ### Forms
+
 To get list of forms available in template of actual Presenter or Control, you can use `FormsNodeVisitorInterface` with `FormsNodeVisitorBehavior`.
 
 ```php
@@ -424,17 +434,18 @@ use Efabrica\PHPStanLatte\Compiler\NodeVisitor\Behavior\FormsNodeVisitorInterfac
 final class MyNodeVisitor extends NodeVisitorAbstract implements FormsNodeVisitorInterface
 {
     use FormsNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         foreach ($this->forms as $form) {
             $this->doSomethingWithForm($form);
         }
-    }    
+    }
 }
 ```
 
 ### Type from scope
+
 In some cases we need to know the types of expressions in compiled templates. For this purpose `ExprTypeNodeVisitorInterface` was created. In `ExprTypeNodeVisitorBehavior` the method `getType()` is implemented. It returns the type of Expr Node.
 These NodeVisitors are executed AFTER all other NodeVisitors in their separate groups based on priority.
 
@@ -448,7 +459,7 @@ use PHPStan\Type\Constant\ConstantStringType;
 final class MyNodeVisitor extends NodeVisitorAbstract implements ExprTypeNodeVisitorInterface
 {
     use ExprTypeNodeVisitorBehavior;
-    
+
     public function enterNode(Node $node)
     {
         if ($this->getType($node) instanceof ConstantStringType) {

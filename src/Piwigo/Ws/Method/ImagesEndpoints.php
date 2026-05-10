@@ -849,7 +849,7 @@ final class ImagesEndpoints
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image      = $images[0];
-                $imageIdStr = isset($image['id']) ? (is_string($image['id']) ? $image['id'] : '') : '';
+                $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
                 $addStatus  = ServiceLocator::get(UploadService::class)->addFormat($filePath, $formatExt ?? '', $imageIdStr);
                 return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumbUrl($image), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
             }
@@ -1062,7 +1062,7 @@ final class ImagesEndpoints
         /** @var array<string, list<string>> $formatDb */
         $formatDb = [];
         foreach (ServiceLocator::get(ImageRepository::class)->findAllFormats() as $row) {
-            $fmtImageId = is_string($row['image_id'] ?? null) ? $row['image_id'] : '';
+            $fmtImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $fmtExtVal  = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             $formatDb[$fmtImageId][] = $fmtExtVal;
         }
@@ -1119,7 +1119,7 @@ final class ImagesEndpoints
         /** @var list<string> $imageIds */
         $imageIds  = [];
         foreach ($imgRepo->findFormatsByFormatIds(array_map(intval(...), $formatIds)) as $row) {
-            $rowImageId = is_string($row['image_id'] ?? null) ? $row['image_id'] : '';
+            $rowImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $rowExt     = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             if (!isset($formatsOf[$rowImageId])) {
                 $imageIds[] = $rowImageId;
@@ -1132,7 +1132,7 @@ final class ImagesEndpoints
         }
         foreach ($imgRepo->findByIds(array_map(intval(...), $imageIds)) as $row) {
             $rowPath = is_string($row['path'] ?? null) ? $row['path'] : '';
-            $rowId   = is_string($row['id'] ?? null) ? $row['id'] : '';
+            $rowId   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }

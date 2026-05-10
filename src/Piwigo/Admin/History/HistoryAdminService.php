@@ -90,11 +90,11 @@ SELECT
         }
 
         if (isset($fields['user']) && $fields['user'] != -1) {
-            $clauses[] = 'user_id = ' . (is_string($fields['user']) ? $fields['user'] : '0');
+            $clauses[] = 'user_id = ' . (is_scalar($fields['user']) ? (string) $fields['user'] : '0');
         }
 
         if (isset($fields['image_id'])) {
-            $clauses[] = 'image_id = ' . (is_string($fields['image_id']) ? $fields['image_id'] : '0');
+            $clauses[] = 'image_id = ' . (is_scalar($fields['image_id']) ? (string) $fields['image_id'] : '0');
         }
 
         if (isset($fields['filename'])) {

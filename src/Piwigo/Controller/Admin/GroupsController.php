@@ -106,7 +106,7 @@ final class GroupsController
         $group_counter         = 0;
 
         foreach ($groupRepo->findAllOrdered() as $row) {
-            $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '';
+            $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $members    = $groupRepo->findMemberUsernamesByGroupId($userFields['username'], $userFields['id'], Tables::users(), is_numeric($row['id']) ? (int) $row['id'] : 0);
             $tpl->append('groups', [
                 'NAME'      => $row['name'],

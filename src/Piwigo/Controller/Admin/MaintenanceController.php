@@ -1067,7 +1067,7 @@ final class MaintenanceController
         $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
 
         foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
-            $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '';
+            $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $is_remote  = UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '');
             $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '&action=';
             $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&site=' . $row_id_str;
@@ -1206,7 +1206,7 @@ final class MaintenanceController
             $next_rank   = ['NULL' => 1];
             $conn        = ServiceLocator::get(Connection::class);
             foreach ($conn->executeQuery('SELECT id FROM ' . Tables::categories())->fetchAllAssociative() as $row) {
-                $rowIdKey = is_string($row['id'] ?? null) ? $row['id'] : '';
+                $rowIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
                 if ($rowIdKey !== '') {
                     $next_rank[$rowIdKey] = 1;
                 }

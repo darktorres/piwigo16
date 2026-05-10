@@ -845,7 +845,7 @@ final class CategoryRepository extends AbstractRepository
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $result[is_string($row['id'] ?? null) ? $row['id'] : ''] = $row;
+            $result[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
         }
         return $result;
     }

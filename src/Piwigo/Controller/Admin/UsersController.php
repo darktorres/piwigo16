@@ -174,7 +174,7 @@ final class UsersController
         $groups_arr_id = $groups_arr_name = [];
         foreach (ServiceLocator::get(GroupRepository::class)->findAllOrdered() as $row) {
             $groups_arr_name[] = '"' . addslashes(is_string($row['name'] ?? null) ? $row['name'] : '') . '"';
-            $groups_arr_id[]   = is_string($row['id'] ?? null) ? $row['id'] : '';
+            $groups_arr_id[]   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
         }
         $tpl->assign('groups_arr_id', implode(',', $groups_arr_id));
         $tpl->assign('groups_arr_name', implode(',', $groups_arr_name));

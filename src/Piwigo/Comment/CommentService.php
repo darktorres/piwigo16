@@ -268,7 +268,7 @@ final readonly class CommentService
     {
         $commentAction = 'validate';
 
-        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($postKey, is_string($comment['image_id'] ?? null) ? $comment['image_id'] : '')) {
+        if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($postKey, is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '')) {
             $commentAction = 'reject';
         } elseif (!Config::commentsValidation() or PermissionService::get()->isAdmin()) {
             $commentAction = 'validate';
@@ -309,7 +309,7 @@ final readonly class CommentService
 
             if ($result and Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction) {
 
-                $commentUrl     = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_string($comment['comment_id'] ?? null) ? $comment['comment_id'] : '0']);
+                $commentUrl     = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), ['comment_id' => is_scalar($comment['comment_id'] ?? null) ? (string) $comment['comment_id'] : '0']);
                 $keyargsContent = [
                     LangService::get()->getL10nArgs('Author: %s', stripslashes(is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '')),
                     LangService::get()->getL10nArgs('Comment: %s', stripslashes(is_string($comment['content'] ?? null) ? $comment['content'] : '')),

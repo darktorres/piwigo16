@@ -331,7 +331,7 @@ SELECT id
             $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_string($row['id'] ?? null) ? $row['id'] : '0') . ';')->fetchAllAssociative();
+        $formats = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {

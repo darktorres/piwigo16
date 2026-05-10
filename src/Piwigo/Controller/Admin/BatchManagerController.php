@@ -908,7 +908,7 @@ final class BatchManagerController
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
                     'TITLE'    => new Html($ttitle),
                     'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
-                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_string($row['id'] ?? null) ? $row['id'] : '')),
+                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '')),
                 ]));
             }
             $tpl->assign('thumb_params', $thumb_params);
@@ -1088,7 +1088,7 @@ final class BatchManagerController
             $storage_category_id = null;
 
             foreach ($images as $row) {
-                $element_ids[] = is_string($row['id'] ?? null) ? $row['id'] : '0';
+                $element_ids[] = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];
                 $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
@@ -1115,7 +1115,7 @@ final class BatchManagerController
                     $related_category_ids[] = $item_cat_id;
                 }
 
-                $row_id_str = is_string($row['id'] ?? null) ? $row['id'] : '0';
+                $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $authorizeds = array_diff(
                     array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
                     explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
@@ -1134,7 +1134,7 @@ final class BatchManagerController
 
                 $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str);
                 $admin_url_start      = $admin_photo_base_url . '-properties';
-                $admin_url_start     .= isset($row['cat_id']) ? '&cat_id=' . (is_string($row['cat_id']) ? $row['cat_id'] : '') : '';
+                $admin_url_start     .= isset($row['cat_id']) ? '&cat_id=' . (is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
                 $selected_level       = $row['level'] ?? null;
 
                 $userLevel  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;

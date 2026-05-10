@@ -641,7 +641,7 @@ final class GeneralEndpoints
         $nameOfTag = [];
         if ($hasTags) {
             foreach (ServiceLocator::get(TagRepository::class)->findAll() as $row) {
-                $tagIdKey = is_string($row['id'] ?? null) ? $row['id'] : '';
+                $tagIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
                 if ($tagIdKey !== '') {
                     $nameOfTag[$tagIdKey] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
                 }

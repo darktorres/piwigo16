@@ -575,10 +575,10 @@ final class AlbumController
             ];
 
             if (empty($category['dir'])) {
-                $tpl_cat['U_DELETE']  = $self_url . '&delete=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
+                $tpl_cat['U_DELETE']  = $self_url . '&delete=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
                 $tpl_cat['U_DELETE'] .= '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
             } elseif (Config::enableSynchronization()) {
-                $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . (is_string($category['id'] ?? null) ? $category['id'] : '');
+                $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
             }
 
             $tpl->append('categories', $tpl_cat);
@@ -619,14 +619,14 @@ final class AlbumController
         }
 
         // typed locals — $category is array<string, mixed>
-        $catId        = is_string($category['id'] ?? null) ? $category['id'] : '0';
+        $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
         $catIntId     = is_numeric($category['id']) ? (int) $category['id'] : 0;
         $catName      = is_scalar($category['name'] ?? null) ? (string) $category['name'] : '';
         $catComment   = is_string($category['comment']) ? $category['comment'] : '';
         $catVisible   = is_string($category['visible'] ?? null) ? $category['visible'] : 'false';
         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
-        $catUppercat  = is_string($category['id_uppercat']) ? $category['id_uppercat'] : '';
-        $catSiteId    = is_string($category['site_id']) ? $category['site_id'] : '';
+        $catUppercat  = is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '';
+        $catSiteId    = is_scalar($category['site_id']) ? (string) $category['site_id'] : '';
         $catLastmod   = is_string($category['lastmodified'] ?? null) || is_int($category['lastmodified'] ?? null) ? $category['lastmodified'] : null;
         $catRepPic    = is_scalar($category['representative_picture_id'] ?? null) ? (string) $category['representative_picture_id'] : '';
         $catComment_b = is_string($category['commentable'] ?? null) ? $category['commentable'] : 'false';
@@ -955,11 +955,11 @@ final class AlbumController
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
             foreach (ServiceLocator::get(GroupRepository::class)->findUserGroupMembersByGroupIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
-                $row_group_id = is_string($row['group_id'] ?? null) ? $row['group_id'] : '';
+                $row_group_id = is_scalar($row['group_id'] ?? null) ? (string) $row['group_id'] : '';
                 if (!isset($granted_groups[$row_group_id])) {
                     $granted_groups[$row_group_id] = [];
                 }
-                $granted_groups[$row_group_id][] = is_string($row['user_id'] ?? null) ? $row['user_id'] : '';
+                $granted_groups[$row_group_id][] = is_scalar($row['user_id'] ?? null) ? (string) $row['user_id'] : '';
             }
             $user_granted_by_group_ids = [];
             foreach ($granted_groups as $group_users) {
@@ -1158,7 +1158,7 @@ final class AlbumController
             }
             /** @var array<string, mixed> $catData */
             $catData     = $cat['cat'];
-            $catId       = is_string($catData['id'] ?? null) ? $catData['id'] : '';
+            $catId       = is_scalar($catData['id'] ?? null) ? (string) $catData['id'] : '';
             $orderedCat  = [
                 'rank'          => $catData['rank'],
                 'name'          => $catData['name'],

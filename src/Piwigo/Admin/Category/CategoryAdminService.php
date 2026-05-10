@@ -161,7 +161,7 @@ SELECT DISTINCT id
         foreach ($categories as $category) {
             if (is_array($category)) {
                 $id         = $category['id'] ?? null;
-                $idUppercat = is_string($category['id_uppercat'] ?? null) ? $category['id_uppercat'] : '0';
+                $idUppercat = is_scalar($category['id_uppercat'] ?? null) ? (string) $category['id_uppercat'] : '0';
                 if (!isset($currentRankForUppercat[$idUppercat])) {
                     $currentRankForUppercat[$idUppercat] = 0;
                 }
@@ -187,10 +187,10 @@ SELECT DISTINCT id
         foreach (ServiceLocator::get(CategoryRepository::class)->getAllForRankUpdate() as $row) {
             if ($row['id_uppercat'] != $currentUppercat) {
                 $currentRank    = 0;
-                $currentUppercat = is_string($row['id_uppercat'] ?? null) ? $row['id_uppercat'] : '';
+                $currentUppercat = is_scalar($row['id_uppercat'] ?? null) ? (string) $row['id_uppercat'] : '';
             }
             ++$currentRank;
-            $rowIdKey          = is_string($row['id'] ?? null) ? $row['id'] : '0';
+            $rowIdKey          = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
             $catMap[$rowIdKey] = [
                 'rank'         => $currentRank,
                 'rank_changed' => $currentRank != $row['rank'],
@@ -270,10 +270,10 @@ SELECT DISTINCT id
                     }
                 }
                 if ($isTop) {
-                    $catIdKey = is_string($cat['id'] ?? null) ? $cat['id'] : '0';
+                    $catIdKey = is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '0';
                     $topCategories[$catIdKey] = $cat;
                     if (!empty($cat['id_uppercat'])) {
-                        $parentIds[] = is_string($cat['id_uppercat']) ? $cat['id_uppercat'] : '';
+                        $parentIds[] = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
                     }
                 }
             }
@@ -282,12 +282,12 @@ SELECT DISTINCT id
             $tables     = [Tables::userAccess() => 'user_id', Tables::groupAccess() => 'group_id'];
 
             foreach ($topCategories as $topCategory) {
-                $refCatId      = is_string($topCategory['id'] ?? null) ? $topCategory['id'] : '0';
-                $topCatUppercat = is_string($topCategory['id_uppercat'] ?? null) ? $topCategory['id_uppercat'] : '';
+                $refCatId      = is_scalar($topCategory['id'] ?? null) ? (string) $topCategory['id'] : '0';
+                $topCatUppercat = is_scalar($topCategory['id_uppercat'] ?? null) ? (string) $topCategory['id_uppercat'] : '';
                 if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercat]) && $parentCats[$topCatUppercat]['status'] === 'private') {
                     $refCatId = $topCatUppercat;
                 }
-                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_string($topCategory['id'] ?? null) ? $topCategory['id'] : '0']);
+                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_scalar($topCategory['id'] ?? null) ? (string) $topCategory['id'] : '0']);
                 foreach ($tables as $table => $field) {
                     $refAccess = array_column(DbConnection::get()->executeQuery(
                         'SELECT ' . $field . ' FROM ' . $table . ' WHERE cat_id = ' . $refCatId
@@ -359,11 +359,11 @@ SELECT DISTINCT id
             $catUppercatsRaw4 = $category['uppercats'] ?? null;
             $catIdRaw4        = $category['id']        ?? null;
             $catSiteIdRaw     = $category['site_id']   ?? null;
-            $uppercats = str_replace(',', '/', is_string($catUppercatsRaw4) ? $catUppercatsRaw4 : '');
-            $catIdKey  = is_string($catIdRaw4) ? $catIdRaw4 : '0';
-            $siteIdKey = is_string($catSiteIdRaw) ? $catSiteIdRaw : '0';
+            $uppercats = str_replace(',', '/', is_scalar($catUppercatsRaw4) ? (string) $catUppercatsRaw4 : '');
+            $catIdKey  = is_scalar($catIdRaw4) ? (string) $catIdRaw4 : '0';
+            $siteIdKey = is_scalar($catSiteIdRaw) ? (string) $catSiteIdRaw : '0';
             $galleriesUrlRaw = $galleriesUrl[$siteIdKey] ?? null;
-            $catFulldirs[$catIdKey]  = is_string($galleriesUrlRaw) ? $galleriesUrlRaw : '';
+            $catFulldirs[$catIdKey]  = is_scalar($galleriesUrlRaw) ? (string) $galleriesUrlRaw : '';
             $catFulldirs[$catIdKey] .= (string) preg_replace_callback('/(\d+)/', $callback, $uppercats);
         }
         return $catFulldirs;
@@ -413,7 +413,7 @@ SELECT DISTINCT id
         $catRepo    = ServiceLocator::get(CategoryRepository::class);
         $catIdsInt = $categoryIds;
         foreach ($catRepo->findByIds($catIdsInt) as $row) {
-            $rowIdKey           = is_string($row['id'] ?? null) ? $row['id'] : '0';
+            $rowIdKey           = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
             $categories[$rowIdKey] = ['parent' => empty($row['id_uppercat']) ? 'NULL' : $row['id_uppercat'], 'status' => $row['status'], 'uppercats' => $row['uppercats']];
         }
         if ($newParent !== 'NULL') {

@@ -114,7 +114,7 @@ final class CategoriesEndpoints
                 $categoriesOfImage = [];
                 foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
                     $categoryIds[] = $row['category_id'];
-                    $rowImgId = is_string($row['image_id'] ?? null) ? $row['image_id'] : '';
+                    $rowImgId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                     if ($rowImgId !== '') {
                         $categoriesOfImage[$rowImgId][] = $row['category_id'];
                     }
@@ -269,7 +269,7 @@ final class CategoriesEndpoints
             $imgRepoWsCats = ServiceLocator::get(ImageRepository::class);
             foreach ($imgRepoWsCats->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds)) as $row) {
                 if ($row['level'] <= $user['level']) {
-                    $thumbnailSrcOf[is_string($row['id'] ?? null) ? $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
+                    $thumbnailSrcOf[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
                 } else {
                     foreach ($categories as &$category) {
                         if ($row['id'] == $category['representative_picture_id']) {
@@ -289,7 +289,7 @@ final class CategoriesEndpoints
             }
             if (count($newImageIds) > 0) {
                 foreach ($imgRepoWsCats->findByIds(array_map(intval(...), $newImageIds)) as $row) {
-                    $thumbnailSrcOf[is_string($row['id'] ?? null) ? $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
+                    $thumbnailSrcOf[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
                 }
             }
         }
@@ -303,7 +303,7 @@ final class CategoriesEndpoints
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
                 if ($category['id'] == $cat['id'] && $category['representative_picture_id'] !== null) {
-                    $repKey = is_string($category['representative_picture_id']) ? $category['representative_picture_id'] : '';
+                    $repKey = is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
                     $cat['tn_url'] = $thumbnailSrcOf[$repKey] ?? null;
                 }
             }
@@ -433,7 +433,7 @@ final class CategoriesEndpoints
             $orderNew      = $setrankCategoryIds;
             $orderNewById  = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
-            $catAsc        = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_string($category['id_uppercat']) ? $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
+            $catAsc        = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
             $catAscStr     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catAsc);
             $orderNewStr   = array_map(fn (int $v): string => (string) $v, $orderNewById);
             if (strcmp(implode(',', $catAscStr), implode(',', $orderNewStr)) !== 0) {
@@ -571,7 +571,7 @@ final class CategoriesEndpoints
         ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant([$categoryId]);
         ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit');
         $category = $catRepo3->findCategoryById($categoryId);
-        $repId    = isset($category['representative_picture_id']) ? (is_string($category['representative_picture_id']) ? $category['representative_picture_id'] : '') : '';
+        $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
         return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
     }
 

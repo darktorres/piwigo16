@@ -547,7 +547,7 @@ final class UserRepository extends AbstractRepository
         )->fetchAllAssociative();
         $result = [];
         foreach ($rows as $row) {
-            $result[is_string($row['id'] ?? null) ? $row['id'] : ''] = is_string($row['username'] ?? null) ? $row['username'] : '';
+            $result[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = is_scalar($row['username'] ?? null) ? (string) $row['username'] : '';
         }
         return $result;
     }

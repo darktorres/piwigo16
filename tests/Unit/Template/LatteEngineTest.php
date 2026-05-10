@@ -14,7 +14,6 @@ use Piwigo\Template\LatteEngine;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
-use Smarty\Smarty;
 
 /**
  * Phase A validation for §1.2 Wave 2: prove that LatteEngine + PiwigoExtension
@@ -252,24 +251,20 @@ final class LatteEngineTest extends TestCase
         );
     }
 
-    public function test_phase_b3_get_extent_falls_back_to_filename_when_no_override(): void
+    public function test_get_extent_returns_filename_unchanged(): void
     {
+        // Phase F removed the plugin-driven extension-override path
+        // along with `smarty/smarty`; `getExtent()` is now a pass-through
+        // that returns the original filename for any handle.
         $this->stageTemplateWithLoaders();
 
         self::assertSame(
-            'fallback.tpl',
-            PiwigoExtension::getExtent('fallback.tpl', 'unknown_handle'),
+            'fallback.latte',
+            PiwigoExtension::getExtent('fallback.latte', 'unknown_handle'),
         );
-    }
-
-    public function test_phase_b3_get_extent_returns_override_when_present(): void
-    {
-        $tpl = $this->stageTemplateWithLoaders();
-        $tpl->extents['my_handle'] = '/abs/path/override.tpl';
-
         self::assertSame(
-            '/abs/path/override.tpl',
-            PiwigoExtension::getExtent('original.tpl', 'my_handle'),
+            'original.latte',
+            PiwigoExtension::getExtent('original.latte', 'my_handle'),
         );
     }
 
@@ -374,16 +369,14 @@ final class LatteEngineTest extends TestCase
     }
 
     /**
-     * Phase F preparation — Template::parse() now routes by file
-     * extension. `.latte` paths land in `Template::renderLatte()` which
-     * threads Smarty's template-vars through {@see LatteEngine::default()}
-     * and resolves the bare filename against Smarty's template_dir.
-     * Test the renderLatte branch directly (the URL-globals assigns at
-     * the top of `parse()` are pre-existing Smarty plumbing that doesn't
-     * change behavior with this PR; stubbing `UrlGenerator` would require
-     * extending a `final readonly` class).
+     * `Template::parse()` threads its assigned-vars bag through
+     * {@see LatteEngine::default()} via `renderLatte()`, resolving the
+     * bare filename against the registered template_dirs. We exercise
+     * `renderLatte()` directly to bypass the URL-globals assigns at the
+     * top of `parse()` (stubbing `UrlGenerator`/`UrlService` would
+     * require extending `final readonly` classes).
      */
-    public function test_template_render_latte_threads_smarty_vars_into_latte(): void
+    public function test_template_render_latte_threads_vars_into_latte(): void
     {
         Lang::loadArray(['Help' => 'Aide']);
 
@@ -391,13 +384,15 @@ final class LatteEngineTest extends TestCase
         $tpl->scriptLoader = new ScriptLoader();
         $tpl->cssLoader = new CssLoader();
 
-        $smarty = new Smarty();
-        $smarty->setCompileDir($this->tempDir);
-        $smarty->setTemplateDir([dirname(__DIR__, 3) . '/themes/admin/_base/template']);
-        $smarty->assign('HELP_SECTION_TITLE', 'Configuration');
-        $smarty->assign('HELP_CONTENT', new Html('<p>body</p>'));
-        $smarty->assign('ENABLE_SYNCHRONIZATION', false);
-        $tpl->smarty = $smarty;
+        $dirsProp = new \ReflectionProperty(Template::class, 'template_dirs');
+        $dirsProp->setValue($tpl, [dirname(__DIR__, 3) . '/themes/admin/_base/template']);
+
+        $varsProp = new \ReflectionProperty(Template::class, 'vars');
+        $varsProp->setValue($tpl, [
+            'HELP_SECTION_TITLE'     => 'Configuration',
+            'HELP_CONTENT'           => new Html('<p>body</p>'),
+            'ENABLE_SYNCHRONIZATION' => false,
+        ]);
 
         TemplateRegistry::set($tpl);
 

@@ -352,7 +352,7 @@ GROUP BY period';
         }
 
         if (!empty($tpl_var)) {
-            $existing = $template->smarty->getTemplateVars('chronology_navigation_bars');
+            $existing = $template->getTemplateVars('chronology_navigation_bars');
             if (is_array($existing) && !empty($existing)) {
                 $lastIdx = count($existing) - 1;
                 $last = $existing[$lastIdx] ?? null;

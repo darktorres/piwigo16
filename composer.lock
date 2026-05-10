@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e0dc777345134d9a1ee251865de22c8",
+    "content-hash": "3c047dec1377c8041acd8ffa9d4017f2",
     "packages": [
         {
             "name": "ahand/mobileesp",
@@ -2482,82 +2482,6 @@
                 "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/v9.3.0"
             },
             "time": "2026-03-03T17:31:43+00:00"
-        },
-        {
-            "name": "smarty/smarty",
-            "version": "v5.8.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/smarty-php/smarty.git",
-                "reference": "78d259d3b971c59a0cd719c270cc5cbb740c36a7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/smarty-php/smarty/zipball/78d259d3b971c59a0cd719c270cc5cbb740c36a7",
-                "reference": "78d259d3b971c59a0cd719c270cc5cbb740c36a7",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2 || ^8.0",
-                "symfony/polyfill-mbstring": "^1.27"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^8.5 || ^7.5",
-                "smarty/smarty-lexer": "^4.0.2"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.0.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/functions.php"
-                ],
-                "psr-4": {
-                    "Smarty\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0"
-            ],
-            "authors": [
-                {
-                    "name": "Monte Ohrt",
-                    "email": "monte@ohrt.com"
-                },
-                {
-                    "name": "Uwe Tews",
-                    "email": "uwe.tews@googlemail.com"
-                },
-                {
-                    "name": "Rodney Rehm",
-                    "email": "rodney.rehm@medialize.de"
-                },
-                {
-                    "name": "Simon Wisselink",
-                    "homepage": "https://www.iwink.nl/"
-                }
-            ],
-            "description": "Smarty - the compiling PHP template engine",
-            "homepage": "https://smarty-php.github.io/smarty/",
-            "keywords": [
-                "templating"
-            ],
-            "support": {
-                "forum": "https://github.com/smarty-php/smarty/discussions",
-                "issues": "https://github.com/smarty-php/smarty/issues",
-                "source": "https://github.com/smarty-php/smarty/tree/v5.8.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/wisskid",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-02-15T14:27:15+00:00"
         },
         {
             "name": "symfony/cache",
@@ -5440,7 +5364,7 @@
             "dist": {
                 "type": "path",
                 "url": "tools/phpstan-latte",
-                "reference": "136a6a38a6f9670dd511651c349fb5a6bef7c8d1"
+                "reference": "866fa67136a7bed61f0dac75a10b838d3b2848f8"
             },
             "require": {
                 "ext-json": "*",

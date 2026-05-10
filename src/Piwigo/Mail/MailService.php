@@ -558,13 +558,13 @@ SELECT
                 ]);
 
                 if ($contentType == 'text/html') {
-                    if ($mailTpl->smarty->templateExists('global-mail-css.latte')) {
+                    if ($mailTpl->templateExists('global-mail-css.latte')) {
                         $mailTpl->setFilename('global-css', 'global-mail-css.latte');
                         $mailTpl->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 
                     $mailTheme = is_string($args['theme']) ? $args['theme'] : '';
-                    if ($mailTpl->smarty->templateExists('mail-css-' . $mailTheme . '.latte')) {
+                    if ($mailTpl->templateExists('mail-css-' . $mailTheme . '.latte')) {
                         $mailTpl->setFilename('css', 'mail-css-' . $mailTheme . '.latte');
                         $mailTpl->assignVarFromHandle('MAIL_CSS', 'css');
                     }
@@ -600,7 +600,7 @@ SELECT
                     $template->setTemplateDir((is_string($tpl['dirname']) ? $tpl['dirname'] : '') . '/' . $contentType);
                 }
                 $tplFilename = is_string($tpl['filename']) ? $tpl['filename'] : '';
-                if ($template->smarty->templateExists($tplFilename . '.latte')) {
+                if ($template->templateExists($tplFilename . '.latte')) {
                     $template->setFilename($tplFilename, $tplFilename . '.latte');
                     if (!empty($tpl['assign']) && is_array($tpl['assign'])) {
                         $safeAssign = [];

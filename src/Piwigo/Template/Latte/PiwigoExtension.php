@@ -294,15 +294,15 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * Mirrors Template::getExtent: when a plugin has registered an
-     * extension override for `$handle`, return its absolute path;
-     * otherwise return the original filename.
+     * Returns the original filename. Phase F removed the plugin-driven
+     * template-extension override path along with `smarty/smarty` (the
+     * fork ships no plugins). Latte templates compiled from the legacy
+     * `|get_extent` filter still call this function, so the entry point
+     * stays — it's now a pass-through.
      */
     public static function getExtent(string $filename = '', string $handle = ''): string
     {
-        $tpl = TemplateRegistry::current();
-        $override = $tpl->extents[$handle] ?? null;
-        return is_string($override) ? $override : $filename;
+        return $filename;
     }
 
     // ---- Phase B.3: stateful asset-pipeline functions --------------------

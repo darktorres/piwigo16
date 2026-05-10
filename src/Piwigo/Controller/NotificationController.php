@@ -45,11 +45,12 @@ final class NotificationController implements ControllerInterface
             ->insert($page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $feed_url = ServiceLocator::get(UrlGenerator::class)->feed();
+        $sep      = str_contains($feed_url, '?') ? '&' : '?';
         if (PermissionService::get()->isAGuest()) {
             $feed_image_only_url = $feed_url;
-            $feed_url .= '?feed=' . $page['feed'];
+            $feed_url .= $sep . 'feed=' . $page['feed'];
         } else {
-            $feed_url .= '?feed=' . $page['feed'];
+            $feed_url .= $sep . 'feed=' . $page['feed'];
             $feed_image_only_url = $feed_url . '&image_only';
         }
 

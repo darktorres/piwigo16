@@ -170,6 +170,11 @@ final readonly class UrlGenerator
     {
         return $this->routeUrl('search');
     }
+    /** Quick-search redirect endpoint (former qsearch.php; redirects to /search?q=…). */
+    public function qsearch(): string
+    {
+        return $this->routeUrl('qsearch');
+    }
     public function about(): string
     {
         return $this->routeUrl('about');

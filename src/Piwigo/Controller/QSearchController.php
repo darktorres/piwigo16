@@ -24,7 +24,10 @@ final class QSearchController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         PermissionService::get()->checkStatus(AccessLevel::Guest);
-        $q = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : '';
+        $body = $request->getParsedBody();
+        $bodyQ = is_array($body) && is_string($body['q'] ?? null) ? $body['q'] : null;
+        $queryQ = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : null;
+        $q = $bodyQ ?? $queryQ ?? '';
         Util::get()->redirect(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['q' => $q]));
         return ResponseFactory::create(302);
     }

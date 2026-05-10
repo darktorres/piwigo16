@@ -183,6 +183,7 @@ final class MenubarRenderer
 
         if (($block = $menu->getBlock('mbMenu')) != null) {
             $block->data['qsearch'] = true;
+            $template->assign('U_QSEARCH', ServiceLocator::get(UrlGenerator::class)->qsearch());
 
             $block->data['tags'] = [
                 'TITLE' => Lang::t('display available tags'),

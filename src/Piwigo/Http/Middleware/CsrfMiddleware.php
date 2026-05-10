@@ -21,6 +21,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *   /upgrade      — upgrader (no session yet)
  *   /identification — login form (no token in the standard form)
  *   /register     — registration form (no token in the standard form)
+ *   /qsearch      — quick-search redirect-only shim (no state change, no token)
  *
  * If the token is present but wrong, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->accessDenied().
  * If the token is missing, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->badRequest().
@@ -34,6 +35,7 @@ final class CsrfMiddleware implements MiddlewareInterface
         '/upgrade',
         '/identification',
         '/register',
+        '/qsearch',
     ];
 
     #[\Override]

@@ -90,25 +90,25 @@ $routes->add('favorites', new Route(
 ));
 
 $routes->add('recent_pics', new Route(
-    path:     '/recent',
+    path:     '/recent_pics',
     defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'recent_pics'],
     methods:  $get,
 ));
 
 $routes->add('best_rated', new Route(
-    path:     '/best-rated',
+    path:     '/best_rated',
     defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'best_rated'],
     methods:  $get,
 ));
 
 $routes->add('most_visited', new Route(
-    path:     '/most-visited',
+    path:     '/most_visited',
     defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'most_visited'],
     methods:  $get,
 ));
 
 $routes->add('recent_cats', new Route(
-    path:     '/recent-albums',
+    path:     '/recent_cats',
     defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'recent_cats'],
     methods:  $get,
 ));
@@ -117,6 +117,30 @@ $routes->add('random', new Route(
     path:     '/random',
     defaults: ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'list'],
     methods:  $get,
+));
+
+// Chronology views: /created-monthly-calendar, /posted-weekly-list-2024-3-15, etc.
+// SectionInitializer's parseWellKnownParamsUrl handles the token after dispatch.
+$routes->add('gallery_chronology_created', new Route(
+    path:         '/created-{rest}',
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController'],
+    requirements: ['rest' => '.+'],
+    methods:      $get,
+));
+
+$routes->add('gallery_chronology_posted', new Route(
+    path:         '/posted-{rest}',
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController'],
+    requirements: ['rest' => '.+'],
+    methods:      $get,
+));
+
+// /list/12,34 → display a fixed image set
+$routes->add('gallery_list', new Route(
+    path:         '/list/{rest}',
+    defaults:     ['_controller' => 'Piwigo\Controller\GalleryController', 'section' => 'list'],
+    requirements: ['rest' => '.+'],
+    methods:      $get,
 ));
 
 // ── Auth / user ───────────────────────────────────────────────────────────────

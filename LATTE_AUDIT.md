@@ -47,165 +47,211 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/\_base (1)
 
-- [ ] `local_head.tpl` ↔ `local_head.latte`
+- [x] `local_head.tpl` ↔ `local_head.latte` — 3-line file. `{combine_css path=… order=-10}` → `{do combineCss(path: …, order: -10)}` ✓ ({do} discards return value of side-effect function). `{if $load_css}` identical.
 
 ## themes/\_base/template (36)
 
-- [ ] `about.tpl` ↔ `about.latte`
-- [ ] `comment_list.tpl` ↔ `comment_list.latte`
-- [ ] `comments.tpl` ↔ `comments.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `identification.tpl` ↔ `identification.latte`
-- [ ] `index.tpl` ↔ `index.latte`
-- [ ] `infos_errors.tpl` ↔ `infos_errors.latte`
-- [ ] `mainpage_categories.tpl` ↔ `mainpage_categories.latte`
-- [ ] `menubar.tpl` ↔ `menubar.latte`
-- [ ] `menubar_categories.tpl` ↔ `menubar_categories.latte`
-- [ ] `menubar_identification.tpl` ↔ `menubar_identification.latte`
-- [ ] `menubar_links.tpl` ↔ `menubar_links.latte`
-- [ ] `menubar_menu.tpl` ↔ `menubar_menu.latte`
-- [ ] `menubar_related_categories.tpl` ↔ `menubar_related_categories.latte`
-- [ ] `menubar_specials.tpl` ↔ `menubar_specials.latte`
-- [ ] `menubar_tags.tpl` ↔ `menubar_tags.latte`
-- [ ] `month_calendar.tpl` ↔ `month_calendar.latte`
-- [ ] `navigation_bar.tpl` ↔ `navigation_bar.latte`
-- [ ] `nbm.tpl` ↔ `nbm.latte`
-- [ ] `no_photo_yet.tpl` ↔ `no_photo_yet.latte`
-- [ ] `notification.tpl` ↔ `notification.latte`
-- [ ] `password.tpl` ↔ `password.latte`
-- [ ] `picture.tpl` ↔ `picture.latte`
-- [ ] `picture_content.tpl` ↔ `picture_content.latte`
-- [ ] `picture_nav_buttons.tpl` ↔ `picture_nav_buttons.latte`
-- [ ] `popuphelp.tpl` ↔ `popuphelp.latte`
-- [ ] `profile.tpl` ↔ `profile.latte`
-- [ ] `profile_content.tpl` ↔ `profile_content.latte`
-- [ ] `redirect.tpl` ↔ `redirect.latte`
-- [ ] `register.tpl` ↔ `register.latte`
-- [ ] `search.tpl` ↔ `search.latte`
-- [ ] `search_rules.tpl` ↔ `search_rules.latte`
-- [ ] `slideshow.tpl` ↔ `slideshow.latte`
-- [ ] `tags.tpl` ↔ `tags.latte`
-- [ ] `thumbnails.tpl` ↔ `thumbnails.latte`
+- [x] `about.tpl` ↔ `about.latte` — `=` prefix on literal-filter prints ✓. `not empty` → `!empty` ✓. `{foreach from=$x item=y}` → `{foreach $x as $y}` ✓. `{include file='…tpl'}` → `{include '…latte'}` ✓. `ABOUT_MESSAGE`/`THEME_ABOUT` Html-wrapped in `AboutController.php:45,50`. `$about_msgs` has no current producer (plugin extension point).
+- [x] `comment_list.tpl` ↔ `comment_list.latte` — full read both. Display `CONTENT` Html-wrapped at `PictureCommentRenderer:184` + `CommentsController:353`; edit-mode plain string (textarea body auto-escapes). `$smarty.foreach.comment_loop.index is odd` → `(($iterator->getCounter() - 1)) % 2 != 0` (verified equivalent: 0-based even/odd ↔ 1-based after shift). `|escape` on textarea content dropped (Latte body auto-escapes html).
+- [x] `comments.tpl` ↔ `comments.latte` — `MENUBAR`/`COMMENT_LIST` auto-Html via `assignVarFromHandle` (verified `CommentsController:395`). `{html_options}` → `{=htmlOptions(…)|noescape}` ×5 (HTML payload). `'x.tpl'|get_extent:'navbar'` → `getExtent('x.latte', 'navbar')` ✓.
+- [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓. `getCombinedScripts` returns `Html` (`PiwigoExtension.php:370`). `QUERIES_LIST` Html-wrapped (`PageTailRenderer:58`). Hand-fix `{$elt|noescape}` on `$footer_elements` foreach (plugin debug HTML); regen would clobber — converter gap.
+- [~] `header.tpl` ↔ `header.latte` — `|strip_tags:false` ↔ `PiwigoExtension::stripTags` wrapper (PHP 8 native rejects bool arg). `|replace:'"':' '` → `|replace:'"',' '` (colon→comma args). `name=tag_loop`+`$smarty.foreach.X.first` → `$iterator->isFirst()`. Backtick interp → string concat. `{include $theme['local_head'], theme: $theme, load_css: …}` adds explicit `theme:` pass (Latte scope). `getCombinedCss/Scripts` return Html. `PAGE_BANNER` Html (`PageHeaderRenderer:40`); `head_elements` Html (`PageHeaderRenderer:65`); `header_msgs` upgrade Html (`CommonBootstrap:312`). JSON script `|noescape` from converter pass. `{strip}` → `{spaceless}`.
+- [x] `identification.tpl` ↔ `identification.latte` — straight conversion. `MENUBAR` auto-Html. `=`-prefix on translates. `|urlencode` preserved. No foreach, no html_options, no `$smarty.*` residue.
+- [~] `index.tpl` ↔ `index.latte` — full read both. `THUMBNAILS`/`CATEGORIES`/`SELECTED_TAGS_TEMPLATE` auto-Html via `assignVarFromHandle` (verified). `TITLE`/`chronology[TITLE]`/`CONTENT_DESCRIPTION`/`category_search_results[]`/`no_search_results[]` Html-wrapped at producers. Hand-fix `|noescape` on plugin HTML payloads: `PLUGIN_INDEX_CONTENT_BEFORE/BEGIN/END/AFTER`, `PLUGIN_INDEX_ACTIONS`, `$button` (PLUGIN_INDEX_BUTTONS), `CONTENT` (no core producer; plugin-supplied). `{if isset($SELECTED_TAGS_TEMPLATE)}` guard added (Latte undefined-var strictness). `name=loop` + `$smarty.foreach.X.first` → `$iterator->isFirst()` ×3. `{else if}` → `{elseif}`. `{include …'x.tpl'|get_extent:'navbar' navbar=$cats_navbar}` → `{include getExtent('x.latte', 'navbar'), navbar: $cats_navbar}`.
+- [x] `infos_errors.tpl` ↔ `infos_errors.latte` — foreach rewrite + `not empty` → `!empty`. `$errors`/`$infos` plain Lang::t text (auto-escape correct).
+- [x] `mainpage_categories.tpl` ↔ `mainpage_categories.latte` — `CAPTION_NB_IMAGES`/`DESCRIPTION` Html-wrapped at `CategoryCatsRenderer:262,269`. `NAME` plain. `|replace:'a':'b'` → `|replace:'a','b'`. `|strip_tags:false` via `PiwigoExtension::stripTags` wrapper. `index is odd` rewritten. `{assign var}` → `{var}`. `{combine_*}` → `{do …}`. `not empty` → `!empty`.
+- [~] `menubar.tpl` ↔ `menubar.latte` — `{foreach from=$blocks key=id item=block}` → `{foreach $blocks as $id => $block}`. `{include file=$block->template|get_extent:$id}` → `{include getExtent($block->template, $id), block: $block, id: $id}` (explicit scope-pass for child). Hand-fix `{$block->raw_content|noescape}` (plugin raw HTML when block has no template).
+- [~] `menubar_categories.tpl` ↔ `menubar_categories.latte` — `{assign}` → `{var}`, `$block->data.X` → `$block->data['X']`. `|str_repeat:N` on HTML literal `'</ul></li>'` hand-fixed `|noescape` ×2. `|translate_dec:'a':'b'` → `|translate_dec:'a','b'`.
+- [x] `menubar_identification.tpl` ↔ `menubar_identification.latte` — `{strip}`/`{/strip}` → `{spaceless}`/`{/spaceless}`. `$smarty.server.REQUEST_URI` → `($_SERVER['REQUEST_URI'] ?? '')` (null-safe). `=`-prefix on translates.
+- [x] `menubar_links.tpl` ↔ `menubar_links.latte` — `|escape:'html'` dropped (Latte attribute auto-escape). `{strip}`→`{spaceless}`. foreach rewrite. dot→bracket. Faithful.
+- [~] `menubar_menu.latte` ↔ `menubar_menu.tpl` — `{$link['REL']|noescape}` hand-fix in tag context (REL is `'rel="nofollow"'` attribute fragment from MenubarRenderer; Latte escapes `=`/`"` even on Html objects). `|escape:'html'` dropped (Latte auto-escape attribute). `{strip}`→`{spaceless}`. dot→bracket.
+- [~] `menubar_related_categories.tpl` ↔ `menubar_related_categories.latte` — same pattern as menubar_categories: `{assign}`→`{var}`, foreach rewrite, `|str_repeat` HTML literal hand-fixed `|noescape` ×2, `|translate_dec` colon→comma args.
+- [~] `menubar_specials.tpl` ↔ `menubar_specials.latte` — same REL hand-fix as `menubar_menu`: `{$link['REL']|noescape}` (HTML attribute fragment in tag context). `{strip}`→`{spaceless}`. dot→bracket.
+- [x] `menubar_tags.tpl` ↔ `menubar_tags.latte` — straight conversion. foreach + dot→bracket + `{strip}`→`{spaceless}` + `|translate_dec` colon→comma args.
+- [x] `month_calendar.tpl` ↔ `month_calendar.latte` — mechanical: foreach + dot→bracket + `{combine_css}`→`{do combineCss}` + `|translate_dec` colon→comma. All vars plain text labels.
+- [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — `{foreach key=p item=u}` → `{foreach $x as $p => $u}`, `{assign}`→`{var}`, dot→bracket. Faithful.
+- [x] `nbm.tpl` ↔ `nbm.latte` — trivial: translate `=`, include extension. `MENUBAR` auto-Html.
+- [x] `no_photo_yet.tpl` ↔ `no_photo_yet.latte` — standalone HTML page (no menubar/footer). Only translate `=`-prefix. `$intro` plain l10n text.
+- [x] `notification.tpl` ↔ `notification.latte` — `{html_head}…{/html_head}` Smarty block → `{capture $_pwgHead1}…{/capture}{do htmlHead($_pwgHead1)}` ✓ (capture-and-pass rewrite).
+- [x] `password.tpl` ↔ `password.latte` — `ne`→`!=`, `eq`→`==`. translate `=`-prefix. `MENUBAR` auto-Html.
+- [~] `picture.tpl` ↔ `picture.latte` — full read both. Mechanical: `{combine_*}`→`{do …}`, `not empty`→`!empty`, dot→bracket, `ne`→`!=`, `|escape`/`|escape:'html'` dropped (attribute auto-escape), `{strip}`→`{spaceless}`, `name=tag_loop`+`first` → `$iterator->isFirst()`, `{foreach key=k item=v}` → `{foreach as $k=>$v}`, `|translate_dec` colon→comma, `'x.tpl'|get_extent:'p'` → `getExtent('x.latte','p')`. Producer-side Html wraps for `SECTION_TITLE`, `COMMENT_IMG`, `INFO_CREATION_DATE`, `INFO_POSTED_DATE`, `ELEMENT_CONTENT`, `related_categories[]` (PictureController). Hand-fix `|noescape`: `PLUGIN_PICTURE_BEFORE/AFTER/ACTIONS`, `$button` (PLUGIN_PICTURE_BUTTONS).
+- [x] `picture_content.tpl` ↔ `picture_content.latte` — mechanical: dot→bracket, `{combine_script}`→`{do …}`, `|replace:'a':'b'`→`|replace:'a','b'`, `|strip_tags:false` via `stripTags` wrapper, `{strip}`→`{spaceless}`, `{assign}`→`{var}`, foreach key/item rewrite, `=`-prefix on printed expressions (`{=($size[0]/4)|intval}`).
+- [x] `picture_nav_buttons.tpl` ↔ `picture_nav_buttons.latte` — all vars plain text labels/URLs. dot→bracket, translate `=`, `{strip}`→`{spaceless}` (rewrites also applied inside Smarty `{*…*}` comments — harmless).
+- [x] `popuphelp.tpl` ↔ `popuphelp.latte` — `HELP_CONTENT` Html-wrapped at PopuphelpController. translate `=`, `{combine_script}`→`{do combineScript}`.
+- [x] `profile.tpl` ↔ `profile.latte` — `PROFILE_CONTENT` auto-Html via `assignVarFromHandle`. translate `=`. trivial.
+- [x] `profile_content.tpl` ↔ `profile_content.latte` — `name=theme` Smarty bareword → `name: 'theme'` quoted in Latte (`Converter::normalizeArgValue`). `{html_options}`/`{html_radios}` → `{=htmlOptions(…)/htmlRadios(…)|noescape}` ×5. `not`→`!`. `{include file=$plugin_block.template}` → `{include $plugin_block['template'], plugin_block: $plugin_block}` (scope-pass).
+- [~] `redirect.tpl` ↔ `redirect.latte` — `{$REDIRECT_MSG|noescape}` hand-fix: producer at `Util.php:139,152` falls back to `nl2br(Lang::t('Redirection…'))` (HTML `<br>`) when `$msg` empty; not Html-wrapped. Better fix: wrap Html at producer.
+- [x] `register.tpl` ↔ `register.latte` — `not`→`!`, translate `=`. trivial form template.
+- [x] `search.tpl` ↔ `search.latte` — `{section name=day start=1 loop=32}` → `{foreach range(1, 32) as $day}` ×2 (verified: start=1,loop=32 → indices 1-32 = `range(1,32)`). `$smarty.section.day.index` → `$day`. `$smarty.now|date_format` → `time()|date_format` ×6 (in onclick handlers; `=` prefix added). `|strip_tags:false|escape:html` → `|strip_tags:false`. `{html_options}` → `{=htmlOptions(…)|noescape}` ×3. `|translate_dec` colon→comma.
+- [x] `search_rules.tpl` ↔ `search_rules.latte` — mechanical: foreach rewrites, translate `=`. All vars plain text.
+- [x] `slideshow.tpl` ↔ `slideshow.latte` — `ELEMENT_CONTENT`/`COMMENT_IMG` wrapped Html at PictureController. `'…tpl'|get_extent:` → `getExtent('…latte', …)`. dot→bracket.
+- [x] `tags.tpl` ↔ `tags.latte` — mechanical: foreach, dot→bracket, `|translate_dec` colon→comma, translate `=`.
+- [x] `thumbnails.tpl` ↔ `thumbnails.latte` — `{assign}`→`{var}`, foreach, dot→bracket, `{combine_*}`→`{do …}`, `|translate_dec` colon→comma, `{strip}`→`{spaceless}`. All thumbnail vars plain text.
 
 ## themes/\_base/template/include (5)
 
-- [ ] `autosize.inc.tpl` ↔ `autosize.inc.latte`
-- [ ] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
-- [ ] `related_tags.inc.tpl` ↔ `related_tags.inc.latte`
-- [ ] `search_filters.inc.tpl` ↔ `search_filters.inc.latte`
-- [ ] `selected_tags.inc.tpl` ↔ `selected_tags.inc.latte`
+- [x] `autosize.inc.tpl` ↔ `autosize.inc.latte` — comment-only file (CSS does the work).
+- [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte` — `{combine_*}`→`{do …}`. trivial.
+- [x] `related_tags.inc.tpl` ↔ `related_tags.inc.latte` — foreach + dot→bracket + `{strip}`→`{spaceless}` + `|translate_dec` colon→comma.
+- [~] `search_filters.inc.tpl` ↔ `search_filters.inc.latte` — `<script type="application/json">{$page_data_json|noescape}</script>` from converter pass. dot→bracket inside string interpolation `"…/{$themeconf['colorscheme']}-…"`.
+- [x] `selected_tags.inc.tpl` ↔ `selected_tags.inc.latte` — foreach + dot→bracket + translate `=`. trivial.
 
 ## themes/\_base/template/help (1)
 
-- [ ] `quick_search.tpl` ↔ `quick_search.latte`
+- [x] `quick_search.tpl` ↔ `quick_search.latte` — pure static help content. translate `=`, `{combine_css}`→`{do combineCss}`. `$is_dark_mode` boolean only. No foreach, no HTML-payload var.
 
 ## themes/\_base/template/mail/text/html (8)
 
-- [ ] `cat_group_info.tpl` ↔ `cat_group_info.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `global-mail-css.tpl` ↔ `global-mail-css.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `mail-css-dark.tpl` ↔ `mail-css-dark.latte`
-- [ ] `mail-css-light.tpl` ↔ `mail-css-light.latte`
-- [ ] `notification_admin.tpl` ↔ `notification_admin.latte`
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
+- [~] `cat_group_info.tpl` ↔ `cat_group_info.latte` — `{$CPL_CONTENT}` is admin-input mail content (may contain HTML); under Latte auto-escape would render escaped. Needs `|noescape` or producer Html wrap. dot→bracket otherwise mechanical.
+- [~] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓; `not empty`→`!empty`; translate `=`. Mechanical.
+- [x] `global-mail-css.tpl` ↔ `global-mail-css.latte` — identical (CSS only).
+- [x] `header.tpl` ↔ `header.latte` — dot→bracket; `not empty`→`!empty`; `MAIL_TITLE`/`MAIL_SUBTITLE` plain text. `GLOBAL_MAIL_CSS`/`MAIL_CSS` Html via `assignVarFromHandle` (`MailService.php:563,569`).
+- [x] `mail-css-dark.tpl` ↔ `mail-css-dark.latte` — identical (CSS only).
+- [x] `mail-css-light.tpl` ↔ `mail-css-light.latte` — identical (CSS only).
+- [~] `notification_admin.tpl` ↔ `notification_admin.latte` — `{$CONTENT}` is HTML mail body (`MailService.php:614`); needs `|noescape` or Html wrap. translate `=`, dot→bracket on `$TECHNICAL[…]`.
+- [~] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — translate `=`, foreach + dot→bracket + `not empty`→`!empty` mechanical. Bug: `{$line}` (line 27, from `$global_new_lines` HTML), `{$custom_mail_content}` (line 33, admin HTML), `{$recent_post['HTML_DATA']}` (line 53, raw `<ul>…</ul>`) all html-escaped under Latte auto-escape. Fix via `|noescape` or producer wrap.
 
 ## themes/\_base/template/mail/text/plain (5)
 
-- [ ] `cat_group_info.tpl` ↔ `cat_group_info.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `notification_admin.tpl` ↔ `notification_admin.latte`
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
+- [x] `cat_group_info.tpl` ↔ `cat_group_info.latte` — plain text mail. translate `=`. `$CPL_CONTENT` plain text in plain-text context (auto-escape neutral when no `<>&`).
+- [x] `footer.tpl` ↔ `footer.latte` — `{literal}…{/literal}` → `{syntax off}…{syntax on}` ✓. `not empty`→`!empty`. translate `=`.
+- [x] `header.tpl` ↔ `header.latte` — `{literal}…{/literal}` → `{syntax off}…{syntax on}` ✓. `not empty`→`!empty`.
+- [x] `notification_admin.tpl` ↔ `notification_admin.latte` — translate `=`, dot→bracket on `$TECHNICAL[…]`. Plain text context.
+- [x] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — foreach rewrite + dot→bracket + `not empty`→`!empty` + translate `=`. Plain-text context.
 
 ## themes/standard_pages/template (7)
 
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `identification.tpl` ↔ `identification.latte`
-- [ ] `password.tpl` ↔ `password.latte`
-- [ ] `profile.tpl` ↔ `profile.latte`
-- [ ] `register.tpl` ↔ `register.latte`
-- [ ] `toaster.tpl` ↔ `toaster.latte`
+- [x] `footer.tpl` ↔ `footer.latte` — `{get_combined_scripts load='footer'}` → `{=getCombinedScripts(load: 'footer')}` (returns `Html`).
+- [x] `header.tpl` ↔ `header.latte` — `{strip}`→`{spaceless}`, foreach themes, backtick interp → string concat, `{include $theme['local_head'], theme: $theme, load_css: …}` scope-pass. `not empty`→`!empty`. `getCombinedCss/Scripts` return Html.
+- [~] `identification.tpl` ↔ `identification.latte` — JSON script `|noescape` ✓. `{else if}`→`{elseif}`. Line 91 `{'Don\'t have an account yet ?'|translate}` retained un-prefixed (converter `rewritePrintedLiteralFilter` regex didn't match escaped apostrophe). Latte 3 still accepts the un-prefixed printed literal-filter form, so renders correctly — converter rule gap.
+- [~] `password.tpl` ↔ `password.latte` — `eq`→`==`. JSON script `|noescape` ✓. Three sites with HTML inside translate strings hand-fixed `|noescape`: line 72 `Hello <em>%s</em>`, line 134 `Return to <a href…>`, line 151 `An error has occured … <a href…>`. `|replace:'a':'b'`→`|replace:'a','b'`. `{assign}`→`{var}`. Escaped-apostrophe gap on `'It\'s your first login !'` (line 45) and `'Let\'s set your password below.'` (line 74) — un-prefixed; Latte 3 still accepts.
+- [~] `profile.tpl` ↔ `profile.latte` — JSON scripts `|noescape` ✓ ×2. Bareword args `name=theme/language/api_expiration` → quoted ×3. `API_EMAIL_INFOS` Html-wrapped at producer (HTML `<em>%s</em>` translation). `|escape:html` dropped on `<p>` body context (Latte body auto-escapes). `{include file=$plugin_block.template}` → `{include $plugin_block['template'], plugin_block: $plugin_block, k_block: $k_block}` scope-pass. `not`→`!`. `{else if}`→`{elseif}`.
+- [x] `register.tpl` ↔ `register.latte` — `not`→`!`. JSON script `|noescape` ✓. `{else if}`→`{elseif}`. translate `=`. Plain text only.
+- [x] `toaster.tpl` ↔ `toaster.latte` — `{combine_*}`→`{do …}`. Trivial.
 
 ## themes/admin/\_base/template (64)
 
-- [ ] `admin.tpl` ↔ `admin.latte`
-- [ ] `album_notification.tpl` ↔ `album_notification.latte`
-- [ ] `albums.tpl` ↔ `albums.latte`
-- [ ] `batch_manager_global.tpl` ↔ `batch_manager_global.latte`
-- [ ] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
-- [ ] `cat_list.tpl` ↔ `cat_list.latte`
-- [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
-- [ ] `cat_options.tpl` ↔ `cat_options.latte`
-- [ ] `cat_perm.tpl` ↔ `cat_perm.latte`
-- [ ] `check_integrity.tpl` ↔ `check_integrity.latte`
-- [ ] `comments.tpl` ↔ `comments.latte`
-- [ ] `configuration_comments.tpl` ↔ `configuration_comments.latte`
-- [ ] `configuration_default.tpl` ↔ `configuration_default.latte`
-- [ ] `configuration_display.tpl` ↔ `configuration_display.latte`
-- [ ] `configuration_main.tpl` ↔ `configuration_main.latte`
-- [ ] `configuration_search.tpl` ↔ `configuration_search.latte`
-- [ ] `configuration_sizes.tpl` ↔ `configuration_sizes.latte`
-- [ ] `configuration_watermark.tpl` ↔ `configuration_watermark.latte`
-- [ ] `double_select.tpl` ↔ `double_select.latte`
-- [ ] `element_set_ranks.tpl` ↔ `element_set_ranks.latte`
-- [ ] `extend_for_templates.tpl` ↔ `extend_for_templates.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `group_list.tpl` ↔ `group_list.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `help.tpl` ↔ `help.latte`
-- [ ] `history.tpl` ↔ `history.latte`
-- [ ] `install.tpl` ↔ `install.latte`
-- [ ] `intro.tpl` ↔ `intro.latte`
-- [ ] `languages_installed.tpl` ↔ `languages_installed.latte`
-- [ ] `languages_new.tpl` ↔ `languages_new.latte`
-- [ ] `maintenance_actions.tpl` ↔ `maintenance_actions.latte`
-- [ ] `maintenance_env.tpl` ↔ `maintenance_env.latte`
-- [ ] `maintenance_sys.tpl` ↔ `maintenance_sys.latte`
-- [ ] `menubar.tpl` ↔ `menubar.latte`
-- [ ] `navigation_bar.tpl` ↔ `navigation_bar.latte`
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
-- [ ] `permalinks.tpl` ↔ `permalinks.latte`
-- [ ] `photos_add_applications.tpl` ↔ `photos_add_applications.latte`
-- [ ] `photos_add_direct.tpl` ↔ `photos_add_direct.latte`
-- [ ] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte`
-- [ ] `picture_coi.tpl` ↔ `picture_coi.latte`
-- [ ] `picture_formats.tpl` ↔ `picture_formats.latte`
-- [ ] `picture_modify.tpl` ↔ `picture_modify.latte`
-- [ ] `plugins_installed.tpl` ↔ `plugins_installed.latte`
-- [ ] `plugins_new.tpl` ↔ `plugins_new.latte`
-- [ ] `popuphelp.tpl` ↔ `popuphelp.latte`
-- [ ] `queue.tpl` ↔ `queue.latte`
-- [ ] `rating.tpl` ↔ `rating.latte`
-- [ ] `rating_user.tpl` ↔ `rating_user.latte`
-- [ ] `site_manager.tpl` ↔ `site_manager.latte`
-- [ ] `site_update.tpl` ↔ `site_update.latte`
-- [ ] `stats.tpl` ↔ `stats.latte`
-- [ ] `tabsheet.tpl` ↔ `tabsheet.latte`
-- [ ] `tags.tpl` ↔ `tags.latte`
-- [ ] `themes_installed.tpl` ↔ `themes_installed.latte`
-- [ ] `themes_new.tpl` ↔ `themes_new.latte`
-- [ ] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte`
-- [ ] `updates_ext.tpl` ↔ `updates_ext.latte`
-- [ ] `updates_pwg.tpl` ↔ `updates_pwg.latte`
-- [ ] `upgrade.tpl` ↔ `upgrade.latte`
-- [ ] `user_activity.tpl` ↔ `user_activity.latte`
-- [ ] `user_list.tpl` ↔ `user_list.latte`
-- [ ] `user_perm.tpl` ↔ `user_perm.latte`
+- [~] `admin.tpl` ↔ `admin.latte` — full read. Sidebar nav. `$ADMIN_PAGE_TITLE` Html-wrapped at producer. `$TABSHEET`, `$ADMIN_CONTENT` auto-Html via `assignVarFromHandle`. Smarty `{if {$U_SHOW_TEMPLATE_TAB}}` (nested print-eval) → `{if $U_SHOW_TEMPLATE_TAB}` (Latte expression). `{$error|noescape}`/`{$info|noescape}`/`{$warning|noescape}`/`{$message|noescape}` hand-fixes — `PageState` callers push HTML (verified at multiple sites).
+- [x] `album_notification.tpl` ↔ `album_notification.latte` — `{combine_*}`→`{do …}`. `{html_options}`→`{=htmlOptions(…)|noescape}` ×2. `{$MAIL_CONTENT}` textarea body input. `{$save_success}` plain Lang::t.
+- [~] `albums.tpl` ↔ `albums.latte` — JSON `|noescape` ✓. `{combine_*}`→`{do …}`. Smarty nested print-eval `{if "first" == {$POS_PREF}}` → `{if "first" == $POS_PREF}` ×2. Line 183 escaped-apostrophe in translate string un-prefixed (`'Supprimer l\'album …'|translate`) — same converter gap; Latte 3 still accepts.
+- [~] `batch_manager_global.tpl` ↔ `batch_manager_global.latte` — `{include … title={'X'|translate}}` (Smarty `{…}` expr arg) → `{include …, title: ('X'|translate)}` ✓. `{assign var=isSelected value=$x|in_array:$y}` → `{var $isSelected = ($x|in_array:$y)}`. `$thumbnail['TITLE']` Html-wrapped at producer (`BatchManagerController:909`). `|escape:'html'` dropped on attribute. `{html_options}`→`{=htmlOptions(…)|noescape}`. `{$action['CONTENT']|noescape}` hand-fix (plugin payload, line 242). foreach key/item rewrite ×2.
+- [~] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte` — JSON `|noescape` ×2. `{html_options}`→`{=htmlOptions(…)|noescape}`. `|escape:html` dropped on attribute. `|count` filter registered (`PiwigoExtension.php:108`); converter mixes `count(…)` function and `|count` filter forms. foreach key/item rewrite. Multi-line `{if count(…) \n< 1}` tag (Latte 3 accepts). `{include $PATH, element: $element, PATH: $PATH}` scope-pass for plugin sub-templates. `url_is_remote()` registered function preserved.
+- [x] `cat_list.tpl` ↔ `cat_list.latte` — `$smarty.cookies.X` → `$_COOKIE['X']`. `{assign var=color_tab value=[…]}` → `{var $color_tab = […]}` (array literal). `$CATEGORIES_NAV` Html-wrapped at producer. foreach + dot→bracket + translate `=` + `|translate_dec` colon→comma.
+- [~] `cat_modify.tpl` ↔ `cat_modify.latte` — `$CATEGORIES_NAV`, `$CATEGORIES_PARENT_NAV` Html-wrapped at AlbumController. Line 73 `{'Directory'}` retained un-prefixed (no filter, no `=`); Latte 3 evaluates as string-literal expression. JSON `|noescape` ✓. dot→bracket throughout. `$CAT_NAME`/`$CAT_COMMENT` plain admin input.
+- [x] `cat_options.tpl` ↔ `cat_options.latte` — trivial. `$DOUBLE_SELECT` auto-Html via `assignVarFromHandle`.
+- [x] `cat_perm.tpl` ↔ `cat_perm.latte` — JSON `|noescape` ✓. `|json_encode|escape:html` → `|json_encode` (attribute auto-escape). `not`→`!`. dot→bracket. `$save_success` plain Lang::t.
+- [~] `check_integrity.tpl` ↔ `check_integrity.latte` — `index is odd` rewrite. dot→bracket. Line 41 `{$c13y.c13y.correction_error_fct}` → `{$c13y['c13y']['correction_error_fct']}` faithful (preserved Smarty-source typo of double `.c13y.c13y.`). `correction_msg`/`correction_error_fct` Html-wrapped at producer (`CheckIntegrity:196,213`). `|nl2br` Latte std returns Html. `|json_encode|escape:html` → `|json_encode` on attribute.
+- [x] `comments.tpl` ↔ `comments.latte` — JS-driven UI, translate `=` + JSON `|noescape`. `{combine_*}`→`{do …}`. No foreach, no HTML payload.
+- [x] `configuration_comments.tpl` ↔ `configuration_comments.latte` — checkbox config. dot→bracket, `{html_options}`→`{=htmlOptions(…)|noescape}`. `$save_success` plain.
+- [x] `configuration_default.tpl` ↔ `configuration_default.latte` — `{html_radios}`→`{=htmlRadios(…)|noescape}` ×3.
+- [~] `configuration_display.tpl` ↔ `configuration_display.latte` — checkbox UI with `('X'|translate|ucfirst)` paren-wrapped translate-arg expressions ✓. Un-prefixed `{'administrators'}` literal ×4 (same pattern).
+- [~] `configuration_main.tpl` ↔ `configuration_main.latte` — JSON `|noescape`. dot→bracket, foreach key/item, `eq/ne`→`==/!=`. `{html_options}`→`{=htmlOptions(…)|noescape}` ×3. `$main['CONF_PAGE_BANNER']` in textarea (plain context). Tooltip title with literal `<br><img>` HTML in attribute (template literal — passes verbatim). Line 40 escaped-apostrophe un-prefixed.
+- [~] `configuration_search.tpl` ↔ `configuration_search.latte` — JSON `|noescape`. `$x.filters_views.$filter_name.access` (Smarty multi-level dot with var key) → `$x['filters_views'][$filter_name]['access']`. `{else if}`→`{elseif}`. `ucfirst(str_replace(…))` function call preserved. Line 57 escaped-apostrophe un-prefixed.
+- [x] `configuration_sizes.tpl` ↔ `configuration_sizes.latte` — JSON `|noescape`. dot→bracket including var keys (`$ferrors.$type` → `$ferrors[$type]`). foreach key/item rewrite.
+- [x] `configuration_watermark.tpl` ↔ `configuration_watermark.latte` — JSON `|noescape`. `eq`→`==`. `{html_options}`→`{=htmlOptions(…)|noescape}`. `|htmlspecialchars` preserved on attribute display.
+- [x] `double_select.tpl` ↔ `double_select.latte` — `{html_options}`→`{=htmlOptions(…)|noescape}` ×2. Trivial.
+- [x] `element_set_ranks.tpl` ↔ `element_set_ranks.latte` — `|replace:'"':' '` → `|replace:'"',' '`. dot→bracket, foreach. `{html_options}`→`{=htmlOptions(…)|noescape}`. `$thumbnail['NAME']` plain (filename).
+- [x] `extend_for_templates.tpl` ↔ `extend_for_templates.latte` — `index is odd` rewrite. `{html_options}` → `{=htmlOptions(name: 'X[]', output: …, values: …, selected: …)|noescape}` ×3 (with multi-arg).
+- [~] `footer.tpl` ↔ `footer.latte` — admin footer. `|escape:url` → `|urlencode`. `getCombinedScripts` returns Html. `{$debug['QUERIES_LIST']}` Html-wrapped at producer (`PageTailRenderer:58`). Hand-fix `{$elt|noescape}` on `$footer_elements` foreach (admin maintenance/search controllers push HTML comment payloads). Lines 23, 44 escaped-apostrophe in translate (`'What\'s new in version %s'|translate:$X`) un-prefixed. Numeric keys: `$WHATS_NEW_IMGS.1` → `$WHATS_NEW_IMGS['1']` (×3+1 commented; PHP int↔string array keys interop).
+- [~] `group_list.tpl` ↔ `group_list.latte` — `{function name=groupContent}…{/function}` Smarty inline function → `{define groupContent}…{/define}` Latte template fragment. `{groupContent ...args}` callsite → `{include groupContent, ...args}`. JSON `|noescape` ×2. Translate args with HTML literals (`'<span>0</span>'` line 107, `'<strong>39</strong>','<strong>251</strong>'` line 177) hand-fixed `|noescape`. `not empty`→`!empty`. `{include groupContent, group: $group, ...}` adds explicit scope-pass + per-arg passes for the Latte fragment.
+- [x] `group_perm.tpl` ↔ `group_perm.latte` — trivial. `$DOUBLE_SELECT` auto-Html. `$TITLE` plain. translate `=` only.
+- [~] `header.tpl` ↔ `header.latte` — admin header. Same pattern as public: `{strip}`→`{spaceless}`, dot→bracket, `not empty`→`!empty`, foreach, backtick interp → string concat, `{include $theme['local_head'], theme: $theme, …}` scope-pass, JSON `|noescape`, `eq`→`==`, `{assign}`→`{var}`. `getCombinedCss/Scripts` return Html.
+- [x] `help.tpl` ↔ `help.latte` — trivial. `not`→`!`. `$HELP_CONTENT` Html-wrapped at producer (MiscController). `$HELP_SECTION_TITLE` plain.
+- [x] `history.tpl` ↔ `history.latte` — JSON `|noescape`, dot→bracket, `'x.tpl'|get_extent:'p'` → `getExtent('x.latte', 'p')` ×2. JS-driven UI.
+- [~] `install.tpl` ↔ `install.latte` — `$L_INSTALL_HELP` Html-wrapped at producer (`InstallController:274`). `$EMAIL` Html-wrapped (admin email htmlspecialchars-escaped before splice into `<span class="adminEmail">`). Line 155 `'Subscribe %s …'|translate:$EMAIL|noescape` hand-fix (translate sprintf collapses Html arg to plain string). `'Keep in touch …, it\'s …'|translate|htmlspecialchars|nl2br` un-prefixed escaped-apostrophe in title attribute.
+- [x] `intro.tpl` ↔ `intro.latte` — JSON `|noescape`, foreach key/item rewrites ×many, `|number_format`, `|translate_dec` colon→comma, `{else if}`→`{elseif}`, `{assign}`→`{var}`. Stats from `GeneralEndpoints` (translate_dec plurals).
+- [x] `languages_installed.tpl` ↔ `languages_installed.latte` — JSON `|noescape`. dot→bracket, nested foreach. Plain text vars (language metadata).
+- [x] `languages_new.tpl` ↔ `languages_new.latte` — `index is odd` rewrite. `|htmlspecialchars|nl2br` chain preserved on cluetip title attribute.
+- [x] `maintenance_actions.tpl` ↔ `maintenance_actions.latte` — JSON `|noescape`. dot→bracket, foreach key/item. `|translate:{round(...)}` (Smarty nested print-eval as filter arg) → `|translate:round(...)` (Latte function-call expression).
+- [x] `maintenance_env.tpl` ↔ `maintenance_env.latte` — JSON `|noescape`. Smarty `{$CONTAINER_INFO} neq 'none'` → `$CONTAINER_INFO != 'none'` (nested `{$X}` in if-condition unwrapped). `|translate:$X:$Y` → `|translate:$X,$Y` (multi-arg).
+- [x] `maintenance_sys.tpl` ↔ `maintenance_sys.latte` — Static activity table. translate `=` only.
+- [x] `menubar.tpl` ↔ `menubar.latte` — admin menu block ordering. `$block->reg->getName()` chained method preserved via `$block['reg']->getName()`. `{math equation="abs(pos)" pos=$block.pos}` Smarty fn → `{=math(equation: "abs(pos)", pos: $block['pos'])}` named-args.
+- [x] `navigation_bar.tpl` ↔ `navigation_bar.latte` — `{assign}`→`{var}`, foreach key/item, dot→bracket. Plain pagination markup.
+- [~] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — `$DOUBLE_SELECT` auto-Html. `index is odd` rewrite. dot→bracket. Line 91 `{$u['CHECKED']|noescape}` hand-fix in tag context (HTML attribute fragment `'checked="checked"'`).
+- [~] `permalinks.tpl` ↔ `permalinks.latte` — `$SORT_*`/`$SORT_OLD_*` Html-wrapped at producer (`MiscController::parseSortVariables` builds `<a href>...<em>↓</em></a>`). JSON `|noescape` ✓. `index is odd` rewrite. `{html_options}`→`{=htmlOptions(…)|noescape}`. Plain DB values otherwise.
+- [~] `photos_add_applications.tpl` ↔ `photos_add_applications.latte` — Lines 25, 37 `'<em>Piwigo for iOS/Android</em>…'|translate|noescape` hand-fix (HTML in translate string).
+- [~] `photos_add_direct.tpl` ↔ `photos_add_direct.latte` — `$ADD_TO_ALBUM`/`$selected_category_name` Html-wrapped at producer (`DirectPreparer:83,96`; `getCatDisplayNameCache` returns HTML breadcrumb). JSON `|noescape`. `{$can_upload=…}` (Smarty short-form assign) → `{var $can_upload = …}`. `|escape:javascript` (Smarty) dropped on legitimate text contexts (Latte body auto-escapes html). `|translate:$X:$Y` → `|translate:$X,$Y` multi-arg. `noscript` block added around HTML5 fallback. Lines 145, 169 escaped-apostrophe in translate (un-prefixed). `$FORMATS_ORIGINAL_INFO[*]` plain Lang::t.
+- [x] `photos_add_ftp.tpl` ↔ `photos_add_ftp.latte` — `$FTP_HELP_CONTENT` Html-wrapped at `PhotoController:719`.
+- [x] `picture_coi.tpl` ↔ `picture_coi.latte` — COI form, plain markup. foreach + dot→bracket.
+- [x] `picture_formats.tpl` ↔ `picture_formats.latte` — JSON `|noescape`. foreach + double-quoted bracket access (`$format["format_id"]`). `$FORMATS` data array.
+- [~] `picture_modify.tpl` ↔ `picture_modify.latte` — JSON `|noescape`. dot→bracket. `|count` mixed with `count()`. `|escape` dropped on `$NAME`. foreach key/item ×2. `|json_encode|escape:html` → `|json_encode` ×2. `{html_options}`→`{=htmlOptions(…)|noescape}`. `INTRO['size']` Html-wrapped at producer (`PhotoController:322` literal `&times;`). `related_categories[*]['name']` and `STORAGE_CATEGORY` Html-wrapped (`PhotoController:357,361` getCatDisplayNameCache HTML breadcrumb). Lines 97, 140 escaped-apostrophe in translate (un-prefixed).
+- [~] `plugins_installed.tpl` ↔ `plugins_installed.latte` — JSON `|noescape`. `{counter start=0 assign=i}` Smarty counter dropped (unused). `{assign}|sprintf:` → `{var $author = (...|sprintf:...)}` ✓. `|cat:` chain preserved. `{$author}/{$version}/$plugin['DESC']` hand-fixed `|noescape` (lines 115, 117, 128) — sprintf/cat-built HTML + plugin DESC HTML.
+- [x] `plugins_new.tpl` ↔ `plugins_new.latte` — JSON `|noescape`. `{html_options}`→`{=htmlOptions(…)|noescape}`. `|escape:html` dropped on tooltip title (Latte attribute auto-escape). `{assign var=color_tab value=[…]}` → `{var $color_tab = […]}`. foreach key/item ×2. `$plugin['BIG_DESC']|nl2br` — Latte std `nl2br` html-escapes first (safer than Smarty `escape_html=false`).
+- [x] `popuphelp.tpl` ↔ `popuphelp.latte` — `$HELP_CONTENT` Html-wrapped at MiscController. Trivial.
+- [x] `queue.tpl` ↔ `queue.latte` — `gt`→`>`. foreach + dot→bracket. Line 59 escaped-quote translate literal `data-confirm='{"\"…\""|translate}'` preserved verbatim.
+- [x] `rating.tpl` ↔ `rating.latte` — JSON `|noescape`. `{html_options}`→`{=htmlOptions(…)|noescape}` ×2. `index is odd` rewrite. `|json_encode|escape:html` → `|json_encode`. dot→bracket, nested foreach.
+- [~] `rating_user.tpl` ↔ `rating_user.latte` — JSON `|noescape`. `|replace:' ':'<br>'` → `|replace:' ','<br>'|noescape` ×2 (HTML in replace value, hand-fix). `{capture assign=X}…{/capture}` → `{capture $X}…{/capture}`. `{foreach}{if cond}{break}{/if}…{/foreach}` → `{foreach}{breakIf cond}…{/foreach}`. `$rate_arr@index` → `$iterator->getCounter() - 1`. `|htmlspecialchars` preserved on title attribute.
+- [x] `site_manager.tpl` ↔ `site_manager.latte` — JSON `|noescape`. `not empty`→`!empty`, `index is odd`, dot→bracket, `|translate_dec` colon→comma. Plain DB values.
+- [x] `site_update.tpl` ↔ `site_update.latte` — `not empty`→`!empty`. dot→bracket. `{html_options}`→`{=htmlOptions(…)|noescape}` ×2. `$L_RESULT_*` plain Lang::t.
+- [x] `stats.tpl` ↔ `stats.latte` — JSON `|noescape`. `data-hours='{json_encode(…)}'` in single-quoted attribute (Latte escape preserves `"` as `&quot;`, browser dataset decodes).
+- [~] `tabsheet.tpl` ↔ `tabsheet.latte` — foreach key/item rewrite. `{$sheet['caption']|noescape}` hand-fix (caption can contain HTML when plugins add tabsheet entries with markup, even though core captions are plain Lang::t).
+- [~] `tags.tpl` ↔ `tags.latte` — `{function name=X}…{/function}` → `{define X}…{/define}`. `{tagContent args}` callsite → `{include tagContent, args}`. JSON `|noescape`. `$smarty.cookies.X` → `$_COOKIE['X']`. `$warning_tags` Html-wrapped at producer (`MiscController:383` orphan-tag review link). `$message_tags` plain Lang::t. dot→bracket, foreach.
+- [~] `themes_installed.tpl` ↔ `themes_installed.latte` — Same pattern as `plugins_installed`. `{assign}|sprintf|cat:` → `{var $X = (...|sprintf:...,...)|cat:...}`. `|escape:'html'` dropped on `$theme['DESC']`, replaced with `|noescape` (line 56). `{$author}/{$version}` hand-fixed `|noescape` (lines 51, 53). `{var $field_name = …}` ×2 (state-tracking).
+- [x] `themes_new.tpl` ↔ `themes_new.latte` — Trivial. foreach + dot→bracket.
+- [~] `themes_standard_pages.tpl` ↔ `themes_standard_pages.latte` — `not`→`!`, foreach. Line 23 escaped-apostrophe in translate (`'…aren\'t activated…'|translate:count(…)`) un-prefixed.
+- [x] `updates_ext.tpl` ↔ `updates_ext.latte` — JSON `|noescape`. foreach key/item ×2. `not empty`→`!empty`. dot→bracket. `{else if}`→`{elseif}`. Plain extension metadata.
+- [~] `updates_pwg.tpl` ↔ `updates_pwg.latte` — JSON `|noescape`. Lines 54, 99 `'<a href="%s">new exciting features</a>'|translate:$URL|noescape` hand-fix (HTML in translate). `{counter assign=i}` Smarty counter dropped (unused). `{else if}`→`{elseif}`. foreach + dot→bracket.
+- [~] `upgrade.tpl` ↔ `upgrade.latte` — Line 59 `'<strong>release %s</strong>'|translate:$X|noescape` hand-fix. `{html_options}`→`{=htmlOptions(…)|noescape}`. `|translate:$X:$Y` → `|translate:$X,$Y`. dot→bracket. `getCombinedCss/Scripts` return Html.
+- [x] `user_activity.tpl` ↔ `user_activity.latte` — JSON `|noescape` ×2. foreach + dot→bracket. `{else if}`→`{elseif}`. `=ucfirst($x)|translate` printed expression. JS-driven UI.
+- [x] `user_list.tpl` ↔ `user_list.latte` — full read (1069 lines, mostly JS-rendered placeholder UI). `{combine_*}`→`{do …}`. JSON `|noescape`. `{html_options}`→`{=htmlOptions(…)|noescape}` ×6+. foreach key/item rewrites. `|translate|escape` → `|translate` (Smarty escape dropped, body auto-escape covers). dot→bracket throughout. Tooltip titles with literal HTML (lines ~509-515, ~963-969) are template literals.
+- [x] `user_perm.tpl` ↔ `user_perm.latte` — `$TITLE` plain Lang::t. `$DOUBLE_SELECT` auto-Html. `categories_because_of_groups[*]` Html-wrapped at producer (`UsersController:313`).
 
 ## themes/admin/\_base/template/include (6)
 
-- [ ] `add_album.inc.tpl` ↔ `add_album.inc.latte`
-- [ ] `album_selector.inc.tpl` ↔ `album_selector.inc.latte`
-- [ ] `autosize.inc.tpl` ↔ `autosize.inc.latte`
-- [ ] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte`
-- [ ] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
-- [ ] `datepicker.inc.tpl` ↔ `datepicker.inc.latte`
+- [x] `add_album.inc.tpl` ↔ `add_album.inc.latte` — `{$X='value'}` (Smarty short-form assign) → `{var $X = 'value'}`. `{include file='X' load_mode=$Y}` → `{include 'X', load_mode: $Y}`. Relative path `'colorbox.inc.latte'` (instead of `include/colorbox…`) since this file IS in include/ dir.
+- [x] `album_selector.inc.tpl` ↔ `album_selector.inc.latte` — `{capture name="X"}` + `$smarty.capture.X` test → `{capture $X}` + `empty($X)` test (Latte capture creates a variable, not `$smarty.capture` map). JSON `|noescape`. `{$X='value'}` → `{var $X = 'value'}`.
+- [x] `autosize.inc.tpl` ↔ `autosize.inc.latte` — comment-only file (CSS does the work).
+- [~] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte` — full read. JSON `|noescape`. dot→bracket throughout. `eq/ne`→`==/!=`, `not isset/not empty`→`!isset/!empty`. `{html_options}`→`{=htmlOptions(…)|noescape}`. `|json_encode|escape:html` → `|json_encode` ×2. `$res@first` → `$iterator->isFirst()`. Smarty nested print-eval `{$NB_NO_MD5SUM}` as filter arg → `$NB_NO_MD5SUM` direct. `{include file='themes/_base/template/help/quick_search.tpl' dark_mode=$is_dark_mode}` → `{include '../../../../_base/template/help/quick_search.latte', is_dark_mode: $is_dark_mode}` — hand-fix renames `dark_mode` → `is_dark_mode` (the .tpl convention passed `dark_mode` but `quick_search` reads `$is_dark_mode`; Smarty's auto-propagation hid the bug, Latte's strict scoping surfaces it). Relative path traversal `../../../../_base/…`.
+- [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte` — short-form assign + `{combine_script}`→`{do combineScript}`. trivial.
+- [x] `datepicker.inc.tpl` ↔ `datepicker.inc.latte` — same pattern as colorbox.
 
 ---
 
 ## Findings log
 
-(empty — populate as the audit progresses)
+### Systemic — HTML-payload vars in `mail/text/html` templates lack `|noescape`
+
+The HTML-mail templates rely on Smarty's `escape_html=false` global to print
+producer-side HTML strings raw. Under Latte auto-escape (HTML context inferred
+from `.latte` extension), the same prints html-escape the markup — the email
+body shows `&lt;ul&gt;…` text instead of rendered HTML.
+
+Confirmed unwrapped HTML payloads in `mail/text/html`:
+
+- `notification_admin.latte:1` — `{$CONTENT}` (`MailService.php:614` assigns
+  `$mailContent` raw; for HTML format this is rendered HTML body).
+- `notification_by_mail.latte:33` — `{$custom_mail_content}` (admin-input
+  mail content, may contain HTML; `MiscController.php:1274`).
+- `notification_by_mail.latte:27` — `{$line}` from `$global_new_lines`
+  (`NotificationService::news(..., $isHtml=…)` returns HTML when HTML mail).
+- `notification_by_mail.latte:53` — `{$recent_post['HTML_DATA']}`
+  (`NotificationService::getHtmlDescriptionRecentPostDate` builds raw
+  `<ul>…<a><img></a>…</ul>` markup).
+- `cat_group_info.latte:8` — `{$CPL_CONTENT}` (admin mail content from
+  album-group-info form; admin may paste HTML).
+
+Fix: producer-side `new Html(...)` wrap, or template-side `|noescape`.
+Producer wrap is more durable since the data shape is intentionally HTML.
+
+### Verified safe — `<style>` block in mail header
+
+`mail/text/html/header.latte:8-9` prints `{$GLOBAL_MAIL_CSS}`/`{$MAIL_CSS}`
+inside `<style>…</style>`. Both vars come through `assignVarFromHandle`
+(`MailService.php:563,569`), which wraps in `Html` — trust travels with the
+value, Latte CSS-context escape is bypassed correctly.
+
+### Systemic — `PageState` errors/infos/warnings/messages may contain HTML
+
+Many callers push HTML markup into the `PageState` collections — links,
+icons, formatted text. Confirmed via grep:
+
+- `PasswordService.php:242` — `addInfo('<a href="…">Login</a>')`.
+- `MiscController.php:453,455,590` — `addMessage(sprintf('… <a href=…>…</a> …'))`.
+- `AlbumController.php:490` — `addInfo($info . ' <a class="icon-pencil" href="…">Edit album</a>')`.
+- `ExtensionsController.php:319` — `addInfo('<a href="…">Activate it now</a>')`.
+- `MaintenanceController.php:522` — `addInfo('<a href="…">Update to Piwigo %s</a>')`.
+
+`admin.latte:106,117,128,139` carry `|noescape` hand-fix on the foreach
+print sites. Better fix: `PageState::add*` could wrap `Html`, or each
+HTML-bearing call site could pass `new Html(...)` directly. Either fix
+removes the per-template hand-fix.

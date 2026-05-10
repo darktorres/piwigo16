@@ -480,10 +480,8 @@ final class MiscController
         $rawHelpPage = $_GET['help'] ?? null;
         $helpPage = is_string($rawHelpPage) ? $rawHelpPage : '';
         if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
-            $help_content = LangService::get()->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
-            if ($help_content == false) {
-                $help_content = '';
-            }
+            $loaded = LangService::get()->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
+            $help_content = is_string($loaded) ? $loaded : '';
             $help_content = EventDispatcher::dispatch('get_popup_help_content', $help_content, $_GET['help']);
         } else {
             throw new AuthException('Hacking attempt!');

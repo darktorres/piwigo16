@@ -249,6 +249,11 @@ SELECT *
                 $infosRaw = ($repPicId !== null) ? ($infos_of_image[$repPicId] ?? null) : null;
                 $representative_infos = is_array($infosRaw) ? $infosRaw : [];
 
+                $description = EventDispatcher::dispatch(
+                    'render_category_literal_description',
+                    EventDispatcher::dispatch('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
+                );
+
                 $tpl_var = array_merge($category, [
                     'ID' => $category['id'],
                     'representative' => $representative_infos,
@@ -261,10 +266,7 @@ SELECT *
                         true,
                         '<br>'
                     )),
-                    'DESCRIPTION' => new Html((string) EventDispatcher::dispatch(
-                        'render_category_literal_description',
-                        EventDispatcher::dispatch('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
-                    )),
+                    'DESCRIPTION' => new Html(is_string($description) ? $description : ''),
                     'NAME' => $name,
                 ]);
                 if (Config::indexNewIcon()) {

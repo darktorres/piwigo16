@@ -176,11 +176,12 @@ SELECT
                         $email = $row['email'];
                     }
 
+                    $renderedContent = EventDispatcher::dispatch('render_comment_content', $row['content']);
                     $tpl_comment = [
                         'ID' => $row['id'],
                         'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
                         'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => new Html((string) EventDispatcher::dispatch('render_comment_content', $row['content'])),
+                        'CONTENT' => new Html(is_string($renderedContent) ? $renderedContent : ''),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 

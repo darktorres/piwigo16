@@ -526,7 +526,8 @@ SELECT *
         if (isset($picture['current']['comment']) && $picture['current']['comment'] !== '') {
             /** @var mixed $commentValue */
             $commentValue = $picture['current']['comment'];
-            $tpl->assign('COMMENT_IMG', new Html((string) EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description')));
+            $rendered = EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description');
+            $tpl->assign('COMMENT_IMG', new Html(is_string($rendered) ? $rendered : ''));
         }
         if (isset($currentPic['author']) && $currentPic['author'] !== '') {
             /** @var mixed $authorValue */

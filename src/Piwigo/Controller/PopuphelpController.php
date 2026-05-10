@@ -43,12 +43,9 @@ final class PopuphelpController implements ControllerInterface
             throw new AuthException('Hacking attempt!');
         }
 
-        $helpContent = LangService::get()->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
-        if ($helpContent === false) {
-            $helpContent = '';
-        }
-        $filtered = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
-        $helpContent = is_string($filtered) ? $filtered : $helpContent;
+        $loaded = LangService::get()->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
+        $helpContent = is_string($loaded) ? $loaded : '';
+        $helpContent = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
 
         $tpl = TemplateRegistry::current();
         $tpl->setFilenames(['popuphelp' => 'popuphelp.latte']);

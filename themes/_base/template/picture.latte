@@ -6,7 +6,7 @@
 {include 'infos_errors.latte'}
 {/if}
 
-{if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE}{/if}
+{if !empty($PLUGIN_PICTURE_BEFORE)}{$PLUGIN_PICTURE_BEFORE|noescape}{/if}
 
 <div id="imageHeaderBar">
 	<div class="browsePath">
@@ -64,8 +64,8 @@
 </div>
 {/if} {* has formats *}
 {/if}{/spaceless}
-{if isset($PLUGIN_PICTURE_BUTTONS)}{foreach $PLUGIN_PICTURE_BUTTONS as $button}{$button}{/foreach}{/if}
-{if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS}{/if}
+{if isset($PLUGIN_PICTURE_BUTTONS)}{foreach $PLUGIN_PICTURE_BUTTONS as $button}{$button|noescape}{/foreach}{/if}
+{if isset($PLUGIN_PICTURE_ACTIONS)}{$PLUGIN_PICTURE_ACTIONS|noescape}{/if}
 {spaceless}{if isset($favorite)}
 	<a href="{$favorite['U_FAVORITE']}" title="{if $favorite['IS_FAVORITE']}{='delete this photo from your favorites'|translate}{else}{='add this photo to your favorites'|translate}{/if}" class="pwg-state-default pwg-button" rel="nofollow">
 		<span class="pwg-icon pwg-icon-favorite-{if $favorite['IS_FAVORITE']}del{else}add{/if}"></span><span class="pwg-button-text">{='Favorites'|translate}</span>
@@ -311,6 +311,6 @@
 </div>
 {/if}{*comments*}
 
-{if !empty($PLUGIN_PICTURE_AFTER)}{$PLUGIN_PICTURE_AFTER}{/if}
+{if !empty($PLUGIN_PICTURE_AFTER)}{$PLUGIN_PICTURE_AFTER|noescape}{/if}
 
 </div>

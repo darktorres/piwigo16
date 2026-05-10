@@ -92,7 +92,7 @@
           <label>{='Theme'|translate}</label>
           <div class="row-flex input-container">
             <i class="icon-brush"></i>
-            {=htmlOptions(name: theme, options: $template_options, selected: $template_selection)|noescape}
+            {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)|noescape}
           </div>
           <p class="error-message"><i class="gallery-icon-attention-circled"></i> {='must not be empty'|translate}</p>
         </div>
@@ -101,7 +101,7 @@
           <label>{='Language'|translate}</label>
           <div class="row-flex input-container">
             <i class="icon-language"></i>
-            {=htmlOptions(name: language, options: $language_options, selected: $language_selection)|noescape}
+            {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)|noescape}
           </div>
           <p class="error-message"><i class="gallery-icon-attention-circled"></i> {='must not be empty'|translate}</p>
         </div>
@@ -302,7 +302,7 @@
                 <label>{='Duration'|translate}</label>
                 <div class="row-flex input-container api-expiration">
                   <i class="gallery-icon-calendar"></i>
-                  {=htmlOptions(name: api_expiration, options: $API_EXPIRATION)|noescape}
+                  {=htmlOptions(name: 'api_expiration', options: $API_EXPIRATION)|noescape}
                 </div>
                 <p id="error_api_key_date" class="error-message"><i class="gallery-icon-attention-circled"></i>
                   {='you must choose a date'|translate}</p>

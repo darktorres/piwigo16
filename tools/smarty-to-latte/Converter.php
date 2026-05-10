@@ -1235,6 +1235,15 @@ final class Converter
         ) {
             return trim($m[1]);
         }
+        // Smarty allows bareword args (e.g. `name=theme` is a string
+        // `'theme'`); Latte's named-arg syntax requires real PHP
+        // expressions, so an unquoted identifier resolves to a constant
+        // or undefined variable. Re-quote it.
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1
+            && !in_array(strtolower($value), ['true', 'false', 'null'], true)
+        ) {
+            return "'$value'";
+        }
         return $value;
     }
 }

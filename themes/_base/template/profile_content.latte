@@ -52,13 +52,13 @@
         <span class="property">
           <label for="template">{='Theme'|translate}</label>
         </span>
-        {=htmlOptions(name: theme, options: $template_options, selected: $template_selection)|noescape}
+        {=htmlOptions(name: 'theme', options: $template_options, selected: $template_selection)|noescape}
       </li>
       <li>
         <span class="property">
           <label for="Language">{='Language'|translate}</label>
         </span>
-        {=htmlOptions(name: language, options: $language_options, selected: $language_selection)|noescape}
+        {=htmlOptions(name: 'language', options: $language_options, selected: $language_selection)|noescape}
       </li>
       <li>
         <span class="property">

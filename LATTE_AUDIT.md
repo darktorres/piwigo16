@@ -82,12 +82,12 @@ the `.tpl` source would produce the same `.latte` we have.
 - [x] `no_photo_yet.tpl` ↔ `no_photo_yet.latte` — `$intro` is plain l10n text. Standalone HTML page (no menubar/footer).
 - [x] `notification.tpl` ↔ `notification.latte` — `{html_head}` Smarty block tag → `{capture}…{do htmlHead(...)}` rewrite.
 - [x] `password.tpl` ↔ `password.latte` — `eq`/`ne` → `==`/`!=`. Straight otherwise.
-- [ ] `picture.tpl` ↔ `picture.latte`
-- [ ] `picture_content.tpl` ↔ `picture_content.latte`
-- [ ] `picture_nav_buttons.tpl` ↔ `picture_nav_buttons.latte`
-- [ ] `popuphelp.tpl` ↔ `popuphelp.latte`
-- [ ] `profile.tpl` ↔ `profile.latte`
-- [ ] `profile_content.tpl` ↔ `profile_content.latte`
+- [~] `picture.tpl` ↔ `picture.latte` — `SECTION_TITLE`, `COMMENT_IMG`, `INFO_CREATION_DATE`, `INFO_POSTED_DATE`, `ELEMENT_CONTENT`, `related_categories[]` Html-wrapped at producer (`PictureController`). `PLUGIN_PICTURE_BEFORE/AFTER/ACTIONS`, `$button` (BUTTONS) hand-fixed `|noescape`.
+- [x] `picture_content.tpl` ↔ `picture_content.latte` — `|strip_tags:false|replace:'"',' '` survives wrapper. Faithful.
+- [x] `picture_nav_buttons.tpl` ↔ `picture_nav_buttons.latte` — straight conversion, plain text labels.
+- [x] `popuphelp.tpl` ↔ `popuphelp.latte` — `HELP_CONTENT` Html-wrapped at producer (PopuphelpController).
+- [x] `profile.tpl` ↔ `profile.latte` — `PROFILE_CONTENT` auto-Html via `assignVarFromHandle`.
+- [~] `profile_content.tpl` ↔ `profile_content.latte` — `name=theme`/`name=language` Smarty barewords incorrectly converted to bare identifiers in Latte; converter `normalizeArgValue` updated to quote barewords. Existing files hand-fixed (×3 sites).
 - [ ] `redirect.tpl` ↔ `redirect.latte`
 - [ ] `register.tpl` ↔ `register.latte`
 - [ ] `search.tpl` ↔ `search.latte`
@@ -327,6 +327,15 @@ containing `<` chars piped through repeat-style filters, but heuristic.
 `SectionInitializer:435` builds `$page['section_title']` as raw HTML
 (`<a href="...">Home</a> / Albums`). `GalleryController:133` assigns it
 to `TITLE`. Wrapped Html at the assign site.
+
+### Systemic — Smarty bareword args become bare identifiers in Latte
+
+`{html_options name=theme ...}` — Smarty treats `theme` as the string
+`'theme'`. Converter's `parseSmartyArgs` faithfully relayed the bareword
+into Latte's named-arg syntax: `htmlOptions(name: theme, ...)` — Latte
+then evaluates `theme` as an undefined constant or variable. Fixed in
+`Converter::normalizeArgValue` by quoting bareword identifiers (skipping
+`true`/`false`/`null`).
 
 ### Per-pair findings
 

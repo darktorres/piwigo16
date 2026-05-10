@@ -99,19 +99,19 @@ final class Converter
             "/\\{=((?:'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")\\|translate(?:[^|}]*)?(?:\\|[^|}]+)*?)\\}/",
             static function (array $m): string {
                 $body = $m[1];
-                // Pull the leading string literal.
-                if (preg_match("/^('(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\")/", $body, $litMatch) !== 1) {
-                    return $m[0];
-                }
-                $lit = $litMatch[1];
-                // Look for an HTML start tag inside the literal.
-                if (preg_match('/<[a-zA-Z][a-zA-Z0-9]*(?:\\s[^>]*)?>/', $lit) !== 1) {
-                    return $m[0];
-                }
                 if (str_contains($body, '|noescape')) {
                     return $m[0];
                 }
-                return '{=' . $body . '|noescape}';
+                $htmlTagPattern = '/<[a-zA-Z][a-zA-Z0-9]*(?:\\s[^>]*)?>/';
+                // HTML in any quoted-string literal (template or arg).
+                if (preg_match_all("/'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"/", $body, $allLits) > 0) {
+                    foreach ($allLits[0] as $lit) {
+                        if (preg_match($htmlTagPattern, $lit) === 1) {
+                            return '{=' . $body . '|noescape}';
+                        }
+                    }
+                }
+                return $m[0];
             },
             $source
         ) ?? $source;

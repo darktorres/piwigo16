@@ -239,7 +239,7 @@
   {if !empty($element_set_global_plugins_actions)}
     {foreach $element_set_global_plugins_actions as $action}
       <div id="action_{$action['ID']}" class="bulkAction">
-      {if !empty($action['CONTENT'])}{$action['CONTENT']}{/if}
+      {if !empty($action['CONTENT'])}{$action['CONTENT']|noescape}{/if}
       </div>
     {/foreach}
   {/if}

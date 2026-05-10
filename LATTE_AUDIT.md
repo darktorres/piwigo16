@@ -149,11 +149,11 @@ the `.tpl` source would produce the same `.latte` we have.
 > and admin pages were not live-smoked (would require auth setup).
 > All 64 pairs left unchecked pending end-to-end review.
 
-- [ ] `admin.tpl` ↔ `admin.latte`
-- [ ] `album_notification.tpl` ↔ `album_notification.latte`
-- [ ] `albums.tpl` ↔ `albums.latte`
-- [ ] `batch_manager_global.tpl` ↔ `batch_manager_global.latte`
-- [ ] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte`
+- [x] `admin.tpl` ↔ `admin.latte` — full read. Sidebar nav. `$ADMIN_PAGE_TITLE` Html-wrapped at producer. `$TABSHEET`, `$ADMIN_CONTENT` auto-Html via assignVarFromHandle. errors/infos/warnings/messages from PageState are plain l10n text.
+- [x] `album_notification.tpl` ↔ `album_notification.latte` — full read. `htmlOptions|noescape` ✓. `$MAIL_CONTENT` is textarea text input. `$save_success` plain text from controller.
+- [x] `albums.tpl` ↔ `albums.latte` — full read. Album-tree popup management. `$page_data_json|noescape` ✓. Plain UI markup; placeholder string preserved.
+- [~] `batch_manager_global.tpl` ↔ `batch_manager_global.latte` — full read. `$thumbnail['TITLE']` Html-wrapped at producer (BatchManagerController:909). `htmlOptions|noescape` ✓. `$action['CONTENT']` (plugin payload) hand-fixed `|noescape` (line 242).
+- [x] `batch_manager_unit.tpl` ↔ `batch_manager_unit.latte` — full read. Per-image edit form. `htmlOptions|noescape` ✓. `url_is_remote(…)` is registered function. PLUGIN_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE foreach with dynamic `{include $PATH, …}`.
 - [~] `cat_list.tpl` ↔ `cat_list.latte` — full read. `$smarty.cookies.X` → `$_COOKIE['X']` ✓. `CATEGORIES_NAV` Html-wrapped at producer (AlbumController). `$category['NAME']` is rendered name (usually plain text, plugin-overridable). `assign` → `var`. Faithful.
 - [ ] `cat_modify.tpl` ↔ `cat_modify.latte`
 - [x] `cat_options.tpl` ↔ `cat_options.latte` — full read both. `$DOUBLE_SELECT` auto-Html. Faithful.
@@ -216,14 +216,12 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/admin/_base/template/include (6)
 
-> NOT properly profiled — never opened.
-
-- [ ] `add_album.inc.tpl` ↔ `add_album.inc.latte`
-- [ ] `album_selector.inc.tpl` ↔ `album_selector.inc.latte`
-- [ ] `autosize.inc.tpl` ↔ `autosize.inc.latte`
-- [ ] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte`
-- [ ] `colorbox.inc.tpl` ↔ `colorbox.inc.latte`
-- [ ] `datepicker.inc.tpl` ↔ `datepicker.inc.latte`
+- [x] `add_album.inc.tpl` ↔ `add_album.inc.latte` — full read. Form for add-album popin. Faithful.
+- [x] `album_selector.inc.tpl` ↔ `album_selector.inc.latte` — full read. `{capture $inc_album_selector}1{/capture}` idempotency guard. JSON script `|noescape` ✓.
+- [x] `autosize.inc.tpl` ↔ `autosize.inc.latte` — comment-only file (CSS does the work).
+- [~] `batch_manager_filter.inc.tpl` ↔ `batch_manager_filter.inc.latte` — full read. Filter form (prefilter/category/tags/level/dimension/filesize/search). Hand-fixed `{include 'quick_search.latte', dark_mode:…}` → `is_dark_mode:…` (the .tpl convention passed `dark_mode` but quick_search uses `$is_dark_mode`; Smarty's auto-propagation hid the bug, Latte's strict scoping surfaces it).
+- [x] `colorbox.inc.tpl` ↔ `colorbox.inc.latte` — full read. Conditional `$load_mode` default + script combine.
+- [x] `datepicker.inc.tpl` ↔ `datepicker.inc.latte` — full read. Same pattern as colorbox.
 
 ---
 

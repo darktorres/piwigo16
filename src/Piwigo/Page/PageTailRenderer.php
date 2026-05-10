@@ -80,6 +80,6 @@ final class PageTailRenderer
         EventDispatcher::notify('loc_end_page_tail');
 
         $template->parse('footer.latte');
-        $template->p();
+        $template->flush();
     }
 }

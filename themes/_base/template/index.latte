@@ -204,7 +204,7 @@
 {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
 
 {if !empty($cats_navbar)}
-	{include getExtent('navigation_bar.latte', 'navbar'), navbar: $cats_navbar}
+	{include 'navigation_bar.latte', navbar: $cats_navbar}
 {/if}
 
 {if !empty($SEARCH_ID)}
@@ -227,7 +227,7 @@
 </div>
 {/if}
 {if !empty($thumb_navbar)}
-	{include getExtent('navigation_bar.latte', 'navbar'), navbar: $thumb_navbar}
+	{include 'navigation_bar.latte', navbar: $thumb_navbar}
 {/if}
 
 {if !empty($PLUGIN_INDEX_CONTENT_END)}{$PLUGIN_INDEX_CONTENT_END|noescape}{/if}

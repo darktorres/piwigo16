@@ -32,8 +32,7 @@ use Piwigo\Users\PermissionService;
  *  - PHP-passthrough modifiers whose first-arg matches Smarty's "pipe
  *    value goes first" convention (sprintf, urlencode, intval, …).
  *  - Custom stateless modifiers (l10n, explode, ternary, url_is_remote,
- *    is_admin, is_classic_user, get_device, get_gallery_home_url,
- *    get_extent).
+ *    is_admin, is_classic_user, get_device, get_gallery_home_url).
  *  - Stateful asset functions delegating to TemplateRegistry::current()
  *    (combineScript, getCombinedScripts, combineCss, getCombinedCss,
  *    defineDerivative, htmlHead, htmlStyle, footerScript).
@@ -123,11 +122,6 @@ final class PiwigoExtension extends Extension
             'is_classic_user' => self::isClassicUser(...),
             'get_device' => self::getDevice(...),
             'get_gallery_home_url' => self::getGalleryHomeUrl(...),
-
-            // Phase B.3 — get_extent is registered as a Smarty modifier
-            // (`{$filename|get_extent:$handle}`), so it stays a filter
-            // here even though the rest of B.3 is functions.
-            'get_extent' => self::getExtent(...),
         ];
     }
 
@@ -158,13 +152,6 @@ final class PiwigoExtension extends Extension
             'math' => self::math(...),
             'url_is_remote' => UrlService::urlIsRemote(...),
             'l10n' => self::translate(...),
-            // get_extent is also exposed as a function so converted
-            // templates can use it inline in `{include}` template-name
-            // expressions where Latte's parser doesn't accept a pipe-
-            // filter chain alongside named-arg payloads. Templates that
-            // want the filter shape (`{$file|get_extent:$handle}`) keep
-            // working via the filter registration above.
-            'getExtent' => self::getExtent(...),
         ];
     }
 
@@ -294,18 +281,6 @@ final class PiwigoExtension extends Extension
     public static function numberFormat(int|float $number, int $decimals = 0, string $decimalSeparator = '.', string $thousandsSeparator = ','): string
     {
         return number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
-    }
-
-    /**
-     * Returns the original filename. Phase F removed the plugin-driven
-     * template-extension override path along with `smarty/smarty` (the
-     * fork ships no plugins). Latte templates compiled from the legacy
-     * `|get_extent` filter still call this function, so the entry point
-     * stays — it's now a pass-through.
-     */
-    public static function getExtent(string $filename = '', string $handle = ''): string
-    {
-        return $filename;
     }
 
     // ---- Phase B.3: stateful asset-pipeline functions --------------------

@@ -3,7 +3,7 @@
 	{foreach $blocks as $id => $block}
 	<dl id="{$id}">
 		{if !empty($block->template)}
-		{include getExtent($block->template, $id), block: $block, id: $id}
+		{include $block->template, block: $block, id: $id}
 		{else}
 		{$block->raw_content|noescape}
 		{/if}

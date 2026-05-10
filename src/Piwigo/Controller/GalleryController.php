@@ -367,7 +367,6 @@ final class GalleryController implements ControllerInterface
             }
         }
 
-        // Render page (outputs directly — legacy Smarty model)
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_index');
         ServiceLocator::get(HtmlService::class)->flushPageMessages();

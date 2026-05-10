@@ -457,16 +457,6 @@ final class Template
     }
 
     /**
-     * Same as flush(). Retained for API compatibility with Smarty-era
-     * callers; the legacy debug-page hook depended on Smarty internals
-     * and is dropped along with the engine.
-     */
-    public function p(): void
-    {
-        $this->flush();
-    }
-
-    /**
      * @return string|array<mixed>
      */
     private static function makeScriptSrc(Combinable $script): string|array

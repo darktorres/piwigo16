@@ -251,23 +251,6 @@ final class LatteEngineTest extends TestCase
         );
     }
 
-    public function test_get_extent_returns_filename_unchanged(): void
-    {
-        // Phase F removed the plugin-driven extension-override path
-        // along with `smarty/smarty`; `getExtent()` is now a pass-through
-        // that returns the original filename for any handle.
-        $this->stageTemplateWithLoaders();
-
-        self::assertSame(
-            'fallback.latte',
-            PiwigoExtension::getExtent('fallback.latte', 'unknown_handle'),
-        );
-        self::assertSame(
-            'original.latte',
-            PiwigoExtension::getExtent('original.latte', 'my_handle'),
-        );
-    }
-
     public function test_phase_b3_get_combined_scripts_header_returns_marker(): void
     {
         $this->stageTemplateWithLoaders();

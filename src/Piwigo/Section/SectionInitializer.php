@@ -36,8 +36,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * StringUtil::scriptBasename() calls that distinguished between the gallery and single-
  * image pages.
  *
- * All $GLOBALS['page'] mutations are preserved so that existing Smarty
- * templates continue to work unchanged.
+ * All $GLOBALS['page'] mutations are preserved so that page-state
+ * consumers (templates, controllers, plugin hooks) see the same shape
+ * as before.
  */
 final class SectionInitializer
 {

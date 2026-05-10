@@ -648,10 +648,8 @@ final class Updates
                         ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
 
                         if ($step == 2) {
-                            // only delete compiled templates on minor update. Doing this on
-                            // a major update might even encounter fatal error if Smarty
-                            // changes. Anyway, a compiled template purge will be performed
-                            // by upgrade.php
+                            // only purge the compiled-template cache on minor updates;
+                            // upgrade.php handles the major-version case.
                             $template->deleteCompiledTemplates();
                             ServiceLocator::get(ConfigService::class)->confDeleteParam('fs_quick_check_last_check');
 

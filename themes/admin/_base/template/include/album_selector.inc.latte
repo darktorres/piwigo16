@@ -1,4 +1,4 @@
-{if !$inc_album_selector}
+{if empty($inc_album_selector)}
 {capture $inc_album_selector}1{/capture}
 {if empty($load_mode)}{var $load_mode = 'footer'}{/if}
 {include 'colorbox.inc.latte', load_mode: $load_mode}

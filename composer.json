@@ -73,7 +73,22 @@
     }
   },
   "scripts": {
-    "lint:latte": "@php tools/latte-lint.php"
+    "lint:latte": "@php tools/latte-lint.php",
+    "lint:php": "@php vendor/bin/pint --test",
+    "lint": ["@lint:php", "@lint:latte"],
+    "analyse:phpstan": "@php vendor/bin/phpstan analyse",
+    "analyse:psalm": "@php vendor/bin/psalm",
+    "analyse": ["@analyse:phpstan", "@analyse:psalm"],
+    "test": "@php vendor/bin/phpunit"
+  },
+  "scripts-descriptions": {
+    "lint": "Run all PHP/Latte lints (pint --test + latte-lint)",
+    "lint:latte": "Validate .latte templates with PiwigoExtension registered",
+    "lint:php": "Check PHP code style with Pint (no fixes)",
+    "analyse": "Run static analysis (phpstan + psalm)",
+    "analyse:phpstan": "Run PHPStan",
+    "analyse:psalm": "Run Psalm",
+    "test": "Run PHPUnit"
   },
   "repositories": [
     {

@@ -1,4 +1,5 @@
 import TomSelect from 'tom-select';
+import 'tom-select/dist/css/tom-select.bootstrap5.css';
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
 import tippy from 'tippy.js';
@@ -193,6 +194,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     qs('.search-cancel')?.addEventListener('click', () => applyFilter('search', ''));
+
+    const toggleAdvancedFilter = (open: boolean) =>
+        qsa('.advanced-filter-btn, .advanced-filter').forEach((el) =>
+            el.classList.toggle('advanced-filter-open', open)
+        );
+    qs('.advanced-filter-btn')?.addEventListener('click', () => {
+        const isOpen = qs('.advanced-filter')?.classList.contains('advanced-filter-open') === true;
+        toggleAdvancedFilter(!isOpen);
+    });
+    qs('.advanced-filter-close')?.addEventListener('click', () => toggleAdvancedFilter(false));
 
     qsa('.buttonInstall').forEach((btn) => {
         const pluginBox = btn.closest<HTMLElement>('.pluginBox');

@@ -1,4 +1,5 @@
 import TomSelect from 'tom-select';
+import 'tom-select/dist/css/tom-select.bootstrap5.css';
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
 import tippy from 'tippy.js';

@@ -825,7 +825,7 @@ final class BatchManagerController
 
         // ── Template ──────────────────────────────────────────────────────────
 
-        $tpl->setFilenames(['batch_manager_global' => 'batch_manager_global.tpl']);
+        $tpl->setFilenames(['batch_manager_global' => 'batch_manager_global.latte']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
@@ -1012,7 +1012,7 @@ final class BatchManagerController
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
         }
 
-        $tpl->setFilenames(['batch_manager_unit' => 'batch_manager_unit.tpl']);
+        $tpl->setFilenames(['batch_manager_unit' => 'batch_manager_unit.latte']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
 
         $tpl->assign([
@@ -1246,7 +1246,7 @@ final class BatchManagerController
             $tableExists = false;
         }
 
-        $tpl->setFilenames(['queue' => 'queue.tpl']);
+        $tpl->setFilenames(['queue' => 'queue.latte']);
 
         $pwg_token     = ServiceLocator::get(Util::class)->getPwgToken();
         $pendingAsync  = $stats['piwigo_async'] ?? 0;

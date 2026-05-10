@@ -393,9 +393,9 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         }
 
         if ($page['slideshow'] === true && Config::lightSlideshow()) {
-            $tpl->setFilenames(['slideshow' => 'slideshow.tpl']);
+            $tpl->setFilenames(['slideshow' => 'slideshow.latte']);
         } else {
-            $tpl->setFilenames(['picture' => 'picture.tpl']);
+            $tpl->setFilenames(['picture' => 'picture.latte']);
         }
 
         $title    = $picture['current']['TITLE'];

@@ -252,7 +252,7 @@ SELECT
                 }
                 $template->assign('comment_add', $tpl_var);
             }
-            $template->setFilenames(['comment_list' => 'comment_list.tpl']);
+            $template->setFilenames(['comment_list' => 'comment_list.latte']);
             $template->assignVarFromHandle('COMMENT_LIST', 'comment_list');
         }
     }

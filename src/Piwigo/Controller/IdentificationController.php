@@ -98,7 +98,7 @@ final class IdentificationController implements ControllerInterface
         $user = &$GLOBALS['user'];
         $tpl  = TemplateRegistry::current();
 
-        $tpl->setFilenames(['identification' => 'identification.tpl']);
+        $tpl->setFilenames(['identification' => 'identification.latte']);
         $tpl->assign([
             'U_REDIRECT'           => $redirect_to,
             'F_LOGIN_ACTION'       => ServiceLocator::get(UrlGenerator::class)->identification(),

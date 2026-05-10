@@ -115,7 +115,7 @@ final class Tabsheet
     {
         $template = TemplateRegistry::current();
 
-        $template->setFilename('tabsheet', 'tabsheet.tpl');
+        $template->setFilename('tabsheet', 'tabsheet.latte');
         $template->assign('tabsheet', $this->sheets);
         $template->assign('tabsheet_selected', $this->selected);
 

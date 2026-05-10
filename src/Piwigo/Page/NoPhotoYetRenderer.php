@@ -58,7 +58,7 @@ final class NoPhotoYetRenderer
                 }
 
                 header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
-                $template->setFilenames(['no_photo_yet' => 'no_photo_yet.tpl']);
+                $template->setFilenames(['no_photo_yet' => 'no_photo_yet.latte']);
 
                 if (PermissionService::get()->isAdmin()) {
                     $url = Config::noPhotoYetUrl();

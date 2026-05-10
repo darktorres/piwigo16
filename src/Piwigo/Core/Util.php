@@ -144,11 +144,11 @@ final readonly class Util
         $title    = 'redirection';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['redirect' => 'redirect.tpl']);
+        $tpl->setFilenames(['redirect' => 'redirect.latte']);
 
         PageHeaderRenderer::render($title, $refresh, $url_link);
 
-        $tpl->setFilenames(['redirect' => 'redirect.tpl']);
+        $tpl->setFilenames(['redirect' => 'redirect.latte']);
         $tpl->assign('REDIRECT_MSG', $msg);
         $tpl->parse('redirect');
 

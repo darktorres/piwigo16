@@ -50,7 +50,7 @@ final class PopuphelpController implements ControllerInterface
         $helpContent = is_string($filtered) ? $filtered : $helpContent;
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['popuphelp' => 'popuphelp.tpl']);
+        $tpl->setFilenames(['popuphelp' => 'popuphelp.latte']);
         $tpl->assign(['HELP_CONTENT' => $helpContent]);
 
         PageHeaderRenderer::render($title);

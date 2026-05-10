@@ -131,7 +131,7 @@ final class PasswordController implements ControllerInterface
         }
 
         $page['body_id'] = 'thePasswordPage';
-        $tpl->setFilenames(['password' => 'password.tpl']);
+        $tpl->setFilenames(['password' => 'password.latte']);
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'          => $title,

@@ -164,7 +164,7 @@ WHERE id IN (' . implode(',', $items) . ')';
             }
 
             $page['comment'] = '';
-            $template->assign('FILE_CHRONOLOGY_VIEW', 'month_calendar.tpl');
+            $template->assign('FILE_CHRONOLOGY_VIEW', 'month_calendar.latte');
 
             foreach ($styles as $style => $styleData) {
                 foreach ($views as $view) {

@@ -63,7 +63,7 @@ final class MenubarRenderer
                 }
             }
             if (!empty($block->data)) {
-                $block->template = 'menubar_links.tpl';
+                $block->template = 'menubar_links.latte';
             }
         }
 
@@ -85,7 +85,7 @@ final class MenubarRenderer
                 'MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getCategoriesMenu(),
                 'U_CATEGORIES' => UrlService::get()->makeIndexUrl(['section' => 'categories']),
             ];
-            $block->template = 'menubar_categories.tpl';
+            $block->template = 'menubar_categories.latte';
         }
 
         $block = $menu->getBlock('mbRelatedCategories');
@@ -108,7 +108,7 @@ final class MenubarRenderer
 
             $block->data = ['MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $exclude_cat_ids)];
             if (count($block->data['MENU_CATEGORIES']) > 0) {
-                $block->template = 'menubar_related_categories.tpl';
+                $block->template = 'menubar_related_categories.latte';
             }
         }
 
@@ -122,7 +122,7 @@ final class MenubarRenderer
                 $block->data[] = array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]);
             }
             if (!empty($block->data)) {
-                $block->template = 'menubar_tags.tpl';
+                $block->template = 'menubar_tags.latte';
             }
         }
 
@@ -178,7 +178,7 @@ final class MenubarRenderer
                 'NAME' => Lang::t('Calendar'),
                 'REL' => 'rel="nofollow"',
             ];
-            $block->template = 'menubar_specials.tpl';
+            $block->template = 'menubar_specials.latte';
         }
 
         if (($block = $menu->getBlock('mbMenu')) != null) {
@@ -219,7 +219,7 @@ final class MenubarRenderer
                 'URL' => ServiceLocator::get(UrlGenerator::class)->notification(),
                 'REL' => 'rel="nofollow"',
             ];
-            $block->template = 'menubar_menu.tpl';
+            $block->template = 'menubar_menu.latte';
         }
 
         if (PermissionService::get()->isAGuest()) {
@@ -244,8 +244,8 @@ final class MenubarRenderer
             }
         }
         if (($block = $menu->getBlock('mbIdentification')) != null) {
-            $block->template = 'menubar_identification.tpl';
+            $block->template = 'menubar_identification.latte';
         }
-        $menu->apply('MENUBAR', 'menubar.tpl');
+        $menu->apply('MENUBAR', 'menubar.latte');
     }
 }

@@ -59,7 +59,7 @@ final class GroupsController
             ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
-        $tpl->setFilenames(['group_list' => 'group_list.tpl']);
+        $tpl->setFilenames(['group_list' => 'group_list.latte']);
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
@@ -178,7 +178,7 @@ final class GroupsController
             ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
         }
 
-        $tpl->setFilenames(['group_perm' => 'group_perm.tpl', 'double_select' => 'double_select.tpl']);
+        $tpl->setFilenames(['group_perm' => 'group_perm.latte', 'double_select' => 'double_select.latte']);
         $tpl->assign([
             'TITLE'              => Lang::t('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),

@@ -187,7 +187,7 @@ final class MiscController
                 break;
         }
 
-        $tpl->setFilenames(['double_select' => 'double_select.tpl', 'notification_by_mail' => 'notification_by_mail.tpl']);
+        $tpl->setFilenames(['double_select' => 'double_select.latte', 'notification_by_mail' => 'notification_by_mail.latte']);
         $tpl->assign(['PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
 
         if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
@@ -301,7 +301,7 @@ final class MiscController
             }
         }
 
-        $tpl->setFilename('permalinks', 'permalinks.tpl');
+        $tpl->setFilename('permalinks', 'permalinks.latte');
         $page['tab'] = 'permalinks';
         ServiceLocator::get(AlbumsTabRenderer::class)->render();
 
@@ -363,7 +363,7 @@ final class MiscController
             Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
         }
 
-        $tpl->setFilenames(['tags' => 'tags.tpl']);
+        $tpl->setFilenames(['tags' => 'tags.latte']);
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
 
         $warning_tags     = '';
@@ -487,7 +487,7 @@ final class MiscController
             throw new AuthException('Hacking attempt!');
         }
 
-        $tpl->setFilename('popuphelp', 'popuphelp.tpl');
+        $tpl->setFilename('popuphelp', 'popuphelp.latte');
         $tpl->assign(['HELP_CONTENT' => $help_content]);
 
         if (isset($_GET['output']) && 'content_only' == $_GET['output']) {
@@ -551,7 +551,7 @@ final class MiscController
 
         ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
 
-        $tpl->setFilenames(['intro' => 'intro.tpl']);
+        $tpl->setFilenames(['intro' => 'intro.latte']);
 
         $intro_newsletter_data = null;
         if (Config::showNewsletterSubscription() && PreferencesService::get()->userprefsGetParam('show_newsletter_subscription', true)) {
@@ -822,7 +822,7 @@ final class MiscController
         $tpl->assign(['F_ACTION' => $action]);
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
-        $tpl->setFilename('menubar_admin_content', 'menubar.tpl');
+        $tpl->setFilename('menubar_admin_content', 'menubar.latte');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'menubar_admin_content');
     }
 
@@ -843,7 +843,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $tpl->setFilenames(['comments' => 'comments.tpl']);
+        $tpl->setFilenames(['comments' => 'comments.latte']);
         $tpl->assign([
             'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
             'PWG_TOKEN'         => ServiceLocator::get(Util::class)->getPwgToken(),
@@ -916,7 +916,7 @@ final class MiscController
         $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
         $nb_elements   = ServiceLocator::get(ImageRepository::class)->countRatings();
 
-        $tpl->setFilename('rating', 'rating.tpl');
+        $tpl->setFilename('rating', 'rating.latte');
         $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
 
@@ -1082,7 +1082,7 @@ final class MiscController
 
         $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
-        $tpl->setFilename('rating', 'rating_user.tpl');
+        $tpl->setFilename('rating', 'rating_user.latte');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'rating');
     }
 
@@ -1116,7 +1116,7 @@ final class MiscController
         $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
         $page['errors'] = array_merge($pageErrors, $errors);
 
-        $tpl->setFilename('profile', 'profile.tpl');
+        $tpl->setFilename('profile', 'profile.latte');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'profile');
     }
 

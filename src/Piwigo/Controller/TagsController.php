@@ -43,7 +43,7 @@ final class TagsController implements ControllerInterface
         $page['body_id'] = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['tags' => 'tags.tpl']);
+        $tpl->setFilenames(['tags' => 'tags.latte']);
 
         $page['display_mode'] = Config::tagsDefaultDisplayMode();
         $display_mode         = StringUtil::get()->inputString('display_mode', null, $_GET);

@@ -307,7 +307,7 @@ final class MaintenanceController
             ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
         }
 
-        $tpl->setFilenames(['maintenance' => 'maintenance_actions.tpl']);
+        $tpl->setFilenames(['maintenance' => 'maintenance_actions.latte']);
         $pwg_token    = ServiceLocator::get(Util::class)->getPwgToken();
         $gallery_locked = Config::galleryLocked();
         $tpl->assign('page_data_json', json_encode([
@@ -526,7 +526,7 @@ final class MaintenanceController
                 break;
         }
 
-        $tpl->setFilenames(['maintenance' => 'maintenance_env.tpl']);
+        $tpl->setFilenames(['maintenance' => 'maintenance_env.latte']);
         $tpl->assign('page_data_json', json_encode(['unit_MB' => Lang::t('%s MB'), 'no_time_elapsed' => Lang::t('right now'), 'no_active_plugin' => Lang::t('No plugin activated'), 'error_occured' => Lang::t('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
         $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&amp;action=%s&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
@@ -822,7 +822,7 @@ final class MaintenanceController
         }
 
         $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
-        $tpl->setFilenames(['maintenance' => 'maintenance_sys.tpl']);
+        $tpl->setFilenames(['maintenance' => 'maintenance_sys.latte']);
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }
 
@@ -846,7 +846,7 @@ final class MaintenanceController
         ServiceLocator::get(Util::class)->checkInputParameter('filter_image_id', $_GET, false, '/^\d+$/');
         ServiceLocator::get(Util::class)->checkInputParameter('filter_user_id', $_GET, false, '/^\d+$/');
 
-        $tpl->setFilename('history', 'history.tpl');
+        $tpl->setFilename('history', 'history.latte');
         ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
@@ -946,7 +946,7 @@ final class MaintenanceController
 
         ServiceLocator::get(HistoryAdminService::class)->historySummarize();
 
-        $tpl->setFilename('stats', 'stats.tpl');
+        $tpl->setFilename('stats', 'stats.latte');
         ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
         $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('history'), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
 
@@ -1009,7 +1009,7 @@ final class MaintenanceController
             ServiceLocator::get(Util::class)->checkPwgToken();
         }
 
-        $tpl->setFilenames(['site_manager' => 'site_manager.tpl']);
+        $tpl->setFilenames(['site_manager' => 'site_manager.latte']);
 
         $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
 
@@ -1583,7 +1583,7 @@ final class MaintenanceController
 
         // ── template ─────────────────────────────────────────────────────────
 
-        $tpl->setFilenames(['update' => 'site_update.tpl']);
+        $tpl->setFilenames(['update' => 'site_update.latte']);
         $result_title  = $simulate ? '[' . Lang::t('Simulation') . '] ' : '';
         $used_metadata = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()));
 

@@ -91,7 +91,7 @@ final class UsersController
             'ACTIVATE_COMMENTS'  => Config::activateComments(),
             'Double_Password'    => Config::doublePasswordTypeInAdmin(),
         ]);
-        $tpl->setFilenames(['user_list' => 'user_list.tpl']);
+        $tpl->setFilenames(['user_list' => 'user_list.latte']);
 
         $default_user = UserService::get()->getDefaultUserInfo(true);
         $userId       = is_numeric($user['id']) ? (int) $user['id'] : 0;
@@ -290,7 +290,7 @@ final class UsersController
             ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
-        $tpl->setFilenames(['user_perm' => 'user_perm.tpl', 'double_select' => 'double_select.tpl']);
+        $tpl->setFilenames(['user_perm' => 'user_perm.latte', 'double_select' => 'double_select.latte']);
         $tpl->assign([
             'TITLE'              => Lang::t('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
@@ -380,7 +380,7 @@ final class UsersController
             exit();
         }
 
-        $tpl->setFilename('user_activity', 'user_activity.tpl');
+        $tpl->setFilename('user_activity', 'user_activity.latte');
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Users'));
 
         $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['users']);

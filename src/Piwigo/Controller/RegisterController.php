@@ -96,7 +96,7 @@ final class RegisterController implements ControllerInterface
         $email = ($post_mail !== null && $post_mail !== '') ? htmlspecialchars(stripslashes($post_mail)) : '';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['register' => 'register.tpl']);
+        $tpl->setFilenames(['register' => 'register.latte']);
         $tpl->assign([
             'U_HOME'                      => UrlService::get()->makeIndexUrl(),
             'F_KEY'                       => $registration_post_key,

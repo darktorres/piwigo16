@@ -166,7 +166,7 @@ final class CheckIntegrity
         $submit_ignore = false;
 
         if (count($this->retrieve_list) > 0) {
-            $template->setFilenames(['check_integrity' => 'check_integrity.tpl']);
+            $template->setFilenames(['check_integrity' => 'check_integrity.latte']);
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 $can_select = false;

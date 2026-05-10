@@ -69,8 +69,8 @@ final class ProfileController implements ControllerInterface
 
         $title = Lang::t('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
-        $tpl->setFilename('profile', 'profile.tpl');
-        $tpl->setFilename('profile_content', 'profile_content.tpl');
+        $tpl->setFilename('profile', 'profile.latte');
+        $tpl->setFilename('profile_content', 'profile_content.latte');
 
         ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), UrlService::get()->makeIndexUrl(), $userdata);
 

@@ -533,8 +533,8 @@ SELECT
                 RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
                 EventDispatcher::notify('before_parse_mail_template', $cacheKey, $contentType);
 
-                $mailTpl->setFilename('mail_header', 'header.tpl');
-                $mailTpl->setFilename('mail_footer', 'footer.tpl');
+                $mailTpl->setFilename('mail_header', 'header.latte');
+                $mailTpl->setFilename('mail_footer', 'footer.latte');
 
                 $addUrlParams = [];
                 if (isset($args['auth_key']) && $args['auth_key'] !== '') {
@@ -551,8 +551,8 @@ SELECT
                 ]);
 
                 if ($contentType == 'text/html') {
-                    if ($mailTpl->smarty->templateExists('global-mail-css.tpl')) {
-                        $mailTpl->setFilename('global-css', 'global-mail-css.tpl');
+                    if ($mailTpl->smarty->templateExists('global-mail-css.latte')) {
+                        $mailTpl->setFilename('global-css', 'global-mail-css.latte');
                         $mailTpl->assignVarFromHandle('GLOBAL_MAIL_CSS', 'global-css');
                     }
 

@@ -270,7 +270,7 @@ SELECT id
 
         $image_file = $row['file'];
 
-        $tpl->setFilenames(['picture_modify' => 'picture_modify.tpl']);
+        $tpl->setFilenames(['picture_modify' => 'picture_modify.latte']);
 
         $admin_url_start = $admin_photo_base_url . '-properties';
         $src_image       = new SrcImage($row);
@@ -494,7 +494,7 @@ SELECT id
         }
 
         $tpl->assign($tpl_var);
-        $tpl->setFilename('picture_coi', 'picture_coi.tpl');
+        $tpl->setFilename('picture_coi', 'picture_coi.latte');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_coi');
     }
 
@@ -542,7 +542,7 @@ SELECT id
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $tpl->setFilename('picture_formats', 'picture_formats.tpl');
+        $tpl->setFilename('picture_formats', 'picture_formats.latte');
         $tpl->assignVarFromHandle('ADMIN_CONTENT', 'picture_formats');
     }
 
@@ -573,7 +573,7 @@ SELECT id
         $tabsheet->select($page['tab']);
         $tabsheet->assign();
 
-        $tpl->setFilenames(['photos_add' => 'photos_add_' . $page['tab'] . '.tpl']);
+        $tpl->setFilenames(['photos_add' => 'photos_add_' . $page['tab'] . '.latte']);
 
         $tab = $page['tab'];
         if ($tab === 'direct') {

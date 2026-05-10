@@ -108,7 +108,7 @@ final class UpgradeController implements ControllerInterface
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
-        $tpl->setFilenames(['upgrade' => 'upgrade.tpl']);
+        $tpl->setFilenames(['upgrade' => 'upgrade.latte']);
         $tpl->assign([
             'RELEASE'        => AppInfo::VERSION,
             'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),

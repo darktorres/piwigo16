@@ -136,7 +136,7 @@ final class GalleryController implements ControllerInterface
         // Menubar
         ServiceLocator::get(MenubarRenderer::class)->render();
 
-        $tpl->setFilename('index', 'index.tpl');
+        $tpl->setFilename('index', 'index.latte');
 
         if (empty($page['is_external'])) {
             $page['body_id'] = 'theCategoryPage';

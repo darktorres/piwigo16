@@ -106,7 +106,7 @@ final class NotificationAdminService
         ServiceLocator::get(MailService::class)->switchLangTo(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
         if ($isActionSend) {
             $ctx->mailTemplate = ServiceLocator::get(MailService::class)->getMailTemplate($ctx->emailFormat);
-            $ctx->mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.tpl');
+            $ctx->mailTemplate->setFilename('notification_by_mail', 'notification_by_mail.latte');
         }
     }
 

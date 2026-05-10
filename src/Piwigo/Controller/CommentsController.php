@@ -227,7 +227,7 @@ final class CommentsController implements ControllerInterface
         $page['body_id'] = 'theCommentsPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['comments' => 'comments.tpl', 'comment_list' => 'comment_list.tpl']);
+        $tpl->setFilenames(['comments' => 'comments.latte', 'comment_list' => 'comment_list.latte']);
         $tpl->assign([
             'F_ACTION'  => ServiceLocator::get(UrlGenerator::class)->comments(),
             'F_KEYWORD' => ($get_keyword !== null && $get_keyword !== '') ? htmlspecialchars(stripslashes($get_keyword)) : '',

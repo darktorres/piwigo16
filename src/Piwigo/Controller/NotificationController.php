@@ -58,7 +58,7 @@ final class NotificationController implements ControllerInterface
         $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['notification' => 'notification.tpl']);
+        $tpl->setFilenames(['notification' => 'notification.latte']);
         $tpl->assign(['U_FEED' => $feed_url, 'U_FEED_IMAGE_ONLY' => $feed_image_only_url]);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');

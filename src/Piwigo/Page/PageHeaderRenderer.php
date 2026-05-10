@@ -24,7 +24,7 @@ final class PageHeaderRenderer
         $pageState = PageState::current();
         $page      = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
-        $template->setFilenames(['header' => 'header.tpl']);
+        $template->setFilenames(['header' => 'header.latte']);
 
         EventDispatcher::notify('loc_begin_page_header');
 

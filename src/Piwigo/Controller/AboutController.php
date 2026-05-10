@@ -38,7 +38,7 @@ final class AboutController implements ControllerInterface
         $page['body_id'] = 'theAboutPage';
 
         $tpl = TemplateRegistry::current();
-        $tpl->setFilenames(['about' => 'about.tpl']);
+        $tpl->setFilenames(['about' => 'about.latte']);
 
         $tpl->assign('ABOUT_MESSAGE', LangService::get()->loadLanguage('about.html', '', ['return' => true]));
 

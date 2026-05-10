@@ -263,7 +263,7 @@ final class ConfigurationController
 
         // ── Template init ─────────────────────────────────────────────────────
 
-        $tpl->setFilename('config', 'configuration_' . $section . '.tpl');
+        $tpl->setFilename('config', 'configuration_' . $section . '.latte');
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('configuration');

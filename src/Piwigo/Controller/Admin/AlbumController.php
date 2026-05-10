@@ -199,7 +199,7 @@ final class AlbumController
         }
 
         $tpl->assign('open_cat', $open_cat);
-        $tpl->setFilename('albums', 'albums.tpl');
+        $tpl->setFilename('albums', 'albums.latte');
         $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('albums')]);
         $tpl->assign('delay_before_autoOpen', Config::albumMoveDelayBeforeAutoOpening());
         $tpl->assign('POS_PREF', Config::newcatDefaultPosition());
@@ -379,7 +379,7 @@ final class AlbumController
         }
 
         $catIdScalar = is_string($page['cat'] ?? null) ? $page['cat'] : '';
-        $tpl->setFilename('album_notification', 'album_notification.tpl');
+        $tpl->setFilename('album_notification', 'album_notification.latte');
         $tpl->assign([
             'CATEGORIES_NAV' => trim(ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($catIdScalar, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-')),
             'F_ACTION'       => $admin_album_base_url . '-notification',
@@ -496,7 +496,7 @@ final class AlbumController
             $navigation   .= ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId(is_scalar($raw_parent_id) ? (int) $raw_parent_id : 0, $base_url . '&amp;parent_id=');
         }
 
-        $tpl->setFilename('categories', 'cat_list.tpl');
+        $tpl->setFilename('categories', 'cat_list.latte');
         $form_action = ServiceLocator::get(UrlGenerator::class)->admin('cat_list');
         if (isset($_GET['parent_id'])) {
             $form_action .= '&amp;parent_id=' . (is_string($_GET['parent_id']) ? $_GET['parent_id'] : '');
@@ -648,7 +648,7 @@ final class AlbumController
             $parent_navigation = Lang::t('Root');
         }
 
-        $tpl->setFilename('album_properties', 'cat_modify.tpl');
+        $tpl->setFilename('album_properties', 'cat_modify.latte');
         $base_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
         $cat_list_url = $base_url . 'albums';
         $self_url     = $cat_list_url;
@@ -813,7 +813,7 @@ final class AlbumController
             ServiceLocator::get(Util::class)->pwgActivity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
         }
 
-        $tpl->setFilenames(['cat_options' => 'cat_options.tpl', 'double_select' => 'double_select.tpl']);
+        $tpl->setFilenames(['cat_options' => 'cat_options.latte', 'double_select' => 'double_select.latte']);
 
         $get_section     = $_GET['section'] ?? null;
         $page['section'] = is_string($get_section) ? $get_section : 'status';
@@ -939,7 +939,7 @@ final class AlbumController
             $tpl->assign(['save_success' => Lang::t('Album updated successfully')]);
         }
 
-        $tpl->setFilename('cat_perm', 'cat_perm.tpl');
+        $tpl->setFilename('cat_perm', 'cat_perm.latte');
         $tpl->assign([
             'CATEGORIES_NAV' => ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pageCat, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-'),
             'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('cat_perm'),
@@ -1064,7 +1064,7 @@ final class AlbumController
             $tpl->assign(['save_success' => $message]);
         }
 
-        $tpl->setFilenames(['element_set_ranks' => 'element_set_ranks.tpl']);
+        $tpl->setFilenames(['element_set_ranks' => 'element_set_ranks.latte']);
         $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
         $category = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $page['category_id']);
 

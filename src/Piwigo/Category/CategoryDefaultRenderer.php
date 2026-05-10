@@ -80,7 +80,7 @@ SELECT image_id, COUNT(*) AS nb_comments
             }
         }
 
-        $template->setFilenames(['index_thumbnails' => 'thumbnails.tpl']);
+        $template->setFilenames(['index_thumbnails' => 'thumbnails.latte']);
 
         EventDispatcher::notify('loc_begin_index_thumbnails', $pictures);
         $tpl_thumbnails_var = [];

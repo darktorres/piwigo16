@@ -106,36 +106,36 @@ the `.tpl` source would produce the same `.latte` we have.
 
 ## themes/_base/template/help (1)
 
-- [ ] `quick_search.tpl` ↔ `quick_search.latte`
+- [x] `quick_search.tpl` ↔ `quick_search.latte` — translate-rewrite. Faithful.
 
 ## themes/_base/template/mail/text/html (8)
 
-- [ ] `cat_group_info.tpl` ↔ `cat_group_info.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `global-mail-css.tpl` ↔ `global-mail-css.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `mail-css-dark.tpl` ↔ `mail-css-dark.latte`
-- [ ] `mail-css-light.tpl` ↔ `mail-css-light.latte`
-- [ ] `notification_admin.tpl` ↔ `notification_admin.latte`
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
+- [x] `cat_group_info.tpl` ↔ `cat_group_info.latte` — faithful. `$CPL_CONTENT` is admin-input mail content; plain-text default expected.
+- [x] `footer.tpl` ↔ `footer.latte` — `|escape:url` → `|urlencode` ✓.
+- [x] `global-mail-css.tpl` ↔ `global-mail-css.latte` — identical (CSS only).
+- [x] `header.tpl` ↔ `header.latte` — faithful. `MAIL_TITLE`/`MAIL_SUBTITLE` plain text.
+- [x] `mail-css-dark.tpl` ↔ `mail-css-dark.latte` — identical (CSS only).
+- [x] `mail-css-light.tpl` ↔ `mail-css-light.latte` — identical (CSS only).
+- [x] `notification_admin.tpl` ↔ `notification_admin.latte` — faithful.
+- [x] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — faithful.
 
 ## themes/_base/template/mail/text/plain (5)
 
-- [ ] `cat_group_info.tpl` ↔ `cat_group_info.latte`
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `notification_admin.tpl` ↔ `notification_admin.latte`
-- [ ] `notification_by_mail.tpl` ↔ `notification_by_mail.latte`
+- [x] `cat_group_info.tpl` ↔ `cat_group_info.latte` — faithful. (Plain-text mail; auto-escape NOT broken because translated text contains no `<`/`>`.)
+- [x] `footer.tpl` ↔ `footer.latte` — `{literal}` → `{syntax off}` ✓.
+- [x] `header.tpl` ↔ `header.latte` — `{literal}` → `{syntax off}` ✓.
+- [x] `notification_admin.tpl` ↔ `notification_admin.latte` — faithful.
+- [x] `notification_by_mail.tpl` ↔ `notification_by_mail.latte` — faithful.
 
 ## themes/standard_pages/template (7)
 
-- [ ] `footer.tpl` ↔ `footer.latte`
-- [ ] `header.tpl` ↔ `header.latte`
-- [ ] `identification.tpl` ↔ `identification.latte`
-- [ ] `password.tpl` ↔ `password.latte`
-- [ ] `profile.tpl` ↔ `profile.latte`
-- [ ] `register.tpl` ↔ `register.latte`
-- [ ] `toaster.tpl` ↔ `toaster.latte`
+- [x] `footer.tpl` ↔ `footer.latte` — `getCombinedScripts` returns Html.
+- [x] `header.tpl` ↔ `header.latte` — `{strip}` → `{spaceless}`. `combine_css/script` → `do …()`. Backtick-string-interpolation rewritten.
+- [x] `identification.tpl` ↔ `identification.latte` — JSON script `|noescape` ✓.
+- [x] `password.tpl` ↔ `password.latte` — JSON script `|noescape` ✓.
+- [~] `profile.tpl` ↔ `profile.latte` — bareword args (`name=theme`, `name=language`, `name=api_expiration`) hand-fixed (3 sites). JSON scripts `|noescape` ✓.
+- [x] `register.tpl` ↔ `register.latte` — JSON script `|noescape` ✓.
+- [x] `toaster.tpl` ↔ `toaster.latte` — straight conversion.
 
 ## themes/admin/_base/template (64)
 

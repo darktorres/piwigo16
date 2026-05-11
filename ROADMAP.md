@@ -864,6 +864,10 @@ refused at load time and listed under admin → Plugins → Incompatible.
 
 ##### `PluginInterface`
 
+One file per plugin (`src/Plugin.php`). Lifecycle methods live on the
+same interface — there is no separate `Maintain` class. Empty bodies
+are fine for plugins that don't need a given hook.
+
 ```php
 namespace Piwigo\Plugin;
 
@@ -874,30 +878,63 @@ interface PluginInterface
     public function getName(): string;           // human-readable
 
     public function boot(ContainerInterface $c): void;
-    public function shutdown(): void;
 
+    // Lifecycle — admin-triggered, not every request.
     public function install(): void;
     public function activate(): void;
     public function deactivate(): void;
     public function uninstall(): void;
+    public function update(string $oldVersion, string $newVersion): void;
 
-    /** @return array<class-string, string> */
-    public function subscribedEvents(): array;   // typed-event class → handler method
+    /**
+     * Symfony `EventSubscriberInterface`-compatible shape:
+     *   class-string => method-name                            (default priority 0)
+     *   class-string => [method-name, priority]                (single listener with priority)
+     *   class-string => list<array{0: string, 1?: int}>        (multiple listeners on same event)
+     *
+     * Higher priority runs first. The method named here is called on
+     * `$this`; its constructor-typed dependencies are autowired by PHP-DI.
+     *
+     * @return array<class-string, string|array{0: string, 1?: int}|list<array{0: string, 1?: int}>>
+     */
+    public function subscribedEvents(): array;
 }
 ```
+
+Worked example — a plugin that listens to two events with priority on
+one and falls back to default on the other:
+
+```php
+public function subscribedEvents(): array
+{
+    return [
+        PictureRendered::class => [
+            ['onRendered', 100],   // runs before default-priority listeners
+            ['logIt', -50],        // runs after them
+        ],
+        TemplateAssigned::class => 'onAssigned',  // shorthand, priority 0
+    ];
+}
+```
+
+The return value is passed straight to Symfony's `EventDispatcher`
+(see "PSR-14 typed events" below); no wrapper logic in our code.
 
 ##### PSR-14 typed events
 
 The existing `Piwigo\Plugins\EventDispatcher` is **static** and routes
-through `$GLOBALS['pwg_event_handlers']` — it can't be retrofitted into
-PSR-14 cleanly because PSR-14 dispatchers are instance methods. The
-plan is to build a new instance dispatcher alongside it and migrate
-callers, not extend the existing one.
+through `$GLOBALS['pwg_event_handlers']`. It can't be retrofitted into
+PSR-14 cleanly because PSR-14 dispatchers are instance methods, and
+the `$GLOBALS` bridge is incompatible with typed event objects. We
+adopt **Symfony's `EventDispatcher`** (which implements PSR-14
+natively and supports priority, propagation stop, and the
+`EventSubscriberInterface` shape `subscribedEvents()` already uses).
 
-1. `composer require psr/event-dispatcher`.
-2. Add `Piwigo\Event\EventDispatcher` implementing
-   `Psr\EventDispatcher\EventDispatcherInterface` and
-   `Psr\EventDispatcher\ListenerProviderInterface`.
+1. `composer require symfony/event-dispatcher` — already in
+   `composer.lock` transitively via `symfony/doctrine-messenger`,
+   make it an explicit direct dep.
+2. Bind `Symfony\Component\EventDispatcher\EventDispatcher` in the DI
+   container under `Psr\EventDispatcher\EventDispatcherInterface`.
 3. Add typed event DTOs under `src/Piwigo/Event/`:
 
 ```php
@@ -931,10 +968,12 @@ final readonly class TemplateAssigned
 }
 ```
 
-4. Bind `Piwigo\Event\EventDispatcher` in the DI container under
-   `Psr\EventDispatcher\EventDispatcherInterface`.
-5. Once all callers have migrated, delete `Piwigo\Plugins\EventDispatcher`
-   and the `$GLOBALS['pwg_event_handlers']` bridge with it.
+4. Migrate the ~217 `Piwigo\Plugins\EventDispatcher::dispatch()` /
+   `::notify()` callsites to dispatch typed event objects through the
+   new instance dispatcher.
+5. Once the last callsite is gone, delete
+   `Piwigo\Plugins\EventDispatcher` and the
+   `$GLOBALS['pwg_event_handlers']` bridge with it.
 
 ##### Fork identity
 
@@ -986,19 +1025,67 @@ not loaded.
 autoload, instantiates the main class, and calls `boot()`. The plugin
 admin UI reads `plugin.json` instead of parsing `main.inc.php` headers.
 
+##### Manifest schema validation
+
+Ship `docs/schemas/plugin.schema.json` and
+`docs/schemas/theme.schema.json` as first-class repository artifacts.
+Validate manifests at load time with **`opis/json-schema`** (draft
+2020-12 compliant, structured errors with JSON path + violation type).
+
+Plugin and theme authors reference the schema via `$schema` for IDE
+autocomplete and pre-commit validation:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/<fork>/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json",
+  "id": "my-plugin",
+  "version": "1.4.0",
+  ...
+}
+```
+
+`PluginRegistry::load()` rejects a manifest with structured errors:
+
+```
+plugins/foo/plugin.json: validation failed
+  /minPiwigo  required property missing
+  /autoload/psr-4  must be object, got array
+```
+
+The schema file IS the contract; ad-hoc validation code can't drift
+out of sync with it. `composer require opis/json-schema` adds the
+dep; no further infrastructure.
+
 ##### WS-method registration
 
-Plugins that expose Web Service methods do so by subscribing to a
-`WsServerBoot` typed event and calling `register(MethodDefinition)` on
-the provided server. (`PwgServer::addMethod()` was removed during the
-front controller migration; it no longer exists.)
+Plugins that expose Web Service methods subscribe to a
+`WsMethodsRegistering` typed event and call `register(MethodDefinition)`
+on the provided server. (`PwgServer::addMethod()` was removed during
+the front controller migration; it no longer exists.)
+
+The event itself:
 
 ```php
-public function onWsServerBoot(WsServerBoot $event): void
+namespace Piwigo\Event;
+
+final readonly class WsMethodsRegistering
+{
+    public function __construct(public PwgServer $server) {}
+}
+```
+
+It fires from `PwgServer::populateMethods()` after core methods are
+registered and before they're sorted — the same point in the lifecycle
+as the legacy `ws_add_methods` hook.
+
+Plugin handler:
+
+```php
+public function onMethodsRegistering(WsMethodsRegistering $event): void
 {
     $event->server->register(new MethodDefinition(
         name:         'pwg.my.method',
-        callback:     ServiceLocator::get(MyEndpoints::class)->myMethod(...),
+        callback:     $this->myEndpoints->myMethod(...),
         description:  'Description shown in the API browser',
         params:       [
             ParamDefinition::required(name: 'photo_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
@@ -1009,7 +1096,9 @@ public function onWsServerBoot(WsServerBoot $event): void
 }
 ```
 
-The handler shows up in `subscribedEvents()` keyed by `WsServerBoot::class`.
+The handler shows up in `subscribedEvents()` keyed by
+`WsMethodsRegistering::class`. `$this->myEndpoints` is a typed
+constructor dep (no `ServiceLocator` lookup — see §1.3).
 
 ##### Migration walkthrough — generic plugin
 
@@ -1029,8 +1118,7 @@ Post-migration:
 plugins/<id>/
   plugin.json              # declarative manifest
   src/
-    Plugin.php             # implements PluginInterface
-    Maintain.php           # implements lifecycle methods
+    Plugin.php             # implements PluginInterface (incl. lifecycle)
   template/                # Latte .latte files
 ```
 
@@ -1038,12 +1126,12 @@ Steps to migrate one plugin (one commit each, in order):
 
 1. Move source under `plugins/<id>/src/` with PSR-4 namespace
    `Piwigo\Plugin\<Pascal>\`.
-2. Convert `main.inc.php` event-handler registrations to a `Plugin` class
-   with `subscribedEvents()`.
-3. Convert `maintain.inc.php` to a `Maintain` class implementing the
-   lifecycle methods.
-4. Add `plugin.json`.
-5. Convert templates to Latte using `tools/smarty-to-latte/convert.php`.
+2. Convert `main.inc.php` event-handler registrations to a `Plugin`
+   class with `subscribedEvents()`. Fold lifecycle methods from
+   `maintain.inc.php` (`install`/`activate`/`deactivate`/`uninstall`/
+   `update`) onto the same `Plugin` class.
+3. Add `plugin.json`.
+4. Convert templates to Latte using `tools/smarty-to-latte/convert.php`.
 
 ##### DI for plugins
 
@@ -1094,12 +1182,14 @@ interface ThemeInterface
     public function getLocalHeadTemplate(): ?string;
 
     public function boot(ContainerInterface $c): void;
+
     public function install(): void;
     public function activate(): void;
     public function deactivate(): void;
     public function uninstall(): void;
+    public function update(string $oldVersion, string $newVersion): void;
 
-    /** @return array<class-string, string> */
+    /** @return array<class-string, string|array{0: string, 1?: int}|list<array{0: string, 1?: int}>> */
     public function subscribedEvents(): array;
 }
 ```
@@ -1235,15 +1325,19 @@ final class ImagesEndpoints
 
 ##### CI gate validating the generated spec
 
-Three options, pick one when the work lands:
+Two complementary gates:
 
-- **PHPUnit structural test** (no new dep, recommended start). Build the
-  spec from a populated server, assert required OpenAPI 3.1 keys and
-  field types are present.
-- **`cebe/php-openapi`** as `require-dev`. Full PHP validator with `$ref`
-  resolution and schema semantics; callable from a test.
-- **External**: `openapi-spec-validator` (Python) or `redocly lint` in CI.
-  More thorough but adds an out-of-PHP dependency.
+- **`cebe/php-openapi`** as `require-dev` — runs inside PHPUnit, so
+  devs catch malformed specs pre-push without waiting for CI. Validates
+  full schema semantics including `$ref` resolution.
+- **`@redocly/cli` lint** as a CI step — the industry-standard OpenAPI
+  linter. Catches style + spec violations that pure schema-validity
+  doesn't surface (unused components, weak descriptions, deprecated
+  patterns). Node toolchain already runs in CI for ESLint/stylelint,
+  so no new infrastructure.
+
+The two cover different rule depths on the same generated spec, so
+both stay green together or both flag a regression.
 
 ##### Verification
 

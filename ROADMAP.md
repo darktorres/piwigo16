@@ -12,12 +12,13 @@
 | --- | ----------------------------- | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | ✅ **Done** ▸ 9 / 9                            | —         | history pagination refactor shipped 2026-05-10 (6-query split + snapshot tests); cat-id gap closed without code change               |
 | 1.2 | Templates pipeline            | ✅ **Done**                                   | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate |
-| 1.3 | Plugin / theme + WS           | 🟡 **Not started**                            | XL        | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups                                                                             |
-| 1.4 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                        |
-| 1.5 | Type correctness              | 🟡 **Not started**                            | M         | mixed-types · globals · schema metadata                                                                                             |
-| 1.6 | Typed boundaries              | 🟡 **Not started**                            | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                     |
-| 1.7 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
-| 1.8 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                  |
+| 1.3 | Kill ServiceLocator + DI      | 🟡 **Not started**                            | L         | constructor injection everywhere; delete `ServiceLocator` static; prerequisite for §1.4                                             |
+| 1.4 | Plugin / theme + WS           | 🟡 **Not started**                            | L         | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups; depends on §1.3                                                            |
+| 1.5 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                        |
+| 1.6 | Type correctness              | 🟡 **Not started**                            | M         | mixed-types · globals · schema metadata                                                                                             |
+| 1.7 | Typed boundaries              | 🟡 **Not started**                            | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                     |
+| 1.8 | Test infrastructure           | 🟡 **Not started**                            | M + L + S | Pest → coverage → Infection (chained)                                                                                               |
+| 1.9 | Deferred / on-demand          | 🟠 **On-demand**                              | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                  |
 | 2.1 | TS `any` reduction            | 🟡 **Not started**                            | M         | 478 → ≤250 patterns                                                                                                                 |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**                            | M         | TS unit-test runner + first wave                                                                                                    |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**                            | S         | per-entrypoint gzip limits in CI                                                                                                    |
@@ -43,22 +44,22 @@ Effort tags: **S** ≤ 1 day · **M** 2–7 days · **L** 1–3 weeks · **XL** 
 
 Most sections are independent. The chains that aren't:
 
-- **1.5b globals cleanup.** Gated by direct `$GLOBALS[...]` reads in `src/`
+- **1.6b globals cleanup.** Gated by direct `$GLOBALS[...]` reads in `src/`
   being eliminated first. Both halves (bridge cleanup + renderer residuals)
   land together.
-- **1.6 typed boundaries.** Phase 1 (HTTP request DTOs) ↔ §1.3 WS endpoints
+- **1.7 typed boundaries.** Phase 1 (HTTP request DTOs) ↔ §1.4 WS endpoints
   — coordinate `PwgServer::addMethod()` migration so plugin authors meet one
   new pattern, not two. Phase 2 (repository entity layer) closes out the
-  globals work in §1.5b — `$user`, `$page` etc. become typed entity reads.
-- **1.7 test infrastructure.** Pest (1.7.1) lands first because it changes
-  the runner that 1.7.2 and 1.7.3 measure. Coverage (1.7.2) feeds Infection
-  (1.7.3) — mutation testing's MSI is meaningful only once enough tests
+  globals work in §1.6b — `$user`, `$page` etc. become typed entity reads.
+- **1.8 test infrastructure.** Pest (1.8.1) lands first because it changes
+  the runner that 1.8.2 and 1.8.3 measure. Coverage (1.8.2) feeds Infection
+  (1.8.3) — mutation testing's MSI is meaningful only once enough tests
   exist to mutate.
 - **3.1 → 3.2.** CSS design tokens before a11y audit — color-contrast
   violations dissolve when tokens land, so most of the violation list
   resolves on its own.
-- **1.3 phase 2 themes ↔ 3.1 step 8.** The skin refactor in 3.1 presumes
-  the `theme.json` layout that lands in 1.3. Soft dependency, not blocking.
+- **1.4 phase 2 themes ↔ 3.1 step 8.** The skin refactor in 3.1 presumes
+  the `theme.json` layout that lands in 1.4. Soft dependency, not blocking.
 
 ---
 
@@ -292,8 +293,8 @@ document.addEventListener('click', e => {
 | D.admin          | Convert ~55 admin templates (`themes/admin/_base/template/`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | ✅ Done · **70 / 70 lint-clean**. Iteration 3 lifted the remaining 32 templates by registering `htmlOptions` / `htmlRadios` / `math` as PiwigoExtension functions (Smarty plugin ports), adding converter rules for `{counter}` strip, user-defined function call → `{include NAME, k: v, …}` rewrite, embedded `{$X}` print sub-tags inside `{if}`/`{elseif}`/`{var}`, Smarty backtick string interpolation → `.` concat (Latte's `~` is rejected inside function-call args), Smarty 5 `$item@index/iteration/first/last/total/key` iterator-attribute syntax, `{if X}{break}{/if}` → `{breakIf X}` idiom, pipe-in-`{if}` (`$x\|count`→`count($x)`), nested-`:{round(...)}` filter-arg unwrap, `$arr.$varname`(variable-index dot-access),`{capture assign=NAME}`keyword variant, and an extended args parser that accepts`key = value`(with whitespace) plus expressions containing`,` `:` `\|` `()`. Two templates needed hand-fixes that don't generalise: `header.latte`(JSON config script tag rebuilt with`\|json_encode\|noescape`since Latte rejects`{$X}`print-statements inside JS string literals) and`queue.tpl`source (HTML attribute quoting flipped to single-quoted to escape inner`"` chars in the Smarty translate-string literal). |
 | D.public         | Convert ~55 public theme templates (`themes/_base/template/` incl. `mail/`, `include/`, `help/` subtrees)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | ✅ Done · **55 / 55 lint-clean**. Iteration 4 added two converter rules (dot-access leading-expr now walks `->prop` PHP-property chains so `$block->data.qsearch` → `$block->data['qsearch']`; `combine_css` / `combine_script` regexes now allow nested `{...}` in path values for `path="…/{$themeconf.colorscheme}.css"`) and four PiwigoExtension filters (`count`, `strip_tags`, `str_repeat`, `default`, `date_format`) plus two functions (`url_is_remote` is now also exposed as a function, not just a filter; `l10n` likewise). Source-level hygiene fixes: `header.tpl` × 2 (`pwg-config` JSON now built via `[…]\|json_encode` array literal, working in both Smarty and Latte); `related_tags.inc.tpl` + `menubar_tags.tpl` (href-split-across-`{if}` rebalanced so each branch produces matching HTML — the original "split `<a … href=\\n{if}…\\n{/if}>`" idiom isn't representable in Latte's tag-aware parser). One hand-fix that doesn't generalise: `search.latte` blocks `{section name=day start=1 loop=32}` (one-off; .tpl source keeps Smarty form, .latte uses `{foreach range(1, 32) as $day}` and `--force` regen requires reapplying).                                                                                                                                                                                                                                      |
 | D.standard_pages | Convert 7 templates in `themes/standard_pages/template/` (footer, header, identification, password, profile, register, toaster) + the orphan `themes/_base/local_head.tpl`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ✅ Done · **8 / 8 lint-clean** on first conversion. The converter rules accumulated through D.admin + D.public covered every construct in this corpus — no rule additions, no source-level hygiene fixes, no hand-fixes required.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| E                | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `PiwigoPolicy` extends Latte's `Sandbox\SecurityPolicy` with two factory methods: `createPluginPolicy()` is the default-deny allowlist for plugin templates (permits structural tags, escape filters, the translation pair, read-only Piwigo helpers; denies `php`/`include`/`extends`/`do`, the asset-pipeline functions, filesystem-touching filters, `math()`, and opaque payload decoders); `createCorePolicy()` is the trusted-core superset that allows the asset-pipeline functions and `do`/`include`/`extends` while still keeping `{php}` denied. `LatteEngine` gained a `?Policy $policy` constructor arg + `LatteEngine::sandboxed()` factory that segregates the plugin compile cache (`templates_c/latte_plugin/`) from the trusted-engine cache so a malicious plugin can't poison core. 10 unit tests pin the allow/deny matrix and round-trip representative `SecurityViolationException` cases (`{php}`, `\|file_exists`, `combineScript()`) through a sandboxed engine. Plugin-loader integration lives in §1.3.                                                                                                                                                                                                                                                                                                                                                           |
-| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `Template::parse()` dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.3. All in-tree controller and service call-sites now register `.latte` filenames (last two flips landed in `MailService.php`: the `mail-css-{theme}` theme-overlay CSS check at line 567 and the dynamic `{tplFilename}` mail-content selector at line 603). The Smarty branch of the dispatcher is now unreachable from in-tree code; Phase F removes it along with the `smarty/smarty` dependency. **Hard-won lesson from an early reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time()\|...}`and`{($\_SERVER['X'] ?? '') \|...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*`is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Each controller flip got e2e validation, not just lint;`\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). |
+| E                | Implement `Piwigo\Template\Latte\PiwigoPolicy` sandbox for plugin-supplied templates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `PiwigoPolicy` extends Latte's `Sandbox\SecurityPolicy` with two factory methods: `createPluginPolicy()` is the default-deny allowlist for plugin templates (permits structural tags, escape filters, the translation pair, read-only Piwigo helpers; denies `php`/`include`/`extends`/`do`, the asset-pipeline functions, filesystem-touching filters, `math()`, and opaque payload decoders); `createCorePolicy()` is the trusted-core superset that allows the asset-pipeline functions and `do`/`include`/`extends` while still keeping `{php}` denied. `LatteEngine` gained a `?Policy $policy` constructor arg + `LatteEngine::sandboxed()` factory that segregates the plugin compile cache (`templates_c/latte_plugin/`) from the trusted-engine cache so a malicious plugin can't poison core. 10 unit tests pin the allow/deny matrix and round-trip representative `SecurityViolationException` cases (`{php}`, `\|file_exists`, `combineScript()`) through a sandboxed engine. Plugin-loader integration lives in §1.4.                                                                                                                                                                                                                                                                                                                                                           |
+| F.0              | Runtime engine routing facade in `Template::parse()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅ Done. `Template::parse()` dispatches by file extension: `.latte` paths route to a private `renderLatte()` that threads Smarty's accumulated template-vars through `LatteEngine::default()` and resolves the bare filename against Smarty's `template_dir`. Smarty plugin pre/post filters and `compile_id` language-cache keys are deliberately not applied to Latte — Latte caches by content hash and plugin extension lands separately in §1.4. All in-tree controller and service call-sites now register `.latte` filenames (last two flips landed in `MailService.php`: the `mail-css-{theme}` theme-overlay CSS check at line 567 and the dynamic `{tplFilename}` mail-content selector at line 603). The Smarty branch of the dispatcher is now unreachable from in-tree code; Phase F removes it along with the `smarty/smarty` dependency. **Hard-won lesson from an early reverted bulk flip:** lint-clean ≠ runtime-safe. 13 templates contained `$smarty.foreach.X.Y`, `$smarty.now`, `$smarty.server.X`, `$smarty.cookies.X`, `$smarty.capture.NAME` references — Smarty's implicit globals that lint-pass under Latte (the bracket form `$smarty['foreach']['X']` looks like a normal array access) but fail at render with "Undefined variable $smarty". Converter now rewrites all five residue families (matches both the dotted form and the bracketed form left by `rewriteSmartyDotAccess`); `rewritePrintedLiteralFilter` widened to accept function-call and parenthesized leading exprs so `{time()\|...}`and`{($\_SERVER['X'] ?? '') \|...}`get the`{=...}`print marker.`LatteEngine::default()`and`::sandboxed()`chmod their cache dirs 0o775 after creation so`\_data/templates_c/latte\*`is shareable between Apache (`www-data`) and CLI (developer); without the chmod, mode bits clamp the parent ACL mask to r-x and whoever creates the dir first locks the other out. Each controller flip got e2e validation, not just lint;`\|noescape`annotations on raw-HTML prints survive across`--force`regen at the .latte level only (the converter is intentionally faithful and never auto-adds`\|noescape`). |
 | F                | Drop `smarty/smarty`; strip Smarty internals from `Template`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | ✅ Done. `Template` (1322 → 456 lines, –866) lost all Smarty machinery: 50+ `registerPlugin` / `registerFilter` calls, plugin handlers (`blockHtml{Head,Style}`, `blockFooterScript`, `funcDefineDerivative`, `funcCombine{Script,Css}`, `funcGetCombined{Scripts,Css}`), filter callbacks (`modcompiler{Translate,TranslateDec}`, `modExplode`, `modTernary`, `prefilterWhiteSpace`, `postfilterLanguage`, `prefilterLocalCss`), and the plugin-extension surface (`setExtent(s)`, `setPrefilter`/`setPostfilter`/`setOutputfilter`, `loadExternalFilters`/`unloadExternalFilters`). The `$this->vars` array replaces Smarty's variable bag; `$this->template_dirs` replaces `Smarty::setTemplateDir`; `parse()` always renders via `LatteEngine::default()`. Public API unchanged so callers don't move (Phase F.1). Companion deletes: `PwgTemplateAdapter` (Smarty's `$pwg.X` accessor — `derivative()` ported to `PiwigoExtension` as a Latte function so 4 templates that used `$pwg->derivative(...)` continue to work); 137 `.tpl` source files (133 in core themes + 4 sample plugin templates under `template-extension/distributed/samples/`); `smarty/smarty: ^5.0` from `composer.json`/`composer.lock`. New methods on `Template`: `templateExists($file)` replaces the public `$tpl->smarty->templateExists()` accessor used by mail rendering. Stale doc comments in `LatteEngine` and `TemplateEngine` updated to reflect the single-engine post-Phase-F state. |
 | F.1              | Migrate callers off `Template`'s handle-based API to direct `.latte`-path calls                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | ✅ Done. `Template::parse($handle, $return)` / `pparse($handle)` / `assignVarFromHandle($var, $handle)` were a Smarty-era inheritance — controllers always called `setFilename($handle, $file.latte)` immediately followed by `parse($handle, …)` in the same method, so the handle indirection added no value over passing the path directly. Public API now: `parse($file, $return = false)`, `pparse($file)`, `assignVarFromTemplate($var, $file)` — each takes the bare `.latte` filename (resolved against the registered template directories) or an absolute path. Companion deletes: `setFilename`, `setFilenames`, `assignVarFromHandle`, the `$files` map. ~30 consumer files migrated (controllers under `Controller/` + `Controller/Admin/`, plus `Page/*Renderer`, `Mail/MailService`, `Admin/Tabsheet`, `Admin/Integrity/CheckIntegrity`, `Admin/Notification/NotificationAdminService`, `Category/CategoryCatsRenderer` + `CategoryDefaultRenderer`, `Picture/PictureCommentRenderer` + `PictureContentRenderer`, `Tag/SelectedTagsRenderer`, `Menu/BlockManager`, `Core/Util`). Output buffer + `scriptLoader` / `cssLoader` + button accumulators + theme-search-path infrastructure stay where they are (page-coordination state, not engine-specific). |
 
@@ -665,7 +666,7 @@ A single `themes/` root rather than the originally-planned three
 including the orphan `themes/_base/local_head.latte` (registered via
 `themeconf.inc.php`'s `local_head` key, resolved by
 `Template::setTheme()` against the theme root, not its `template/`
-subdir). The single-root walk is also future-proof for §1.3 themes.
+subdir). The single-root walk is also future-proof for §1.4 themes.
 
 CI: a parallel `precompile` job in `.github/workflows/ci.yml` runs
 `composer precompile:templates` after `composer install`, mirroring
@@ -694,11 +695,11 @@ Outcome delivered:
   precompile hook folds in there, not here. Tarball end-users absorb
   a one-time first-request compile until then.
 - **Plugin sandbox cache.** `LatteEngine::sandboxed()` warming
-  (`templates_c/latte_plugin/`) is parked until §1.3 introduces plugin
+  (`templates_c/latte_plugin/`) is parked until §1.4 introduces plugin
   `.latte` templates; zero exist in tree today.
 - **`template_compile_check = 0` flip.** The precompile is a
   prerequisite for the production toggle, but the toggle itself is
-  config-schema work and fits §1.5c.
+  config-schema work and fits §1.6c.
 - **OPcache guidance / preload doc.** `_data/templates_c/latte/` holds
   plain PHP and benefits from OPcache; `opcache.max_accelerated_files`
   needs only ~150 entries for the current tree, and `opcache.preload`
@@ -720,7 +721,89 @@ rm themes/_base/template/_probe.latte
 
 ---
 
-### 1.3 Plugin / theme system + WS plugin surface
+### 1.3 Kill ServiceLocator — constructor injection everywhere
+
+**Status:** 🟡 Not started · **Effort:** L · prerequisite for §1.4
+
+`Piwigo\Core\ServiceLocator` is a static service-lookup shim over the
+PHP-DI 7 container we already require. Code shaped like
+`ServiceLocator::get(Foo::class)->bar()` dots the codebase ~1980 times.
+It hides dependencies, breaks composition, makes plugins impossible to
+wire with a typed `boot(ContainerInterface $c)` cleanly, and forces
+every test to set up a thread-local container. It has to go before
+§1.4 lands.
+
+**Strategy.** Every service declares its dependencies in its
+constructor; PHP-DI autowires. No more global lookup. `ServiceLocator`,
+its `setContainer()` static, and the unit-test fallback array all
+disappear in the commit that strips the last callsite.
+
+**Implementation order:**
+
+1. **Audit static contexts.** Find every free function, static method,
+   or class-less script that calls `ServiceLocator::get()` — these can't
+   be constructor-injected and need to become instance methods on a
+   class with constructor deps, or accept the container as an explicit
+   parameter. Surface them first:
+
+   ```bash
+   grep -rn "ServiceLocator::" src/ | grep -vE "(private|public|protected)"
+   ```
+
+2. **Migrate instance-method callsites class-by-class.** For each
+   class with `ServiceLocator::get(Foo::class)` calls:
+   - Add `private readonly Foo $foo` to the constructor.
+   - Replace every internal `ServiceLocator::get(Foo::class)` with
+     `$this->foo`.
+   - PHP-DI's autowiring resolves the constructor at instantiation
+     time — no binding work needed for concrete classes; only
+     interfaces require an explicit `bind`.
+
+3. **Wire tests.** Replace `ServiceLocator::register()` calls in test
+   `setUp()` with PHP-DI container bindings:
+
+   ```php
+   $container = (new ContainerBuilder())->useAutowiring(true)->build();
+   $container->set(FooInterface::class, $fooMock);
+   ```
+
+4. **Delete the shim.** Once `grep -rn "ServiceLocator::" src/ tests/`
+   returns nothing, remove `src/Piwigo/Core/ServiceLocator.php`, the
+   `setContainer()` global, and the `$services` fallback array.
+
+**Critical files:**
+
+- `src/Piwigo/Core/ServiceLocator.php` — to be deleted at the end.
+- `composer.json` — `php-di/php-di ^7.0` already required; no new dep.
+- DI bootstrap (wherever PHP-DI's container is built today) — switch
+  to full autowiring; bind interfaces → implementations explicitly.
+
+**Verification:**
+
+```bash
+# No remaining static lookups:
+grep -rn "ServiceLocator::" src/ tests/ | wc -l       # → 0
+
+# Full unit + integration suite passes:
+vendor/bin/phpunit
+
+# Static analysis clean:
+vendor/bin/phpstan analyse
+
+# Manual: log in to admin, navigate gallery + a few admin pages, edit
+# one album, upload one photo. Anything that fails to instantiate due
+# to a missing constructor dep surfaces here.
+```
+
+**Why now, not folded into §1.6 type correctness:**
+
+§1.6 work is about adding types to existing control flow. This is
+about deleting a control-flow pattern entirely. Different surgery,
+different commit train. Bundling would muddle review.
+
+---
+
+### 1.4 Plugin / theme system + WS plugin surface
 
 **Status:** 🟢 Active ▸ foundation partial · **Effort:** L · 3 phases
 
@@ -866,7 +949,7 @@ public const string VERSION = '17.0.0';
 ```
 
 The bump immediately marks every existing PEM extension as incompatible
-(see 1.3 intro): `getVersionsToCheck()` queries PEM for a version whose
+(see 1.4 intro): `getVersionsToCheck()` queries PEM for a version whose
 branch matches ours, finds nothing for branch 17, and returns empty.
 That is the whole point of the bump — it lets us rewrite plugins,
 themes, and languages one at a time against the fork's branch instead
@@ -974,11 +1057,11 @@ public function boot(ContainerInterface $c): void
 }
 ```
 
-`ContainerInterface` here is `Psr\Container\ContainerInterface`. The
-codebase currently uses the static `Piwigo\Core\ServiceLocator` — Phase 1
-introduces a PSR-11 facade around `ServiceLocator` (or replaces it with
-a real PSR-11 container) so plugin `boot()` has a typed handle without
-forcing every internal callsite to migrate at once.
+`ContainerInterface` here is `Psr\Container\ContainerInterface`,
+backed by the PHP-DI 7 container that §1.3 establishes as the only DI
+mechanism. Plugins receive it in `boot()` for late-bound resolution;
+their own `Plugin` class also declares typed deps in its constructor
+like any core service, autowired by PHP-DI.
 
 ##### Removal note
 
@@ -1179,7 +1262,7 @@ npx playwright test
 
 ---
 
-### 1.4 Security hardening
+### 1.5 Security hardening
 
 **Status:** 🟢 Active ▸ 1 of 6 sub-tasks done · **Effort:** M
 
@@ -1292,7 +1375,7 @@ proper exception via the named constructors below.)
 **Lockout-reason surfacing.** `pwgLogin()` keeps its `bool` return.
 A new `AuthService::getLastFailureReason()` lets the controller
 distinguish lockout from bad-credentials for the user-facing
-message. Restructuring to an explicit result-DTO belongs to §1.6
+message. Restructuring to an explicit result-DTO belongs to §1.7
 (typed boundaries), not this wave.
 
 **`AuthException` gains** `accountLocked()` and `rateLimited()` named
@@ -1301,7 +1384,7 @@ natural channel (the form path uses error strings).
 
 **Configuration deferred.** Thresholds are hard-coded in the service
 constructors with the values above. Config keys
-(`login_throttle_*`, `login_rate_*`) come **after** §1.5c
+(`login_throttle_*`, `login_rate_*`) come **after** §1.6c
 config-schema metadata lands — premature now would produce keys that
 need re-shaping when the schema work happens.
 
@@ -1378,11 +1461,11 @@ is locked:
   escalation, IDOR), supply chain (composer/npm). Map each to the
   defense in tree.
 - **CSP override procedure.** Documented as "not yet supported, file
-  an issue"; the §1.3 plugin work is the proper home for relaxation
+  an issue"; the §1.4 plugin work is the proper home for relaxation
   hooks.
 - **Account-lockout admin runbook.** Manual unlock via
   `DELETE FROM phpwg_user_failed_logins WHERE user_id = …` until
-  the §1.3 admin-UX work lands a button.
+  the §1.4 admin-UX work lands a button.
 - **Vulnerability reporting.** Private channel + SLA. Channel choice
   confirmed before merge.
 
@@ -1392,12 +1475,12 @@ is locked:
   Wave B should also wire the limiter + throttle into
   `WsAuthMethods::login()`; confirm scope during Wave B
   implementation.
-- **Config keys for thresholds.** Gated on §1.5c (config-schema
+- **Config keys for thresholds.** Gated on §1.6c (config-schema
   metadata).
-- **Admin UI for unlocking users.** Gated on §1.3 admin-UX work.
+- **Admin UI for unlocking users.** Gated on §1.4 admin-UX work.
 - **CSP `report-uri` / `report-to`.** No reporting endpoint to design
   yet; revisit if violations appear in production.
-- **Per-plugin CSP relaxation hook.** §1.3 territory.
+- **Per-plugin CSP relaxation hook.** §1.4 territory.
 - **`secure => true` unconditional + cookie prefix
   (`__Host-` / `__Secure-`).** Gated on a future "force HTTPS"
   config flag.
@@ -1433,7 +1516,7 @@ rm themes/_base/template/_probe.latte
 
 ---
 
-### 1.5 Type correctness — three tactical streams
+### 1.6 Type correctness — three tactical streams
 
 **Status:** 🟡 Not started · **Effort:** M · 3 streams (6 + 2 + 5 items)
 
@@ -1448,11 +1531,11 @@ mixed-type surface that doesn't require new architectural patterns:
   surface from the schema work.
 
 Architectural boundary work — typed entities for DB rows and typed DTOs
-for HTTP input — was originally drafted under 1.5a (items 8–9) but lives
-in §1.6 now. Same gating constraint, same review effort — tackle 1.5
+for HTTP input — was originally drafted under 1.6a (items 8–9) but lives
+in §1.7 now. Same gating constraint, same review effort — tackle 1.6
 as one section, work the streams in parallel where possible.
 
-#### 1.5a Mixed-type fixes
+#### 1.6a Mixed-type fixes
 
 **Status:** 🟡 Not started · 6 items
 
@@ -1501,7 +1584,7 @@ annotation just documents what's actually accepted. The other
 `mixed $id`-shaped sites the original audit catalogued live inside
 `array_map(fn (mixed $v) => …)` lambdas at DB call boundaries — those
 get removed naturally as queries move into typed repository methods
-under §1.6 Phase 2.
+under §1.7 Phase 2.
 
 ###### EventDispatcher generic
 
@@ -1540,7 +1623,7 @@ Land in this order, smallest blast radius first:
 5. `RequestCache` / `PersistentCache` templates (2 files + 13 callers).
 6. `EventDispatcher::dispatch` (1 file + 217 callers verified by PHPStan).
 
-#### 1.5b Globals cleanup
+#### 1.6b Globals cleanup
 
 **Status:** 🟡 Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
 
@@ -1548,7 +1631,7 @@ Both items below are gated by the same precondition — direct
 `$GLOBALS[...]` reads in `src/` being eliminated first — so tackle them
 together as one closing pass.
 
-**Relationship to the entity layer (§1.6 Phase 2).** The `$user` global is
+**Relationship to the entity layer (§1.7 Phase 2).** The `$user` global is
 itself a raw DB row (`array<string, mixed>`). Once `UserRepository` returns
 a typed `UserEntity`, `CurrentUser::get()` can expose typed properties
 (`->id`, `->username`, `->status`) instead of routing through
@@ -1609,7 +1692,7 @@ full, but they're harmless given the reference-bridge model in
 `Kernel::boot()`. Low priority — schedule when the bridge cleanup happens
 anyway.
 
-#### 1.5c Config schema metadata
+#### 1.6c Config schema metadata
 
 **Status:** 🟡 Not started · 5 items
 
@@ -1713,7 +1796,7 @@ target the build script knows about.
 
 ---
 
-### 1.6 Typed boundaries — HTTP input and DB rows
+### 1.7 Typed boundaries — HTTP input and DB rows
 
 **Status:** 🟡 Not started · **Effort:** L · 2 phases
 
@@ -1724,10 +1807,10 @@ solved by the same architectural pattern: a single-cast factory at the
 boundary that produces a typed object, and business logic that consumes
 typed properties without `is_*` guards.
 
-This section was extracted from §1.5 because it's no longer tactical
+This section was extracted from §1.6 because it's no longer tactical
 type tightening — it introduces new patterns, new vocabulary, and (for
 HTTP) new dependencies. It's comparable in scope to §1.2 (templates) or
-§1.3 (plugins).
+§1.4 (plugins).
 
 #### Phase 1 — Request DTO layer (HTTP boundary)
 
@@ -1811,8 +1894,8 @@ same Serializer + Validator. Zero new dependencies.
 
 Full Symfony HttpKernel adoption (PSR-7 → HttpFoundation, kernel
 events, standard ArgumentResolver pipeline, exception → response flow)
-is a separate architectural decision. Not in scope for §1.6; revisit
-when §1.3 (plugin/theme system) is far enough along to know whether
+is a separate architectural decision. Not in scope for §1.7; revisit
+when §1.4 (plugin/theme system) is far enough along to know whether
 the codebase wants one event bus or two. The DTOs and `PayloadFactory`
 from Phase 1 carry over unchanged if that adoption ever happens.
 
@@ -1823,7 +1906,7 @@ from Phase 1 carry over unchanged if that adoption ever happens.
 2. Sweep multi-field admin endpoints (forms in `MaintenanceController`,
    `BatchManagerController`, etc.).
 3. Sweep WS endpoint payloads (`ImagesEndpoints`, etc.) — coordinate
-   with §1.3's `PwgServer::addMethod()` migration so plugin authors
+   with §1.4's `PwgServer::addMethod()` migration so plugin authors
    see one new pattern, not two.
 4. Decide whether to add the optional attribute resolver based on how
    repetitive `PayloadFactory::create()` calls feel in practice.
@@ -1910,13 +1993,13 @@ etc.). No transitional helper API.
 
 #### Cross-references
 
-- §1.5a — tactical type tightening; lands first because it has no
+- §1.6a — tactical type tightening; lands first because it has no
   blockers.
-- §1.5b — globals cleanup closes once `UserRepository` returns a typed
+- §1.6b — globals cleanup closes once `UserRepository` returns a typed
   `UserEntity` and `CurrentUser::get()` exposes typed properties.
-- §1.3 — plugin/theme system; coordinate Phase 1 sequencing with the
+- §1.4 — plugin/theme system; coordinate Phase 1 sequencing with the
   WS endpoint migration there.
-- §1.7 (test infrastructure) — entity factories and DTO fixtures are
+- §1.8 (test infrastructure) — entity factories and DTO fixtures are
   good candidates for the early Pest/PHPUnit suite.
 
 #### Verification
@@ -1932,13 +2015,13 @@ Per phase:
 
 ---
 
-### 1.7 Test infrastructure
+### 1.8 Test infrastructure
 
 **Status:** 🟡 Not started · **Effort:** M + L + S · 3 chained items
 
 Three coupled items, sequenced because each enables the next.
 
-#### 1.7.1 Pest — first
+#### 1.8.1 Pest — first
 
 **Status:** 🟡 Not started · **Effort:** M
 
@@ -2024,7 +2107,7 @@ find tests/e2e -name '*.spec.ts' | wc -l     # 0 — all ported
 find tests/Browser -name '*.php' | wc -l     # 16 — one per original spec
 ```
 
-#### 1.7.2 Unit-test coverage 13% → ≥40%
+#### 1.8.2 Unit-test coverage 13% → ≥40%
 
 **Status:** 🔵 Continuous · **Effort:** L · depends on Pest landing
 
@@ -2068,9 +2151,9 @@ vendor/bin/pest --coverage-text | grep 'Lines:'
 # Target: ≥ 40.00%
 ```
 
-#### 1.7.3 Mutation testing — Infection — last
+#### 1.8.3 Mutation testing — Infection — last
 
-**Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.7.2
+**Status:** 🟡 Not started · **Effort:** S · depends on coverage from 1.8.2
 
 Mutation testing complements coverage % — high coverage with weak
 assertions still scores low MSI, surfacing tests that exercise but don't
@@ -2139,7 +2222,7 @@ open build/infection/report.html   # visualize surviving mutants per file
 
 ---
 
-### 1.8 Deferred / on-demand
+### 1.9 Deferred / on-demand
 
 **Status:** 🟠 On-demand · 5 items · no scheduled effort
 
@@ -2442,7 +2525,7 @@ first wave. Track in `vitest.config.ts` so CI fails on regression.
 
 ##### Boundary with PHP test infra
 
-1.7.1 Pest absorbs the _browser_ tests (Playwright →
+1.8.1 Pest absorbs the _browser_ tests (Playwright →
 `pest-plugin-browser`); Vitest stays for TS unit tests. Non-overlapping —
 no item to merge across tracks.
 
@@ -2656,7 +2739,7 @@ are already in place. The remaining 10 live steps:
 | 5    | Collapse search CSS variants. Replace `search.css` + `clear-search.css` + `dark-search.css` with a single variable-driven `search.css` using `--search-*` tokens. Net savings: ~500 lines.                                                                                                                                  |
 | 6    | Non-color design tokens at theme root — `:root {}` block with `--space-*`, `--font-size-*`, `--line-height-*`, `--radius-*`, `--z-*`, `--bp-*` (canonical breakpoints `sm=576 md=800 lg=1100`). Replace hardcoded values throughout.                                                                                        |
 | 7    | Color tokens for `themes/standard_pages/`. Emit `:root {}` color block in parent; replace direct color literals with `var(--color-*)`.                                                                                                                                                                                      |
-| 8    | Refactor `themes/standard_pages/skins/*.css` (11 skins × ~337 lines × 20 `!important` ≈ 220 instances). With tokens in place, each skin reduces to a single `:root {}` override block (~30 lines, 0 `!important`). **Soft dep on 1.3 phase 2** — `theme.json` layout.                                                       |
+| 8    | Refactor `themes/standard_pages/skins/*.css` (11 skins × ~337 lines × 20 `!important` ≈ 220 instances). With tokens in place, each skin reduces to a single `:root {}` override block (~30 lines, 0 `!important`). **Soft dep on 1.4 phase 2** — `theme.json` layout.                                                       |
 | 10   | Admin-parent CSS design tokens via `base.css.tpl` — Smarty-templated `:root {}` block emitting `--admin-{bg,fg,accent,border}` from `$admin_skin` in each child theme's `themeconf.inc.php`. Removes the `{combine_css path="…/$theme.id/css/components/general.css" order=-9}` `{* Temporary solution *}` workaround.      |
 | 11   | Split `themes/admin/_base/theme.css` (9,635 lines) along its 60+ `/* name.css */` section markers into base/components/pages/features. `theme.css` becomes an `@import` list. Utility classes `.u-*` (added by inline-style extraction) land in `base/utilities.css`.                                                       |
 | 12   | Slim admin child themes — `themes/admin/{light,dark}/theme.css` reduce to `:root {}` variable override blocks. Structural rules currently duplicated (borders, padding, grid, `@keyframes`) move up into the parent's split CSS.                                                                                            |

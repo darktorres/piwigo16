@@ -13,6 +13,51 @@ The **Compatible with** column lists every Piwigo version upstream `piwigo.org/e
 
 Of the 636 entries here, only 321 (~50%) are actually compatible with Piwigo 16; the rest target older Piwigo versions (some as old as 1.5). The mirror keeps whatever revision was retrievable upstream regardless of declared compatibility, so `piwigo16-tools` in particular is largely a historical archive (only 1 of 33 entries works on Piwigo 16). Filter on the column when looking for currently-supported extensions.
 
+## Inter-extension dependencies
+
+Some plugins include from another plugin's path (`PHPWG_PLUGINS_PATH . 'OtherPlugin/...'`) — an implicit hard dependency. The new fork plugin contract (ROADMAP §1.4 "Plugin dependencies") replaces this with a typed `require` field in `plugin.json`; this section enumerates the graph the converter has to preserve.
+
+**Library plugins** (one-to-many fan-in):
+
+| Library plugin              | Required by                                                                                                                                                | Count |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
+| `GrumPluginClasses`         | `AMenuManager`, `AMetaData`, `ASearchEngine`, `AStat`, `ColorStat`, `EStat`, `GMaps`, `Histogram`, `lmt`, `UserStat`; legacy aliases `grum_plugins_classes` (`FormattedDescription`) and `grum_plugins_classes-2` (`mypolls`, `translator`) |    13 |
+| `IndexManager`              | `ComOnIndex_17j`, `nbc_EditoOnIndex_1.3.e`, `nbc_LogonOnIndex1.4.f`, `nbc_TagsOnIndex_1.1.b`                                                                |     4 |
+
+**Bilateral edges** (long tail):
+
+| Dependent                       | Depends on               |
+| ------------------------------- | ------------------------ |
+| `AlbumPilot_1.4.0`              | `piwigo-videojs`         |
+| `EasyRotate_0.7`                | `rotateImage`            |
+| `HistoryIPExcluder_12.a`        | `nbc_HistoryIPExcluder`  |
+| `icy_picture_modify-v2.4.6`     | `community`              |
+| `LocalFilesEditor_16.3.0`       | `PersonalPlugin`         |
+| `piwigo-cas_users_16.d`         | `cas_users`              |
+| `PluginsManager_17l`            | `trash`                  |
+| `PWG_Stuffs_15.a`               | `piclens`                |
+| `SocialConnect_0.0.3`           | `oAuth`                  |
+| `UserAdvManager_2.80.0`         | `NBC_UserAdvManager`     |
+
+**Theme parent inheritance** — the upstream root theme `default` is renamed to `_base` in the fork, mirroring the bundled `themes/_base/` directory. The PEM mirror's `themeconf.inc.php` files declare these parents:
+
+| Parent theme            | Child count |
+| ----------------------- | ----------: |
+| `_base` (was `default`) |          47 |
+| `Pure_default`          |           9 |
+| `gally-default`         |           6 |
+| `OS_default`            |           4 |
+| `stripped`              |           3 |
+| `PwgCarbon_dft`         |           3 |
+| `stripped_black_bloc`   |           2 |
+| `simple`                |           2 |
+| `elegant`               |           2 |
+| `Sylvia`                |           2 |
+
+Inheritance chains of depth ≥ 3 exist (e.g. a child theme → `Pure_default` → `_base`). 30 themes declare no parent at all (root themes that aren't `_base`).
+
+Regeneration: `tools/audit-extension-deps.php` walks the sibling repos and re-emits this section (not yet built — produced by hand during the initial audit on 2026-05-10).
+
 ## piwigo16-plugins
 
 405 entries.

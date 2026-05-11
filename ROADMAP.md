@@ -935,10 +935,41 @@ natively and supports priority, propagation stop, and the
    make it an explicit direct dep.
 2. Bind `Symfony\Component\EventDispatcher\EventDispatcher` in the DI
    container under `Psr\EventDispatcher\EventDispatcherInterface`.
-3. Add typed event DTOs under `src/Piwigo/Event/`:
+3. Add typed event DTOs under `src/Piwigo/Event/` — **one DTO per
+   distinct event** that core or any current PEM plugin uses. The
+   audit of `/home/torres/piwigo16-plugins/` (405 plugins) surfaces
+   **144 distinct event names**, plus core's own events. The fork
+   ships typed DTOs for **all of them** — plugin authors never reach
+   for a string event name; if it isn't a typed event class, it isn't
+   an event. The catalog is exhaustive on day one; partial coverage
+   would push plugin authors back onto stringly-typed dispatch.
+
+   DTOs are grouped by domain for navigability:
+
+   ```text
+   src/Piwigo/Event/
+     Lifecycle/          # init, user_init, register_user, login_*, delete_*
+     Location/           # loc_begin_*, loc_end_* (page-rendering hooks)
+     Picture/            # PictureRendered, PictureDeleted, render_element_content
+     User/               # UserLoggedIn, UserDeleted, UserCommentValidation
+     Admin/              # AdminPagesRegistering, TabsheetBeforeSelect, etc.
+     BlockManager/       # BlockManagerApply, BlockManagerRegisterBlocks
+     Ws/                 # WsMethodsRegistering, WsInvokeAllowed
+     Template/           # TemplateAssigned, RenderPageBanner
+     # …
+   ```
+
+   The DTO names are derived case-by-case from each legacy event name
+   (snake_case → PascalCase + domain prefix where ambiguous). A
+   one-shot generator script in `tools/event-dtos/` reads the audit
+   output and stubs the 144 classes; per-event work is then filling in
+   the constructor parameter list (replacing the legacy positional
+   `$arr` with named typed fields).
+
+   Sample DTO:
 
 ```php
-namespace Piwigo\Event;
+namespace Piwigo\Event\Picture;
 
 final readonly class PictureRendered
 {
@@ -954,6 +985,8 @@ and-modify methods (the `trigger_change` use case from the old
 dispatcher):
 
 ```php
+namespace Piwigo\Event\Template;
+
 final readonly class TemplateAssigned
 {
     public function __construct(
@@ -1004,14 +1037,42 @@ applied locally at load time.
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/<fork>/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json",
   "id": "my-plugin",
-  "version": "1.4.0",
   "name": "My Plugin",
+  "version": "1.4.0",
+  "description": "What this plugin does, one line.",
+  "homepage": "https://example.com/my-plugin",
+  "author": "Jane Developer",
+  "authorUri": "https://example.com",
   "minPiwigo": "17.0",
+  "hasSettings": "webmaster",
   "main": "Piwigo\\Plugin\\MyPlugin\\Plugin",
   "autoload": { "psr-4": { "Piwigo\\Plugin\\MyPlugin\\": "src/" } }
 }
 ```
+
+The seven metadata fields above the `minPiwigo` line map 1:1 to the
+header block PEM plugins already embed in `main.inc.php`:
+
+| `main.inc.php` header  | `plugin.json` key  | Required |
+|------------------------|--------------------|----------|
+| (directory basename)   | `id`               | yes      |
+| `Plugin Name:`         | `name`             | yes      |
+| `Version:`             | `version`          | yes      |
+| `Description:`         | `description`      | yes      |
+| `Plugin URI:`          | `homepage`         | no       |
+| `Author:`              | `author`           | no       |
+| `Author URI:`          | `authorUri`        | no       |
+| `Has Settings:`        | `hasSettings`      | no       |
+
+`hasSettings` accepts `true` or an admin-level string (`"webmaster"`,
+`"admin"`) matching the values the 141 plugins in the PEM mirror use
+today. `homepage` and `authorUri` are validated as URLs; `version` is
+validated as SemVer-or-PEM-revision-string. The fork-specific
+additions (`id`, `minPiwigo`, `main`, `autoload`, `$schema`) have no
+legacy header equivalent — they're new structure that the loader
+needs.
 
 `minPiwigo` is required. `PluginRegistry` compares its branch against
 `AppInfo::branchFromVersion(AppInfo::VERSION)` and rejects anything that
@@ -1102,14 +1163,24 @@ constructor dep (no `ServiceLocator` lookup — see §1.3).
 
 ##### Migration walkthrough — generic plugin
 
-Existing layout (legacy plugin):
+Existing layout (legacy plugin) — counts from the PEM mirror at
+`/home/torres/piwigo16-plugins/` (405 plugins total):
 
 ```text
 plugins/<id>/
-  main.inc.php             # registers handlers via add_event_handler()
-  maintain.inc.php         # extends PluginMaintain
-  include/                 # tab handlers
-  template/                # Smarty .tpl files
+  main.inc.php             # entry point — 404/405 have one
+                           # contains the header block (Plugin Name:, Version:,
+                           # Description:, …) parsed as plugin metadata, then
+                           # add_event_handler() registrations.
+  maintain.inc.php         # function-style lifecycle (142/405).
+  maintain.class.php       # class-style lifecycle extending PluginMaintain
+                           # (104/405). Modern of the two; 159 have neither.
+  admin.php                # admin-tab handler routed via
+                           # admin.php?page=plugin-<id> (224/405).
+  language/                # bundled .po/.lang files (341/405).
+  template/                # Smarty .tpl files (209/405; 872 .tpl files total
+                           # across the mirror).
+  include/                 # internal classes / event handlers.
 ```
 
 Post-migration:
@@ -1150,6 +1221,91 @@ backed by the PHP-DI 7 container that §1.3 establishes as the only DI
 mechanism. Plugins receive it in `boot()` for late-bound resolution;
 their own `Plugin` class also declares typed deps in its constructor
 like any core service, autowired by PHP-DI.
+
+##### Modern plugin API surface
+
+`boot(ContainerInterface $c)` is the only entry point plugins use to
+reach core. The container exposes typed services that replace every
+legacy procedural function plugins currently call directly. The set
+below covers ~98% of legacy plugin API usage in the PEM mirror; the
+counts are the total callsite count across all 405 plugins (in both
+`main.inc.php` and `include/*.php`).
+
+| Service (typed, via `$c->get(…::class)`)         | Replaces legacy function(s)                                       | Plugin calls today |
+|--------------------------------------------------|-------------------------------------------------------------------|--------------------|
+| `Piwigo\Db\DbConnection` (Doctrine DBAL)         | `pwg_query`, `query2array`, `mass_inserts`, `mass_updates`        | 1315               |
+| `Piwigo\Lang\LangService`                        | `load_language`                                                   | 335                |
+| `Piwigo\Url\UrlService`                          | `get_root_url`                                                    | 292                |
+| `Psr\EventDispatcher\EventDispatcherInterface`   | `trigger_change`, `trigger_event`, `trigger_notify`               | 136                |
+| `Piwigo\Core\StringUtil`                         | `safe_unserialize`, `safe_serialize`                              | 87                 |
+| `Piwigo\Config\ConfigService`                    | `conf_update_param`, `conf_delete_param`                          | 65                 |
+| `Piwigo\Users\UserCacheService`                  | `invalidate_user_cache`                                           | 34                 |
+| `Piwigo\Users\UserService`                       | `get_username`, `get_user_language`, etc.                         | ~7                 |
+
+(Some services already exist in `src/Piwigo/…/`; `UserCacheService`
+and any unbuilt counterparts land as part of Phase 1's first commit
+batch.)
+
+**Non-service legacy calls** plugins must inline:
+
+- `format_date($ts)` → `(new \DateTimeImmutable("@$ts"))->format(...)`
+  with `LangService` for localized format strings (36 callsites).
+- `generate_key($len)` → `bin2hex(random_bytes((int) ceil($len / 2)))`
+  (16 callsites).
+
+**Explicitly NOT carried into the new API:**
+
+| Legacy surface                  | New mechanism                                                   |
+|---------------------------------|-----------------------------------------------------------------|
+| `$GLOBALS['…']` reads/writes    | typed services + PSR-7 request/response                         |
+| `$conf` array access            | `ConfigService` (typed reads, validated writes)                 |
+| top-level `pwg_query()`         | `DbConnection` from the container                               |
+| `$page['errors'][] = …`         | typed `PageState` accumulator on the response                   |
+| `pwg_log(…)`                    | PSR-3 `LoggerInterface` from the container                      |
+| `set_status_header()`, `redirect()` | return `ResponseInterface` from the handler                 |
+
+Plugin authors that grep positively for any of those forbidden
+patterns during a pre-publish `composer piwigo:lint` step (planned,
+not yet built) get rejected. The PEM listing for branch 17 only
+surfaces plugins that pass the lint.
+
+##### Admin pages
+
+224 of 405 PEM plugins have an `admin.php` handler reached via the
+URL convention `admin.php?page=plugin-<id>`. The new mechanism
+replaces both that URL hack and the 142-instance
+`get_admin_plugin_menu_links` event with a typed registry:
+
+```php
+public function subscribedEvents(): array
+{
+    return [
+        AdminPagesRegistering::class => 'onAdminPagesRegistering',
+    ];
+}
+
+public function onAdminPagesRegistering(AdminPagesRegistering $event): void
+{
+    $event->registry->add(new AdminPage(
+        id:         'my-plugin',
+        label:      'My Plugin',
+        controller: $this->adminController,         // RequestHandlerInterface
+        menuGroup:  AdminMenuGroup::Plugins,
+        permission: AdminPermission::Webmaster,
+    ));
+}
+```
+
+The admin menu reads its entries directly from the `AdminPage`
+registry — plugins don't subscribe to a separate menu event. URLs
+move from `admin.php?page=plugin-<id>` to `/admin/plugin/<id>`,
+routed through the front controller. The `controller` is any
+PSR-15 `RequestHandlerInterface`; the plugin's constructor-typed
+deps are autowired.
+
+For plugins that need multiple admin pages (sub-tabs in the legacy
+model), call `$event->registry->add(...)` multiple times with
+different `id` and `label`.
 
 ##### Removal note
 

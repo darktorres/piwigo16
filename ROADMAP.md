@@ -829,6 +829,22 @@ window** — the 17.0 bump is the deprecation. Plugins or themes without
 a valid `plugin.json` / `theme.json` declaring `minPiwigo: "17.0"` are
 refused at load time and listed under admin → Plugins → Incompatible.
 
+**Reality check — this is a rewrite, not a port.** The PEM-mirror
+audit (see "Migration walkthrough" below) shows current plugins use
+**zero namespaces**, **zero readonly/nullsafe**, only 8 with
+`declare(strict_types=1)`, only 1 arrow function, and **zero tests**.
+Fork-targeted plugins are written from scratch in modern PHP against
+the new contract — they're not legacy plugin code lightly translated.
+Same for themes (113 themeconf-based, all PHP 5-era).
+
+**Critical-path dependencies inside this section.** §1.4 doesn't
+sequence inside itself — Phase 1 plugins, Phase 2 themes, Phase 3 WS
+API. It also rides on §1.7 Phase 2 (repository entity layer): the
+plugin API surface below exposes typed entity repositories (`Image`,
+`User`, `Album`, `Tag`) so plugins don't reach `IMAGES_TABLE` /
+`USERS_TABLE` constants directly. §1.7's typed-entity work is on the
+critical path for §1.4, not just §1.3.
+
 **Foundation already landed:**
 
 - `src/Piwigo/Plugins/EventDispatcher.php` — static priority-bucketed
@@ -892,8 +908,17 @@ interface PluginInterface
      *   class-string => [method-name, priority]                (single listener with priority)
      *   class-string => list<array{0: string, 1?: int}>        (multiple listeners on same event)
      *
-     * Higher priority runs first. The method named here is called on
-     * `$this`; its constructor-typed dependencies are autowired by PHP-DI.
+     * Higher priority runs first. The handler method runs on `$this`;
+     * **both `$this`'s constructor deps and the handler method's own
+     * extra parameters are autowired by PHP-DI on every invocation**.
+     * The first parameter is always the typed event object; any
+     * additional typed parameters are resolved from the container at
+     * call time:
+     *
+     *   public function onPictureRendered(
+     *       PictureRendered $event,
+     *       LoggerInterface $logger,   // autowired per-call
+     *   ): PictureRendered { … }
      *
      * @return array<class-string, string|array{0: string, 1?: int}|list<array{0: string, 1?: int}>>
      */
@@ -1289,8 +1314,29 @@ Steps to migrate one plugin (one commit each, in order):
 4. **Convert templates to Latte.** Run
    `tools/smarty-to-latte/convert.php` on the plugin's `template/`
    directory. The PEM mirror has **1,218 plugin `.tpl` files** to
-   process across the ecosystem; the same converter that did the
-   133-template core conversion in §1.2 handles them.
+   process across the ecosystem. The §1.2 converter handled core's
+   133 templates; the plugin-side surface is wider and the converter
+   must support these Piwigo-specific Smarty constructs (counted
+   across plugin `.tpl` files):
+
+   | Smarty form              | Plugin uses | Latte target                             |
+   |--------------------------|------------:|------------------------------------------|
+   | `{combine_script ...}`   |         391 | `{combineScript(...)}` (Piwigo extension)|
+   | `{combine_css ...}`      |         381 | `{combineCss(...)}`                      |
+   | `{footer_script}…{/foot…}` |       219 | `{block footer-scripts}…{/block}`        |
+   | `{html_head}…{/html_head}` |        76 | `{block html-head}…{/block}`             |
+   | `{html_style}…{/html_st…}` |        73 | inline `<style>` block                   |
+   | `{html_options ...}`     |         139 | `{foreach}` over an options array        |
+   | `{known_script ...}`     |          22 | `{knownScript(...)}` (Piwigo extension)  |
+   | `{lang ...}`             |          88 | `{=$x\|translate}` or `{=t($x)}`          |
+   | `{ldelim}` / `{rdelim}`  |         338 | literal `{` / `}` (Latte: `{l}` / `{r}`) |
+   | `\|translate` modifier   |       1,318 | `\|translate` filter (Piwigo extension)  |
+   | `\|cat` (concat)         |         212 | Latte `~` operator                       |
+
+   Extend `tools/smarty-to-latte/convert.php` with these rules if it
+   doesn't already cover them. The converter is intentionally faithful
+   — no `\|noescape` auto-injection (same policy as the core
+   conversion).
 5. **Convert language files to `.po`.** Plugins currently ship
    `.lang.php` (key→string PHP arrays) — **5,916 files** across the
    mirror. Run `tools/lang-php-to-po/convert.php` to produce
@@ -1354,10 +1400,23 @@ counts are the total callsite count across all 405 plugins (in both
 | `Piwigo\Session\SessionService`                  | `$_SESSION[…]` direct reads/writes                                | 49 plugins         |
 | `Piwigo\Security\CsrfTokenService`               | `get_pwg_token`, `check_pwg_token`                                | 39 plugins         |
 | `Psr\Log\LoggerInterface`                        | `pwg_log`                                                         | (low; coarsely tracked) |
+| `Piwigo\Image\DerivativeService`                 | `DerivativeImage`, `get_derivative_url`, `derivative_path` reads  | 77 plugins         |
+| `Symfony\Contracts\HttpClient\HttpClientInterface` | `curl_init`/`curl_exec` raw, `fetchRemote`                      | 33 plugins         |
+| `Piwigo\Mail\MailService`                        | `pwg_mail`                                                        | 25 plugins         |
+| `Piwigo\Cache\PersistentCache`                   | `cache_set`/`cache_get`/`PERSISTENT_CACHE`                        | 5 plugins          |
+| Typed entity repositories (`ImageRepository`, `UserRepository`, `AlbumRepository`, `TagRepository`) | direct table reads (`IMAGES_TABLE` 425, `USERS_TABLE` 133, `CATEGORIES_TABLE` 214, `TAGS_TABLE` 45) | 800+ table-constant references |
 
 (Some services already exist in `src/Piwigo/…/`; `UserCacheService`,
-`PageState`, `CurrentUser`, `SessionService`, and `CsrfTokenService`
-land as part of Phase 1's first commit batch.)
+`PageState`, `CurrentUser`, `SessionService`, `CsrfTokenService`, and
+the entity repositories land as part of Phase 1's first commit
+batch — the latter folded with §1.7 Phase 2 work.)
+
+Plus, on the response side — 343 plugins call `redirect()` or set the
+`Location` header directly. The new model returns a typed
+`Psr\Http\Message\ResponseInterface` from the controller; for the
+common case, a `RedirectResponse::to($url)` factory keeps it short.
+12 plugins use `$_FILES`; the new model receives typed
+`Psr\Http\Message\UploadedFileInterface` from the PSR-7 request.
 
 **Non-service legacy calls** plugins must inline:
 
@@ -1376,11 +1435,39 @@ land as part of Phase 1's first commit batch.)
 | `$page['errors'][] = …`         | typed `PageState` accumulator on the response                   |
 | `pwg_log(…)`                    | PSR-3 `LoggerInterface` from the container                      |
 | `set_status_header()`, `redirect()` | return `ResponseInterface` from the handler                 |
+| `script_basename()` (113 callsites) | PSR-15 controllers know their route via request URI         |
+| `IN_ADMIN` constant             | route-based admin gating in the dispatcher                      |
+| `PHPWG_ROOT_PATH` (1,041 file uses) | constructor-inject `Piwigo\Core\PathService` or `string $rootPath` |
+| `defined('PHPWG_ROOT_PATH') or die(...)` guard | gone — controllers run only when routed     |
 
 Plugin authors that grep positively for any of those forbidden
 patterns during a pre-publish `composer piwigo:lint` step (planned,
 not yet built) get rejected. The PEM listing for branch 17 only
-surfaces plugins that pass the lint.
+surfaces plugins that pass the lint AND ship a passing test suite
+(see "Pre-publish gates" below).
+
+##### Pre-publish gates
+
+Zero of the 405 current PEM plugins have any tests. For the fork's
+branch-17 PEM listing to be meaningful, plugins targeting it must
+clear two CI-style gates on every published revision:
+
+1. **Lint** — `composer piwigo:lint`. Greps source for the forbidden
+   patterns above (`$GLOBALS[`, `$conf[`, top-level `pwg_query`, raw
+   `IMAGES_TABLE`/`USERS_TABLE` reads, `script_basename`, etc.). Also
+   validates `plugin.json` against `docs/schemas/plugin.schema.json`.
+2. **Tests** — `vendor/bin/phpunit` (or Pest from §1.8.1) exits zero.
+   `tests/` is required. The fork ships a `PluginTestCase` base class
+   that boots a sandboxed container with mocked services so plugins
+   can test their event handlers, admin controllers, and migrations
+   without spinning a real DB. Minimum coverage threshold gets set
+   later (probably 50%); the day-one requirement is just "a test
+   suite that runs and passes."
+
+The PEM-side endpoint that lists plugins for a fork install filters
+out anything that fails either gate, so plugins without tests
+literally aren't discoverable on the fork — same enforcement
+mechanism as the `minPiwigo: "17.0"` check.
 
 ##### Plugin assets — TypeScript, CSS, Vite
 
@@ -1389,10 +1476,24 @@ admin and frontend CSS stack today via `combine_script` (22),
 `combine_css` (39), and `set_filenames` (208 combined invocations).
 The new asset pipeline:
 
-1. **TypeScript only.** Plugin JS is `.ts` source; `.js` ships
-   only as Vite build output (under `plugins/<id>/dist/`). No raw
-   hand-written JS in `src/`. Existing plugin JS migrates via
-   `tools/js-to-ts/convert.php`.
+1. **TypeScript only, and jQuery-free.** Plugin JS is `.ts` source;
+   `.js` ships only as Vite build output (under
+   `plugins/<id>/dist/`). No raw hand-written JS in `src/`. Existing
+   plugin JS migrates via `tools/js-to-ts/convert.php`.
+
+   The mirror's reality: **105 of 143 JS-shipping plugins use
+   jQuery** today; 87 use TinyMCE; 19,247 LOC of plugin JS in total.
+   The conversion is two-step, not one:
+   - **`.js → .ts`** — type the existing logic.
+   - **jQuery → vanilla DOM** — `$(selector)` → `document.querySelector`,
+     `.on('click', ...)` → `addEventListener`, `$.ajax` → `fetch()`,
+     `$.cookie` → `document.cookie` helper, etc. Mechanically retyping
+     jQuery as `JQueryStatic` defeats the point — the fork has no
+     jQuery dependency.
+   - **TinyMCE stays** (rich-text editing is non-trivial to replace),
+     but accessed through a typed wrapper around the upstream
+     `@tinymce/tinymce-webcomponent` package — no global namespace
+     reach.
 2. **Vite integration.** Each plugin declares its entry points in
    `plugin.json`:
 
@@ -1659,6 +1760,36 @@ This mirrors how `themeconf.inc.php` array merge already works and avoids
 forcing third-party themes to extend a base class. (Alternative
 considered: class inheritance via `extends DefaultTheme`. Rejected
 because it forces a brittle hierarchy on third-party authors.)
+
+**Template-file resolution.** PEM-mirror themes ship **selective
+overrides**, not full template trees — typical overrides are
+`header.tpl` (46 themes), `footer.tpl` (49), `picture.tpl` (40),
+`mail-css.tpl` (69), `local_head.tpl` (42), `comments.tpl` (41), etc.
+`ThemeRegistry` wires a `Piwigo\Theme\TemplateResolver` that walks
+the parent chain at lookup time to find each template file:
+
+```php
+final readonly class TemplateResolver
+{
+    public function __construct(private ThemeInterface $current) {}
+
+    public function resolve(string $relativePath): string
+    {
+        for ($t = $this->current; $t !== null; $t = $t->getParent()) {
+            $candidate = $t->getRootPath() . '/template/' . $relativePath;
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+        throw new TemplateNotFoundException($relativePath);
+    }
+}
+```
+
+Latte's `FileLoader` is configured to call through `TemplateResolver`,
+so `{include 'header.latte'}` resolves correctly regardless of which
+theme owns the rendered file. The chain depth is bounded by the
+parent-graph the registry validates at boot (no cycles).
 
 ##### Theme switch event
 

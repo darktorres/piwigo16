@@ -824,10 +824,16 @@ implications.
   reading and OpenAPI CI gate, riding on the registry Phase 1 builds.
 
 Languages are out of scope — they're `.po` + `.lang` + `index.php` with
-no behavior to gate; no manifest needed. **No bridges, no deprecation
-window** — the 17.0 bump is the deprecation. Plugins or themes without
-a valid `plugin.json` / `theme.json` declaring `minPiwigo: "17.0"` are
-refused at load time and listed under admin → Plugins → Incompatible.
+no behavior to gate; no manifest needed. **`piwigo16-tools` is also
+out of scope** — it's a historical archive of external desktop/CLI
+tools (Mac `.pkg`, Windows `.exe`, native `.so`, even `.jar`) that
+talk to Piwigo over the WS API. None of them run inside the Piwigo
+process; §1.4 doesn't touch them.
+
+**No bridges, no deprecation window** — the 17.0 bump is the
+deprecation. Plugins or themes without a valid `plugin.json` /
+`theme.json` declaring `minPiwigo: "17.0"` are refused at load time
+and listed under admin → Plugins → Incompatible.
 
 **Reality check — this is a rewrite, not a port.** The PEM-mirror
 audit (see "Migration walkthrough" below) shows current plugins use
@@ -1054,6 +1060,18 @@ final readonly class TemplateAssigned
    `Piwigo\Plugins\EventDispatcher` and the
    `$GLOBALS['pwg_event_handlers']` bridge with it.
 
+**Plugins as event sources, not just subscribers.** The PEM-mirror
+audit surfaced ~40 distinct plugin-defined event names — plugins
+firing their own events for other plugins to listen to (e.g.
+`AdditionalPages` fires `AP_render_content` to 22 listeners,
+`BatchDownload` fires three `batchdownload_*` events, `cas_users`
+fires `cas_users_user_info`). Each plugin can ship its own typed
+event DTOs under `plugins/<id>/src/Event/`. Other plugins subscribe
+via the class-string key in `subscribedEvents()` exactly the same
+way they subscribe to core events. The `require` graph in
+`plugin.json` (see "Plugin dependencies" above) ensures the
+event-source plugin loads before its listeners.
+
 ##### Fork identity
 
 `AppInfo::VERSION` was bumped to `17.0.0` as preparation for this
@@ -1091,6 +1109,7 @@ applied locally at load time.
   "homepage": "https://example.com/my-plugin",
   "author": "Jane Developer",
   "authorUri": "https://example.com",
+  "license": "GPL-3.0-or-later",
   "minPiwigo": "17.0",
   "hasSettings": "webmaster",
   "require": {
@@ -1115,13 +1134,19 @@ header block PEM plugins already embed in `main.inc.php`:
 | `Author:`              | `author`           | no       |
 | `Author URI:`          | `authorUri`        | no       |
 | `Has Settings:`        | `hasSettings`      | no       |
+| (no legacy header)     | `license`          | yes      |
 
 `hasSettings` is constrained to four values matching the PEM mirror
 distribution (96 × `true`, 38 × `"webmaster"`, 9 × `false`, plus
 one `"Webmaster"` typo we normalize). `homepage` and `authorUri` are
 validated as URLs; `version` is validated as
-SemVer-or-PEM-revision-string. The fork-specific additions (`id`,
-`minPiwigo`, `require`, `main`, `autoload`, `$schema`) have no legacy
+SemVer-or-PEM-revision-string. `license` is a required SPDX
+identifier (e.g. `"GPL-3.0-or-later"`, `"MIT"`, `"Apache-2.0"`) —
+the PEM-mirror audit found only 120/405 plugins state a license
+explicitly today; 309 ship without any license boilerplate, which
+the fork's lint rejects to avoid distributing unlicensed code as if
+it were GPL. The fork-specific additions (`id`, `minPiwigo`,
+`license`, `require`, `main`, `autoload`, `$schema`) have no legacy
 header equivalent — they're new structure that the loader needs.
 
 ##### Plugin dependencies
@@ -1404,6 +1429,8 @@ counts are the total callsite count across all 405 plugins (in both
 | `Symfony\Contracts\HttpClient\HttpClientInterface` | `curl_init`/`curl_exec` raw, `fetchRemote`                      | 33 plugins         |
 | `Piwigo\Mail\MailService`                        | `pwg_mail`                                                        | 25 plugins         |
 | `Piwigo\Cache\PersistentCache`                   | `cache_set`/`cache_get`/`PERSISTENT_CACHE`                        | 5 plugins          |
+| `Piwigo\Storage\LocalStorage`                    | `PWG_LOCAL_DIR` reads, `_data/` writes, raw `mkdir`/`file_put_contents` for plugin data | 82+47+54+11 ≈ 194 hits |
+| `Piwigo\Session\FlashService`                    | one-shot `$page['infos'][]` / `$page['errors'][]` writes survived across a redirect      | (post-redirect-GET pattern) |
 | Typed entity repositories (`ImageRepository`, `UserRepository`, `AlbumRepository`, `TagRepository`) | direct table reads (`IMAGES_TABLE` 425, `USERS_TABLE` 133, `CATEGORIES_TABLE` 214, `TAGS_TABLE` 45) | 800+ table-constant references |
 
 (Some services already exist in `src/Piwigo/…/`; `UserCacheService`,
@@ -1642,6 +1669,40 @@ runs. `CsrfMiddleware` (from §1.5) gates all `POST`/`PUT`/`DELETE` to
 plugin admin pages; 39 plugins already use `pwg_token` checks today,
 and they migrate to the new `CsrfTokenService` (see the API surface
 table above).
+
+**GET-render / POST-handle / redirect — the controller convention.**
+236 PEM plugins have `<form method="post">` in their admin templates;
+43 use `{$F_ACTION}` (post-to-same-URL); 343 plugins call
+`redirect()` after a successful save. The PSR-15 controller mirrors
+that idiom:
+
+```php
+final class MyPluginAdminController implements RequestHandlerInterface
+{
+    public function __construct(
+        private ConfigService     $config,
+        private TemplateRegistry  $templates,
+        private FlashService      $flash,
+    ) {}
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        if ($request->getMethod() === 'POST') {
+            $this->config->confUpdateParam('my_plugin', $request->getParsedBody());
+            $this->flash->success('Saved.');
+            return RedirectResponse::to((string) $request->getUri());
+        }
+        return $this->templates->current()->render('admin/my-plugin.latte', [
+            'config' => $this->config->confGetParam('my_plugin'),
+        ]);
+    }
+}
+```
+
+`FlashService` is a typed session-backed one-shot message store —
+read once by the next request, then cleared. Replaces the legacy
+`$page['infos'][]` / `$page['errors'][]` array writes for the
+post-redirect-GET case.
 
 ##### Removal note
 

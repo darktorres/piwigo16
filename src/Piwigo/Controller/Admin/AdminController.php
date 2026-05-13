@@ -16,7 +16,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -50,6 +49,25 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class AdminController implements ControllerInterface
 {
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly CommentRepository $commentRepository,
+        private readonly ConfigService $configService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
+        private readonly SessionService $sessionService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -57,7 +75,7 @@ final class AdminController implements ControllerInterface
 
         // common.inc.php creates the frontend template (IN_ADMIN not yet set).
         // Replace it with the admin-theme template now that IN_ADMIN is defined.
-        $admin_theme_raw = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
+        $admin_theme_raw = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
         $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
@@ -72,10 +90,10 @@ final class AdminController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_admin');
 
-        PermissionService::get()->checkStatus(AccessLevel::Administrator);
+        $this->permissionService->checkStatus(AccessLevel::Administrator);
 
-        ServiceLocator::get(Util::class)->checkInputParameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-        ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        $this->util->checkInputParameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        $this->util->checkInputParameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         // ── Filesystem quick-check ────────────────────────────────────────────
 
@@ -92,26 +110,26 @@ final class AdminController implements ControllerInterface
                 $perform_fsqc = true;
             }
             if ($perform_fsqc) {
-                ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
+                $this->imageAdminService->fsQuickCheck();
             }
         }
 
         // ── Direct / AJAX actions ─────────────────────────────────────────────
 
-        $plugins_new_order = StringUtil::get()->inputString('plugins_new_order', null, $_GET);
+        $plugins_new_order = $this->stringUtil->inputString('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
-            ServiceLocator::get(SessionService::class)->setSessionVar('plugins_new_order', $plugins_new_order);
+            $this->sessionService->setSessionVar('plugins_new_order', $plugins_new_order);
             exit;
         }
 
-        if (StringUtil::get()->inputString('change_theme', null, $_GET) !== null) {
+        if ($this->stringUtil->inputString('change_theme', null, $_GET) !== null) {
             $admin_themes = ['dark', 'light'];
-            $rawTheme         = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
+            $rawTheme         = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
             $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];
             $result           = array_diff($admin_themes, $admin_theme_array);
             $new_admin_theme  = array_pop($result);
 
-            PreferencesService::get()->userprefsUpdateParam('admin_theme', $new_admin_theme);
+            $this->preferencesService->userprefsUpdateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
             foreach (['page', 'tab', 'section'] as $url_param) {
@@ -120,23 +138,23 @@ final class AdminController implements ControllerInterface
                 }
             }
 
-            $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin();
+            $redirect_url = $this->urlGenerator->admin();
             if (count($url_params) > 0) {
                 $redirect_url .= '&' . implode('&', $url_params);
             }
 
-            Util::get()->redirect($redirect_url);
+            $this->util->redirect($redirect_url);
         }
 
         // ── Sync user info ────────────────────────────────────────────────────
 
         if (Config::externalAuthentification()) {
-            ServiceLocator::get(UserAdminService::class)->syncUsers();
+            $this->userAdminService->syncUsers();
         }
 
         // ── Variables init ────────────────────────────────────────────────────
 
-        $change_theme_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&';
+        $change_theme_url = $this->urlGenerator->admin() . '&';
         $test_get         = $_GET;
         unset($test_get['page'], $test_get['section'], $test_get['tag']);
         $qsRawVal = $_SERVER['QUERY_STRING'] ?? null;
@@ -201,14 +219,14 @@ final class AdminController implements ControllerInterface
         }
 
         $adminPage  = $page['page'];
-        $adminBase  = ServiceLocator::get(UrlGenerator::class)->admin();
+        $adminBase  = $this->urlGenerator->admin();
         $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
-        $wsBase     = ServiceLocator::get(UrlGenerator::class)->ws();
+        $wsBase     = $this->urlGenerator->ws();
         $wsSep      = str_contains($wsBase, '?') ? '&' : '?';
         $GLOBALS['link_start'] = $link_start = $adminBase . $adminSep . 'page=';
         $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&section=';
 
-        Util::get()->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        $this->util->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // ── Template init ─────────────────────────────────────────────────────
 
@@ -245,8 +263,8 @@ final class AdminController implements ControllerInterface
             'U_TAGS'                 => $link_start . 'tags',
             'U_USERS'                => $link_start . 'user_list',
             'U_GROUPS'               => $link_start . 'group_list',
-            'U_RETURN'               => UrlService::get()->getGalleryHomeUrl(),
-            'U_ADMIN'                => ServiceLocator::get(UrlGenerator::class)->admin(),
+            'U_RETURN'               => $this->urlService->getGalleryHomeUrl(),
+            'U_ADMIN'                => $this->urlGenerator->admin(),
             'U_LOGOUT'               => UrlService::getRootUrl() . '?act=logout',
             'U_PLUGINS'              => $link_start . 'plugins',
             'U_ADD_PHOTOS'           => $link_start . 'photos_add',
@@ -265,14 +283,14 @@ final class AdminController implements ControllerInterface
 
         if (Config::activateComments()) {
             $tpl->assign('U_COMMENTS', $link_start . 'comments');
-            $nb_comments = ServiceLocator::get(CommentRepository::class)->countUnvalidated();
+            $nb_comments = $this->commentRepository->countUnvalidated();
             if ($nb_comments > 0) {
                 $tpl->assign('NB_PENDING_COMMENTS', $nb_comments);
                 $page['nb_pending_comments'] = $nb_comments;
             }
         }
 
-        $nb_photos_in_caddie = ServiceLocator::get(UserRepository::class)
+        $nb_photos_in_caddie = $this->userRepository
             ->countCaddieByUserId(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0);
 
         if ($nb_photos_in_caddie > 0) {
@@ -288,16 +306,16 @@ final class AdminController implements ControllerInterface
         }
 
         if (in_array($adminPage, ['site_update', 'batch_manager'], true)) {
-            $nb_no_md5sum = count(ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum());
+            $nb_no_md5sum = count($this->imageAdminService->getPhotosNoMd5sum());
             if ($nb_no_md5sum > 0) {
                 $page['no_md5sum_number'] = $nb_no_md5sum;
             }
         }
 
         $page['nb_orphans']      = 0;
-        $page['nb_photos_total'] = ServiceLocator::get(ImageRepository::class)->countAll();
+        $page['nb_photos_total'] = $this->imageRepository->countAll();
         if ($page['nb_photos_total'] < 100000) {
-            $page['nb_orphans'] = ServiceLocator::get(ImageAdminService::class)->countOrphans();
+            $page['nb_orphans'] = $this->imageAdminService->countOrphans();
         }
 
         $tpl->assign([
@@ -311,7 +329,7 @@ final class AdminController implements ControllerInterface
             in_array($adminPage, ['site_manager', 'site_update'], true)
             || (!empty($_POST) && in_array($adminPage, ['album', 'albums', 'cat_options', 'user_list', 'user_perm'], true))
         ) {
-            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            $this->userAdminService->invalidateUserCache();
         }
 
         // ── What's new ────────────────────────────────────────────────────────
@@ -319,11 +337,11 @@ final class AdminController implements ControllerInterface
         $show_whats_new          = false;
         $whats_new_major_version = AppInfo::branchFromVersion(AppInfo::VERSION);
 
-        if (PreferencesService::get()->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
+        if ($this->preferencesService->userprefsGetParam('show_whats_new_' . $whats_new_major_version, true) && $this->configService->pwgIsDbconfWriteable()) {
             $registrationDate = is_scalar($user['registration_date'] ?? null) ? (string) $user['registration_date'] : '';
             $lastMajorUpdate  = Config::lastMajorUpdate() ?? '';
             if ($registrationDate > $lastMajorUpdate) {
-                PreferencesService::get()->userprefsUpdateParam('show_whats_new_' . $whats_new_major_version, false);
+                $this->preferencesService->userprefsUpdateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 $userPreferences            = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
                 $userprefs_params_to_delete = [];
@@ -333,7 +351,7 @@ final class AdminController implements ControllerInterface
                     }
                 }
                 if (count($userprefs_params_to_delete) > 0) {
-                    PreferencesService::get()->userprefsDeleteParam($userprefs_params_to_delete);
+                    $this->preferencesService->userprefsDeleteParam($userprefs_params_to_delete);
                 }
                 $show_whats_new = true;
             }
@@ -382,17 +400,17 @@ final class AdminController implements ControllerInterface
         EventDispatcher::notify('loc_begin_admin_page');
         $this->dispatchToSubController($adminPage);
 
-        $tpl->assign('ACTIVE_MENU', ServiceLocator::get(AdminService::class)->getActiveMenu($adminPage));
+        $tpl->assign('ACTIVE_MENU', $this->adminService->getActiveMenu($adminPage));
 
         // ── Render ────────────────────────────────────────────────────────────
 
-        $tpl->assign('pwgmenu', ServiceLocator::get(AdminService::class)->pwgURL());
+        $tpl->assign('pwgmenu', $this->adminService->pwgURL());
 
         PageHeaderRenderer::render($title);
 
         EventDispatcher::notify('loc_end_admin');
 
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
 
         $tpl->pparse('admin.latte');
 

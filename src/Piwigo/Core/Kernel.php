@@ -110,6 +110,28 @@ final class Kernel
         return self::$container;
     }
 
+    /**
+     * Typed service lookup for static-bootstrap contexts that cannot accept
+     * constructor injection (entry-point controllers' static helpers, the
+     * CommonBootstrap orchestrator, etc.). Service classes themselves must
+     * declare their dependencies in constructors and never call this.
+     *
+     * @template T of object
+     * @param class-string<T> $id
+     * @return T
+     */
+    public static function service(string $id): object
+    {
+        if (self::$container === null) {
+            throw new \LogicException('Kernel not booted — call Kernel::boot() first.');
+        }
+        $service = self::$container->get($id);
+        if (!$service instanceof $id) {
+            throw new \LogicException("Container returned an unexpected type for '{$id}'.");
+        }
+        return $service;
+    }
+
     public static function isBooted(): bool
     {
         return self::$booted;

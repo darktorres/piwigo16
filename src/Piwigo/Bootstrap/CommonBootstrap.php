@@ -171,7 +171,7 @@ final class CommonBootstrap
         UserBootstrap::bootstrap();
         EventDispatcher::init();
         EventDispatcher::addListener('try_log_user', AuthService::get()->pwgLogin(...));
-        PluginService::get()->loadPlugins();
+        Kernel::service(PluginService::class)->loadPlugins();
 
         if (!Config::has('piwigo_installed_version')) {
             ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);

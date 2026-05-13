@@ -8,7 +8,6 @@ use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
@@ -18,12 +17,9 @@ final readonly class PluginService
 {
     public function __construct(
         private PluginRepository $repo,
+        private StringUtil $stringUtil,
+        private Util $util,
     ) {
-    }
-
-    public static function get(): self
-    {
-        return ServiceLocator::get(self::class);
     }
 
     /** @return array<array<string,mixed>> */
@@ -69,7 +65,7 @@ final readonly class PluginService
         $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
         if ($fsVersion != null && (
             $fsVersion == 'auto' || $pluginVersion == 'auto' ||
-              ServiceLocator::get(StringUtil::class)->safeVersionCompare($pluginVersion, $fsVersion, '<') === true
+              $this->stringUtil->safeVersionCompare($pluginVersion, $fsVersion, '<') === true
         )
         ) {
             $oldVersion = $pluginVersion;
@@ -98,7 +94,7 @@ final readonly class PluginService
 
             if ($newVersion != $oldVersion) {
                 $this->repo->updateVersion($pluginId, $fsVersion);
-                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
+                $this->util->pwgActivity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
             }
         }
     }

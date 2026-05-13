@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -29,10 +28,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TagsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly PermissionService $permissionService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_tags');
 
@@ -45,7 +55,7 @@ final class TagsController implements ControllerInterface
         $tpl = TemplateRegistry::current();
 
         $page['display_mode'] = Config::tagsDefaultDisplayMode();
-        $display_mode         = StringUtil::get()->inputString('display_mode', null, $_GET);
+        $display_mode         = $this->stringUtil->inputString('display_mode', null, $_GET);
         if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
             $page['display_mode'] = $display_mode;
         }
@@ -53,17 +63,17 @@ final class TagsController implements ControllerInterface
         foreach (['cloud', 'letters'] as $mode) {
             $tpl->assign(
                 'U_' . strtoupper($mode),
-                ServiceLocator::get(UrlGenerator::class)->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&display_mode=' . $mode)
+                $this->urlGenerator->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&display_mode=' . $mode)
             );
         }
 
         $displayMode = $page['display_mode'];
         $tpl->assign('display_mode', $displayMode);
 
-        $tags = ServiceLocator::get(TagService::class)->getAvailableTags();
+        $tags = $this->tagService->getAvailableTags();
 
         if ($displayMode === 'letters') {
-            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            usort($tags, fn (mixed $a, mixed $b): int => $this->htmlService->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
             $current_letter   = null;
             $nb_tags          = count($tags);
@@ -74,7 +84,7 @@ final class TagsController implements ControllerInterface
             foreach ($tags as $tag) {
                 $tagArr      = is_array($tag) ? $tag : [];
                 $tagName     = is_string($tagArr['name'] ?? null) ? $tagArr['name'] : '';
-                $tag_letter  = mb_strtoupper(mb_substr(ServiceLocator::get(StringUtil::class)->pwgTransliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
+                $tag_letter  = mb_strtoupper(mb_substr($this->stringUtil->pwgTransliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
 
                 if ($current_tag_idx === 0) {
                     $current_letter  = $tag_letter;
@@ -94,7 +104,7 @@ final class TagsController implements ControllerInterface
                     $letter         = ['tags' => []];
                 }
 
-                $letter['tags'][] = array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]);
+                $letter['tags'][] = array_merge($tagArr, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]])]);
                 $current_tag_idx++;
             }
 
@@ -103,14 +113,14 @@ final class TagsController implements ControllerInterface
                 $tpl->append('letters', $letter);
             }
         } else {
-            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(TagService::class)->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            usort($tags, fn (mixed $a, mixed $b): int => $this->tagService->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
             $tags = array_slice($tags, 0, Config::fullTagCloudItemsNumber());
-            $tags = ServiceLocator::get(TagService::class)->addLevelToTags($tags);
-            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            $tags = $this->tagService->addLevelToTags($tags);
+            usort($tags, fn (mixed $a, mixed $b): int => $this->htmlService->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
 
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
-                $tpl->append('tags', array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]));
+                $tpl->append('tags', array_merge($tagArr, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]])]));
             }
         }
 
@@ -118,12 +128,12 @@ final class TagsController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theTagsPage', $hideMenuOn)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_tags');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('tags.latte');
         PageTailRenderer::render();
 

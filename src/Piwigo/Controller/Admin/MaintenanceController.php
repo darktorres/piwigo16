@@ -29,11 +29,9 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
@@ -73,6 +71,37 @@ final class MaintenanceController
     /** @var array<string, array<string, string>> */
     private array $maintActions = [];
 
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AdminService $adminService,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryService $categoryService,
+        private readonly ConfigService $configService,
+        private readonly CookieService $cookieService,
+        private readonly DateService $dateService,
+        private readonly HistoryAdminService $historyAdminService,
+        private readonly HistoryRepository $historyRepository,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly MessageBusInterface $messageBus,
+        private readonly MetadataAdminService $metadataAdminService,
+        private readonly PermissionRepository $permissionRepository,
+        private readonly PermissionService $permissionService,
+        private readonly RateService $rateService,
+        private readonly SearchRepository $searchRepository,
+        private readonly SessionRepository $sessionRepository,
+        private readonly SessionService $sessionService,
+        private readonly SiteRepository $siteRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'maintenance') {
@@ -105,7 +134,7 @@ final class MaintenanceController
         $page = &$GLOBALS['page'];
 
         if (isset($_GET['action'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         $this->maintActions = [
@@ -128,10 +157,10 @@ final class MaintenanceController
         ];
         $GLOBALS['maint_actions'] = $this->maintActions;
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         if (isset($_GET['tab'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
+            $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
             $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
         } else {
             $page['tab'] = 'actions';
@@ -160,7 +189,7 @@ final class MaintenanceController
     {
         $tpl = TemplateRegistry::current();
 
-        ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
+        $this->imageAdminService->fsQuickCheck();
 
         if (empty($this->maintActions)) {
             /** @var array<string, array<string, string>> $maint_actions_g */
@@ -177,52 +206,52 @@ final class MaintenanceController
                 phpinfo();
                 exit();
             case 'lock_gallery':
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_locked', 'true');
-                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
+                $this->configService->confUpdateParam('gallery_locked', 'true');
+                $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
+                $this->util->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_locked', 'false');
+                $this->configService->confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
+                $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
+                $this->util->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':
-                ServiceLocator::get(CategoryAdminService::class)->imagesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->categoriesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->updateUppercats();
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
+                $this->categoryAdminService->imagesIntegrity();
+                $this->categoryAdminService->categoriesIntegrity();
+                $this->categoryAdminService->updateUppercats();
+                $this->categoryAdminService->updateCategory('all');
+                $this->categoryAdminService->updateGlobalRank();
+                $this->userAdminService->invalidateUserCache(true);
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update albums informations'), Lang::t('action successfully performed.')));
                 break;
             case 'images':
-                ServiceLocator::get(CategoryAdminService::class)->imagesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->updatePath();
-                ServiceLocator::get(RateService::class)->updateRatingScore();
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+                $this->categoryAdminService->imagesIntegrity();
+                $this->categoryAdminService->updatePath();
+                $this->rateService->updateRatingScore();
+                $this->userAdminService->invalidateUserCache();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
                 break;
             case 'delete_orphan_tags':
-                ServiceLocator::get(TagAdminService::class)->deleteOrphanTags();
+                $this->tagAdminService->deleteOrphanTags();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;
             case 'user_cache':
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+                $this->userAdminService->invalidateUserCache();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge user cache'), Lang::t('action successfully performed.')));
                 break;
             case 'history_detail':
-                ServiceLocator::get(HistoryRepository::class)->deleteAll();
+                $this->historyRepository->deleteAll();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge history detail'), Lang::t('action successfully performed.')));
                 break;
             case 'history_summary':
-                ServiceLocator::get(HistoryRepository::class)->deleteAllSummary();
+                $this->historyRepository->deleteAllSummary();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge history summary'), Lang::t('action successfully performed.')));
                 break;
             case 'sessions':
-                ServiceLocator::get(SessionService::class)->sessionGc();
-                $userRepo    = ServiceLocator::get(UserRepository::class);
-                $sessionRepo = ServiceLocator::get(SessionRepository::class);
+                $this->sessionService->sessionGc();
+                $userRepo    = $this->userRepository;
+                $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();
                 $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
@@ -239,7 +268,7 @@ final class MaintenanceController
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge sessions'), Lang::t('action successfully performed.')));
                 break;
             case 'feeds':
-                ServiceLocator::get(UserRepository::class)->deleteNeverUsedFeeds();
+                $this->userRepository->deleteNeverUsedFeeds();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge never used notification feeds'), Lang::t('action successfully performed.')));
                 break;
             case 'database':
@@ -251,11 +280,11 @@ final class MaintenanceController
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;
             case 'empty_lounge':
-                $rows = ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
+                $rows = $this->categoryAdminService->emptyLounge();
                 PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
             case 'search':
-                ServiceLocator::get(SearchRepository::class)->deleteAll();
+                $this->searchRepository->deleteAll();
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
@@ -266,14 +295,14 @@ final class MaintenanceController
                 $types_str = is_string($rawGetType = $_GET['type'] ?? null) ? $rawGetType : '';
                 $types     = $types_str === 'all' ? ['all'] : explode('_', $types_str);
                 foreach ($types as $type_to_clear) {
-                    ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($type_to_clear);
+                    $this->imageAdminService->clearDerivativeCache($type_to_clear);
                 }
-                ServiceLocator::get(MessageBusInterface::class)->dispatch(new RegenerateAllDerivativesJob($types));
+                $this->messageBus->dispatch(new RegenerateAllDerivativesJob($types));
                 PageState::current()->addInfo(Lang::t('action successfully performed.'));
                 break;
             case 'check_upgrade':
                 $result = '';
-                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
+                if (!$this->adminService->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -305,10 +334,10 @@ final class MaintenanceController
         }
 
         if ($register_activity) {
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
+            $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
         }
 
-        $pwg_token    = ServiceLocator::get(Util::class)->getPwgToken();
+        $pwg_token    = $this->util->getPwgToken();
         $gallery_locked = Config::galleryLocked();
         $tpl->assign('page_data_json', json_encode([
             'unit_MB'                     => Lang::t('%s MB'),
@@ -324,8 +353,8 @@ final class MaintenanceController
             'str_delete_all_sizes_confirm' => Lang::t('Are you sure you want to delete all sizes?'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&action=%s&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
-        if (!PermissionService::get()->isWebmaster()) {
+        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->util->getPwgToken();
+        if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -355,7 +384,7 @@ final class MaintenanceController
             'U_MAINT_COMPILED_TEMPLATES'  => sprintf($url_format, 'compiled-templates'),
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
-            'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
+            'U_HELP'                      => $this->urlGenerator->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
             'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
@@ -374,7 +403,7 @@ final class MaintenanceController
                 }
                 $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
                 $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
-                return ServiceLocator::get(DateService::class)->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
+                return $this->dateService->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
             })(),
         ]);
 
@@ -409,12 +438,12 @@ final class MaintenanceController
             $tpl->assign(['U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery')]);
         }
 
-        $nb_lounge = ServiceLocator::get(ImageRepository::class)->countLoungeImages();
+        $nb_lounge = $this->imageRepository->countLoungeImages();
         if ($nb_lounge > 0) {
             $tpl->assign(['U_EMPTY_LOUNGE' => sprintf($url_format, 'empty_lounge'), 'LOUNGE_COUNTER' => $nb_lounge]);
         }
 
-        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
         $tpl->assign('advanced_features', $advanced_features);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_actions.latte');
@@ -427,44 +456,44 @@ final class MaintenanceController
         $tpl = TemplateRegistry::current();
 
         if (isset($_GET['action'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         $action = $_GET['action'] ?? '';
         switch ($action) {
             case 'phpinfo':  phpinfo();
                 exit();
-            case 'lock_gallery':    ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_locked', 'true');
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
+            case 'lock_gallery':    $this->configService->confUpdateParam('gallery_locked', 'true');
+                $this->util->redirect($this->urlGenerator->admin('maintenance'));
                 break;
-            case 'unlock_gallery':  ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_locked', 'false');
+            case 'unlock_gallery':  $this->configService->confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('maintenance'));
+                $this->util->redirect($this->urlGenerator->admin('maintenance'));
                 break;
-            case 'categories':      ServiceLocator::get(CategoryAdminService::class)->imagesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->categoriesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->updateUppercats();
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
+            case 'categories':      $this->categoryAdminService->imagesIntegrity();
+                $this->categoryAdminService->categoriesIntegrity();
+                $this->categoryAdminService->updateUppercats();
+                $this->categoryAdminService->updateCategory('all');
+                $this->categoryAdminService->updateGlobalRank();
+                $this->userAdminService->invalidateUserCache(true);
                 break;
-            case 'images':          ServiceLocator::get(CategoryAdminService::class)->imagesIntegrity();
-                ServiceLocator::get(CategoryAdminService::class)->updatePath();
-                ServiceLocator::get(RateService::class)->updateRatingScore();
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            case 'images':          $this->categoryAdminService->imagesIntegrity();
+                $this->categoryAdminService->updatePath();
+                $this->rateService->updateRatingScore();
+                $this->userAdminService->invalidateUserCache();
                 break;
-            case 'delete_orphan_tags': ServiceLocator::get(TagAdminService::class)->deleteOrphanTags();
+            case 'delete_orphan_tags': $this->tagAdminService->deleteOrphanTags();
                 break;
-            case 'user_cache':      ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            case 'user_cache':      $this->userAdminService->invalidateUserCache();
                 break;
-            case 'history_detail':  ServiceLocator::get(HistoryRepository::class)->deleteAll();
+            case 'history_detail':  $this->historyRepository->deleteAll();
                 break;
-            case 'history_summary': ServiceLocator::get(HistoryRepository::class)->deleteAllSummary();
+            case 'history_summary': $this->historyRepository->deleteAllSummary();
                 break;
             case 'sessions':
-                ServiceLocator::get(SessionService::class)->sessionGc();
-                $userRepo    = ServiceLocator::get(UserRepository::class);
-                $sessionRepo = ServiceLocator::get(SessionRepository::class);
+                $this->sessionService->sessionGc();
+                $userRepo    = $this->userRepository;
+                $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();
                 $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
                 $sessions_to_delete = [];
@@ -479,14 +508,14 @@ final class MaintenanceController
                     $sessionRepo->deleteByIds($sessions_to_delete);
                 }
                 break;
-            case 'feeds':           ServiceLocator::get(UserRepository::class)->deleteNeverUsedFeeds();
+            case 'feeds':           $this->userRepository->deleteNeverUsedFeeds();
                 break;
             case 'database':        MaintenanceService::repairAndOptimize();
                 break;
             case 'c13y':            $c13y = new CheckIntegrity();
                 $c13y->maintenance();
                 break;
-            case 'search':          ServiceLocator::get(SearchRepository::class)->deleteAll();
+            case 'search':          $this->searchRepository->deleteAll();
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
@@ -494,11 +523,11 @@ final class MaintenanceController
                 break;
             case 'derivatives':
                 $dtype = is_string($_GET['type'] ?? null) ? $_GET['type'] : '';
-                ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($dtype);
+                $this->imageAdminService->clearDerivativeCache($dtype);
                 break;
             case 'check_upgrade':
                 $result = '';
-                if (!ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
+                if (!$this->adminService->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -517,7 +546,7 @@ final class MaintenanceController
                         PageState::current()->addInfo(Lang::t('You are running on development sources, no check possible.'));
                     } elseif (version_compare($versions['current'] ?? '', $versions['latest']) < 0) {
                         PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
-                        $update_url = ServiceLocator::get(UrlGenerator::class)->admin('updates');
+                        $update_url = $this->urlGenerator->admin('updates');
                         PageState::current()->addInfo(new Html('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>'));
                     } else {
                         PageState::current()->addInfo(Lang::t('You are running the latest version of Piwigo.'));
@@ -528,7 +557,7 @@ final class MaintenanceController
 
         $tpl->assign('page_data_json', json_encode(['unit_MB' => Lang::t('%s MB'), 'no_time_elapsed' => Lang::t('right now'), 'no_active_plugin' => Lang::t('No plugin activated'), 'error_occured' => Lang::t('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = ServiceLocator::get(UrlGenerator::class)->admin('maintenance') . '&action=%s&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken();
+        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->util->getPwgToken();
 
         $purge_urls = [];
         $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&type=all';
@@ -540,7 +569,7 @@ final class MaintenanceController
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
         $db_current_date       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-        [$container_name, $container_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
+        [$container_name, $container_version] = $this->stringUtil->getContainerInfo();
         if (!in_array($container_name, ['Official', 'none'])) {
             $container_name = '(unofficial) ' . $container_name;
         }
@@ -560,7 +589,7 @@ final class MaintenanceController
             'U_MAINT_COMPILED_TEMPLATES'  => sprintf($url_format, 'compiled-templates'),
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
-            'U_HELP'                      => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('maintenance'),
+            'U_HELP'                      => $this->urlGenerator->adminPopupHelp('maintenance'),
             'PHPWG_URL'                   => PHPWG_URL,
             'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
@@ -579,11 +608,11 @@ final class MaintenanceController
                 }
                 $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
                 $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
-                return ServiceLocator::get(DateService::class)->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
+                return $this->dateService->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
             })(),
         ]);
 
-        $graphics_library = ServiceLocator::get(AdminService::class)->getGraphicsLibraryLabel();
+        $graphics_library = $this->adminService->getGraphicsLibraryLabel();
         if (!empty($graphics_library)) {
             $tpl->assign('GRAPHICS_LIBRARY', $graphics_library);
         }
@@ -594,9 +623,9 @@ final class MaintenanceController
             $tpl->assign(['U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery')]);
         }
 
-        $installed_on = ServiceLocator::get(AdminService::class)->getInstallationDate();
+        $installed_on = $this->adminService->getInstallationDate();
         if ($installed_on !== null && $installed_on !== '') {
-            $tpl->assign(['INSTALLED_ON' => ServiceLocator::get(DateService::class)->formatDate($installed_on, ['day', 'month', 'year']), 'INSTALLED_SINCE' => ServiceLocator::get(DateService::class)->timeSince($installed_on, 'day')]);
+            $tpl->assign(['INSTALLED_ON' => $this->dateService->formatDate($installed_on, ['day', 'month', 'year']), 'INSTALLED_SINCE' => $this->dateService->timeSince($installed_on, 'day')]);
         }
 
         $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
@@ -617,13 +646,13 @@ final class MaintenanceController
         }
         $maint_actions = $this->maintActions;
 
-        if (PermissionService::get()->isWebmaster()) {
+        if ($this->permissionService->isWebmaster()) {
             if (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
                 $response = [];
                 $data     = [];
                 $usernameField = Config::userFields()['username'];
                 $idField       = Config::userFields()['id'];
-                $activityRows  = ServiceLocator::get(Connection::class)
+                $activityRows  = $this->conn
                     ->executeQuery("SELECT activity_id, object, object_id, action, performed_by, occured_on, details, IF(performed_by = 0, 'System', $usernameField) AS username FROM " . Tables::activity() . ' LEFT JOIN ' . Tables::users() . " ON performed_by = $idField WHERE object = 'system' ORDER BY activity_id DESC")
                     ->fetchAllAssociative();
 
@@ -809,7 +838,7 @@ final class MaintenanceController
                     }
 
                     [$date, $hour] = explode(' ', is_string($rows['occured_on'] ?? null) ? $rows['occured_on'] : '');
-                    $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => $rows['username'], 'date' => ServiceLocator::get(DateService::class)->formatDate($date), 'hour' => $hour, 'detail' => $detail];
+                    $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => $rows['username'], 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
                 }
 
                 $response = ['data' => $data];
@@ -820,7 +849,7 @@ final class MaintenanceController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_sys.latte');
     }
 
@@ -840,15 +869,15 @@ final class MaintenanceController
             'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
         ];
 
-        ServiceLocator::get(Util::class)->checkInputParameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
-        ServiceLocator::get(Util::class)->checkInputParameter('filter_image_id', $_GET, false, '/^\d+$/');
-        ServiceLocator::get(Util::class)->checkInputParameter('filter_user_id', $_GET, false, '/^\d+$/');
+        $this->util->checkInputParameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
+        $this->util->checkInputParameter('filter_image_id', $_GET, false, '/^\d+$/');
+        $this->util->checkInputParameter('filter_user_id', $_GET, false, '/^\d+$/');
 
-        ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history'), 'API_METHOD' => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
+        $this->historyAdminService->historyTabsheet();
+        $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('history'), 'API_METHOD' => $this->urlGenerator->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
         if (isset($page['search_id'])) {
-            $navbar = ServiceLocator::get(Util::class)->createNavigationBar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
+            $navbar = $this->util->createNavigationBar($this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
             $tpl->assign('navbar', $navbar);
         }
 
@@ -865,7 +894,7 @@ final class MaintenanceController
         } else {
             $form['start'] = $form['end'] = date('Y-m-d');
             $form['types'] = $types;
-            $form['display_thumbnail'] = ServiceLocator::get(CookieService::class)->getCookieVar('display_thumbnail', 'no_display_thumbnail');
+            $form['display_thumbnail'] = $this->cookieService->getCookieVar('display_thumbnail', 'no_display_thumbnail');
         }
 
         $getFilterIp     = $_GET['filter_ip']     ?? null;
@@ -882,7 +911,7 @@ final class MaintenanceController
 
         if ($form_param['user_id'] != '-1') {
             $userFields = Config::userFields();
-            $foundUsername = ServiceLocator::get(UserRepository::class)->findUsernameById($userFields['id'], $userFields['username'], Tables::users(), (int) $form_param['user_id']);
+            $foundUsername = $this->userRepository->findUsernameById($userFields['id'], $userFields['username'], Tables::users(), (int) $form_param['user_id']);
             if ($foundUsername !== null) {
                 $form_param['user_name'] = $foundUsername;
             } else {
@@ -905,7 +934,7 @@ final class MaintenanceController
         $tpl->assign('guest_id', Config::guestId());
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('History'));
         $tpl->assign('page_data_json', json_encode([
-            'API_METHOD'                  => ServiceLocator::get(UrlGenerator::class)->ws(['format' => 'json', 'method' => 'pwg.history.search']),
+            'API_METHOD'                  => $this->urlGenerator->ws(['format' => 'json', 'method' => 'pwg.history.search']),
             'filter_user_name'            => $form_param['user_name'] ?? null,
             'guest_id'                    => Config::guestId(),
             'today'                       => date('Y-m-d'),
@@ -941,10 +970,10 @@ final class MaintenanceController
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
 
-        ServiceLocator::get(HistoryAdminService::class)->historySummarize();
+        $this->historyAdminService->historySummarize();
 
-        ServiceLocator::get(HistoryAdminService::class)->historyTabsheet();
-        $tpl->assign(['U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('history'), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('history')]);
+        $this->historyAdminService->historyTabsheet();
+        $tpl->assign(['U_HELP' => $this->urlGenerator->adminPopupHelp('history'), 'F_ACTION' => $this->urlGenerator->admin('history')]);
 
         $actual_date = new \DateTime();
         $actual_date->add(new \DateInterval('PT1S'));
@@ -1002,11 +1031,11 @@ final class MaintenanceController
         }
 
         if (!empty($_POST) || isset($_GET['action'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('site_update');
@@ -1025,7 +1054,7 @@ final class MaintenanceController
                 $url = './' . $url;
             }
 
-            $siteRepo = ServiceLocator::get(SiteRepository::class);
+            $siteRepo = $this->siteRepository;
             if ($siteRepo->countByUrl($url) > 0) {
                 PageState::current()->addError(Lang::t('This site already exists') . ' [' . $url . ']');
             }
@@ -1049,28 +1078,28 @@ final class MaintenanceController
             $siteIdSm = (int) $_GET['site'];
         }
         if (isset($_GET['action']) && $siteIdSm !== null) {
-            $galleries_url = ServiceLocator::get(SiteRepository::class)->findGalleriesUrlById($siteIdSm);
+            $galleries_url = $this->siteRepository->findGalleriesUrlById($siteIdSm);
             switch ($_GET['action']) {
-                case 'delete': ServiceLocator::get(CategoryAdminService::class)->deleteSite($page['site']);
+                case 'delete': $this->categoryAdminService->deleteSite($page['site']);
                     PageState::current()->addInfo(($galleries_url ?? '') . ' ' . Lang::t('deleted'));
                     break;
             }
         }
 
         $tpl->assign([
-            'F_ACTION'   => ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['action', 'site', 'pwg_token']),
-            'PWG_TOKEN'  => ServiceLocator::get(Util::class)->getPwgToken(),
+            'F_ACTION'   => $this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
+            'PWG_TOKEN'  => $this->util->getPwgToken(),
             'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
             'page_data_json' => json_encode(['str_delete_site_confirm' => Lang::t('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $sites_detail = array_column(DbConnection::get()->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
+        $sites_detail = array_column($this->conn->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
 
-        foreach (ServiceLocator::get(SiteRepository::class)->findAll() as $row) {
+        foreach ($this->siteRepository->findAll() as $row) {
             $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $is_remote  = UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '');
-            $base_url   = ServiceLocator::get(UrlGenerator::class)->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '&action=';
-            $update_url = ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&site=' . $row_id_str;
+            $base_url   = $this->urlGenerator->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . $this->util->getPwgToken() . '&action=';
+            $update_url = $this->urlGenerator->admin('site_update') . '&site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
             $tpl_var = [
@@ -1117,7 +1146,7 @@ final class MaintenanceController
         }
         $site_id = $_GET['site'];
 
-        $site_url = ServiceLocator::get(SiteRepository::class)->findGalleriesUrlById((int) $site_id);
+        $site_url = $this->siteRepository->findGalleriesUrlById((int) $site_id);
         if (!isset($site_url)) {
             throw new NotFoundException('site ' . $site_id . ' does not exist');
         }
@@ -1140,10 +1169,10 @@ final class MaintenanceController
         }
 
         if (isset($page['no_md5sum_number'])) {
-            $tpl->assign(['save_error' => new Html('<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);
+            $tpl->assign(['save_error' => new Html('<a href="' . $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);
         }
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('site_update');
@@ -1151,7 +1180,7 @@ final class MaintenanceController
         $tabsheet->assign();
 
         if (isset($_GET['quick_sync'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
             $_POST['sync'] = 'files';
             $_POST['display_info'] = '1';
             $_POST['add_to_caddie'] = '1';
@@ -1184,7 +1213,7 @@ final class MaintenanceController
         }
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
-            $start = StringUtil::get()->getMoment();
+            $start = $this->stringUtil->getMoment();
             $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
@@ -1193,8 +1222,8 @@ final class MaintenanceController
                     $query .= ' AND id = ' . $_POST['cat'];
                 }
             }
-            $db_categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
-            $db_fulldirs   = ServiceLocator::get(CategoryAdminService::class)->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+            $db_categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $db_fulldirs   = $this->categoryAdminService->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 $basedir = $db_fulldirs[(int) $_POST['cat']] ?? '';
@@ -1204,7 +1233,7 @@ final class MaintenanceController
 
             $db_fulldirs = array_flip($db_fulldirs);
             $next_rank   = ['NULL' => 1];
-            $conn        = ServiceLocator::get(Connection::class);
+            $conn        = $this->conn;
             foreach ($conn->executeQuery('SELECT id FROM ' . Tables::categories())->fetchAllAssociative() as $row) {
                 $rowIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
                 if ($rowIdKey !== '') {
@@ -1220,7 +1249,7 @@ final class MaintenanceController
                 $next_rank[$ruk] = $row['next_rank'];
             }
 
-            $next_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::categories() . '`')->fetchOne();
+            $next_id_raw = $this->conn->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::categories() . '`')->fetchOne();
             $next_id     = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
 
             $fs_fulldirs = $site_reader->getFullDirectories($basedir);
@@ -1278,10 +1307,10 @@ final class MaintenanceController
                         $category_up[] = $category['id_uppercat'];
                     }
                 }
-                ServiceLocator::get(Util::class)->pwgActivity('album', $category_ids, 'add', ['sync' => true]);
+                $this->util->pwgActivity('album', $category_ids, 'add', ['sync' => true]);
                 $category_up_str = implode(',', array_unique($category_up));
                 if (Config::inheritanceByDefault() && !empty($category_up_str)) {
-                    $permRepoSync    = ServiceLocator::get(PermissionRepository::class);
+                    $permRepoSync    = $this->permissionRepository;
                     $category_up_ids = array_map(intval(...), explode(',', $category_up_str));
                     $groupAccessRows = $permRepoSync->findGroupCategoryAccess($category_up_ids);
                     $granted_grps    = [];
@@ -1329,7 +1358,7 @@ final class MaintenanceController
                     Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
                     Dml::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
                 } else {
-                    ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($category_ids, ServiceLocator::get(UserAdminService::class)->getAdmins());
+                    $this->categoryAdminService->addPermissionOnCategory($category_ids, $this->userAdminService->getAdmins());
                 }
             }
             $counts['new_categories'] = count($inserts);
@@ -1346,36 +1375,36 @@ final class MaintenanceController
             }
             if (count($to_delete) > 0) {
                 if (!$simulate) {
-                    ServiceLocator::get(CategoryAdminService::class)->deleteCategories($to_delete);
+                    $this->categoryAdminService->deleteCategories($to_delete);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
-                            ServiceLocator::get(ImageAdminService::class)->clearDerivativeCacheRec($to_delete_dir, '#.+#');
+                            $this->imageAdminService->clearDerivativeCacheRec($to_delete_dir, '#.+#');
                         }
                     }
                 }
                 $counts['del_categories'] = count($to_delete);
             }
-            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning dirs : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
         }
 
         // ── files / elements ──────────────────────────────────────────────────
 
         if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
-            $start_files = $start = StringUtil::get()->getMoment();
+            $start_files = $start = $this->stringUtil->getMoment();
             $fs = $site_reader->getElements($basedir);
-            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- get_elements: ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
 
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
             $db_elements = [];
             if (count($cat_ids) > 0) {
                 $query       = 'SELECT id, path FROM ' . Tables::images() . ' WHERE storage_category_id IN (' . wordwrap(implode(', ', $cat_ids), 160, "\n") . ')';
-                $db_elements = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
+                $db_elements = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
             }
 
-            $next_element_id_raw = DbConnection::get()->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
+            $next_element_id_raw = $this->conn->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
             $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
-            $start             = StringUtil::get()->getMoment();
+            $start             = $this->stringUtil->getMoment();
             $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
 
             foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements)) as $path) {
@@ -1388,7 +1417,7 @@ final class MaintenanceController
                     $errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
                     continue;
                 }
-                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => ServiceLocator::get(StringUtil::class)->getNameFromFile($filename), 'date_available' => CURRENT_DATE, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
+                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => $this->stringUtil->getNameFromFile($filename), 'date_available' => CURRENT_DATE, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
                 if ($_POST['privacy_level'] != 0) {
                     $insert['level'] = $_POST['privacy_level'];
                 }
@@ -1416,7 +1445,7 @@ final class MaintenanceController
 
                 if (count($existing_ids) > 0) {
                     $db_formats = [];
-                    foreach (ServiceLocator::get(ImageRepository::class)->findFormatsByImageIds(array_map(intval(...), $existing_ids)) as $row) {
+                    foreach ($this->imageRepository->findFormatsByImageIds(array_map(intval(...), $existing_ids)) as $row) {
                         $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                         $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
                         if (!isset($db_formats[$row_image_id])) {
@@ -1455,16 +1484,16 @@ final class MaintenanceController
                 if (count($inserts) > 0) {
                     Dml::massInserts(Tables::images(), array_keys($inserts[0]), $inserts);
                     Dml::massInserts(Tables::imageCategory(), array_keys($insert_links[0]), $insert_links);
-                    ServiceLocator::get(Util::class)->pwgActivity('photo', $caddiables, 'add', ['sync' => true]);
+                    $this->util->pwgActivity('photo', $caddiables, 'add', ['sync' => true]);
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
-                        ServiceLocator::get(Util::class)->fillCaddie($caddiables);
+                        $this->util->fillCaddie($caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {
                     Dml::massInserts(Tables::imageFormat(), array_keys($insert_formats[0]), $insert_formats);
                 }
                 if (count($formats_to_delete) > 0) {
-                    ServiceLocator::get(ImageRepository::class)->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
+                    $this->imageRepository->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
                 }
             }
             $counts['new_elements'] = count($inserts);
@@ -1479,26 +1508,26 @@ final class MaintenanceController
             }
             if (count($to_delete_elements) > 0) {
                 if (!$simulate) {
-                    ServiceLocator::get(ImageAdminService::class)->deleteElements($to_delete_elements);
+                    $this->imageAdminService->deleteElements($to_delete_elements);
                 } $counts['del_elements'] = count($to_delete_elements);
             }
 
-            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::get()->getElapsedTime($start_files, StringUtil::get()->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning files : ' . $this->stringUtil->getElapsedTime($start_files, $this->stringUtil->getMoment()) . ' -->');
         }
 
         // ── sync categories & files ───────────────────────────────────────────
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
             if (!$simulate) {
-                $start = StringUtil::get()->getMoment();
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- ServiceLocator::get(CategoryAdminService::class)->updateCategory(all) : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
-                $start = StringUtil::get()->getMoment();
-                ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+                $start = $this->stringUtil->getMoment();
+                $this->categoryAdminService->updateCategory('all');
+                $tpl->append('footer_elements', '<!-- $this->categoryAdminService->updateCategory(all) : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+                $start = $this->stringUtil->getMoment();
+                $this->categoryAdminService->updateGlobalRank();
+                $tpl->append('footer_elements', '<!-- ordering categories : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
             }
             if ($_POST['sync'] == 'files') {
-                $start = StringUtil::get()->getMoment();
+                $start = $this->stringUtil->getMoment();
                 $opts  = ['category_id' => '', 'recursive' => true];
                 if (isset($_POST['cat'])) {
                     $opts['category_id'] = $_POST['cat'];
@@ -1507,9 +1536,9 @@ final class MaintenanceController
                     }
                 }
                 $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
-                $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdOpt, (int) $site_id, $opts['recursive'], false);
-                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
-                $start = StringUtil::get()->getMoment();
+                $files = $this->metadataAdminService->getFilelist($catIdOpt, (int) $site_id, $opts['recursive'], false);
+                $tpl->append('footer_elements', '<!-- get_filelist : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+                $start = $this->stringUtil->getMoment();
                 $datas = [];
                 foreach ($files as $id => $file) {
                     $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
@@ -1521,7 +1550,7 @@ final class MaintenanceController
                 if (!$simulate && count($datas) > 0) {
                     Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes())], $datas);
                 }
-                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- update files : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
             }
         }
 
@@ -1539,11 +1568,11 @@ final class MaintenanceController
                     $opts['recursive'] = false;
                 }
             }
-            $start       = StringUtil::get()->getMoment();
+            $start       = $this->stringUtil->getMoment();
             $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
-            $files = ServiceLocator::get(MetadataAdminService::class)->getFilelist($catIdMeta, (int) $site_id, $opts['recursive'], $opts['only_new']);
-            $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
-            $start = StringUtil::get()->getMoment();
+            $files = $this->metadataAdminService->getFilelist($catIdMeta, (int) $site_id, $opts['recursive'], $opts['only_new']);
+            $tpl->append('footer_elements', '<!-- get_filelist : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+            $start = $this->stringUtil->getMoment();
             $datas = $tags_of = [];
             foreach ($files as $id => $element_infos) {
                 $element_infos_arr = is_array($element_infos) ? $element_infos : [];
@@ -1558,7 +1587,7 @@ final class MaintenanceController
                                 $tags_of[$id] = [];
                             }
                             foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
-                                $tags_of[$id][] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName($tag_name);
+                                $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
                             }
                         }
                     }
@@ -1570,9 +1599,9 @@ final class MaintenanceController
                 if (count($datas) > 0) {
                     Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
                 }
-                ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
+                $this->tagAdminService->setTagsOf($tags_of);
             }
-            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::get()->getElapsedTime($start, StringUtil::get()->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- metadata update : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
             $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($errors)]);
         }
 
@@ -1583,11 +1612,11 @@ final class MaintenanceController
 
         $tpl->assign([
             'SITE_URL'       => $site_url_str,
-            'U_SITE_MANAGER' => ServiceLocator::get(UrlGenerator::class)->admin('site_manager'),
+            'U_SITE_MANAGER' => $this->urlGenerator->admin('site_manager'),
             'L_RESULT_UPDATE' => $result_title . Lang::t('Search for new images in the directories'),
             'L_RESULT_METADATA' => $result_title . Lang::t('Metadata synchronization results'),
             'METADATA_LIST'  => $used_metadata,
-            'U_HELP'         => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('synchronize'),
+            'U_HELP'         => $this->urlGenerator->adminPopupHelp('synchronize'),
             'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
         ]);
 
@@ -1611,16 +1640,16 @@ final class MaintenanceController
             $tpl_introduction = ['sync' => 'dirs', 'sync_meta' => true, 'display_info' => false, 'add_to_caddie' => false, 'subcats_included' => true, 'privacy_level_selected' => 0, 'meta_all' => false, 'meta_empty_overrides' => false];
             $cat_selected = [];
             if (isset($_GET['cat_id'])) {
-                ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+                $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
                 $cat_selected = [is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0];
                 $tpl_introduction['sync'] = 'files';
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = ServiceLocator::get(Util::class)->getPrivacyLevelOptions();
+        $tpl_introduction['privacy_level_options'] = $this->util->getPrivacyLevelOptions();
         $tpl->assign('introduction', $tpl_introduction);
 
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);
+        $this->categoryService->displaySelectCatWrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);
 
         if (count($errors) > 0) {
             foreach ($errors as $error) {
@@ -1645,7 +1674,7 @@ final class MaintenanceController
     /** @return array<mixed> */
     private function getLast(int $last_number = 60, string $type = 'year'): array
     {
-        return ServiceLocator::get(HistoryRepository::class)->findSummaryByType($type, $last_number);
+        return $this->historyRepository->findSummaryByType($type, $last_number);
     }
 
     /** @return array<mixed> */
@@ -1656,15 +1685,15 @@ final class MaintenanceController
             $date  = new \DateTime();
             $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
             $query .= ' LIMIT ' . $limit;
-            $result   = DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative();
+            $result   = $this->conn->executeQuery($query . ';')->fetchAllAssociative();
             $lastDate = $date->sub(new \DateInterval('P' . ((int) $last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return $this->setMissingValues('month', $result, $lastDate, new \DateTime());
         }
-        if (count(DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative()) > 1) {
-            return $this->setMissingValues('month', DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative());
+        if (count($this->conn->executeQuery($query . ';')->fetchAllAssociative()) > 1) {
+            return $this->setMissingValues('month', $this->conn->executeQuery($query . ';')->fetchAllAssociative());
         } else {
             $last_year_date = new \DateTime();
-            return $this->setMissingValues('month', DbConnection::get()->executeQuery($query . ';')->fetchAllAssociative(), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
+            return $this->setMissingValues('month', $this->conn->executeQuery($query . ';')->fetchAllAssociative(), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
         }
     }
 
@@ -1682,7 +1711,7 @@ final class MaintenanceController
             ' WHERE ((year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ') OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ') OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')) AND day IS NOT NULL AND hour IS NULL ORDER BY year DESC, month DESC;';
 
         $months = [];
-        foreach (DbConnection::get()->executeQuery($query)->fetchAllAssociative() as $value) {
+        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $value) {
             $dt = $this->getDateObject($value);
             $months[$dt->format('Y/m/1')][] = $value;
         }
@@ -1700,7 +1729,7 @@ final class MaintenanceController
             $result['month'][] = $this->setMissingValues('day', $val, new \DateTime($key), $lastDate);
         }
 
-        $result['avg'] = ServiceLocator::get(HistoryRepository::class)->findCurrentPeriodDailyAvg((int) $date->format('Y'), (int) $date->format('n'));
+        $result['avg'] = $this->historyRepository->findCurrentPeriodDailyAvg((int) $date->format('Y'), (int) $date->format('n'));
         return $result;
     }
 

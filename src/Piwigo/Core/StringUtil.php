@@ -8,9 +8,10 @@ use Piwigo\Url\UrlService;
 
 final class StringUtil
 {
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function microSeconds(): string

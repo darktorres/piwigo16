@@ -139,7 +139,7 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c): RateService => new RateService($rate, $img, $c)),
     CommentService::class  => factory(static fn (CommentRepository $repo): CommentService => new CommentService($repo)),
-    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn): AuthService => new AuthService($u, $ak, $conn)),
+    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, StringUtil $s, Util $util, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d): AuthService => new AuthService($u, $ak, $conn, $s, $util, $sess, $ug, $us, $d)),
     PasswordService::class     => factory(static fn (): PasswordService => new PasswordService()),
     CalendarService::class     => factory(static fn (): CalendarService => new CalendarService()),
     MailService::class         => factory(static fn (Connection $conn): MailService => new MailService($conn)),

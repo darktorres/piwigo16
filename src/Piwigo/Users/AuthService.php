@@ -10,8 +10,8 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\DbConnection;
@@ -29,12 +29,19 @@ final readonly class AuthService
         private UserRepository $userRepo,
         private AuthKeyRepository $authKeyRepo,
         private Connection $conn,
+        private StringUtil $stringUtil,
+        private Util $util,
+        private SessionService $sessionService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private DateService $dateService,
     ) {
     }
 
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null
@@ -44,7 +51,7 @@ final readonly class AuthService
             return '';
         }
 
-        if (!ServiceLocator::get(StringUtil::class)->emailCheckFormat($mailAddress ?? '')) {
+        if (!$this->stringUtil->emailCheckFormat($mailAddress ?? '')) {
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
@@ -118,7 +125,7 @@ final readonly class AuthService
     {
         $cookieLang = is_string($_COOKIE['lang'] ?? null) ? $_COOKIE['lang'] : '';
         if ($cookieLang !== '' and CurrentUser::get()->language != $cookieLang) {
-            if (!array_key_exists($cookieLang, Util::get()->getLanguages())) {
+            if (!array_key_exists($cookieLang, $this->util->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
             Dml::singleUpdate(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
@@ -150,7 +157,7 @@ final readonly class AuthService
         $_SESSION['pwg_uid'] = $userId;
 
         EventDispatcher::notify('user_login', $userId);
-        ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'login');
+        $this->util->pwgActivity('user', $userId, 'login');
     }
 
     public function autoLogin(): bool
@@ -190,7 +197,7 @@ final readonly class AuthService
             return true;
         }
 
-        ServiceLocator::get(SessionService::class)->sessionGc();
+        $this->sessionService->sessionGc();
 
         $userFound = $this->findUserByUsernameOrEmail($username);
         $fakeUser  = $this->generateFakeUser();
@@ -201,7 +208,7 @@ final readonly class AuthService
 
         if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
-                ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, 'login_failure_wrong_password');
+                $this->util->pwgActivity('user', $ufId, 'login_failure_wrong_password');
             }
             EventDispatcher::notify('login_failure', stripslashes($username));
             return false;
@@ -215,7 +222,7 @@ final readonly class AuthService
             /** @psalm-var mixed $stateReasonRaw */
             $stateReasonRaw = $state['reason'] ?? null;
             $stateReason    = is_string($stateReasonRaw) ? $stateReasonRaw : 'login_failure_before_log_user';
-            ServiceLocator::get(Util::class)->pwgActivity('user', $ufId, $stateReason);
+            $this->util->pwgActivity('user', $ufId, $stateReason);
             EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
@@ -272,7 +279,7 @@ final readonly class AuthService
     {
         $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
         EventDispatcher::notify('user_logout', $logoutUid);
-        ServiceLocator::get(Util::class)->pwgActivity('user', $logoutUid, 'logout');
+        $this->util->pwgActivity('user', $logoutUid, 'logout');
 
         $_SESSION = [];
         session_unset();
@@ -439,12 +446,12 @@ SELECT
             'activation_key_expire' => $expire,
         ], ['user_id' => $userId]);
 
-        UrlService::get()->setMakeFullUrl();
-        $passwordLink = UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->password(), ['key' => $activationKey]);
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
+        $passwordLink = $this->urlService->addUrlParams($this->urlGenerator->password(), ['key' => $activationKey]);
+        $this->urlService->unsetMakeFullUrl();
 
         $strAuthResult = strtotime('now -' . $duration . ' second');
-        $timeValidation = ServiceLocator::get(DateService::class)->timeSince($strAuthResult !== false ? $strAuthResult : null, 'second', null, false);
+        $timeValidation = $this->dateService->timeSince($strAuthResult !== false ? $strAuthResult : null, 'second', null, false);
 
         return ['time_validation' => $timeValidation, 'password_link' => $passwordLink];
     }

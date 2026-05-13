@@ -12,7 +12,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
@@ -31,6 +30,9 @@ final readonly class MailService
 {
     public function __construct(
         private Connection $conn,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private Util $util,
     ) {
     }
 
@@ -41,7 +43,7 @@ final readonly class MailService
 
     public function getMailSenderEmail(): string
     {
-        return empty(Config::mailSenderEmail()) ? ServiceLocator::get(Util::class)->getWebmasterMailAddress() : Config::mailSenderEmail();
+        return empty(Config::mailSenderEmail()) ? $this->util->getWebmasterMailAddress() : Config::mailSenderEmail();
     }
 
     /** @return array<string,mixed> */
@@ -489,7 +491,7 @@ SELECT
         $bccRaw = $args['Bcc'] ?? '';
         $Bcc = $this->getCleanRecipientsList(is_array($bccRaw) || is_string($bccRaw) ? $bccRaw : '');
         if (Config::sendBccMailWebmaster()) {
-            $Bcc[] = ['email' => ServiceLocator::get(Util::class)->getWebmasterMailAddress(), 'name' => ''];
+            $Bcc[] = ['email' => $this->util->getWebmasterMailAddress(), 'name' => ''];
         }
         if (!empty($Bcc)) {
             foreach ($Bcc as $recipient) {
@@ -550,7 +552,7 @@ SELECT
                     'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
-                    'CONTENT_ENCODING' => ServiceLocator::get(StringUtil::class)->getPwgCharset(),
+                    'CONTENT_ENCODING' => $this->stringUtil->getPwgCharset(),
                     'CONTACT_MAIL'     => $this->getMailSenderEmail(),
                 ]);
 
@@ -806,7 +808,7 @@ SELECT
     public function pwgGenerateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
         UrlService::get()->setMakeFullUrl();
-        $profileUrl = ServiceLocator::get(UrlGenerator::class)->profile();
+        $profileUrl = $this->urlGenerator->profile();
 
         $message  = '<p style="margin-top: 20px;">' . Lang::t('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin-bottom: 20px;">' . Lang::t('Your password was successfully reset') . '.</p>';

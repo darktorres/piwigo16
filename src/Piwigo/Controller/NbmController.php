@@ -8,7 +8,6 @@ use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
@@ -24,6 +23,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class NbmController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly NotificationAdminService $notificationAdminService,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -40,9 +46,9 @@ final class NbmController implements ControllerInterface
         $unsubscribe = is_string($rawUnsubscribe) ? $rawUnsubscribe : null;
 
         if ($subscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $subscribe)) {
-            ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(false, [$subscribe]);
+            $this->notificationAdminService->subscribeNotificationByMail(false, [$subscribe]);
         } elseif ($unsubscribe !== null && preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
-            ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(false, [$unsubscribe]);
+            $this->notificationAdminService->unsubscribeNotificationByMail(false, [$unsubscribe]);
         } else {
             PageState::current()->addError(Lang::t('Unknown identifier'));
         }
@@ -59,11 +65,11 @@ final class NbmController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNBMPage', $hideMenuOn, true)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title);
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->parse('nbm.latte');
         PageTailRenderer::render();
 

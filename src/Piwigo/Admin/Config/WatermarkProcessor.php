@@ -8,7 +8,6 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Image\ImageStdParams;
@@ -19,6 +18,12 @@ use Piwigo\Users\PermissionService;
 
 final class WatermarkProcessor
 {
+    public function __construct(
+        private readonly ImageAdminService $imageAdminService,
+        private readonly StringUtil $stringUtil,
+        private readonly Util $util,
+    ) {
+    }
     public function process(): void
     {
         if (!PermissionService::get()->isWebmaster()) {
@@ -43,12 +48,12 @@ final class WatermarkProcessor
                 if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
                     $rawWmName    = $watermarkImage['name'] ?? null;
                     $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
-                    $new_name = ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($wm_file_name));
+                    $new_name = $this->stringUtil->str2url($this->stringUtil->getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
                     if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(
+                            $watermark_files[] = $this->stringUtil->getFilenameWoExtension(
                                 substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
                             );
                         }
@@ -166,11 +171,11 @@ final class WatermarkProcessor
             ImageStdParams::save();
 
             if (count($changed_types)) {
-                ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
+                $this->imageAdminService->clearDerivativeCache($changed_types);
             }
 
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
+            $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
         } else {
             $tpl->assign('watermark', $pwatermark);
             $tpl->assign('ferrors', $errors);

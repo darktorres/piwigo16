@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
@@ -19,6 +18,13 @@ use Piwigo\Url\UrlService;
 
 final class FilterResolver
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly HtmlService $htmlService,
+        private readonly TagAdminService $tagAdminService,
+        private readonly Util $util,
+    ) {
+    }
     /**
      * @param array<mixed> $collection
      */
@@ -60,7 +66,7 @@ final class FilterResolver
             'selection' => $collection,
             'all_elements' => $catElementsId,
             'START' => $start,
-            'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(),
+            'PWG_TOKEN' => $this->util->getPwgToken(),
             'U_DISPLAY' => $baseUrl . UrlService::get()->getQueryStringDiff(['display']),
             'F_ACTION' => $baseUrl . UrlService::get()->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
@@ -94,7 +100,7 @@ SELECT
   FROM ' . Tables::tags() . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
 ;';
-            $filter_tags = ServiceLocator::get(TagAdminService::class)->getTaglist($query);
+            $filter_tags = $this->tagAdminService->getTaglist($query);
         }
         $tpl->assign('filter_tags', $filter_tags);
 
@@ -103,7 +109,7 @@ SELECT
         $filterCategory = $bulk_manager_filter['category'] ?? null;
         if (isset($filterCategory)) {
             $selected_category = is_numeric($filterCategory) ? (int) $filterCategory : 0;
-            $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($selected_category);
+            $selected_category_name = $this->htmlService->getCatDisplayNameFromId($selected_category);
         }
         $tpl->assign('filter_category_selected_name', strip_tags($selected_category_name));
         $tpl->assign('filter_category_selected', $selected_category);
@@ -121,7 +127,7 @@ SELECT
       OR i.storage_category_id IS NULL
     )
 ;';
-            $associated_categories = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
+            $associated_categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
         }
         $tpl->assign('associated_categories', $associated_categories);
 

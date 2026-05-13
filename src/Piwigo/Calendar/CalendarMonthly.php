@@ -6,7 +6,7 @@ namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
@@ -237,7 +237,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
 
         $items = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $y = substr($periodStr, 0, 4);
@@ -313,7 +313,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $items = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $m = (int) substr($periodStr, 0, 2);
@@ -387,7 +387,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $day_counts = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? 0;
             $d = is_int($periodRaw) ? $periodRaw : (is_numeric($periodRaw) ? (int) $periodRaw : 0);
             $day_counts[$d] = $row['count'];
@@ -413,7 +413,7 @@ final class CalendarMonthly extends CalendarBase
                 $page['chronology_date'] = $cdTmp2;
             }
 
-            $rowResult = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative();
+            $rowResult = Kernel::service(Connection::class)->executeQuery($query)->fetchAssociative();
             $row = $rowResult !== false ? $rowResult : null;
             if ($row === null) {
                 continue;

@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\TemplateRegistry;
@@ -22,6 +21,12 @@ use Piwigo\Users\PermissionService;
 
 final class CalendarService
 {
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly Connection $conn,
+        private readonly Util $util,
+    ) {
+    }
     public function initializeCalendar(): void
     {
         $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
@@ -45,7 +50,7 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
                 /** @phpstan-ignore-next-line offsetAccess.nonOffsetAccessible */
                 $categoryIdRaw = $page['category']['id'] ?? null;
                 $subIds = array_diff(
-                    ServiceLocator::get(CategoryService::class)->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
+                    $this->categoryService->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
                     explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
                 );
 
@@ -80,7 +85,7 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
 WHERE id IN (' . implode(',', $items) . ')';
         }
 
-        ServiceLocator::get(Util::class)->pwgDebug('start initialize_calendar');
+        $this->util->pwgDebug('start initialize_calendar');
 
         $fields = [
             'created' => ['label' => Lang::t('Creation date')],
@@ -234,12 +239,12 @@ WHERE id IN (' . implode(',', $items) . ')';
                   . $calendar->inner_sql . '
   ' . $calendar->getDateWhere() . '
   ' . $orderBy;
-                $page['items'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+                $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (isset($cacheKey)) {
                     $persistentCache->set($cacheKey, $page['items']);
                 }
             }
         }
-        ServiceLocator::get(Util::class)->pwgDebug('end initialize_calendar');
+        $this->util->pwgDebug('end initialize_calendar');
     }
 }

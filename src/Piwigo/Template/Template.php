@@ -9,8 +9,8 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -101,7 +101,7 @@ final class Template
                 );
             }
             if (Config::dbName() !== '') {
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('data_dir_checked', 1);
+                Kernel::service(ConfigService::class)->confUpdateParam('data_dir_checked', 1);
             }
         }
 
@@ -130,7 +130,7 @@ final class Template
         if (
             '_base' != $theme
             and in_array(StringUtil::scriptBasename(), ['identification', 'register', 'password', 'profile'])
-            and (((bool) ($themeconf['use_standard_pages'] ?? false)) or ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false))
+            and (((bool) ($themeconf['use_standard_pages'] ?? false)) or Kernel::service(ConfigService::class)->confGetParam('use_standard_pages', false))
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->loadThemeconf($root.'/'.$theme);
@@ -341,9 +341,9 @@ final class Template
     public function parse(string $file, bool $return = false)
     {
         $this->assign('ROOT_URL', UrlService::getRootUrl());
-        $wsBase = ServiceLocator::get(UrlGenerator::class)->ws();
+        $wsBase = Kernel::service(UrlGenerator::class)->ws();
         $this->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
-        $this->assign('U_SEARCH', ServiceLocator::get(UrlGenerator::class)->searchPage());
+        $this->assign('U_SEARCH', Kernel::service(UrlGenerator::class)->searchPage());
 
         $v = $this->renderLatte($file);
 

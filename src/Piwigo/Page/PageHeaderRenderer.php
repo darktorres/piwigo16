@@ -7,8 +7,8 @@ namespace Piwigo\Page;
 use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
@@ -27,9 +27,9 @@ final class PageHeaderRenderer
 
         EventDispatcher::notify('loc_begin_page_header');
 
-        $show_mobile_app_banner = ServiceLocator::get(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
+        $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
         if (defined('IN_ADMIN')) {
-            $show_mobile_app_banner = ServiceLocator::get(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
+            $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
         }
 
         $pageBanner = $page['page_banner'] ?? Config::pageBanner();
@@ -40,7 +40,7 @@ final class PageHeaderRenderer
                 str_replace('%gallery_title%', Config::galleryTitle(), is_string($pageBanner) ? $pageBanner : '')
             )),
             'BODY_ID'                => $page['body_id'] ?? '',
-            'CONTENT_ENCODING'       => ServiceLocator::get(StringUtil::class)->getPwgCharset(),
+            'CONTENT_ENCODING'       => StringUtil::get()->getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
             'U_HOME'                 => UrlService::get()->getGalleryHomeUrl(),
             'LEVEL_SEPARATOR'        => Config::levelSeparator(),
@@ -72,7 +72,7 @@ final class PageHeaderRenderer
 
         EventDispatcher::notify('loc_end_page_header');
 
-        header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
+        header('Content-Type: text/html; charset=' . StringUtil::get()->getPwgCharset());
         $template->parse('header.latte');
 
         EventDispatcher::notify('loc_after_page_header');

@@ -18,10 +18,8 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
@@ -51,6 +49,33 @@ use Piwigo\Ws\WsHelper;
 
 final class GeneralEndpoints
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AuthService $authService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CommentRepository $commentRepository,
+        private readonly ConfigService $configService,
+        private readonly CookieService $cookieService,
+        private readonly DateService $dateService,
+        private readonly HistoryAdminService $historyAdminService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly PictureService $pictureService,
+        private readonly RateService $rateService,
+        private readonly SearchRepository $searchRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly TagRepository $tagRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+        private readonly WsHelper $wsHelper,
+    ) {
+    }
+
     public function directorySizeBytes(string $path): ?int
     {
         if (!is_dir($path)) {
@@ -98,7 +123,7 @@ final class GeneralEndpoints
             }
         }
         $maxUrls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
-        [$maxId, $imageCount] = ServiceLocator::get(ImageRepository::class)->findMaxIdAndCount();
+        [$maxId, $imageCount] = $this->imageRepository->findMaxIdAndCount();
         if ($imageCount === 0) {
             return [];
         }
@@ -110,14 +135,14 @@ final class GeneralEndpoints
         Config::override('derivative_url_style', 2);
         $qlimit = min(5000, (int) ceil(max($imageCount / 500, $maxUrls / count($types))));
         /** @var array<string> $whereClauses */
-        $whereClauses   = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, '');
+        $whereClauses   = $this->wsHelper->imageSqlFilter($params, '');
         $whereClauses[] = 'id<start_id';
         if (!empty($params['ids'])) {
             $idsArr         = is_array($params['ids']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['ids']) : [];
             $whereClauses[] = 'id IN (' . implode(',', $idsArr) . ')';
         }
         $queryModel = 'SELECT id, path, representative_ext, width, height, rotation FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY id DESC LIMIT ' . $qlimit . ';';
-        $conn       = ServiceLocator::get(Connection::class);
+        $conn       = $this->conn;
         $urls       = [];
         do {
             $rows   = $conn->executeQuery(str_replace('start_id', (string) $startId, $queryModel))->fetchAllAssociative();
@@ -167,11 +192,11 @@ final class GeneralEndpoints
     {
         $infos = [];
         $infos['version']            = AppInfo::VERSION;
-        $imgRepo  = ServiceLocator::get(ImageRepository::class);
-        $catRepo  = ServiceLocator::get(CategoryRepository::class);
-        $tagRepo  = ServiceLocator::get(TagRepository::class);
-        $userRepo = ServiceLocator::get(UserRepository::class);
-        $comRepo  = ServiceLocator::get(CommentRepository::class);
+        $imgRepo  = $this->imageRepository;
+        $catRepo  = $this->categoryRepository;
+        $tagRepo  = $this->tagRepository;
+        $userRepo = $this->userRepository;
+        $comRepo  = $this->commentRepository;
         $infos['nb_elements']           = $imgRepo->countAll();
         $infos['nb_categories']         = $catRepo->countAll();
         $infos['nb_virtual']            = $catRepo->countVirtual();
@@ -206,7 +231,7 @@ final class GeneralEndpoints
         $pathCache = Config::dataLocation();
         $infos['cache_size'] = $this->directorySizeBytes($pathCache);
         $pathMsizes = Config::dataLocation() . 'i';
-        $msizes     = ServiceLocator::get(ImageAdminService::class)->getCacheSizeDerivatives($pathMsizes);
+        $msizes     = $this->imageAdminService->getCacheSizeDerivatives($pathMsizes);
         $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::getDefinedTypeMap()), 0.0);
         $infos['msizes']['custom'] = 0.0;
         $all = 0.0;
@@ -222,7 +247,7 @@ final class GeneralEndpoints
         foreach ($infos as $name => $value) {
             $output[] = ['name' => $name, 'value' => $value];
         }
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('cache_sizes', $output, true);
+        $this->configService->confUpdateParam('cache_sizes', $output, true);
         return ['infos' => new PwgNamedArray($output, 'item')];
     }
 
@@ -231,7 +256,7 @@ final class GeneralEndpoints
     {
         $userId = CurrentUser::get()->id;
         $query  = 'SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::caddie() . ' ON id=element_id AND user_id=' . $userId . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) . ') AND element_id IS NULL;';
-        $result = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $result = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
         $datas  = [];
         foreach ($result as $id) {
             $datas[] = ['element_id' => $id, 'user_id' => $userId];
@@ -253,9 +278,9 @@ final class GeneralEndpoints
         if (!empty($params['image_id'])) {
             $query .= ' AND element_id=' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
         }
-        $changes = DbConnection::get()->executeStatement($query);
+        $changes = $this->conn->executeStatement($query);
         if ($changes > 0) {
-            ServiceLocator::get(RateService::class)->updateRatingScore();
+            $this->rateService->updateRatingScore();
         }
         return $changes;
     }
@@ -269,11 +294,11 @@ final class GeneralEndpoints
         $username = is_string($params['username'] ?? null) ? $params['username'] : '';
         $password = is_string($params['password'] ?? null) ? $params['password'] : '';
         if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
-            if (AuthService::get()->authKeyLogin($username . ':' . $password)) {
+            if ($this->authService->authKeyLogin($username . ':' . $password)) {
                 $_SESSION['connected_with'] = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif (AuthService::get()->tryLogUser($username, $password, false)) {
+        } elseif ($this->authService->tryLogUser($username, $password, false)) {
             $_SESSION['connected_with'] = 'ws_session_login';
             return true;
         }
@@ -285,8 +310,8 @@ final class GeneralEndpoints
         if (defined('PWG_API_KEY_REQUEST')) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
-        if (!PermissionService::get()->isAGuest()) {
-            AuthService::get()->logoutUser();
+        if (!$this->permissionService->isAGuest()) {
+            $this->authService->logoutUser();
         }
         return true;
     }
@@ -295,15 +320,15 @@ final class GeneralEndpoints
     {
         $currentUser = CurrentUser::get();
         $res = [];
-        $res['username'] = PermissionService::get()->isAGuest() ? 'guest' : stripslashes($currentUser->username);
+        $res['username'] = $this->permissionService->isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
-        $res['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
-        $res['charset']   = ServiceLocator::get(StringUtil::class)->getPwgCharset();
+        $res['pwg_token'] = $this->util->getPwgToken();
+        $res['charset']   = $this->stringUtil->getPwgCharset();
         $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = AppInfo::VERSION;
-        $res['save_visits'] = ServiceLocator::get(Util::class)->doLog();
+        $res['save_visits'] = $this->util->doLog();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
         /** @var mixed $httpUserAgentRaw */
         $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -314,7 +339,7 @@ final class GeneralEndpoints
         if ($httpUserAgent === '' || !str_starts_with($httpUserAgent, 'Apache-HttpClient/')) {
             $res['available_sizes'] = array_keys(ImageStdParams::getDefinedTypeMap());
         }
-        if (PermissionService::get()->isAdmin()) {
+        if ($this->permissionService->isAdmin()) {
             $res['upload_file_types'] = implode(',', array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions())));
             $res['upload_form_chunk_size'] = Config::uploadFormChunkSize();
         }
@@ -328,7 +353,7 @@ final class GeneralEndpoints
     public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (!empty($param[$datefield]) && !ServiceLocator::get(StringUtil::class)->isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
+            if (!empty($param[$datefield]) && !$this->stringUtil->isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
             }
         }
@@ -359,10 +384,10 @@ final class GeneralEndpoints
             $where .= ' AND performed_by=' . (is_numeric($param['uid']) ? (int) $param['uid'] : 0);
         }
         if (isset($param['action'])) {
-            $where .= ' AND action=' . DbConnection::get()->quote(is_string($param['action']) ? $param['action'] : '');
+            $where .= ' AND action=' . $this->conn->quote(is_string($param['action']) ? $param['action'] : '');
         }
         if (isset($param['object'])) {
-            $where .= ' AND object=' . DbConnection::get()->quote(is_string($param['object']) ? $param['object'] : '');
+            $where .= ' AND object=' . $this->conn->quote(is_string($param['object']) ? $param['object'] : '');
         }
         $dateMinVal = $param['date_min'] ?? null;
         if ($dateMinVal !== null && $dateMinVal !== '' && $dateMinVal !== false && $dateMinVal !== 0) {
@@ -378,12 +403,12 @@ final class GeneralEndpoints
         if ('none' === Config::activityDisplayConnections()) {
             $where .= " AND action NOT IN ('login', 'logout')";
         } elseif ('admins_only' === Config::activityDisplayConnections()) {
-            $where .= ' AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', ServiceLocator::get(UserAdminService::class)->getAdmins()) . '))';
+            $where .= ' AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $this->userAdminService->getAdmins()) . '))';
         }
         $moreRowsAvailable = true;
         while (count($outputLines) < $pageSize && $moreRowsAvailable) {
             $query = 'SELECT activity_id, performed_by, object, object_id, action, session_idx, ip_address, occured_on, details, user_agent FROM ' . Tables::activity() . ' ' . $where . ' ORDER BY activity_id DESC LIMIT ' . $nbRowsToFetch . ' OFFSET ' . $pageOffset . ';';
-            $rows  = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $rows  = $this->conn->executeQuery($query)->fetchAllAssociative();
             if (count($rows) < $nbRowsToFetch) {
                 $moreRowsAvailable = false;
             }
@@ -413,7 +438,7 @@ final class GeneralEndpoints
                         }
                         [$date, $hour]     = explode(' ', is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '');
                         $rowPerformedBy    = $row['performed_by'];
-                        $outputLines[]     = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => ServiceLocator::get(DateService::class)->formatDate($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
+                        $outputLines[]     = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
                         $userIdKey = is_scalar($rowPerformedBy) ? (string) $rowPerformedBy : '';
                         if ($userIdKey !== '') {
                             $userIds[$userIdKey] = 1;
@@ -437,7 +462,7 @@ final class GeneralEndpoints
         $usernameOf = [];
         if (count($userIds) > 0) {
             $query = 'SELECT `' . Config::userFields()['id'] . '` AS user_id, `' . Config::userFields()['username'] . '` AS username FROM ' . Tables::users() . ' WHERE `' . Config::userFields()['id'] . '` IN (' . implode(',', array_keys($userIds)) . ');';
-            $usernameOf = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
+            $usernameOf = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
         }
         foreach ($outputLines as $idx => $outputLine) {
             if ('user' === ($outputLine['object'] ?? '')) {
@@ -493,10 +518,10 @@ final class GeneralEndpoints
         }
         $logImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
         if (!empty($params['image_id']) && $logImageId !== null) {
-            ServiceLocator::get(PictureService::class)->increaseImageVisitCounter($logImageId);
+            $this->pictureService->increaseImageVisitCounter($logImageId);
         }
         $imageType = $params['is_download'] ? 'high' : 'picture';
-        ServiceLocator::get(Util::class)->pwgLog($logImageId, $imageType);
+        $this->util->pwgLog($logImageId, $imageType);
     }
 
     /**
@@ -516,17 +541,17 @@ final class GeneralEndpoints
         $page['errors'] = [];
         $search         = ['fields' => []];
         if (!empty($param['start'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            $this->util->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
         if (!empty($param['end'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            $this->util->checkInputParameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
         if (empty($param['types'])) {
             $search['fields']['types'] = $types;
         } else {
-            ServiceLocator::get(Util::class)->checkInputParameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
+            $this->util->checkInputParameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
             $search['fields']['types'] = $param['types'];
         }
         $search['fields']['user'] = is_numeric($param['user_id']) ? (int) $param['user_id'] : 0;
@@ -539,20 +564,20 @@ final class GeneralEndpoints
         if (!empty($param['ip'])) {
             $search['fields']['ip'] = str_replace('*', '%', is_string($param['ip']) ? $param['ip'] : '');
         }
-        ServiceLocator::get(Util::class)->checkInputParameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
+        $this->util->checkInputParameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         $displayThumbnailRaw = $param['display_thumbnail'] ?? null;
         $displayThumbnailStr = is_string($displayThumbnailRaw) ? $displayThumbnailRaw : '';
         $cookieVal           = ($displayThumbnailStr !== '' && isset($displayThumbnails[$displayThumbnailStr])) ? $displayThumbnailStr : null;
         $strtotimeMonth = strtotime('+1 month');
         /** @var int|false $strtotimeMonth */
-        ServiceLocator::get(CookieService::class)->setCookieVar('display_thumbnail', $cookieVal, $strtotimeMonth === false ? null : $strtotimeMonth);
-        $searchRepo = ServiceLocator::get(SearchRepository::class);
+        $this->cookieService->setCookieVar('display_thumbnail', $cookieVal, $strtotimeMonth === false ? null : $strtotimeMonth);
+        $searchRepo = $this->searchRepository;
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
         $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
         $search = is_array($page['search'] ?? null) ? $page['search'] : [];
-        $historyService = ServiceLocator::get(HistoryAdminService::class);
+        $historyService = $this->historyAdminService;
         $search         = $historyService->prepareSearch($search);
 
         $pageNumber = is_numeric($param['pageNumber']) ? (int) $param['pageNumber'] : 0;
@@ -593,7 +618,7 @@ final class GeneralEndpoints
         $searchDetails = [];
         if (count($searchIds) > 0) {
             $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', array_map(intval(...), $searchIds)) . ');';
-            $searchDetails = array_column(DbConnection::get()->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
+            $searchDetails = array_column($this->conn->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
                 $rulesArr    = StringUtil::safeUnserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
                 $rulesFields = is_array($rulesArr['fields'] ?? null) ? $rulesArr['fields'] : [];
@@ -620,7 +645,7 @@ final class GeneralEndpoints
         }
         if (count($userIds) > 0) {
             $userFields = Config::userFields();
-            $rawMap     = ServiceLocator::get(UserRepository::class)->findUsernamesByIds($userFields['id'], $userFields['username'], Tables::users(), array_map(intval(...), array_keys($userIds)));
+            $rawMap     = $this->userRepository->findUsernamesByIds($userFields['id'], $userFields['username'], Tables::users(), array_map(intval(...), array_keys($userIds)));
             foreach ($rawMap as $id => $username) {
                 $usernameOf[$id] = stripslashes($username);
             }
@@ -630,21 +655,21 @@ final class GeneralEndpoints
         $fullCatPath    = [];
         if (count($categoryIds) > 0) {
             $categoryIdsStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds);
-            $uppercatsOf    = array_column(DbConnection::get()->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
+            $uppercatsOf    = array_column($this->conn->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
-                $albumBase = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-';
-                $fullCatPath[$categoryId] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($uppercatsS, $albumBase);
+                $albumBase = $this->urlGenerator->admin() . '&page=album-';
+                $fullCatPath[$categoryId] = $this->htmlService->getCatDisplayNameCache($uppercatsS, $albumBase);
                 $uppercatsParts       = explode(',', $uppercatsS);
-                $nameOfCategory[$categoryId] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(end($uppercatsParts) ?: '', $albumBase);
+                $nameOfCategory[$categoryId] = $this->htmlService->getCatDisplayNameCache(end($uppercatsParts) ?: '', $albumBase);
             }
         }
         if (count($imageIds) > 0) {
-            $imageInfos = array_column(DbConnection::get()->executeQuery('SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', array_keys($imageIds)) . ');')->fetchAllAssociative(), null, 'id');
+            $imageInfos = array_column($this->conn->executeQuery('SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', array_keys($imageIds)) . ');')->fetchAllAssociative(), null, 'id');
         }
         $nameOfTag = [];
         if ($hasTags) {
-            foreach (ServiceLocator::get(TagRepository::class)->findAll() as $row) {
+            foreach ($this->tagRepository->findAll() as $row) {
                 $tagIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
                 if ($tagIdKey !== '') {
                     $nameOfTag[$tagIdKey] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
@@ -672,7 +697,7 @@ final class GeneralEndpoints
             } else {
                 $userString .= $lineUserIdStr;
             }
-            $userString .= '&nbsp;<a href="' . ServiceLocator::get(UrlGenerator::class)->admin('history') . '&amp;search_id=' . $searchId . '&amp;user_id=' . $lineUserIdStr . '">+</a>';
+            $userString .= '&nbsp;<a href="' . $this->urlGenerator->admin('history') . '&amp;search_id=' . $searchId . '&amp;user_id=' . $lineUserIdStr . '">+</a>';
             $tagNames = '';
             $tagIds   = '';
             if (isset($line['tag_ids'])) {
@@ -688,8 +713,8 @@ final class GeneralEndpoints
             $imageEditString = '';
             $imageId        = '';
             if ($lineImageIdStr !== '') {
-                $imageEditString = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $lineImageIdStr);
-                $pictureUrl      = UrlService::get()->makePictureUrl(['image_id' => $lineImageId]);
+                $imageEditString = $this->urlGenerator->admin('photo-' . $lineImageIdStr);
+                $pictureUrl      = $this->urlService->makePictureUrl(['image_id' => $lineImageId]);
                 $element         = [];
                 if (isset($imageInfos[$lineImageIdStr])) {
                     $element = ['id' => $lineImageId, 'file' => $imageInfos[$lineImageIdStr]['file'], 'path' => $imageInfos[$lineImageIdStr]['path'], 'representative_ext' => $imageInfos[$lineImageIdStr]['representative_ext']];
@@ -726,7 +751,7 @@ final class GeneralEndpoints
                 $searchDetail = ['allwords' => (count($sdAllwordsWords) > 0) ? $sdAllwordsWords : null, 'tags' => (count($sdTagsWords) > 0) ? array_intersect_key($nameOfTag, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdTagsWords))) : null, 'date_posted' => (isset($sd['date_posted']) && $sd['date_posted'] !== '') ? $sd['date_posted'] : null, 'cat' => (count($sdCatWords) > 0) ? array_intersect_key($nameOfCategory, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdCatWords))) : null, 'author' => (count($sdAuthorWords) > 0) ? $sdAuthorWords : null, 'added_by' => (count($sdAddedBy) > 0) ? array_intersect_key($usernameOf, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdAddedBy))) : null, 'filetypes' => (isset($sd['filetypes']) && $sd['filetypes'] !== '') ? $sd['filetypes'] : null];
             }
             $lineDate = is_scalar($line['date'] ?? null) ? $line['date'] : null;
-            array_push($result, ['DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
+            array_push($result, ['DATE' => $this->dateService->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
         }
         $sortedMembers = [];
         foreach ($userHitCounts as $uid => $hits) {

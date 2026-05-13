@@ -7,18 +7,19 @@ namespace Piwigo\Lang;
 use Gettext\Loader\PoLoader;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Html\HtmlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 final class LangService
 {
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function l10n(?string $key, string|int|float|bool|null ...$args): string
@@ -105,7 +106,7 @@ final class LangService
         $langDir = $dirname . 'language/';
 
         $defaultLanguage = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
-            ? UserService::get()->getDefaultLanguage()
+            ? Kernel::service(UserService::class)->getDefaultLanguage()
             : AppInfo::DEFAULT_LANGUAGE;
 
         $languages = [];

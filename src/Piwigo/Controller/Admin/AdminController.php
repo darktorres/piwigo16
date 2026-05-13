@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ControllerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
@@ -403,23 +404,23 @@ final class AdminController implements ControllerInterface
     private function dispatchToSubController(string $page): void
     {
         if (in_array($page, AlbumController::PAGES, true)) {
-            new AlbumController()->handle($page);
+            Kernel::service(AlbumController::class)->handle($page);
         } elseif (in_array($page, PhotoController::PAGES, true)) {
-            new PhotoController()->handle($page);
+            Kernel::service(PhotoController::class)->handle($page);
         } elseif (in_array($page, BatchManagerController::PAGES, true)) {
-            new BatchManagerController()->handle($page);
+            Kernel::service(BatchManagerController::class)->handle($page);
         } elseif (in_array($page, ConfigurationController::PAGES, true)) {
-            new ConfigurationController()->handle($page);
+            Kernel::service(ConfigurationController::class)->handle($page);
         } elseif (in_array($page, UsersController::PAGES, true)) {
-            new UsersController()->handle($page);
+            Kernel::service(UsersController::class)->handle($page);
         } elseif (in_array($page, GroupsController::PAGES, true)) {
-            new GroupsController()->handle($page);
+            Kernel::service(GroupsController::class)->handle($page);
         } elseif (in_array($page, ExtensionsController::PAGES, true)) {
-            new ExtensionsController()->handle($page);
+            Kernel::service(ExtensionsController::class)->handle($page);
         } elseif (in_array($page, MaintenanceController::PAGES, true)) {
-            new MaintenanceController()->handle($page);
+            Kernel::service(MaintenanceController::class)->handle($page);
         } else {
-            new MiscController()->handle($page);
+            Kernel::service(MiscController::class)->handle($page);
         }
     }
 }

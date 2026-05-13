@@ -16,15 +16,14 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallSentinel;
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -125,7 +124,7 @@ final class CommonBootstrap
         PersistentCacheRegistry::set($persistent_cache);
 
         try {
-            DbConnection::get();
+            Kernel::service(Connection::class);
         } catch (\Exception $e) {
             HtmlService::fatalError(Lang::t($e->getMessage()));
         }
@@ -141,7 +140,7 @@ final class CommonBootstrap
 
         // Load application config from the DB. Container is available, so this can
         // go through the typed service path.
-        ServiceLocator::get(ConfigService::class)->loadConfFromDb();
+        Kernel::service(ConfigService::class)->loadConfFromDb();
 
         // Run DB migrations only after Config is loaded from the DB, because
         // migrations may inspect Config values (e.g. Config::autoMigrate()).
@@ -174,14 +173,14 @@ final class CommonBootstrap
         Kernel::service(PluginService::class)->loadPlugins();
 
         if (!Config::has('piwigo_installed_version')) {
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+            Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
+            Util::get()->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
+            Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         if (!Config::has('last_major_update')) {
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('last_major_update', new \DateTimeImmutable()->format('Y-m-d H:i:s'), true);
+            Kernel::service(ConfigService::class)->confUpdateParam('last_major_update', new \DateTimeImmutable()->format('Y-m-d H:i:s'), true);
         }
 
         if (Config::has('order_by_custom')) {
@@ -191,7 +190,7 @@ final class CommonBootstrap
             Config::override('order_by_inside_category', Config::orderByInsideCategoryCustom());
         }
 
-        ServiceLocator::get(Util::class)->checkLounge();
+        Util::get()->checkLounge();
 
         $user_globals  = self::readGlobal('user');
         $user_language = is_array($user_globals) && is_scalar($user_globals['language'] ?? null)
@@ -237,7 +236,7 @@ final class CommonBootstrap
         if (PageState::current()->authKeyInvalid) {
             PageState::current()->addError(
                 Lang::t('Your authentication key is no longer valid.')
-                . sprintf(' <a href="%s">%s</a>', ServiceLocator::get(UrlGenerator::class)->identification(), Lang::t('Login'))
+                . sprintf(' <a href="%s">%s</a>', Kernel::service(UrlGenerator::class)->identification(), Lang::t('Login'))
             );
         }
 
@@ -276,7 +275,7 @@ final class CommonBootstrap
             $user_arr_theme = self::readGlobal('user');
             $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
             $theme     = is_string($theme_raw) ? $theme_raw : '';
-            if (StringUtil::scriptBasename() != 'ws' and ServiceLocator::get(Util::class)->mobileTheme()) {
+            if (StringUtil::scriptBasename() != 'ws' and Util::get()->mobileTheme()) {
                 $theme = Config::mobilTheme();
             }
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
@@ -285,7 +284,7 @@ final class CommonBootstrap
         TemplateRegistry::set($template);
 
         if (!Config::has('no_photo_yet')) {
-            ServiceLocator::get(NoPhotoYetRenderer::class)->render();
+            Kernel::service(NoPhotoYetRenderer::class)->render();
         }
 
         $user_arr_gs        = self::readGlobal('user');
@@ -300,12 +299,12 @@ final class CommonBootstrap
             $GLOBALS['header_msgs'][] = Lang::t('The gallery is locked for maintenance. Please, come back later.');
 
             if (StringUtil::scriptBasename() != 'identification' and !PermissionService::get()->isAdmin()) {
-                ServiceLocator::get(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
+                Kernel::service(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
                 if (!headers_sent()) {
                     header('Retry-After: 900');
                 }
-                header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
-                echo '<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                header('Content-Type: text/html; charset=' . StringUtil::get()->getPwgCharset());
+                echo '<a href="' . Kernel::service(UrlGenerator::class)->identification() . '">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512);
                 exit();
             }
@@ -341,7 +340,7 @@ final class CommonBootstrap
         EventDispatcher::addListener(
             'blockmanager_register_blocks',
             static function (BlockManager $menu): void {
-                ServiceLocator::get(HtmlService::class)->registerDefaultMenubarBlocks($menu);
+                Kernel::service(HtmlService::class)->registerDefaultMenubarBlocks($menu);
             },
             EventDispatcher::NEUTRAL_PRIORITY - 1
         );

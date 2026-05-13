@@ -7,7 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -16,12 +16,14 @@ final readonly class PermissionService
 {
     public function __construct(
         private Connection $conn,
+        private HtmlService $htmlService,
     ) {
     }
 
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function getUserStatus(string $userStatus = ''): string
@@ -56,7 +58,7 @@ final readonly class PermissionService
     public function checkStatus(int $accessType): void
     {
         if (!$this->isAutorizeStatus($accessType)) {
-            ServiceLocator::get(HtmlService::class)->accessDenied();
+            $this->htmlService->accessDenied();
         }
     }
 

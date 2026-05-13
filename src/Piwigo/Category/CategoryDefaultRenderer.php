@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
@@ -23,6 +22,18 @@ use Piwigo\Users\CurrentUser;
 
 final class CategoryDefaultRenderer
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageRepository $imageRepository,
+        private readonly SessionService $sessionService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlService $urlService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function render(): void
     {
         $template = TemplateRegistry::current();
@@ -48,20 +59,20 @@ final class CategoryDefaultRenderer
         if (count($selection) > 0) {
             $rank_of = array_flip($selection);
 
-            foreach (ServiceLocator::get(ImageRepository::class)
+            foreach ($this->imageRepository
                 ->findByIds(array_map(intval(...), $selection)) as $row) {
                 $row['rank'] = $rank_of[ is_numeric($row['id']) ? (int)$row['id'] : 0 ];
                 $pictures[] = $row;
             }
 
-            usort($pictures, ServiceLocator::get(CategoryService::class)->rankCompare(...));
+            usort($pictures, $this->categoryService->rankCompare(...));
             unset($rank_of);
         }
 
         if (count($pictures) > 0) {
             $row = reset($pictures);
-            $page['cat_slideshow_url'] = UrlService::get()->addUrlParams(
-                UrlService::get()->duplicatePictureUrl(
+            $page['cat_slideshow_url'] = $this->urlService->addUrlParams(
+                $this->urlService->duplicatePictureUrl(
                     ['image_id' => $row['id'], 'image_file' => $row['file']],
                     ['start']
                 ),
@@ -76,7 +87,7 @@ SELECT image_id, COUNT(*) AS nb_comments
     AND image_id IN (' . implode(',', array_map(strval(...), $selection)) . ')
   GROUP BY image_id
 ;';
-                $nb_comments_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
+                $nb_comments_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
             }
         }
 
@@ -85,7 +96,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         $tpl_thumbnails_var = [];
 
         foreach ($pictures as $row) {
-            $url = UrlService::get()->duplicatePictureUrl(
+            $url = $this->urlService->duplicatePictureUrl(
                 ['image_id' => $row['id'], 'image_file' => $row['file']],
                 ['start']
             );
@@ -96,24 +107,24 @@ SELECT image_id, COUNT(*) AS nb_comments
                 $row['NB_COMMENTS'] = $row['nb_comments'] = is_numeric($nbVal) ? (int) $nbVal : 0;
             }
 
-            $name = ServiceLocator::get(HtmlService::class)->renderElementName($row);
-            $desc = ServiceLocator::get(HtmlService::class)->renderElementDescription($row, 'main_page_element_description');
+            $name = $this->htmlService->renderElementName($row);
+            $desc = $this->htmlService->renderElementDescription($row, 'main_page_element_description');
 
             $rowPath = $row['path'] ?? null;
             $rowFile = $row['file'] ?? null;
             $tpl_var = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
-                'TN_TITLE' => ServiceLocator::get(HtmlService::class)->getThumbnailTitle($row, $name, $desc),
+                'TN_TITLE' => $this->htmlService->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($rowPath) ? $rowPath : '')),
-                'file_ext' => strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($rowFile) ? $rowFile : '')),
+                'path_ext' => strtolower($this->stringUtil->getExtension(is_string($rowPath) ? $rowPath : '')),
+                'file_ext' => strtolower($this->stringUtil->getExtension(is_string($rowFile) ? $rowFile : '')),
             ]);
 
             if (Config::indexNewIcon()) {
                 $rowDateAvailable = $row['date_available'] ?? null;
-                $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($rowDateAvailable) ? $rowDateAvailable : null);
+                $tpl_var['icon_ts'] = $this->util->getIcon(is_string($rowDateAvailable) ? $rowDateAvailable : null);
             }
 
             if ($user['show_nb_hits']) {
@@ -136,7 +147,7 @@ SELECT image_id, COUNT(*) AS nb_comments
             $tpl_thumbnails_var[] = $tpl_var;
         }
 
-        $derivRaw = ServiceLocator::get(SessionService::class)->getSessionVar('index_deriv', DerivativeSize::Thumb->value);
+        $derivRaw = $this->sessionService->getSessionVar('index_deriv', DerivativeSize::Thumb->value);
         $derivType = is_string($derivRaw) ? $derivRaw : DerivativeSize::Thumb->value;
         $template->assign([
             'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType($derivType)),
@@ -149,6 +160,6 @@ SELECT image_id, COUNT(*) AS nb_comments
         $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');
         unset($pictures, $selection, $tpl_thumbnails_var);
         $template->clearAssign('thumbnails');
-        ServiceLocator::get(Util::class)->pwgDebug('end CategoryDefaultRenderer');
+        $this->util->pwgDebug('end CategoryDefaultRenderer');
     }
 }

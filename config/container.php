@@ -182,7 +182,7 @@ return [
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, Util $util): MenubarRenderer => new MenubarRenderer($cat, $perm, $tag, $ug, $u, $util)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u)),
     CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, Util $util): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $util)),
-    CategoryDefaultRenderer::class   => factory(static fn (): CategoryDefaultRenderer => new CategoryDefaultRenderer()),
+    CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, StringUtil $s, UrlService $u, Util $util): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $s, $u, $util)),
     SelectedTagsRenderer::class      => factory(static fn (): SelectedTagsRenderer => new SelectedTagsRenderer()),
     NoPhotoYetRenderer::class        => factory(static fn (): NoPhotoYetRenderer => new NoPhotoYetRenderer()),
     PictureRateRenderer::class       => factory(static fn (): PictureRateRenderer => new PictureRateRenderer()),

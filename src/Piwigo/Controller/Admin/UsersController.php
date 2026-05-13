@@ -15,10 +15,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
@@ -41,6 +39,25 @@ final class UsersController
         'user_activity',
     ];
 
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ActivityRepository $activityRepository,
+        private readonly AdminService $adminService,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryService $categoryService,
+        private readonly GroupRepository $groupRepository,
+        private readonly HtmlService $htmlService,
+        private readonly PermissionRepository $permissionRepository,
+        private readonly PreferencesService $preferencesService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly UserTabRenderer $userTabRenderer,
+        private readonly Util $util,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'user_list') {
@@ -61,17 +78,17 @@ final class UsersController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-        ServiceLocator::get(Util::class)->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 
         $page['tab'] = 'user_list';
-        ServiceLocator::get(UserTabRenderer::class)->render();
+        $this->userTabRenderer->render();
 
         // ── Groups ──────────────────────────────────────────────────────────
 
         $groups            = [];
         $groups_for_filter = [];
-        foreach (ServiceLocator::get(GroupRepository::class)->findWithMemberCounts() as $row) {
+        foreach ($this->groupRepository->findWithMemberCounts() as $row) {
             $groups[is_numeric($row['id']) ? (int) $row['id'] : 0] = $row['name'];
             $groups_for_filter[] = ['id' => $row['id'], 'name' => $row['name'], 'counter' => $row['nb_users_of']];
         }
@@ -80,7 +97,7 @@ final class UsersController
         // ── Registration dates ───────────────────────────────────────────────
 
         $register_dates = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findRegistrationMonthsYears() as $row) {
+        foreach ($this->userRepository->findRegistrationMonthsYears() as $row) {
             $register_dates[] = $row['registration_year'] . '-' . sprintf('%02u', $row['registration_month']);
         }
         $tpl->assign('register_dates', implode(',', $register_dates));
@@ -92,7 +109,7 @@ final class UsersController
             'ACTIVATE_COMMENTS'  => Config::activateComments(),
             'Double_Password'    => Config::doublePasswordTypeInAdmin(),
         ]);
-        $default_user = UserService::get()->getDefaultUserInfo(true);
+        $default_user = $this->userService->getDefaultUserInfo(true);
         $userId       = is_numeric($user['id']) ? (int) $user['id'] : 0;
         $userStatus   = is_string($user['status']) ? $user['status'] : '';
 
@@ -100,23 +117,23 @@ final class UsersController
         $password_protected_users = [(string) Config::guestId()];
 
         if ($userStatus === 'admin') {
-            $admin_ids = array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
+            $admin_ids = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
             $admin_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids);
             $protected_users = array_merge($protected_users, $admin_ids_str);
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids_str, [(string) $userId]));
         }
 
-        $owner_username = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
+        $owner_username = array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
 
         $tpl->assign([
-            'U_HISTORY'                 => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
-            'PWG_TOKEN'                 => ServiceLocator::get(Util::class)->getPwgToken(),
+            'U_HISTORY'                 => $this->urlGenerator->admin('history') . '&filter_user_id=',
+            'PWG_TOKEN'                 => $this->util->getPwgToken(),
             'NB_IMAGE_PAGE'             => $default_user['nb_image_page'] ?? null,
             'RECENT_PERIOD'             => $default_user['recent_period'] ?? null,
-            'theme_options'             => ServiceLocator::get(Util::class)->getPwgThemes(),
-            'theme_selected'            => UserService::get()->getDefaultTheme(),
-            'language_options'          => Util::get()->getLanguages(),
-            'language_selected'         => UserService::get()->getDefaultLanguage(),
+            'theme_options'             => $this->util->getPwgThemes(),
+            'theme_selected'            => $this->userService->getDefaultTheme(),
+            'language_options'          => $this->util->getLanguages(),
+            'language_selected'         => $this->userService->getDefaultLanguage(),
             'association_options'       => $groups,
             'protected_users'           => implode(',', array_unique($protected_users)),
             'password_protected_users'  => implode(',', array_unique($password_protected_users)),
@@ -140,7 +157,7 @@ final class UsersController
         }
 
         $nb_users_by_status = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findStatusDistribution(Config::guestId()) as $status => $count) {
+        foreach ($this->userRepository->findStatusDistribution(Config::guestId()) as $status => $count) {
             $nb_users_by_status[$status] = ['name' => Lang::t('user_status_' . $status), 'counter' => $count];
         }
         $nb_users_by_status = array_merge($label_of_status, $nb_users_by_status);
@@ -162,7 +179,7 @@ final class UsersController
             $level_options[$level] = Lang::t(sprintf('Level %d', $level));
         }
         $nb_users_by_level = $level_options;
-        foreach (ServiceLocator::get(UserRepository::class)->findLevelDistribution(Config::guestId()) as $level => $count) {
+        foreach ($this->userRepository->findLevelDistribution(Config::guestId()) as $level => $count) {
             $nb_users_by_level[$level] = ['name' => Lang::t(sprintf('Level %d', $level)), 'counter' => $count];
         }
         $tpl->assign('level_options', $level_options);
@@ -172,19 +189,19 @@ final class UsersController
         $tpl->assign('nb_users_by_level', $nb_users_by_level);
 
         $groups_arr_id = $groups_arr_name = [];
-        foreach (ServiceLocator::get(GroupRepository::class)->findAllOrdered() as $row) {
+        foreach ($this->groupRepository->findAllOrdered() as $row) {
             $groups_arr_name[] = '"' . addslashes(is_string($row['name'] ?? null) ? $row['name'] : '') . '"';
             $groups_arr_id[]   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
         }
         $tpl->assign('groups_arr_id', implode(',', $groups_arr_id));
         $tpl->assign('groups_arr_name', implode(',', $groups_arr_name));
         $tpl->assign('guest_id', Config::guestId());
-        $viewSelRaw = PreferencesService::get()->userprefsGetParam('user-manager-view', 'line');
+        $viewSelRaw = $this->preferencesService->userprefsGetParam('user-manager-view', 'line');
         $viewSelStr = is_string($viewSelRaw) ? $viewSelRaw : 'line';
         $tpl->assign('view_selector', $viewSelStr);
 
         $viewSel = $viewSelStr;
-        $paginationRaw = $viewSel === 'line' ? PreferencesService::get()->userprefsGetParam('user-manager-pagination', 5) : PreferencesService::get()->userprefsGetParam('user-manager-pagination', 10);
+        $paginationRaw = $viewSel === 'line' ? $this->preferencesService->userprefsGetParam('user-manager-pagination', 5) : $this->preferencesService->userprefsGetParam('user-manager-pagination', 10);
         $pagination    = is_scalar($paginationRaw) ? $paginationRaw : 5;
         $tpl->assign('pagination', $pagination);
 
@@ -197,9 +214,9 @@ final class UsersController
             $groups_arr_json[] = [$id, $name];
         }
 
-        $rawPagination = PreferencesService::get()->userprefsGetParam('user-manager-pagination', $viewSel === 'line' ? 5 : 10);
+        $rawPagination = $this->preferencesService->userprefsGetParam('user-manager-pagination', $viewSel === 'line' ? 5 : 10);
         $tpl->assign('page_data_json', json_encode([
-            'pwg_token'                => ServiceLocator::get(Util::class)->getPwgToken(),
+            'pwg_token'                => $this->util->getPwgToken(),
             'connected_user'           => $userId,
             'connected_user_status'    => $userStatus,
             'owner_id'                 => Config::webmasterId(),
@@ -208,7 +225,7 @@ final class UsersController
             'has_group'                => $_GET['group'] ?? '',
             'view_selector'            => $viewSel,
             'pagination'               => is_numeric($rawPagination) ? (int) $rawPagination : 0,
-            'history_base_url'         => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_user_id=',
+            'history_base_url'         => $this->urlGenerator->admin('history') . '&filter_user_id=',
             'register_dates'           => $register_dates,
             'groups_arr'               => $groups_arr_json,
             'months'                   => [Lang::t('Jan'), Lang::t('Feb'), Lang::t('Mar'), Lang::t('Apr'), Lang::t('May'), Lang::t('Jun'), Lang::t('Jul'), Lang::t('Aug'), Lang::t('Sep'), Lang::t('Oct'), Lang::t('Nov'), Lang::t('Dec')],
@@ -263,9 +280,9 @@ final class UsersController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(Util::class)->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
-            ServiceLocator::get(Util::class)->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
+            $this->util->checkPwgToken();
+            $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
+            $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
@@ -282,22 +299,22 @@ final class UsersController
 
         if (isset($_POST['falsify']) && count($post_cat_true) > 0) {
             $post_cat_true_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
-            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($post_cat_true_ids);
-            ServiceLocator::get(PermissionRepository::class)->deleteUserAccessForUser($pageUser, array_map(intval(...), $subcats));
+            $subcats = $this->categoryService->getSubcatIds($post_cat_true_ids);
+            $this->permissionRepository->deleteUserAccessForUser($pageUser, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
             $post_cat_false_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
-            ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($post_cat_false_ids, $pageUser);
+            $this->categoryAdminService->addPermissionOnCategory($post_cat_false_ids, $pageUser);
         }
 
         $tpl->assign([
-            'TITLE'              => Lang::t('Manage permissions for user "%s"', ServiceLocator::get(UserAdminService::class)->getUsername($pageUser)),
+            'TITLE'              => Lang::t('Manage permissions for user "%s"', $this->userAdminService->getUsername($pageUser)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
             'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
-            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('user_perm') . '&user_id=' . $pageUser,
+            'F_ACTION'           => $this->urlGenerator->admin('user_perm') . '&user_id=' . $pageUser,
         ]);
 
         $group_authorized = [];
-        $groupAuthorizedRows = ServiceLocator::get(PermissionRepository::class)->findGroupAuthorizedCategoriesForUser($pageUser);
+        $groupAuthorizedRows = $this->permissionRepository->findGroupAuthorizedCategoriesForUser($pageUser);
 
         if (count($groupAuthorizedRows) > 0) {
             $cats = [];
@@ -305,9 +322,9 @@ final class UsersController
                 $cats[]           = $row;
                 $group_authorized[] = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
             }
-            usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+            usort($cats, $this->categoryService->globalRankCompare(...));
             foreach ($cats as $category) {
-                $tpl->append('categories_because_of_groups', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
+                $tpl->append('categories_because_of_groups', new Html($this->htmlService->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
             }
         }
 
@@ -316,9 +333,9 @@ final class UsersController
             $query_true .= ' AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
         }
         $query_true .= ';';
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        $this->categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
-        $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findDirectUserCatIds($pageUser, $group_authorized);
+        $authorized_ids = $this->permissionRepository->findDirectUserCatIds($pageUser, $group_authorized);
 
         $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private'";
         if (count($authorized_ids) > 0) {
@@ -328,9 +345,9 @@ final class UsersController
             $query_false .= ' AND id NOT IN (' . implode(',', $group_authorized) . ')';
         }
         $query_false .= ';';
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $this->categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
         $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'user_perm.latte');
     }
@@ -340,19 +357,19 @@ final class UsersController
     private function userActivity(): void
     {
         $tpl = TemplateRegistry::current();
-        ServiceLocator::get(Util::class)->checkInputParameter('photo', $_GET, false, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('photo', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         $page['tab'] = 'user_activity';
-        ServiceLocator::get(UserTabRenderer::class)->render();
+        $this->userTabRenderer->render();
 
         if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
             $usernameField = Config::userFields()['username'];
             $idField       = Config::userFields()['id'];
-            $activityRows  = ServiceLocator::get(Connection::class)
+            $activityRows  = $this->conn
                 ->executeQuery("SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details, $usernameField AS username FROM " . Tables::activity() . ' JOIN ' . Tables::users() . " AS u ON performed_by = u.$idField WHERE object = 'user' ORDER BY activity_id DESC")
                 ->fetchAllAssociative();
 
@@ -380,22 +397,22 @@ final class UsersController
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Users'));
 
-        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['users']);
+        $cache_keys = $this->adminService->getAdminClientCacheKeys(['users']);
         $tpl->assign([
-            'PWG_TOKEN'                    => ServiceLocator::get(Util::class)->getPwgToken(),
+            'PWG_TOKEN'                    => $this->util->getPwgToken(),
             'INHERIT'                      => Config::inheritanceByDefault(),
             'CACHE_KEYS'                   => $cache_keys,
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),
         ]);
 
-        $nb_lines_for_user = array_column(DbConnection::get()->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
+        $nb_lines_for_user = array_column($this->conn->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
 
         $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
         if (count($nb_lines_for_user) > 0) {
             $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
         }
 
-        $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+        $username_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
         $filterable_users = [];
         foreach ($nb_lines_for_user as $id => $nb_line) {
@@ -403,10 +420,10 @@ final class UsersController
         }
         $tpl->assign('ulist', $filterable_users);
 
-        $nb_users = ServiceLocator::get(UserRepository::class)->countAll(Tables::users());
+        $nb_users = $this->userRepository->countAll(Tables::users());
         $tpl->assign('nb_users', $nb_users);
 
-        $actRepo  = ServiceLocator::get(ActivityRepository::class);
+        $actRepo  = $this->activityRepository;
         $min_date = $actRepo->findOldestDate();
         $max_date = $actRepo->findNewestDate();
 
@@ -419,7 +436,7 @@ final class UsersController
         foreach (['photo' => Tables::images(), 'album' => Tables::categories(), 'group' => Tables::groups()] as $filter_key => $filter_table) {
             if (isset($_GET[$filter_key])) {
                 $filterId = is_string($_GET[$filter_key]) ? $_GET[$filter_key] : '0';
-                $rows = DbConnection::get()->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
+                $rows = $this->conn->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
                 if (count($rows) == 0) {
                     HtmlService::fatalError($filter_key . ' #' . $filterId . ' does not exist');
                 }
@@ -438,7 +455,7 @@ final class UsersController
         }
         $query .= ' GROUP BY action, object ORDER BY object ASC;';
 
-        $actions = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $actions = $this->conn->executeQuery($query)->fetchAllAssociative();
         foreach ($actions as &$action) {
             $action['value'] = (is_string($action['object'] ?? null) ? $action['object'] : '') . '/' . (is_string($action['action'] ?? null) ? $action['action'] : '');
         }

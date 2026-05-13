@@ -59,7 +59,7 @@ final class InstallService
 
     public static function activateCorePlugins(): void
     {
-        $plugins = new Plugins();
+        $plugins = Kernel::service(Plugins::class);
         foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
             if (in_array($plugin_id, [])) {
                 $plugins->performAction('activate', $plugin_id);

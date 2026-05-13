@@ -874,7 +874,7 @@ final readonly class Util
             return;
         }
 
-        $plugins = new Plugins();
+        $plugins = Kernel::service(Plugins::class);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
         foreach ($plugins->db_plugins_by_id as $plugin) {

@@ -37,7 +37,7 @@ final class ExtensionsEndpoints
      */
     public function pluginsGetList(array $params, PwgServer $service): array
     {
-        $plugins    = new Plugins();
+        $plugins    = Kernel::service(Plugins::class);
         $plugins->sortFsPlugins('name');
         $pluginList = [];
         foreach ($plugins->fs_plugins as $pluginId => $fsPlugin) {
@@ -61,7 +61,7 @@ final class ExtensionsEndpoints
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
         define('IN_ADMIN', true);
-        $plugins      = new Plugins();
+        $plugins      = Kernel::service(Plugins::class);
         $pluginAction = is_string($params['action']) ? $params['action'] : '';
         $pluginId     = is_string($params['plugin']) ? $params['plugin'] : '';
         $errors       = $plugins->performAction($pluginAction, $pluginId);
@@ -85,7 +85,7 @@ final class ExtensionsEndpoints
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
         define('IN_ADMIN', true);
-        $themes      = new Themes();
+        $themes      = Kernel::service(Themes::class);
         $themeAction = is_string($params['action']) ? $params['action'] : '';
         $themeId     = is_string($params['theme']) ? $params['theme'] : '';
         $errors      = $themes->performAction($themeAction, $themeId);
@@ -119,7 +119,7 @@ final class ExtensionsEndpoints
         $upgradeStatus = 'ok';
         $extensionName = '';
         if ($type === 'plugins') {
-            $extension = new Plugins();
+            $extension = Kernel::service(Plugins::class);
             if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]['state'] === 'active') {
                 $extension->performAction('deactivate', $extensionId);
                 $this->util->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->util->getPwgToken(), 'format' => 'json']));
@@ -132,7 +132,7 @@ final class ExtensionsEndpoints
                 $extension->performAction('activate', $extensionId);
             }
         } elseif ($type === 'themes') {
-            $extension      = new Themes();
+            $extension      = Kernel::service(Themes::class);
             $upgradeStatus  = $extension->extractThemeFiles('upgrade', $revision, $extensionId);
             $extensionName  = is_string($extension->fs_themes[$extensionId]['name'] ?? null) ? $extension->fs_themes[$extensionId]['name'] : '';
             $fromVersion    = is_string($extension->fs_themes[$extensionId]['version'] ?? null) ? $extension->fs_themes[$extensionId]['version'] : '';

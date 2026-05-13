@@ -10,7 +10,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -33,11 +32,16 @@ final class Plugins
     /**
      * Initialize $fs_plugins and $db_plugins_by_id
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly HtmlService $htmlService,
+        private readonly LangService $langService,
+        private readonly PluginRepository $pluginRepository,
+        private readonly Util $util,
+    ) {
         $this->getFsPlugins();
 
-        foreach (ServiceLocator::get(PluginRepository::class)->findAll() as $db_plugin) {
+        foreach ($this->pluginRepository->findAll() as $db_plugin) {
             if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
                 $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
             }
@@ -113,7 +117,7 @@ final class Plugins
                 $errors = EventDispatcher::dispatch('plugin_install_errors', $errors);
 
                 if (empty($errors)) {
-                    ServiceLocator::get(PluginRepository::class)->insert($plugin_id, $installVersionStr);
+                    $this->pluginRepository->insert($plugin_id, $installVersionStr);
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -137,7 +141,7 @@ final class Plugins
                     $plugin_maintain->update($previous_version, $new_version, $errors);
 
                     if ($new_version != 'auto') {
-                        ServiceLocator::get(PluginRepository::class)->updateVersion($plugin_id, $new_version);
+                        $this->pluginRepository->updateVersion($plugin_id, $new_version);
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -150,7 +154,7 @@ final class Plugins
                 if (!isset($crt_db_plugin)) {
                     $installResult = $this->performAction('install', $plugin_id);
                     $errors = is_array($installResult) ? $installResult : [];
-                    $crt_db_plugin = ServiceLocator::get(PluginRepository::class)->findAll(null, $plugin_id)[0] ?? null;
+                    $crt_db_plugin = $this->pluginRepository->findAll(null, $plugin_id)[0] ?? null;
                     ConfigService::loadConfFromDb();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
@@ -164,7 +168,7 @@ final class Plugins
                 }
 
                 if (count($errors) === 0) {
-                    ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'active');
+                    $this->pluginRepository->updateState($plugin_id, 'active');
                 } else {
                     $activity_details['result'] = 'error';
                 }
@@ -176,7 +180,7 @@ final class Plugins
                     break;
                 }
 
-                ServiceLocator::get(PluginRepository::class)->updateState($plugin_id, 'inactive');
+                $this->pluginRepository->updateState($plugin_id, 'inactive');
 
                 self::buildMaintainClass($plugin_id)->deactivate();
 
@@ -201,7 +205,7 @@ final class Plugins
                     $this->performAction('deactivate', $plugin_id);
                 }
 
-                ServiceLocator::get(PluginRepository::class)->delete($plugin_id);
+                $this->pluginRepository->delete($plugin_id);
 
                 self::buildMaintainClass($plugin_id)->uninstall();
                 break;
@@ -226,11 +230,11 @@ final class Plugins
                     $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
 
-                ServiceLocator::get(AdminService::class)->deltree(Config::pluginsPath() . $plugin_id, Config::pluginsPath() . 'trash');
+                $this->adminService->deltree(Config::pluginsPath() . $plugin_id, Config::pluginsPath() . 'trash');
                 break;
         }
 
-        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Plugin, $action, $activity_details);
+        $this->util->pwgActivity('system', ActivitySystem::Plugin, $action, $activity_details);
 
         return $errors;
     }
@@ -290,7 +294,7 @@ final class Plugins
             if (preg_match('|Plugin URI:\\s*(https?:\\/\\/.+)|', $plg_data, $val)) {
                 $plugin['uri'] = trim($val[1]);
             }
-            if (is_string($desc = LangService::get()->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
+            if (is_string($desc = $this->langService->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
                 $plugin['description'] = trim($desc);
             } elseif (preg_match('|Description:\\s*(.+)|', $plg_data, $val)) {
                 $plugin['description'] = trim($val[1]);
@@ -334,7 +338,7 @@ final class Plugins
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_plugins, ServiceLocator::get(HtmlService::class)->nameCompare(...));
+                uasort($this->fs_plugins, $this->htmlService->nameCompare(...));
                 break;
             case 'status':
                 $this->sortPluginsByState();
@@ -358,7 +362,7 @@ final class Plugins
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             foreach ($pem_versions as $entry) {
                 if (!is_array($entry) || !isset($entry['name'], $entry['id'])) {
                     continue;
@@ -409,7 +413,7 @@ final class Plugins
             }
         }
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -459,7 +463,7 @@ final class Plugins
         ];
 
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_plugins = StringUtil::safeUnserialize($result);
             if ($pem_plugins === []) {
                 return false;
@@ -540,7 +544,7 @@ final class Plugins
             $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
-                if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
+                if ($this->adminService->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
                     $zip = new \PclZip($archive);
                     $listRaw = $zip->listContent();
@@ -620,7 +624,7 @@ final class Plugins
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            ServiceLocator::get(AdminService::class)->deltree($path, Config::pluginsPath() . 'trash');
+                                            $this->adminService->deltree($path, Config::pluginsPath() . 'trash');
                                         }
                                     }
                                 }
@@ -721,7 +725,7 @@ final class Plugins
         $nb = $b['author'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
+            return $this->htmlService->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -742,7 +746,7 @@ final class Plugins
 
     public function sortPluginsByState(): void
     {
-        uasort($this->fs_plugins, ServiceLocator::get(HtmlService::class)->nameCompare(...));
+        uasort($this->fs_plugins, $this->htmlService->nameCompare(...));
 
         $active_plugins = [];
         $inactive_plugins = [];

@@ -15,10 +15,8 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
@@ -31,12 +29,20 @@ final readonly class CategoryAdminService
 {
     public function __construct(
         private Connection $conn,
+        private CategoryRepository $categoryRepository,
+        private CategoryService $categoryService,
+        private ConfigService $configService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private Util $util,
     ) {
     }
 
     public function deleteSite(mixed $id): void
     {
-        $repo        = ServiceLocator::get(CategoryRepository::class);
+        $repo        = $this->categoryRepository;
         $intId       = is_numeric($id) ? (int) $id : 0;
         $categoryIds = $repo->findIdsBySiteId($intId);
         $this->deleteCategories($categoryIds);
@@ -49,12 +55,12 @@ final readonly class CategoryAdminService
         if (count($ids) === 0) {
             return;
         }
-        $ids        = ServiceLocator::get(CategoryService::class)->getSubcatIds($ids);
-        $elementIds = ServiceLocator::get(ImageRepository::class)->findIdsByStorageCategoryIds($ids);
-        ServiceLocator::get(ImageAdminService::class)->deleteElements($elementIds);
+        $ids        = $this->categoryService->getSubcatIds($ids);
+        $elementIds = $this->imageRepository->findIdsByStorageCategoryIds($ids);
+        $this->imageAdminService->deleteElements($elementIds);
 
         if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
-            $catRepo         = ServiceLocator::get(CategoryRepository::class);
+            $catRepo         = $this->categoryRepository;
             $imageIdsLinked  = $catRepo->findLinkedImageIdsByCategoryIds($ids);
             if (count($imageIdsLinked) > 0) {
                 $imageIdsToDelete = [];
@@ -65,12 +71,12 @@ final readonly class CategoryAdminService
                 if ($photoDeletionMode === 'force_delete') {
                     $imageIdsToDelete = $imageIdsLinked;
                 }
-                ServiceLocator::get(ImageAdminService::class)->deleteElements($imageIdsToDelete, true);
+                $this->imageAdminService->deleteElements($imageIdsToDelete, true);
             }
         }
 
-        $catRepo2  = ServiceLocator::get(CategoryRepository::class);
-        $userRepo2 = ServiceLocator::get(UserRepository::class);
+        $catRepo2  = $this->categoryRepository;
+        $userRepo2 = $this->userRepository;
         $catRepo2->deleteImageCategoryByCategoryIds($ids);
         $userRepo2->deleteUserAccessByCategoryIds($ids);
         $catRepo2->deleteGroupAccessByCategoryIds($ids);
@@ -79,12 +85,12 @@ final readonly class CategoryAdminService
         $userRepo2->deleteUserCacheByCategoryIds($ids);
 
         EventDispatcher::notify('delete_categories', $ids);
-        ServiceLocator::get(Util::class)->pwgActivity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
+        $this->util->pwgActivity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
     }
 
     public function imagesIntegrity(): void
     {
-        $catRepo       = ServiceLocator::get(CategoryRepository::class);
+        $catRepo       = $this->categoryRepository;
         $orphanImageIds = $catRepo->findOrphanImageCategoryLinks();
         if (count($orphanImageIds) > 0) {
             $catRepo->deleteOrphanImageCategoryLinks($orphanImageIds);
@@ -112,9 +118,9 @@ SELECT DISTINCT c.id
     AND ' . sprintf($whereCats, 'c.id') . '
     AND i.id IS NULL
 ;';
-        $wrongRep = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $wrongRep = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
         if (count($wrongRep) > 0) {
-            ServiceLocator::get(CategoryRepository::class)->clearRepresentatives(
+            $this->categoryRepository->clearRepresentatives(
                 array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $wrongRep)
             );
         }
@@ -126,7 +132,7 @@ SELECT DISTINCT id
   WHERE representative_picture_id IS NULL
     AND ' . sprintf($whereCats, 'category_id') . '
 ;';
-            $toRand = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
+            $toRand = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
             if (count($toRand) > 0) {
                 $this->setRandomRepresentant($toRand);
             }
@@ -145,7 +151,7 @@ SELECT DISTINCT id
         foreach ($relatedColumns as $fullcol) {
             [$table, $column] = explode('.', $fullcol);
             $query = 'SELECT ' . $column . ' FROM ' . $table . ' LEFT JOIN ' . Tables::categories() . ' ON id = ' . $column . ' WHERE id IS NULL';
-            $orphans = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), $column)));
+            $orphans = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery($query)->fetchAllAssociative(), $column)));
             if (count($orphans) > 0) {
                 $this->conn->executeStatement('DELETE FROM ' . $table . ' WHERE ' . $column . ' IN (' . implode(',', $orphans) . ')');
             }
@@ -184,7 +190,7 @@ SELECT DISTINCT id
         $catMap         = [];
         $currentRank    = 0;
         $currentUppercat = '';
-        foreach (ServiceLocator::get(CategoryRepository::class)->getAllForRankUpdate() as $row) {
+        foreach ($this->categoryRepository->getAllForRankUpdate() as $row) {
             if ($row['id_uppercat'] != $currentUppercat) {
                 $currentRank    = 0;
                 $currentUppercat = is_scalar($row['id_uppercat'] ?? null) ? (string) $row['id_uppercat'] : '';
@@ -221,15 +227,15 @@ SELECT DISTINCT id
             trigger_error('set_cat_visible invalid param', E_USER_WARNING);
             return;
         }
-        $catRepo = ServiceLocator::get(CategoryRepository::class);
+        $catRepo = $this->categoryRepository;
         if ($value) {
             $cats = $this->getUppercatIds($categories);
             if ($unlockChild) {
-                $cats = array_merge($cats, ServiceLocator::get(CategoryService::class)->getSubcatIds($categories));
+                $cats = array_merge($cats, $this->categoryService->getSubcatIds($categories));
             }
             $catRepo->setVisible(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cats), true);
         } else {
-            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
+            $subcats = $this->categoryService->getSubcatIds($categories);
             $catRepo->setVisible(array_map(fn (int $v): int => $v, $subcats), false);
         }
     }
@@ -244,19 +250,19 @@ SELECT DISTINCT id
             trigger_error('set_cat_status invalid param ' . $value, E_USER_WARNING);
             return;
         }
-        $catRepo = ServiceLocator::get(CategoryRepository::class);
+        $catRepo = $this->categoryRepository;
         if ($value === 'public') {
             $uppercats = $this->getUppercatIds($categories);
             $catRepo->setStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $uppercats), 'public');
         }
         if ($value === 'private') {
-            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($categories);
+            $subcats = $this->categoryService->getSubcatIds($categories);
             $catRepo->setStatus(array_map(fn (int $v): int => $v, $subcats), 'private');
 
             $topCategories = [];
             $parentIds     = [];
             $allCategories = $catRepo->findDetailsByIds($categories);
-            usort($allCategories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+            usort($allCategories, $this->categoryService->globalRankCompare(...));
 
             foreach ($allCategories as $cat) {
                 $isTop = true;
@@ -287,9 +293,9 @@ SELECT DISTINCT id
                 if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercat]) && $parentCats[$topCatUppercat]['status'] === 'private') {
                     $refCatId = $topCatUppercat;
                 }
-                $subCatsForRef = ServiceLocator::get(CategoryService::class)->getSubcatIds([is_scalar($topCategory['id'] ?? null) ? (string) $topCategory['id'] : '0']);
+                $subCatsForRef = $this->categoryService->getSubcatIds([is_scalar($topCategory['id'] ?? null) ? (string) $topCategory['id'] : '0']);
                 foreach ($tables as $table => $field) {
-                    $refAccess = array_column(DbConnection::get()->executeQuery(
+                    $refAccess = array_column($this->conn->executeQuery(
                         'SELECT ' . $field . ' FROM ' . $table . ' WHERE cat_id = ' . $refCatId
                     )->fetchAllAssociative(), $field);
                     if (count($refAccess) === 0) {
@@ -315,7 +321,7 @@ SELECT DISTINCT id
             return [];
         }
         $uppercats       = [];
-        $uppercatStrings = ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds($catIds);
+        $uppercatStrings = $this->categoryRepository->findUppercatsByIds($catIds);
         foreach ($uppercatStrings as $uppercatsStr) {
             $uppercats = array_merge($uppercats, explode(',', $uppercatsStr));
         }
@@ -328,7 +334,7 @@ SELECT DISTINCT id
         if (!is_array($categories)) {
             $categories = [$categories];
         }
-        $imgRepo = ServiceLocator::get(ImageRepository::class);
+        $imgRepo = $this->imageRepository;
         $datas   = [];
         foreach ($categories as $categoryId) {
             $datas[] = ['id' => $categoryId, 'representative_picture_id' => $imgRepo->findRandomIdByCategoryId($categoryId)];
@@ -348,9 +354,9 @@ SELECT DISTINCT id
         if (count($catIds) === 0) {
             return [];
         }
-        $catDirs = array_column(DbConnection::get()->executeQuery('SELECT id, dir FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL')->fetchAllAssociative(), 'dir', 'id');
-        $galleriesUrl = array_column(DbConnection::get()->executeQuery('SELECT id, galleries_url FROM ' . Tables::sites())->fetchAllAssociative(), 'galleries_url', 'id');
-        $categories   = DbConnection::get()->executeQuery(
+        $catDirs = array_column($this->conn->executeQuery('SELECT id, dir FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL')->fetchAllAssociative(), 'dir', 'id');
+        $galleriesUrl = array_column($this->conn->executeQuery('SELECT id, galleries_url FROM ' . Tables::sites())->fetchAllAssociative(), 'galleries_url', 'id');
+        $categories   = $this->conn->executeQuery(
             'SELECT id, uppercats, site_id FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND id IN (' . wordwrap(implode(', ', $catIds), 80, "\n") . ')'
         )->fetchAllAssociative();
         $callback     = (fn (array $m): string => is_string($m[1]) && is_string($catDirs[$m[1]] ?? null) ? $catDirs[$m[1]] : '');
@@ -371,7 +377,7 @@ SELECT DISTINCT id
 
     public function updateUppercats(): void
     {
-        $catMap = array_column(DbConnection::get()->executeQuery('SELECT id, id_uppercat, uppercats FROM ' . Tables::categories())->fetchAllAssociative(), null, 'id');
+        $catMap = array_column($this->conn->executeQuery('SELECT id, id_uppercat, uppercats FROM ' . Tables::categories())->fetchAllAssociative(), null, 'id');
         $datas  = [];
         foreach ($catMap as $id => $cat) {
             $upperList = [];
@@ -391,10 +397,10 @@ SELECT DISTINCT id
 
     public function updatePath(): void
     {
-        $catIds   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(storage_category_id) FROM ' . Tables::images() . ' WHERE storage_category_id IS NOT NULL')->fetchAllAssociative(), 'storage_category_id'));
+        $catIds   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT DISTINCT(storage_category_id) FROM ' . Tables::images() . ' WHERE storage_category_id IS NOT NULL')->fetchAllAssociative(), 'storage_category_id'));
         $fulldirs = $this->getFulldirs($catIds);
         foreach ($catIds as $catId) {
-            ServiceLocator::get(ImageRepository::class)->updatePathByStorageCategoryId($catId, $fulldirs[$catId] ?? '');
+            $this->imageRepository->updatePathByStorageCategoryId($catId, $fulldirs[$catId] ?? '');
         }
     }
 
@@ -410,7 +416,7 @@ SELECT DISTINCT id
         }
         $newParent  = $newParent < 1 ? 'NULL' : $newParent;
         $categories = [];
-        $catRepo    = ServiceLocator::get(CategoryRepository::class);
+        $catRepo    = $this->categoryRepository;
         $catIdsInt = $categoryIds;
         foreach ($catRepo->findByIds($catIdsInt) as $row) {
             $rowIdKey           = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
@@ -434,7 +440,7 @@ SELECT DISTINCT id
             $this->setCatStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($categories)), 'private');
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
-        ServiceLocator::get(Util::class)->pwgActivity('album', $catIdsInt, 'move', ['parent' => $newParent]);
+        $this->util->pwgActivity('album', $catIdsInt, 'move', ['parent' => $newParent]);
     }
 
     /**
@@ -448,7 +454,7 @@ SELECT DISTINCT id
         }
         $rank = 0;
         if (Config::newcatDefaultPosition() === 'last') {
-            $maxRank = ServiceLocator::get(CategoryRepository::class)->findMaxRankForParent(($parentId === null || $parentId === '' || $parentId === 0) ? null : (int) $parentId);
+            $maxRank = $this->categoryRepository->findMaxRankForParent(($parentId === null || $parentId === '' || $parentId === 0) ? null : (int) $parentId);
             if ($maxRank !== null) {
                 $rank = $maxRank + 1;
             }
@@ -463,7 +469,7 @@ SELECT DISTINCT id
         }
         $uppercatsPrefix = '';
         if (($parentId !== null && $parentId !== '' && $parentId !== 0) && is_numeric($parentId)) {
-            $parent = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $parentId);
+            $parent = $this->categoryRepository->findCategoryById((int) $parentId);
             if ($parent !== null) {
                 $insert['id_uppercat'] = $parent['id'];
                 $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $insert['rank'];
@@ -477,26 +483,26 @@ SELECT DISTINCT id
             }
         }
         Dml::singleInsert(Tables::categories(), $insert);
-        $insertedId = (int) DbConnection::get()->lastInsertId();
+        $insertedId = (int) $this->conn->lastInsertId();
         Dml::singleUpdate(Tables::categories(), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
         $this->updateGlobalRank();
         $idUppercatRaw = $insert['id_uppercat'] ?? null;
         $idUppercatStr = is_string($idUppercatRaw) ? $idUppercatRaw : (is_numeric($idUppercatRaw) ? (string) $idUppercatRaw : '0');
         if ($insert['status'] === 'private' && isset($insert['id_uppercat']) && $insert['id_uppercat'] !== '' && $insert['id_uppercat'] !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
-            $grantedGrps = array_column(DbConnection::get()->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'group_id');
+            $grantedGrps = array_column($this->conn->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'group_id');
             $inserts     = [];
             foreach ($grantedGrps as $grp) {
                 $inserts[] = ['group_id' => $grp, 'cat_id' => $insertedId];
             }
             Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
-            $grantedUsers = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'user_id'));
+            $grantedUsers = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'user_id'));
             $this->addPermissionOnCategory($insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
             $userId = CurrentUser::get()->id;
-            $this->addPermissionOnCategory($insertedId, array_unique(array_merge(ServiceLocator::get(UserAdminService::class)->getAdmins(), [$userId])));
+            $this->addPermissionOnCategory($insertedId, array_unique(array_merge($this->userAdminService->getAdmins(), [$userId])));
         }
         EventDispatcher::notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
-        ServiceLocator::get(Util::class)->pwgActivity('album', $insertedId, 'add');
+        $this->util->pwgActivity('album', $insertedId, 'add');
         return ['info' => Lang::t('Album added'), 'id' => $insertedId];
     }
 
@@ -510,11 +516,11 @@ SELECT DISTINCT id
             return;
         }
         $existing = [];
-        foreach (ServiceLocator::get(CategoryRepository::class)->findExistingImageCategoryLinks($images, $categories) as $row) {
+        foreach ($this->categoryRepository->findExistingImageCategoryLinks($images, $categories) as $row) {
             $catKey            = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
             $existing[$catKey][] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
         }
-        $currentRankOf = array_column(DbConnection::get()->executeQuery(
+        $currentRankOf = array_column($this->conn->executeQuery(
             'SELECT category_id, MAX(`rank`) AS max_rank FROM ' . Tables::imageCategory() . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $categories) . ') GROUP BY category_id'
         )->fetchAllAssociative(), 'max_rank', 'category_id');
 
@@ -553,9 +559,9 @@ SELECT id FROM ' . Tables::imageCategory() . '
     AND id IN (' . implode(',', $images) . ')
     AND (category_id != storage_category_id OR storage_category_id IS NULL)
 ;';
-        $dissociables = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+        $dissociables = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
         if (!empty($dissociables)) {
-            ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByCategoryAndImageIds(
+            $this->categoryRepository->deleteImageCategoryByCategoryAndImageIds(
                 (int) $category,
                 array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $dissociables)
             );
@@ -593,7 +599,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         if (count($sources) === 0) {
             return;
         }
-        $images = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery(
+        $images = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery(
             'SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $sources) . ')'
         )->fetchAllAssociative(), 'image_id'));
         $this->associateImagesToCategories($images, $destinations);
@@ -616,9 +622,9 @@ SELECT id FROM ' . Tables::imageCategory() . '
         }
         $catIds = $this->getUppercatIds($categoryIds);
         if (isset($_POST['apply_on_sub'])) {
-            $catIds = array_merge($catIds, ServiceLocator::get(CategoryService::class)->getSubcatIds($categoryIds));
+            $catIds = array_merge($catIds, $this->categoryService->getSubcatIds($categoryIds));
         }
-        $privateCats = array_column(DbConnection::get()->executeQuery(
+        $privateCats = array_column($this->conn->executeQuery(
             'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_numeric($v) ? (string)(int)$v : '0', $catIds)) . ") AND status = 'private'"
         )->fetchAllAssociative(), 'id');
         if (count($privateCats) === 0) {
@@ -673,7 +679,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
             [$runningExecId, $runningExecStartTime] = explode('-', (string) Config::emptyLoungeRunning());
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug('empty_lounge, exec=' . $runningExecId . ', timeout stopped by another call');
-                ServiceLocator::get(ConfigService::class)->confDeleteParam('empty_lounge_running');
+                $this->configService->confDeleteParam('empty_lounge_running');
             }
         }
         $execId = StringUtil::generateKey(4);
@@ -687,7 +693,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         }
         $logger->debug('empty_lounge, exec=' . $execId . ' wins the race!');
         $maxImageId = 0;
-        $rows       = DbConnection::get()->executeQuery('SELECT image_id, category_id FROM ' . Tables::lounge() . ' ORDER BY category_id ASC, image_id ASC')->fetchAllAssociative();
+        $rows       = $this->conn->executeQuery('SELECT image_id, category_id FROM ' . Tables::lounge() . ' ORDER BY category_id ASC, image_id ASC')->fetchAllAssociative();
         $images     = [];
         foreach ($rows as $idx => $row) {
             if (is_numeric($row['image_id']) && (int) $row['image_id'] > $maxImageId) {
@@ -699,11 +705,11 @@ SELECT id FROM ' . Tables::imageCategory() . '
                 $images = [];
             }
         }
-        ServiceLocator::get(ImageRepository::class)->deleteLoungeBeforeId($maxImageId);
+        $this->imageRepository->deleteLoungeBeforeId($maxImageId);
         if ($invalidateUserCache) {
-            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            $this->userAdminService->invalidateUserCache();
         }
-        ServiceLocator::get(ConfigService::class)->confDeleteParam('empty_lounge_running');
+        $this->configService->confDeleteParam('empty_lounge_running');
         $logger->debug('empty_lounge, exec=' . $execId . ', ends');
         EventDispatcher::notify('empty_lounge', $rows);
         return $rows;

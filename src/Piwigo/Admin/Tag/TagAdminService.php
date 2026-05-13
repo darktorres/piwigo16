@@ -9,9 +9,7 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -22,6 +20,11 @@ final readonly class TagAdminService
 {
     public function __construct(
         private Connection $conn,
+        private HtmlService $htmlService,
+        private ImageAdminService $imageAdminService,
+        private TagRepository $tagRepository,
+        private UserAdminService $userAdminService,
+        private Util $util,
     ) {
     }
 
@@ -42,7 +45,7 @@ final readonly class TagAdminService
     /** @return array<mixed> */
     public function getOrphanTags(): array
     {
-        return ServiceLocator::get(TagRepository::class)->findOrphanTags();
+        return $this->tagRepository->findOrphanTags();
     }
 
     /**
@@ -71,7 +74,7 @@ final readonly class TagAdminService
         }
         $taglistBefore = $this->getImageTagIds($imagesArr);
         $tagInts       = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $tagsArr);
-        ServiceLocator::get(TagRepository::class)->deleteImageTagsByImageIdsAndTagIds($imagesArr, $tagInts);
+        $this->tagRepository->deleteImageTagsByImageIdsAndTagIds($imagesArr, $tagInts);
         $inserts = [];
         foreach ($imagesArr as $imageId) {
             foreach (array_unique($tagInts) as $tagId) {
@@ -81,8 +84,8 @@ final readonly class TagAdminService
         Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
         $taglistAfter  = $this->getImageTagIds($imagesArr);
         $toUpdate      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
-        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($toUpdate);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
+        $this->imageAdminService->updateImagesLastmodified($toUpdate);
+        $this->userAdminService->invalidateUserCacheNbTags();
     }
 
     /** @param int[]|int $tagIds */
@@ -91,14 +94,14 @@ final readonly class TagAdminService
         if (is_int($tagIds)) {
             $tagIds = [$tagIds];
         }
-        $tagRepo  = ServiceLocator::get(TagRepository::class);
+        $tagRepo  = $this->tagRepository;
         $imageIds = $tagRepo->findDistinctImageIdsByTagIds($tagIds);
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
         EventDispatcher::notify('delete_tags', $tagIds);
-        ServiceLocator::get(Util::class)->pwgActivity('tag', $tagIds, 'delete');
-        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($imageIds);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
+        $this->util->pwgActivity('tag', $tagIds, 'delete');
+        $this->imageAdminService->updateImagesLastmodified($imageIds);
+        $this->userAdminService->invalidateUserCacheNbTags();
     }
 
     public function tagIdFromTagName(string $tagName): int|string
@@ -113,7 +116,7 @@ final readonly class TagAdminService
             $cached = $cache[$tagName];
             return is_int($cached) ? $cached : (is_scalar($cached) ? (string) $cached : '');
         }
-        $tagRepo = ServiceLocator::get(TagRepository::class);
+        $tagRepo = $this->tagRepository;
         $foundId = $tagRepo->findIdByExactName($tagName);
         $existing = $foundId !== null ? [$foundId] : [];
         if (count($existing) === 0) {
@@ -123,7 +126,7 @@ final readonly class TagAdminService
             if (count($existing) === 0) {
                 $extraClauses = EventDispatcher::dispatch('get_tag_name_like_where', [], $tagName);
                 if (count($extraClauses) > 0) {
-                    $existing = array_column(DbConnection::get()->executeQuery(
+                    $existing = array_column($this->conn->executeQuery(
                         'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $extraClauses))
                     )->fetchAllAssociative(), 'id');
                 }
@@ -132,9 +135,9 @@ final readonly class TagAdminService
                     if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
                         $page['tag_id_from_tag_name_cache'] = [];
                     }
-                    $newId = (int) DbConnection::get()->lastInsertId();
+                    $newId = (int) $this->conn->lastInsertId();
                     $page['tag_id_from_tag_name_cache'][$tagName] = $newId;
-                    ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
+                    $this->userAdminService->invalidateUserCacheNbTags();
                     return $newId;
                 }
             }
@@ -157,7 +160,7 @@ final readonly class TagAdminService
         $imageIds      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($tagsOf));
         $taglistBefore = $this->getImageTagIds($imageIds);
         $logger->debug('taglist_before', $taglistBefore);
-        ServiceLocator::get(TagRepository::class)->deleteImageTagsByImageIds($imageIds);
+        $this->tagRepository->deleteImageTagsByImageIds($imageIds);
         $inserts = [];
         foreach ($tagsOf as $imageId => $tagIds) {
             $tagIdsArr = is_array($tagIds) ? array_map(fn (mixed $v): int|string => is_numeric($v) ? (int) $v : (is_scalar($v) ? (string) $v : ''), $tagIds) : [];
@@ -172,8 +175,8 @@ final readonly class TagAdminService
         $logger->debug('taglist_after', $taglistAfter);
         $toUpdate = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
         $logger->debug('images_to_update', $toUpdate);
-        ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($toUpdate);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCacheNbTags();
+        $this->imageAdminService->updateImagesLastmodified($toUpdate);
+        $this->userAdminService->invalidateUserCacheNbTags();
     }
 
     /**
@@ -186,7 +189,7 @@ final readonly class TagAdminService
             return [];
         }
         $tagsOf    = array_fill_keys($imageIds, []);
-        $imageTags = ServiceLocator::get(TagRepository::class)->findImageTagPairs($imageIds);
+        $imageTags = $this->tagRepository->findImageTagPairs($imageIds);
         foreach ($imageTags as $imageTag) {
             $imgIdKey = is_numeric($imageTag['image_id']) ? (int) $imageTag['image_id'] : 0;
             if (isset($tagsOf[$imgIdKey])) {
@@ -242,9 +245,9 @@ final readonly class TagAdminService
                 }
             }
         }
-        usort($taglist, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
+        usort($taglist, $this->htmlService->tagAlphaCompare(...));
         if (count($altlist)) {
-            usort($altlist, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
+            usort($altlist, $this->htmlService->tagAlphaCompare(...));
             $taglist = array_merge($taglist, $altlist);
         }
         return $taglist;
@@ -277,10 +280,10 @@ final readonly class TagAdminService
     public function createTag(string $tagName): array
     {
         $tagName    = strip_tags($tagName);
-        $existingId = ServiceLocator::get(TagRepository::class)->findIdByExactName($tagName);
+        $existingId = $this->tagRepository->findIdByExactName($tagName);
         if ($existingId === null) {
             Dml::singleInsert(Tables::tags(), ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)]);
-            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) DbConnection::get()->lastInsertId()];
+            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) $this->conn->lastInsertId()];
         }
         return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];
     }

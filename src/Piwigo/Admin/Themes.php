@@ -11,8 +11,8 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
+use Piwigo\Admin\AdminService;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -35,9 +35,18 @@ final class Themes
 
     /**
      * Initialize $fs_themes and $db_themes_by_id
-    */
-    public function __construct()
-    {
+     */
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly ConfigService $configService,
+        private readonly HtmlService $htmlService,
+        private readonly LangService $langService,
+        private readonly PreferencesService $preferencesService,
+        private readonly ThemeRepository $themeRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
         $this->getFsThemes();
 
         foreach ($this->getDbThemes() as $db_theme) {
@@ -127,12 +136,12 @@ final class Themes
                     $themeVersion = is_scalar($tvRaw) ? (string) $tvRaw : '';
                     $tnRaw = $this->fs_themes[$theme_id]['name'] ?? null;
                     $themeName = is_scalar($tnRaw) ? (string) $tnRaw : '';
-                    ServiceLocator::get(ThemeRepository::class)->activate($theme_id, $themeVersion, $themeName);
+                    $this->themeRepository->activate($theme_id, $themeVersion, $themeName);
 
                     $activity_details['version'] = $themeVersion;
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
-                        ServiceLocator::get(ConfigService::class)->confUpdateParam('mobile_theme', $theme_id);
+                        $this->configService->confUpdateParam('mobile_theme', $theme_id);
                     }
                 }
                 break;
@@ -149,18 +158,18 @@ final class Themes
                     break;
                 }
 
-                if ($theme_id == UserService::get()->getDefaultTheme()) {
-                    $themeRepo = ServiceLocator::get(ThemeRepository::class);
+                if ($theme_id == $this->userService->getDefaultTheme()) {
+                    $themeRepo = $this->themeRepository;
                     $new_theme = $themeRepo->findAnyOtherThemeId($theme_id) ?? '_base';
                     $this->setDefaultTheme($new_theme);
                 }
 
                 $theme_maintain->deactivate();
 
-                ServiceLocator::get(ThemeRepository::class)->deactivate($theme_id);
+                $this->themeRepository->deactivate($theme_id);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
-                    ServiceLocator::get(ConfigService::class)->confUpdateParam('mobile_theme', '');
+                    $this->configService->confUpdateParam('mobile_theme', '');
                 }
                 break;
 
@@ -185,7 +194,7 @@ final class Themes
 
                 $theme_maintain->delete();
 
-                ServiceLocator::get(AdminService::class)->deltree(Config::themesPath().$theme_id, Config::themesPath() . 'trash');
+                $this->adminService->deltree(Config::themesPath().$theme_id, Config::themesPath() . 'trash');
                 break;
 
             case 'set_default':
@@ -194,7 +203,7 @@ final class Themes
                 break;
         }
 
-        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Theme, $action, $activity_details);
+        $this->util->pwgActivity('system', ActivitySystem::Theme, $action, $activity_details);
 
         return array_values($errors);
     }
@@ -239,9 +248,9 @@ final class Themes
     public function setDefaultTheme(string $theme_id): void
     {
         // first we need to know which users are using the current default theme
-        $default_theme = UserService::get()->getDefaultTheme();
+        $default_theme = $this->userService->getDefaultTheme();
 
-        $themeRepo = ServiceLocator::get(ThemeRepository::class);
+        $themeRepo = $this->themeRepository;
         $user_ids = array_unique(
             array_merge(
                 $themeRepo->findUsersByTheme($default_theme),
@@ -258,7 +267,7 @@ final class Themes
      */
     public function getDbThemes(?string $id = ''): array
     {
-        return ServiceLocator::get(ThemeRepository::class)->findAll($id);
+        return $this->themeRepository->findAll($id);
     }
 
     /**
@@ -298,7 +307,7 @@ final class Themes
                     if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
                         $theme['uri'] = trim($val[1]);
                     }
-                    if (is_string($desc = LangService::get()->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
+                    if (is_string($desc = $this->langService->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
                         $theme['description'] = trim($desc);
                     } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
                         $theme['description'] = trim($val[1]);
@@ -333,7 +342,7 @@ final class Themes
                     if (file_exists($screenshot_path)) {
                         $theme['screenshot'] = $screenshot_path;
                     } else {
-                        $admin_theme = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
+                        $admin_theme = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
                         $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH.'themes/admin/'
@@ -344,7 +353,7 @@ final class Themes
 
                     $admin_file = $path.'/admin/admin.inc.php';
                     if (file_exists($admin_file)) {
-                        $theme['admin_uri'] = ServiceLocator::get(UrlGenerator::class)->admin('theme') . '&theme='.$file;
+                        $theme['admin_uri'] = $this->urlGenerator->admin('theme') . '&theme='.$file;
                     }
 
                     // IMPORTANT SECURITY !
@@ -363,7 +372,7 @@ final class Themes
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_themes, ServiceLocator::get(HtmlService::class)->nameCompare(...));
+                uasort($this->fs_themes, $this->htmlService->nameCompare(...));
                 break;
             case 'status':
                 $this->sortThemesByState();
@@ -392,7 +401,7 @@ final class Themes
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -441,7 +450,7 @@ final class Themes
                 $get_data['extension_include'] = implode(',', $themes_to_check);
             }
         }
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_themes = StringUtil::safeUnserialize($result);
             if ($pem_themes === []) {
                 return false;
@@ -498,7 +507,7 @@ final class Themes
             $handle = Filesystem::tryFopen($archive, 'wb');
             if (is_resource($handle)) {
                 $fh = $handle;
-                if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
+                if ($this->adminService->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
                     $zip = new \PclZip($archive);
                     $listRaw = $zip->listContent();
@@ -579,7 +588,7 @@ final class Themes
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            ServiceLocator::get(AdminService::class)->deltree($path, Config::themesPath() . 'trash');
+                                            $this->adminService->deltree($path, Config::themesPath() . 'trash');
                                         }
                                     }
                                 }
@@ -661,7 +670,7 @@ final class Themes
         $nb = $b['author'] ?? null;
         $r = strcasecmp(is_scalar($na) ? (string) $na : '', is_scalar($nb) ? (string) $nb : '');
         if ($r == 0) {
-            return ServiceLocator::get(HtmlService::class)->nameCompare($a, $b);
+            return $this->htmlService->nameCompare($a, $b);
         } else {
             return $r;
         }
@@ -682,7 +691,7 @@ final class Themes
 
     public function sortThemesByState(): void
     {
-        uasort($this->fs_themes, ServiceLocator::get(HtmlService::class)->nameCompare(...));
+        uasort($this->fs_themes, $this->htmlService->nameCompare(...));
 
         $active_themes = [];
         $inactive_themes = [];

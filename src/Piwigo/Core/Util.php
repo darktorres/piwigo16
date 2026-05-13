@@ -905,7 +905,7 @@ final readonly class Util
         }
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
-        $themes  = new Themes();
+        $themes  = Kernel::service(Themes::class);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];
         $privateThemes = [];

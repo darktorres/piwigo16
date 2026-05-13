@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
@@ -119,7 +120,7 @@ final class UpgradeService
 
             if (in_array($default_theme, $theme_ids)) {
                 if (!$themeRepo->existsById(AppInfo::DEFAULT_TEMPLATE)) {
-                    $themes = new Themes();
+                    $themes = Kernel::service(Themes::class);
                     $themes->performAction('activate', AppInfo::DEFAULT_TEMPLATE);
                 }
                 $themeRepo->setThemeForUsers([Config::defaultUserId()], AppInfo::DEFAULT_TEMPLATE);

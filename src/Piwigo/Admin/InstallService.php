@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
@@ -48,7 +49,7 @@ final class InstallService
 
     public static function activateCoreThemes(): void
     {
-        $themes = new Themes();
+        $themes = Kernel::service(Themes::class);
         foreach ($themes->fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, ['modus'])) {
                 $themes->performAction('activate', $theme_id);

@@ -501,7 +501,7 @@ final class ExtensionsController
 
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes';
         $base_url = $this->urlGenerator->admin($pageStr);
-        $themes   = new Themes();
+        $themes   = Kernel::service(Themes::class);
 
         if (isset($_GET['action']) && isset($_GET['theme'])) {
             $get_action = is_string($_GET['action']) ? $_GET['action'] : '';
@@ -598,7 +598,7 @@ final class ExtensionsController
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes_new';
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
-        $themes   = new Themes();
+        $themes   = Kernel::service(Themes::class);
 
         $themes_dir = PHPWG_ROOT_PATH . 'themes';
         if (!is_writable($themes_dir)) {
@@ -710,7 +710,7 @@ final class ExtensionsController
             }
         }
 
-        $themes = new Themes();
+        $themes = Kernel::service(Themes::class);
         $themes->getFsThemes();
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];
@@ -746,7 +746,7 @@ final class ExtensionsController
             throw new ValidationException('Invalid theme URL');
         }
 
-        $themes = new Themes();
+        $themes = Kernel::service(Themes::class);
         if (!in_array($themeParam, array_keys($themes->fs_themes))) {
             throw new ValidationException('Invalid theme');
         }

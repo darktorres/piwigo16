@@ -8,7 +8,6 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -33,58 +32,72 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PasswordController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly LangService $langService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly PasswordService $passwordService,
+        private readonly PermissionService $permissionService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        PermissionService::get()->checkStatus(AccessLevel::Free);
+        $this->permissionService->checkStatus(AccessLevel::Free);
 
         EventDispatcher::notify('loc_begin_password');
 
-        ServiceLocator::get(Util::class)->checkInputParameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
+        $this->util->checkInputParameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $get_action = StringUtil::get()->inputString('action', null, $_GET);
+        $get_action = $this->stringUtil->inputString('action', null, $_GET);
 
-        if (StringUtil::get()->inputString('submit', null, $_POST) !== null) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+        if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
+            $this->util->checkPwgToken();
 
             if ('lost' == $get_action) {
-                if (ServiceLocator::get(PasswordService::class)->processVerificationCode()) {
+                if ($this->passwordService->processVerificationCode()) {
                     PageState::current()->addInfo(Lang::t('If your account exists, a verification code has been sent to your email address.'));
                     $page['action'] = 'lost_code';
                 }
             }
             if ('lost_code' == $get_action) {
-                if (ServiceLocator::get(PasswordService::class)->processPasswordRequest()) {
+                if ($this->passwordService->processPasswordRequest()) {
                     PageState::current()->addInfo(Lang::t('Verification successful! You can now choose a new password.'));
                     $page['action'] = 'reset';
                 }
             }
             if ('reset' == $get_action) {
-                if (ServiceLocator::get(PasswordService::class)->resetPassword()) {
+                if ($this->passwordService->resetPassword()) {
                     $page['action'] = 'reset_end';
                 }
             }
         }
 
-        if (StringUtil::get()->inputString('key', null, $_GET) !== null && !PermissionService::get()->isAGuest()) {
+        if ($this->stringUtil->inputString('key', null, $_GET) !== null && !$this->permissionService->isAGuest()) {
             unset($_GET['key']);
         }
 
         $first_login = false;
-        $get_key     = StringUtil::get()->inputString('key', null, $_GET);
-        if ($get_key !== null && StringUtil::get()->inputString('submit', null, $_POST) === null) {
-            $user_id = ServiceLocator::get(PasswordService::class)->checkPasswordResetKey($get_key);
+        $get_key     = $this->stringUtil->inputString('key', null, $_GET);
+        if ($get_key !== null && $this->stringUtil->inputString('submit', null, $_POST) === null) {
+            $user_id = $this->passwordService->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
-                $userdata = UserService::get()->getuserdata($user_id, false);
+                $userdata = $this->userService->getuserdata($user_id, false);
                 $page['username'] = $userdata !== false ? $userdata['username'] : '';
                 TemplateRegistry::current()->assign('key', $get_key);
-                $first_login = UserService::get()->hasAlreadyLoggedIn($user_id);
+                $first_login = $this->userService->hasAlreadyLoggedIn($user_id);
                 if (!isset($page['action'])) {
                     $page['action'] = 'reset';
                 }
@@ -102,15 +115,15 @@ final class PasswordController implements ControllerInterface
         }
 
         if ('reset' == $page['action']) {
-            if (($get_key === null && (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
-                Util::get()->redirect(UrlService::get()->getGalleryHomeUrl());
+            if (($get_key === null && ($this->permissionService->isAGuest() || $this->permissionService->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
+                $this->util->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
-        if ('lost' == $page['action'] && !PermissionService::get()->isAGuest()) {
-            Util::get()->redirect(UrlService::get()->getGalleryHomeUrl());
+        if ('lost' == $page['action'] && !$this->permissionService->isAGuest()) {
+            $this->util->redirect($this->urlService->getGalleryHomeUrl());
         }
         if ('lost_code' == $page['action'] && !isset($_SESSION['reset_password_code'])) {
-            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->identification());
+            $this->util->redirect($this->urlGenerator->identification());
         }
         if ('lost' == $page['action'] && isset($_SESSION['reset_password_code'])) {
             $page['action'] = 'lost_code';
@@ -121,7 +134,7 @@ final class PasswordController implements ControllerInterface
 
         if ('lost' == $page['action']) {
             $title       = Lang::t('Forgot your password?');
-            $post_uoe    = StringUtil::get()->inputString('username_or_email', null, $_POST);
+            $post_uoe    = $this->stringUtil->inputString('username_or_email', null, $_POST);
             if ($post_uoe !== null) {
                 $tpl->assign('username_or_email', htmlspecialchars(stripslashes($post_uoe)));
             }
@@ -134,32 +147,32 @@ final class PasswordController implements ControllerInterface
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'          => $title,
-            'form_action'    => ServiceLocator::get(UrlGenerator::class)->password(),
+            'form_action'    => $this->urlGenerator->password(),
             'action'         => $page['action'],
             'username'       => is_scalar($page['username'] ?? null) ? $page['username'] : ($user['username'] ?? ''),
-            'PWG_TOKEN'      => ServiceLocator::get(Util::class)->getPwgToken(),
-            'U_IDENTIFICATION' => ServiceLocator::get(UrlGenerator::class)->identification(),
-            'U_REGISTER'     => ServiceLocator::get(UrlGenerator::class)->register(),
+            'PWG_TOKEN'      => $this->util->getPwgToken(),
+            'U_IDENTIFICATION' => $this->urlGenerator->identification(),
+            'U_REGISTER'     => $this->urlGenerator->register(),
         ]);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('thePasswordPage', $hideMenuOn)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
-        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
+        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+            if (!array_key_exists($cookie_lang, $this->util->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
+            $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
+        foreach ($this->util->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $tpl->assign(['language_options' => $language_options, 'current_language' => $userLang]);
@@ -176,7 +189,7 @@ final class PasswordController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_password');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('password.latte');
         PageTailRenderer::render();
 

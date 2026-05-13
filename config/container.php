@@ -179,7 +179,7 @@ return [
     FilterResolver::class            => factory(static fn (): FilterResolver => new FilterResolver()),
     SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
     WatermarkProcessor::class        => factory(static fn (): WatermarkProcessor => new WatermarkProcessor()),
-    MenubarRenderer::class           => factory(static fn (): MenubarRenderer => new MenubarRenderer()),
+    MenubarRenderer::class           => factory(static fn (CategoryService $cat, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, Util $util): MenubarRenderer => new MenubarRenderer($cat, $perm, $tag, $ug, $u, $util)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u)),
     CategoryCatsRenderer::class      => factory(static fn (): CategoryCatsRenderer => new CategoryCatsRenderer()),
     CategoryDefaultRenderer::class   => factory(static fn (): CategoryDefaultRenderer => new CategoryDefaultRenderer()),

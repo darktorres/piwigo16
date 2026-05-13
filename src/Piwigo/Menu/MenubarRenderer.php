@@ -8,7 +8,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Tag\TagService;
@@ -20,6 +19,16 @@ use Piwigo\Users\PermissionService;
 
 final class MenubarRenderer
 {
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly PermissionService $permissionService,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function render(): void
     {
         $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
@@ -29,7 +38,7 @@ final class MenubarRenderer
 
         $menu = new BlockManager('menubar');
 
-        if (Config::guestAccess() or !PermissionService::get()->isAGuest()) {
+        if (Config::guestAccess() or !$this->permissionService->isAGuest()) {
             $menu->loadRegisteredBlocks();
         }
         $menu->prepareDisplay();
@@ -68,13 +77,13 @@ final class MenubarRenderer
         }
 
         $block = $menu->getBlock('mbCategories');
-        if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and ServiceLocator::get(Util::class)->getFilterPageValue('used')) {
+        if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and $this->util->getFilterPageValue('used')) {
             if ($filter['enabled']) {
-                $template->assign('U_STOP_FILTER', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl([]), ['filter' => 'stop']));
+                $template->assign('U_STOP_FILTER', $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']));
             } else {
                 $template->assign(
                     'U_START_FILTER',
-                    UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl([]), ['filter' => 'start-recent-' . (is_scalar($user['recent_period'] ?? null) ? (string) $user['recent_period'] : '')])
+                    $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'start-recent-' . (is_scalar($user['recent_period'] ?? null) ? (string) $user['recent_period'] : '')])
                 );
             }
         }
@@ -82,8 +91,8 @@ final class MenubarRenderer
         if ($block != null) {
             $block->data = [
                 'NB_PICTURE' => $user['nb_total_images'] ?? 0,
-                'MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getCategoriesMenu(),
-                'U_CATEGORIES' => UrlService::get()->makeIndexUrl(['section' => 'categories']),
+                'MENU_CATEGORIES' => $this->categoryService->getCategoriesMenu(),
+                'U_CATEGORIES' => $this->urlService->makeIndexUrl(['section' => 'categories']),
             ];
             $block->template = 'menubar_categories.latte';
         }
@@ -106,7 +115,7 @@ final class MenubarRenderer
                 }
             }
 
-            $block->data = ['MENU_CATEGORIES' => ServiceLocator::get(CategoryService::class)->getRelatedCategoriesMenu($items, $exclude_cat_ids)];
+            $block->data = ['MENU_CATEGORIES' => $this->categoryService->getRelatedCategoriesMenu($items, $exclude_cat_ids)];
             if (count($block->data['MENU_CATEGORIES']) > 0) {
                 $block->template = 'menubar_related_categories.latte';
             }
@@ -114,12 +123,12 @@ final class MenubarRenderer
 
         $block = $menu->getBlock('mbTags');
         if ($block != null and 'picture' != StringUtil::scriptBasename()) {
-            $tags = ServiceLocator::get(TagService::class)->getAvailableTags();
-            usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(TagService::class)->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+            $tags = $this->tagService->getAvailableTags();
+            usort($tags, fn (mixed $a, mixed $b): int => $this->tagService->tagsCounterCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
             $tags = array_slice($tags, 0, Config::menubarTagCloudItemsNumber());
             foreach ($tags as $tag) {
                 $tagArr = is_array($tag) ? $tag : [];
-                $block->data[] = array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]])]);
+                $block->data[] = array_merge($tagArr, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]])]);
             }
             if (!empty($block->data)) {
                 $block->template = 'menubar_tags.latte';
@@ -127,49 +136,49 @@ final class MenubarRenderer
         }
 
         if (($block = $menu->getBlock('mbSpecials')) != null) {
-            if (!PermissionService::get()->isAGuest()) {
+            if (!$this->permissionService->isAGuest()) {
                 $block->data['favorites'] = [
-                    'URL' => UrlService::get()->makeIndexUrl(['section' => 'favorites']),
+                    'URL' => $this->urlService->makeIndexUrl(['section' => 'favorites']),
                     'TITLE' => Lang::t('display your favorites photos'),
                     'NAME' => Lang::t('Your favorites'),
                 ];
             }
 
             $block->data['most_visited'] = [
-                'URL' => UrlService::get()->makeIndexUrl(['section' => 'most_visited']),
+                'URL' => $this->urlService->makeIndexUrl(['section' => 'most_visited']),
                 'TITLE' => Lang::t('display most visited photos'),
                 'NAME' => Lang::t('Most visited'),
             ];
 
             if (Config::rateEnabled()) {
                 $block->data['best_rated'] = [
-                    'URL' => UrlService::get()->makeIndexUrl(['section' => 'best_rated']),
+                    'URL' => $this->urlService->makeIndexUrl(['section' => 'best_rated']),
                     'TITLE' => Lang::t('display best rated photos'),
                     'NAME' => Lang::t('Best rated'),
                 ];
             }
 
             $block->data['recent_pics'] = [
-                'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_pics']),
+                'URL' => $this->urlService->makeIndexUrl(['section' => 'recent_pics']),
                 'TITLE' => Lang::t('display most recent photos'),
                 'NAME' => Lang::t('Recent photos'),
             ];
 
             $block->data['recent_cats'] = [
-                'URL' => UrlService::get()->makeIndexUrl(['section' => 'recent_cats']),
+                'URL' => $this->urlService->makeIndexUrl(['section' => 'recent_cats']),
                 'TITLE' => Lang::t('display recently updated albums'),
                 'NAME' => Lang::t('Recent albums'),
             ];
 
             $block->data['random'] = [
-                'URL' => ServiceLocator::get(UrlGenerator::class)->random(),
+                'URL' => $this->urlGenerator->random(),
                 'TITLE' => Lang::t('display a set of random photos'),
                 'NAME' => Lang::t('Random photos'),
                 'REL' => 'rel="nofollow"',
             ];
 
             $block->data['calendar'] = [
-                'URL' => UrlService::get()->makeIndexUrl([
+                'URL' => $this->urlService->makeIndexUrl([
                     'chronology_field' => (Config::calendarDatefield() == 'date_available' ? 'posted' : 'created'),
                     'chronology_style' => 'monthly',
                     'chronology_view' => 'calendar',
@@ -183,19 +192,19 @@ final class MenubarRenderer
 
         if (($block = $menu->getBlock('mbMenu')) != null) {
             $block->data['qsearch'] = true;
-            $template->assign('U_QSEARCH', ServiceLocator::get(UrlGenerator::class)->qsearch());
+            $template->assign('U_QSEARCH', $this->urlGenerator->qsearch());
 
             $block->data['tags'] = [
                 'TITLE' => Lang::t('display available tags'),
                 'NAME' => Lang::t('Tags'),
-                'URL' => ServiceLocator::get(UrlGenerator::class)->tagsPage(),
-                'COUNTER' => ServiceLocator::get(TagService::class)->getNbAvailableTags(),
+                'URL' => $this->urlGenerator->tagsPage(),
+                'COUNTER' => $this->tagService->getNbAvailableTags(),
             ];
 
             $block->data['search'] = [
                 'TITLE' => Lang::t('search'),
                 'NAME' => Lang::t('Search'),
-                'URL' => ServiceLocator::get(UrlGenerator::class)->searchPage(),
+                'URL' => $this->urlGenerator->searchPage(),
                 'REL' => 'rel="search"',
             ];
 
@@ -203,45 +212,45 @@ final class MenubarRenderer
                 $block->data['comments'] = [
                     'TITLE' => Lang::t('display last user comments'),
                     'NAME' => Lang::t('Comments'),
-                    'URL' => ServiceLocator::get(UrlGenerator::class)->comments(),
-                    'COUNTER' => ServiceLocator::get(Util::class)->getNbAvailableComments(),
+                    'URL' => $this->urlGenerator->comments(),
+                    'COUNTER' => $this->util->getNbAvailableComments(),
                 ];
             }
 
             $block->data['about'] = [
                 'TITLE' => Lang::t('About Piwigo'),
                 'NAME' => Lang::t('About'),
-                'URL' => ServiceLocator::get(UrlGenerator::class)->about(),
+                'URL' => $this->urlGenerator->about(),
             ];
 
             $block->data['rss'] = [
                 'TITLE' => Lang::t('RSS feed'),
                 'NAME' => Lang::t('Notification'),
-                'URL' => ServiceLocator::get(UrlGenerator::class)->notification(),
+                'URL' => $this->urlGenerator->notification(),
                 'REL' => 'rel="nofollow"',
             ];
             $block->template = 'menubar_menu.latte';
         }
 
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             $template->assign([
-                'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
-                'U_LOST_PASSWORD' => ServiceLocator::get(UrlGenerator::class)->password(),
+                'U_LOGIN' => $this->urlGenerator->identification(),
+                'U_LOST_PASSWORD' => $this->urlGenerator->password(),
                 'AUTHORIZE_REMEMBERING' => Config::authorizeRemembering(),
             ]);
             if (Config::allowUserRegistration()) {
-                $template->assign('U_REGISTER', ServiceLocator::get(UrlGenerator::class)->register());
+                $template->assign('U_REGISTER', $this->urlGenerator->register());
             }
         } else {
             $template->assign('USERNAME', stripslashes(CurrentUser::get()->username));
-            if (PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
-                $template->assign('U_PROFILE', ServiceLocator::get(UrlGenerator::class)->profile());
+            if ($this->permissionService->isAutorizeStatus(AccessLevel::Classic)) {
+                $template->assign('U_PROFILE', $this->urlGenerator->profile());
             }
             if (!Config::apacheAuthentication()) {
                 $template->assign('U_LOGOUT', UrlService::getRootUrl() . '?act=logout');
             }
-            if (PermissionService::get()->isAdmin()) {
-                $template->assign('U_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin());
+            if ($this->permissionService->isAdmin()) {
+                $template->assign('U_ADMIN', $this->urlGenerator->admin());
             }
         }
         if (($block = $menu->getBlock('mbIdentification')) != null) {

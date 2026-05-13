@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Util;
 use Piwigo\Template\TemplateRegistry;
@@ -211,7 +212,7 @@ final class ExtensionsEndpoints
      */
     public function checkUpdates(array $params, PwgServer $service): array
     {
-        $update  = new Updates();
+        $update  = Kernel::service(Updates::class);
         $result  = [];
         if (!isset($_SESSION['need_update' . AppInfo::VERSION])) {
             $update->checkPiwigoUpgrade();

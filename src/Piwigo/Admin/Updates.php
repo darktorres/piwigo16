@@ -12,7 +12,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Mail\MailService;
@@ -41,19 +40,38 @@ final class Updates
     public array $merged_extensions = [];
     public string $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
 
-    public function __construct(string $page = 'updates')
-    {
+    public function __construct(
+        Plugins $plugins,
+        Themes $themes,
+        Languages $languages,
+        private readonly AdminService $adminService,
+        private readonly ConfigService $configService,
+        private readonly MailService $mailService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
         $this->types = ['plugins', 'themes', 'languages'];
-
-        if (in_array($page, $this->types)) {
-            $this->types = [$page];
-        }
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
-        $this->plugins = new Plugins();
-        $this->themes = new Themes();
-        $this->languages = new Languages();
+        $this->plugins   = $plugins;
+        $this->themes    = $themes;
+        $this->languages = $languages;
+    }
+
+    /**
+     * Narrows the types this Updates instance operates on to a single category
+     * (must be one of 'plugins', 'themes', 'languages'). Anything else is a no-op.
+     */
+    public function setPage(string $page): self
+    {
+        if (in_array($page, $this->types, true)) {
+            $this->types = [$page];
+        }
+        return $this;
     }
 
     /** @return array<string, array<mixed>> */
@@ -100,13 +118,13 @@ final class Updates
         };
     }
 
-    public static function checkPiwigoUpgrade(): void
+    public function checkPiwigoUpgrade(): void
     {
         $_SESSION['need_update'.AppInfo::VERSION] = null;
 
         $result = '';
         if (preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
-          and ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)
+          and $this->adminService->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)
           and is_string($result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
@@ -133,7 +151,7 @@ final class Updates
           'is_dev' => true,
           ];
 
-        [$env, $build_version] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
+        [$env, $build_version] = $this->stringUtil->getContainerInfo();
         $build_version = is_string($build_version) ? $build_version : '';
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
@@ -149,7 +167,7 @@ final class Updates
             $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
 
             $result = '';
-            if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) && is_string($result)) {
+            if ($this->adminService->fetchRemote($url, $result) && is_string($result)) {
                 $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
@@ -218,12 +236,12 @@ final class Updates
      */
     public function notifyPiwigoNewVersions(): void
     {
-        if (!ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
+        if (!$this->configService->pwgIsDbconfWriteable()) {
             return;
         }
 
         $new_versions = $this->getPiwigoNewVersions();
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('update_notify_last_check', date('c'));
+        $this->configService->confUpdateParam('update_notify_last_check', date('c'));
 
         if ($new_versions['is_dev']) {
             return;
@@ -266,18 +284,18 @@ final class Updates
         if ($notify) {
             // send email
 
-            ServiceLocator::get(MailService::class)->switchLangTo(UserService::get()->getDefaultLanguage());
+            $this->mailService->switchLangTo($this->userService->getDefaultLanguage());
 
             $content = Lang::t('Hello,');
             $content .= "\n\n".Lang::t(
                 'Time has come to update your Piwigo with version %s, go to %s',
                 $new_versions_string,
-                ServiceLocator::get(UrlGenerator::class)->admin('updates')
+                $this->urlGenerator->admin('updates')
             );
             $content .= "\n\n".Lang::t('It only takes a few clicks.');
             $content .= "\n\n".Lang::t('Running on an up-to-date Piwigo is important for security.');
 
-            ServiceLocator::get(MailService::class)->pwgMailAdmins(
+            $this->mailService->pwgMailAdmins(
                 [
                 'subject' => Lang::t('Piwigo %s is available, please update', $new_versions_string),
                 'content' => $content,
@@ -290,10 +308,10 @@ final class Updates
                 true // only webmasters
             );
 
-            ServiceLocator::get(MailService::class)->switchLangBack();
+            $this->mailService->switchLangBack();
 
             // save notify
-            ServiceLocator::get(ConfigService::class)->confUpdateParam(
+            $this->configService->confUpdateParam(
                 'update_notify_last_notification',
                 [
                 'version' => $new_versions_string,
@@ -313,7 +331,7 @@ final class Updates
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -363,7 +381,7 @@ final class Updates
             $post_data['extension_include'] = implode(',', array_keys($ext_to_check));
         }
 
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data, $post_data) && is_string($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data, $post_data) && is_string($result)) {
             $pem_exts = StringUtil::safeUnserialize($result);
             if ($pem_exts === []) {
                 return false;
@@ -440,7 +458,7 @@ final class Updates
                     $fsExtVersion    = is_string($fsExtVersionRaw) ? $fsExtVersionRaw : '';
                     $extRevNameRaw   = $ext_info['revision_name'] ?? null;
                     $extRevName      = is_string($extRevNameRaw) ? $extRevNameRaw : '';
-                    if (ServiceLocator::get(StringUtil::class)->safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
+                    if ($this->stringUtil->safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
                         if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;
                         } else {
@@ -452,7 +470,7 @@ final class Updates
             $updatesIgnoredArr[$type] = $ignore_list;
             Config::override('updates_ignored', $updatesIgnoredArr);
         }
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
+        $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
         return [];
     }
 
@@ -469,7 +487,7 @@ final class Updates
                         ? $typeUpdates[$ext_id]
                         : '';
                     if (isset($typeUpdates[$ext_id])
-                      and ServiceLocator::get(StringUtil::class)->safeVersionCompare(is_string($fs_ext['version'] ?? null) ? $fs_ext['version'] : '', $need_update_version, '>=') === true) {
+                      and $this->stringUtil->safeVersionCompare(is_string($fs_ext['version'] ?? null) ? $fs_ext['version'] : '', $need_update_version, '>=') === true) {
                         // Extension have been upgraded
                         $this->checkExtensions();
                         break;
@@ -503,7 +521,7 @@ final class Updates
     public function getMergedExtensions(string $version): void
     {
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($this->merged_extension_url, $result) && is_string($result)) {
+        if ($this->adminService->fetchRemote($this->merged_extension_url, $result) && is_string($result)) {
             $rows = explode("\n", $result);
             foreach ($rows as $row) {
                 if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
@@ -516,7 +534,7 @@ final class Updates
         }
     }
 
-    public static function processObsoleteList(string $file): void
+    public function processObsoleteList(string $file): void
     {
         if (file_exists(PHPWG_ROOT_PATH.$file)
           and ($old_files = file(PHPWG_ROOT_PATH.$file, FILE_IGNORE_NEW_LINES)) !== false) {
@@ -526,13 +544,13 @@ final class Updates
                 if (is_file($path)) {
                     Filesystem::tryUnlink($path);
                 } elseif (is_dir($path)) {
-                    ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_ROOT_PATH.'_trash');
+                    $this->adminService->deltree($path, PHPWG_ROOT_PATH.'_trash');
                 }
             }
         }
     }
 
-    public static function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): void
+    public function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): void
     {
         $page = &$GLOBALS['page'];
         if (!is_array($page)) {
@@ -541,7 +559,7 @@ final class Updates
         $template = TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, AppInfo::VERSION, '>')) {
-            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('updates'));
+            $this->util->redirect($this->urlGenerator->admin('updates'));
         }
 
         $obsolete_list = null;
@@ -572,7 +590,7 @@ final class Updates
 
             while (!$end) {
                 $chunk_num++;
-                if (ServiceLocator::get(AdminService::class)->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
+                if ($this->adminService->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
                   and is_string($result)
                   and $input = StringUtil::safeUnserialize($result)) {
                     if (0 == ($input['remaining'] ?? -1)) {
@@ -639,26 +657,26 @@ final class Updates
 
                     if (empty($error)) {
                         if (!empty($obsolete_list)) {
-                            self::processObsoleteList($obsolete_list);
+                            $this->processObsoleteList($obsolete_list);
                         }
 
-                        ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
-                        ServiceLocator::get(UserAdminService::class)->invalidateUserCache(true);
-                        ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_installed_version', $upgrade_to);
-                        ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
+                        $this->adminService->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                        $this->userAdminService->invalidateUserCache(true);
+                        $this->configService->confUpdateParam('piwigo_installed_version', $upgrade_to);
+                        $this->util->pwgActivity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
 
                         if ($step == 2) {
                             // only purge the compiled-template cache on minor updates;
                             // upgrade.php handles the major-version case.
                             $template->deleteCompiledTemplates();
-                            ServiceLocator::get(ConfigService::class)->confDeleteParam('fs_quick_check_last_check');
+                            $this->configService->confDeleteParam('fs_quick_check_last_check');
 
                             PageState::current()->addInfo(Lang::t('Update Complete'));
                             PageState::current()->addInfo($upgrade_to);
                             $page['updated_version'] = $upgrade_to;
                             $step = -1;
                         } else {
-                            Util::get()->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
+                            $this->util->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);
@@ -669,7 +687,7 @@ final class Updates
                         ));
                     }
                 } else {
-                    ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                    $this->adminService->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
                     PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
                 }
             } else {

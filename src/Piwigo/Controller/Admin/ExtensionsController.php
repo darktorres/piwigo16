@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
@@ -981,7 +982,7 @@ final class ExtensionsController
         Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
         $pageStr = is_string($page['page'] ?? null) ? $page['page'] : 'updates';
-        $autoupdate = new Updates($pageStr);
+        $autoupdate = Kernel::service(Updates::class)->setPage($pageStr);
 
         $show_reset = false;
         if (!$autoupdate->getServerExtensions()) {
@@ -1075,7 +1076,7 @@ final class ExtensionsController
             $upgrade_to = is_string($rawUpgradeToAlt) ? $rawUpgradeToAlt : '';
         }
 
-        $updates      = new Updates();
+        $updates      = Kernel::service(Updates::class);
         $new_versions = $updates->getPiwigoNewVersions();
 
         if ($step == 0) {
@@ -1098,14 +1099,14 @@ final class ExtensionsController
         if ($step == 2 && $this->permissionService->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 $rawUpgradeTo2 = $_POST['upgrade_to'];
-                Updates::upgradeTo(is_string($rawUpgradeTo2) ? $rawUpgradeTo2 : '', $step);
+                Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo2) ? $rawUpgradeTo2 : '', $step);
             }
         }
 
         if ($step == 3 && $this->permissionService->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 $rawUpgradeTo3 = $_POST['upgrade_to'];
-                Updates::upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
+                Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
             }
             $updates->getMergedExtensions($upgrade_to);
             $updates->getServerExtensions($upgrade_to);

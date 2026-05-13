@@ -121,7 +121,7 @@ final class UpgradeController implements ControllerInterface
 
         if ($has_remote_site) {
             $step = 3;
-            Updates::upgradeTo('2.3.4', $step, false);
+            Kernel::service(Updates::class)->upgradeTo('2.3.4', $step, false);
 
             $rawPage       = $GLOBALS['page'] ?? null;
             $upgradeErrors = is_array($rawPage) && is_array($rawPage['errors'] ?? null)

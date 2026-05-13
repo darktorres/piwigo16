@@ -8,6 +8,7 @@ use Latte\Runtime\Html;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
@@ -41,7 +42,7 @@ final class PageTailRenderer
             if ($check_for_updates) {
                 $exec_id = ServiceLocator::get(Util::class)->pwgUniqueExecBegins('check_for_updates');
                 if ($exec_id !== false) {
-                    new Updates()->notifyPiwigoNewVersions();
+                    Kernel::service(Updates::class)->notifyPiwigoNewVersions();
                     ServiceLocator::get(Util::class)->pwgUniqueExecEnds('check_for_updates');
                 }
             }

@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -30,6 +29,16 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SearchController implements ControllerInterface
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ConfigService $configService,
+        private readonly HtmlService $htmlService,
+        private readonly SearchService $searchService,
+        private readonly TagService $tagService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -42,7 +51,7 @@ final class SearchController implements ControllerInterface
 
         $search = ['mode' => 'AND', 'fields' => []];
 
-        $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
+        $filters_views_raw = $this->configService->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views     = StringUtil::safeUnserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
 
         $filter_rename_for = [
@@ -79,7 +88,7 @@ final class SearchController implements ControllerInterface
         $words = [];
         $q     = StringUtil::get()->inputString('q', null, $_GET);
         if ($q !== null && $q !== '') {
-            $words = ServiceLocator::get(SearchService::class)->splitAllwords($q);
+            $words = $this->searchService->splitAllwords($q);
         }
 
         if (count($words ?? []) > 0 || in_array('allwords', $fields)) {
@@ -93,16 +102,16 @@ final class SearchController implements ControllerInterface
         $cat_ids  = [];
         $cat_id   = StringUtil::get()->inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
-            ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+            $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
 SELECT *
   FROM ' . Tables::userCacheCategories() . '
   WHERE cat_id = ' . $cat_id . '
     AND user_id = ' . (is_scalar($user['id']) ? (int) $user['id'] : 0) . '
 ;';
-            $found_categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $found_categories = $this->conn->executeQuery($query)->fetchAllAssociative();
             if (empty($found_categories)) {
-                ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
+                $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
             }
             $cat_ids = [$cat_id];
         }
@@ -111,11 +120,11 @@ SELECT *
             $search['fields']['cat'] = ['words' => $cat_ids, 'sub_inc' => true];
         }
 
-        if (count(ServiceLocator::get(TagService::class)->getAvailableTags()) > 0) {
+        if (count($this->tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
             $tag_id  = StringUtil::get()->inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
-                ServiceLocator::get(Util::class)->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+                $this->util->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);
             }
             if (count($tag_ids) > 0 || in_array('tags', $fields)) {
@@ -135,7 +144,7 @@ SELECT id
     AND author IS NOT NULL
     LIMIT 1
 ;';
-            $first_author = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $first_author = $this->conn->executeQuery($query)->fetchAllAssociative();
             if (count($first_author) > 0) {
                 $search['fields']['author'] = ['words' => [], 'mode' => 'OR'];
             }
@@ -157,7 +166,7 @@ SELECT id
             }
         }
 
-        [$search_uuid, $search_url] = ServiceLocator::get(SearchService::class)->saveSearch($search);
+        [$search_uuid, $search_url] = $this->searchService->saveSearch($search);
         Util::get()->redirect(is_scalar($search_url) ? (string) $search_url : '');
 
         return ResponseFactory::create(200); // unreachable after redirect

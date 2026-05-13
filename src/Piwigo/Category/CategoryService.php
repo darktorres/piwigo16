@@ -7,10 +7,9 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
@@ -28,6 +27,7 @@ final readonly class CategoryService
     public function __construct(
         private CategoryRepository $catRepo,
         private Connection $conn,
+        private FilterService $filterService,
     ) {
     }
 
@@ -53,7 +53,7 @@ final readonly class CategoryService
     {
         $forbidden = CurrentUser::get()->rawAttributes['forbidden_categories'] ?? '';
         if (in_array($categoryId, explode(',', is_scalar($forbidden) ? (string) $forbidden : ''))) {
-            ServiceLocator::get(HtmlService::class)->accessDenied();
+            Kernel::service(HtmlService::class)->accessDenied();
         }
     }
 
@@ -114,7 +114,7 @@ WHERE ' . $where . '
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
             ]);
             if (Config::indexNewIcon()) {
-                $row['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
+                $row['icon_ts'] = Kernel::service(Util::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
             }
             $cats[] = $row;
             if ($selectedCategory !== null && $row['id'] == ($selectedCategory['id'] ?? null)) {
@@ -125,7 +125,7 @@ WHERE ' . $where . '
         }
         usort($cats, $this->globalRankCompare(...));
 
-        ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($cats);
+        $this->filterService->updateCategoriesWithFilteredData($cats);
 
         return $cats;
     }
@@ -160,7 +160,7 @@ WHERE ' . $where . '
     FROM ' . Tables::categories() . '
     WHERE id IN (' . (is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '') . ')
   ;';
-            $names = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $names = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
             $cat['upper_names'] = [];
             foreach ($upperIds as $catId) {
@@ -201,7 +201,7 @@ WHERE ' . $where . '
         $tplCats  = [];
         foreach ($categories as $category) {
             if ($fullname !== false && $fullname !== '') {
-                $option = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '', null));
+                $option = strip_tags(Kernel::service(HtmlService::class)->getCatDisplayNameCache(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '', null));
             } else {
                 $option  = str_repeat('&nbsp;', (3 * substr_count(is_string($category['global_rank'] ?? null) ? $category['global_rank'] : '', '.')));
                 $option .= '- ';
@@ -216,7 +216,7 @@ WHERE ' . $where . '
     /** @param int[]|string $selecteds */
     public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true): void
     {
-        $categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $categories = $this->conn->executeQuery($query)->fetchAllAssociative();
         usort($categories, $this->globalRankCompare(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -244,7 +244,7 @@ SELECT DISTINCT(id)
         }
         $query .= '
 ;';
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -268,7 +268,7 @@ SELECT id, permalink, 0 AS is_old
   FROM ' . Tables::categories() . '
   WHERE permalink IN (' . $in . ')
 ;';
-        $permaHash = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
+        $permaHash = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
 
         if (empty($permaHash)) {
             return null;
@@ -497,7 +497,7 @@ SELECT id
         }
         $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
 
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -577,7 +577,7 @@ SELECT
   FROM ' . Tables::categories() . '
   WHERE id IN (' . implode(',', array_keys($catIds)) . ')
 ;';
-        $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $cats = $this->conn->executeQuery($query)->fetchAllAssociative();
         usort($cats, $this->globalRankCompare(...));
 
         $indexOfCat = [];

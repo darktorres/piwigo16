@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Theme\ThemeRepository;
@@ -67,7 +66,7 @@ final class UpgradeService
     {
         $standard_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
 
-        $pluginRepo = ServiceLocator::get(PluginRepository::class);
+        $pluginRepo = Kernel::service(PluginRepository::class);
         $allActive  = $pluginRepo->findAll('active');
         $plugins    = [];
         foreach ($allActive as $row) {
@@ -92,7 +91,7 @@ final class UpgradeService
     {
         $standard_themes = ['modus', 'elegant', 'smartpocket'];
 
-        $themeRepo   = ServiceLocator::get(ThemeRepository::class);
+        $themeRepo   = Kernel::service(ThemeRepository::class);
         $allThemes   = $themeRepo->findAll();
         $theme_ids   = [];
         $theme_names = [];
@@ -113,7 +112,7 @@ final class UpgradeService
                 . '<p><i>' . implode(', ', $theme_names) . '</i></p>'
             );
 
-            $defaultUserInfo = ServiceLocator::get(UserRepository::class)
+            $defaultUserInfo = Kernel::service(UserRepository::class)
                 ->getDefaultUserInfo(Config::defaultUserId());
             $defaultThemeRaw = $defaultUserInfo !== null ? ($defaultUserInfo['theme'] ?? null) : null;
             $default_theme = is_scalar($defaultThemeRaw) ? (string) $defaultThemeRaw : '';
@@ -130,7 +129,7 @@ final class UpgradeService
 
     public static function deactivateTemplates(): void
     {
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('extents_for_templates', []);
+        Kernel::service(ConfigService::class)->confUpdateParam('extents_for_templates', []);
     }
 
     public static function checkUpgradeAccessRights(): void
@@ -140,7 +139,7 @@ final class UpgradeService
             session_start();
             $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
             if ($pwgUid !== '') {
-                $statusValue = ServiceLocator::get(UserRepository::class)
+                $statusValue = Kernel::service(UserRepository::class)
                     ->findStatusByUserId((int) $pwgUid);
                 if ($statusValue === 'webmaster') {
                     define('PHPWG_IN_UPGRADE', true);
@@ -170,7 +169,7 @@ final class UpgradeService
                 .' INNER JOIN '.Tables::userInfos().' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
                 .' WHERE '.Config::userFields()['username'].' = ?';
         }
-        $rowResult = DbConnection::get()->executeQuery($query, [$username])->fetchAssociative();
+        $rowResult = Kernel::service(Connection::class)->executeQuery($query, [$username])->fetchAssociative();
         $row = $rowResult !== false ? $rowResult : null;
 
         if ($row === null || !password_verify($password, is_string($row['password']) ? $row['password'] : '')) {
@@ -207,13 +206,13 @@ final class UpgradeService
         $query   = 'SELECT id FROM '.Tables::upgrade().';';
         $applied = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-            array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id')
+            array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'id')
         );
         return count(array_diff(self::getAvailableUpgradeIds(), $applied)) > 0;
     }
 
     public static function upgradeDbConnect(): void
     {
-        DbConnection::get();
+        Kernel::service(Connection::class);
     }
 }

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Metadata;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
@@ -17,13 +16,21 @@ use Piwigo\Metadata\MetadataService;
 
 final class MetadataAdminService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ImageRepository $imageRepository,
+        private readonly MetadataService $metadataService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+    ) {
+    }
     /**
      * @param array<string, string> $map
      * @return array<mixed>
      */
     public function getSyncIptcData(string $file, array $map): array
     {
-        $iptc = ServiceLocator::get(MetadataService::class)->getIptcData($file, $map);
+        $iptc = $this->metadataService->getIptcData($file, $map);
 
         foreach ($iptc as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -54,7 +61,7 @@ final class MetadataAdminService
     /** @return array<mixed> */
     public function getSyncExifData(string $file): array
     {
-        $exif = ServiceLocator::get(MetadataService::class)->getExifData($file, Config::useExifMapping());
+        $exif = $this->metadataService->getExifData($file, Config::useExifMapping());
 
         foreach ($exif as $pwg_key => $value) {
             if (in_array($pwg_key, ['date_creation', 'date_available'])) {
@@ -127,13 +134,13 @@ final class MetadataAdminService
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file)) !== false) {
+            if (is_readable($file) && ($image_size = $this->stringUtil->pwgSafeGetimagesize($file)) !== false) {
                 $type = $image_size[2];
                 if (IMAGETYPE_TIFF_MM == $type || IMAGETYPE_TIFF_II == $type) {
                     $is_tiff = true;
                 }
             }
-            $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative($file, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
+            $file = $this->stringUtil->originalToRepresentative($file, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
 
         if (function_exists('mime_content_type')) {
@@ -165,7 +172,7 @@ final class MetadataAdminService
                         $infos['height'] = round((float) explode(' ', $vb)[3]);
                     }
                 }
-                if (is_readable($file) && ($image_size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($file)) !== false) {
+                if (is_readable($file) && ($image_size = $this->stringUtil->pwgSafeGetimagesize($file)) !== false) {
                     $infos['width'] = $image_size[0];
                     $infos['height'] = $image_size[1];
                 }
@@ -210,7 +217,7 @@ final class MetadataAdminService
         $datas = [];
         $tags_of = [];
 
-        foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), $ids)) as $data) {
+        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $data) {
             $data = $this->getSyncMetadata($data);
             if ($data === false) {
                 continue;
@@ -223,7 +230,7 @@ final class MetadataAdminService
                         $tags_of[$id] = [];
                     }
                     foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
-                        $tags_of[$id][] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName($tag_name);
+                        $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
                     }
                 }
             }
@@ -245,7 +252,7 @@ final class MetadataAdminService
             );
         }
 
-        ServiceLocator::get(TagAdminService::class)->setTagsOf($tags_of);
+        $this->tagAdminService->setTagsOf($tags_of);
     }
 
     /** @return array<mixed> */
@@ -273,7 +280,7 @@ SELECT id
         }
         $query .= ';';
 
-        foreach (DbConnection::get()->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $cat_ids[] = $row['id'];
         }
 
@@ -291,7 +298,7 @@ SELECT id, path, representative_ext
         }
         $query .= ';';
 
-        return array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+        return array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
     }
 
     public function normalizeKeywordsString(string $keywordsString): string

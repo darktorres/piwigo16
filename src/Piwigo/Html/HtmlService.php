@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -27,6 +27,11 @@ use Piwigo\Users\PermissionService;
 
 final class HtmlService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly StringUtil $stringUtil,
+    ) {
+    }
     /** @param array<mixed> $catInformations */
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
@@ -77,12 +82,12 @@ final class HtmlService
             $addUrlParamsArr['auth'] = $authKey;
         }
 
-        $catNamesRaw = RequestCache::remember('cat_names', 'all', static function (): array {
+        $catNamesRaw = RequestCache::remember('cat_names', 'all', function (): array {
             $query = '
 SELECT id, name, permalink
   FROM ' . Tables::categories() . '
 ;';
-            return array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            return array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
         });
         /** @var array<int|string, array<string,mixed>> $catNames */
         $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];
@@ -138,7 +143,7 @@ SELECT id, name, permalink
 
     public function getCatDisplayNameFromId(int|string $catId, ?string $url = ''): string
     {
-        $catInfo    = ServiceLocator::get(CategoryService::class)->getCatInfo($catId);
+        $catInfo    = Kernel::service(CategoryService::class)->getCatInfo($catId);
         $upperNames = $catInfo['upper_names'] ?? [];
         return $this->getCatDisplayName(is_array($upperNames) ? $upperNames : [], $url);
     }
@@ -183,7 +188,7 @@ SELECT id, name, permalink
     {
         foreach ([$a, $b] as $tag) {
             $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
-            RequestCache::remember('tag_alpha', $tagName, static fn (): string => ServiceLocator::get(StringUtil::class)->pwgTransliterate($tagName));
+            RequestCache::remember('tag_alpha', $tagName, fn (): string => $this->stringUtil->pwgTransliterate($tagName));
         }
 
         $aName = is_string($a['name'] ?? null) ? $a['name'] : '';
@@ -216,7 +221,7 @@ SELECT id, name, permalink
         /** @var mixed $rawRequestUri */
         $rawRequestUri = $_SERVER['REQUEST_URI'] ?? '';
         $requestUri    = is_string($rawRequestUri) ? $rawRequestUri : '';
-        Util::get()->redirectHttp(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
+        Util::get()->redirectHttp(UrlService::get()->addUrlParams(Kernel::service(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg): void
@@ -302,7 +307,7 @@ $btraceMsg
     {
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
-        $title = '<a href="' . ServiceLocator::get(UrlGenerator::class)->tagsPage() . '" title="' . Lang::t('display available tags') . '">'
+        $title = '<a href="' . Kernel::service(UrlGenerator::class)->tagsPage() . '" title="' . Lang::t('display available tags') . '">'
           . Lang::t(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
 
@@ -338,7 +343,7 @@ $btraceMsg
                   '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="'
                   . Lang::t('remove this tag from the list')
                   . '"><img src="'
-                    . UrlService::getRootUrl() . (is_string(ServiceLocator::get(Util::class)->getThemeconf('icon_dir')) ? ServiceLocator::get(Util::class)->getThemeconf('icon_dir') : '') . '/remove_s.png'
+                    . UrlService::getRootUrl() . (is_string(Kernel::service(Util::class)->getThemeconf('icon_dir')) ? Kernel::service(Util::class)->getThemeconf('icon_dir') : '') . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';
@@ -405,7 +410,7 @@ $btraceMsg
         if (!empty($info['name'])) {
             return (string) EventDispatcher::dispatch('render_element_name', is_string($info['name']) ? $info['name'] : '', $info);
         }
-        return ServiceLocator::get(StringUtil::class)->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
+        return $this->stringUtil->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
 
     /** @param array<string, mixed> $info */
@@ -458,7 +463,7 @@ $btraceMsg
     public function getElementUrlProtectionHandler(string $url, array $infos): string
     {
         if ('images' == Config::originalUrlProtection()) {
-            $ext = ServiceLocator::get(StringUtil::class)->getExtension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
+            $ext = $this->stringUtil->getExtension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
             if (!in_array($ext, Config::pictureExtensions())) {
                 return $url;
             }

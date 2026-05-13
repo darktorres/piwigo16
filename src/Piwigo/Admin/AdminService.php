@@ -10,10 +10,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -26,6 +24,13 @@ final readonly class AdminService
 {
     public function __construct(
         private Connection $conn,
+        private CategoryRepository $categoryRepository,
+        private DateService $dateService,
+        private HistoryRepository $historyRepository,
+        private ImageRepository $imageRepository,
+        private StringUtil $stringUtil,
+        private TagRepository $tagRepository,
+        private UserRepository $userRepository,
     ) {
     }
 
@@ -73,7 +78,7 @@ final readonly class AdminService
             $path = $start . '/' . $file;
             if (is_dir($path)) {
                 $extents = array_merge($extents, $this->getExtents($path));
-            } elseif (!is_link($path) && file_exists($path) && ServiceLocator::get(StringUtil::class)->getExtension($path) === 'tpl') {
+            } elseif (!is_link($path) && file_exists($path) && $this->stringUtil->getExtension($path) === 'tpl') {
                 $extents[] = substr($path, 21);
             }
         }
@@ -422,7 +427,7 @@ final readonly class AdminService
                         'id'        => $topic['topic_id'] ?? null,
                         'subject'   => $topic['subject'] ?? null,
                         'posted_on' => $postedOn,
-                        'posted'    => ServiceLocator::get(DateService::class)->formatDate($postedOn),
+                        'posted'    => $this->dateService->formatDate($postedOn),
                         'url'       => $topic['url'] ?? null,
                     ];
                 }
@@ -483,11 +488,11 @@ final readonly class AdminService
     public function getPwgGeneralStatitics(): array
     {
         $stats    = [];
-        $imgRepo  = ServiceLocator::get(ImageRepository::class);
-        $catRepo  = ServiceLocator::get(CategoryRepository::class);
-        $tagRepo  = ServiceLocator::get(TagRepository::class);
-        $userRepo = ServiceLocator::get(UserRepository::class);
-        $histRepo = ServiceLocator::get(HistoryRepository::class);
+        $imgRepo  = $this->imageRepository;
+        $catRepo  = $this->categoryRepository;
+        $tagRepo  = $this->tagRepository;
+        $userRepo = $this->userRepository;
+        $histRepo = $this->historyRepository;
 
         $stats['nb_photos']     = $imgRepo->countAll();
         $stats['nb_categories'] = $catRepo->countAll();
@@ -509,14 +514,14 @@ final readonly class AdminService
     {
         $piwigoOrigins = '2001-09-01 00:00:00';
         $candidate     = null;
-        $users = DbConnection::get()->executeQuery(
+        $users = $this->conn->executeQuery(
             'SELECT registration_date FROM ' . Tables::userInfos() . ' WHERE user_id = 2'
         )->fetchAllAssociative();
         if (count($users) > 0) {
             $candidate = $users[0]['registration_date'];
         }
         if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $users = DbConnection::get()->executeQuery(
+            $users = $this->conn->executeQuery(
                 'SELECT MIN(registration_date) AS min_registration_date FROM ' . Tables::userInfos() . " WHERE registration_date > '$piwigoOrigins'"
             )->fetchAllAssociative();
             if (count($users) > 0) {
@@ -524,7 +529,7 @@ final readonly class AdminService
             }
         }
         if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $images = DbConnection::get()->executeQuery(
+            $images = $this->conn->executeQuery(
                 'SELECT date_available FROM ' . Tables::images() . ' ORDER BY id ASC LIMIT 1'
             )->fetchAllAssociative();
             if (count($images) > 0) {

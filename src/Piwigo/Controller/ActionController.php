@@ -7,11 +7,9 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -32,20 +30,30 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ActionController implements ControllerInterface
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly HtmlService $htmlService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly StringUtil $stringUtil,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         $params = $request->getQueryParams();
         $format = [];
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
-            $get_format = StringUtil::get()->inputInt('format', null, $_GET);
+            $this->util->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
+            $get_format = $this->stringUtil->inputInt('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . ($get_format ?? 0) . ';';
-            $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
 
             if (count($formats) == 0) {
                 $this->error(400, 'Invalid request - format');
@@ -56,20 +64,20 @@ final class ActionController implements ControllerInterface
             $_GET['part'] = 'f';
         }
 
-        $get_id   = StringUtil::get()->inputInt('id', null, $_GET);
-        $get_part = StringUtil::get()->inputString('part', null, $_GET);
+        $get_id   = $this->stringUtil->inputInt('id', null, $_GET);
+        $get_part = $this->stringUtil->inputString('part', null, $_GET);
         if ($get_id === null || $get_part === null || !in_array($get_part, ['e', 'r', 'f'])) {
             $this->error(400, 'Invalid request - id/part');
         }
 
-        $element_info = ServiceLocator::get(ImageRepository::class)->findById($get_id);
+        $element_info = $this->imageRepository->findById($get_id);
         if ($element_info === null || count($element_info) === 0) {
             $this->error(404, 'Requested id not found');
         }
 
         $is_admin_download = false;
-        $get_pwg_token     = StringUtil::get()->inputString('pwg_token', null, $_GET);
-        if (PermissionService::get()->isAdmin() && $get_pwg_token !== null && ServiceLocator::get(Util::class)->getPwgToken() == $get_pwg_token) {
+        $get_pwg_token     = $this->stringUtil->inputString('pwg_token', null, $_GET);
+        if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->util->getPwgToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (is_array($GLOBALS['user'] ?? null)) {
                 $GLOBALS['user']['enabled_high'] = true;
@@ -82,9 +90,9 @@ final class ActionController implements ControllerInterface
 SELECT id FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $get_id . '
-' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
+' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
   LIMIT 1;';
-        if (!$is_admin_download && ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
+        if (!$is_admin_download && $this->conn->executeQuery($query)->fetchOne() === false) {
             $this->error(401, 'Access denied');
         }
 
@@ -98,16 +106,16 @@ SELECT id FROM ' . Tables::categories() . '
                         $this->error(401, 'Access denied e');
                     }
                 }
-                $file = ServiceLocator::get(StringUtil::class)->getElementPath($element_info);
+                $file = $this->stringUtil->getElementPath($element_info);
                 break;
             case 'r':
                 $reprExt = $element_info['representative_ext'] ?? null;
-                $file = ServiceLocator::get(StringUtil::class)->originalToRepresentative(ServiceLocator::get(StringUtil::class)->getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
+                $file = $this->stringUtil->originalToRepresentative($this->stringUtil->getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
                 break;
             case 'f':
                 $formatExt = $format['ext'] ?? null;
-                $file = ServiceLocator::get(StringUtil::class)->originalToFormat(ServiceLocator::get(StringUtil::class)->getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
-                $element_info['file'] = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
+                $file = $this->stringUtil->originalToFormat($this->stringUtil->getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
+                $element_info['file'] = $this->stringUtil->getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
                 break;
         }
 
@@ -116,9 +124,9 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if ($get_part == 'e') {
-            ServiceLocator::get(Util::class)->pwgLog($get_id, 'high');
+            $this->util->pwgLog($get_id, 'high');
         } elseif ($get_part == 'f') {
-            ServiceLocator::get(Util::class)->pwgLog($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
+            $this->util->pwgLog($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
         EventDispatcher::notify('loc_action_before_http_headers');
@@ -139,7 +147,7 @@ SELECT id FROM ' . Tables::categories() . '
             $http_headers[] = 'Last-Modified: ' . $gmt_mtime;
 
             if ($get_part !== 'f' && isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-                ServiceLocator::get(HtmlService::class)->setStatusHeader(304);
+                $this->htmlService->setStatusHeader(304);
                 foreach ($http_headers as $header) {
                     header($header);
                 }
@@ -148,14 +156,14 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if (!isset($ctype)) {
-            $ctype = $this->guessMimeType(ServiceLocator::get(StringUtil::class)->getExtension($file));
+            $ctype = $this->guessMimeType($this->stringUtil->getExtension($file));
         }
 
         $http_headers[] = 'Content-Type: ' . $ctype;
         $http_headers[] = 'Cache-Control: public';
 
         $elementFile = is_scalar($element_info['file'] ?? null) ? (string) $element_info['file'] : basename($file);
-        if (StringUtil::get()->inputString('download', null, $_GET) !== null) {
+        if ($this->stringUtil->inputString('download', null, $_GET) !== null) {
             $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($elementFile) . '";';
             $http_headers[] = 'Content-Transfer-Encoding: binary';
         } else {
@@ -199,7 +207,7 @@ SELECT id FROM ' . Tables::categories() . '
 
     private function error(int $code, string $msg): never
     {
-        ServiceLocator::get(HtmlService::class)->setStatusHeader($code);
+        $this->htmlService->setStatusHeader($code);
         echo $msg;
         exit();
     }

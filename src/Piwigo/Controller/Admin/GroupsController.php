@@ -14,7 +14,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Dml;
@@ -35,6 +34,19 @@ final class GroupsController
         'group_perm',
     ];
 
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly GroupRepository $groupRepository,
+        private readonly PermissionRepository $permissionRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserAdminService $userAdminService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'group_list') {
@@ -49,7 +61,7 @@ final class GroupsController
     private function groupList(): void
     {
         $tpl = TemplateRegistry::current();
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('groups');
@@ -57,18 +69,18 @@ final class GroupsController
         $tabsheet->assign();
 
         if (!empty($_POST) || isset($_GET['delete']) || isset($_GET['toggle_is_default'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
-        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['groups', 'users']);
+        $cache_keys = $this->adminService->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
-            'F_ADD_ACTION'              => ServiceLocator::get(UrlGenerator::class)->admin('group_list'),
-            'PWG_TOKEN'                 => ServiceLocator::get(Util::class)->getPwgToken(),
+            'F_ADD_ACTION'              => $this->urlGenerator->admin('group_list'),
+            'PWG_TOKEN'                 => $this->util->getPwgToken(),
             'CACHE_KEYS'                => $cache_keys,
             'ROOT_URL'                  => UrlService::getRootUrl(),
             'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),
             'page_data_json'            => json_encode([
-                'pwg_token'                    => ServiceLocator::get(Util::class)->getPwgToken(),
+                'pwg_token'                    => $this->util->getPwgToken(),
                 'rootUrl'                      => UrlService::getRootUrl(),
                 'serverId'                     => $cache_keys['_hash'],
                 'serverKey'                    => $cache_keys['users'],
@@ -95,10 +107,10 @@ final class GroupsController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $groupRepo  = ServiceLocator::get(GroupRepository::class);
+        $groupRepo  = $this->groupRepository;
         $userFields = Config::userFields();
 
-        $admin_url             = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $admin_url             = $this->urlGenerator->admin() . '&page=';
         $perm_url              = $admin_url . 'group_perm&group_id=';
         $users_url             = $admin_url . 'user_list&group=';
         $del_url               = $admin_url . 'group_list&delete=';
@@ -115,10 +127,10 @@ final class GroupsController
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
-                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . $this->util->getPwgToken(),
                 'U_PERM'     => $perm_url . $row_id_str,
                 'U_USERS'    => $users_url . $row_id_str,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . $this->util->getPwgToken(),
             ]);
             $group_counter++;
         }
@@ -135,16 +147,16 @@ final class GroupsController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(Util::class)->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
-            ServiceLocator::get(Util::class)->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
+            $this->util->checkPwgToken();
+            $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
+            $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (!isset($_GET['group_id'])) {
             HtmlService::fatalError('group_id URL parameter is missing');
         }
 
-        ServiceLocator::get(Util::class)->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
         $getGroupId = $_GET['group_id'];
         $page['group'] = $getGroupId;
         $group_id      = is_numeric($getGroupId) ? (int) $getGroupId : 0;
@@ -156,15 +168,15 @@ final class GroupsController
 
         if (isset($_POST['falsify']) && count($post_cat_true) > 0) {
             $post_cat_true_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_true);
-            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds($post_cat_true_ids);
-            ServiceLocator::get(PermissionRepository::class)->deleteGroupAccessForGroup($group_id, array_map(intval(...), $subcats));
+            $subcats = $this->categoryService->getSubcatIds($post_cat_true_ids);
+            $this->permissionRepository->deleteGroupAccessForGroup($group_id, array_map(intval(...), $subcats));
         } elseif (isset($_POST['trueify']) && count($post_cat_false) > 0) {
             $post_cat_false_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $post_cat_false);
-            $uppercats     = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($post_cat_false_ids);
+            $uppercats     = $this->categoryAdminService->getUppercatIds($post_cat_false_ids);
             $uppercats_str = array_map(fn (string $v): string => $v, $uppercats);
 
-            $permRepo = ServiceLocator::get(PermissionRepository::class);
-            $catRepo  = ServiceLocator::get(CategoryRepository::class);
+            $permRepo = $this->permissionRepository;
+            $catRepo  = $this->categoryRepository;
 
             $private_uppercats = $catRepo->findPrivateByIds(array_map(intval(...), $uppercats_str));
             $authorized_ids    = $permRepo->findAuthorizedCatIdsByGroup($group_id);
@@ -174,29 +186,29 @@ final class GroupsController
                 $inserts[] = ['group_id' => $group_id, 'cat_id' => $to_autorize_id];
             }
             Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
-            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            $this->userAdminService->invalidateUserCache();
         }
 
         $tpl->assign([
-            'TITLE'              => Lang::t('Manage permissions for group "%s"', ServiceLocator::get(UserAdminService::class)->getGroupname($group_id)),
+            'TITLE'              => Lang::t('Manage permissions for group "%s"', $this->userAdminService->getGroupname($group_id)),
             'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
             'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
-            'F_ACTION'           => ServiceLocator::get(UrlGenerator::class)->admin('group_perm') . '&group_id=' . $group_id,
+            'F_ACTION'           => $this->urlGenerator->admin('group_perm') . '&group_id=' . $group_id,
         ]);
 
         $query_true = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . " ON cat_id = id WHERE status = 'private' AND group_id = " . $group_id . ';';
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_true, [], 'category_option_true');
+        $this->categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
 
-        $authorized_ids = ServiceLocator::get(PermissionRepository::class)->findAuthorizedPrivateCatIdsByGroup($group_id);
+        $authorized_ids = $this->permissionRepository->findAuthorizedPrivateCatIdsByGroup($group_id);
 
         $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private'";
         if (count($authorized_ids) > 0) {
             $query_false .= ' AND id NOT IN (' . implode(',', $authorized_ids) . ')';
         }
         $query_false .= ';';
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query_false, [], 'category_option_false');
+        $this->categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
         $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'group_perm.latte');
     }

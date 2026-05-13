@@ -18,11 +18,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -47,6 +45,31 @@ use Piwigo\Ws\WsHelper;
 
 final class ImagesEndpoints
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly CommentService $commentService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly MetadataAdminService $metadataAdminService,
+        private readonly PermissionService $permissionService,
+        private readonly RateRepository $rateRepository,
+        private readonly RateService $rateService,
+        private readonly SearchService $searchService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+        private readonly TagService $tagService,
+        private readonly UploadService $uploadService,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly Util $util,
+        private readonly WsHelper $wsHelper,
+    ) {
+    }
+
     // ── Internal helpers ─────────────────────────────────────────────────
 
     public function addImageCategoryRelations(int $imageId, string $categoriesString, bool $replaceMode = false): true|PwgError
@@ -56,8 +79,8 @@ final class ImagesEndpoints
         $searchCurrentRanks = false;
         if (empty($categoriesString)) {
             if ($replaceMode) {
-                ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([$imageId]);
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory([]);
+                $this->categoryRepository->deleteImageCategoryByImageIds([$imageId]);
+                $this->categoryAdminService->updateCategory([]);
             }
             return true;
         }
@@ -78,22 +101,22 @@ final class ImagesEndpoints
         $catIds = array_unique($catIds);
         if (count($catIds) === 0) {
             if ($replaceMode) {
-                ServiceLocator::get(CategoryRepository::class)->deleteImageCategoryByImageIds([$imageId]);
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory([]);
+                $this->categoryRepository->deleteImageCategoryByImageIds([$imageId]);
+                $this->categoryAdminService->updateCategory([]);
             }
             return true;
         }
-        $dbCatIds    = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
+        $dbCatIds    = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
         $unknownCatIds = array_diff($catIds, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $dbCatIds));
         if (count($unknownCatIds) !== 0) {
             return new PwgError(500, '[addImageCategoryRelations] the following categories are unknown: ' . implode(', ', $unknownCatIds));
         }
-        $existingCatIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ';')->fetchAllAssociative(), 'category_id'));
+        $existingCatIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ';')->fetchAllAssociative(), 'category_id'));
         if ($replaceMode) {
             $toRemoveCatIds = array_diff($existingCatIds, $catIds);
             if (count($toRemoveCatIds) > 0) {
-                ServiceLocator::get(CategoryRepository::class)->removeImageFromCategories($imageId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
-                ServiceLocator::get(CategoryAdminService::class)->updateCategory(array_map(fn (mixed $v): int => (int) $v, $toRemoveCatIds));
+                $this->categoryRepository->removeImageFromCategories($imageId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
+                $this->categoryAdminService->updateCategory(array_map(fn (mixed $v): int => (int) $v, $toRemoveCatIds));
             }
         }
         $newCatIds = array_diff($catIds, $existingCatIds);
@@ -101,7 +124,7 @@ final class ImagesEndpoints
             return true;
         }
         if ($searchCurrentRanks) {
-            $currentRankOf = array_column(DbConnection::get()->executeQuery('SELECT category_id, MAX(`rank`) AS max_rank FROM ' . Tables::imageCategory() . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $newCatIds) . ') GROUP BY category_id;')->fetchAllAssociative(), 'max_rank', 'category_id');
+            $currentRankOf = array_column($this->conn->executeQuery('SELECT category_id, MAX(`rank`) AS max_rank FROM ' . Tables::imageCategory() . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $newCatIds) . ') GROUP BY category_id;')->fetchAllAssociative(), 'max_rank', 'category_id');
             foreach ($newCatIds as $catId) {
                 if (!isset($currentRankOf[$catId])) {
                     $currentRankOf[$catId] = 0;
@@ -116,7 +139,7 @@ final class ImagesEndpoints
             $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, 'rank' => $rankOnCategory[$catId]];
         }
         Dml::massInserts(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
-        ServiceLocator::get(CategoryAdminService::class)->updateCategory($newCatIds);
+        $this->categoryAdminService->updateCategory($newCatIds);
         return true;
     }
 
@@ -182,13 +205,13 @@ final class ImagesEndpoints
             return new PwgError(403, 'Comments are disabled');
         }
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
-        if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
+        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
+        if ($this->conn->executeQuery($query)->fetchOne() === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
         }
         $comm = ['author' => trim(is_string($params['author'] ?? null) ? $params['author'] : ''), 'content' => trim(is_string($params['content'] ?? null) ? $params['content'] : ''), 'image_id' => $pImageId];
         $infos         = [];
-        $commentAction = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_string($params['key'] ?? null) ? $params['key'] : '', $infos);
+        $commentAction = $this->commentService->insertUserComment($comm, is_string($params['key'] ?? null) ? $params['key'] : '', $infos);
         switch ($commentAction) {
             case 'reject':
                 $infos[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
@@ -208,13 +231,13 @@ final class ImagesEndpoints
     public function getInfo(array $params, PwgServer $service): PwgError|array
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
-        $imageRow = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAssociative();
+        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
+        $imageRow = $this->conn->executeQuery($query)->fetchAssociative();
         if ($imageRow === false) {
             return new PwgError(404, 'image_id not found');
         }
         /** @var array<string, mixed> $imageRow */
-        $imageRow      = array_merge($imageRow, ServiceLocator::get(WsHelper::class)->getUrls($imageRow));
+        $imageRow      = array_merge($imageRow, $this->wsHelper->getUrls($imageRow));
         $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
         $imageRowFile  = is_string($imageRow['file'] ?? null) ? $imageRow['file'] : '';
         $imageRow['name_raw']    = $imageRow['name'];
@@ -224,56 +247,56 @@ final class ImagesEndpoints
         $imageRow['comment']     = EventDispatcher::dispatch('render_element_description', $imageRow['comment'], __FUNCTION__);
         $isCommentable    = false;
         $relatedCategories = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
             if ($row['commentable'] === 'true') {
                 $isCommentable = true;
             }
             unset($row['commentable']);
-            $row['url']      = UrlService::get()->makeIndexUrl(['category' => $row]);
-            $row['page_url'] = UrlService::get()->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
+            $row['url']      = $this->urlService->makeIndexUrl(['category' => $row]);
+            $row['page_url'] = $this->urlService->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $catNameRaw      = EventDispatcher::dispatch('render_category_name', $row['name'], __FUNCTION__);
             $row['name']     = strip_tags(is_scalar($catNameRaw) ? (string) $catNameRaw : '');
             $relatedCategories[] = $row;
         }
-        usort($relatedCategories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
-        if (empty($relatedCategories) && !PermissionService::get()->isAdmin()) {
+        usort($relatedCategories, $this->categoryService->globalRankCompare(...));
+        if (empty($relatedCategories) && !$this->permissionService->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
         /** @var list<array<string, mixed>> $relatedTags */
-        $relatedTags = ServiceLocator::get(TagService::class)->getCommonTags([$imageRowId], -1);
+        $relatedTags = $this->tagService->getCommonTags([$imageRowId], -1);
         foreach ($relatedTags as $i => $tag) {
-            $tag['url']      = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
-            $tag['page_url'] = UrlService::get()->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'tags' => [$tag]]);
+            $tag['url']      = $this->urlService->makeIndexUrl(['tags' => [$tag]]);
+            $tag['page_url'] = $this->urlService->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'tags' => [$tag]]);
             unset($tag['counter']);
             $tag['id']       = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
             $relatedTags[$i] = $tag;
         }
         $rating = ['score' => $imageRow['rating_score'], 'count' => 0, 'average' => null];
         if (isset($rating['score'])) {
-            [$rating['count'], $rating['average']] = ServiceLocator::get(RateRepository::class)->findCountAndAvgByElementId($imageRowId);
+            [$rating['count'], $rating['average']] = $this->rateRepository->findCountAndAvgByElementId($imageRowId);
             $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
         }
         $relatedComments = [];
         $whereComments   = 'image_id = ' . $imageRowId;
-        if (!PermissionService::get()->isAdmin()) {
+        if (!$this->permissionService->isAdmin()) {
             $whereComments .= ' AND validated="true"';
         }
-        $nbCommentsCol = array_column(DbConnection::get()->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
+        $nbCommentsCol = array_column($this->conn->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
         $nbCommentsRaw = $nbCommentsCol[0] ?? null;
         $nbComments          = is_numeric($nbCommentsRaw) ? (int) $nbCommentsRaw : 0;
         $pCommentsPerPage    = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
         $pCommentsPage       = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
         if ($nbComments > 0 && $pCommentsPerPage > 0) {
-            foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT id, date, author, content FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ' ORDER BY date LIMIT ' . $pCommentsPerPage . ' OFFSET ' . ($pCommentsPerPage * $pCommentsPage) . ';')->fetchAllAssociative() as $row) {
+            foreach ($this->conn->executeQuery('SELECT id, date, author, content FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ' ORDER BY date LIMIT ' . $pCommentsPerPage . ' OFFSET ' . ($pCommentsPerPage * $pCommentsPage) . ';')->fetchAllAssociative() as $row) {
                 $row['id']         = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $relatedComments[] = $row;
             }
         }
         $commentPostData = null;
-        if (Config::activateComments() && $isCommentable && (!PermissionService::get()->isAGuest() || Config::commentsForall())) {
+        if (Config::activateComments() && $isCommentable && (!$this->permissionService->isAGuest() || Config::commentsForall())) {
             $commentPostData['author'] = stripslashes(CurrentUser::get()->username);
-            $commentPostData['key']    = ServiceLocator::get(Util::class)->getEphemeralKey(2, (string) $pImageId);
+            $commentPostData['key']    = $this->util->getEphemeralKey(2, (string) $pImageId);
         }
         $ret = $imageRow;
         foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
@@ -284,7 +307,7 @@ final class ImagesEndpoints
         unset($ret['path'], $ret['storage_category_id']);
         $ret['rates']    = [WS_XML_ATTRIBUTES => $rating];
         $ret['categories'] = new PwgNamedArray($relatedCategories, 'category', ['id', 'url', 'page_url']);
-        $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', ServiceLocator::get(WsHelper::class)->getTagXmlAttributes());
+        $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', $this->wsHelper->getTagXmlAttributes());
         if (isset($commentPostData)) {
             $ret['comment_post'] = [WS_XML_ATTRIBUTES => $commentPostData];
         }
@@ -301,11 +324,11 @@ final class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
-        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
-        if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
+        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
+        if ($this->conn->executeQuery($query)->fetchOne() === false) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
-        $res = ServiceLocator::get(RateService::class)->ratePicture($pImageId, $pRate);
+        $res = $this->rateService->ratePicture($pImageId, $pRate);
         if ($res === false) {
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', Config::rateItems()));
         }
@@ -323,22 +346,22 @@ final class ImagesEndpoints
         $pPerPage  = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $images    = [];
         /** @var array<string> $whereClauses */
-        $whereClauses = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, 'i.');
-        $orderBy      = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
+        $whereClauses = $this->wsHelper->imageSqlFilter($params, 'i.');
+        $orderBy      = $this->wsHelper->imageSqlOrder($params, 'i.');
         $superOrderBy = false;
         if (!empty($orderBy)) {
             Config::override('order_by', 'ORDER BY ' . $orderBy);
             $superOrderBy = true;
         }
-        $searchResult = ServiceLocator::get(SearchService::class)->getQuickSearchResults($pQuery, ['super_order_by' => $superOrderBy, 'images_where' => implode(' AND ', $whereClauses)]);
+        $searchResult = $this->searchService->getQuickSearchResults($pQuery, ['super_order_by' => $superOrderBy, 'images_where' => implode(' AND ', $whereClauses)]);
         $searchResultArr = $searchResult ?? [];
         $searchItems  = is_array($searchResultArr['items'] ?? null) ? $searchResultArr['items'] : [];
         $imageIds     = array_slice($searchItems, $pPage * $pPerPage, $pPerPage);
         if (count($imageIds)) {
             $imageIdsInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds);
             $imageIdsFlip = array_flip($imageIdsInt);
-            $favoriteIds  = UrlService::get()->getUserFavorites();
-            foreach (ServiceLocator::get(ImageRepository::class)->findByIds($imageIdsInt) as $row) {
+            $favoriteIds  = $this->urlService->getUserFavorites();
+            foreach ($this->imageRepository->findByIds($imageIdsInt) as $row) {
                 $image       = [];
                 $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
                 $image['is_favorite'] = $rowIdInt !== 0 && isset($favoriteIds[$rowIdInt]);
@@ -353,7 +376,7 @@ final class ImagesEndpoints
                 $nameRaw     = EventDispatcher::dispatch('render_element_name', $image['name'] ?? '', __FUNCTION__);
                 $image['name']    = strip_tags(is_string($nameRaw) ? $nameRaw : (is_scalar($nameRaw) ? (string) $nameRaw : ''));
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
-                $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
+                $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $imgIdRaw = $image['id'] ?? null;
                 $imgIdInt = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;
                 if (isset($imageIdsFlip[$imgIdInt])) {
@@ -363,7 +386,7 @@ final class ImagesEndpoints
             ksort($images, SORT_NUMERIC);
             $images = array_values($images);
         }
-        return ['paging' => new PwgNamedStruct(['page' => $pPage, 'per_page' => $pPerPage, 'count' => count($images), 'total_count' => count($searchItems)]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $pPage, 'per_page' => $pPerPage, 'count' => count($images), 'total_count' => count($searchItems)]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
     }
 
     /**
@@ -375,11 +398,11 @@ final class ImagesEndpoints
         $searchInfo = null;
         if (isset($params['search_id'])) {
             $pSearchId = is_string($params['search_id']) ? $params['search_id'] : '';
-            $searchPattern = ServiceLocator::get(SearchService::class)->getSearchIdPattern($pSearchId);
+            $searchPattern = $this->searchService->getSearchIdPattern($pSearchId);
             if ($searchPattern === null || $searchPattern === '') {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
             }
-            $searchInfo = ServiceLocator::get(SearchService::class)->getSearchInfo($pSearchId);
+            $searchInfo = $this->searchService->getSearchInfo($pSearchId);
             if ($searchInfo === null || count($searchInfo) === 0) {
                 return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
             }
@@ -406,7 +429,7 @@ final class ImagesEndpoints
                 }
             }
             $search['fields']['allwords']['fields'] = $pAllwordsFields;
-            $search['fields']['allwords']['words']  = ServiceLocator::get(SearchService::class)->splitAllwords(is_string($params['allwords']) ? $params['allwords'] : '');
+            $search['fields']['allwords']['words']  = $this->searchService->splitAllwords(is_string($params['allwords']) ? $params['allwords'] : '');
         }
         if (isset($params['tags'])) {
             $pTags = is_array($params['tags']) ? $params['tags'] : [];
@@ -519,7 +542,7 @@ final class ImagesEndpoints
             }
         }
         $forkedFrom = isset($searchInfo['id']) && is_scalar($searchInfo['id']) ? (string) $searchInfo['id'] : null;
-        [$searchUuid, $searchUrl] = ServiceLocator::get(SearchService::class)->saveSearch($search, $forkedFrom);
+        [$searchUuid, $searchUrl] = $this->searchService->saveSearch($search, $forkedFrom);
         return ['search_id' => $searchUuid, 'search_url' => $searchUrl];
     }
 
@@ -531,10 +554,10 @@ final class ImagesEndpoints
         }
         $pLevel    = is_numeric($params['level']) ? (int) $params['level'] : 0;
         $pImageIds = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $affected  = ServiceLocator::get(ImageRepository::class)->setLevelForIds($pLevel, $pImageIds);
-        ServiceLocator::get(Util::class)->pwgActivity('photo', $pImageIds, 'edit');
+        $affected  = $this->imageRepository->setLevelForIds($pLevel, $pImageIds);
+        $this->util->pwgActivity('photo', $pImageIds, 'edit');
         if ($affected) {
-            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            $this->userAdminService->invalidateUserCache();
         }
         return $affected;
     }
@@ -548,16 +571,16 @@ final class ImagesEndpoints
         $pImageIdArr   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
         $pCategoryId   = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         if (count($pImageIdArr) > 1) {
-            ServiceLocator::get(CategoryAdminService::class)->saveImagesOrder($pCategoryId, $pImageIdArr);
-            $imageIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
+            $this->categoryAdminService->saveImagesOrder($pCategoryId, $pImageIdArr);
+            $imageIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
             return ['image_id' => $imageIds, 'category_id' => $pCategoryId];
         }
         $pImageId = $pImageIdArr[0] ?? 0;
         if (empty($params['rank'])) {
             return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
         }
-        $catRepo = ServiceLocator::get(CategoryRepository::class);
-        if (!ServiceLocator::get(ImageRepository::class)->existsById($pImageId)) {
+        $catRepo = $this->categoryRepository;
+        if (!$this->imageRepository->existsById($pImageId)) {
             return new PwgError(404, 'image_id not found');
         }
         if (!$catRepo->hasImageInCategory($pImageId, $pCategoryId)) {
@@ -605,7 +628,7 @@ final class ImagesEndpoints
         $logger->debug(__FUNCTION__, $params);
         $pImageId    = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pTypeAf     = is_string($params['type'] ?? null) ? $params['type'] : '';
-        $image       = ServiceLocator::get(ImageRepository::class)->findById($pImageId);
+        $image       = $this->imageRepository->findById($pImageId);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -620,7 +643,7 @@ final class ImagesEndpoints
         $this->mergeChunks($filePath, $imageMd5sum, $originalType);
         chmod($filePath, Config::chmodValue() & 0o666);
         if ($pTypeAf === 'file') {
-            $infos = ServiceLocator::get(UploadService::class)->pwgImageInfos($filePath);
+            $infos = $this->uploadService->pwgImageInfos($filePath);
             $doUpdate = false;
             foreach (['width', 'height', 'filesize'] as $imageInfo) {
                 if ($infos[$imageInfo] > $image[$imageInfo]) {
@@ -632,7 +655,7 @@ final class ImagesEndpoints
                 return true;
             }
         }
-        ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $imageFile, null, null, $pImageId, $imageMd5sum);
+        $this->uploadService->addUploadedFile($filePath, $imageFile, null, null, $pImageId, $imageMd5sum);
         return null;
     }
 
@@ -647,7 +670,7 @@ final class ImagesEndpoints
         $pOriginalSum    = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
         $pOriginalFilename = is_scalar($params['original_filename']) ? (string) $params['original_filename'] : null;
         $pLevel          = isset($params['level']) && is_numeric($params['level']) ? (int) $params['level'] : null;
-        if ($pImageId > 0 && !ServiceLocator::get(ImageRepository::class)->existsById($pImageId)) {
+        if ($pImageId > 0 && !$this->imageRepository->existsById($pImageId)) {
             return new PwgError(404, 'image_id not found');
         }
         if ($params['check_uniqueness']) {
@@ -658,7 +681,7 @@ final class ImagesEndpoints
             if (Config::uniquenessMode() === 'filename') {
                 $whereClause = "file = '" . (is_string($params['original_filename'] ?? null) ? $params['original_filename'] : '') . "'";
             }
-            $counter = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE ' . $whereClause)->fetchOne();
+            $counter = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE ' . $whereClause)->fetchOne();
             if ((is_numeric($counter) ? (int) $counter : 0) !== 0) {
                 return new PwgError(500, 'file already exists');
             }
@@ -673,7 +696,7 @@ final class ImagesEndpoints
         $filePath = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-original';
         $this->mergeChunks($filePath, $pOriginalSum, $originalType);
         chmod($filePath, Config::chmodValue() & 0o666);
-        $imageId = ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
+        $imageId = $this->uploadService->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
         $update  = [];
         foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
             if (isset($params[$key])) {
@@ -688,16 +711,16 @@ final class ImagesEndpoints
             $pCategoriesStr = is_string($params['categories']) ? $params['categories'] : '';
             $this->addImageCategoryRelations($imageId, $pCategoriesStr);
             if (preg_match('/^\d+/', $pCategoriesStr, $matches)) {
-                $category              = ServiceLocator::get(CategoryRepository::class)->findCategoryById((int) $matches[0]);
+                $category              = $this->categoryRepository->findCategoryById((int) $matches[0]);
                 $urlParams['section']  = 'categories';
                 $urlParams['category'] = $category;
             }
         }
         if (isset($params['tag_ids']) && $params['tag_ids'] !== '') {
-            ServiceLocator::get(TagAdminService::class)->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
+            $this->tagAdminService->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
         }
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        return ['image_id' => $imageId, 'url' => UrlService::get()->makePictureUrl($urlParams)];
+        $this->userAdminService->invalidateUserCache();
+        return ['image_id' => $imageId, 'url' => $this->urlService->makePictureUrl($urlParams)];
     }
 
     /**
@@ -729,13 +752,13 @@ final class ImagesEndpoints
         }
         $pImageIdAs  = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pCategoryAs = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
-        if ($pImageIdAs > 0 && !ServiceLocator::get(ImageRepository::class)->existsById($pImageIdAs)) {
+        if ($pImageIdAs > 0 && !$this->imageRepository->existsById($pImageIdAs)) {
             return new PwgError(404, 'image_id not found');
         }
         $filesTmpRaw  = $filesImage['tmp_name'] ?? null;
         $filesTmp     = is_string($filesTmpRaw) ? $filesTmpRaw : '';
         $filesName    = is_string($filesImage['name'] ?? null) ? $filesImage['name'] : null;
-        $imageId   = ServiceLocator::get(UploadService::class)->addUploadedFile($filesTmp, $filesName, $pCategoryAs, 8, $pImageIdAs > 0 ? $pImageIdAs : null);
+        $imageId   = $this->uploadService->addUploadedFile($filesTmp, $filesName, $pCategoryAs, 8, $pImageIdAs > 0 ? $pImageIdAs : null);
         $update    = [];
         foreach (['name', 'author', 'comment', 'level', 'date_creation'] as $key) {
             if (isset($params[$key])) {
@@ -747,33 +770,33 @@ final class ImagesEndpoints
             $tagIds = [];
             if (is_array($params['tags'])) {
                 foreach ($params['tags'] as $tagName) {
-                    $tagIds[] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName(is_scalar($tagName) ? (string) $tagName : '');
+                    $tagIds[] = $this->tagAdminService->tagIdFromTagName(is_scalar($tagName) ? (string) $tagName : '');
                 }
             } else {
                 $tagNamesSplit = preg_split('~(?<!\\\),~', is_string($params['tags']) ? $params['tags'] : '');
                 $tagNames = $tagNamesSplit !== false ? $tagNamesSplit : [];
                 foreach ($tagNames as $tagName) {
-                    $tagIds[] = ServiceLocator::get(TagAdminService::class)->tagIdFromTagName(preg_replace('#\\\\*,#', ',', $tagName) ?? '');
+                    $tagIds[] = $this->tagAdminService->tagIdFromTagName(preg_replace('#\\\\*,#', ',', $tagName) ?? '');
                 }
             }
-            ServiceLocator::get(TagAdminService::class)->addTags($tagIds, [$imageId]);
+            $this->tagAdminService->addTags($tagIds, [$imageId]);
         }
         $urlParams = ['image_id' => $imageId];
         if (!empty($pCategoryAs)) {
             $firstCatId  = $pCategoryAs[0] ?? 0;
-            $category    = ServiceLocator::get(CategoryRepository::class)->findCategoryById($firstCatId);
+            $category    = $this->categoryRepository->findCategoryById($firstCatId);
             $urlParams['section']  = 'categories';
             $urlParams['category'] = $category;
         }
-        ServiceLocator::get(MetadataAdminService::class)->syncMetadata([$imageId]);
-        return ['image_id' => $imageId, 'url' => UrlService::get()->makePictureUrl($urlParams)];
+        $this->metadataAdminService->syncMetadata([$imageId]);
+        return ['image_id' => $imageId, 'url' => $this->urlService->makePictureUrl($urlParams)];
     }
 
     /** @param array<mixed> $params */
     public function upload(array $params, PwgServer $service): mixed
     {
         $formatExt = null;
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (isset($params['format_of'])) {
@@ -844,13 +867,13 @@ final class ImagesEndpoints
             rename("{$filePath}.part", $filePath);
             if (isset($params['format_of'])) {
                 $formatOfId = is_numeric($params['format_of']) ? (int) $params['format_of'] : 0;
-                $images     = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $formatOfId . ';')->fetchAllAssociative();
+                $images     = $this->conn->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $formatOfId . ';')->fetchAllAssociative();
                 if (count($images) === 0) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image      = $images[0];
                 $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
-                $addStatus  = ServiceLocator::get(UploadService::class)->addFormat($filePath, $formatExt ?? '', $imageIdStr);
+                $addStatus  = $this->uploadService->addFormat($filePath, $formatExt ?? '', $imageIdStr);
                 return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumbUrl($image), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
             }
             $name          = stripslashes(is_string($params['name'] ?? null) ? $params['name'] : '');
@@ -859,19 +882,19 @@ final class ImagesEndpoints
             $pCategoryInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $pCategory);
             $pCategoryFirst = $pCategoryInt[0] ?? 0;
             if ($params['update_mode']) {
-                $images = DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id WHERE i.file = ' . DbConnection::get()->quote($name) . ' AND ic.category_id = ' . $pCategoryFirst . ';')->fetchAllAssociative();
+                $images = $this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id WHERE i.file = ' . $this->conn->quote($name) . ' AND ic.category_id = ' . $pCategoryFirst . ';')->fetchAllAssociative();
                 if ($images != null) {
                     $img0      = $images[0];
                     $idImage   = isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
                     $addStatus = 'update';
                 }
             }
-            $imageId = ServiceLocator::get(UploadService::class)->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
-            $catRepo2   = ServiceLocator::get(CategoryRepository::class);
-            $imageInfos = ServiceLocator::get(ImageRepository::class)->findById($imageId);
+            $imageId = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
+            $catRepo2   = $this->categoryRepository;
+            $imageInfos = $this->imageRepository->findById($imageId);
             $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
-            $nbPhotosLounge = ServiceLocator::get(Connection::class)->executeQuery('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')', [$pCategoryFirst])->fetchOne();
-            $categoryName   = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($pCategoryFirst, null);
+            $nbPhotosLounge = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')', [$pCategoryFirst])->fetchOne();
+            $categoryName   = $this->htmlService->getCatDisplayNameFromId($pCategoryFirst, null);
             if ($imageInfos === null) {
                 return null;
             }
@@ -891,7 +914,7 @@ final class ImagesEndpoints
         $pImageIdAsync = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pChunk        = is_numeric($params['chunk']) ? (int) $params['chunk'] : 0;
         $pChunks       = is_numeric($params['chunks']) ? (int) $params['chunks'] : 0;
-        if ($pImageIdAsync > 0 && !ServiceLocator::get(ImageRepository::class)->existsById($pImageIdAsync)) {
+        if ($pImageIdAsync > 0 && !$this->imageRepository->existsById($pImageIdAsync)) {
             return new PwgError(404, __FUNCTION__ . ' : image_id not found');
         }
         $pUserId = (string) CurrentUser::get()->id;
@@ -901,7 +924,7 @@ final class ImagesEndpoints
         if (!Util::mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
-        ServiceLocator::get(StringUtil::class)->secureDirectory(dirname($chunkfilePath));
+        $this->stringUtil->secureDirectory(dirname($chunkfilePath));
         $filesFile2RawArr  = $_FILES['file'] ?? null;
         $filesFile2        = is_array($filesFile2RawArr) ? $filesFile2RawArr : [];
         $filesFile2TmpRaw  = $filesFile2['tmp_name'] ?? null;
@@ -986,10 +1009,10 @@ final class ImagesEndpoints
         $pCategoryAsync  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
         $pLevelAsync     = is_numeric($params['level']) ? (int) $params['level'] : null;
         $pImageIdUpload  = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
-        $imageId         = ServiceLocator::get(UploadService::class)->addUploadedFile($outputFilepath, $pFilename, $pCategoryAsync, $pLevelAsync, $pImageIdUpload, $pOriginalSum);
+        $imageId         = $this->uploadService->addUploadedFile($outputFilepath, $pFilename, $pCategoryAsync, $pLevelAsync, $pImageIdUpload, $pOriginalSum);
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $imageId);
         if (isset($params['tag_ids']) && $params['tag_ids'] !== '') {
-            ServiceLocator::get(TagAdminService::class)->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
+            $this->tagAdminService->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
         }
         $update = [];
         foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
@@ -1000,7 +1023,7 @@ final class ImagesEndpoints
         if (count($update) > 0) {
             Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         }
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->userAdminService->invalidateUserCache();
         $userRef = &$GLOBALS['user'];
         if (is_array($userRef) && !empty($params['level']) && $params['level'] > ($userRef['level'] ?? 0)) {
             $userRef['level'] = $params['level'];
@@ -1033,14 +1056,14 @@ final class ImagesEndpoints
         if (Config::uniquenessMode() === 'md5sum') {
             $md5sumsResult = preg_split($splitPattern, is_string($params['md5sum_list'] ?? null) ? $params['md5sum_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
             $md5sums  = $md5sumsResult !== false ? $md5sumsResult : [];
-            $idOfMd5  = array_column(DbConnection::get()->executeQuery('SELECT id, md5sum FROM ' . Tables::images() . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
+            $idOfMd5  = array_column($this->conn->executeQuery('SELECT id, md5sum FROM ' . Tables::images() . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $idOfMd5[$md5sum] ?? null;
             }
         } elseif (Config::uniquenessMode() === 'filename') {
             $filenamesResult = preg_split($splitPattern, is_string($params['filename_list'] ?? null) ? $params['filename_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
             $filenames = $filenamesResult !== false ? $filenamesResult : [];
-            $idOfFile  = array_column(DbConnection::get()->executeQuery('SELECT id, file FROM ' . Tables::images() . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
+            $idOfFile  = array_column($this->conn->executeQuery('SELECT id, file FROM ' . Tables::images() . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
             foreach ($filenames as $filename) {
                 $result[$filename] = $idOfFile[$filename] ?? null;
             }
@@ -1053,15 +1076,15 @@ final class ImagesEndpoints
     {
         $candidates = json_decode(stripslashes(is_string($params['filename_list'] ?? null) ? $params['filename_list'] : ''), true);
         $uniqueFilenamesDb = [];
-        foreach (ServiceLocator::get(ImageRepository::class)->findAllIdFilename() as $row) {
-            $filenameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : '');
+        foreach ($this->imageRepository->findAllIdFilename() as $row) {
+            $filenameWoExt = $this->stringUtil->getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : '');
             $uniqueFilenamesDb[$filenameWoExt][] = $row['id'];
         }
         $formatExtensions = Config::formatExtensions();
         usort($formatExtensions, fn (mixed $a, mixed $b): int => strlen((string) $b) - strlen((string) $a));
         /** @var array<string, list<string>> $formatDb */
         $formatDb = [];
-        foreach (ServiceLocator::get(ImageRepository::class)->findAllFormats() as $row) {
+        foreach ($this->imageRepository->findAllFormats() as $row) {
             $fmtImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $fmtExtVal  = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             $formatDb[$fmtImageId][] = $fmtExtVal;
@@ -1104,7 +1127,7 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['format_id'])) {
@@ -1113,7 +1136,7 @@ final class ImagesEndpoints
         $params['format_id'] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['format_id']);
         $formatIds = array_filter($params['format_id'], fn (int $v): bool => $v >= 0);
         $ok        = true;
-        $imgRepo   = ServiceLocator::get(ImageRepository::class);
+        $imgRepo   = $this->imageRepository;
         /** @var array<string, list<string>> $formatsOf */
         $formatsOf = [];
         /** @var list<string> $imageIds */
@@ -1136,11 +1159,11 @@ final class ImagesEndpoints
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
-            $imagePath = ServiceLocator::get(StringUtil::class)->getElementPath($row);
+            $imagePath = $this->stringUtil->getElementPath($row);
             $files     = [];
             if (isset($formatsOf[$rowId])) {
                 foreach ($formatsOf[$rowId] as $formatExt) {
-                    $files[] = ServiceLocator::get(StringUtil::class)->originalToFormat($imagePath, $formatExt);
+                    $files[] = $this->stringUtil->originalToFormat($imagePath, $formatExt);
                 }
             }
             foreach ($files as $path) {
@@ -1152,7 +1175,7 @@ final class ImagesEndpoints
             }
         }
         $imgRepo->deleteFormatsByFormatIds(array_map(intval(...), $formatIds));
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->userAdminService->invalidateUserCache();
         return $ok;
     }
 
@@ -1163,7 +1186,7 @@ final class ImagesEndpoints
     public function checkFiles(array $params, PwgServer $service): PwgError|array
     {
         $checkImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $path         = ServiceLocator::get(ImageRepository::class)->findPathById($checkImageId);
+        $path         = $this->imageRepository->findPathById($checkImageId);
         if ($path === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1187,11 +1210,11 @@ final class ImagesEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer $service): mixed
     {
-        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $setImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $imageRow   = ServiceLocator::get(ImageRepository::class)->findById($setImageId);
+        $imageRow   = $this->imageRepository->findById($setImageId);
         if ($imageRow === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1226,7 +1249,7 @@ final class ImagesEndpoints
         if (count($update) > 0) {
             $update['id'] = $setImageId;
             Dml::singleUpdate(Tables::images(), $update, ['id' => $update['id']]);
-            ServiceLocator::get(Util::class)->pwgActivity('photo', $setImageId, 'edit');
+            $this->util->pwgActivity('photo', $setImageId, 'edit');
         }
         if (isset($params['categories'])) {
             $this->addImageCategoryRelations($setImageId, is_string($params['categories']) ? $params['categories'] : '', $multipleValueMode === 'replace');
@@ -1240,9 +1263,9 @@ final class ImagesEndpoints
                 }
             }
             if ($multipleValueMode === 'replace') {
-                ServiceLocator::get(TagAdminService::class)->setTags($tagIds, $setImageId);
+                $this->tagAdminService->setTags($tagIds, $setImageId);
             } elseif ($multipleValueMode === 'append') {
-                ServiceLocator::get(TagAdminService::class)->addTags($tagIds, [$setImageId]);
+                $this->tagAdminService->addTags($tagIds, [$setImageId]);
             } else {
                 return new PwgError(500, '[ws_images_setInfo] invalid parameter multiple_value_mode "' . $multipleValueMode . '", possible values are {replace, append}.');
             }
@@ -1255,17 +1278,17 @@ final class ImagesEndpoints
             foreach ($requestTagList as $idx => $tagCandidate) {
                 $requestTagList[$idx] = strip_tags(stripslashes(is_string($tagCandidate) ? $tagCandidate : ''));
             }
-            $tagList = ServiceLocator::get(TagAdminService::class)->getTagIds($requestTagList);
-            ServiceLocator::get(TagAdminService::class)->setTags($tagList, $setImageId);
+            $tagList = $this->tagAdminService->getTagIds($requestTagList);
+            $this->tagAdminService->setTags($tagList, $setImageId);
         }
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->userAdminService->invalidateUserCache();
         return null;
     }
 
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer $service): PwgError|int
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $delImageIdsRaw = $params['image_id'];
@@ -1274,8 +1297,8 @@ final class ImagesEndpoints
         }
         $delImageIdsRaw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $delImageIdsRaw);
         $imageIds       = array_filter($delImageIdsRaw, fn (int $v): bool => $v > 0);
-        $ret            = ServiceLocator::get(ImageAdminService::class)->deleteElements(array_values($imageIds), true);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $ret            = $this->imageAdminService->deleteElements(array_values($imageIds), true);
+        $this->userAdminService->invalidateUserCache();
         return $ret;
     }
 
@@ -1283,7 +1306,7 @@ final class ImagesEndpoints
     public function checkUpload(mixed $params, PwgServer $service): mixed
     {
         $ret = [];
-        $ret['message']        = ServiceLocator::get(UploadService::class)->readyForUploadMessage();
+        $ret['message']        = $this->uploadService->readyForUploadMessage();
         $ret['ready_for_upload'] = ($ret['message'] === null || $ret['message'] === '');
         return $ret;
     }
@@ -1294,7 +1317,7 @@ final class ImagesEndpoints
      */
     public function emptyLounge(array $params, PwgServer $service): array
     {
-        return ['rows' => ServiceLocator::get(CategoryAdminService::class)->emptyLounge()];
+        return ['rows' => $this->categoryAdminService->emptyLounge()];
     }
 
     /**
@@ -1303,7 +1326,7 @@ final class ImagesEndpoints
      */
     public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $ucImageIdsRaw = $params['image_id'];
@@ -1313,9 +1336,9 @@ final class ImagesEndpoints
         $ucImageIdsRaw = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ucImageIdsRaw);
         $imageIds      = array_values(array_filter($ucImageIdsRaw, fn (int $v): bool => $v > 0));
         $ucCategoryId  = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $movedFromLounge  = ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
-        $categoryInfos    = ['nb_photos' => ServiceLocator::get(CategoryRepository::class)->countImagesByCategoryId($ucCategoryId)];
-        $categoryName     = ServiceLocator::get(HtmlService::class)->getCatDisplayNameFromId($ucCategoryId, null);
+        $movedFromLounge  = $this->categoryAdminService->emptyLounge();
+        $categoryInfos    = ['nb_photos' => $this->categoryRepository->countImagesByCategoryId($ucCategoryId)];
+        $categoryName     = $this->htmlService->getCatDisplayNameFromId($ucCategoryId, null);
         EventDispatcher::notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
         return ['moved_from_lounge' => $movedFromLounge, 'category' => ['id' => $ucCategoryId, 'nb_photos' => $categoryInfos['nb_photos'], 'label' => $categoryName]];
     }
@@ -1326,16 +1349,16 @@ final class ImagesEndpoints
      */
     public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $noMd5sumIds    = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
+        $noMd5sumIds    = $this->imageAdminService->getPhotosNoMd5sum();
         $addedCount     = 0;
         if (count($noMd5sumIds) > 0) {
             $md5sumIdsToAdd = array_slice($noMd5sumIds, 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
-            $addedCount     = ServiceLocator::get(ImageAdminService::class)->addMd5sum($md5sumIdsToAdd);
+            $addedCount     = $this->imageAdminService->addMd5sum($md5sumIdsToAdd);
         }
-        return ['nb_added' => $addedCount, 'nb_no_md5sum' => count(ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum())];
+        return ['nb_added' => $addedCount, 'nb_no_md5sum' => count($this->imageAdminService->getPhotosNoMd5sum())];
     }
 
     /**
@@ -1344,7 +1367,7 @@ final class ImagesEndpoints
      */
     public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $syncImageIdsRaw = $params['image_id'];
@@ -1362,11 +1385,11 @@ final class ImagesEndpoints
         if (empty($imageIds)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
-        $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
+        $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
         if (empty($imageIds)) {
             return new PwgError(403, 'No image found');
         }
-        ServiceLocator::get(MetadataAdminService::class)->syncMetadata($imageIds);
+        $this->metadataAdminService->syncMetadata($imageIds);
         return ['nb_synchronized' => count($imageIds)];
     }
 
@@ -1376,36 +1399,36 @@ final class ImagesEndpoints
      */
     public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $orphanIdsToDelete = array_slice(ServiceLocator::get(ImageAdminService::class)->getOrphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
-        $deletedCount      = ServiceLocator::get(ImageAdminService::class)->deleteElements($orphanIdsToDelete, true);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
-        return ['nb_deleted' => $deletedCount, 'nb_orphans' => count(ServiceLocator::get(ImageAdminService::class)->getOrphans())];
+        $orphanIdsToDelete = array_slice($this->imageAdminService->getOrphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
+        $deletedCount      = $this->imageAdminService->deleteElements($orphanIdsToDelete, true);
+        $this->userAdminService->invalidateUserCache();
+        return ['nb_deleted' => $deletedCount, 'nb_orphans' => count($this->imageAdminService->getOrphans())];
     }
 
     /** @param array<mixed> $params */
     public function setCategory(array $params, PwgServer $service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $scImageIds   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $categories   = DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id = ' . $scCategoryId . ';')->fetchAllAssociative();
+        $categories   = $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id = ' . $scCategoryId . ';')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
         $scAction = is_string($params['action'] ?? null) ? $params['action'] : '';
         if ($scAction === 'associate') {
-            ServiceLocator::get(CategoryAdminService::class)->associateImagesToCategories($scImageIds, [$scCategoryId]);
+            $this->categoryAdminService->associateImagesToCategories($scImageIds, [$scCategoryId]);
         } elseif ($scAction === 'dissociate') {
-            ServiceLocator::get(CategoryAdminService::class)->dissociateImagesFromCategory($scImageIds, (string) $scCategoryId);
+            $this->categoryAdminService->dissociateImagesFromCategory($scImageIds, (string) $scCategoryId);
         } elseif ($scAction === 'move') {
-            ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories($scImageIds, [$scCategoryId]);
+            $this->categoryAdminService->moveImagesToCategories($scImageIds, [$scCategoryId]);
         }
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->userAdminService->invalidateUserCache();
         return null;
     }
 }

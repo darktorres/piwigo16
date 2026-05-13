@@ -165,7 +165,7 @@ return [
     GroupsEndpoints::class           => factory(static fn (): GroupsEndpoints => new GroupsEndpoints()),
     UsersEndpoints::class            => factory(static fn (): UsersEndpoints => new UsersEndpoints()),
     CategoriesEndpoints::class       => factory(static fn (): CategoriesEndpoints => new CategoriesEndpoints()),
-    ImagesEndpoints::class           => factory(static fn (): ImagesEndpoints => new ImagesEndpoints()),
+    ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, StringUtil $s, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, Util $util, WsHelper $ws): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $s, $tA, $tag, $up, $u, $uA, $util, $ws)),
     AdminService::class              => factory(static fn (Connection $conn): AdminService => new AdminService($conn)),
     CategoryAdminService::class      => factory(static fn (Connection $conn): CategoryAdminService => new CategoryAdminService($conn)),
     ImageAdminService::class         => factory(static fn (): ImageAdminService => new ImageAdminService()),

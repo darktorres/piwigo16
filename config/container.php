@@ -158,7 +158,7 @@ return [
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     SectionInitializer::class    => factory(static fn (): SectionInitializer => new SectionInitializer()),
     GeneralEndpoints::class          => factory(static fn (): GeneralEndpoints => new GeneralEndpoints()),
-    TagsEndpoints::class             => factory(static fn (): TagsEndpoints => new TagsEndpoints()),
+    TagsEndpoints::class             => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, TagAdminService $tA, TagRepository $tR, TagService $tag, UrlService $u, Util $util, WsHelper $ws): TagsEndpoints => new TagsEndpoints($conn, $cat, $h, $i, $tA, $tR, $tag, $u, $util, $ws)),
     CommentsEndpoints::class         => factory(static fn (): CommentsEndpoints => new CommentsEndpoints()),
     PermissionsEndpoints::class      => factory(static fn (): PermissionsEndpoints => new PermissionsEndpoints()),
     ExtensionsEndpoints::class       => factory(static fn (): ExtensionsEndpoints => new ExtensionsEndpoints()),

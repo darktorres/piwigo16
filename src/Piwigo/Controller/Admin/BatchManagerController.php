@@ -20,11 +20,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
@@ -55,6 +53,30 @@ final class BatchManagerController
         'queue',
     ];
 
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AdminService $adminService,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly DateService $dateService,
+        private readonly FilterResolver $filterResolver,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly SearchService $searchService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+        private readonly TagRepository $tagRepository,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'batch_manager') {
@@ -77,20 +99,20 @@ final class BatchManagerController
         $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
-        ServiceLocator::get(Util::class)->checkInputParameter('selection', $_POST, true, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('display', $_REQUEST, false, '/^(\d+|all)$/');
+        $this->util->checkInputParameter('selection', $_POST, true, ValidationPattern::ID);
+        $this->util->checkInputParameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
         // ── Specific actions ──────────────────────────────────────────────────
 
         if (isset($_GET['action'])) {
             if ('empty_caddie' == $_GET['action']) {
-                ServiceLocator::get(ImageRepository::class)->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
+                $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
+                $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
 
             if ('delete_orphans' == $_GET['action'] && isset($_GET['nb_orphans_deleted'])) {
-                ServiceLocator::get(Util::class)->checkInputParameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
+                $this->util->checkInputParameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
                 $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
                 if ($nb_orphans_deleted > 0) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
@@ -100,12 +122,12 @@ final class BatchManagerController
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
                     $getPage = $_GET['page'] ?? null;
-                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
+                    $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
                 }
             }
 
             if ('sync_md5sum' == $_GET['action'] && isset($_GET['nb_md5sum_added'])) {
-                ServiceLocator::get(Util::class)->checkInputParameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
+                $this->util->checkInputParameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
                 $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
                 if ($nb_md5sum_added > 0) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
@@ -115,7 +137,7 @@ final class BatchManagerController
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
                     $getPage2 = $_GET['page'] ?? null;
-                    Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
+                    $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
                 }
             }
         }
@@ -150,7 +172,7 @@ final class BatchManagerController
             }
 
             if (isset($_POST['filter_category_use'])) {
-                ServiceLocator::get(Util::class)->checkInputParameter('filter_category', $_POST, false, ValidationPattern::ID);
+                $this->util->checkInputParameter('filter_category', $_POST, false, ValidationPattern::ID);
                 $bmf['category'] = $_POST['filter_category'];
                 if (isset($_POST['filter_category_recursive'])) {
                     $bmf['category_recursive'] = true;
@@ -164,14 +186,14 @@ final class BatchManagerController
                 } else {
                     $filter_tags_raw = is_string($filter_tags_post) ? $filter_tags_post : '';
                 }
-                $bmf['tags'] = ServiceLocator::get(TagAdminService::class)->getTagIds($filter_tags_raw, false);
+                $bmf['tags'] = $this->tagAdminService->getTagIds($filter_tags_raw, false);
                 if (isset($_POST['tag_mode']) && in_array($_POST['tag_mode'], ['AND', 'OR'])) {
                     $bmf['tag_mode'] = $_POST['tag_mode'];
                 }
             }
 
             if (isset($_POST['filter_level_use'])) {
-                ServiceLocator::get(Util::class)->checkInputParameter('filter_level', $_POST, false, '/^\d+$/');
+                $this->util->checkInputParameter('filter_level', $_POST, false, '/^\d+$/');
                 if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
                     $bmf['level'] = $_POST['filter_level'];
                     if (isset($_POST['filter_level_include_lower'])) {
@@ -317,35 +339,35 @@ final class BatchManagerController
             switch ($bmf_prefilter) {
                 case 'caddie':
                     $userId        = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'element_id');
+                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'element_id');
                     break;
                 case 'favorites':
                     $userId2       = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $userId2 . ';')->fetchAllAssociative(), 'image_id');
+                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $userId2 . ';')->fetchAllAssociative(), 'image_id');
                     break;
                 case 'last_import':
-                    $last_import_date = ServiceLocator::get(ImageRepository::class)->findMaxDateAvailable();
+                    $last_import_date = $this->imageRepository->findMaxDateAvailable();
                     if ($last_import_date !== null && $last_import_date !== '') {
-                        $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
+                        $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
                     }
                     break;
                 case 'no_virtual_album':
-                    $all_elements    = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ';')->fetchAllAssociative(), 'id');
+                    $all_elements    = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ';')->fetchAllAssociative(), 'id');
                     $linked_to_virtual = [];
-                    $virtual_categories = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE dir IS NULL;')->fetchAllAssociative(), 'id');
+                    $virtual_categories = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE dir IS NULL;')->fetchAllAssociative(), 'id');
                     if (!empty($virtual_categories)) {
-                        $linked_to_virtual = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)) . ');')->fetchAllAssociative(), 'image_id');
+                        $linked_to_virtual = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)) . ');')->fetchAllAssociative(), 'image_id');
                     }
                     $filter_sets[] = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual));
                     break;
                 case 'no_album':
-                    $filter_sets[] = ServiceLocator::get(ImageAdminService::class)->getOrphans();
+                    $filter_sets[] = $this->imageAdminService->getOrphans();
                     break;
                 case 'no_sync_md5sum':
-                    $filter_sets[] = ServiceLocator::get(ImageAdminService::class)->getPhotosNoMd5sum();
+                    $filter_sets[] = $this->imageAdminService->getPhotosNoMd5sum();
                     break;
                 case 'no_tag':
-                    $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
+                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
                     break;
                 case 'duplicates':
                     $duplicates_on_fields = [];
@@ -368,7 +390,7 @@ final class BatchManagerController
                     }
                     $query .= ' GROUP BY ' . implode(',', $duplicates_on_fields) . ' HAVING COUNT(*) > 1;';
                     $ids = [];
-                    foreach (array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
+                    foreach (array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
                         $ids_string = rtrim(is_scalar($ids_string) ? (string) $ids_string : '', ',');
                         $ids = array_merge($ids, explode(',', $ids_string));
                     }
@@ -376,7 +398,7 @@ final class BatchManagerController
                     break;
                 case 'all_photos':
                     if (count($bmf) == 1) {
-                        $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                        $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
                     }
                     break;
                 default:
@@ -387,25 +409,25 @@ final class BatchManagerController
 
         if (isset($bmf['category'])) {
             $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
-            if (!ServiceLocator::get(CategoryRepository::class)->existsById($bmf_category)) {
+            if (!$this->categoryRepository->existsById($bmf_category)) {
                 unset($_SESSION['bulk_manager_filter']);
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
+                $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
-            $categories   = isset($bmf['category_recursive']) ? ServiceLocator::get(CategoryService::class)->getSubcatIds([$bmf_category]) : [$bmf_category];
-            $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
+            $categories   = isset($bmf['category_recursive']) ? $this->categoryService->getSubcatIds([$bmf_category]) : [$bmf_category];
+            $filter_sets[] = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
         }
 
         if (isset($bmf['level'])) {
             $operator  = isset($bmf['level_include_lower']) ? '<=' : '=';
             $bmf_level = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-            $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE level ' . $operator . ' ' . $bmf_level . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE level ' . $operator . ' ' . $bmf_level . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
         }
 
         if (!empty($bmf['tags'])) {
             $bmf_tags     = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags']) ? $bmf['tags'] : []);
             $bmfTagMode = $bmf['tag_mode'] ?? null;
             $bmf_tag_mode = is_string($bmfTagMode) ? $bmfTagMode : 'AND';
-            $filter_sets[] = ServiceLocator::get(TagService::class)->getImageIdsForTags($bmf_tags, $bmf_tag_mode, null, null, false);
+            $filter_sets[] = $this->tagService->getImageIdsForTags($bmf_tags, $bmf_tag_mode, null, null, false);
         }
 
         if (isset($bmf['dimension'])) {
@@ -431,7 +453,7 @@ final class BatchManagerController
                 $where_clause[] = 'width/height < ' . number_format($max_ratio + 0.01, 4, '.', '');
             }
             if (!empty($where_clause)) {
-                $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
             }
         }
 
@@ -447,7 +469,7 @@ final class BatchManagerController
                 $where_clause[] = 'filesize <= ' . number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
             }
             if (!empty($where_clause)) {
-                $filter_sets[] = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
             }
         }
 
@@ -455,7 +477,7 @@ final class BatchManagerController
             $bmf_search   = is_array($bmf['search']) ? $bmf['search'] : [];
             $bmf_search_q = is_string($bmf_search['q'] ?? null) ? $bmf_search['q'] : '';
             if (strlen($bmf_search_q) > 0) {
-                $res       = ServiceLocator::get(SearchService::class)->getQuickSearchResultsNoCache($bmf_search_q, ['permissions' => false]);
+                $res       = $this->searchService->getQuickSearchResultsNoCache($bmf_search_q, ['permissions' => false]);
                 $res_qs    = is_array($res['qs'] ?? null) ? $res['qs'] : [];
                 if (!empty($res['items']) && !empty($res_qs['unmatched_terms'])) {
                     $tpl->assign('no_search_results', array_map(static fn (mixed $v): string => htmlspecialchars(is_scalar($v) ? (string) $v : ''), is_array($res_qs['unmatched_terms']) ? $res_qs['unmatched_terms'] : []));
@@ -484,10 +506,10 @@ final class BatchManagerController
 
         // ── Tabs ──────────────────────────────────────────────────────────────
 
-        $GLOBALS['manager_link'] = $manager_link = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&mode=';
+        $GLOBALS['manager_link'] = $manager_link = $this->urlGenerator->admin('batch_manager') . '&mode=';
 
         if (isset($_GET['mode'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
+            $this->util->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
             $page['tab'] = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
         } else {
             $page['tab'] = 'global';
@@ -501,7 +523,7 @@ final class BatchManagerController
         // ── Dimensions ────────────────────────────────────────────────────────
 
         $widths = $heights = $ratios = [];
-        foreach (ServiceLocator::get(ImageRepository::class)->findDistinctDimensions() as $row) {
+        foreach ($this->imageRepository->findDistinctDimensions() as $row) {
             $row_width  = $row['width'];
             $row_height = $row['height'];
             if ($row_width > 0 && $row_height > 0) {
@@ -552,7 +574,7 @@ final class BatchManagerController
         // ── Filesizes ─────────────────────────────────────────────────────────
 
         $filesizes = [];
-        foreach (ServiceLocator::get(ImageRepository::class)->findDistinctFilesizes() as $filesize_kb) {
+        foreach ($this->imageRepository->findDistinctFilesizes() as $filesize_kb) {
             $filesizes[] = sprintf('%.1f', (float) $filesize_kb / 1024.0);
         }
         if (empty($filesizes)) {
@@ -608,19 +630,19 @@ final class BatchManagerController
         $duplicates_on_fields = [];
         $associated_categories = [];
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         EventDispatcher::notify('loc_begin_element_set_global');
 
-        ServiceLocator::get(Util::class)->checkInputParameter('del_tags', $_POST, true, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('associate', $_POST, true, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('move', $_POST, false, ValidationPattern::ID);
-        ServiceLocator::get(Util::class)->checkInputParameter('dissociate', $_POST, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('del_tags', $_POST, true, ValidationPattern::ID);
+        $this->util->checkInputParameter('associate', $_POST, true, ValidationPattern::ID);
+        $this->util->checkInputParameter('move', $_POST, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('dissociate', $_POST, false, ValidationPattern::ID);
 
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            $this->util->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_string($rawWholeSet1 = $_POST['whole_set'] ?? null) ? $rawWholeSet1 : '');
@@ -640,7 +662,7 @@ final class BatchManagerController
             $page['prefilter'] = $bmf['prefilter'];
         }
 
-        $redirect_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
+        $redirect_url = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
 
         /** @var array<int> $collection_int */
         $collection_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $collection);
@@ -655,7 +677,7 @@ final class BatchManagerController
             $redirect = false;
 
             if ('remove_from_caddie' == $action) {
-                ServiceLocator::get(ImageRepository::class)->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
+                $this->imageRepository->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
                 $redirect = true;
             } elseif ('add_tags' == $action) {
                 if (!isset($_POST['add_tags']) || $_POST['add_tags'] === '') {
@@ -668,8 +690,8 @@ final class BatchManagerController
                     } else {
                         $add_tags_val = $add_tags_raw;
                     }
-                    $tag_ids = ServiceLocator::get(TagAdminService::class)->getTagIds($add_tags_val);
-                    ServiceLocator::get(TagAdminService::class)->addTags($tag_ids, $collection_int);
+                    $tag_ids = $this->tagAdminService->getTagIds($add_tags_val);
+                    $this->tagAdminService->addTags($tag_ids, $collection_int);
                     if ('no_tag' == $page['prefilter']) {
                         $redirect = true;
                     }
@@ -680,12 +702,12 @@ final class BatchManagerController
                 /** @var array<int> $del_tags_int */
                 $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
                 if (count($del_tags_int) > 0) {
-                    $taglist_before = ServiceLocator::get(TagAdminService::class)->getImageTagIds($collection_int);
-                    ServiceLocator::get(TagRepository::class)->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
-                    $taglist_after  = ServiceLocator::get(TagAdminService::class)->getImageTagIds($collection_int);
+                    $taglist_before = $this->tagAdminService->getImageTagIds($collection_int);
+                    $this->tagRepository->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
+                    $taglist_after  = $this->tagAdminService->getImageTagIds($collection_int);
                     /** @var array<int> $images_to_update */
-                    $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, ServiceLocator::get(TagAdminService::class)->compareImageTagLists($taglist_before, $taglist_after));
-                    ServiceLocator::get(ImageAdminService::class)->updateImagesLastmodified($images_to_update);
+                    $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->tagAdminService->compareImageTagLists($taglist_before, $taglist_after));
+                    $this->imageAdminService->updateImagesLastmodified($images_to_update);
                     $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags'] ?? null) ? $bmf['tags'] : []);
                     if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) {
                         $redirect = true;
@@ -698,14 +720,14 @@ final class BatchManagerController
                     PageState::current()->addError(Lang::t('Select at least one album'));
                 } else {
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
-                    ServiceLocator::get(CategoryAdminService::class)->associateImagesToCategories($collection_int, $associate_raw);
+                    $this->categoryAdminService->associateImagesToCategories($collection_int, $associate_raw);
                     $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
                     if ('no_album' == $page['prefilter']) {
                         $redirect = true;
                     } elseif ('no_virtual_album' == $page['prefilter']) {
                         $rawAssociate  = $_POST['associate'];
                         $associate_id  = is_string($rawAssociate) ? $rawAssociate : '';
-                        $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($associate_id);
+                        $category_info = $this->categoryService->getCatInfo($associate_id);
                         if (!isset($category_info['dir']) || $category_info['dir'] === '') {
                             $redirect = true;
                         }
@@ -715,12 +737,12 @@ final class BatchManagerController
                 $moveRaw     = $_POST['move'] ?? null;
                 $move_id     = is_string($moveRaw) ? $moveRaw : '';
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
-                ServiceLocator::get(CategoryAdminService::class)->moveImagesToCategories($collection_int, [$move_id_int]);
+                $this->categoryAdminService->moveImagesToCategories($collection_int, [$move_id_int]);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
                 if ('no_album' == $page['prefilter']) {
                     $redirect = true;
                 } elseif ('no_virtual_album' == $page['prefilter']) {
-                    $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($move_id);
+                    $category_info = $this->categoryService->getCatInfo($move_id);
                     if (!isset($category_info['dir']) || $category_info['dir'] === '') {
                         $redirect = true;
                     }
@@ -730,7 +752,7 @@ final class BatchManagerController
             } elseif ('dissociate' == $action) {
                 $dissociate_key = $_POST['dissociate'] ?? null;
                 $dissociate_raw = is_string($dissociate_key) ? $dissociate_key : '';
-                $nb_dissociated = ServiceLocator::get(CategoryAdminService::class)->dissociateImagesFromCategory($collection_int, $dissociate_raw);
+                $nb_dissociated = $this->categoryAdminService->dissociateImagesFromCategory($collection_int, $dissociate_raw);
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
                     $redirect = true;
@@ -742,7 +764,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['author']], $datas);
-                ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'author']);
+                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'author']);
             } elseif ('title' == $action) {
                 $titleValue = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
                 $datas = [];
@@ -750,7 +772,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name']], $datas);
-                ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'title']);
+                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'title']);
             } elseif ('date_creation' == $action) {
                 $date_creation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
                 $datas = [];
@@ -758,7 +780,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['date_creation']], $datas);
-                ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
+                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
             } elseif ('level' == $action) {
                 $levelValue = $_POST['level'] ?? null;
                 $datas = [];
@@ -766,7 +788,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['level']], $datas);
-                ServiceLocator::get(Util::class)->pwgActivity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
+                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
                     $postLevelRaw = $_POST['level'] ?? null;
@@ -776,7 +798,7 @@ final class BatchManagerController
                     }
                 }
             } elseif ('add_to_caddie' == $action) {
-                ServiceLocator::get(Util::class)->fillCaddie($collection_int);
+                $this->util->fillCaddie($collection_int);
             } elseif ('delete' == $action) {
                 if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
                     if (count($collection_int) > 0) {
@@ -786,7 +808,7 @@ final class BatchManagerController
                         /** @var array<mixed> $page_infos_ref */
                         $page_infos_ref   = &$_SESSION['page_infos'];
                         $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection_int));
-                        $redirect_url     = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
+                        $redirect_url     = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
                         $redirect         = true;
                     } else {
                         PageState::current()->addError(Lang::t('No photo can be deleted'));
@@ -797,10 +819,10 @@ final class BatchManagerController
             } elseif ('metadata' == $action) {
                 PageState::current()->addInfo(new Html(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>'));
             } elseif ('delete_derivatives' == $action && isset($_POST['del_derivatives_type']) && $_POST['del_derivatives_type'] !== '') {
-                foreach (ServiceLocator::get(ImageRepository::class)->findPathsAndRepresentativesByIds($collection_int) as $info) {
+                foreach ($this->imageRepository->findPathsAndRepresentativesByIds($collection_int) as $info) {
                     $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
                     foreach ($del_types as $dtype) {
-                        ServiceLocator::get(ImageAdminService::class)->deleteElementDerivatives($info, is_string($dtype) ? $dtype : '');
+                        $this->imageAdminService->deleteElementDerivatives($info, is_string($dtype) ? $dtype : '');
                     }
                 }
             } elseif ('generate_derivatives' == $action) {
@@ -815,20 +837,20 @@ final class BatchManagerController
             }
 
             if (!in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'])) {
-                ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+                $this->userAdminService->invalidateUserCache();
             }
 
             EventDispatcher::notify('element_set_global_action', $action, $collection_int);
             if ($redirect) {
-                Util::get()->redirect($redirect_url);
+                $this->util->redirect($redirect_url);
             }
         }
 
         // ── Template ──────────────────────────────────────────────────────────
 
-        $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
+        $base_url = $this->urlGenerator->admin();
 
-        ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
+        $this->filterResolver->render($collection, $base_url);
 
         $catElementsId = is_array($page['cat_elements_id']) ? $page['cat_elements_id'] : [];
         $pageStart     = is_int($page['start']) ? $page['start'] : 0;
@@ -836,13 +858,13 @@ final class BatchManagerController
         $tpl->assign('IN_CADDIE', 'caddie' == $page['prefilter']);
 
         if (count($catElementsId) > 0) {
-            $tpl->assign('associated_tags', ServiceLocator::get(TagService::class)->getCommonTags($catElementsId, -1));
+            $tpl->assign('associated_tags', $this->tagService->getCommonTags($catElementsId, -1));
         }
 
         $rawDateCreationPost = $_POST['date_creation'] ?? null;
         $dateCreationAssign  = (!isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? date('Y-m-d') . ' 00:00:00' : (is_string($rawDateCreationPost) ? $rawDateCreationPost : '');
         $tpl->assign('DATE_CREATION', $dateCreationAssign);
-        $tpl->assign(['level_options' => ServiceLocator::get(Util::class)->getPrivacyLevelOptions(), 'level_options_selected' => 0]);
+        $tpl->assign(['level_options' => $this->util->getPrivacyLevelOptions(), 'level_options_selected' => 0]);
 
         $site_reader  = new LocalSiteReader('./');
         $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()));
@@ -868,7 +890,7 @@ final class BatchManagerController
         $nb_thumbs_page = 0;
 
         if (count($catElementsId) > 0) {
-            $nav_bar = ServiceLocator::get(Util::class)->createNavigationBar($base_url . UrlService::get()->getQueryStringDiff(['start']), count($catElementsId), $pageStart, $nbImages);
+            $nav_bar = $this->util->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsId), $pageStart, $nbImages);
             $tpl->assign('navbar', $nav_bar);
 
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
@@ -876,7 +898,7 @@ final class BatchManagerController
 
             $query = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM ' . Tables::images();
             if ($is_category) {
-                $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($bmf_category_val);
+                $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
@@ -890,15 +912,15 @@ final class BatchManagerController
             }
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart . ';';
 
-            $batchRows   = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
+            $batchRows   = $this->conn->executeQuery($query)->fetchAllAssociative();
             $thumb_params = ImageStdParams::getByType(DerivativeSize::Square->value);
 
             foreach ($batchRows as $row) {
                 $nb_thumbs_page++;
                 $src_image   = new SrcImage($row);
-                $ttitle      = ServiceLocator::get(HtmlService::class)->renderElementName($row);
+                $ttitle      = $this->htmlService->renderElementName($row);
                 $row_file    = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($ttitle != ServiceLocator::get(StringUtil::class)->getNameFromFile($row_file)) {
+                if ($ttitle != $this->stringUtil->getNameFromFile($row_file)) {
                     $ttitle .= ' (' . $row_file . ')';
                 }
                 $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
@@ -908,13 +930,13 @@ final class BatchManagerController
                     'thumb'    => new DerivativeImage($thumb_params, $src_image),
                     'TITLE'    => new Html($ttitle),
                     'FILE_SRC' => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
-                    'U_EDIT'   => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '')),
+                    'U_EDIT'   => $this->urlGenerator->admin('photo-' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '')),
                 ]));
             }
             $tpl->assign('thumb_params', $thumb_params);
         }
 
-        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
+        $cache_keys = $this->adminService->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
             'nb_thumbs_page'                      => $nb_thumbs_page,
             'nb_thumbs_set'                        => count($catElementsId),
@@ -956,12 +978,12 @@ final class BatchManagerController
         EventDispatcher::notify('loc_begin_element_set_unit');
 
         if (isset($_POST['submit'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(Util::class)->checkInputParameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
+            $this->util->checkPwgToken();
+            $this->util->checkInputParameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $collection = explode(',', is_string($rawElementIds = $_POST['element_ids'] ?? null) ? $rawElementIds : '');
 
             $datas = [];
-            foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), $collection)) as $row) {
+            foreach ($this->imageRepository->findByIds(array_map(intval(...), $collection)) as $row) {
                 $data         = [];
                 $row_id_raw   = $row['id'] ?? null;
                 $row_id_str   = is_string($row_id_raw) ? $row_id_raw : '';
@@ -987,19 +1009,19 @@ final class BatchManagerController
                     if (is_array($tags_val)) {
                         $tags_val = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $tags_val);
                     }
-                    $tag_ids  = ServiceLocator::get(TagAdminService::class)->getTagIds($tags_val);
+                    $tag_ids  = $this->tagAdminService->getTagIds($tags_val);
                 }
-                ServiceLocator::get(TagAdminService::class)->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
+                $this->tagAdminService->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
             }
 
             Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name', 'author', 'level', 'comment', 'date_creation']], $datas);
             PageState::current()->addInfo(Lang::t('Photo informations updated'));
-            ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+            $this->userAdminService->invalidateUserCache();
         }
 
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            $this->util->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_string($rawWholeSet2 = $_POST['whole_set'] ?? null) ? $rawWholeSet2 : '');
@@ -1012,16 +1034,16 @@ final class BatchManagerController
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
         }
 
-        $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
+        $base_url = $this->urlGenerator->admin();
 
         $tpl->assign([
-            'U_ELEMENTS_PAGE' => $base_url . UrlService::get()->getQueryStringDiff(['display', 'start']),
-            'level_options'   => ServiceLocator::get(Util::class)->getPrivacyLevelOptions(),
+            'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
+            'level_options'   => $this->util->getPrivacyLevelOptions(),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
-            'PWG_TOKEN'       => ServiceLocator::get(Util::class)->getPwgToken(),
+            'PWG_TOKEN'       => $this->util->getPwgToken(),
         ]);
 
-        ServiceLocator::get(FilterResolver::class)->render($collection, $base_url);
+        $this->filterResolver->render($collection, $base_url);
 
         $tpl->assign('page_data_json', json_encode([
             'str_are_you_sure' => Lang::t('Are you sure?'),
@@ -1049,7 +1071,7 @@ final class BatchManagerController
         $tpl->assign('per_page', $nbImagesU);
 
         if (count($catElementsIdU) > 0) {
-            $nav_bar = ServiceLocator::get(Util::class)->createNavigationBar($base_url . UrlService::get()->getQueryStringDiff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
+            $nav_bar = $this->util->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
             $tpl->assign(['navbar' => $nav_bar]);
 
             $element_ids      = [];
@@ -1064,7 +1086,7 @@ final class BatchManagerController
 
             $query = 'SELECT * FROM ' . Tables::images();
             if ($is_category) {
-                $category_info = ServiceLocator::get(CategoryService::class)->getCatInfo($bmf_category_val);
+                $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
@@ -1078,11 +1100,11 @@ final class BatchManagerController
             }
             $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU . ';';
 
-            $images         = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $images         = $this->conn->executeQuery($query)->fetchAllAssociative();
             $added_by_ids   = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $added_by_username_of = array_column(DbConnection::get()->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username, ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $added_by_ids) . ');')->fetchAllAssociative(), 'username', 'id');
+                $added_by_username_of = array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username, ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $added_by_ids) . ');')->fetchAllAssociative(), 'username', 'id');
             }
 
             $storage_category_id = null;
@@ -1091,10 +1113,10 @@ final class BatchManagerController
                 $element_ids[] = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];
-                $tag_selection = ServiceLocator::get(TagAdminService::class)->getTaglistFromRows(ServiceLocator::get(TagRepository::class)->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
-                $legend        = ServiceLocator::get(HtmlService::class)->renderElementName($row);
+                $tag_selection = $this->tagAdminService->getTaglistFromRows($this->tagRepository->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
+                $legend        = $this->htmlService->renderElementName($row);
                 $row_file_str  = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($legend != ServiceLocator::get(StringUtil::class)->getNameFromFile($row_file_str)) {
+                if ($legend != $this->stringUtil->getNameFromFile($row_file_str)) {
                     $legend .= ' (' . $row_file_str . ')';
                 }
                 $extTab        = explode('.', is_scalar($row['path'] ?? null) ? (string) $row['path'] : '');
@@ -1102,11 +1124,11 @@ final class BatchManagerController
                 $related_categories   = [];
                 $related_category_ids = [];
                 $row_id_int           = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $media_image          = ServiceLocator::get(ImageAdminService::class)->getImageInfos($row_id_int, true);
+                $media_image          = $this->imageAdminService->getImageInfos($row_id_int, true);
 
-                foreach (ServiceLocator::get(CategoryRepository::class)->findCategoryInfosByImageId($row_id_int) as $item) {
+                foreach ($this->categoryRepository->findCategoryInfosByImageId($row_id_int) as $item) {
                     $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
-                    $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($item_uppercats, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+                    $name = $this->htmlService->getCatDisplayNameCache($item_uppercats, $this->urlGenerator->admin() . '&page=album-');
                     if ($item['category_id'] == $storage_category_id) {
                         $tpl->assign('STORAGE_CATEGORY', $name);
                     }
@@ -1117,22 +1139,22 @@ final class BatchManagerController
 
                 $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $authorizeds = array_diff(
-                    array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
-                    explode(',', PermissionService::get()->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
+                    array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
+                    explode(',', $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
                 );
 
-                $catNames = RequestCache::remember('cat_names', 'all', static fn (): array => array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $catNames = RequestCache::remember('cat_names', 'all', fn (): array => array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
                 $url_img  = null;
                 if (isset($row['cat_id']) && in_array($row['cat_id'], $authorizeds)) {
-                    $url_img = UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);
+                    $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);
                 } else {
                     foreach ($authorizeds as $category) {
-                        $url_img = UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null]);
+                        $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null]);
                         break;
                     }
                 }
 
-                $admin_photo_base_url = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str);
+                $admin_photo_base_url = $this->urlGenerator->admin('photo-' . $row_id_str);
                 $admin_url_start      = $admin_photo_base_url . '-properties';
                 $admin_url_start     .= isset($row['cat_id']) ? '&cat_id=' . (is_scalar($row['cat_id']) ? (string) $row['cat_id'] : '') : '';
                 $selected_level       = $row['level'] ?? null;
@@ -1146,7 +1168,7 @@ final class BatchManagerController
                     'TN_SRC'                => DerivativeImage::url(DerivativeSize::Medium->value, $src_image),
                     'FILE_SRC'              => DerivativeImage::url(DerivativeSize::Large->value, $src_image),
                     'LEGEND'                => $legend,
-                    'U_EDIT'                => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $row_id_str),
+                    'U_EDIT'                => $this->urlGenerator->admin('photo-' . $row_id_str),
                     'NAME'                  => htmlspecialchars(is_string($row['name'] ?? null) ? $row['name'] : ''),
                     'AUTHOR'                => htmlspecialchars(is_string($row['author'] ?? null) ? $row['author'] : ''),
                     'LEVEL'                 => (isset($row['level']) && $row['level'] !== '' && $row['level'] !== 0) ? $row['level'] : '0',
@@ -1154,14 +1176,14 @@ final class BatchManagerController
                     'DATE_CREATION'         => $row['date_creation'],
                     'TAGS'                  => $tag_selection,
                     'is_svg'                => (strtoupper(end($extTab)) == 'SVG'),
-                    'TITLE'                 => ServiceLocator::get(HtmlService::class)->renderElementName($row),
+                    'TITLE'                 => $this->htmlService->renderElementName($row),
                     'DIMENSIONS'            => (is_string($row['width'] ?? null) ? $row['width'] : '') . 'x' . (is_string($row['height'] ?? null) ? $row['height'] : '') . ' px',
                     'FORMAT'                => ($row['width'] >= $row['height']) ? 1 : 0,
                     'FILESIZE'              => Lang::t('%.2f MB', (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
-                    'REGISTRATION_DATE'     => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null)),
+                    'REGISTRATION_DATE'     => $this->dateService->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null)),
                     'EXT'                   => Lang::t('%s file type', end($extTab)),
-                    'POST_DATE'             => Lang::t('Added on %s', ServiceLocator::get(DateService::class)->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), ['day', 'month', 'year'])),
-                    'AGE'                   => Lang::t(ucfirst(ServiceLocator::get(DateService::class)->timeSince(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), 'year'))),
+                    'POST_DATE'             => Lang::t('Added on %s', $this->dateService->formatDate(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), ['day', 'month', 'year'])),
+                    'AGE'                   => Lang::t(ucfirst($this->dateService->timeSince(is_string($row['date_available']) ? $row['date_available'] : (is_int($row['date_available']) ? $row['date_available'] : null), 'year'))),
                     'ADDED_BY'              => Lang::t('Added by %s', is_string($added_by_username_of[is_string($row['added_by'] ?? null) ? $row['added_by'] : ''] ?? null) ? $added_by_username_of[is_string($row['added_by'] ?? null) ? $row['added_by'] : ''] : Lang::t('N/A')),
                     'STATS'                 => Lang::t('Visited %d times', is_numeric($row['hit']) ? (int) $row['hit'] : 0),
                     'FILE'                  => Lang::t('%s', is_string($row['file']) ? $row['file'] : ''),
@@ -1169,10 +1191,10 @@ final class BatchManagerController
                     'related_category_ids'  => json_encode($related_category_ids),
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
                     'tag_selection'         => $tag_selection,
-                    'U_DOWNLOAD'            => ServiceLocator::get(UrlGenerator::class)->actionDownload((int) $row_id_str, 'e', ServiceLocator::get(Util::class)->getPwgToken()),
-                    'U_HISTORY'             => ServiceLocator::get(UrlGenerator::class)->admin('history') . '&filter_image_id=' . $row_id_str,
-                    'U_ACTIVITY'            => ServiceLocator::get(UrlGenerator::class)->admin('user_activity') . '&photo=' . $row_id_str,
-                    'U_DELETE'              => $admin_url_start . '&delete=1&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(),
+                    'U_DOWNLOAD'            => $this->urlGenerator->actionDownload((int) $row_id_str, 'e', $this->util->getPwgToken()),
+                    'U_HISTORY'             => $this->urlGenerator->admin('history') . '&filter_image_id=' . $row_id_str,
+                    'U_ACTIVITY'            => $this->urlGenerator->admin('user_activity') . '&photo=' . $row_id_str,
+                    'U_DELETE'              => $admin_url_start . '&delete=1&pwg_token=' . $this->util->getPwgToken(),
                     'U_SYNC'                => $admin_url_start . '&sync_metadata=1',
                     'PATH'                  => $row['path'],
                     'level_options_selected' => [$selected_level],
@@ -1182,7 +1204,7 @@ final class BatchManagerController
             $tpl->assign(['ELEMENT_IDS' => implode(',', $element_ids)]);
         }
 
-        $cache_keys = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['tags', 'categories']);
+        $cache_keys = $this->adminService->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
             'CACHE_KEYS'                          => $cache_keys,
             'batch_manager_unit_page_data_json'   => json_encode([
@@ -1204,10 +1226,10 @@ final class BatchManagerController
     {
         $tpl = TemplateRegistry::current();
 
-        ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
+        $this->imageAdminService->fsQuickCheck();
 
         $tableName = Config::dbPrefix() . 'messenger_messages';
-        $conn      = ServiceLocator::get(Connection::class);
+        $conn      = $this->conn;
 
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
 
@@ -1219,14 +1241,14 @@ final class BatchManagerController
                 $conn->executeStatement('UPDATE ' . $tableName . ' SET queue_name = ?, available_at = NOW(), delivered_at = NULL WHERE id = ?', ['piwigo_async', $failedId]);
                 PageState::current()->addInfo('Job moved back to async queue.');
             }
-            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('queue'));
+            $this->util->redirect($this->urlGenerator->admin('queue'));
         }
 
         if ($action === 'purge_failed') {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
             $conn->executeStatement('DELETE FROM ' . $tableName . ' WHERE queue_name = ?', ['piwigo_failed']);
             PageState::current()->addInfo('Failed queue purged.');
-            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('queue'));
+            $this->util->redirect($this->urlGenerator->admin('queue'));
         }
 
         $stats       = [];
@@ -1246,15 +1268,15 @@ final class BatchManagerController
         }
 
 
-        $pwg_token     = ServiceLocator::get(Util::class)->getPwgToken();
+        $pwg_token     = $this->util->getPwgToken();
         $pendingAsync  = $stats['piwigo_async'] ?? 0;
         $pendingFailed = $stats['piwigo_failed'] ?? 0;
 
-        $failedJobsForTpl = array_map(static function (array $row): array {
+        $failedJobsForTpl = array_map(function (array $row): array {
             /** @var array<string, mixed> $body */
             $body  = json_decode(is_string($row['body']) ? $row['body'] : '{}', true) ?? [];
             $class = is_string($bodyType = $body['type'] ?? null) ? basename(str_replace('\\', '/', $bodyType)) : 'Unknown';
-            return ['id' => is_numeric($row['id']) ? (int) $row['id'] : 0, 'class' => $class, 'created_at' => is_string($row['created_at']) ? $row['created_at'] : '', 'U_RETRY' => ServiceLocator::get(UrlGenerator::class)->admin('queue') . '&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0)];
+            return ['id' => is_numeric($row['id']) ? (int) $row['id'] : 0, 'class' => $class, 'created_at' => is_string($row['created_at']) ? $row['created_at'] : '', 'U_RETRY' => $this->urlGenerator->admin('queue') . '&action=retry&id=' . (is_numeric($row['id']) ? (int) $row['id'] : 0)];
         }, $failedJobs);
 
         $tpl->assign([
@@ -1262,7 +1284,7 @@ final class BatchManagerController
             'pending_async'  => $pendingAsync,
             'pending_failed' => $pendingFailed,
             'failed_jobs'    => $failedJobsForTpl,
-            'U_PURGE_FAILED' => ServiceLocator::get(UrlGenerator::class)->admin('queue') . '&action=purge_failed&pwg_token=' . $pwg_token,
+            'U_PURGE_FAILED' => $this->urlGenerator->admin('queue') . '&action=purge_failed&pwg_token=' . $pwg_token,
             'worker_command' => 'bin/piwigo messenger:consume async --time-limit=3600 --memory-limit=256M',
         ]);
 

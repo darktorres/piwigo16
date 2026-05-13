@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,11 +22,16 @@ use Psr\Http\Server\RequestHandlerInterface;
  *   /register     — registration form (no token in the standard form)
  *   /qsearch      — quick-search redirect-only shim (no state change, no token)
  *
- * If the token is present but wrong, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->accessDenied().
- * If the token is missing, ServiceLocator::get(Util::class)->checkPwgToken() calls ServiceLocator::get(HtmlService::class)->badRequest().
+ * If the token is present but wrong, Util::checkPwgToken() calls HtmlService::accessDenied().
+ * If the token is missing, Util::checkPwgToken() calls HtmlService::badRequest().
  */
 final class CsrfMiddleware implements MiddlewareInterface
 {
+    public function __construct(
+        private readonly Util $util,
+    ) {
+    }
+
     private const array EXEMPT_PREFIXES = [
         '/ws',
         '/admin',
@@ -47,7 +51,7 @@ final class CsrfMiddleware implements MiddlewareInterface
                 : '/';
 
             if (!$this->isExempt($path)) {
-                ServiceLocator::get(Util::class)->checkPwgToken();
+                $this->util->checkPwgToken();
             }
         }
 

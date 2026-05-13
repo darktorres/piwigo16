@@ -177,7 +177,7 @@ return [
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, Util $util): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $util)),
     FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, Util $util): FilterResolver => new FilterResolver($conn, $h, $tA, $util)),
-    SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
+    SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, Util $util): SizesProcessor => new SizesProcessor($iA, $up, $util)),
     WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, StringUtil $s, Util $util): WatermarkProcessor => new WatermarkProcessor($iA, $s, $util)),
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, Util $util): MenubarRenderer => new MenubarRenderer($cat, $perm, $tag, $ug, $u, $util)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u)),
@@ -227,7 +227,7 @@ return [
     SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
     FilterMiddleware::class           => factory(static fn (Connection $conn, CategoryService $cat, SessionService $sess, Util $util): FilterMiddleware => new FilterMiddleware($conn, $cat, $sess, $util)),
-    CsrfMiddleware::class             => factory(static fn (): CsrfMiddleware => new CsrfMiddleware()),
+    CsrfMiddleware::class             => factory(static fn (Util $util): CsrfMiddleware => new CsrfMiddleware($util)),
     RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
     ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),
 ];

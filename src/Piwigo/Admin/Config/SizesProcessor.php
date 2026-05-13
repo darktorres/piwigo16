@@ -9,7 +9,6 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Image\DerivativeEncoding;
@@ -22,6 +21,12 @@ use Piwigo\Users\PermissionService;
 
 final class SizesProcessor
 {
+    public function __construct(
+        private readonly ImageAdminService $imageAdminService,
+        private readonly UploadService $uploadService,
+        private readonly Util $util,
+    ) {
+    }
     public function process(): void
     {
         if (!PermissionService::get()->isWebmaster()) {
@@ -47,7 +52,7 @@ final class SizesProcessor
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         /** @var string[] $pageErrors */
         $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        ServiceLocator::get(UploadService::class)->saveUploadFormConfig($updates, $pageErrors, $errors);
+        $this->uploadService->saveUploadFormConfig($updates, $pageErrors, $errors);
         $page['errors'] = $pageErrors;
         $GLOBALS['page'] = $page;
 
@@ -221,11 +226,11 @@ final class SizesProcessor
             ImageStdParams::setAndSaveDisabled($disabled);
 
             if (count($changed_types)) {
-                ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache($changed_types);
+                $this->imageAdminService->clearDerivativeCache($changed_types);
             }
 
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'sizes']);
+            $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'sizes']);
         } else {
             foreach ($original_fields as $field) {
                 if (isset($_POST[$field])) {

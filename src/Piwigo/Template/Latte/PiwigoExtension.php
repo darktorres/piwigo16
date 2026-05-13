@@ -7,8 +7,8 @@ namespace Piwigo\Template\Latte;
 use Latte\Extension;
 use Latte\Runtime\Html;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
@@ -248,12 +248,12 @@ final class PiwigoExtension extends Extension
 
     public static function isAdmin(string $userStatus = ''): bool
     {
-        return ServiceLocator::get(PermissionService::class)->isAdmin($userStatus);
+        return Kernel::service(PermissionService::class)->isAdmin($userStatus);
     }
 
     public static function isClassicUser(string $userStatus = ''): bool
     {
-        return ServiceLocator::get(PermissionService::class)->isClassicUser($userStatus);
+        return Kernel::service(PermissionService::class)->isClassicUser($userStatus);
     }
 
     public static function getDevice(): string
@@ -263,7 +263,7 @@ final class PiwigoExtension extends Extension
 
     public static function getGalleryHomeUrl(): string
     {
-        return ServiceLocator::get(UrlGenerator::class)->gallery();
+        return Kernel::service(UrlGenerator::class)->gallery();
     }
 
     /**

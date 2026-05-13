@@ -7,7 +7,7 @@ namespace Piwigo\Image;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 
@@ -197,7 +197,7 @@ final class ImageStdParams
           'w' => self::$watermark,
           'c' => self::$custom,
           ]);
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('derivatives', $ser);
+        Kernel::service(ConfigService::class)->confUpdateParam('derivatives', $ser);
 
         if ($save_disabled) {
             self::saveDisabled();
@@ -214,9 +214,9 @@ final class ImageStdParams
         }
         if (count(self::$disabled_type_map) > 0) {
             $disabled = serialize(self::$disabled_type_map);
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
+            Kernel::service(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
         } else {
-            ServiceLocator::get(Connection::class)->executeStatement(
+            Kernel::service(Connection::class)->executeStatement(
                 'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\''
             );
         }

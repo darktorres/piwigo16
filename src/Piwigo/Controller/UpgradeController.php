@@ -7,15 +7,14 @@ namespace Piwigo\Controller;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
 use Piwigo\Admin\UpgradeService;
+use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\LangService;
 use Piwigo\Template\Template;
@@ -34,6 +33,13 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class UpgradeController implements ControllerInterface
 {
+    public function __construct(
+        private readonly ConfigService $configService,
+        private readonly Connection $conn,
+        private readonly StringUtil $stringUtil,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -114,7 +120,7 @@ final class UpgradeController implements ControllerInterface
 
         $page = &$GLOBALS['page'];
         $has_remote_site = false;
-        foreach (DbConnection::get()->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
             if (UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '')) {
                 $has_remote_site = true;
             }
@@ -137,8 +143,8 @@ final class UpgradeController implements ControllerInterface
             exit();
         }
 
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
-        header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
+        $this->configService->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
+        header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();

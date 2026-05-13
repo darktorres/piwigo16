@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
@@ -29,6 +28,12 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class WsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly UrlGenerator $urlGenerator,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -39,7 +44,7 @@ final class WsController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Free);
 
         if (!Config::allowWebServices()) {
-            ServiceLocator::get(HtmlService::class)->pageForbidden('Web services are disabled');
+            $this->htmlService->pageForbidden('Web services are disabled');
         }
 
         PwgServer::boot();
@@ -52,7 +57,7 @@ final class WsController implements ControllerInterface
             $server = PwgServerRegistry::current();
             $server->populateMethods();
 
-            $serverUrl = ServiceLocator::get(UrlGenerator::class)->ws();
+            $serverUrl = $this->urlGenerator->ws();
 
             $spec = new SpecBuilder($server, $serverUrl)->build();
 
@@ -67,7 +72,7 @@ final class WsController implements ControllerInterface
 
         // Swagger UI: /ws/docs  or  ?_openapi=ui
         if ($rest === '/docs' || $openApiParam === 'ui') {
-            $specUrl = ServiceLocator::get(UrlGenerator::class)->ws() . '/openapi.json';
+            $specUrl = $this->urlGenerator->ws() . '/openapi.json';
 
             if (!headers_sent()) {
                 header('Content-Type: text/html; charset=utf-8');

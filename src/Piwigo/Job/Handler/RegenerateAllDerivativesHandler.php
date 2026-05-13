@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
+use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -18,10 +18,10 @@ final class RegenerateAllDerivativesHandler
 {
     public function __invoke(RegenerateAllDerivativesJob $job): void
     {
-        $rows  = ServiceLocator::get(ImageRepository::class)->findAllIdFilename();
-        $bus   = ServiceLocator::get(MessageBusInterface::class);
+        $rows  = Kernel::service(ImageRepository::class)->findAllIdFilename();
+        $bus   = Kernel::service(MessageBusInterface::class);
         $types = $job->types === ['all']
-            ? ServiceLocator::get(DerivativeService::class)->getDefinedTypes()
+            ? Kernel::service(DerivativeService::class)->getDefinedTypes()
             : $job->types;
 
         $dispatched = 0;

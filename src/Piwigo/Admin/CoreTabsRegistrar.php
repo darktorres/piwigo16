@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Url\UrlGenerator;
 
 final class CoreTabsRegistrar
@@ -28,7 +28,7 @@ final class CoreTabsRegistrar
 
         switch ($tab_id) {
             case 'admin_home':
-                $sheets[''] = ['caption' => Lang::t('Administration Home'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin()];
+                $sheets[''] = ['caption' => Lang::t('Administration Home'), 'url' => Kernel::service(UrlGenerator::class)->admin()];
                 break;
 
             case 'tags':
@@ -141,8 +141,8 @@ final class CoreTabsRegistrar
                 break;
 
             case 'rating':
-                $sheets['rating'] = ['caption' => Lang::t('Photos'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin('rating')];
-                $sheets['rating_user'] = ['caption' => Lang::t('Users'), 'url' => ServiceLocator::get(UrlGenerator::class)->admin('rating_user')];
+                $sheets['rating'] = ['caption' => Lang::t('Photos'), 'url' => Kernel::service(UrlGenerator::class)->admin('rating')];
+                $sheets['rating_user'] = ['caption' => Lang::t('Users'), 'url' => Kernel::service(UrlGenerator::class)->admin('rating_user')];
                 break;
 
             case 'themes':

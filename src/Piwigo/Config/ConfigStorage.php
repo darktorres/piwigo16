@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 
 /**
  * Thin OO facade over the conf-table free functions in
@@ -46,7 +46,7 @@ final class ConfigStorage
      */
     public static function persist(string $key, mixed $value, ?string $serializer = null): void
     {
-        ServiceLocator::get(ConfigService::class)->confUpdateParam($key, $value, false, $serializer);
+        Kernel::service(ConfigService::class)->confUpdateParam($key, $value, false, $serializer);
     }
 
     /**
@@ -56,7 +56,7 @@ final class ConfigStorage
      */
     public static function delete(string|array $keys): void
     {
-        ServiceLocator::get(ConfigService::class)->confDeleteParam($keys);
+        Kernel::service(ConfigService::class)->confDeleteParam($keys);
     }
 
     /**
@@ -65,6 +65,6 @@ final class ConfigStorage
      */
     public static function isWriteable(): bool
     {
-        return ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable();
+        return Kernel::service(ConfigService::class)->pwgIsDbconfWriteable();
     }
 }

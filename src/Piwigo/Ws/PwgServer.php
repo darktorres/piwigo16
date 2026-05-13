@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
@@ -153,7 +154,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             tags:        ['reflection'],
         ));
 
-        WsMethodRegistrar::register($this);
+        Kernel::service(WsMethodRegistrar::class)->register($this);
         EventDispatcher::notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
     }

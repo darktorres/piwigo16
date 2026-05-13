@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\PermissionService;
@@ -19,9 +18,23 @@ use Piwigo\Ws\Method\PermissionsEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 
-final class WsMethodRegistrar
+final readonly class WsMethodRegistrar
 {
-    public static function register(PwgServer $server): void
+    public function __construct(
+        private CategoriesEndpoints $categoriesEndpoints,
+        private CommentsEndpoints $commentsEndpoints,
+        private ExtensionsEndpoints $extensionsEndpoints,
+        private GeneralEndpoints $generalEndpoints,
+        private GroupsEndpoints $groupsEndpoints,
+        private ImagesEndpoints $imagesEndpoints,
+        private PermissionsEndpoints $permissionsEndpoints,
+        private TagsEndpoints $tagsEndpoints,
+        private UsersEndpoints $usersEndpoints,
+        private PermissionService $permissionService,
+    ) {
+    }
+
+    public function register(PwgServer $server): void
     {
         $user    = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $filterParams = [
@@ -40,14 +53,14 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.getVersion',
-            callback:    ServiceLocator::get(GeneralEndpoints::class)->getVersion(...),
+            callback:    $this->generalEndpoints->getVersion(...),
             description: 'Returns the Piwigo version.',
             tags:        ['pwg'],
         ));
 
         $server->register(new MethodDefinition(
             name:         'pwg.getInfos',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->getInfos(...),
+            callback:     $this->generalEndpoints->getInfos(...),
             description:  'Returns general informations.',
             tags:         ['pwg'],
             requiresAuth: true,
@@ -55,7 +68,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.getCacheSize',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->getCacheSize(...),
+            callback:     $this->generalEndpoints->getCacheSize(...),
             description:  'Returns general informations.',
             tags:         ['pwg'],
             requiresAuth: true,
@@ -63,7 +76,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.activity.getList',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->getActivityList(...),
+            callback:     $this->generalEndpoints->getActivityList(...),
             description:  'Returns general informations.',
             params:       [
                 ParamDefinition::optional(name: 'page', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
@@ -89,7 +102,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.caddie.add',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->caddieAdd(...),
+            callback:     $this->generalEndpoints->caddieAdd(...),
             description:  'Adds elements to the caddie. Returns the number of elements added.',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -100,7 +113,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.categories.getImages',
-            callback:    ServiceLocator::get(CategoriesEndpoints::class)->getImages(...),
+            callback:    $this->categoriesEndpoints->getImages(...),
             description: 'Returns elements for the corresponding categories.
 <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
 <br><b>order</b> comma separated fields for sorting',
@@ -117,7 +130,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.categories.getList',
-            callback:    ServiceLocator::get(CategoriesEndpoints::class)->getList(...),
+            callback:    $this->categoriesEndpoints->getList(...),
             description: 'Returns a list of categories.',
             params:      [
                 ParamDefinition::optional(name: 'cat_id', default: null, type: WS_TYPE_INT | WS_TYPE_POSITIVE, info: 'Parent category. "0" or empty for root.'),
@@ -134,7 +147,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.getMissingDerivatives',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->getMissingDerivatives(...),
+            callback:     $this->generalEndpoints->getMissingDerivatives(...),
             description:  'Returns a list of derivatives to build.',
             params:       [
                 ParamDefinition::optional(name: 'types', default: null, flags: WS_PARAM_FORCE_ARRAY, info: 'square, thumb, 2small, xsmall, small, medium, large, xlarge, xxlarge, 3xlarge, 4xlarge'),
@@ -149,11 +162,11 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.addComment',
-            callback:    ServiceLocator::get(ImagesEndpoints::class)->addComment(...),
+            callback:    $this->imagesEndpoints->addComment(...),
             description: 'Adds a comment to an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
-                ParamDefinition::optional(name: 'author', default: PermissionService::get()->isAGuest() ? 'guest' : $user['username']),
+                ParamDefinition::optional(name: 'author', default: $this->permissionService->isAGuest() ? 'guest' : $user['username']),
                 ParamDefinition::required('content'),
                 ParamDefinition::required('key'),
             ],
@@ -163,7 +176,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.getInfo',
-            callback:    ServiceLocator::get(ImagesEndpoints::class)->getInfo(...),
+            callback:    $this->imagesEndpoints->getInfo(...),
             description: 'Returns information about an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
@@ -175,7 +188,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.rate',
-            callback:    ServiceLocator::get(ImagesEndpoints::class)->rate(...),
+            callback:    $this->imagesEndpoints->rate(...),
             description: 'Rates an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
@@ -186,7 +199,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.search',
-            callback:    ServiceLocator::get(ImagesEndpoints::class)->search(...),
+            callback:    $this->imagesEndpoints->search(...),
             description: 'Returns elements for the corresponding query search.',
             params:      [
                 ParamDefinition::required('query'),
@@ -200,7 +213,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setPrivacyLevel',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->setPrivacyLevel(...),
+            callback:     $this->imagesEndpoints->setPrivacyLevel(...),
             description:  'Sets the privacy levels for the images.',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -213,7 +226,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.formats.searchImage',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->formatsSearchImage(...),
+            callback:     $this->imagesEndpoints->formatsSearchImage(...),
             description:  'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
             params:       [
                 ParamDefinition::required('filename_list'),
@@ -225,7 +238,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.formats.delete',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->formatsDelete(...),
+            callback:     $this->imagesEndpoints->formatsDelete(...),
             description:  'Remove a format',
             params:       [
                 ParamDefinition::optional(name: 'format_id', default: null, type: WS_TYPE_ID, flags: WS_PARAM_ACCEPT_ARRAY),
@@ -238,7 +251,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setRank',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->setRank(...),
+            callback:     $this->imagesEndpoints->setRank(...),
             description:  'Sets the rank of a photo for a given album.
 <br><br>If you provide a list for image_id:
 <ul>
@@ -257,7 +270,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setCategory',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->setCategory(...),
+            callback:     $this->imagesEndpoints->setCategory(...),
             description:  'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -272,7 +285,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.rates.delete',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->ratesDelete(...),
+            callback:     $this->generalEndpoints->ratesDelete(...),
             description:  'Deletes all rates for a user.',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WS_TYPE_ID),
@@ -286,14 +299,14 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.session.getStatus',
-            callback:    ServiceLocator::get(GeneralEndpoints::class)->sessionGetStatus(...),
+            callback:    $this->generalEndpoints->sessionGetStatus(...),
             description: 'Gets information about the current session. Also provides a token useable with admin methods.',
             tags:        ['session'],
         ));
 
         $server->register(new MethodDefinition(
             name:        'pwg.session.login',
-            callback:    ServiceLocator::get(GeneralEndpoints::class)->sessionLogin(...),
+            callback:    $this->generalEndpoints->sessionLogin(...),
             description: 'Tries to login the user.',
             params:      [
                 ParamDefinition::required('username'),
@@ -305,14 +318,14 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.session.logout',
-            callback:    ServiceLocator::get(GeneralEndpoints::class)->sessionLogout(...),
+            callback:    $this->generalEndpoints->sessionLogout(...),
             description: 'Ends the current session.',
             tags:        ['session'],
         ));
 
         $server->register(new MethodDefinition(
             name:        'pwg.tags.getList',
-            callback:    ServiceLocator::get(TagsEndpoints::class)->getList(...),
+            callback:    $this->tagsEndpoints->getList(...),
             description: 'Retrieves a list of available tags.',
             params:      [
                 ParamDefinition::optional(name: 'sort_by_counter', default: false, type: WS_TYPE_BOOL),
@@ -322,7 +335,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:        'pwg.tags.getImages',
-            callback:    ServiceLocator::get(TagsEndpoints::class)->getImages(...),
+            callback:    $this->tagsEndpoints->getImages(...),
             description: 'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.',
             params:      [
                 ParamDefinition::optional(name: 'tag_id', default: null, type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -339,7 +352,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addChunk',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->addChunk(...),
+            callback:     $this->imagesEndpoints->addChunk(...),
             description:  'Add a chunk of a file.',
             params:       [
                 ParamDefinition::required('data'),
@@ -354,7 +367,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addFile',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->addFile(...),
+            callback:     $this->imagesEndpoints->addFile(...),
             description:  'Add or update a file for an existing photo.
 <br>pwg.images.addChunk must have been called before (maybe several times).',
             params:       [
@@ -368,7 +381,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.add',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->add(...),
+            callback:     $this->imagesEndpoints->add(...),
             description:  'Add an image.
 <br>pwg.images.addChunk must have been called before (maybe several times).
 <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
@@ -393,7 +406,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addSimple',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->addSimple(...),
+            callback:     $this->imagesEndpoints->addSimple(...),
             description:  'Add an image.
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".
@@ -414,7 +427,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.upload',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->upload(...),
+            callback:     $this->imagesEndpoints->upload(...),
             description:  'Add an image.
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".',
@@ -433,7 +446,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.uploadAsync',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->uploadAsync(...),
+            callback:     $this->imagesEndpoints->uploadAsync(...),
             description:  'Upload photo by chunks in a random order.
 <br>Use the <b>$_FILES[file]</b> field for uploading file.
 <br>Start with chunk 0 (zero).
@@ -464,7 +477,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.delete',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->delete(...),
+            callback:     $this->imagesEndpoints->delete(...),
             description:  'Deletes image(s).',
             params:       [
                 ParamDefinition::required(name: 'image_id', flags: WS_PARAM_ACCEPT_ARRAY),
@@ -477,7 +490,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setMd5sum',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->setMd5sum(...),
+            callback:     $this->imagesEndpoints->setMd5sum(...),
             description:  'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
             params:       [
                 ParamDefinition::optional(name: 'block_size', default: Config::checksumComputeBlocksize(), type: WS_TYPE_INT | WS_TYPE_POSITIVE),
@@ -490,7 +503,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.syncMetadata',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->syncMetadata(...),
+            callback:     $this->imagesEndpoints->syncMetadata(...),
             description:  'Sync metadatas, by blocks. Returns how many images were synchronized',
             params:       [
                 ParamDefinition::required(name: 'image_id', flags: WS_PARAM_ACCEPT_ARRAY, info: 'Comma separated ids or array of id'),
@@ -503,7 +516,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.deleteOrphans',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->deleteOrphans(...),
+            callback:     $this->imagesEndpoints->deleteOrphans(...),
             description:  'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
             params:       [
                 ParamDefinition::optional(name: 'block_size', default: 1000, type: WS_TYPE_INT | WS_TYPE_POSITIVE),
@@ -516,7 +529,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.calculateOrphans',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->calculateOrphans(...),
+            callback:     $this->categoriesEndpoints->calculateOrphans(...),
             description:  'Return the number of orphan photos if an album is deleted.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -527,7 +540,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.getAdminList',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->getAdminList(...),
+            callback:     $this->categoriesEndpoints->getAdminList(...),
             description:  'Get albums list as displayed on admin page. <br>
       <b>additional_output</b> controls which data are returned, possible values are:<br>
       null, full_name_with_admin_links<br>',
@@ -543,7 +556,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.add',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->add(...),
+            callback:     $this->categoriesEndpoints->add(...),
             description:  'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
             params:       [
                 ParamDefinition::required('name'),
@@ -561,7 +574,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.delete',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->delete(...),
+            callback:     $this->categoriesEndpoints->delete(...),
             description:  'Deletes album(s).
 <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
 (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
@@ -577,7 +590,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.move',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->move(...),
+            callback:     $this->categoriesEndpoints->move(...),
             description:  'Move album(s).
 <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
             params:       [
@@ -592,7 +605,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setRepresentative',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->setRepresentative(...),
+            callback:     $this->categoriesEndpoints->setRepresentative(...),
             description:  'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WS_TYPE_ID),
@@ -605,7 +618,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.deleteRepresentative',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->deleteRepresentative(...),
+            callback:     $this->categoriesEndpoints->deleteRepresentative(...),
             description:  'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WS_TYPE_ID),
@@ -617,7 +630,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.refreshRepresentative',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->refreshRepresentative(...),
+            callback:     $this->categoriesEndpoints->refreshRepresentative(...),
             description:  'Find a new album thumbnail.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WS_TYPE_ID),
@@ -629,7 +642,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.getAdminList',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->getAdminList(...),
+            callback:     $this->tagsEndpoints->getAdminList(...),
             description:  '<b>Admin only.</b>',
             tags:         ['tags'],
             requiresAuth: true,
@@ -637,7 +650,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.add',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->add(...),
+            callback:     $this->tagsEndpoints->add(...),
             description:  'Adds a new tag.',
             params:       [
                 ParamDefinition::required('name'),
@@ -648,7 +661,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.delete',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->delete(...),
+            callback:     $this->tagsEndpoints->delete(...),
             description:  'Delete tag(s) by ID.',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -660,7 +673,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.rename',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->rename(...),
+            callback:     $this->tagsEndpoints->rename(...),
             description:  'Rename tag',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WS_TYPE_ID),
@@ -673,7 +686,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.duplicate',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->duplicate(...),
+            callback:     $this->tagsEndpoints->duplicate(...),
             description:  'Create a copy of a tag',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WS_TYPE_ID),
@@ -687,7 +700,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.merge',
-            callback:     ServiceLocator::get(TagsEndpoints::class)->merge(...),
+            callback:     $this->tagsEndpoints->merge(...),
             description:  'Merge tags in one other group',
             params:       [
                 ParamDefinition::required(name: 'destination_tag_id', type: WS_TYPE_ID, info: 'Is not necessarily part of groups to merge'),
@@ -701,7 +714,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.exist',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->exist(...),
+            callback:     $this->imagesEndpoints->exist(...),
             description:  'Checks existence of images.
 <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
             params:       [
@@ -714,7 +727,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.checkFiles',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->checkFiles(...),
+            callback:     $this->imagesEndpoints->checkFiles(...),
             description:  'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
 <br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
             params:       [
@@ -729,7 +742,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.checkUpload',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->checkUpload(...),
+            callback:     $this->imagesEndpoints->checkUpload(...),
             description:  'Checks if Piwigo is ready for upload.',
             tags:         ['images'],
             requiresAuth: true,
@@ -737,7 +750,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.emptyLounge',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->emptyLounge(...),
+            callback:     $this->imagesEndpoints->emptyLounge(...),
             description:  'Empty lounge, where images may be waiting before taking off.',
             tags:         ['images'],
             requiresAuth: true,
@@ -745,7 +758,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.uploadCompleted',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->uploadCompleted(...),
+            callback:     $this->imagesEndpoints->uploadCompleted(...),
             description:  'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
             params:       [
                 ParamDefinition::optional(name: 'image_id', default: null, flags: WS_PARAM_ACCEPT_ARRAY),
@@ -758,7 +771,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setInfo',
-            callback:     ServiceLocator::get(ImagesEndpoints::class)->setInfo(...),
+            callback:     $this->imagesEndpoints->setInfo(...),
             description:  'Changes properties of an image.
 <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
 (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
@@ -785,7 +798,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setInfo',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->setInfo(...),
+            callback:     $this->categoriesEndpoints->setInfo(...),
             description:  'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WS_TYPE_ID),
@@ -804,7 +817,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setRank',
-            callback:     ServiceLocator::get(CategoriesEndpoints::class)->setRank(...),
+            callback:     $this->categoriesEndpoints->setRank(...),
             description:  'Changes the rank of an album
         <br><br>If you provide a list for category_id:
         <ul>
@@ -822,7 +835,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.plugins.getList',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->pluginsGetList(...),
+            callback:     $this->extensionsEndpoints->pluginsGetList(...),
             description:  'Gets the list of plugins with id, name, version, state and description.',
             tags:         ['extensions'],
             requiresAuth: true,
@@ -830,7 +843,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.plugins.performAction',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->pluginsPerformAction(...),
+            callback:     $this->extensionsEndpoints->pluginsPerformAction(...),
             params:       [
                 ParamDefinition::required(name: 'action', info: 'install, activate, deactivate, uninstall, delete'),
                 ParamDefinition::required('plugin'),
@@ -842,7 +855,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.themes.performAction',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->themesPerformAction(...),
+            callback:     $this->extensionsEndpoints->themesPerformAction(...),
             params:       [
                 ParamDefinition::required(name: 'action', info: 'activate, deactivate, delete, set_default'),
                 ParamDefinition::required('theme'),
@@ -854,7 +867,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.update',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->update(...),
+            callback:     $this->extensionsEndpoints->update(...),
             description:  '<b>Webmaster only.</b>',
             params:       [
                 ParamDefinition::required(name: 'type', info: 'plugins, languages, themes'),
@@ -868,7 +881,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.ignoreUpdate',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->ignoreUpdate(...),
+            callback:     $this->extensionsEndpoints->ignoreUpdate(...),
             description:  '<b>Webmaster only.</b> Ignores an extension if it needs update.',
             params:       [
                 ParamDefinition::optional(name: 'type', default: null, info: 'plugins, languages, themes'),
@@ -882,7 +895,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.checkUpdates',
-            callback:     ServiceLocator::get(ExtensionsEndpoints::class)->checkUpdates(...),
+            callback:     $this->extensionsEndpoints->checkUpdates(...),
             description:  'Checks if piwigo or extensions are up to date.',
             tags:         ['extensions'],
             requiresAuth: true,
@@ -890,7 +903,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.getList',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->getList(...),
+            callback:     $this->groupsEndpoints->getList(...),
             description:  'Retrieves a list of all groups. The list can be filtered.',
             params:       [
                 ParamDefinition::optionalFlag(name: 'group_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -905,7 +918,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.add',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->add(...),
+            callback:     $this->groupsEndpoints->add(...),
             description:  'Creates a group and returns the new group record.',
             params:       [
                 ParamDefinition::required('name'),
@@ -918,7 +931,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.delete',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->delete(...),
+            callback:     $this->groupsEndpoints->delete(...),
             description:  'Deletes a or more groups. Users and photos are not deleted.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -931,7 +944,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.setInfo',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->setInfo(...),
+            callback:     $this->groupsEndpoints->setInfo(...),
             description:  'Updates a group. Leave a field blank to keep the current value.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WS_TYPE_ID),
@@ -946,7 +959,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.addUser',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->addUser(...),
+            callback:     $this->groupsEndpoints->addUser(...),
             description:  'Adds one or more users to a group.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WS_TYPE_ID),
@@ -960,7 +973,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.deleteUser',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->deleteUser(...),
+            callback:     $this->groupsEndpoints->deleteUser(...),
             description:  'Removes one or more users from a group.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WS_TYPE_ID),
@@ -974,7 +987,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.merge',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->merge(...),
+            callback:     $this->groupsEndpoints->merge(...),
             description:  'Merge groups in one other group',
             params:       [
                 ParamDefinition::required(name: 'destination_group_id', type: WS_TYPE_ID, info: 'Is not necessarily part of groups to merge'),
@@ -988,7 +1001,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.duplicate',
-            callback:     ServiceLocator::get(GroupsEndpoints::class)->duplicate(...),
+            callback:     $this->groupsEndpoints->duplicate(...),
             description:  'Create a copy of a group',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WS_TYPE_ID),
@@ -1002,7 +1015,7 @@ final class WsMethodRegistrar
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.getList',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->getList(...),
+            callback:     $this->usersEndpoints->getList(...),
             description:  'Retrieves a list of all the users.<br>
 <br>
 <b>display</b> controls which data are returned, possible values are:<br>
@@ -1033,7 +1046,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.add',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->add(...),
+            callback:     $this->usersEndpoints->add(...),
             description:  'Registers a new user.',
             params:       [
                 ParamDefinition::required('username'),
@@ -1051,7 +1064,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.delete',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->delete(...),
+            callback:     $this->usersEndpoints->delete(...),
             description:  'Deletes on or more users. Photos owned by this user are not deleted.',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -1064,7 +1077,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.getAuthKey',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->getAuthKey(...),
+            callback:     $this->usersEndpoints->getAuthKey(...),
             description:  'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WS_TYPE_ID),
@@ -1077,7 +1090,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.setInfo',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->setInfo(...),
+            callback:     $this->usersEndpoints->setInfo(...),
             description:  'Updates a user. Leave a field blank to keep the current value.
 <br>"username", "password" and "email" are ignored if "user_id" is an array.
 <br>set "group_id" to -1 if you want to dissociate users from all groups',
@@ -1106,7 +1119,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.setMyInfo',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->setMyInfo(...),
+            callback:    $this->usersEndpoints->setMyInfo(...),
             params:      [
                 ParamDefinition::optionalFlag('email'),
                 ParamDefinition::optionalFlag(name: 'nb_image_page', type: WS_TYPE_INT | WS_TYPE_POSITIVE | WS_TYPE_NOTNULL),
@@ -1127,7 +1140,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.getList',
-            callback:     ServiceLocator::get(PermissionsEndpoints::class)->getList(...),
+            callback:     $this->permissionsEndpoints->getList(...),
             description:  'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
 <br>Provide only one parameter!',
             params:       [
@@ -1141,7 +1154,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.add',
-            callback:     ServiceLocator::get(PermissionsEndpoints::class)->add(...),
+            callback:     $this->permissionsEndpoints->add(...),
             description:  'Adds permissions to an album.',
             params:       [
                 ParamDefinition::required(name: 'cat_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -1157,7 +1170,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.remove',
-            callback:     ServiceLocator::get(PermissionsEndpoints::class)->remove(...),
+            callback:     $this->permissionsEndpoints->remove(...),
             description:  'Removes permissions from an album.',
             params:       [
                 ParamDefinition::required(name: 'cat_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY),
@@ -1172,7 +1185,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.preferences.set',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->preferencesSet(...),
+            callback:    $this->usersEndpoints->preferencesSet(...),
             description: 'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
             params:      [
                 ParamDefinition::required('param'),
@@ -1184,7 +1197,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.add',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->favoritesAdd(...),
+            callback:    $this->usersEndpoints->favoritesAdd(...),
             description: 'Adds the indicated image to the current user\'s favorite images.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
@@ -1194,7 +1207,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.remove',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->favoritesRemove(...),
+            callback:    $this->usersEndpoints->favoritesRemove(...),
             description: 'Removes the indicated image from the current user\'s favorite images.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
@@ -1204,7 +1217,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.getList',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->favoritesGetList(...),
+            callback:    $this->usersEndpoints->favoritesGetList(...),
             description: 'Returns the favorite images of the current user.',
             params:      [
                 ParamDefinition::optional(name: 'per_page', default: 100, type: WS_TYPE_INT | WS_TYPE_POSITIVE, maxValue: Config::wsMaxImagesPerPage()),
@@ -1216,7 +1229,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.history.log',
-            callback:    ServiceLocator::get(GeneralEndpoints::class)->historyLog(...),
+            callback:    $this->generalEndpoints->historyLog(...),
             description: 'Log visit in history',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
@@ -1230,7 +1243,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.history.search',
-            callback:     ServiceLocator::get(GeneralEndpoints::class)->historySearch(...),
+            callback:     $this->generalEndpoints->historySearch(...),
             description:  'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
       <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
       <br> <strong>Date format</strong> is yyyy-mm-dd
@@ -1252,7 +1265,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.filteredSearch.create',
-            callback:    ServiceLocator::get(ImagesEndpoints::class)->filteredSearchCreate(...),
+            callback:    $this->imagesEndpoints->filteredSearchCreate(...),
             params:      [
                 ParamDefinition::optionalFlag(name: 'search_id', info: 'prior search_id (or search_key), if any'),
                 ParamDefinition::optionalFlag(name: 'allwords', info: 'query to search by words'),
@@ -1283,7 +1296,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.generatePasswordLink',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->generatePasswordLink(...),
+            callback:     $this->usersEndpoints->generatePasswordLink(...),
             description:  'Return the reset password link <br />
        (Only webmaster can perform this action for another webmaster)',
             params:       [
@@ -1298,7 +1311,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.setMainUser',
-            callback:     ServiceLocator::get(UsersEndpoints::class)->setMainUser(...),
+            callback:     $this->usersEndpoints->setMainUser(...),
             description:  'Update the main user (owner) <br />
         - To be the main user, the user must have the status "webmaster".<br />
         - Only a webmaster can perform this action',
@@ -1313,7 +1326,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.create',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->createApiKey(...),
+            callback:    $this->usersEndpoints->createApiKey(...),
             description: 'Create a new api key for the user in the current session',
             params:      [
                 ParamDefinition::required('key_name'),
@@ -1326,7 +1339,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.revoke',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->revokeApiKey(...),
+            callback:    $this->usersEndpoints->revokeApiKey(...),
             description: 'Revoke a api key for the user in the current session',
             params:      [
                 ParamDefinition::required('pkid'),
@@ -1338,7 +1351,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.edit',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->editApiKey(...),
+            callback:    $this->usersEndpoints->editApiKey(...),
             description: 'Edit a api key for the user in the current session',
             params:      [
                 ParamDefinition::required('key_name'),
@@ -1351,7 +1364,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.get',
-            callback:    ServiceLocator::get(UsersEndpoints::class)->getApiKey(...),
+            callback:    $this->usersEndpoints->getApiKey(...),
             description: 'Get all api key for the user in the current session',
             params:      [
                 ParamDefinition::required('pwg_token'),
@@ -1362,7 +1375,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.getList',
-            callback:     ServiceLocator::get(CommentsEndpoints::class)->getList(...),
+            callback:     $this->commentsEndpoints->getList(...),
             description:  'Get comments',
             params:       [
                 ParamDefinition::optional(name: 'status', default: 'all', info: 'must be: all, validated or pending'),
@@ -1380,7 +1393,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.delete',
-            callback:     ServiceLocator::get(CommentsEndpoints::class)->delete(...),
+            callback:     $this->commentsEndpoints->delete(...),
             description:  'Delete comments',
             params:       [
                 ParamDefinition::required(name: 'comment_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE, flags: WS_PARAM_FORCE_ARRAY),
@@ -1393,7 +1406,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.validate',
-            callback:     ServiceLocator::get(CommentsEndpoints::class)->validate(...),
+            callback:     $this->commentsEndpoints->validate(...),
             description:  'Validate comments',
             params:       [
                 ParamDefinition::required(name: 'comment_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE, flags: WS_PARAM_FORCE_ARRAY),

@@ -145,7 +145,7 @@ return [
     MailService::class         => factory(static fn (Connection $conn): MailService => new MailService($conn)),
     PermissionService::class   => factory(static fn (Connection $conn): PermissionService => new PermissionService($conn)),
     PreferencesService::class  => factory(static fn (Util $u, UserRepository $r): PreferencesService => new PreferencesService($u, $r)),
-    UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak): UserService => new UserService($u, $conn, $h, $a, $g, $ak)),
+    UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak, StringUtil $s, Util $util, LangService $lang, UrlGenerator $ug, MailService $mail, MessageBusInterface $bus, HtmlService $html, DateService $date, CategoryService $cat, UserAdminService $uas, SessionService $sess, AuthService $auth, PreferencesService $pref, PermissionService $perm): UserService => new UserService($u, $conn, $h, $a, $g, $ak, $s, $util, $lang, $ug, $mail, $bus, $html, $date, $cat, $uas, $sess, $auth, $pref, $perm)),
     ProfileService::class      => factory(static fn (): ProfileService => new ProfileService()),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn): CategoryService => new CategoryService($cat, $conn)),
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),

@@ -189,7 +189,7 @@ return [
     PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, Util $util): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $util)),
     PictureMetadataRenderer::class   => factory(static fn (): PictureMetadataRenderer => new PictureMetadataRenderer()),
     MetadataAdminService::class      => factory(static fn (): MetadataAdminService => new MetadataAdminService()),
-    HistoryAdminService::class       => factory(static fn (): HistoryAdminService => new HistoryAdminService()),
+    HistoryAdminService::class       => factory(static fn (Connection $conn, ConfigService $cfg, HistoryRepository $hR, StringUtil $s): HistoryAdminService => new HistoryAdminService($conn, $cfg, $hR, $s)),
     WsHelper::class                  => factory(static fn (): WsHelper => new WsHelper()),
     StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
     DateService::class         => factory(static fn (): DateService => new DateService()),

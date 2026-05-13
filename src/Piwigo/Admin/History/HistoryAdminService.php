@@ -9,9 +9,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
@@ -19,6 +17,14 @@ use Piwigo\History\HistoryRepository;
 
 final class HistoryAdminService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ConfigService $configService,
+        private readonly HistoryRepository $historyRepository,
+        private readonly StringUtil $stringUtil,
+    ) {
+    }
+
     public function historyTabsheet(): void
     {
         /** @var array<string, mixed> $page */
@@ -53,9 +59,9 @@ final class HistoryAdminService
 SELECT
     id
   FROM ' . Tables::images() . '
-  WHERE file LIKE ' . DbConnection::get()->quote(is_string($fields['filename']) ? $fields['filename'] : '') . '
+  WHERE file LIKE ' . $this->conn->quote(is_string($fields['filename']) ? $fields['filename'] : '') . '
 ;';
-            $search['image_ids'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+            $search['image_ids'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
         }
 
         $search['fields'] = $fields;
@@ -129,10 +135,10 @@ SELECT
         }
 
         if (isset($fields['ip'])) {
-            $clauses[] = "{$p}IP LIKE " . DbConnection::get()->quote(is_string($fields['ip']) ? $fields['ip'] : '');
+            $clauses[] = "{$p}IP LIKE " . $this->conn->quote(is_string($fields['ip']) ? $fields['ip'] : '');
         }
 
-        $clauses = ServiceLocator::get(StringUtil::class)->prependAppendArrayItems($clauses, '(', ')');
+        $clauses = $this->stringUtil->prependAppendArrayItems($clauses, '(', ')');
         return implode("\n    AND ", $clauses);
     }
 
@@ -144,7 +150,7 @@ SELECT
     {
         $where = $this->buildHistoryWhereSql($search, $types);
         $sql   = 'SELECT COUNT(*) AS c FROM ' . Tables::history() . ' WHERE ' . $where . ';';
-        $row   = ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAssociative();
+        $row   = $this->conn->executeQuery($sql)->fetchAssociative();
         return is_array($row) && is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
     }
 
@@ -164,7 +170,7 @@ SELECT
                . ' FROM ' . Tables::history() . ' h'
                . ' INNER JOIN ' . Tables::images() . ' i ON i.id = h.image_id'
                . " WHERE h.image_type = 'high' AND " . $where . ';';
-        $row   = ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAssociative();
+        $row   = $this->conn->executeQuery($sql)->fetchAssociative();
         return is_array($row) && is_numeric($row['s'] ?? null) ? (int) $row['s'] : 0;
     }
 
@@ -182,7 +188,7 @@ SELECT
                . ' WHERE user_id = ' . $guestId . ' AND ' . $where
                . ' GROUP BY IP;';
         $out = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
             $ip  = is_string($row['IP'] ?? null) ? $row['IP'] : '';
             $out[$ip] = is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
         }
@@ -204,7 +210,7 @@ SELECT
                . ' WHERE ' . $where
                . ' GROUP BY user_id;';
         $out = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
             if (!is_numeric($row['user_id'] ?? null)) {
                 continue;
             }
@@ -224,7 +230,7 @@ SELECT
         $sql   = 'SELECT DISTINCT search_id FROM ' . Tables::history()
                . ' WHERE search_id IS NOT NULL AND ' . $where . ';';
         $out = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
             if (is_numeric($row['search_id'] ?? null)) {
                 $out[] = (int) $row['search_id'];
             }
@@ -259,7 +265,7 @@ SELECT
   ORDER BY date DESC, time DESC
   LIMIT ' . $limit . ' OFFSET ' . $offset . '
 ;';
-        return ServiceLocator::get(Connection::class)->executeQuery($sql)->fetchAllAssociative();
+        return $this->conn->executeQuery($sql)->fetchAllAssociative();
     }
 
     public function historySummarize(?int $max_lines = null): void
@@ -272,7 +278,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-        $summary_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $summary_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
 
         $history_min_id = 0;
         if (count($summary_lines) > 0) {
@@ -284,7 +290,7 @@ SELECT
     MIN(id) AS min_id
   FROM ' . Tables::history() . '
 ;';
-            $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+            $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
             if (count($history_lines) > 0) {
                 $history_min_id = (is_numeric($history_lines[0]['min_id']) ? (int) $history_lines[0]['min_id'] : 0) - 1;
             }
@@ -313,7 +319,7 @@ SELECT
     date ASC,
     hour ASC
 ;';
-        $historyRows = ServiceLocator::get(Connection::class)
+        $historyRows = $this->conn
             ->executeQuery($query)->fetchAllAssociative();
 
         $need_update = [];
@@ -374,7 +380,7 @@ SELECT *
       )
     )
 ;';
-            foreach (ServiceLocator::get(Connection::class)
+            foreach ($this->conn
                 ->executeQuery($query)->fetchAllAssociative() as $row) {
                 $key = sprintf('%4u', is_numeric($row['year']) ? (int) $row['year'] : 0);
                 if (isset($row['month'])) {
@@ -434,7 +440,7 @@ SELECT *
             return;
         }
 
-        $histRepo = ServiceLocator::get(HistoryRepository::class);
+        $histRepo = $this->historyRepository;
         $count = $histRepo->countAll();
 
         if ($count <= Config::historyAutopurgeKeepLines()) {
@@ -450,7 +456,7 @@ SELECT
   ORDER BY history_id_to DESC
   LIMIT 1
 ;';
-        $summary_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $summary_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
         if (count($summary_lines) == 0) {
             return;
         }
@@ -464,7 +470,7 @@ SELECT
   ORDER BY id DESC
   LIMIT 1
 ;';
-        $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
         if (count($history_lines) == 0) {
             return;
         }
@@ -477,7 +483,7 @@ SELECT
   ORDER BY id ASC
   LIMIT 1
 ;';
-        $history_lines = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
         $history_id_oldest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
 
         $search_min = [
@@ -499,7 +505,7 @@ SELECT
             return;
         }
 
-        $histRepo = ServiceLocator::get(HistoryRepository::class);
+        $histRepo = $this->historyRepository;
         $count = $histRepo->countAll();
 
         if ($count > Config::historyAutopurgeKeepLines() + Config::historyAutopurgeBlocksize()) {
@@ -510,6 +516,6 @@ SELECT
             $histRepo->dropSummarizedColumn();
         }
 
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('history_summarized_dropped', true);
+        $this->configService->confUpdateParam('history_summarized_dropped', true);
     }
 }

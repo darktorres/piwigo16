@@ -24,7 +24,7 @@ final class SpecBuilderTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->server = new PwgServer();
+        $this->server = new \ReflectionClass(PwgServer::class)->newInstanceWithoutConstructor();
 
         // Stub globals that addMethod / getMethods touch (none — it's pure array work).
     }

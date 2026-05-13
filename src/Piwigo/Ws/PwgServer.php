@@ -6,7 +6,6 @@ namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -36,8 +35,10 @@ final class PwgServer
     /** @var array<string, MethodDefinition> */
     private array $_methodDefs = [];
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly PermissionService $permissionService,
+    ) {
     }
 
     /** @return array<string, WsMethod> */
@@ -114,7 +115,7 @@ final class PwgServer
     public function run(): void
     {
         if (is_null($this->_responseEncoder)) {
-            ServiceLocator::get(HtmlService::class)->setStatusHeader(400);
+            $this->htmlService->setStatusHeader(400);
             if (!headers_sent()) {
                 header('Content-Type: text/plain');
             }
@@ -171,7 +172,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if (!headers_sent() && $response instanceof PwgError) {
             $code = $response->code();
             if ($code !== null && $code >= 400 && $code < 600) {
-                ServiceLocator::get(HtmlService::class)->setStatusHeader($code, $response->message());
+                $this->htmlService->setStatusHeader($code, $response->message());
             }
         }
 
@@ -311,7 +312,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and !PermissionService::get()->isAdmin()) {
+        if (isset($method['options']['admin_only']) and $method['options']['admin_only'] and !$this->permissionService->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
 
@@ -483,7 +484,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             define('WS_XML_ATTRIBUTES', 'attributes_xml_');
         }
 
-        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => ServiceLocator::get(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EventDispatcher::NEUTRAL_PRIORITY);
+        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => Kernel::service(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EventDispatcher::NEUTRAL_PRIORITY);
 
         $requestFormat = 'rest';
         $responseFormat = null;
@@ -497,7 +498,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         }
 
 
-        $server = new self();
+        $server = Kernel::service(self::class);
         PwgServerRegistry::set($server);
         $GLOBALS['service'] = $server;
 
@@ -524,7 +525,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         }
         $server->setEncoder($responseFormat, $encoder);
 
-        UrlService::get()->setMakeFullUrl();
+        Kernel::service(UrlService::class)->setMakeFullUrl();
     }
 
     public function isAuthorizedMethodForAPIKEY(): bool

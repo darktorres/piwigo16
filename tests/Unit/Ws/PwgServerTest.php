@@ -25,7 +25,7 @@ final class PwgServerTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->server = new PwgServer();
+        $this->server = new \ReflectionClass(PwgServer::class)->newInstanceWithoutConstructor();
     }
 
     // ── hasMethod() ──────────────────────────────────────────────────────────

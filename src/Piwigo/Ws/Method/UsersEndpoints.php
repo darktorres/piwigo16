@@ -13,11 +13,9 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
@@ -40,6 +38,24 @@ use Piwigo\Ws\WsHelper;
 
 final class UsersEndpoints
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AuthService $authService,
+        private readonly ConfigService $configService,
+        private readonly DateService $dateService,
+        private readonly GroupRepository $groupRepository,
+        private readonly ImageRepository $imageRepository,
+        private readonly MailService $mailService,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+        private readonly WsHelper $wsHelper,
+    ) {
+    }
+
     /**
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
@@ -59,13 +75,13 @@ final class UsersEndpoints
             $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdArr)) . ')';
         }
         if (!empty($params['username'])) {
-            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . DbConnection::get()->quote(is_string($params['username']) ? $params['username'] : '');
+            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . $this->conn->quote(is_string($params['username']) ? $params['username'] : '');
         }
         $filteredGroups = [];
         if (!empty($params['filter'])) {
             $filterStr      = is_string($params['filter']) ? $params['filter'] : '';
-            $filteredGroups = ServiceLocator::get(GroupRepository::class)->findIdsByNameLike($filterStr);
-            $filterQuoted   = DbConnection::get()->quote('%' . $filterStr . '%');
+            $filteredGroups = $this->groupRepository->findIdsByNameLike($filterStr);
+            $filterQuoted   = $this->conn->quote('%' . $filterStr . '%');
             $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ' . $filterQuoted . ' OR u.' . Config::userFields()['email'] . ' LIKE ' . $filterQuoted;
             if (!empty($filteredGroups)) {
                 $filterWhere .= ' OR ug.group_id IN (' . implode(',', array_map(fn (int $v): string => (string) $v, $filteredGroups)) . ')';
@@ -176,7 +192,7 @@ final class UsersEndpoints
             $query .= ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
         }
         $users      = [];
-        $usersConn  = ServiceLocator::get(Connection::class);
+        $usersConn  = $this->conn;
         $usersRows  = $usersConn->executeQuery($query)->fetchAllAssociative();
         $totalCount = 0;
         if (isset($params['display']['total_count'])) {
@@ -192,7 +208,7 @@ final class UsersEndpoints
         }
         if (count($users) > 0) {
             if (array_key_exists('groups', $params['display'])) {
-                $conn = ServiceLocator::get(Connection::class);
+                $conn = $this->conn;
                 $qb   = $conn->createQueryBuilder()->select('user_id', 'group_id')->from(Tables::userGroup());
                 $qb->where($qb->expr()->in('user_id', ':ids'))->setParameter('ids', array_keys($users), ArrayParameterType::INTEGER);
                 foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
@@ -208,26 +224,26 @@ final class UsersEndpoints
                 $curUid = is_numeric($curUser['id'] ?? null) ? (int) $curUser['id'] : 0;
                 if (isset($params['display']['registration_date_string'])) {
                     $regDate = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
-                    $users[$curUid]['registration_date_string'] = ServiceLocator::get(DateService::class)->formatDate($regDate, ['day', 'month', 'year']);
+                    $users[$curUid]['registration_date_string'] = $this->dateService->formatDate($regDate, ['day', 'month', 'year']);
                 }
                 if (isset($params['display']['registration_date_since'])) {
                     $regDate2 = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
-                    $users[$curUid]['registration_date_since'] = ServiceLocator::get(DateService::class)->timeSince($regDate2, 'month');
+                    $users[$curUid]['registration_date_since'] = $this->dateService->timeSince($regDate2, 'month');
                 }
                 if (isset($params['display']['last_visit'])) {
                     $lastVisit = $curUser['last_visit'] ?? null;
                     $users[$curUid]['last_visit'] = $lastVisit;
                     if (!BoolUtil::fromMixed($curUser['last_visit_from_history'] ?? null) && ($lastVisit === null || $lastVisit === '')) {
-                        $lastVisit                    = UserService::get()->getUserLastVisitFromHistory($curUid, true);
+                        $lastVisit                    = $this->userService->getUserLastVisitFromHistory($curUid, true);
                         $users[$curUid]['last_visit'] = $lastVisit;
                     }
                     if (isset($params['display']['last_visit_string'])) {
                         $lvStr = is_scalar($lastVisit) ? (string) $lastVisit : null;
-                        $users[$curUid]['last_visit_string'] = ServiceLocator::get(DateService::class)->formatDate($lvStr, ['day', 'month', 'year']);
+                        $users[$curUid]['last_visit_string'] = $this->dateService->formatDate($lvStr, ['day', 'month', 'year']);
                     }
                     if (isset($params['display']['last_visit_since'])) {
                         $lvSince = is_scalar($lastVisit) ? (string) $lastVisit : null;
-                        $users[$curUid]['last_visit_since'] = ServiceLocator::get(DateService::class)->timeSince($lvSince, 'day');
+                        $users[$curUid]['last_visit_since'] = $this->dateService->timeSince($lvSince, 'day');
                     }
                 }
             }
@@ -247,7 +263,7 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) === 0) {
@@ -261,7 +277,7 @@ final class UsersEndpoints
         }
         $errors = [];
         $passwordRaw = $params['password'] ?? null;
-        $userId = UserService::get()->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($passwordRaw) ? $passwordRaw : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
+        $userId = $this->userService->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($passwordRaw) ? $passwordRaw : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
         if ($userId === false || $userId === 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
         }
@@ -271,10 +287,10 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function getAuthKey(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $authkey = AuthService::get()->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
+        $authkey = $this->authService->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
         if ($authkey === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
         }
@@ -284,19 +300,19 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $currentUser = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
         if ($currentUser->status === 'admin') {
-            $protectedUsers = array_merge($protectedUsers, array_column(DbConnection::get()->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
+            $protectedUsers = array_merge($protectedUsers, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
         }
         $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
         $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));
         $counter   = 0;
         foreach ($userIdArr as $userId) {
-            ServiceLocator::get(UserAdminService::class)->deleteUser($userId);
+            $this->userAdminService->deleteUser($userId);
             $counter++;
         }
         return Translator::get()->plural('%d user deleted', '%d users deleted', $counter);
@@ -305,10 +321,10 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $updatedUsers = UserService::get()->checkAndSaveUserInfos($params);
+        $updatedUsers = $this->userService->checkAndSaveUserInfos($params);
         if (isset($updatedUsers['error'])) {
             $err = is_array($updatedUsers['error']) ? $updatedUsers['error'] : [];
             return new PwgError(is_int($err['code'] ?? null) ? $err['code'] : null, is_string($err['message'] ?? null) ? $err['message'] : '');
@@ -320,10 +336,10 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function setMyInfo(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             return new PwgError(401, 'Access Denied');
         }
         $currentUser = CurrentUser::get();
@@ -342,7 +358,7 @@ final class UsersEndpoints
                 return new PwgError(403, Lang::t('The passwords do not match'));
             }
             $userFields      = Config::userFields();
-            $currentPassword = ServiceLocator::get(UserRepository::class)->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), $currentUser->id);
+            $currentPassword = $this->userRepository->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), $currentUser->id);
             if (!password_verify(is_string($params['password']) ? $params['password'] : '', is_string($currentPassword) ? $currentPassword : '')) {
                 return new PwgError(403, Lang::t('Current password is wrong'));
             }
@@ -350,7 +366,7 @@ final class UsersEndpoints
         }
         unset($params['new_password'], $params['conf_new_password'], $params['username'], $params['status'], $params['level'], $params['group_id'], $params['enabled_high']);
         $params['user_id'] = [$currentUser->id];
-        $updatedUsers2 = UserService::get()->checkAndSaveUserInfos($params);
+        $updatedUsers2 = $this->userService->checkAndSaveUserInfos($params);
         if (isset($updatedUsers2['error'])) {
             $err2 = is_array($updatedUsers2['error']) ? $updatedUsers2['error'] : [];
             return new PwgError(is_int($err2['code'] ?? null) ? $err2['code'] : null, is_string($err2['message'] ?? null) ? $err2['message'] : '');
@@ -369,19 +385,19 @@ final class UsersEndpoints
         if ($params['is_json']) {
             $value = json_decode($value, true);
         }
-        PreferencesService::get()->userprefsUpdateParam($prefParam, $value);
+        $this->preferencesService->userprefsUpdateParam($prefParam, $value);
         return CurrentUser::get()->rawAttributes['preferences'] ?? null;
     }
 
     /** @param array<mixed> $params */
     public function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
         $userId      = CurrentUser::get()->id;
         $favImageId  = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        if (!ServiceLocator::get(ImageRepository::class)->existsById($favImageId)) {
+        if (!$this->imageRepository->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
         Dml::singleInsert(Tables::favorites(), ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
@@ -391,15 +407,15 @@ final class UsersEndpoints
     /** @param array<mixed> $params */
     public function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
         $userId     = CurrentUser::get()->id;
         $remImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        if (!ServiceLocator::get(ImageRepository::class)->existsById($remImageId)) {
+        if (!$this->imageRepository->existsById($remImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        ServiceLocator::get(UserRepository::class)->deleteFavorite($userId, $remImageId);
+        $this->userRepository->deleteFavorite($userId, $remImageId);
         return true;
     }
 
@@ -409,16 +425,16 @@ final class UsersEndpoints
      */
     public function favoritesGetList(array $params, PwgServer &$service): false|array
     {
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             return false;
         }
         $userId = CurrentUser::get()->id;
-        UserService::get()->checkUserFavorites();
-        $orderBy = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
+        $this->userService->checkUserFavorites();
+        $orderBy = $this->wsHelper->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
+        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
         $images  = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $image = [];
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
@@ -428,13 +444,13 @@ final class UsersEndpoints
             foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                 $image[$k] = $row[$k] ?? null;
             }
-            $images[] = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
+            $images[] = array_merge($image, $this->wsHelper->getUrls($row));
         }
         $favPerPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $favPage    = is_numeric($params['page']) ? (int) $params['page'] : 0;
         $count      = count($images);
         $images     = array_slice($images, $favPerPage * $favPage, $favPerPage);
-        return ['paging' => new PwgNamedStruct(['page' => $favPage, 'per_page' => $favPerPage, 'count' => $count]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $favPage, 'per_page' => $favPerPage, 'count' => $count]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
     }
 
     /**
@@ -443,30 +459,30 @@ final class UsersEndpoints
      */
     public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        if (ServiceLocator::get(UserAdminService::class)->getUsername($targetUserId) === false) {
+        if ($this->userAdminService->getUsername($targetUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
-        $userLost = UserService::get()->getuserdata($targetUserId);
+        $userLost = $this->userService->getuserdata($targetUserId);
         if ($userLost === false) {
             return new PwgError(404, 'User not found');
         }
         $userLostStatus = is_string($userLost['status'] ?? null) ? $userLost['status'] : '';
-        if (PermissionService::get()->isAGuest($userLostStatus) || PermissionService::get()->isGeneric($userLostStatus)) {
+        if ($this->permissionService->isAGuest($userLostStatus) || $this->permissionService->isGeneric($userLostStatus)) {
             return new PwgError(403, 'Password reset is not allowed for this user');
         }
         if (CurrentUser::get()->status === 'admin' && $userLostStatus === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
-        $firstLogin     = UserService::get()->hasAlreadyLoggedIn($targetUserId);
+        $firstLogin     = $this->userService->hasAlreadyLoggedIn($targetUserId);
         $sendByMailResp = null;
         $userLostLanguage = is_string($userLost['language'] ?? null) ? $userLost['language'] : '';
-        $langToUse      = $firstLogin ? UserService::get()->getDefaultLanguage() : $userLostLanguage;
-        ServiceLocator::get(MailService::class)->switchLangTo($langToUse);
-        $generateLink = AuthService::get()->generatePasswordLink($targetUserId, $firstLogin);
+        $langToUse      = $firstLogin ? $this->userService->getDefaultLanguage() : $userLostLanguage;
+        $this->mailService->switchLangTo($langToUse);
+        $generateLink = $this->authService->generatePasswordLink($targetUserId, $firstLogin);
         $userLostEmailRaw    = $userLost['email'] ?? null;
         $userLostUsernameRaw = $userLost['username'] ?? null;
         $genPasswordLinkRaw  = $generateLink['password_link'] ?? null;
@@ -476,34 +492,34 @@ final class UsersEndpoints
         $genPasswordLink  = is_string($genPasswordLinkRaw) ? $genPasswordLinkRaw : '';
         $genTimeValidation = is_string($genTimeValidationRaw) ? $genTimeValidationRaw : '';
         if ($params['send_by_mail'] && $userLostEmail !== '') {
-            $emailParams = $firstLogin ? ServiceLocator::get(MailService::class)->pwgGenerateSetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : ServiceLocator::get(MailService::class)->pwgGenerateResetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
-            $sendByMailResp = ServiceLocator::get(MailService::class)->pwgMail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
+            $emailParams = $firstLogin ? $this->mailService->pwgGenerateSetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : $this->mailService->pwgGenerateResetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
+            $sendByMailResp = $this->mailService->pwgMail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
         }
-        ServiceLocator::get(MailService::class)->switchLangBack();
+        $this->mailService->switchLangBack();
         return ['generated_link' => $genPasswordLink, 'send_by_mail' => $sendByMailResp, 'time_validation' => $genTimeValidation];
     }
 
     /** @param array<mixed> $params */
     public function setMainUser(array $params, PwgServer &$service): PwgError|string
     {
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        if (ServiceLocator::get(UserAdminService::class)->getUsername($mainUserId) === false) {
+        if ($this->userAdminService->getUsername($mainUserId) === false) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
         }
-        $newMainUser = UserService::get()->getuserdata($mainUserId);
+        $newMainUser = $this->userService->getuserdata($mainUserId);
         if ($newMainUser === false) {
             return new PwgError(404, 'User not found');
         }
         if ($newMainUser['status'] !== 'webmaster') {
             return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
         }
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('webmaster_id', $params['user_id']);
+        $this->configService->confUpdateParam('webmaster_id', $params['user_id']);
         return 'The main user has been changed.';
     }
 
@@ -515,10 +531,10 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
+        if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if ($params['duration'] < 1 || $params['duration'] > 999999) {
@@ -529,7 +545,7 @@ final class UsersEndpoints
             return new PwgError(400, 'Key name is too long');
         }
         $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
-        $secret   = UserService::get()->createApiKey($userId, $duration, $apiKeyNameRaw);
+        $secret   = $this->userService->createApiKey($userId, $duration, $apiKeyNameRaw);
         $logger->info('[api_key][user_id=' . $userId . '][action=create][key_name=' . $apiKeyNameRaw . ']');
         return $secret;
     }
@@ -539,17 +555,17 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
+        if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $revokePkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
         if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revokePkid)) {
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
-        $revokedKey = UserService::get()->revokeApiKey($userId, $revokePkid);
+        $revokedKey = $this->userService->revokeApiKey($userId, $revokePkid);
         if (true !== $revokedKey) {
             return new PwgError(403, is_string($revokedKey) ? $revokedKey : '');
         }
@@ -562,10 +578,10 @@ final class UsersEndpoints
     {
         $logger = LoggerRegistry::current();
         $userId = CurrentUser::get()->id;
-        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
+        if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $editPkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
@@ -573,7 +589,7 @@ final class UsersEndpoints
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
         $keyName  = is_string($params['key_name'] ?? null) ? $params['key_name'] : '';
-        $editedKey = UserService::get()->editApiKey($userId, $editPkid, $keyName);
+        $editedKey = $this->userService->editApiKey($userId, $editPkid, $keyName);
         if (true !== $editedKey) {
             return new PwgError(403, $editedKey);
         }
@@ -587,13 +603,13 @@ final class UsersEndpoints
      */
     public function getApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        if (PermissionService::get()->isAGuest() || !AuthService::get()->connectedWithPwgUi()) {
+        if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $apiKeys = UserService::get()->getApiKey((string) CurrentUser::get()->id);
+        $apiKeys = $this->userService->getApiKey((string) CurrentUser::get()->id);
         return ($apiKeys !== false && count($apiKeys) > 0) ? $apiKeys : new PwgError(404, Lang::t('No API key found'));
     }
 }

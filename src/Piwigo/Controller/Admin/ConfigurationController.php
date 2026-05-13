@@ -17,10 +17,8 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
@@ -39,6 +37,21 @@ final class ConfigurationController
         'configuration',
     ];
 
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ConfigService $configService,
+        private readonly DateService $dateService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly PermissionService $permissionService,
+        private readonly ProfileService $profileService,
+        private readonly SizesProcessor $sizesProcessor,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserService $userService,
+        private readonly Util $util,
+        private readonly WatermarkProcessor $watermarkProcessor,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'configuration') {
@@ -52,11 +65,11 @@ final class ConfigurationController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        ServiceLocator::get(Util::class)->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
+        $this->util->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
 
         $page['section'] = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'main';
         $section = $page['section'];
@@ -120,14 +133,14 @@ final class ConfigurationController
         // ── POST submission ───────────────────────────────────────────────────
 
         if (isset($_POST['submit'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
             $int_pattern = '/^\d+$/';
 
             switch ($section) {
                 case 'main':
                     if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
                         if (isset($_POST['order_by']) && $_POST['order_by'] !== '') {
-                            ServiceLocator::get(Util::class)->checkInputParameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                            $this->util->checkInputParameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
                             $used = [];
                             foreach ($post_order_by as $i => $val) {
@@ -172,11 +185,11 @@ final class ConfigurationController
                     break;
 
                 case 'watermark':
-                    ServiceLocator::get(WatermarkProcessor::class)->process();
+                    $this->watermarkProcessor->process();
                     break;
 
                 case 'sizes':
-                    ServiceLocator::get(SizesProcessor::class)->process();
+                    $this->sizesProcessor->process();
                     break;
 
                 case 'comments':
@@ -234,19 +247,19 @@ final class ConfigurationController
             }
 
             $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && PermissionService::get()->isWebmaster()) {
-                foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
+            if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && $this->permissionService->isWebmaster()) {
+                foreach ($this->conn->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
                         $value = is_string($_POST[$row_param]) ? $_POST[$row_param] : '';
                         if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
                             $value = strip_tags($value);
                         }
-                        ServiceLocator::get(ConfigService::class)->confUpdateParam($row_param, $value);
+                        $this->configService->confUpdateParam($row_param, $value);
                     }
                 }
                 $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-                ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
+                $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
             }
 
             ConfigService::loadConfFromDb();
@@ -256,10 +269,10 @@ final class ConfigurationController
 
         if ($section === 'sizes' && isset($_GET['action']) && 'restore_settings' == $_GET['action']) {
             ImageStdParams::restoreDefault();
-            ServiceLocator::get(ImageAdminService::class)->clearDerivativeCache();
+            $this->imageAdminService->clearDerivativeCache();
             ConfigService::loadConfFromDb();
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
+            $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
         }
 
         // ── Template init ─────────────────────────────────────────────────────
@@ -269,11 +282,11 @@ final class ConfigurationController
         $tabsheet->select($section);
         $tabsheet->assign();
 
-        $action = ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&section=' . $section;
+        $action = $this->urlGenerator->admin('configuration') . '&section=' . $section;
 
         $tpl->assign([
-            'U_HELP'    => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('configuration'),
-            'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(),
+            'U_HELP'    => $this->urlGenerator->adminPopupHelp('configuration'),
+            'PWG_TOKEN' => $this->util->getPwgToken(),
             'F_ACTION'  => $action,
         ]);
 
@@ -317,7 +330,7 @@ final class ConfigurationController
 
                 $groups = array_map(
                     fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                    array_column(DbConnection::get()->executeQuery('SELECT id, name FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'name', 'id')
+                    array_column($this->conn->executeQuery('SELECT id, name FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'name', 'id')
                 );
                 natcasesort($groups);
                 $tpl->assign(['group_options' => $groups]);
@@ -344,16 +357,16 @@ final class ConfigurationController
                 break;
 
             case 'default':
-                $edit_user = UserService::get()->buildUser(Config::guestId(), false);
+                $edit_user = $this->userService->buildUser(Config::guestId(), false);
                 $errors = [];
-                if (ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors)) {
-                    $edit_user = UserService::get()->buildUser(Config::guestId(), false);
+                if ($this->profileService->saveProfileFromPost($edit_user, $errors)) {
+                    $edit_user = $this->userService->buildUser(Config::guestId(), false);
                     PageState::current()->addInfo(Lang::t('Information data registered in database'));
                 }
                 $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
                 $page['errors'] = array_merge($pageErrors2, $errors);
 
-                ServiceLocator::get(ProfileService::class)->loadProfileInTemplate($action, '', $edit_user, 'GUEST_');
+                $this->profileService->loadProfileInTemplate($action, '', $edit_user, 'GUEST_');
                 $tpl->assign('default', []);
                 break;
 
@@ -417,7 +430,7 @@ final class ConfigurationController
                     $now = time();
                     foreach (ImageStdParams::$custom as $custom => $time) {
                         $time_int         = is_numeric($time) ? (int) $time : 0;
-                        $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? Lang::t('today') : ServiceLocator::get(DateService::class)->timeSince($time_int, 'day');
+                        $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? Lang::t('today') : $this->dateService->timeSince($time_int, 'day');
                     }
                     $tpl->assign('custom_derivatives', $tpl_vars);
                 }
@@ -496,7 +509,7 @@ final class ConfigurationController
                 break;
         }
 
-        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $section . '.latte');
     }

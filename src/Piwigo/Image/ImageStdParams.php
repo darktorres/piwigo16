@@ -188,7 +188,7 @@ final class ImageStdParams
      */
     public static function save(bool $save_disabled = true): void
     {
-        if (!ServiceLocator::has(ConfigService::class)) {
+        if (!Kernel::isBooted()) {
             return;
         }
         $ser = serialize([
@@ -209,7 +209,7 @@ final class ImageStdParams
      */
     public static function saveDisabled(): void
     {
-        if (!ServiceLocator::has(ConfigService::class)) {
+        if (!Kernel::isBooted()) {
             return;
         }
         if (count(self::$disabled_type_map) > 0) {

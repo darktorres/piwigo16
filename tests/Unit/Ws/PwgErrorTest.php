@@ -18,7 +18,7 @@ final class PwgErrorTest extends TestCase
 
     public function test_http_status_codes_do_not_throw(): void
     {
-        // ServiceLocator::get(HtmlService::class)->setStatusHeader() is stubbed in tests/bootstrap.php for unit runs.
+        // HtmlService::setStatusHeader() is stubbed in tests/bootstrap.php for unit runs.
         $e = new PwgError(404, 'Not found');
         self::assertSame(404, $e->code());
         self::assertSame('Not found', $e->message());

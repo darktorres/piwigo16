@@ -9,7 +9,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Users\CurrentUser;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -138,22 +137,20 @@ final class KernelBootTest extends TestCase
         self::assertSame('New Value', Lang::t('new_key'));
     }
 
-    public function test_ServiceLocator_has_PageState_after_boot(): void
+    public function test_container_has_PageState_after_boot(): void
     {
         $this->simulateGlobals();
         Kernel::boot();
 
-        self::assertTrue(ServiceLocator::has(PageState::class));
-        self::assertInstanceOf(PageState::class, ServiceLocator::get(PageState::class));
+        self::assertInstanceOf(PageState::class, Kernel::service(PageState::class));
     }
 
-    public function test_ServiceLocator_Config_instance_is_same_as_Config_instance(): void
+    public function test_container_Config_instance_is_same_as_Config_instance(): void
     {
         $this->simulateGlobals();
         Kernel::boot();
 
-        self::assertTrue(ServiceLocator::has(Config::class));
-        self::assertSame(Config::instance(), ServiceLocator::get(Config::class));
+        self::assertSame(Config::instance(), Kernel::service(Config::class));
     }
 
     public function test_reset_clears_booted_flag(): void

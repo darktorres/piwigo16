@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
@@ -29,6 +28,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class FilterMiddleware implements MiddlewareInterface
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryService $categoryService,
+        private readonly SessionService $sessionService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -45,7 +52,7 @@ final class FilterMiddleware implements MiddlewareInterface
         /** @var array<mixed> $header_notes */
         $header_notes = &$GLOBALS['header_notes'];
 
-        if (empty(Config::filterPages()) || !ServiceLocator::get(Util::class)->getFilterPageValue('used')) {
+        if (empty(Config::filterPages()) || !$this->util->getFilterPageValue('used')) {
             $filter['enabled'] = false;
             return;
         }
@@ -54,7 +61,7 @@ final class FilterMiddleware implements MiddlewareInterface
 
         $recentPeriodFromUrl = null;
 
-        if (!ServiceLocator::get(Util::class)->getFilterPageValue('cancel')) {
+        if (!$this->util->getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
                 $urlMatches    = [];
                 $rawFilter = $_GET['filter'];
@@ -68,7 +75,7 @@ final class FilterMiddleware implements MiddlewareInterface
                     $recentPeriodFromUrl = (int) $urlMatches[1];
                 }
             } else {
-                $filter['enabled'] = ServiceLocator::get(SessionService::class)->getSessionVar('filter_enabled', false);
+                $filter['enabled'] = $this->sessionService->getSessionVar('filter_enabled', false);
             }
         } else {
             $filter['enabled'] = false;
@@ -76,11 +83,11 @@ final class FilterMiddleware implements MiddlewareInterface
 
         if (!(bool) $filter['enabled']) {
             if (!empty($_SESSION['pwg_filter_enabled'])) {
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_enabled');
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_check_key');
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_categories');
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_visible_categories');
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('filter_visible_images');
+                $this->sessionService->unsetSessionVar('filter_enabled');
+                $this->sessionService->unsetSessionVar('filter_check_key');
+                $this->sessionService->unsetSessionVar('filter_categories');
+                $this->sessionService->unsetSessionVar('filter_visible_categories');
+                $this->sessionService->unsetSessionVar('filter_visible_images');
             }
             return;
         }
@@ -88,7 +95,7 @@ final class FilterMiddleware implements MiddlewareInterface
         // ── Load or recompute filter data ─────────────────────────────────────
 
         /** @var array{user: int, recent_period: int, time: int, date: string} $filterKey */
-        $filterKey = ServiceLocator::get(SessionService::class)->getSessionVar('filter_check_key', [
+        $filterKey = $this->sessionService->getSessionVar('filter_check_key', [
             'user' => 0, 'recent_period' => -1, 'time' => 0, 'date' => '',
         ]);
 
@@ -118,7 +125,7 @@ final class FilterMiddleware implements MiddlewareInterface
                 'date'          => date('Ymd'),
             ];
 
-            $computedCategories    = ServiceLocator::get(CategoryService::class)->getComputedCategories($user, $recentPeriod);
+            $computedCategories    = $this->categoryService->getComputedCategories($user, $recentPeriod);
             $filter['categories']  = $computedCategories;
 
             $visibleCatKeys        = array_map(static fn (string $k): string => $k, array_keys($computedCategories));
@@ -136,23 +143,23 @@ WHERE ' . $catClause . '
 
             $visibleImageStr = implode(',', array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id')
+                array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id')
             ));
             $filter['visible_images'] = $visibleImageStr !== '' ? $visibleImageStr : -1;
 
-            ServiceLocator::get(SessionService::class)->setSessionVar('filter_enabled', $filter['enabled']);
-            ServiceLocator::get(SessionService::class)->setSessionVar('filter_check_key', $filterKey);
-            ServiceLocator::get(SessionService::class)->setSessionVar('filter_categories', serialize($computedCategories));
-            ServiceLocator::get(SessionService::class)->setSessionVar('filter_visible_categories', $filter['visible_categories']);
-            ServiceLocator::get(SessionService::class)->setSessionVar('filter_visible_images', $filter['visible_images']);
+            $this->sessionService->setSessionVar('filter_enabled', $filter['enabled']);
+            $this->sessionService->setSessionVar('filter_check_key', $filterKey);
+            $this->sessionService->setSessionVar('filter_categories', serialize($computedCategories));
+            $this->sessionService->setSessionVar('filter_visible_categories', $filter['visible_categories']);
+            $this->sessionService->setSessionVar('filter_visible_images', $filter['visible_images']);
         } else {
-            $rawCategories                = ServiceLocator::get(SessionService::class)->getSessionVar('filter_categories', serialize([]));
+            $rawCategories                = $this->sessionService->getSessionVar('filter_categories', serialize([]));
             $filter['categories']         = unserialize(is_string($rawCategories) ? $rawCategories : serialize([]));
-            $filter['visible_categories'] = ServiceLocator::get(SessionService::class)->getSessionVar('filter_visible_categories', '');
-            $filter['visible_images']     = ServiceLocator::get(SessionService::class)->getSessionVar('filter_visible_images', '');
+            $filter['visible_categories'] = $this->sessionService->getSessionVar('filter_visible_categories', '');
+            $filter['visible_images']     = $this->sessionService->getSessionVar('filter_visible_images', '');
         }
 
-        if (ServiceLocator::get(Util::class)->getFilterPageValue('add_notes')) {
+        if ($this->util->getFilterPageValue('add_notes')) {
             $header_notes[] = Translator::get()->plural(
                 'Photos posted within the last %d day.',
                 'Photos posted within the last %d days.',

@@ -226,7 +226,7 @@ return [
     ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
     SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
-    FilterMiddleware::class           => factory(static fn (): FilterMiddleware => new FilterMiddleware()),
+    FilterMiddleware::class           => factory(static fn (Connection $conn, CategoryService $cat, SessionService $sess, Util $util): FilterMiddleware => new FilterMiddleware($conn, $cat, $sess, $util)),
     CsrfMiddleware::class             => factory(static fn (): CsrfMiddleware => new CsrfMiddleware()),
     RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
     ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),

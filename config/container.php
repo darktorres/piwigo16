@@ -172,7 +172,7 @@ return [
     TagAdminService::class           => factory(static fn (Connection $conn): TagAdminService => new TagAdminService($conn)),
     UserAdminService::class          => factory(static fn (): UserAdminService => new UserAdminService()),
     NotificationAdminService::class  => factory(static fn (): NotificationAdminService => new NotificationAdminService()),
-    UploadService::class             => factory(static fn (): UploadService => new UploadService()),
+    UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (): AlbumsTabRenderer => new AlbumsTabRenderer()),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
     DirectPreparer::class            => factory(static fn (): DirectPreparer => new DirectPreparer()),

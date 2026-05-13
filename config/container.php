@@ -171,7 +171,7 @@ return [
     ImageAdminService::class         => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CommentRepository $com, ConfigService $cfg, ImageRepository $i, StringUtil $s, TagRepository $tR, UrlGenerator $ug, UserRepository $u, Util $util): ImageAdminService => new ImageAdminService($conn, $catA, $catR, $com, $cfg, $i, $s, $tR, $ug, $u, $util)),
     TagAdminService::class           => factory(static fn (Connection $conn, HtmlService $h, ImageAdminService $iA, TagRepository $tR, UserAdminService $uA, Util $util): TagAdminService => new TagAdminService($conn, $h, $iA, $tR, $uA, $util)),
     UserAdminService::class          => factory(static fn (): UserAdminService => new UserAdminService()),
-    NotificationAdminService::class  => factory(static fn (): NotificationAdminService => new NotificationAdminService()),
+    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, StringUtil $s, UrlGenerator $ug, UrlService $u, UserService $us, Util $util): NotificationAdminService => new NotificationAdminService($mail, $nR, $s, $ug, $u, $us, $util)),
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (): AlbumsTabRenderer => new AlbumsTabRenderer()),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),

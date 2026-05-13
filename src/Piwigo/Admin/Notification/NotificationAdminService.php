@@ -8,7 +8,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -24,11 +23,22 @@ use Piwigo\Users\UserService;
 
 final class NotificationAdminService
 {
+    public function __construct(
+        private readonly MailService $mailService,
+        private readonly NotificationRepository $notificationRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function findAvailableCheckKey(): string
     {
         while (true) {
             $key = StringUtil::generateKey(16);
-            if (!ServiceLocator::get(NotificationRepository::class)->checkKeyExists($key)) {
+            if (!$this->notificationRepository->checkKeyExists($key)) {
                 return $key;
             }
         }
@@ -37,7 +47,7 @@ final class NotificationAdminService
     public function checkSendmailTimeout(): bool
     {
         $ctx                   = MailNotificationContext::current();
-        $ctx->isSendmailTimeout = ((StringUtil::get()->getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
+        $ctx->isSendmailTimeout = (($this->stringUtil->getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
         return $ctx->isSendmailTimeout;
     }
 
@@ -59,20 +69,20 @@ final class NotificationAdminService
         $enabledFilter = ($enabledFilterValue !== '' && $enabledFilterValue !== false)
             ? (bool) $enabledFilterValue
             : null;
-        return ServiceLocator::get(NotificationRepository::class)->getUserNotifications($action, $checkKeyList, $enabledFilter);
+        return $this->notificationRepository->getUserNotifications($action, $checkKeyList, $enabledFilter);
     }
 
     public function beginUsersEnvNbm(bool $isToSendMail = false): void
     {
         $ctx          = MailNotificationContext::current();
         $ctx->saveUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-        ServiceLocator::get(MailService::class)->switchLangTo(CurrentUser::get()->language);
+        $this->mailService->switchLangTo(CurrentUser::get()->language);
         $ctx->isToSendMail = $isToSendMail;
         if ($isToSendMail) {
-            $ctx->emailFormat          = ServiceLocator::get(MailService::class)->getStrEmailFormat(Config::nbmSendHtmlMail());
-            $ctx->sendAsName           = (Config::has('nbm_send_mail_as') && !empty(Config::nbmSendMailAs())) ? Config::nbmSendMailAs() : ServiceLocator::get(MailService::class)->getMailSenderName();
-            $ctx->sendAsMailAddress    = ServiceLocator::get(Util::class)->getWebmasterMailAddress();
-            $ctx->sendAsMailFormated   = ServiceLocator::get(MailService::class)->formatEmail($ctx->sendAsName, $ctx->sendAsMailAddress);
+            $ctx->emailFormat          = $this->mailService->getStrEmailFormat(Config::nbmSendHtmlMail());
+            $ctx->sendAsName           = (Config::has('nbm_send_mail_as') && !empty(Config::nbmSendMailAs())) ? Config::nbmSendMailAs() : $this->mailService->getMailSenderName();
+            $ctx->sendAsMailAddress    = $this->util->getWebmasterMailAddress();
+            $ctx->sendAsMailFormated   = $this->mailService->formatEmail($ctx->sendAsName, $ctx->sendAsMailAddress);
             $ctx->errorOnMailCount     = 0;
             $ctx->sentMailCount        = 0;
             $ctx->msgInfo  = Lang::t('Mail sent to %s [%s].');
@@ -84,7 +94,7 @@ final class NotificationAdminService
     {
         $ctx = MailNotificationContext::current();
         CurrentUser::setRawAttributes($ctx->saveUser);
-        ServiceLocator::get(MailService::class)->switchLangBack();
+        $this->mailService->switchLangBack();
         if ($ctx->isToSendMail) {
             $ctx->emailFormat          = '';
             $ctx->sendAsName           = '';
@@ -101,17 +111,17 @@ final class NotificationAdminService
     public function setUserOnEnvNbm(array &$nbmUser, bool $isActionSend): void
     {
         $ctx     = MailNotificationContext::current();
-        $newUser = UserService::get()->buildUser(is_numeric($nbmUser['user_id']) ? (int) $nbmUser['user_id'] : 0, true);
+        $newUser = $this->userService->buildUser(is_numeric($nbmUser['user_id']) ? (int) $nbmUser['user_id'] : 0, true);
         CurrentUser::setRawAttributes($newUser);
-        ServiceLocator::get(MailService::class)->switchLangTo(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
+        $this->mailService->switchLangTo(is_string($newUser['language'] ?? null) ? $newUser['language'] : '');
         if ($isActionSend) {
-            $ctx->mailTemplate = ServiceLocator::get(MailService::class)->getMailTemplate($ctx->emailFormat);
+            $ctx->mailTemplate = $this->mailService->getMailTemplate($ctx->emailFormat);
         }
     }
 
     public function unsetUserOnEnvNbm(): void
     {
-        ServiceLocator::get(MailService::class)->switchLangBack();
+        $this->mailService->switchLangBack();
         MailNotificationContext::current()->mailTemplate = null;
     }
 
@@ -153,15 +163,15 @@ final class NotificationAdminService
     {
         $ctx = MailNotificationContext::current();
         $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set in assignVarsNbmMailContent');
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
         $tpl->assign([
             'USERNAME'        => stripslashes((string) $nbmUser['username']),
             'SEND_AS_NAME'    => $ctx->sendAsName,
-            'UNSUBSCRIBE_LINK' => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->nbm(), ['unsubscribe' => $nbmUser['check_key']]),
-            'SUBSCRIBE_LINK'   => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->nbm(), ['subscribe' => $nbmUser['check_key']]),
+            'UNSUBSCRIBE_LINK' => $this->urlService->addUrlParams($this->urlGenerator->nbm(), ['unsubscribe' => $nbmUser['check_key']]),
+            'SUBSCRIBE_LINK'   => $this->urlService->addUrlParams($this->urlGenerator->nbm(), ['subscribe' => $nbmUser['check_key']]),
             'CONTACT_EMAIL'    => $ctx->sendAsMailAddress,
         ]);
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
     }
 
     /**
@@ -170,7 +180,7 @@ final class NotificationAdminService
      */
     public function doSubscribeUnsubscribeNotificationByMail(bool $isAdminRequest, bool $isSubscribe = false, array $checkKeyList = []): array
     {
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
         $checkKeyTreated         = [];
         $updatedDataCount        = 0;
         $errorOnUpdatedDataCount = 0;
@@ -199,8 +209,8 @@ final class NotificationAdminService
                     $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_') . ($isAdminRequest ? 'admin' : 'himself');
                     $ctx = MailNotificationContext::current();
                     $tpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
-                    $tpl->assign([$sectionActionBy => true, 'GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->getGalleryHomeUrl()]);
-                    $ret = ServiceLocator::get(MailService::class)->pwgMail(
+                    $tpl->assign([$sectionActionBy => true, 'GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => $this->urlService->getGalleryHomeUrl()]);
+                    $ret = $this->mailService->pwgMail(
                         ['name' => stripslashes((string) $nbmUser['username']), 'email' => $nbmUser['mail_address']],
                         ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $tpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat]
                     );
@@ -232,7 +242,7 @@ final class NotificationAdminService
         if ($errorOnUpdatedDataCount != 0) {
             PageState::current()->addError(Translator::get()->plural('%d user was not updated.', '%d users were not updated.', $errorOnUpdatedDataCount));
         }
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
         return $checkKeyTreated;
     }
 

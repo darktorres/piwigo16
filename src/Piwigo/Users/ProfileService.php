@@ -8,10 +8,9 @@ use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\LangService;
@@ -22,6 +21,18 @@ use Piwigo\Url\UrlService;
 
 final class ProfileService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AuthService $authService,
+        private readonly DateService $dateService,
+        private readonly LangService $langService,
+        private readonly MailService $mailService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     /**
      * @param array<string,mixed> $userdata
      * @param string[] $errors
@@ -37,8 +48,8 @@ final class ProfileService
         $special_user = in_array($userdata['id'], [Config::guestId(), Config::defaultUserId()]);
         if ($special_user) {
             unset($_POST['username'], $_POST['mail_address'], $_POST['password'], $_POST['use_new_pwd'], $_POST['passwordConf'], $_POST['theme'], $_POST['language']);
-            $_POST['theme']    = UserService::get()->getDefaultTheme();
-            $_POST['language'] = UserService::get()->getDefaultLanguage();
+            $_POST['theme']    = $this->userService->getDefaultTheme();
+            $_POST['language'] = $this->userService->getDefaultLanguage();
         }
 
         if (!defined('IN_ADMIN')) {
@@ -58,16 +69,16 @@ final class ProfileService
             ) {
                 $errors[] = Lang::t('Recent period must be a positive integer value');
             }
-            if (!in_array($_POST['language'] ?? null, array_keys(Util::get()->getLanguages()))) {
+            if (!in_array($_POST['language'] ?? null, array_keys($this->util->getLanguages()))) {
                 die('Hacking attempt, incorrect language value');
             }
-            if (!in_array($_POST['theme'] ?? null, array_keys(ServiceLocator::get(Util::class)->getPwgThemes()))) {
+            if (!in_array($_POST['theme'] ?? null, array_keys($this->util->getPwgThemes()))) {
                 die('Hacking attempt, incorrect theme value');
             }
         }
 
         if (isset($_POST['mail_address'])) {
-            $mail_error = AuthService::get()->validateMailAddress(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address']) ? $_POST['mail_address'] : null);
+            $mail_error = $this->authService->validateMailAddress(is_int($userdata['id'] ?? null) ? $userdata['id'] : null, is_string($_POST['mail_address']) ? $_POST['mail_address'] : null);
             if ($mail_error !== null && $mail_error !== '') {
                 $errors[] = $mail_error;
             }
@@ -78,7 +89,7 @@ final class ProfileService
                 $errors[] = Lang::t('The passwords do not match');
             }
             if (!defined('IN_ADMIN')) {
-                $current_password = ServiceLocator::get(UserRepository::class)->findPasswordById(
+                $current_password = $this->userRepository->findPasswordById(
                     Config::userFields()['password'],
                     Config::userFields()['id'],
                     Tables::users(),
@@ -102,27 +113,27 @@ final class ProfileService
                 if (isset($_POST['use_new_pwd']) && $_POST['use_new_pwd'] !== '') {
                     $fields[]                                  = Config::userFields()['password'];
                     $data[Config::userFields()['password']]    = password_hash(is_string($rawNewPwd = $_POST['use_new_pwd']) ? $rawNewPwd : '', PASSWORD_BCRYPT);
-                    ServiceLocator::get(AuthService::class)->deactivateUserAuthKeys(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
+                    $this->authService->deactivateUserAuthKeys(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
                 }
 
                 if (isset($_POST['username']) && $_POST['username'] !== '') {
-                    if ($_POST['username'] != $userdata['username'] and UserService::get()->getUserid(is_string($_POST['username']) ? $_POST['username'] : '') !== false) {
+                    if ($_POST['username'] != $userdata['username'] and $this->userService->getUserid(is_string($_POST['username']) ? $_POST['username'] : '') !== false) {
                         PageState::current()->addError(Lang::t('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
                         $fields[]                                   = Config::userFields()['username'];
                         $data[Config::userFields()['username']]     = $_POST['username'];
                         if ($_POST['username'] != $userdata['username']) {
-                            ServiceLocator::get(MailService::class)->switchLangTo(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
+                            $this->mailService->switchLangTo(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
                             $keyargs_content = [
-                                LangService::get()->getL10nArgs('Hello', ''),
-                                LangService::get()->getL10nArgs('Your username has been successfully changed to : %s', $_POST['username']),
+                                $this->langService->getL10nArgs('Hello', ''),
+                                $this->langService->getL10nArgs('Your username has been successfully changed to : %s', $_POST['username']),
                             ];
-                            ServiceLocator::get(MailService::class)->pwgMail(
+                            $this->mailService->pwgMail(
                                 is_string($_POST['mail_address']) ? $_POST['mail_address'] : '',
-                                ['subject' => '[' . Config::galleryTitle() . '] ' . Lang::t('Username modification'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']
+                                ['subject' => '[' . Config::galleryTitle() . '] ' . Lang::t('Username modification'), 'content' => $this->langService->l10nArgs($keyargs_content), 'content_format' => 'text/plain']
                             );
-                            ServiceLocator::get(MailService::class)->switchLangBack();
+                            $this->mailService->switchLangBack();
                         }
                     }
                 }
@@ -130,7 +141,7 @@ final class ProfileService
                 Dml::massUpdates(Tables::users(), ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
 
                 if ($_POST['mail_address'] != $userdata['email']) {
-                    ServiceLocator::get(AuthService::class)->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
+                    $this->authService->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
                 }
                 $activity_details_tables[] = 'users';
             }
@@ -153,10 +164,10 @@ final class ProfileService
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
             EventDispatcher::notify('save_profile_from_post', $userId);
-            ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
+            $this->util->pwgActivity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
 
             if (isset($_POST['redirect']) && $_POST['redirect'] !== '') {
-                Util::get()->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
+                $this->util->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
             }
         }
         return true;
@@ -189,10 +200,10 @@ final class ProfileService
         ]);
 
         $tpl->assign('template_selection', $userdata['theme']);
-        $tpl->assign('template_options', ServiceLocator::get(Util::class)->getPwgThemes());
+        $tpl->assign('template_options', $this->util->getPwgThemes());
 
         $language_options = [];
-        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
+        foreach ($this->util->getLanguages() as $language_code => $language_name) {
             if (isset($_POST['submit']) or $userdata['language'] == $language_code) {
                 $tpl->assign('language_selection', $language_code);
             }
@@ -220,9 +231,9 @@ final class ProfileService
         }
 
         $query  = 'SELECT ' . implode(', ', $duration) . ';';
-        $result = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
+        $result = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
         foreach ($result as $day => $date) {
-            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . ServiceLocator::get(DateService::class)->formatDate(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . $this->dateService->formatDate(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
         }
         if ($has_custom) {
             $display_duration['custom'] = Lang::t('Custom date');
@@ -238,6 +249,6 @@ final class ProfileService
         $tpl->assign('API_EMAIL_INFOS', new Html($email_notifications_infos));
 
         EventDispatcher::notify('load_profile_in_template', $userdata);
-        $tpl->assign('PWG_TOKEN', ServiceLocator::get(Util::class)->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
     }
 }

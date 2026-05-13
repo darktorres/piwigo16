@@ -10,7 +10,6 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Html\HtmlService;
@@ -19,6 +18,16 @@ use Piwigo\Template\TemplateRegistry;
 
 final class DirectPreparer
 {
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly HtmlService $htmlService,
+        private readonly ImageRepository $imageRepository,
+        private readonly UploadService $uploadService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function prepare(string $photosAddBaseUrl): void
     {
         $tpl = TemplateRegistry::current();
@@ -32,7 +41,7 @@ final class DirectPreparer
 
         if (PwgImage::getLibrary() == 'gd') {
             $fudge_factor = 1.7;
-            $available_memory = (float) ((int) ServiceLocator::get(UploadService::class)->getIniSize('memory_limit') - memory_get_usage());
+            $available_memory = (float) ((int) $this->uploadService->getIniSize('memory_limit') - memory_get_usage());
             $max_upload_width = round(sqrt($available_memory / (2.0 * $fudge_factor)));
             $max_upload_height = round(2.0 * $max_upload_width / 3.0);
             $max_upload_width = round($max_upload_width / 100.0) * 100.0;
@@ -56,7 +65,7 @@ final class DirectPreparer
 
         $tpl->assign([
             'form_action' => $photosAddBaseUrl,
-            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
+            'pwg_token' => $this->util->getPwgToken(),
         ]);
 
         $unique_exts = array_unique(
@@ -76,12 +85,12 @@ final class DirectPreparer
         $selected_category = [];
 
         if (isset($_GET['album'])) {
-            ServiceLocator::get(Util::class)->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
+            $this->util->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
             $album_id_int = is_scalar($_GET['album']) ? (int) $_GET['album'] : 0;
-            $cat = ServiceLocator::get(CategoryRepository::class)->findCategoryById($album_id_int);
+            $cat = $this->categoryRepository->findCategoryById($album_id_int);
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
-                $tpl->assign('ADD_TO_ALBUM', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
+                $tpl->assign('ADD_TO_ALBUM', new Html($this->htmlService->getCatDisplayNameCache(
                     is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '',
                     null
                 )));
@@ -91,26 +100,26 @@ final class DirectPreparer
                 HtmlService::fatalError('[Hacking attempt] the album id = "' . $album_id . '" is not valid');
             }
         } else {
-            $last_cat = ServiceLocator::get(ImageRepository::class)->findLastUploadedCategoryInfo();
+            $last_cat = $this->imageRepository->findLastUploadedCategoryInfo();
             if ($last_cat !== null) {
                 $selected_category = [$last_cat['category_id']];
-                $selected_category_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($last_cat['uppercats'], null);
+                $selected_category_name = $this->htmlService->getCatDisplayNameCache($last_cat['uppercats'], null);
                 $tpl->assign('selected_category_name', new Html($selected_category_name));
             }
         }
 
         $tpl->assign('selected_category', $selected_category);
-        $nb_albums = ServiceLocator::get(CategoryRepository::class)->countAll();
+        $nb_albums = $this->categoryRepository->countAll();
         $tpl->assign('NB_ALBUMS', $nb_albums);
 
         $selected_level = $_POST['level'] ?? 0;
         $tpl->assign([
-            'level_options' => ServiceLocator::get(Util::class)->getPrivacyLevelOptions(),
+            'level_options' => $this->util->getPrivacyLevelOptions(),
             'level_options_selected' => [$selected_level],
         ]);
 
         $setup_errors = [];
-        $error_message = ServiceLocator::get(UploadService::class)->readyForUploadMessage();
+        $error_message = $this->uploadService->readyForUploadMessage();
         if ($error_message !== null && $error_message !== '') {
             $setup_errors[] = $error_message;
         }
@@ -119,7 +128,7 @@ final class DirectPreparer
         }
         $tpl->assign([
             'setup_errors' => $setup_errors,
-            'CACHE_KEYS' => ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']),
+            'CACHE_KEYS' => $this->adminService->getAdminClientCacheKeys(['categories']),
         ]);
 
         if (isset($_GET['hide_warnings'])) {
@@ -130,18 +139,18 @@ final class DirectPreparer
             if (Config::useExif() && !function_exists('exif_read_data')) {
                 $setup_warnings[] = Lang::t('Exif extension not available, admin should disable exif use');
             }
-            if (ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') > ServiceLocator::get(UploadService::class)->getIniSize('post_max_size')) {
+            if ($this->uploadService->getIniSize('upload_max_filesize') > $this->uploadService->getIniSize('post_max_size')) {
                 $setup_warnings[] = Lang::t(
                     'In your php.ini file, the upload_max_filesize (%sB) is bigger than post_max_size (%sB), you should change this setting',
-                    ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize', false),
-                    ServiceLocator::get(UploadService::class)->getIniSize('post_max_size', false)
+                    $this->uploadService->getIniSize('upload_max_filesize', false),
+                    $this->uploadService->getIniSize('post_max_size', false)
                 );
             }
-            if (ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') < Config::uploadFormChunkSize() * 1024) {
+            if ($this->uploadService->getIniSize('upload_max_filesize') < Config::uploadFormChunkSize() * 1024) {
                 $setup_warnings[] = sprintf(
                     'Piwigo setting upload_form_chunk_size (%ukB) should be smaller than PHP configuration setting upload_max_filesize (%ukB)',
                     Config::uploadFormChunkSize(),
-                    ceil((int) ServiceLocator::get(UploadService::class)->getIniSize('upload_max_filesize') / 1024)
+                    ceil((int) $this->uploadService->getIniSize('upload_max_filesize') / 1024)
                 );
             }
             $tpl->assign([

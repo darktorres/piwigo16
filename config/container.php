@@ -175,7 +175,7 @@ return [
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (): AlbumsTabRenderer => new AlbumsTabRenderer()),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
-    DirectPreparer::class            => factory(static fn (): DirectPreparer => new DirectPreparer()),
+    DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, Util $util): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $util)),
     FilterResolver::class            => factory(static fn (): FilterResolver => new FilterResolver()),
     SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
     WatermarkProcessor::class        => factory(static fn (): WatermarkProcessor => new WatermarkProcessor()),

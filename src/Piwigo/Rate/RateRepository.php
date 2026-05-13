@@ -206,7 +206,7 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return (element_id, rcount, rsum) for every element that has at least one rate.
-     * Used by the Bayesian average recalculation in ServiceLocator::get(RateService::class)->updateRatingScore().
+     * Used by the Bayesian average recalculation in RateService::updateRatingScore().
      *
      * @return list<array<string, mixed>>
      */
@@ -222,7 +222,7 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return ids of images that have rating_score set but no rate rows.
-     * Used by ServiceLocator::get(RateService::class)->updateRatingScore() to clear stale scores after all rates are deleted.
+     * Used by RateService::updateRatingScore() to clear stale scores after all rates are deleted.
      *
      * @return int[]
      */

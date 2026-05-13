@@ -8,7 +8,6 @@ use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
@@ -23,6 +22,12 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class AboutController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -53,12 +58,12 @@ final class AboutController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theAboutPage', $hideMenuOn, true)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_about');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('about.latte');
         PageTailRenderer::render();
 

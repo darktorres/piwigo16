@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
@@ -18,8 +17,8 @@ final class InstallService
 {
     public static function executeSqlFile(string $filepath, string $replaced, string $replacing, string $dblayer): void
     {
-        if (ServiceLocator::has(Connection::class)) {
-            $conn = ServiceLocator::get(Connection::class);
+        if (Kernel::isBooted()) {
+            $conn = Kernel::service(Connection::class);
         } else {
             $conn = DbConnection::build();
         }
@@ -118,7 +117,7 @@ final class InstallService
         Config::override('db_base', $dbname);
 
         try {
-            DbConnection::get();
+            Kernel::service(Connection::class);
             $dbVersion = DbInfo::version();
             if (version_compare($dbVersion, Dml::REQUIRED_MYSQL_VERSION, '<')) {
                 $errors[] = sprintf(

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
+use Piwigo\Core\Kernel;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Db\Tables;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
@@ -24,7 +24,7 @@ final class SendNotificationEmailHandler
             $emailField = Config::userFields()['email'];
             $idField    = Config::userFields()['id'];
 
-            $row = ServiceLocator::get(Connection::class)
+            $row = Kernel::service(Connection::class)
                 ->executeQuery(
                     'SELECT ' . $emailField . ' AS email FROM ' . Tables::users() . ' WHERE ' . $idField . ' = ?',
                     [$job->userId]
@@ -43,7 +43,7 @@ final class SendNotificationEmailHandler
             return;
         }
 
-        ServiceLocator::get(MailService::class)->pwgMail(
+        Kernel::service(MailService::class)->pwgMail(
             $to,
             [
                 'subject'        => is_scalar($job->params['subject'] ?? null) ? (string) $job->params['subject'] : '',

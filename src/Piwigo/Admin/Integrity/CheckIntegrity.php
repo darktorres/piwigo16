@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Core\Kernel;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
@@ -11,7 +12,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
@@ -265,7 +265,7 @@ final class CheckIntegrity
         $conf_c13y_ignore =  [];
         $conf_c13y_ignore['version'] = AppInfo::VERSION;
         $conf_c13y_ignore['list'] = $conf_ignore_list;
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
+        Kernel::service(ConfigService::class)->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
     }
 
     /**
@@ -286,7 +286,7 @@ final class CheckIntegrity
      */
     public function getHtlmLinksMoreInfo(): string
     {
-        $pwg_links = ServiceLocator::get(AdminService::class)->pwgURL();
+        $pwg_links = Kernel::service(AdminService::class)->pwgURL();
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(

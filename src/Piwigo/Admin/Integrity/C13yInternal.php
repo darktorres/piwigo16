@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Core\Kernel;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
@@ -11,7 +12,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
@@ -112,7 +112,7 @@ final class C13yInternal
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
         $idField = Config::userFields()['id'];
-        $conn = ServiceLocator::get(Connection::class);
+        $conn = Kernel::service(Connection::class);
         $qb = $conn->createQueryBuilder()
             ->select("u.$idField AS id", 'ui.status')
             ->from(Tables::users(), 'u')
@@ -215,7 +215,7 @@ final class C13yInternal
                             $updates
                         );
 
-                        $usernameResult = ServiceLocator::get(UserAdminService::class)->getUsername($id);
+                        $usernameResult = Kernel::service(UserAdminService::class)->getUsername($id);
                         PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));
 
                         $result = true;

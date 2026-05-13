@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Core\Kernel;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
@@ -99,7 +99,7 @@ final class UserBootstrap
                 exit;
             }
             define('PWG_API_KEY_REQUEST', true);
-            $_POST['pwg_token'] = $_GET['pwg_token'] = ServiceLocator::get(Util::class)->getPwgToken();
+            $_POST['pwg_token'] = $_GET['pwg_token'] = Kernel::service(Util::class)->getPwgToken();
             $requestMethodRaw = $_REQUEST['method'];
             LoggerRegistry::current()->info(
                 '[api_key][pkid=' . explode(':', $authHeader)[0] . ']'
@@ -122,7 +122,7 @@ final class UserBootstrap
             ];
             $serviceRaw = $GLOBALS['service'] ?? null;
             if ($serviceRaw instanceof PwgServer) {
-                $login = ServiceLocator::get(GeneralEndpoints::class)->sessionLogin($credentials, $serviceRaw);
+                $login = Kernel::service(GeneralEndpoints::class)->sessionLogin($credentials, $serviceRaw);
                 if (true !== $login) {
                     $serviceRaw->sendResponse($login);
                     exit();

@@ -7,13 +7,16 @@ namespace Piwigo\Permalink;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 
 final class PermalinkService
 {
+    public function __construct(
+        private readonly PermalinkRepository $repo,
+    ) {
+    }
     public function deleteCatPermalink(string $catId, bool $save): bool
     {
-        $repo      = ServiceLocator::get(PermalinkRepository::class);
+        $repo      = $this->repo;
         $permalink = $repo->findPermalinkByCategoryId((int) $catId);
 
         if (!isset($permalink)) {
@@ -57,7 +60,7 @@ final class PermalinkService
             return false;
         }
 
-        $repo = ServiceLocator::get(PermalinkRepository::class);
+        $repo = $this->repo;
 
         $existingCatId = $repo->findCategoryIdByPermalink($permalink);
         if (isset($existingCatId)) {

@@ -6,7 +6,6 @@ namespace Piwigo\Picture;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -15,6 +14,11 @@ use Piwigo\Users\PermissionService;
 
 final class PictureRateRenderer
 {
+    public function __construct(
+        private readonly RateRepository $rateRepository,
+    ) {
+    }
+
     public function render(): void
     {
         if (!Config::rateEnabled()) {
@@ -34,7 +38,7 @@ final class PictureRateRenderer
         ];
         if (null !== $rate_summary['score']) {
             [$rate_summary['count'], $rate_summary['average']] =
-                ServiceLocator::get(RateRepository::class)
+                $this->rateRepository
                     ->findCountAndAvgByElementId(is_numeric($current['id'] ?? null) ? (int) $current['id'] : 0);
         }
         $template->assign('rate_summary', $rate_summary);
@@ -52,7 +56,7 @@ final class PictureRateRenderer
                     }
                     $anonId = implode('.', $ip_components);
                 }
-                $user_rate = ServiceLocator::get(RateRepository::class)
+                $user_rate = $this->rateRepository
                     ->findRateByUserAndElement($imageId, CurrentUser::get()->id, $anonId);
             } else {
                 $user_rate = null;

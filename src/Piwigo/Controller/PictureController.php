@@ -15,11 +15,9 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Html\HtmlService;
@@ -55,17 +53,45 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PictureController implements ControllerInterface
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly CommentService $commentService,
+        private readonly DateService $dateService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageRepository $imageRepository,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly PermissionService $permissionService,
+        private readonly PictureCommentRenderer $pictureCommentRenderer,
+        private readonly PictureMetadataRenderer $pictureMetadataRenderer,
+        private readonly PictureRateRenderer $pictureRateRenderer,
+        private readonly PictureService $pictureService,
+        private readonly RateService $rateService,
+        private readonly SectionInitializer $sectionInitializer,
+        private readonly SessionService $sessionService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        ServiceLocator::get(SectionInitializer::class)->initialize(
+        $this->sectionInitializer->initialize(
             $request->withAttribute('_route_path', '/' . ($args['rest'] ?? '')),
             'picture'
         );
 
-        UserService::get()->saveEditContext();
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->userService->saveEditContext();
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -82,13 +108,13 @@ final class PictureController implements ControllerInterface
         $imageId   = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
 
         if ($category !== null) {
-            ServiceLocator::get(CategoryService::class)->checkRestrictions($catId);
+            $this->categoryService->checkRestrictions($catId);
         }
 
         $page['rank_of'] = array_flip($items);
 
         if (!isset($page['rank_of'][$imageId])) {
-            $imageRepo = ServiceLocator::get(ImageRepository::class);
+            $imageRepo = $this->imageRepository;
             if ($imageId > 0) {
                 $row = $imageRepo->findById($imageId);
             } else {
@@ -100,11 +126,11 @@ final class PictureController implements ControllerInterface
                 $row     = $imageRepo->findByFilePattern($pattern);
             }
             if ($row === null) {
-                ServiceLocator::get(HtmlService::class)->pageNotFound('The requested image does not exist', UrlService::get()->duplicateIndexUrl());
+                $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
                 return ResponseFactory::create(404);
             }
             if (is_numeric($row['level'] ?? null) && is_numeric($user['level'] ?? null) && $row['level'] > $user['level']) {
-                ServiceLocator::get(HtmlService::class)->accessDenied();
+                $this->htmlService->accessDenied();
             }
             $page['image_id']   = $row['id'];
             $page['image_file'] = $row['file'];
@@ -114,40 +140,40 @@ final class PictureController implements ControllerInterface
                 $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
                 $visibleImages   = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
                 if ($visibleImages !== '' && !in_array($imageId, explode(',', $visibleImages))) {
-                    ServiceLocator::get(HtmlService::class)->pageNotFound('The requested image is filtered', UrlService::get()->duplicateIndexUrl());
+                    $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
                     return ResponseFactory::create(404);
                 }
                 if ('categories' == $page['section'] && !isset($page['category'])) {
-                    ServiceLocator::get(HtmlService::class)->accessDenied();
+                    $this->htmlService->accessDenied();
                 } else {
                     $query = '
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $imageId
-                        . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . '
+                        . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . '
   LIMIT 1';
-                    if (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne() === false) {
-                        ServiceLocator::get(HtmlService::class)->accessDenied();
+                    if ($this->conn->executeQuery($query)->fetchOne() === false) {
+                        $this->htmlService->accessDenied();
                     } else {
                         if ('best_rated' == $page['section']) {
                             $page['rank_of'][$imageId] = count($items);
                             $items[]                   = $imageId;
                             $page['items']             = $items;
                         } else {
-                            $url = UrlService::get()->makePictureUrl(['image_id' => $imageId, 'image_file' => is_scalar($page['image_file'] ?? null) ? $page['image_file'] : '', 'section' => 'categories', 'flat' => true]);
-                            ServiceLocator::get(HtmlService::class)->setStatusHeader('recent_pics' == $page['section'] ? 301 : 302);
-                            Util::get()->redirectHttp($url);
+                            $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => is_scalar($page['image_file'] ?? null) ? $page['image_file'] : '', 'section' => 'categories', 'flat' => true]);
+                            $this->htmlService->setStatusHeader('recent_pics' == $page['section'] ? 301 : 302);
+                            $this->util->redirectHttp($url);
                         }
                     }
                 }
             }
         }
 
-        if (StringUtil::get()->inputString('metadata', null, $_GET) !== null) {
-            if (ServiceLocator::get(SessionService::class)->getSessionVar('show_metadata') == null) {
-                ServiceLocator::get(SessionService::class)->setSessionVar('show_metadata', 1);
+        if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
+            if ($this->sessionService->getSessionVar('show_metadata') == null) {
+                $this->sessionService->setSessionVar('show_metadata', 1);
             } else {
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('show_metadata');
+                $this->sessionService->unsetSessionVar('show_metadata');
             }
         }
 
@@ -182,57 +208,57 @@ SELECT id
             $page['last_item'] = $items[$lastRank];
         }
 
-        $url_up = UrlService::get()->duplicateIndexUrl(
+        $url_up = $this->urlService->duplicateIndexUrl(
             ['start' => (int) floor($currentRank / $nbImagePage) * $nbImagePage],
             ['start']
         );
-        $url_self = UrlService::get()->duplicatePictureUrl();
+        $url_self = $this->urlService->duplicatePictureUrl();
 
         // Actions
-        $get_action = StringUtil::get()->inputString('action', null, $_GET);
+        $get_action = $this->stringUtil->inputString('action', null, $_GET);
         if ($get_action !== null) {
             switch ($get_action) {
                 case 'add_to_favorites':
-                    ServiceLocator::get(UserRepository::class)->addFavorite(
+                    $this->userRepository->addFavorite(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    Util::get()->redirect($url_self);
+                    $this->util->redirect($url_self);
                     break;
                 case 'remove_from_favorites':
-                    ServiceLocator::get(UserRepository::class)->deleteFavorite(
+                    $this->userRepository->deleteFavorite(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    Util::get()->redirect('favorites' == $page['section'] ? $url_up : $url_self);
+                    $this->util->redirect('favorites' == $page['section'] ? $url_up : $url_self);
                     break;
                 case 'set_as_representative':
-                    if (PermissionService::get()->isAdmin() && $category !== null) {
-                        ServiceLocator::get(CategoryRepository::class)->setRepresentativePicture([$catId], $imageId);
-                        ServiceLocator::get(Util::class)->pwgActivity('album', $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]);
-                        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+                    if ($this->permissionService->isAdmin() && $category !== null) {
+                        $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
+                        $this->util->pwgActivity('album', $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]);
+                        $this->userAdminService->invalidateUserCache();
                     }
-                    Util::get()->redirect($url_self);
+                    $this->util->redirect($url_self);
                     break;
                 case 'add_to_caddie':
-                    ServiceLocator::get(Util::class)->fillCaddie([$imageId]);
-                    Util::get()->redirect($url_self);
+                    $this->util->fillCaddie([$imageId]);
+                    $this->util->redirect($url_self);
                     break;
                 case 'rate':
-                    ServiceLocator::get(RateService::class)->ratePicture($imageId, StringUtil::get()->inputInt('rate', 0, $_POST));
-                    Util::get()->redirect($url_self);
+                    $this->rateService->ratePicture($imageId, $this->stringUtil->inputInt('rate', 0, $_POST));
+                    $this->util->redirect($url_self);
                     break;
                 case 'edit_comment':
-                    ServiceLocator::get(Util::class)->checkInputParameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
-                    $comment_to_edit = StringUtil::get()->inputInt('comment_to_edit', null, $_GET);
-                    $author_id       = ServiceLocator::get(CommentService::class)->getCommentAuthorId($comment_to_edit ?? 0);
-                    if (PermissionService::get()->canManageComment('edit', $author_id)) {
-                        $post_content = StringUtil::get()->inputString('content', null, $_POST);
+                    $this->util->checkInputParameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
+                    $comment_to_edit = $this->stringUtil->inputInt('comment_to_edit', null, $_GET);
+                    $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
+                    if ($this->permissionService->canManageComment('edit', $author_id)) {
+                        $post_content = $this->stringUtil->inputString('content', null, $_POST);
                         if ($post_content !== null && $post_content !== '') {
-                            ServiceLocator::get(Util::class)->checkPwgToken();
-                            $comment_action = ServiceLocator::get(CommentService::class)->updateUserComment(
-                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::get()->inputString('website_url', null, $_POST)],
-                                StringUtil::get()->inputString('key', null, $_POST) ?? ''
+                            $this->util->checkPwgToken();
+                            $comment_action = $this->commentService->updateUserComment(
+                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => $this->stringUtil->inputString('website_url', null, $_POST)],
+                                $this->stringUtil->inputString('key', null, $_POST) ?? ''
                             );
                             $perform_redirect = false;
                             switch ($comment_action) {
@@ -250,7 +276,7 @@ SELECT id
                                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
                             }
                             if ($perform_redirect) {
-                                Util::get()->redirect($url_self);
+                                $this->util->redirect($url_self);
                             }
                             unset($_POST['content']);
                         }
@@ -258,38 +284,38 @@ SELECT id
                     }
                     break;
                 case 'delete_comment':
-                    ServiceLocator::get(Util::class)->checkPwgToken();
-                    ServiceLocator::get(Util::class)->checkInputParameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
-                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::get()->inputInt('comment_to_delete', null, $_GET) ?? 0);
-                    if (PermissionService::get()->canManageComment('delete', $author_id)) {
-                        ServiceLocator::get(CommentService::class)->deleteUserComment(StringUtil::get()->inputInt('comment_to_delete', null, $_GET) ?? 0);
+                    $this->util->checkPwgToken();
+                    $this->util->checkInputParameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
+                    $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
+                    if ($this->permissionService->canManageComment('delete', $author_id)) {
+                        $this->commentService->deleteUserComment($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
-                    Util::get()->redirect($url_self);
+                    $this->util->redirect($url_self);
                     break;
                 case 'validate_comment':
-                    ServiceLocator::get(Util::class)->checkPwgToken();
-                    ServiceLocator::get(Util::class)->checkInputParameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
-                    $author_id = ServiceLocator::get(CommentService::class)->getCommentAuthorId(StringUtil::get()->inputInt('comment_to_validate', null, $_GET) ?? 0);
-                    if (PermissionService::get()->canManageComment('validate', $author_id)) {
-                        ServiceLocator::get(CommentService::class)->validateUserComment(StringUtil::get()->inputInt('comment_to_validate', null, $_GET) ?? 0);
+                    $this->util->checkPwgToken();
+                    $this->util->checkInputParameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
+                    $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
+                    if ($this->permissionService->canManageComment('validate', $author_id)) {
+                        $this->commentService->validateUserComment($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
-                    Util::get()->redirect($url_self);
+                    $this->util->redirect($url_self);
                     break;
             }
         }
 
         // Hit counter
-        $inc_hit_count = StringUtil::get()->inputString('content', null, $_POST) === null;
+        $inc_hit_count = $this->stringUtil->inputString('content', null, $_POST) === null;
         if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
             $inc_hit_count = false;
         } else {
-            if (ServiceLocator::get(SessionService::class)->getSessionVar('referer_image_id', 0) == $imageId) {
+            if ($this->sessionService->getSessionVar('referer_image_id', 0) == $imageId) {
                 $inc_hit_count = false;
             }
-            ServiceLocator::get(SessionService::class)->setSessionVar('referer_image_id', $imageId);
+            $this->sessionService->setSessionVar('referer_image_id', $imageId);
         }
         if (EventDispatcher::dispatch('allow_increment_element_hit_count', $inc_hit_count, $imageId)) {
-            ServiceLocator::get(PictureService::class)->increaseImageVisitCounter($imageId);
+            $this->pictureService->increaseImageVisitCounter($imageId);
         }
 
         // Related categories
@@ -298,10 +324,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $imageId . '
-' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
+' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
 ;';
-        $related_categories = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
-        usort($related_categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+        $related_categories = $this->conn->executeQuery($query)->fetchAllAssociative();
+        usort($related_categories, $this->categoryService->globalRankCompare(...));
 
         // Load prev/current/next picture data
         $picture = [];
@@ -315,7 +341,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $ids[] = $page['last_item'];
         }
 
-        foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $ids)) as $row) {
+        foreach ($this->imageRepository->findByIds(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $ids)) as $row) {
             if (isset($page['previous_item']) && $row['id'] == $page['previous_item']) {
                 $i = 'previous';
             } elseif (isset($page['next_item']) && $row['id'] == $page['next_item']) {
@@ -334,24 +360,24 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
             $row['src_image']  = new SrcImage($row);
             $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
-            $row['path_ext']   = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($src_path));
-            $row['file_ext']   = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($src_file));
+            $row['path_ext']   = strtolower($this->stringUtil->getExtension($src_path));
+            $row['file_ext']   = strtolower($this->stringUtil->getExtension($src_file));
 
             if ($i == 'current') {
-                $row['element_path'] = ServiceLocator::get(StringUtil::class)->getElementPath($row);
+                $row['element_path'] = $this->stringUtil->getElementPath($row);
                 if ($row['src_image']->isOriginal()) {
                     if ($user['enabled_high'] == 'true') {
                         $row['element_url']  = $row['src_image']->getUrl();
-                        $row['download_url'] = UrlService::get()->getActionUrl($src_id, 'e', true);
+                        $row['download_url'] = $this->urlService->getActionUrl($src_id, 'e', true);
                     }
                 } else {
-                    $row['element_url']  = UrlService::get()->getElementUrl($row);
-                    $row['download_url'] = UrlService::get()->getActionUrl($src_id, 'e', true);
+                    $row['element_url']  = $this->urlService->getElementUrl($row);
+                    $row['download_url'] = $this->urlService->getActionUrl($src_id, 'e', true);
                 }
             }
 
-            $row['url'] = UrlService::get()->duplicatePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']], ['start']);
-            $row['TITLE']     = ServiceLocator::get(HtmlService::class)->renderElementName($row);
+            $row['url'] = $this->urlService->duplicatePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']], ['start']);
+            $row['TITLE']     = $this->htmlService->renderElementName($row);
             $row['TITLE_ESC'] = str_replace('"', '&quot;', $row['TITLE']);
             $picture[$i]      = $row;
 
@@ -369,13 +395,13 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
         $slideshow_params     = [];
         $slideshow_url_params = [];
-        $get_slideshow        = StringUtil::get()->inputString('slideshow', null, $_GET);
+        $get_slideshow        = $this->stringUtil->inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
             $page['slideshow']    = true;
             $page['meta_robots']  = ['noindex' => 1, 'nofollow' => 1];
-            $slideshow_params     = ServiceLocator::get(PictureService::class)->decodeSlideshowParams($get_slideshow);
-            $slideshow_url_params['slideshow'] = ServiceLocator::get(PictureService::class)->encodeSlideshowParams($slideshow_params);
+            $slideshow_params     = $this->pictureService->decodeSlideshowParams($get_slideshow);
+            $slideshow_url_params['slideshow'] = $this->pictureService->encodeSlideshowParams($slideshow_params);
 
             if ($slideshow_params['play']) {
                 $id_pict_redirect = '';
@@ -386,7 +412,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 }
                 if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
                     $refresh  = $slideshow_params['period'];
-                    $url_link = UrlService::get()->addUrlParams($picture[$id_pict_redirect]['url'], $slideshow_url_params);
+                    $url_link = $this->urlService->addUrlParams($picture[$id_pict_redirect]['url'], $slideshow_url_params);
                 }
             }
         } else {
@@ -396,8 +422,8 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $title    = $picture['current']['TITLE'];
         $title_nb = ($currentRank + 1) . '/' . count($items);
 
-        $url_metadata     = UrlService::get()->duplicatePictureUrl();
-        $url_metadata     = UrlService::get()->addUrlParams($url_metadata, ['metadata' => null]);
+        $url_metadata     = $this->urlService->duplicatePictureUrl();
+        $url_metadata     = $this->urlService->addUrlParams($url_metadata, ['metadata' => null]);
         $curSrcImg = $picture['current']['src_image'];
         $metadata_showable = EventDispatcher::dispatch(
             'get_element_metadata_available',
@@ -405,7 +431,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $picture['current']
         );
 
-        if (StringUtil::get()->inputString('metadata', null, $_GET) !== null) {
+        if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
             $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
         }
 
@@ -419,7 +445,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
             if (isset($picture[$which_image])) {
                 $imgArr = $picture[$which_image];
-                $tpl->assign($which_image, array_merge($imgArr, ['U_IMG' => UrlService::get()->addUrlParams(is_string($imgArr['url'] ?? null) ? $imgArr['url'] : '', $slideshow_url_params)]));
+                $tpl->assign($which_image, array_merge($imgArr, ['U_IMG' => $this->urlService->addUrlParams(is_string($imgArr['url'] ?? null) ? $imgArr['url'] : '', $slideshow_url_params)]));
             }
         }
 
@@ -432,15 +458,15 @@ SELECT *
   FROM ' . Tables::imageFormat() . '
   WHERE image_id = ' . (is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0) . '
 ;';
-                $formats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
                 array_unshift($formats, [
                     'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
-                    'ext'          => ServiceLocator::get(StringUtil::class)->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
+                    'ext'          => $this->stringUtil->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
                     'filesize'     => $currentPic['filesize'] ?? null,
                 ]);
                 foreach ($formats as &$format) {
                     if (!isset($format['download_url'])) {
-                        $format['download_url'] = ServiceLocator::get(UrlGenerator::class)->actionFormat((int) (is_scalar($format['format_id'] ?? null) ? $format['format_id'] : 0));
+                        $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id'] ?? null) ? $format['format_id'] : 0));
                     }
                     $fmtExtRaw        = $format['ext'] ?? null;
                     $extStr           = is_scalar($fmtExtRaw) ? (string) $fmtExtRaw : '';
@@ -465,20 +491,20 @@ SELECT *
                 $pVal = $slideshow_params[$p] ?? false;
                 $pValBool = $pVal !== false && $pVal !== '' && $pVal !== 0 && $pVal !== [];
                 $var_name = 'U_' . ($pValBool ? 'STOP_' : 'START_') . strtoupper($p);
-                $tpl_slideshow[$var_name] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ServiceLocator::get(PictureService::class)->encodeSlideshowParams(array_merge($slideshow_params, [$p => !$pValBool]))]);
+                $tpl_slideshow[$var_name] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams(array_merge($slideshow_params, [$p => !$pValBool]))]);
             }
             foreach (['dec', 'inc'] as $op) {
                 $periodRaw = $slideshow_params['period'] ?? 0;
                 $new_period  = (is_numeric($periodRaw) ? (int) $periodRaw : 0) + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
-                $new_params  = ServiceLocator::get(PictureService::class)->correctSlideshowParams(array_merge($slideshow_params, ['period' => $new_period]));
+                $new_params  = $this->pictureService->correctSlideshowParams(array_merge($slideshow_params, ['period' => $new_period]));
                 if ($new_params['period'] === $new_period) {
-                    $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ServiceLocator::get(PictureService::class)->encodeSlideshowParams($new_params)]);
+                    $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams($new_params)]);
                 }
             }
             $tpl->assign('slideshow', $tpl_slideshow);
         } elseif (Config::pictureSlideShowIcon()) {
             $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
-            $tpl->assign(['U_SLIDESHOW_START' => UrlService::get()->addUrlParams($currentUrl, ['slideshow' => ''])]);
+            $tpl->assign(['U_SLIDESHOW_START' => $this->urlService->addUrlParams($currentUrl, ['slideshow' => ''])]);
         }
 
         $tpl->assign([
@@ -495,24 +521,24 @@ SELECT *
             $tpl->assign('U_METADATA', $url_metadata);
         }
 
-        if (PermissionService::get()->isAdmin()) {
+        if ($this->permissionService->isAdmin()) {
             if (isset($page['category']) && Config::pictureRepresentativeIcon()) {
-                $tpl->assign(['U_SET_AS_REPRESENTATIVE' => UrlService::get()->addUrlParams($url_self, ['action' => 'set_as_representative'])]);
+                $tpl->assign(['U_SET_AS_REPRESENTATIVE' => $this->urlService->addUrlParams($url_self, ['action' => 'set_as_representative'])]);
             }
             if (Config::pictureEditIcon()) {
-                $tpl->assign('U_PHOTO_ADMIN', ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId));
+                $tpl->assign('U_PHOTO_ADMIN', $this->urlGenerator->admin('photo-' . $imageId));
             }
             if (Config::pictureCaddieIcon()) {
-                $tpl->assign('U_CADDIE', UrlService::get()->addUrlParams($url_self, ['action' => 'add_to_caddie']));
+                $tpl->assign('U_CADDIE', $this->urlService->addUrlParams($url_self, ['action' => 'add_to_caddie']));
             }
         }
 
-        if (!PermissionService::get()->isAGuest() && Config::pictureFavoriteIcon()) {
-            $is_favorite = ServiceLocator::get(UserRepository::class)->isFavorite(
+        if (!$this->permissionService->isAGuest() && Config::pictureFavoriteIcon()) {
+            $is_favorite = $this->userRepository->isFavorite(
                 is_numeric($user['id']) ? (int) $user['id'] : 0,
                 $imageId
             );
-            $tpl->assign('favorite', ['IS_FAVORITE' => $is_favorite, 'U_FAVORITE' => UrlService::get()->addUrlParams($url_self, ['action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites'])]);
+            $tpl->assign('favorite', ['IS_FAVORITE' => $is_favorite, 'U_FAVORITE' => $this->urlService->addUrlParams($url_self, ['action' => !$is_favorite ? 'add_to_favorites' : 'remove_from_favorites'])]);
         }
 
         // Picture info
@@ -530,13 +556,13 @@ SELECT *
         }
         if (isset($currentPic['date_creation']) && $currentPic['date_creation'] !== '') {
             $dc   = (is_string($currentPic['date_creation']) || is_int($currentPic['date_creation'])) ? $currentPic['date_creation'] : null;
-            $val  = ServiceLocator::get(DateService::class)->formatDate($dc);
-            $url  = UrlService::get()->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
+            $val  = $this->dateService->formatDate($dc);
+            $url  = $this->urlService->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
             $infos['INFO_CREATION_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
         }
         $da  = (isset($currentPic['date_available']) && (is_string($currentPic['date_available']) || is_int($currentPic['date_available']))) ? $currentPic['date_available'] : null;
-        $val = ServiceLocator::get(DateService::class)->formatDate($da);
-        $url = UrlService::get()->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
+        $val = $this->dateService->formatDate($da);
+        $url = $this->urlService->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
         $infos['INFO_POSTED_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
 
         if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
@@ -554,16 +580,16 @@ SELECT *
         $tpl->assign('display_info', unserialize(Config::pictureInformations() ?? ''));
 
         // Related tags
-        $tags = ServiceLocator::get(TagService::class)->getCommonTags([$imageId], -1);
+        $tags = $this->tagService->getCommonTags([$imageId], -1);
         foreach ($tags as $tag) {
             $tagArr = is_array($tag) ? $tag : [];
-            $tpl->append('related_tags', array_merge($tagArr, ['URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]), 'U_TAG_IMAGE' => UrlService::get()->duplicatePictureUrl(['section' => 'tags', 'tags' => [$tag]])]));
+            $tpl->append('related_tags', array_merge($tagArr, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]]), 'U_TAG_IMAGE' => $this->urlService->duplicatePictureUrl(['section' => 'tags', 'tags' => [$tag]])]));
         }
 
         // Related categories
         if (count($related_categories) == 1 && $category !== null && $related_categories[0]['id'] == $catId) {
             $upperNames = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
-            $tpl->append('related_categories', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($upperNames)));
+            $tpl->append('related_categories', new Html($this->htmlService->getCatDisplayName($upperNames)));
         } else {
             $ids = [];
             foreach ($related_categories as $category) {
@@ -571,18 +597,18 @@ SELECT *
             }
             $ids    = array_unique($ids);
             $query  = 'SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')';
-            $catMap = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $catMap = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') as $id) {
                     $cats[] = $catMap[$id];
                 }
-                $tpl->append('related_categories', new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName($cats)));
+                $tpl->append('related_categories', new Html($this->htmlService->getCatDisplayName($cats)));
             }
         }
 
-        if (in_array(strtolower(ServiceLocator::get(StringUtil::class)->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
-            $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => ServiceLocator::get(PictureService::class)->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
+        if (in_array(strtolower($this->stringUtil->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
+            $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
         }
 
         $element_content = EventDispatcher::dispatch('render_element_content', '', $picture['current']);
@@ -596,7 +622,7 @@ SELECT *
         if ($nextPic !== null && $nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
             && !str_contains($httpUserAgent, 'Chrome/')
         ) {
-            $derivRaw   = ServiceLocator::get(SessionService::class)->getSessionVar('picture_deriv', Config::derivativeDefaultSize());
+            $derivRaw   = $this->sessionService->getSessionVar('picture_deriv', Config::derivativeDefaultSize());
             $derivType  = is_string($derivRaw) ? $derivRaw : Config::derivativeDefaultSize();
             $nextDerivsRaw = $nextPic['derivatives'] ?? null;
             $nextDerivs = is_array($nextDerivsRaw) ? $nextDerivsRaw : [];
@@ -606,14 +632,14 @@ SELECT *
             }
         }
 
-        $tpl->assign('U_CANONICAL', UrlService::get()->makePictureUrl(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
+        $tpl->assign('U_CANONICAL', $this->urlService->makePictureUrl(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
 
-        ServiceLocator::get(PictureRateRenderer::class)->render();
+        $this->pictureRateRenderer->render();
         if (Config::activateComments()) {
-            ServiceLocator::get(PictureCommentRenderer::class)->render($edit_comment ?? null);
+            $this->pictureCommentRenderer->render($edit_comment ?? null);
         }
         if ($metadata_showable && isset($_SESSION['pwg_show_metadata'])) {
-            ServiceLocator::get(PictureMetadataRenderer::class)->render();
+            $this->pictureMetadataRenderer->render();
         }
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
@@ -623,12 +649,12 @@ SELECT *
             if (!isset($page['start'])) {
                 $page['start'] = 0;
             }
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title, isset($refresh) && is_int($refresh) ? $refresh : null, $url_link ?? null);
         EventDispatcher::notify('loc_end_picture');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         if ($page['slideshow'] === true && Config::lightSlideshow()) {
             $tpl->pparse('slideshow.latte');
         } else {
@@ -637,7 +663,7 @@ SELECT *
         }
 
         $picIdRaw = $currentPic['id'] ?? null;
-        ServiceLocator::get(Util::class)->pwgLog((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
+        $this->util->pwgLog((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

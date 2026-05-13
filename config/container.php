@@ -196,7 +196,7 @@ return [
     LangService::class         => factory(static fn (): LangService => new LangService()),
     ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
     QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
-    Util::class                => factory(static fn (Connection $conn, LoggerInterface $log): Util => new Util($conn, $log)),
+    Util::class                => factory(static fn (Connection $conn, LoggerInterface $log, LangService $lang, LanguageRepository $langRepo, ThemeRepository $themeRepo, UserRepository $u, PermissionService $perm, HtmlService $html, SessionService $sess, ConfigService $cfg, HistoryRepository $hist, HistoryAdminService $histA, CategoryAdminService $catA, AdminService $admin, StringUtil $s): Util => new Util($conn, $log, $lang, $langRepo, $themeRepo, $u, $perm, $html, $sess, $cfg, $hist, $histA, $catA, $admin, $s)),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

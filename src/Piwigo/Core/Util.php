@@ -46,14 +46,28 @@ defined('MKGETDIR_DEFAULT') or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | M
 
 final readonly class Util
 {
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function __construct(
         private Connection $conn,
         private LoggerInterface $log,
+        private LangService $langService,
+        private LanguageRepository $languageRepository,
+        private ThemeRepository $themeRepository,
+        private UserRepository $userRepository,
+        private PermissionService $permissionService,
+        private HtmlService $htmlService,
+        private SessionService $sessionService,
+        private ConfigService $configService,
+        private HistoryRepository $historyRepository,
+        private HistoryAdminService $historyAdminService,
+        private CategoryAdminService $categoryAdminService,
+        private AdminService $adminService,
+        private StringUtil $stringUtil,
     ) {
     }
 
@@ -125,14 +139,14 @@ final readonly class Util
     public function redirectHtml(string $url, string $msg = '', int $refreshTime = 0): void
     {
         if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
-            CurrentUser::setRawAttributes(UserService::get()->buildUser(Config::guestId(), true));
-            LangService::get()->loadLanguage('common.lang');
+            CurrentUser::setRawAttributes(Kernel::service(UserService::class)->buildUser(Config::guestId(), true));
+            $this->langService->loadLanguage('common.lang');
             EventDispatcher::notify('loading_lang');
-            LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
+            $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         } elseif (defined('IN_ADMIN')) {
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', UserService::get()->getDefaultTheme());
+            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         }
 
@@ -169,7 +183,7 @@ final readonly class Util
     public function getLanguages(): array
     {
         $languages = [];
-        foreach (ServiceLocator::get(LanguageRepository::class)->findIdNameMap() as $id => $name) {
+        foreach ($this->languageRepository->findIdNameMap() as $id => $name) {
             if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
                 $languages[$id] = $name;
             }
@@ -181,11 +195,7 @@ final readonly class Util
     public function getPwgThemes(bool $showMobile = false): array
     {
         $themes = [];
-        if (ServiceLocator::has(ThemeRepository::class)) {
-            $rows = ServiceLocator::get(ThemeRepository::class)->findAll();
-        } else {
-            $rows = $this->conn->executeQuery('SELECT id, name FROM ' . Tables::themes() . ' ORDER BY name ASC;')->fetchAllAssociative();
-        }
+        $rows = $this->themeRepository->findAll();
         foreach ($rows as $row) {
             if ($row['id'] === Config::mobilTheme()) {
                 if (!$showMobile) {
@@ -225,7 +235,7 @@ final readonly class Util
     public function getWebmasterMailAddress(): string
     {
         $userFields = Config::userFields();
-        $email = ServiceLocator::get(UserRepository::class)
+        $email = $this->userRepository
             ->getWebmasterEmail(
                 $userFields['email'],
                 $userFields['id'],
@@ -241,7 +251,7 @@ final readonly class Util
     {
         $userId = CurrentUser::get()->id;
         $query  = 'SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ' . $userId . ';';
-        $inCaddie = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'element_id');
+        $inCaddie = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'element_id');
         $caddiables = array_diff($elementsId, array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $inCaddie));
         $datas = [];
         foreach ($caddiables as $caddiable) {
@@ -256,10 +266,10 @@ final readonly class Util
     {
         $cached = RequestCache::remember('user', 'nb_available_comments', function (): int {
             $where = [];
-            if (!PermissionService::get()->isAdmin()) {
+            if (!$this->permissionService->isAdmin()) {
                 $where[] = "validated='true'";
             }
-            $where[] = PermissionService::get()->getSqlConditionFandF(
+            $where[] = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],
                 '',
                 true
@@ -279,10 +289,10 @@ final readonly class Util
     {
         if (isset($_REQUEST['pwg_token']) && $_REQUEST['pwg_token'] !== '') {
             if ($this->getPwgToken() !== $_REQUEST['pwg_token']) {
-                ServiceLocator::get(HtmlService::class)->accessDenied();
+                $this->htmlService->accessDenied();
             }
         } else {
-            ServiceLocator::get(HtmlService::class)->badRequest('missing token');
+            $this->htmlService->badRequest('missing token');
         }
     }
 
@@ -361,8 +371,8 @@ final readonly class Util
         $sqlRecentDate = RequestCache::remember(
             'get_icon',
             'sql_recent_date',
-            static function () use ($recentPeriod): string {
-                $v = DbConnection::get()->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
+            function () use ($recentPeriod): string {
+                $v = $this->conn->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
                 return is_scalar($v) ? (string) $v : '';
             }
         );
@@ -444,7 +454,7 @@ final readonly class Util
 
     public function getDevice(): string
     {
-        $rawDevice = ServiceLocator::get(SessionService::class)->getSessionVar('device', '');
+        $rawDevice = $this->sessionService->getSessionVar('device', '');
         $device = is_string($rawDevice) ? $rawDevice : '';
         if ($device === '') {
             $uagentObj = new \uagent_info();
@@ -455,7 +465,7 @@ final readonly class Util
             } else {
                 $device = 'desktop';
             }
-            ServiceLocator::get(SessionService::class)->setSessionVar('device', $device);
+            $this->sessionService->setSessionVar('device', $device);
         }
         return $device;
     }
@@ -471,13 +481,13 @@ final readonly class Util
             $isMobileTheme = (is_string($mobileRaw) || is_int($mobileRaw) || is_float($mobileRaw))
                 ? BoolUtil::fromMixed($mobileRaw)
                 : false;
-            ServiceLocator::get(SessionService::class)->setSessionVar('mobile_theme', $isMobileTheme);
+            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
         } else {
-            $isMobileTheme = ServiceLocator::get(SessionService::class)->getSessionVar('mobile_theme');
+            $isMobileTheme = $this->sessionService->getSessionVar('mobile_theme');
         }
         if (is_null($isMobileTheme)) {
             $isMobileTheme = ($this->getDevice() === 'mobile');
-            ServiceLocator::get(SessionService::class)->setSessionVar('mobile_theme', $isMobileTheme);
+            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
         }
         return (bool) $isMobileTheme;
     }
@@ -485,10 +495,10 @@ final readonly class Util
     public function doLog(int|null $imageId = null, string|null $imageType = null): bool
     {
         $doLog = Config::logConf();
-        if (PermissionService::get()->isAdmin()) {
+        if ($this->permissionService->isAdmin()) {
             $doLog = Config::historyAdmin();
         }
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             $doLog = Config::historyGuest();
         }
         return (bool) EventDispatcher::dispatch('pwg_log_allowed', $doLog, $imageId, $imageType);
@@ -509,7 +519,7 @@ final readonly class Util
         $updateLastVisit = EventDispatcher::dispatch('pwg_log_update_last_visit', $updateLastVisit);
 
         if ($updateLastVisit) {
-            ServiceLocator::get(UserRepository::class)->updateLastVisit($userId);
+            $this->userRepository->updateLastVisit($userId);
         }
 
         if (!$this->doLog($imageId, $imageType)) {
@@ -539,7 +549,7 @@ final readonly class Util
 
         if ($pageSection !== '') {
             if (!Config::has('history_sections_cache')) {
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
+                $this->configService->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
             }
             $historySectionsCache = StringUtil::safeUnserialize(Config::historySectionsCache() ?? '');
             Config::override('history_sections_cache', $historySectionsCache);
@@ -555,7 +565,7 @@ final readonly class Util
                     'ALTER TABLE ' . Tables::history() . " CHANGE section section enum('" .
                     implode("','", array_unique($historySections)) . "') DEFAULT NULL"
                 );
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
+                $this->configService->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
                 $section = $pageSection;
             }
         }
@@ -565,7 +575,7 @@ final readonly class Util
         $searchId   = is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : 'NULL';
         $authKeyId  = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
 
-        $historyId = ServiceLocator::get(HistoryRepository::class)->insertLog(
+        $historyId = $this->historyRepository->insertLog(
             $userId,
             $ip,
             $section ?? null,
@@ -578,10 +588,10 @@ final readonly class Util
             $tagsString ?? null
         );
         if ($historyId % 1000 === 0) {
-            ServiceLocator::get(HistoryAdminService::class)->historySummarize(50000);
+            $this->historyAdminService->historySummarize(50000);
         }
         if (Config::historyAutopurgeEvery() > 0 && $historyId % Config::historyAutopurgeEvery() === 0) {
-            ServiceLocator::get(HistoryAdminService::class)->historyAutopurge();
+            $this->historyAdminService->historyAutopurge();
         }
         return true;
     }
@@ -688,7 +698,7 @@ final readonly class Util
             return;
         }
         $query   = 'SELECT image_id, date_available, NOW() AS dbnow FROM ' . Tables::lounge() . ' JOIN ' . Tables::images() . ' ON image_id = id ORDER BY image_id ASC LIMIT 1;';
-        $voyagers = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $voyagers = $this->conn->executeQuery($query)->fetchAllAssociative();
         if (count($voyagers)) {
             $voyager = $voyagers[0];
             $dbnowStr = is_string($voyager['dbnow'] ?? null) ? $voyager['dbnow'] : '';
@@ -697,7 +707,7 @@ final readonly class Util
             $dateAvailTs = strtotime($dateAvailStr);
             $age = ($dbnowTs !== false ? $dbnowTs : 0) - ($dateAvailTs !== false ? $dateAvailTs : 0);
             if ($age > Config::loungeMaxDuration()) {
-                ServiceLocator::get(CategoryAdminService::class)->emptyLounge();
+                $this->categoryAdminService->emptyLounge();
             }
         }
     }
@@ -736,7 +746,7 @@ final readonly class Util
 
     public function pwgUniqueExecEnds(string $tokenName): void
     {
-        ServiceLocator::get(ConfigService::class)->confDeleteParam($tokenName . '_running');
+        $this->configService->confDeleteParam($tokenName . '_running');
         $this->log->info('[' . $tokenName . '] ends now');
     }
 
@@ -745,13 +755,13 @@ final readonly class Util
         $strtotimeResult = Config::has('send_piwigo_infos_last_notice') ? strtotime(Config::sendPiwigoInfosLastNotice() ?? '') : false;
         $lastNotice = $strtotimeResult !== false ? $strtotimeResult : time();
         $lastNotice += $waitTime;
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', date('c', $lastNotice), true);
+        $this->configService->confUpdateParam('send_piwigo_infos_last_notice', date('c', $lastNotice), true);
         $this->log->info('[sendPiwigoInfosRetryLater] new send_piwigo_infos_last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
     }
 
     public function sendPiwigoInfos(): void
     {
-        $startTime = StringUtil::get()->getMoment();
+        $startTime = $this->stringUtil->getMoment();
 
         if (!Config::sendPiwigoInfos()) {
             return;
@@ -761,7 +771,7 @@ final readonly class Util
 
         $doSend = false;
         if (Config::has('send_piwigo_infos_last_notice')) {
-            $period = ServiceLocator::get(ConfigService::class)->confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+            $period = $this->configService->confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
             if (strtotime(Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800') . ' second ago')) {
                 $doSend = true;
             }
@@ -775,7 +785,7 @@ final readonly class Util
 
         $this->log->info('[sendPiwigoInfos] last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? 'notFound') . ' => lets do it');
 
-        if (!ServiceLocator::get(ConfigService::class)->pwgIsDbconfWriteable()) {
+        if (!$this->configService->pwgIsDbconfWriteable()) {
             $this->log->info('[sendPiwigoInfos] conf is not writeable, abort');
             return;
         }
@@ -789,10 +799,10 @@ final readonly class Util
         $dbCurrentDate = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
         if (!Config::has('send_piwigo_infos_origin_hash')) {
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
+            $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
-        [$containerType, $containerVersion] = ServiceLocator::get(StringUtil::class)->getContainerInfo();
+        [$containerType, $containerVersion] = $this->stringUtil->getContainerInfo();
 
         $piwigoInfos = [
             'origin_hash' => Config::sendPiwigoInfosOriginHash(),
@@ -805,23 +815,23 @@ final readonly class Util
                 'db_version'        => DbInfo::version(),
                 'php_datetime'      => date('Y-m-d H:i:s'),
                 'db_datetime'       => $dbCurrentDate,
-                'graphics_library'  => ServiceLocator::get(AdminService::class)->getGraphicsLibrary(),
+                'graphics_library'  => $this->adminService->getGraphicsLibrary(),
             ],
-            'general_stats' => ServiceLocator::get(AdminService::class)->getPwgGeneralStatitics(),
+            'general_stats' => $this->adminService->getPwgGeneralStatitics(),
         ];
 
         $du = $piwigoInfos['general_stats']['disk_usage'] ?? 0;
         $piwigoInfos['general_stats']['disk_usage']        = intval((is_numeric($du) ? (float) $du : 0.0) / 1024.0);
-        $piwigoInfos['general_stats']['installed_on']      = ServiceLocator::get(AdminService::class)->getInstallationDate();
+        $piwigoInfos['general_stats']['installed_on']      = $this->adminService->getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced']  = 0;
         $piwigoInfos['general_stats']['last_photo_synced'] = null;
         $piwigoInfos['general_stats']['last_photo']        = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
             $query = 'SELECT COUNT(*) AS counter FROM `' . Tables::images() . '` WHERE storage_category_id IS NOT NULL;';
-            if (array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
+            if (array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
                 $query = 'SELECT IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method, MAX(date_available) AS last_added_on, COUNT(*) AS nb_files FROM `' . Tables::images() . '` GROUP BY add_method;';
-                $filesByMethod = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
+                $filesByMethod = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
                 $piwigoInfos['general_stats']['nb_photos_synced']  = $filesByMethod['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesByMethod['sync']['last_added_on'];
                 $methodOfLastPhoto = 'sync';
@@ -831,19 +841,19 @@ final readonly class Util
                 $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'];
             } else {
                 $query  = 'SELECT date_available FROM `' . Tables::images() . '` ORDER BY id DESC LIMIT 1;';
-                $images = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                $images = $this->conn->executeQuery($query)->fetchAllAssociative();
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
             }
 
             $query = 'SELECT SUBSTRING_INDEX(path,".",-1) AS ext, COUNT(*) AS counter, SUM(filesize) AS filesize FROM `' . Tables::images() . '` GROUP BY ext;';
-            $piwigoInfos['file_extensions'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'ext');
+            $piwigoInfos['file_extensions'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'ext');
         }
 
         $url         = PEM_URL . '/api/get_extension_list.php';
         $result = '';
-        $pemExtensions = ServiceLocator::get(AdminService::class)->fetchRemote($url, $result) && is_string($result) ? StringUtil::safeUnserialize($result) : [];
+        $pemExtensions = $this->adminService->fetchRemote($url, $result) && is_string($result) ? StringUtil::safeUnserialize($result) : [];
 
         if ($pemExtensions !== []) {
             $officialExts = [];
@@ -860,7 +870,7 @@ final readonly class Util
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->sendPiwigoInfosRetryLater(1 * 60 * 60);
             $this->pwgUniqueExecEnds('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::get()->getElapsedTime($startTime, StringUtil::get()->getMoment()));
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . $this->stringUtil->getElapsedTime($startTime, $this->stringUtil->getMoment()));
             return;
         }
 
@@ -925,7 +935,7 @@ final readonly class Util
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes']         = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = UserService::get()->getDefaultTheme();
+        $defaultTheme = Kernel::service(UserService::class)->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
         }
@@ -933,7 +943,7 @@ final readonly class Util
 
         $piwigoInfos['themes_usage'] = [];
         $query      = 'SELECT theme, COUNT(*) AS theme_counter FROM ' . Tables::userInfos() . ' GROUP BY theme ORDER BY theme;';
-        $themesUsed = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
+        $themesUsed = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
         foreach ($themesUsed as $themeUsed => $counter) {
             if (isset($privateThemes[$themeUsed])) {
                 $themeUsed = 'private theme';
@@ -941,16 +951,16 @@ final readonly class Util
             $piwigoInfos['themes_usage'][$themeUsed] = ($piwigoInfos['themes_usage'][$themeUsed] ?? 0) + (is_numeric($counter) ? (int) $counter : 0);
         }
 
-        $piwigoInfos['general_stats']['default_language'] = UserService::get()->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = Kernel::service(UserService::class)->getDefaultLanguage();
 
         $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . Tables::userInfos() . ' GROUP BY language ORDER BY language;';
-        $piwigoInfos['languages_usage'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
+        $piwigoInfos['languages_usage'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
 
         $piwigoInfos['activities']                      = [];
         $piwigoInfos['general_stats']['nb_activities']  = 0;
 
         $query      = 'SELECT object, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY object, action;";
-        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
         foreach ($activities as $activity) {
             $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
             $objectKey = is_string($activity['object'] ?? null) ? $activity['object'] : '';
@@ -963,7 +973,7 @@ final readonly class Util
 
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
         $query      = 'SELECT object, object_id, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object = 'system' GROUP BY object, object_id, action;";
-        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
         $systemActivities = [];
         foreach ($activities as $activity) {
             $objectIdKey = is_numeric($activity['object_id']) ? (int) $activity['object_id'] : 0;
@@ -977,7 +987,7 @@ final readonly class Util
         $piwigoInfos['activities']['system'] = $systemActivities;
 
         $query   = 'SELECT action, occured_on, details FROM ' . Tables::activity() . " WHERE object = 'system' AND object_id = " . ActivitySystem::Core . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
-        $updates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $updates = $this->conn->executeQuery($query)->fetchAllAssociative();
         foreach ($updates as $update) {
             $details = StringUtil::safeUnserialize(is_string($update['details']) ? $update['details'] : '');
             if (isset($details['from_version']) && isset($details['to_version'])) {
@@ -994,7 +1004,7 @@ final readonly class Util
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
         $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . Tables::activity() . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
-        $activities = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
         $apps       = [];
         $appsPattern = [
             'Piwigo iOS'          => '/^Piwigo\/\d+ CFNetwork/',
@@ -1035,22 +1045,22 @@ final readonly class Util
             $piwigoInfos['features'][$feature] = Config::raw($feature) ? 'yes' : 'no';
         }
 
-        $updateUrl = ServiceLocator::get(ConfigService::class)->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
+        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
         $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL) . '/ws.php';
 
         $getData  = ['format' => 'php', 'method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
         $postData = ['data' => json_encode($piwigoInfos)];
 
-        if (!ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $getData, $postData)) {
+        if (!$this->adminService->fetchRemote($url, $result, $getData, $postData)) {
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
             $this->sendPiwigoInfosRetryLater(24 * 60 * 60);
         } else {
             $lastNotice = date('c');
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
+            $this->configService->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
         }
 
         $this->pwgUniqueExecEnds('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::get()->getElapsedTime($startTime, StringUtil::get()->getMoment()));
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . $this->stringUtil->getElapsedTime($startTime, $this->stringUtil->getMoment()));
     }
 }

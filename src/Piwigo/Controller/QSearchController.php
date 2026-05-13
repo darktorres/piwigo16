@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
@@ -20,6 +19,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class QSearchController implements ControllerInterface
 {
+    public function __construct(
+        private readonly UrlGenerator $urlGenerator,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -28,7 +32,7 @@ final class QSearchController implements ControllerInterface
         $bodyQ = is_array($body) && is_string($body['q'] ?? null) ? $body['q'] : null;
         $queryQ = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : null;
         $q = $bodyQ ?? $queryQ ?? '';
-        Util::get()->redirect(UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['q' => $q]));
+        Util::get()->redirect(UrlService::get()->addUrlParams($this->urlGenerator->searchPage(), ['q' => $q]));
         return ResponseFactory::create(302);
     }
 }

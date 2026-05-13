@@ -14,7 +14,7 @@ namespace Piwigo\Template;
  * instance. Untouched files and plugins keep working through the global;
  * migrated call sites use the typed accessor.
  *
- * Local-scope Template instances (e.g. mail templates in ServiceLocator::get(MailService::class)->getMailTemplate())
+ * Local-scope Template instances (e.g. mail templates created by MailService)
  * are NOT registered here — they are throwaway objects that intentionally
  * never become the active template.
  */

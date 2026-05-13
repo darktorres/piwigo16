@@ -852,7 +852,7 @@ final class CategoryRepository extends AbstractRepository
 
     /**
      * Return the uppercats strings for the given category ids.
-     * Used by ServiceLocator::get(CategoryAdminService::class)->getUppercatIds() to collect all ancestor ids.
+     * Used by CategoryAdminService::getUppercatIds() to collect all ancestor ids.
      *
      * @param array<int|string> $ids
      * @return string[]

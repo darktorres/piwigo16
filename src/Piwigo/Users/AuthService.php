@@ -14,7 +14,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -416,7 +415,7 @@ SELECT
                 'key_type'   => 'auth_key',
             ];
             Dml::singleInsert(Tables::userAuthKeys(), $key);
-            $lastId = DbConnection::get()->lastInsertId();
+            $lastId = $this->conn->lastInsertId();
             $key['auth_key_id'] = is_numeric($lastId) ? (int) $lastId : 0;
             return $key;
         } else {

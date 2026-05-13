@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
-use Piwigo\Db\DbConnection;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
@@ -21,6 +22,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class UpgradeFeedController implements ControllerInterface
 {
+    public function __construct(
+        private readonly Connection $conn,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -33,7 +39,7 @@ final class UpgradeFeedController implements ControllerInterface
         define('PREFIX_TABLE', Config::dbPrefix());
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
+        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
         $existing = UpgradeService::getAvailableUpgradeIds();
         $to_apply = array_diff($existing, $applied);
 

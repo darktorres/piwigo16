@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\Kernel;
+
 final class DbInfo
 {
     public static function version(): string
     {
-        $v = DbConnection::get()->executeQuery('SELECT VERSION()')->fetchOne();
+        $v = Kernel::service(Connection::class)->executeQuery('SELECT VERSION()')->fetchOne();
         return is_string($v) ? $v : '';
     }
 }

@@ -127,7 +127,7 @@ return [
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
-    DerivativeService::class   => factory(static fn (): DerivativeService => new DerivativeService()),
+    DerivativeService::class   => factory(static fn (Util $util): DerivativeService => new DerivativeService($util)),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
     MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),
@@ -174,7 +174,7 @@ return [
     NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, StringUtil $s, UrlGenerator $ug, UrlService $u, UserService $us, Util $util): NotificationAdminService => new NotificationAdminService($mail, $nR, $s, $ug, $u, $us, $util)),
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR, UrlGenerator $ug): AlbumsTabRenderer => new AlbumsTabRenderer($catR, $ug)),
-    UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
+    UserTabRenderer::class           => factory(static fn (UrlGenerator $ug): UserTabRenderer => new UserTabRenderer($ug)),
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, Util $util): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $util)),
     FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, Util $util): FilterResolver => new FilterResolver($conn, $h, $tA, $util)),
     SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, Util $util): SizesProcessor => new SizesProcessor($iA, $up, $util)),
@@ -190,7 +190,7 @@ return [
     PictureMetadataRenderer::class   => factory(static fn (MetadataService $m): PictureMetadataRenderer => new PictureMetadataRenderer($m)),
     MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, StringUtil $s, TagAdminService $tA): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $s, $tA)),
     HistoryAdminService::class       => factory(static fn (Connection $conn, ConfigService $cfg, HistoryRepository $hR, StringUtil $s): HistoryAdminService => new HistoryAdminService($conn, $cfg, $hR, $s)),
-    WsHelper::class                  => factory(static fn (): WsHelper => new WsHelper()),
+    WsHelper::class                  => factory(static fn (StringUtil $s): WsHelper => new WsHelper($s)),
     StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
     DateService::class         => factory(static fn (): DateService => new DateService()),
     LangService::class         => factory(static fn (): LangService => new LangService()),

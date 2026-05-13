@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\Kernel;
+
 final class SchemaHelper
 {
     /**
@@ -14,7 +17,7 @@ final class SchemaHelper
     public static function getEnums(string $table, string $field): array
     {
         $options = [];
-        foreach (DbConnection::get()->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery('DESC ' . $table)->fetchAllAssociative() as $row) {
             if ($row['Field'] === $field) {
                 $raw = explode(',', substr(is_string($row['Type'] ?? null) ? $row['Type'] : '', 5, -1));
                 foreach ($raw as $option) {

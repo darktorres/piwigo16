@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
@@ -42,27 +42,27 @@ final class SrcImage
         $path = is_scalar($pathRaw) ? (string) $pathRaw : '';
         $fileRaw = $infos['file'] ?? '';
         $file = is_scalar($fileRaw) ? (string) $fileRaw : '';
-        $ext = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($path));
-        $infos['file_ext'] = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($file));
+        $ext = strtolower(Kernel::service(StringUtil::class)->getExtension($path));
+        $infos['file_ext'] = strtolower(Kernel::service(StringUtil::class)->getExtension($file));
         $infos['path_ext'] = $ext;
         if (in_array($ext, Config::pictureExtensions())) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {
             $repExt = $infos['representative_ext'];
-            $this->rel_path = ServiceLocator::get(StringUtil::class)->originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
+            $this->rel_path = Kernel::service(StringUtil::class)->originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
-            $mimeIconDir = ServiceLocator::get(Util::class)->getThemeconf('mime_icon_dir');
+            $mimeIconDir = Kernel::service(Util::class)->getThemeconf('mime_icon_dir');
             $triggerResult = EventDispatcher::dispatch('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
             $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
+            if (($size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/_base/icon/mimetypes/unknown.png';
                 }
-                $size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path);
+                $size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
             if ($size === false) {
                 $this->size = null;
@@ -140,14 +140,14 @@ final class SrcImage
             // giving up. Covers e.g. the dupe-image upload path where the
             // returning record only carries id, not width/height.
             $path = $this->getPath();
-            if (is_readable($path) && ($size = ServiceLocator::get(StringUtil::class)->pwgSafeGetimagesize($path)) !== false) {
+            if (is_readable($path) && ($size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize($path)) !== false) {
                 $w = $size[0];
                 $h = $size[1];
                 $wi = is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0);
                 $hi = is_int($h) ? $h : (int) (is_scalar($h) ? $h : 0);
                 $this->size = [$wi, $hi];
                 if ($this->id !== 0) {
-                    ServiceLocator::get(ImageRepository::class)
+                    Kernel::service(ImageRepository::class)
                         ->updateDimensions($this->id, $wi, $hi);
                 }
                 return $this->size;

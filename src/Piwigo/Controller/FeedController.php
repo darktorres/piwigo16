@@ -8,7 +8,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Feed\FeedHelper;
@@ -29,56 +28,69 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class FeedController implements ControllerInterface
 {
+    public function __construct(
+        private readonly DateService $dateService,
+        private readonly FeedRepository $feedRepository,
+        private readonly HtmlService $htmlService,
+        private readonly NotificationService $notificationService,
+        private readonly PermissionService $permissionService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlService $urlService,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        ServiceLocator::get(Util::class)->checkInputParameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
+        $this->util->checkInputParameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-        $feed_id    = StringUtil::get()->inputString('feed', '', $_GET);
-        $image_only = StringUtil::get()->inputString('image_only', null, $_GET) !== null;
+        $feed_id    = $this->stringUtil->inputString('feed', '', $_GET);
+        $image_only = $this->stringUtil->inputString('image_only', null, $_GET) !== null;
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
         $feed_row = [];
         if ($feed_id !== null && $feed_id !== '') {
-            $feed_row = ServiceLocator::get(FeedRepository::class)->findById($feed_id);
+            $feed_row = $this->feedRepository->findById($feed_id);
             if ($feed_row === null || count($feed_row) === 0) {
-                ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Unknown feed identifier'));
+                $this->htmlService->pageNotFound(Lang::t('Unknown feed identifier'));
             }
             if ($feed_row !== null && $feed_row['user_id'] != $user['id']) {
-                $user = UserService::get()->buildUser(is_numeric($feed_row['user_id']) ? (int) $feed_row['user_id'] : 0, true);
+                $user = $this->userService->buildUser(is_numeric($feed_row['user_id']) ? (int) $feed_row['user_id'] : 0, true);
             }
         } else {
             $image_only = true;
-            if (!PermissionService::get()->isAGuest()) {
-                $user = UserService::get()->buildUser(Config::guestId(), true);
+            if (!$this->permissionService->isAGuest()) {
+                $user = $this->userService->buildUser(Config::guestId(), true);
             }
         }
 
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         $dbnow = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
 
         $rss           = new PiwigoFeedCreator();
-        $rss->encoding = ServiceLocator::get(StringUtil::class)->getPwgCharset();
+        $rss->encoding = $this->stringUtil->getPwgCharset();
         $rss->title    = Config::galleryTitle();
         $username      = is_string($user['username'] ?? null) ? $user['username'] : '';
         $rss->title   .= ' (as ' . stripslashes($username) . ')';
-        $rss->link     = UrlService::get()->getGalleryHomeUrl();
+        $rss->link     = $this->urlService->getGalleryHomeUrl();
 
         $news = [];
         if (!$image_only) {
             $last_check = isset($feed_row['last_check']) && is_scalar($feed_row['last_check'])
                 ? (string) $feed_row['last_check'] : null;
-            $news = ServiceLocator::get(NotificationService::class)->news($last_check, $dbnow, true, true);
+            $news = $this->notificationService->news($last_check, $dbnow, true, true);
 
             if (count($news) > 0) {
                 $item = new \FeedItem();
-                $item->title = Lang::t('New on %s', ServiceLocator::get(DateService::class)->formatDate($dbnow));
-                $item->link  = UrlService::get()->getGalleryHomeUrl();
+                $item->title = Lang::t('New on %s', $this->dateService->formatDate($dbnow));
+                $item->link  = $this->urlService->getGalleryHomeUrl();
                 $item->description = '<ul>';
                 foreach ($news as $line) {
                     $item->description .= '<li>' . $line . '</li>';
@@ -90,7 +102,7 @@ final class FeedController implements ControllerInterface
                 $item->guid   = sprintf('%s', $dbnow);
                 $rss->addItem($item);
 
-                ServiceLocator::get(FeedRepository::class)->updateLastCheck((string) $feed_id, $dbnow);
+                $this->feedRepository->updateLastCheck((string) $feed_id, $dbnow);
             }
         }
 
@@ -99,26 +111,26 @@ final class FeedController implements ControllerInterface
                 ? (string) $feed_row['last_check'] : '';
             if (!isset($feed_row['last_check']) || time() - FeedHelper::datetimeToTs($lastCheck) > 30 * 24 * 3600) {
                 $keepAliveDate = new \DateTimeImmutable($dbnow)->modify('+15 days')->format('Y-m-d H:i:s');
-                ServiceLocator::get(FeedRepository::class)->updateLastCheck($feed_id, $keepAliveDate);
+                $this->feedRepository->updateLastCheck($feed_id, $keepAliveDate);
             }
         }
 
-        $dates = ServiceLocator::get(NotificationService::class)->getRecentPostDatesArray(Config::recentPostDates()['RSS']);
+        $dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['RSS']);
         foreach ($dates as $date_detail) {
             if (!is_array($date_detail)) {
                 continue;
             }
             $item  = new \FeedItem();
             $date  = is_string($date_detail['date_available'] ?? null) ? $date_detail['date_available'] : '';
-            $item->title = ServiceLocator::get(NotificationService::class)->getTitleRecentPostDate($date_detail);
-            $item->link  = UrlService::get()->makeIndexUrl([
+            $item->title = $this->notificationService->getTitleRecentPostDate($date_detail);
+            $item->link  = $this->urlService->makeIndexUrl([
                 'chronology_field' => 'posted',
                 'chronology_style' => 'monthly',
                 'chronology_view'  => 'calendar',
                 'chronology_date'  => explode('-', substr($date, 0, 10)),
             ]);
-            $item->description = '<a href="' . UrlService::get()->makeIndexUrl() . '">' . Config::galleryTitle() . '</a><br> ';
-            $item->description .= ServiceLocator::get(NotificationService::class)->getHtmlDescriptionRecentPostDate($date_detail);
+            $item->description = '<a href="' . $this->urlService->makeIndexUrl() . '">' . Config::galleryTitle() . '</a><br> ';
+            $item->description .= $this->notificationService->getHtmlDescriptionRecentPostDate($date_detail);
             $item->descriptionHtmlSyndicated = true;
             $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($date));
             $item->author = Config::rssReedAuthor();

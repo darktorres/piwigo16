@@ -9,7 +9,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -25,6 +24,19 @@ use Piwigo\Users\UserService;
 
 final class PasswordService
 {
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly MailService $mailService,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function processVerificationCode(): bool
     {
         $logger = LoggerRegistry::current();
@@ -32,15 +44,15 @@ final class PasswordService
             return true;
         }
 
-        $username_or_email = StringUtil::get()->inputString('username_or_email', '', $_POST);
+        $username_or_email = $this->stringUtil->inputString('username_or_email', '', $_POST);
         if ($username_or_email === null || $username_or_email === '') {
             PageState::current()->addKeyedError('password_form_error', Lang::t('Invalid username or email'));
             return false;
         }
 
-        $user_id = UserService::get()->getUseridByEmail($username_or_email);
+        $user_id = $this->userService->getUseridByEmail($username_or_email);
         if (!is_numeric($user_id)) {
-            $user_id = UserService::get()->getUserid($username_or_email);
+            $user_id = $this->userService->getUserid($username_or_email);
         }
 
         $is_user_found = is_numeric($user_id);
@@ -48,17 +60,17 @@ final class PasswordService
             $user_id = Config::guestId();
         }
 
-        $userdata = UserService::get()->getuserdata($is_user_found ? (int) $user_id : Config::guestId(), false);
+        $userdata = $this->userService->getuserdata($is_user_found ? (int) $user_id : Config::guestId(), false);
         if ($userdata === false) {
-            $userdata = ['status' => 'guest', 'language' => UserService::get()->getDefaultLanguage(), 'email' => ''];
+            $userdata = ['status' => 'guest', 'language' => $this->userService->getDefaultLanguage(), 'email' => ''];
         }
 
         $status            = isset($userdata['status'])   && is_string($userdata['status']) ? $userdata['status'] : 'guest';
-        $userdata_language = isset($userdata['language']) && is_string($userdata['language']) ? $userdata['language'] : UserService::get()->getDefaultLanguage();
+        $userdata_language = isset($userdata['language']) && is_string($userdata['language']) ? $userdata['language'] : $this->userService->getDefaultLanguage();
         $userdata_email    = isset($userdata['email'])    && is_string($userdata['email']) ? $userdata['email'] : '';
 
         if ($is_user_found) {
-            if (PermissionService::get()->isAGuest($status) || PermissionService::get()->isGeneric($status)) {
+            if ($this->permissionService->isAGuest($status) || $this->permissionService->isGeneric($status)) {
                 PageState::current()->addKeyedError('password_form_error', Lang::t('Password reset is not allowed for this user'));
                 return false;
             }
@@ -73,13 +85,13 @@ final class PasswordService
         }
 
         $skip_mail     = !$is_user_found || $userdata_email === '';
-        ServiceLocator::get(MailService::class)->switchLangTo($userdata_language);
-        $user_code     = ServiceLocator::get(UserService::class)->generateUserCode();
-        $template_mail = ServiceLocator::get(MailService::class)->pwgGenerateCodeVerificationMail(is_string($user_code['code'] ?? null) ? $user_code['code'] : '');
+        $this->mailService->switchLangTo($userdata_language);
+        $user_code     = $this->userService->generateUserCode();
+        $template_mail = $this->mailService->pwgGenerateCodeVerificationMail(is_string($user_code['code'] ?? null) ? $user_code['code'] : '');
         if (!$skip_mail) {
-            ServiceLocator::get(MailService::class)->pwgMail($userdata_email, $template_mail);
+            $this->mailService->pwgMail($userdata_email, $template_mail);
         }
-        ServiceLocator::get(MailService::class)->switchLangBack();
+        $this->mailService->switchLangBack();
 
         $_SESSION['reset_password_code'] = [
             'secret'     => $user_code['secret'],
@@ -113,8 +125,8 @@ final class PasswordService
         $session_code['attempts']         = $current_attempts;
         $_SESSION['reset_password_code']  = $session_code;
 
-        $user_code = StringUtil::get()->inputString('user_code', '', $_POST);
-        $is_valid  = ($user_code !== null && $user_code !== '') && preg_match('/^\d{6}$/', $user_code) && ServiceLocator::get(UserService::class)->verifyUserCode($state['secret'], $user_code);
+        $user_code = $this->stringUtil->inputString('user_code', '', $_POST);
+        $is_valid  = ($user_code !== null && $user_code !== '') && preg_match('/^\d{6}$/', $user_code) && $this->userService->verifyUserCode($state['secret'], $user_code);
 
         if (!$is_valid) {
             if ($current_attempts >= 3) {
@@ -122,16 +134,16 @@ final class PasswordService
                 if (isset($state['user_id']) && $state['user_id'] !== 0) {
                     $state_user_id = $state['user_id'];
                     $save_user     = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-                    CurrentUser::setRawAttributes(UserService::get()->buildUser($state_user_id, false));
-                    PreferencesService::get()->userprefsUpdateParam('reset_password_forbidden_until', time() + 60 * 60);
+                    CurrentUser::setRawAttributes($this->userService->buildUser($state_user_id, false));
+                    $this->preferencesService->userprefsUpdateParam('reset_password_forbidden_until', time() + 60 * 60);
                     CurrentUser::setRawAttributes($save_user);
-                    ServiceLocator::get(Util::class)->pwgActivity('user', $state_user_id, 'reset_password_failure_too_many');
+                    $this->util->pwgActivity('user', $state_user_id, 'reset_password_failure_too_many');
                 }
                 PageState::current()->addKeyedError('login_page_error', Lang::t('Too many attempts, please try later..'));
                 return false;
             }
             if (isset($state['user_id']) && $state['user_id'] !== 0) {
-                ServiceLocator::get(Util::class)->pwgActivity('user', $state['user_id'], 'reset_password_failure_code');
+                $this->util->pwgActivity('user', $state['user_id'], 'reset_password_failure_code');
             }
             PageState::current()->addKeyedError('password_form_error', Lang::t('Invalid verification code'));
             return false;
@@ -146,9 +158,9 @@ final class PasswordService
         }
 
         $save_user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
-        $temp_user = UserService::get()->buildUser($user_id, false);
+        $temp_user = $this->userService->buildUser($user_id, false);
         CurrentUser::setRawAttributes($temp_user);
-        PreferencesService::get()->userprefsDeleteParam('reset_password_forbidden_until');
+        $this->preferencesService->userprefsDeleteParam('reset_password_forbidden_until');
 
         $temp_username = is_string($temp_user['username'] ?? null) ? $temp_user['username'] : '';
         $temp_email    = is_string($temp_user['email'] ?? null) ? $temp_user['email'] : '';
@@ -167,7 +179,7 @@ final class PasswordService
         }
         CurrentUser::setRawAttributes($save_user);
 
-        if (PermissionService::get()->isAGuest($status) || PermissionService::get()->isGeneric($status) || $has_no_email) {
+        if ($this->permissionService->isAGuest($status) || $this->permissionService->isGeneric($status) || $has_no_email) {
             PageState::current()->addKeyedError('password_form_error', Lang::t('Password reset is not allowed for this user'));
             return false;
         }
@@ -183,11 +195,11 @@ final class PasswordService
         }
 
         $user_id = null;
-        foreach (ServiceLocator::get(UserRepository::class)->findByActiveActivationKey() as $row) {
+        foreach ($this->userRepository->findByActiveActivationKey() as $row) {
             $activation_key = is_string($row['activation_key'] ?? null) ? $row['activation_key'] : '';
             $row_status     = is_string($row['status'] ?? null) ? $row['status'] : '';
             if (password_verify($reset_key, $activation_key)) {
-                if (PermissionService::get()->isAGuest($row_status) || PermissionService::get()->isGeneric($row_status)) {
+                if ($this->permissionService->isAGuest($row_status) || $this->permissionService->isGeneric($row_status)) {
                     PageState::current()->addKeyedError('password_page_error', Lang::t('Password reset is not allowed for this user'));
                     return false;
                 }
@@ -228,26 +240,26 @@ final class PasswordService
         /** @var array{user_id: int|null, username: string, email: string, language: string}|null $valid_reset_code */
         $valid_reset_code = is_array($_SESSION['valid_reset_password_code'] ?? null) ? $_SESSION['valid_reset_password_code'] : null;
         if ($valid_reset_code !== null && $valid_reset_code['email'] !== '') {
-            ServiceLocator::get(MailService::class)->switchLangTo($valid_reset_code['language']);
+            $this->mailService->switchLangTo($valid_reset_code['language']);
             $reset_user_id   = $valid_reset_code['user_id'] !== null ? (string) $valid_reset_code['user_id'] : '';
-            $api_keys        = ServiceLocator::get(UserService::class)->getAvailableApiKey($reset_user_id);
+            $api_keys        = $this->userService->getAvailableApiKey($reset_user_id);
             $nb_of_apikeys   = $api_keys !== false ? count($api_keys) : 0;
-            $template_mail   = ServiceLocator::get(MailService::class)->pwgGenerateSuccessResetPasswordMail($valid_reset_code['username'], $nb_of_apikeys);
-            ServiceLocator::get(MailService::class)->pwgMail($valid_reset_code['email'], $template_mail);
-            ServiceLocator::get(MailService::class)->switchLangBack();
+            $template_mail   = $this->mailService->pwgGenerateSuccessResetPasswordMail($valid_reset_code['username'], $nb_of_apikeys);
+            $this->mailService->pwgMail($valid_reset_code['email'], $template_mail);
+            $this->mailService->switchLangBack();
         }
         unset($_SESSION['valid_reset_password_code']);
 
-        ServiceLocator::get(Util::class)->pwgActivity('user', $user_id, 'reset_password_success');
+        $this->util->pwgActivity('user', $user_id, 'reset_password_success');
         PageState::current()->addInfo(Lang::t('Your password has been reset'));
-        PageState::current()->addInfo(new Html('<a href="' . ServiceLocator::get(UrlGenerator::class)->identification() . '">' . Lang::t('Login') . '</a>'));
+        PageState::current()->addInfo(new Html('<a href="' . $this->urlGenerator->identification() . '">' . Lang::t('Login') . '</a>'));
 
         return true;
     }
 
     public function resetPasswordKey(): int|false
     {
-        $key = StringUtil::get()->inputString('key', null, $_GET);
+        $key = $this->stringUtil->inputString('key', null, $_GET);
         if ($key === null) {
             return false;
         }
@@ -255,8 +267,8 @@ final class PasswordService
         if (!is_numeric($user_id)) {
             return false;
         }
-        ServiceLocator::get(AuthService::class)->deactivatePasswordResetKey($user_id);
-        ServiceLocator::get(AuthService::class)->deactivateUserAuthKeys($user_id);
+        $this->authService->deactivatePasswordResetKey($user_id);
+        $this->authService->deactivateUserAuthKeys($user_id);
         return $user_id;
     }
 

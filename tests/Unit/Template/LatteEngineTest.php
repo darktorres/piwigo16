@@ -158,8 +158,8 @@ final class LatteEngineTest extends TestCase
     /**
      * Phase B.2 smoke — explode, ternary, l10n alias of translate. The
      * service-backed filters (is_admin, is_classic_user, get_device,
-     * get_gallery_home_url, url_is_remote) require ServiceLocator
-     * bootstrapping that's outside this unit test's scope; their
+     * get_gallery_home_url, url_is_remote) require a booted Kernel
+     * that's outside this unit test's scope; their
      * stateless Latte wiring is identical to the four below, and
      * integration coverage exercises them through real templates once
      * Phase B.5 lands the dispatcher.

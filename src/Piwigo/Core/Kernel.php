@@ -53,7 +53,6 @@ final class Kernel
         CurrentUser::attachGlobals();
 
         self::$container = Container::build();
-        ServiceLocator::setContainer(self::$container);
 
         // Seed LoggerRegistry with a NullLogger if common.inc.php hasn't set a real one yet
         // (index.php?/install and index.php?/upgrade bypass common.inc.php).
@@ -149,6 +148,5 @@ final class Kernel
         LanguageStack::reset();
         CurrentUser::reset();
         StorageRegistry::reset();
-        ServiceLocator::reset();
     }
 }

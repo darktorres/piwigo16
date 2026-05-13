@@ -51,7 +51,7 @@ final class Config
     private function __construct()
     {
     }
-    /** Singleton handle — used by ServiceLocator; all data methods are static. */
+    /** Singleton handle — all data methods are static. */
     public static function instance(): self
     {
         return self::$singleton ??= new self();

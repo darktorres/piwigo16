@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Users;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -23,35 +22,47 @@ use Piwigo\Users\UserService;
 
 final class UserAdminService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ConfigService $configService,
+        private readonly GroupRepository $groupRepository,
+        private readonly PermissionRepository $permissionRepository,
+        private readonly SessionService $sessionService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function deleteUser(int $userId): void
     {
-        $uRepo = ServiceLocator::get(UserRepository::class);
+        $uRepo = $this->userRepository;
         $uRepo->deleteAllRelatedData($userId);
-        ServiceLocator::get(SessionService::class)->deleteUserSessions($userId);
+        $this->sessionService->deleteUserSessions($userId);
         $uRepo->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
         EventDispatcher::notify('delete_user', $userId);
-        ServiceLocator::get(Util::class)->pwgActivity('user', $userId, 'delete');
+        $this->util->pwgActivity('user', $userId, 'delete');
     }
 
     public function syncUsers(): void
     {
         $baseUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column(DbConnection::get()->executeQuery(
+            array_column($this->conn->executeQuery(
                 'SELECT ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users()
             )->fetchAllAssociative(), 'id')
         );
 
         $infosUsers = array_map(
             fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column(DbConnection::get()->executeQuery(
+            array_column($this->conn->executeQuery(
                 'SELECT user_id FROM ' . Tables::userInfos()
             )->fetchAllAssociative(), 'user_id')
         );
 
         $toCreate = array_diff($baseUsers, $infosUsers);
         if (count($toCreate) > 0) {
-            UserService::get()->createUserInfos($toCreate);
+            $this->userService->createUserInfos($toCreate);
         }
 
         $tables = [
@@ -63,12 +74,12 @@ final class UserAdminService
             $toDelete = array_diff(
                 array_map(
                     fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                    array_column(DbConnection::get()->executeQuery('SELECT DISTINCT user_id FROM ' . $table)->fetchAllAssociative(), 'user_id')
+                    array_column($this->conn->executeQuery('SELECT DISTINCT user_id FROM ' . $table)->fetchAllAssociative(), 'user_id')
                 ),
                 $baseUsers
             );
             if (count($toDelete) > 0) {
-                ServiceLocator::get(UserRepository::class)->deleteOrphanedFromTable($table, array_values($toDelete));
+                $this->userRepository->deleteOrphanedFromTable($table, array_values($toDelete));
             }
         }
     }
@@ -90,7 +101,7 @@ final class UserAdminService
         if ($includeWebmaster) {
             $statusList[] = 'webmaster';
         }
-        $raw = array_column(DbConnection::get()->executeQuery(
+        $raw = array_column($this->conn->executeQuery(
             'SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('" . implode("','", $statusList) . "')"
         )->fetchAllAssociative(), 'user_id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
@@ -98,7 +109,7 @@ final class UserAdminService
 
     public function getGroupname(int $groupId): string|false
     {
-        $name = ServiceLocator::get(GroupRepository::class)->findNameById($groupId);
+        $name = $this->groupRepository->findNameById($groupId);
         return $name ?? false;
     }
 
@@ -118,29 +129,29 @@ final class UserAdminService
         if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId == $matches[1]) {
-                    ServiceLocator::get(ConfigService::class)->confUpdateParam('email_admin_on_new_user', 'all', true);
+                    $this->configService->confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
         }
         $groupIdString = implode(',', $groupIds);
-        $permRepo      = ServiceLocator::get(PermissionRepository::class);
-        $groupRepo     = ServiceLocator::get(GroupRepository::class);
+        $permRepo      = $this->permissionRepository;
+        $groupRepo     = $this->groupRepository;
         $permRepo->deleteGroupAccessByGroups($groupIds);
         $groupRepo->deleteUserGroupByGroupIds($groupIds);
-        $groupList = array_column(DbConnection::get()->executeQuery(
+        $groupList = array_column($this->conn->executeQuery(
             'SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . $groupIdString . ')'
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
         EventDispatcher::notify('delete_group', $groupids);
-        ServiceLocator::get(Util::class)->pwgActivity('group', $groupids, 'delete');
+        $this->util->pwgActivity('group', $groupids, 'delete');
         return $groupList;
     }
 
     public function getUsername(int $userId): false|string
     {
         $userFields = Config::userFields();
-        $username   = ServiceLocator::get(UserRepository::class)->findUsernameById(
+        $username   = $this->userRepository->findUsernameById(
             $userFields['id'],
             $userFields['username'],
             Tables::users(),
@@ -155,7 +166,7 @@ final class UserAdminService
         if (LoggerRegistry::isInitialized()) {
             LoggerRegistry::current()->info('invalidate_user_cache called');
         }
-        $userRepo = ServiceLocator::get(UserRepository::class);
+        $userRepo = $this->userRepository;
         if ($full) {
             $userRepo->truncateCategoryCache();
             $userRepo->truncateUserCache();
@@ -163,7 +174,7 @@ final class UserAdminService
             $userRepo->markAllCachesForUpdate();
         }
         $persistentCache->purge(true);
-        ServiceLocator::get(ConfigService::class)->confDeleteParam('count_orphans');
+        $this->configService->confDeleteParam('count_orphans');
         EventDispatcher::notify('invalidate_user_cache', $full);
     }
 
@@ -172,7 +183,7 @@ final class UserAdminService
         if (isset($GLOBALS['user']) && is_array($GLOBALS['user'])) {
             unset($GLOBALS['user']['nb_available_tags']);
         }
-        ServiceLocator::get(UserRepository::class)->clearNbAvailableTags();
+        $this->userRepository->clearNbAvailableTags();
     }
 
     public function catAdminAccess(int $categoryId): bool

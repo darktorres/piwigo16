@@ -10,11 +10,10 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -32,6 +31,21 @@ use Piwigo\Users\UserRepository;
 
 final class ImageAdminService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CommentRepository $commentRepository,
+        private readonly ConfigService $configService,
+        private readonly ImageRepository $imageRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly TagRepository $tagRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+    ) {
+    }
+
     /**
      * @param int[] $ids
      * @return int[]
@@ -43,7 +57,7 @@ final class ImageAdminService
         }
         $newIds    = [];
         $formatsOf = [];
-        $repo      = ServiceLocator::get(ImageRepository::class);
+        $repo      = $this->imageRepository;
         foreach ($repo->findFormatsByImageIds($ids) as $row) {
             $fmtImageId = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
             if (!isset($formatsOf[$fmtImageId])) {
@@ -57,14 +71,14 @@ final class ImageAdminService
                 continue;
             }
             $files   = [];
-            $files[] = ServiceLocator::get(StringUtil::class)->getElementPath($row);
+            $files[] = $this->stringUtil->getElementPath($row);
             if (!empty($row['representative_ext'])) {
-                $files[] = ServiceLocator::get(StringUtil::class)->originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
+                $files[] = $this->stringUtil->originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
             }
             $rowIdInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($formatsOf[$rowIdInt])) {
                 foreach ($formatsOf[$rowIdInt] as $fmtExt) {
-                    $files[] = ServiceLocator::get(StringUtil::class)->originalToFormat($files[0], $fmtExt);
+                    $files[] = $this->stringUtil->originalToFormat($files[0], $fmtExt);
                 }
             }
             $ok = true;
@@ -100,11 +114,11 @@ final class ImageAdminService
                 return 0;
             }
         }
-        $imgRepo  = ServiceLocator::get(ImageRepository::class);
-        $catRepo  = ServiceLocator::get(CategoryRepository::class);
-        $comRepo  = ServiceLocator::get(CommentRepository::class);
-        $userRepo = ServiceLocator::get(UserRepository::class);
-        $tagRepo  = ServiceLocator::get(TagRepository::class);
+        $imgRepo  = $this->imageRepository;
+        $catRepo  = $this->categoryRepository;
+        $comRepo  = $this->commentRepository;
+        $userRepo = $this->userRepository;
+        $tagRepo  = $this->tagRepository;
         $comRepo->deleteByImageIds($ids);
         $catRepo->deleteImageCategoryByImageIds($ids);
         $imgRepo->deleteFormatsByImageIds($ids);
@@ -115,22 +129,22 @@ final class ImageAdminService
         $imgRepo->deleteByIds($ids);
         $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
         if (count($categoryIds) > 0) {
-            ServiceLocator::get(CategoryAdminService::class)->updateCategory($categoryIds);
+            $this->categoryAdminService->updateCategory($categoryIds);
         }
         EventDispatcher::notify('delete_elements', $ids);
-        ServiceLocator::get(Util::class)->pwgActivity('photo', $ids, 'delete');
+        $this->util->pwgActivity('photo', $ids, 'delete');
         return count($ids);
     }
 
     /** @return array<mixed> */
     public function getCategoryRepresentantProperties(string $imageId, ?string $size = null): array
     {
-        $row = ServiceLocator::get(ImageRepository::class)->findById((int) $imageId);
+        $row = $this->imageRepository->findById((int) $imageId);
         if ($row === null) {
             return [];
         }
         $src = $size === null ? DerivativeImage::thumbUrl($row) : DerivativeImage::url($size, $row);
-        return ['src' => $src, 'url' => ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $imageId)];
+        return ['src' => $src, 'url' => $this->urlGenerator->admin('photo-' . $imageId)];
     }
 
     /** @return string[] */
@@ -181,7 +195,7 @@ final class ImageAdminService
                         continue;
                     }
                     if (is_file($path . '/' . $node)) {
-                        $ext        = ServiceLocator::get(StringUtil::class)->getExtension($node);
+                        $ext        = $this->stringUtil->getExtension($node);
                         $flipPicExt = Config::flipPictureExt();
                         $flipFileExt = Config::flipFileExt();
                         if (isset($flipPicExt[$ext])) {
@@ -217,7 +231,7 @@ final class ImageAdminService
     {
         $path = is_string($infos['path'] ?? null) ? $infos['path'] : '';
         if (!empty($infos['representative_ext'])) {
-            $path = ServiceLocator::get(StringUtil::class)->originalToRepresentative($path, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
+            $path = $this->stringUtil->originalToRepresentative($path, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);
@@ -342,7 +356,7 @@ final class ImageAdminService
         if (count($imageIds) === 0) {
             return;
         }
-        ServiceLocator::get(ImageRepository::class)->touchLastModified($imageIds);
+        $this->imageRepository->touchLastModified($imageIds);
     }
 
     /** @return array<string,mixed>|null */
@@ -351,7 +365,7 @@ final class ImageAdminService
         if (!is_numeric($imageId)) {
             HtmlService::fatalError('[getImageInfos] invalid image identifier ' . htmlentities($imageId));
         }
-        $images = DbConnection::get()->executeQuery(
+        $images = $this->conn->executeQuery(
             'SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId
         )->fetchAllAssociative();
         if (count($images) === 0) {
@@ -366,7 +380,7 @@ final class ImageAdminService
     /** @return int[] */
     public function getPhotosNoMd5sum(): array
     {
-        $raw = array_column(DbConnection::get()->executeQuery(
+        $raw = array_column($this->conn->executeQuery(
             'SELECT id FROM ' . Tables::images() . ' WHERE md5sum is null'
         )->fetchAllAssociative(), 'id');
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
@@ -375,7 +389,7 @@ final class ImageAdminService
     /** @param int[] $ids */
     public function addMd5sum(array $ids): int
     {
-        $pathForId = array_column(DbConnection::get()->executeQuery(
+        $pathForId = array_column($this->conn->executeQuery(
             'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', array_map(strval(...), $ids)) . ')'
         )->fetchAllAssociative(), 'path', 'id');
         $updates = [];
@@ -388,26 +402,26 @@ final class ImageAdminService
 
     public function countOrphans(): int
     {
-        if (is_null(ServiceLocator::get(ConfigService::class)->confGetParam('count_orphans'))) {
-            $allCount = ServiceLocator::get(ImageRepository::class)->countAll();
-            $catCount = ServiceLocator::get(CategoryRepository::class)->countLinkedImages();
+        if (is_null($this->configService->confGetParam('count_orphans'))) {
+            $allCount = $this->imageRepository->countAll();
+            $catCount = $this->categoryRepository->countLinkedImages();
             $counter  = $allCount - $catCount;
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('count_orphans', $counter, true);
+            $this->configService->confUpdateParam('count_orphans', $counter, true);
         }
-        $count = ServiceLocator::get(ConfigService::class)->confGetParam('count_orphans');
+        $count = $this->configService->confGetParam('count_orphans');
         return is_numeric($count) ? (int) $count : 0;
     }
 
     /** @return int[] */
     public function getOrphans(): array
     {
-        $loungedIds = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::lounge())->fetchAllAssociative(), 'image_id');
+        $loungedIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::lounge())->fetchAllAssociative(), 'image_id');
         $query = 'SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IS NULL';
         if (count($loungedIds) > 0) {
             $query .= ' AND id NOT IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $loungedIds)) . ')';
         }
         $query .= ' ORDER BY id ASC';
-        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     public function fsQuickCheck(): void
@@ -423,9 +437,9 @@ final class ImageAdminService
             return;
         }
         $page['fs_quick_check_already_called'] = true;
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('fs_quick_check_last_check', date('c'));
+        $this->configService->confUpdateParam('fs_quick_check_last_check', date('c'));
 
-        $issue1827Ids = array_column(DbConnection::get()->executeQuery(
+        $issue1827Ids = array_column($this->conn->executeQuery(
             'SELECT id FROM ' . Tables::images() . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
         )->fetchAllAssociative(), 'id');
         shuffle($issue1827Ids);
@@ -433,7 +447,7 @@ final class ImageAdminService
 
         $randomImageIds = array_map(
             fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-            array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' LIMIT 5000')->fetchAllAssociative(), 'id')
+            array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LIMIT 5000')->fetchAllAssociative(), 'id')
         );
         shuffle($randomImageIds);
         $randomImageIds = array_slice($randomImageIds, 0, 50);
@@ -443,7 +457,7 @@ final class ImageAdminService
             return;
         }
 
-        $paths = array_column(DbConnection::get()->executeQuery(
+        $paths = array_column($this->conn->executeQuery(
             'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', $checkIds) . ')'
         )->fetchAllAssociative(), 'path', 'id');
 
@@ -455,7 +469,7 @@ final class ImageAdminService
             }
         }
 
-        $duplicatePaths = DbConnection::get()->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
+        $duplicatePaths = $this->conn->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
         if (count($duplicatePaths) > 0) {
             $template->assign('header_msgs', [Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
         }

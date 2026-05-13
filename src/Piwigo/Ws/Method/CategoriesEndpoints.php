@@ -11,9 +11,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -35,6 +33,24 @@ use Piwigo\Ws\WsHelper;
 
 final class CategoriesEndpoints
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+        private readonly WsHelper $wsHelper,
+    ) {
+    }
+
     /**
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
@@ -45,7 +61,7 @@ final class CategoriesEndpoints
         /** @var int[] $catIds */
         $catIds = array_values(array_unique(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCatId)));
         if (count($catIds) > 0) {
-            $dbCatIds     = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
+            $dbCatIds     = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
             $missingCatIds = array_diff($catIds, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $dbCatIds));
             if (count($missingCatIds) > 0) {
                 return new PwgError(404, 'cat_id {' . implode(',', $missingCatIds) . '} not found');
@@ -65,8 +81,8 @@ final class CategoriesEndpoints
         if (!empty($whereClauses)) {
             $whereClauses = ['(' . implode("\n    OR ", $whereClauses) . ')'];
         }
-        $whereClauses[] = PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
-        $catConn = ServiceLocator::get(Connection::class);
+        $whereClauses[] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
+        $catConn = $this->conn;
         $cats    = [];
         foreach ($catConn->executeQuery('SELECT id, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $whereClauses) . ';')->fetchAllAssociative() as $row) {
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
@@ -74,15 +90,15 @@ final class CategoriesEndpoints
         }
         if (!empty($cats)) {
             /** @var string[] $whereClauses2 */
-            $whereClauses2   = ServiceLocator::get(WsHelper::class)->imageSqlFilter($params, 'i.');
+            $whereClauses2   = $this->wsHelper->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $whereClauses2[] = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
-            $orderBy         = ServiceLocator::get(WsHelper::class)->imageSqlOrder($params, 'i.');
+            $whereClauses2[] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
+            $orderBy         = $this->wsHelper->imageSqlOrder($params, 'i.');
             if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
             }
             $orderBy     = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-            $favoriteIds = UrlService::get()->getUserFavorites();
+            $favoriteIds = $this->urlService->getUserFavorites();
             $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
             $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
             $query       = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id WHERE ' . implode("\n    AND ", $whereClauses2) . ' GROUP BY i.id ' . $orderBy . ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
@@ -104,7 +120,7 @@ final class CategoriesEndpoints
                 $renderedName = EventDispatcher::dispatch('render_element_name', $imageName, __FUNCTION__);
                 $image['name']    = strip_tags((string) $renderedName);
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
-                $image = array_merge($image, ServiceLocator::get(WsHelper::class)->getUrls($row));
+                $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $images[] = $image;
             }
             $totalImagesRaw = $catConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
@@ -112,7 +128,7 @@ final class CategoriesEndpoints
             if (count($imageIds) > 0) {
                 $categoryIds = [];
                 $categoriesOfImage = [];
-                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
+                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
                     $categoryIds[] = $row['category_id'];
                     $rowImgId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                     if ($rowImgId !== '') {
@@ -121,7 +137,7 @@ final class CategoriesEndpoints
                 }
                 $detailsForCategory = [];
                 if (count($categoryIds) > 0) {
-                    $detailsForCategory = array_column(DbConnection::get()->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds)) . ');')->fetchAllAssociative(), null, 'id');
+                    $detailsForCategory = array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds)) . ');')->fetchAllAssociative(), null, 'id');
                 }
                 foreach ($images as $idx => $image) {
                     $imageCats  = [];
@@ -135,15 +151,15 @@ final class CategoriesEndpoints
                         if (!isset($detailsForCategory[$catIdKey])) {
                             continue;
                         }
-                        $url     = UrlService::get()->makeIndexUrl(['category' => $detailsForCategory[$catIdKey]]);
-                        $pageUrl = UrlService::get()->makePictureUrl(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'] ?? null, 'image_file' => $image['file']]);
+                        $url     = $this->urlService->makeIndexUrl(['category' => $detailsForCategory[$catIdKey]]);
+                        $pageUrl = $this->urlService->makePictureUrl(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'] ?? null, 'image_file' => $image['file']]);
                         $imageCats[] = ['id' => is_numeric($catId) ? (int) $catId : 0, 'url' => $url, 'page_url' => $pageUrl];
                     }
                     $images[$idx]['categories'] = new PwgNamedArray($imageCats, 'category', ['id', 'url', 'page_url']);
                 }
             }
         }
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', ServiceLocator::get(WsHelper::class)->getImageXmlAttributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
     }
 
     /**
@@ -178,14 +194,14 @@ final class CategoriesEndpoints
             $where[]  = 'status = "public"';
             $where[]  = 'visible = "true"';
             $joinUser = Config::guestId();
-        } elseif (PermissionService::get()->isAdmin()) {
-            $forbiddenCategories = PermissionService::get()->calculatePermissions($currentUser->id, $currentUser->status);
+        } elseif ($this->permissionService->isAdmin()) {
+            $forbiddenCategories = $this->permissionService->calculatePermissions($currentUser->id, $currentUser->status);
             $where[]  = 'id NOT IN (' . $forbiddenCategories . ')';
             $joinType = 'LEFT';
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order FROM ' . Tables::categories() . ' ' . $joinType . ' JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $joinUser . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . DbConnection::get()->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%');
+            $query .= ' AND name LIKE ' . $this->conn->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%');
             if (!isset($params['limit'])) {
                 $query .= ' LIMIT ' . Config::linkedAlbumSearchLimit();
             }
@@ -198,7 +214,7 @@ final class CategoriesEndpoints
             $query .= ' ORDER BY `rank` ASC LIMIT ' . ($limitParam + ($catIdParam > 0 ? 1 : 0));
         }
         $query .= ';';
-        $getListConn = ServiceLocator::get(Connection::class);
+        $getListConn = $this->conn;
         $getListRows = $getListConn->executeQuery($query)->fetchAllAssociative();
         if (isset($params['limit'])) {
             $resultCount    = $getListConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
@@ -213,7 +229,7 @@ final class CategoriesEndpoints
         $userRepresentativeUpdatesFor = [];
         $cats                        = [];
         foreach ($getListRows as $row) {
-            $row['url'] = UrlService::get()->makeIndexUrl(['category' => $row]);
+            $row['url'] = $this->urlService->makeIndexUrl(['category' => $row]);
             foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
                 $rowKeyVal = $row[$key] ?? null;
                 $row[$key] = is_numeric($rowKeyVal) ? (int) $rowKeyVal : 0;
@@ -221,7 +237,7 @@ final class CategoriesEndpoints
             $fullnameParam = $params['fullname'] ?? false;
             if ($fullnameParam !== false && $fullnameParam !== '' && $fullnameParam !== 0) {
                 $uppercatsRaw = $row['uppercats'] ?? null;
-                $row['name'] = strip_tags(ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_string($uppercatsRaw) ? $uppercatsRaw : '', null));
+                $row['name'] = strip_tags($this->htmlService->getCatDisplayNameCache(is_string($uppercatsRaw) ? $uppercatsRaw : '', null));
             } else {
                 $row['name_raw']  = $row['name'];
                 $renderedListName = EventDispatcher::dispatch('render_category_name', is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getList');
@@ -235,12 +251,12 @@ final class CategoriesEndpoints
             } elseif (!empty($row['representative_picture_id'])) {
                 $imageId = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $imageId = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($row);
+                $imageId = $this->categoryService->getRandomImageInCategory($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
                     $rowUppercatsRaw = $row['uppercats'] ?? null;
-                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . Dml::RANDOM_FUNCTION . '() LIMIT 1;';
-                    $subval = ServiceLocator::get(Connection::class)->executeQuery($subQuery)->fetchOne();
+                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . Dml::RANDOM_FUNCTION . '() LIMIT 1;';
+                    $subval = $this->conn->executeQuery($subQuery)->fetchOne();
                     if ($subval !== false) {
                         $imageId = is_numeric($subval) ? (int) $subval : null;
                     }
@@ -260,20 +276,20 @@ final class CategoriesEndpoints
             }
             $cats[] = $row;
         }
-        usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+        usort($cats, $this->categoryService->globalRankCompare(...));
         $thumbnailSrcOf = [];
         if (count($categories) > 0) {
             $newImageIds  = [];
             $thumbSizeRaw  = $params['thumbnail_size'] ?? null;
             $thumbnailSize = is_string($thumbSizeRaw) ? $thumbSizeRaw : '';
-            $imgRepoWsCats = ServiceLocator::get(ImageRepository::class);
+            $imgRepoWsCats = $this->imageRepository;
             foreach ($imgRepoWsCats->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds)) as $row) {
                 if ($row['level'] <= $user['level']) {
                     $thumbnailSrcOf[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
                 } else {
                     foreach ($categories as &$category) {
                         if ($row['id'] == $category['representative_picture_id']) {
-                            $newImgId = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category);
+                            $newImgId = $this->categoryService->getRandomImageInCategory($category);
                             if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
                             }
@@ -311,9 +327,9 @@ final class CategoriesEndpoints
         }
         unset($cat);
         if ($params['tree_output']) {
-            return ServiceLocator::get(WsHelper::class)->categoriesFlatlistToTree($cats);
+            return $this->wsHelper->categoriesFlatlistToTree($cats);
         }
-        $output['categories'] = new PwgNamedArray($cats, 'category', ServiceLocator::get(WsHelper::class)->getCategoryXmlAttributes());
+        $output['categories'] = new PwgNamedArray($cats, 'category', $this->wsHelper->getCategoryXmlAttributes());
         return $output;
     }
 
@@ -327,7 +343,7 @@ final class CategoriesEndpoints
             $params['additional_output'] = '';
         }
         $params['additional_output'] = array_map(trim(...), explode(',', is_string($params['additional_output']) ? $params['additional_output'] : ''));
-        $nbImagesOf = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS counter FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'counter', 'category_id');
+        $nbImagesOf = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS counter FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'counter', 'category_id');
         $where      = ['1=1'];
         $adminCatId = is_numeric($params['cat_id']) ? (int) $params['cat_id'] : 0;
         if (!$params['recursive']) {
@@ -341,10 +357,10 @@ final class CategoriesEndpoints
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . DbConnection::get()->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%') . ' LIMIT ' . Config::linkedAlbumSearchLimit();
+            $query .= ' AND name LIKE ' . $this->conn->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%') . ' LIMIT ' . Config::linkedAlbumSearchLimit();
         }
         $query     .= ';';
-        $searchConn = ServiceLocator::get(Connection::class);
+        $searchConn = $this->conn;
         $searchRows = $searchConn->executeQuery($query)->fetchAllAssociative();
         $counter    = $searchConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         $cats       = [];
@@ -353,7 +369,7 @@ final class CategoriesEndpoints
             $id              = is_string($rowIdRaw) ? $rowIdRaw : '';
             $row['nb_images'] = $nbImagesOf[$id] ?? 0;
             $rowUppercatsRaw = $row['uppercats'] ?? null;
-            $catDisplayName  = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '', ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+            $catDisplayName  = $this->htmlService->getCatDisplayNameCache(is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '', $this->urlGenerator->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
             $renderedAdminName = EventDispatcher::dispatch('render_category_name', is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getAdminList');
             $row['name']     = strip_tags((string) $renderedAdminName);
@@ -372,7 +388,7 @@ final class CategoriesEndpoints
             $catsIds    = array_column($cats, 'id');
             $nbSubcatsOf = [];
             if (!empty($catsIds)) {
-                $nbSubcatsOf = array_column(DbConnection::get()->executeQuery('SELECT id_uppercat, COUNT(*) AS nb_subcats FROM ' . Tables::categories() . ' WHERE id_uppercat IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catsIds)) . ') GROUP BY id_uppercat;')->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
+                $nbSubcatsOf = array_column($this->conn->executeQuery('SELECT id_uppercat, COUNT(*) AS nb_subcats FROM ' . Tables::categories() . ' WHERE id_uppercat IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catsIds)) . ') GROUP BY id_uppercat;')->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
             }
             foreach ($cats as $idx => $cat) {
                 $catIdRaw2           = $cat['id'] ?? null;
@@ -382,7 +398,7 @@ final class CategoriesEndpoints
             }
         }
         $limitReached = ($counter > Config::linkedAlbumSearchLimit());
-        usort($cats, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+        usort($cats, $this->categoryService->globalRankCompare(...));
         return ['categories' => new PwgNamedArray($cats, 'category', ['id', 'nb_images', 'name', 'uppercats', 'global_rank', 'status', 'test']), 'limit' => Config::linkedAlbumSearchLimit(), 'limit_reached' => $limitReached];
     }
 
@@ -392,7 +408,7 @@ final class CategoriesEndpoints
      */
     public function add(array $params, PwgServer &$service): PwgError|array
     {
-        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['position']) && in_array($params['position'], ['first', 'last'])) {
@@ -410,11 +426,11 @@ final class CategoriesEndpoints
         $catNameStr = is_string($catNameRaw) ? $catNameRaw : '';
         $catName   = (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) ? strip_tags($catNameStr) : $catNameStr;
         $catParent = is_numeric($params['parent']) ? (int) $params['parent'] : (is_string($params['parent']) ? $params['parent'] : null);
-        $creationOutput = ServiceLocator::get(CategoryAdminService::class)->createVirtualCategory($catName, $catParent, $options);
+        $creationOutput = $this->categoryAdminService->createVirtualCategory($catName, $catParent, $options);
         if (isset($creationOutput['error'])) {
             return new PwgError(500, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->userAdminService->invalidateUserCache();
         return $creationOutput;
     }
 
@@ -424,7 +440,7 @@ final class CategoriesEndpoints
         $rawSetrankIds  = is_array($params['category_id']) ? $params['category_id'] : [];
         /** @var int[] $setrankCategoryIds */
         $setrankCategoryIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawSetrankIds);
-        $categories     = DbConnection::get()->executeQuery('SELECT id, id_uppercat, `rank` FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $setrankCategoryIds) . ');')->fetchAllAssociative();
+        $categories     = $this->conn->executeQuery('SELECT id, id_uppercat, `rank` FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $setrankCategoryIds) . ');')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
@@ -433,7 +449,7 @@ final class CategoriesEndpoints
             $orderNew      = $setrankCategoryIds;
             $orderNewById  = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
-            $catAsc        = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
+            $catAsc        = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
             $catAscStr     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catAsc);
             $orderNewStr   = array_map(fn (int $v): string => (string) $v, $orderNewById);
             if (strcmp(implode(',', $catAscStr), implode(',', $orderNewStr)) !== 0) {
@@ -444,7 +460,7 @@ final class CategoriesEndpoints
             $singleCatId    = implode('', array_map(fn (int $v): string => (string) $v, $setrankCategoryIds));
             $idUppercatRaw  = $category['id_uppercat'] ?? null;
             $idUppercatStr  = is_string($idUppercatRaw) ? $idUppercatRaw : '';
-            $orderOld       = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . ($idUppercatStr === '' ? 'IS NULL' : '= ' . $idUppercatStr) . ' AND id != ' . $singleCatId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'id');
+            $orderOld       = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . ($idUppercatStr === '' ? 'IS NULL' : '= ' . $idUppercatStr) . ' AND id != ' . $singleCatId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'id');
             $rankTarget     = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
             $orderNew       = [];
             $wasInserted    = false;
@@ -461,18 +477,18 @@ final class CategoriesEndpoints
                 $orderNew[] = $singleCatId;
             }
         }
-        ServiceLocator::get(CategoryAdminService::class)->saveCategoriesOrder($orderNew);
+        $this->categoryAdminService->saveCategoriesOrder($orderNew);
         return null;
     }
 
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (isset($params['pwg_token']) && ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $categories = DbConnection::get()->executeQuery('SELECT * FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId . ';')->fetchAllAssociative();
+        $categories = $this->conn->executeQuery('SELECT * FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId . ';')->fetchAllAssociative();
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
@@ -482,7 +498,7 @@ final class CategoriesEndpoints
                 return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
             }
             if ($params['status'] !== $category['status']) {
-                ServiceLocator::get(CategoryAdminService::class)->setCatStatus([$categoryId], is_string($params['status']) ? $params['status'] : '');
+                $this->categoryAdminService->setCatStatus([$categoryId], is_string($params['status']) ? $params['status'] : '');
             }
         }
         $update = ['id' => $categoryId];
@@ -493,7 +509,7 @@ final class CategoriesEndpoints
             }
         }
         if (!empty($params['visible']) && ($params['visible'] !== $category['visible'])) {
-            ServiceLocator::get(CategoryAdminService::class)->setCatVisible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
+            $this->categoryAdminService->setCatVisible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
         }
         $infoColumns    = ['name', 'comment', 'commentable'];
         $performUpdate  = false;
@@ -505,16 +521,16 @@ final class CategoriesEndpoints
             }
         }
         if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && $params['apply_commentable_to_subalbums']) {
-            $subcats = ServiceLocator::get(CategoryService::class)->getSubcatIds([$categoryId]);
+            $subcats = $this->categoryService->getSubcatIds([$categoryId]);
             if (count($subcats) > 0) {
                 $commentableVal = is_string($params['commentable']) ? $params['commentable'] : 'false';
-                ServiceLocator::get(CategoryRepository::class)->setCommentable(array_map(intval(...), $subcats), $commentableVal === 'true');
+                $this->categoryRepository->setCommentable(array_map(intval(...), $subcats), $commentableVal === 'true');
             }
         }
         if ($performUpdate) {
             Dml::singleUpdate(Tables::categories(), $update, ['id' => $update['id']]);
         }
-        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
+        $this->util->pwgActivity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
         return null;
     }
 
@@ -523,8 +539,8 @@ final class CategoriesEndpoints
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $imageId    = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $catRepo    = ServiceLocator::get(CategoryRepository::class);
-        $imgRepo    = ServiceLocator::get(ImageRepository::class);
+        $catRepo    = $this->categoryRepository;
+        $imgRepo    = $this->imageRepository;
         if (!$catRepo->existsById($categoryId)) {
             return new PwgError(404, 'category_id not found');
         }
@@ -532,8 +548,8 @@ final class CategoriesEndpoints
             return new PwgError(404, 'image_id not found');
         }
         $catRepo->setRepresentativePicture([$categoryId], $imageId);
-        ServiceLocator::get(UserRepository::class)->clearUserRepresentativeForCategory($categoryId);
-        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit', ['image_id' => $imageId]);
+        $this->userRepository->clearUserRepresentativeForCategory($categoryId);
+        $this->util->pwgActivity('album', $categoryId, 'edit', ['image_id' => $imageId]);
         return null;
     }
 
@@ -541,7 +557,7 @@ final class CategoriesEndpoints
     public function deleteRepresentative(array $params, PwgServer &$service): mixed
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $catRepo2   = ServiceLocator::get(CategoryRepository::class);
+        $catRepo2   = $this->categoryRepository;
         if (!$catRepo2->existsById($categoryId)) {
             return new PwgError(404, 'category_id not found');
         }
@@ -550,7 +566,7 @@ final class CategoriesEndpoints
             return new PwgError(401, 'not permitted');
         }
         $catRepo2->clearRepresentatives([$categoryId]);
-        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit');
+        $this->util->pwgActivity('album', $categoryId, 'edit');
         return null;
     }
 
@@ -561,24 +577,24 @@ final class CategoriesEndpoints
     public function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $catRepo3   = ServiceLocator::get(CategoryRepository::class);
+        $catRepo3   = $this->categoryRepository;
         if (!$catRepo3->existsById($categoryId)) {
             return new PwgError(404, 'category_id not found');
         }
         if (!$catRepo3->hasCategoryImages($categoryId)) {
             return new PwgError(401, 'not permitted');
         }
-        ServiceLocator::get(CategoryAdminService::class)->setRandomRepresentant([$categoryId]);
-        ServiceLocator::get(Util::class)->pwgActivity('album', $categoryId, 'edit');
+        $this->categoryAdminService->setRandomRepresentant([$categoryId]);
+        $this->util->pwgActivity('album', $categoryId, 'edit');
         $category = $catRepo3->findCategoryById($categoryId);
         $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
-        return ServiceLocator::get(ImageAdminService::class)->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
+        return $this->imageAdminService->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
     }
 
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $photoDeletionMode = is_string($params['photo_deletion_mode'] ?? null) ? $params['photo_deletion_mode'] : '';
@@ -595,13 +611,13 @@ final class CategoriesEndpoints
         if (count($categoryIds) === 0) {
             return null;
         }
-        $rawCategoryIds = array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIds) . ');')->fetchAllAssociative(), 'id');
+        $rawCategoryIds = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIds) . ');')->fetchAllAssociative(), 'id');
         if (count($rawCategoryIds) === 0) {
             return null;
         }
-        ServiceLocator::get(CategoryAdminService::class)->deleteCategories(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCategoryIds), $photoDeletionMode);
-        ServiceLocator::get(CategoryAdminService::class)->updateGlobalRank();
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->categoryAdminService->deleteCategories(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCategoryIds), $photoDeletionMode);
+        $this->categoryAdminService->updateGlobalRank();
+        $this->userAdminService->invalidateUserCache();
         return null;
     }
 
@@ -611,7 +627,7 @@ final class CategoriesEndpoints
      */
     public function move(array $params, PwgServer &$service): PwgError|array
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['category_id'])) {
@@ -626,7 +642,7 @@ final class CategoriesEndpoints
         $categoriesInDb = [];
         $updateCatIds   = [];
         $parentId       = is_numeric($params['parent']) ? (int) $params['parent'] : 0;
-        foreach (ServiceLocator::get(CategoryRepository::class)->findByIds(array_map(intval(...), $categoryIds)) as $row) {
+        foreach ($this->categoryRepository->findByIds(array_map(intval(...), $categoryIds)) as $row) {
             $rowIdRaw3          = $row['id'] ?? null;
             $rowId              = is_string($rowIdRaw3) ? $rowIdRaw3 : '';
             $categoriesInDb[$rowId] = $row;
@@ -643,23 +659,23 @@ final class CategoriesEndpoints
             return new PwgError(403, sprintf('Category %u does not exist', $unknownCategoryIds[0]));
         }
         if ($parentId !== 0) {
-            $subcatIds = ServiceLocator::get(CategoryService::class)->getSubcatIds([$parentId]);
+            $subcatIds = $this->categoryService->getSubcatIds([$parentId]);
             if (count($subcatIds) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
         }
-        ServiceLocator::get(CategoryAdminService::class)->moveCategories($categoryIds, $parentId);
-        ServiceLocator::get(UserAdminService::class)->invalidateUserCache();
+        $this->categoryAdminService->moveCategories($categoryIds, $parentId);
+        $this->userAdminService->invalidateUserCache();
         $catDisplayName = '';
-        foreach (ServiceLocator::get(CategoryRepository::class)->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
-            $catDisplayName = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache($uppercatsStr, ServiceLocator::get(UrlGenerator::class)->admin() . '&page=album-');
+        foreach ($this->categoryRepository->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
+            $catDisplayName = $this->htmlService->getCatDisplayNameCache($uppercatsStr, $this->urlGenerator->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
-        $nbPhotosIn = array_column(DbConnection::get()->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+        $nbPhotosIn = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
         $updateCats = [];
         foreach (array_unique($updateCatIds) as $updateCat) {
             $nbSubPhotos      = 0;
-            $subCatWithoutParent = array_diff(ServiceLocator::get(CategoryService::class)->getSubcatIds([$updateCat]), [$updateCat]);
+            $subCatWithoutParent = array_diff($this->categoryService->getSubcatIds([$updateCat]), [$updateCat]);
             foreach ($subCatWithoutParent as $idSubCat) {
                 $nbSubPhotos += is_numeric($nbPhotosIn[(string) $idSubCat] ?? null) ? (int) $nbPhotosIn[(string) $idSubCat] : 0;
             }
@@ -674,22 +690,22 @@ final class CategoriesEndpoints
         $paramCatId    = is_array($param['category_id']) ? $param['category_id'] : [];
         $categoryId    = is_numeric($paramCatId[0] ?? null) ? (int) $paramCatId[0] : 0;
         $category      = [];
-        $category['has_images'] = ServiceLocator::get(CategoryRepository::class)->hasCategoryImages($categoryId);
-        $subcatIds     = ServiceLocator::get(CategoryService::class)->getSubcatIds([$categoryId]);
+        $category['has_images'] = $this->categoryRepository->hasCategoryImages($categoryId);
+        $subcatIds     = $this->categoryService->getSubcatIds([$categoryId]);
         $category['nb_subcats'] = count($subcatIds) - 1;
-        $imageIdsRecursive = array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+        $imageIdsRecursive = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
         $category['nb_images_recursive'] = count($imageIdsRecursive);
         $category['nb_images_becoming_orphan']     = 0;
         $category['nb_images_associated_outside']  = 0;
         if ($category['nb_images_recursive'] > 0) {
             if ($category['nb_images_recursive'] < 1000) {
-                $imageIdsAssociatedOutside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column(DbConnection::get()->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ') AND image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive)) . ');')->fetchAllAssociative(), 'image_id'));
+                $imageIdsAssociatedOutside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ') AND image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive)) . ');')->fetchAllAssociative(), 'image_id'));
                 $category['nb_images_associated_outside'] = count($imageIdsAssociatedOutside);
                 $imageIdsBecomingOrphan = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive), $imageIdsAssociatedOutside);
                 $category['nb_images_becoming_orphan'] = count($imageIdsBecomingOrphan);
             } else {
                 $imageIdsRecursiveKeys = array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive));
-                $imageIdsAssociatedOutside2 = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+                $imageIdsAssociatedOutside2 = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
                 $imageIdsNotOrphan = [];
                 foreach ($imageIdsAssociatedOutside2 as $imageId) {
                     if (isset($imageIdsRecursiveKeys[is_scalar($imageId) ? (string) $imageId : ''])) {

@@ -9,9 +9,7 @@ use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
@@ -27,6 +25,18 @@ use Piwigo\Users\PermissionService;
 
 final class CategoryCatsRenderer
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryService $categoryService,
+        private readonly DateService $dateService,
+        private readonly FilterService $filterService,
+        private readonly HtmlService $htmlService,
+        private readonly PermissionService $permissionService,
+        private readonly UrlService $urlService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function render(): void
     {
         $template = TemplateRegistry::current();
@@ -57,14 +67,14 @@ SELECT SQL_CALC_FOUND_ROWS
 
         if ('recent_cats' == $page['section']) {
             $query .= '
-  AND ' . PermissionService::get()->getRecentPhotosSql('date_last');
+  AND ' . $this->permissionService->getRecentPhotosSql('date_last');
         } else {
             $query .= '
   AND id_uppercat ' . (!isset($page['category']) || !is_array($page['category']) ? 'is NULL' : '= ' . (is_scalar($page['category']['id'] ?? null) ? (string) $page['category']['id'] : ''));
         }
 
         $query .= '
-      ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
+      ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
         $query .= '
 -- after conditions
 ';
@@ -81,7 +91,7 @@ SELECT SQL_CALC_FOUND_ROWS
 
         $query = EventDispatcher::dispatch('loc_begin_index_category_thumbnails_query', $query);
 
-        $conn = ServiceLocator::get(Connection::class);
+        $conn = $this->conn;
         $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
         $page['total_categories'] = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
@@ -98,7 +108,7 @@ SELECT SQL_CALC_FOUND_ROWS
             } elseif (!empty($row['representative_picture_id'])) {
                 $image_id = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $image_id = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($row);
+                $image_id = $this->categoryService->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                 $rowUppercatsForQuery = $row['uppercats'] ?? null;
                 $subquery = '
@@ -107,11 +117,11 @@ SELECT representative_picture_id
   ON id = cat_id and user_id = ' . $currentUser->id . '
   WHERE uppercats LIKE \'' . (is_string($rowUppercatsForQuery) ? $rowUppercatsForQuery : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
-                    . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
+                    . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
   ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
-                $subval = ServiceLocator::get(Connection::class)->executeQuery($subquery)->fetchOne();
+                $subval = $this->conn->executeQuery($subquery)->fetchOne();
                 if ($subval !== false) {
                     $image_id = is_numeric($subval) ? (int) $subval : null;
                 }
@@ -145,15 +155,15 @@ SELECT
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')
-' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
+' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
   GROUP BY category_id
 ;';
-                $dates_of_category = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
+                $dates_of_category = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
             }
         }
 
         if ('recent_cats' == $page['section']) {
-            usort($categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+            usort($categories, $this->categoryService->globalRankCompare(...));
         }
 
         $infos_of_image = [];
@@ -165,13 +175,13 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')
 ;';
-            foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+            foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                 if ($row['level'] <= $user['level']) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 } else {
                     foreach ($categories as &$category) {
                         if ($row['id'] == $category['representative_picture_id']) {
-                            $image_id = ServiceLocator::get(CategoryService::class)->getRandomImageInCategory($category);
+                            $image_id = $this->categoryService->getRandomImageInCategory($category);
                             if (isset($image_id) and !in_array($image_id, $image_ids)) {
                                 $new_image_ids[] = $image_id;
                             }
@@ -192,7 +202,7 @@ SELECT *
   FROM ' . Tables::images() . '
   WHERE id IN (' . implode(',', $new_image_ids) . ')
 ;';
-                foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+                foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 }
             }
@@ -220,7 +230,7 @@ SELECT *
         }
 
         if (count($categories) > 0) {
-            ServiceLocator::get(FilterService::class)->updateCategoriesWithFilteredData($categories);
+            $this->filterService->updateCategoriesWithFilteredData($categories);
 
             EventDispatcher::notify('loc_begin_index_category_thumbnails', $categories);
             $tpl_thumbnails_var = [];
@@ -238,7 +248,7 @@ SELECT *
 
                 if ($page['section'] == 'recent_cats') {
                     $uppercatsRaw = $category['uppercats'] ?? null;
-                    $name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($uppercatsRaw) ? (string) $uppercatsRaw : '', null);
+                    $name = $this->htmlService->getCatDisplayNameCache(is_scalar($uppercatsRaw) ? (string) $uppercatsRaw : '', null);
                 } else {
                     $name = $category['name'];
                 }
@@ -257,8 +267,8 @@ SELECT *
                     'ID' => $category['id'],
                     'representative' => $representative_infos,
                     'TN_ALT' => strip_tags((string) $category['name']),
-                    'URL' => UrlService::get()->makeIndexUrl(['category' => $category]),
-                    'CAPTION_NB_IMAGES' => new Html(ServiceLocator::get(CategoryService::class)->getDisplayImagesCount(
+                    'URL' => $this->urlService->makeIndexUrl(['category' => $category]),
+                    'CAPTION_NB_IMAGES' => new Html($this->categoryService->getDisplayImagesCount(
                         is_numeric($category['nb_images']) ? (int) $category['nb_images'] : 0,
                         is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
                         is_numeric($category['count_categories']) ? (int) $category['count_categories'] : 0,
@@ -270,7 +280,7 @@ SELECT *
                 ]);
                 if (Config::indexNewIcon()) {
                     $maxDateLastRaw = $category['max_date_last'] ?? null;
-                    $tpl_var['icon_ts'] = ServiceLocator::get(Util::class)->getIcon(
+                    $tpl_var['icon_ts'] = $this->util->getIcon(
                         is_scalar($maxDateLastRaw) ? (string) $maxDateLastRaw : null,
                         (bool) ($category['is_child_date_last'] ?? false)
                     );
@@ -283,7 +293,7 @@ SELECT *
                         $from = $dates_of_category[$catId]['from'] ?? null;
                         $to = $dates_of_category[$catId]['to'] ?? null;
                         if ($from !== null && $from !== '') {
-                            $tpl_var['INFO_DATES'] = ServiceLocator::get(DateService::class)->formatFromto(
+                            $tpl_var['INFO_DATES'] = $this->dateService->formatFromto(
                                 (is_string($from) || is_int($from)) ? $from : null,
                                 (is_string($to) || is_int($to)) ? $to : null
                             );
@@ -307,8 +317,8 @@ SELECT *
 
             $page['cats_navigation_bar'] = [];
             if ($page['total_categories'] > Config::nbCategoriesPage()) {
-                $page['cats_navigation_bar'] = ServiceLocator::get(Util::class)->createNavigationBar(
-                    UrlService::get()->duplicateIndexUrl([], ['startcat']),
+                $page['cats_navigation_bar'] = $this->util->createNavigationBar(
+                    $this->urlService->duplicateIndexUrl([], ['startcat']),
                     is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
                     is_numeric($page['startcat']) ? (int) $page['startcat'] : 0,
                     Config::nbCategoriesPage(),
@@ -320,6 +330,6 @@ SELECT *
             $template->assign('cats_navbar', $page['cats_navigation_bar']);
         }
 
-        ServiceLocator::get(Util::class)->pwgDebug('end CategoryCatsRenderer');
+        $this->util->pwgDebug('end CategoryCatsRenderer');
     }
 }

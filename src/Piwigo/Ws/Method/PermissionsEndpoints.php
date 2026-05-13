@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
@@ -18,6 +17,15 @@ use Piwigo\Ws\PwgServer;
 
 final class PermissionsEndpoints
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryService $categoryService,
+        private readonly PermissionRepository $permissionRepository,
+        private readonly Util $util,
+    ) {
+    }
+
     /**
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
@@ -28,7 +36,7 @@ final class PermissionsEndpoints
         if (count($myParams) > 1) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
-        $permRepo    = ServiceLocator::get(PermissionRepository::class);
+        $permRepo    = $this->permissionRepository;
         $catIdsFilter = !empty($params['cat_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []) : null;
         $perms       = [];
         foreach ($permRepo->findUserCategoryAccess($catIdsFilter) as $row) {
@@ -83,18 +91,18 @@ final class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['group_id'])) {
             $catIdParamInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
-            $catIds        = ServiceLocator::get(CategoryAdminService::class)->getUppercatIds($catIdParamInt);
+            $catIds        = $this->categoryAdminService->getUppercatIds($catIdParamInt);
             if ($params['recursive']) {
-                $catIds = array_merge($catIds, ServiceLocator::get(CategoryService::class)->getSubcatIds($catIdParamInt));
+                $catIds = array_merge($catIds, $this->categoryService->getSubcatIds($catIdParamInt));
             }
             $catIdsStr = array_map(fn (mixed $v): string => (string) $v, $catIds);
             $query     = 'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
-            $privateCats = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+            $privateCats = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
             $inserts     = [];
             $groupIdParam = is_array($params['group_id']) ? $params['group_id'] : [];
             foreach ($privateCats as $catId) {
@@ -110,7 +118,7 @@ final class PermissionsEndpoints
             }
             $catIdParam2Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
             $userIdParamInt = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['user_id']) ? $params['user_id'] : []);
-            ServiceLocator::get(CategoryAdminService::class)->addPermissionOnCategory($catIdParam2Int, $userIdParamInt);
+            $this->categoryAdminService->addPermissionOnCategory($catIdParam2Int, $userIdParamInt);
         }
         return $service->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
     }
@@ -118,13 +126,13 @@ final class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function remove(array $params, PwgServer &$service): mixed
     {
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $catIdParam3Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
-        $catIds         = ServiceLocator::get(CategoryService::class)->getSubcatIds($catIdParam3Int);
+        $catIds         = $this->categoryService->getSubcatIds($catIdParam3Int);
         $catIdsStr      = array_map(fn (mixed $v): string => (string) $v, $catIds);
-        $permRepo2      = ServiceLocator::get(PermissionRepository::class);
+        $permRepo2      = $this->permissionRepository;
         $catIdsInt      = array_map(fn (string $v): int => (int) $v, $catIdsStr);
         if (!empty($params['group_id'])) {
             $groupIdRem = is_array($params['group_id']) ? $params['group_id'] : [];

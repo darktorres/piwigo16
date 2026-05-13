@@ -13,7 +13,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -23,6 +22,14 @@ use Piwigo\Ws\PwgServer;
 
 final class ExtensionsEndpoints
 {
+    public function __construct(
+        private readonly ConfigService $configService,
+        private readonly PermissionService $permissionService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly Util $util,
+    ) {
+    }
+
     /**
      * @param array<mixed> $params
      * @return array<mixed>
@@ -43,10 +50,10 @@ final class ExtensionsEndpoints
     public function pluginsPerformAction(array $params, PwgServer $service): PwgError|true
     {
         $template = TemplateRegistry::current();
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
         if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
@@ -70,7 +77,7 @@ final class ExtensionsEndpoints
     public function themesPerformAction(array $params, PwgServer $service): PwgError|true
     {
         $template = TemplateRegistry::current();
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
@@ -96,10 +103,10 @@ final class ExtensionsEndpoints
         if (!Config::enableExtensionsInstall()) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return new PwgError(401, Lang::t('Webmaster status is required.'));
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!in_array($params['type'], ['plugins', 'themes', 'languages'])) {
@@ -114,7 +121,7 @@ final class ExtensionsEndpoints
             $extension = new Plugins();
             if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]['state'] === 'active') {
                 $extension->performAction('deactivate', $extensionId);
-                Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(), 'format' => 'json']));
+                $this->util->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->util->getPwgToken(), 'format' => 'json']));
             }
             $performResult = $extension->performAction('update', $extensionId, ['revision' => $revision]);
             $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';
@@ -135,7 +142,7 @@ final class ExtensionsEndpoints
             } else {
                 $activityDetails['result'] = 'error';
             }
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Theme, 'update', $activityDetails);
+            $this->util->pwgActivity('system', ActivitySystem::Theme, 'update', $activityDetails);
         } elseif ($type === 'languages') {
             $extension     = new Languages();
             $upgradeStatus = $extension->extractLanguageFiles('upgrade', $revision, $extensionId);
@@ -155,10 +162,10 @@ final class ExtensionsEndpoints
     public function ignoreUpdate(array $params, PwgServer $service): PwgError|true
     {
         define('IN_ADMIN', true);
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }
-        if (ServiceLocator::get(Util::class)->getPwgToken() !== $params['pwg_token']) {
+        if ($this->util->getPwgToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $updatesIgnoredRaw          = Config::raw('updates_ignored');
@@ -174,7 +181,7 @@ final class ExtensionsEndpoints
             } else {
                 Config::override('updates_ignored', ['plugins' => [], 'themes' => [], 'languages' => []]);
             }
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
+            $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
@@ -193,7 +200,7 @@ final class ExtensionsEndpoints
             $ignoredCfg[$ignoreType2] = $ignoredForType;
             Config::override('updates_ignored', $ignoredCfg);
         }
-        ServiceLocator::get(ConfigService::class)->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
+        $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
         unset($_SESSION['extensions_need_update']);
         return true;
     }

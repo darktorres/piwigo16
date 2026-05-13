@@ -12,7 +12,6 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -44,12 +43,32 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class GalleryController implements ControllerInterface
 {
+    public function __construct(
+        private readonly CategoryCatsRenderer $categoryCatsRenderer,
+        private readonly CategoryDefaultRenderer $categoryDefaultRenderer,
+        private readonly CategoryService $categoryService,
+        private readonly ConfigService $configService,
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly PermissionService $permissionService,
+        private readonly SearchFilterRenderer $searchFilterRenderer,
+        private readonly SectionInitializer $sectionInitializer,
+        private readonly SelectedTagsRenderer $selectedTagsRenderer,
+        private readonly SessionService $sessionService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        ServiceLocator::get(SectionInitializer::class)->initialize($request, 'index');
+        $this->sectionInitializer->initialize($request, 'index');
 
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -65,32 +84,32 @@ final class GalleryController implements ControllerInterface
             ? (int) $category['count_categories'] : null;
 
         if ($category !== null) {
-            ServiceLocator::get(CategoryService::class)->checkRestrictions($catId);
+            $this->categoryService->checkRestrictions($catId);
         }
         if ($start > 0 && $start >= count($items)) {
-            ServiceLocator::get(HtmlService::class)->pageNotFound('', UrlService::get()->duplicateIndexUrl(['start' => 0]));
+            $this->htmlService->pageNotFound('', $this->urlService->duplicateIndexUrl(['start' => 0]));
         }
 
         EventDispatcher::notify('loc_begin_index');
 
         // Image display-order change
-        $imageOrder = StringUtil::get()->inputInt('image_order', null, $_GET);
+        $imageOrder = $this->stringUtil->inputInt('image_order', null, $_GET);
         if ($imageOrder !== null) {
             if ($imageOrder > 0) {
-                ServiceLocator::get(SessionService::class)->setSessionVar('image_order', $imageOrder);
+                $this->sessionService->setSessionVar('image_order', $imageOrder);
             } else {
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('image_order');
+                $this->sessionService->unsetSessionVar('image_order');
             }
-            Util::get()->redirect(UrlService::get()->duplicateIndexUrl([], ['start']));
+            $this->util->redirect($this->urlService->duplicateIndexUrl([], ['start']));
         }
 
-        $display = StringUtil::get()->inputString('display', null, $_GET);
+        $display = $this->stringUtil->inputString('display', null, $_GET);
         if ($display !== null) {
             $metaRobots             = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : [];
             $metaRobots['noindex']  = 1;
             $page['meta_robots']    = $metaRobots;
             if (array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
-                ServiceLocator::get(SessionService::class)->setSessionVar('index_deriv', $display);
+                $this->sessionService->setSessionVar('index_deriv', $display);
             }
         }
 
@@ -99,8 +118,8 @@ final class GalleryController implements ControllerInterface
         // Navigation bar
         $page['navigation_bar'] = [];
         if (count($items) > $nbImagePage) {
-            $page['navigation_bar'] = ServiceLocator::get(Util::class)->createNavigationBar(
-                UrlService::get()->duplicateIndexUrl([], ['start']),
+            $page['navigation_bar'] = $this->util->createNavigationBar(
+                $this->urlService->duplicateIndexUrl([], ['start']),
                 count($items),
                 $start,
                 $nbImagePage,
@@ -111,23 +130,23 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('thumb_navbar', $page['navigation_bar']);
 
         // Caddie filling
-        if (StringUtil::get()->inputString('caddie', null, $_GET) !== null) {
-            ServiceLocator::get(Util::class)->fillCaddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
-            Util::get()->redirect(UrlService::get()->duplicateIndexUrl());
+        if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
+            $this->util->fillCaddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
+            $this->util->redirect($this->urlService->duplicateIndexUrl());
         }
 
         // Canonical URL
         if (isset($page['is_homepage']) && $page['is_homepage']) {
-            $canonicalUrl = UrlService::get()->getGalleryHomeUrl();
+            $canonicalUrl = $this->urlService->getGalleryHomeUrl();
         } else {
             $safeStart = $nbImagePage > 0 ? (int) ((float) $nbImagePage * round((float) $start / (float) $nbImagePage)) : 0;
             if ($safeStart > 0 && $safeStart >= count($items)) {
                 $safeStart -= $nbImagePage;
             }
-            $canonicalUrl = UrlService::get()->duplicateIndexUrl(['start' => $safeStart]);
+            $canonicalUrl = $this->urlService->duplicateIndexUrl(['start' => $safeStart]);
         }
         $tpl->assign('U_CANONICAL', $canonicalUrl);
-        $useStandardPagesRaw = ServiceLocator::get(ConfigService::class)->confGetParam('use_standard_pages', false);
+        $useStandardPagesRaw = $this->configService->confGetParam('use_standard_pages', false);
         $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
 
         // Page title
@@ -135,17 +154,17 @@ final class GalleryController implements ControllerInterface
         $tpl->assign('NB_ITEMS', count($items));
 
         // Menubar
-        ServiceLocator::get(MenubarRenderer::class)->render();
+        $this->menubarRenderer->render();
 
         if (empty($page['is_external'])) {
             $page['body_id'] = 'theCategoryPage';
 
             if (isset($page['flat']) || isset($page['chronology_field'])) {
-                $tpl->assign('U_MODE_NORMAL', UrlService::get()->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));
+                $tpl->assign('U_MODE_NORMAL', $this->urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));
             }
 
             if (Config::indexFlatIcon() && !isset($page['flat']) && $section === 'categories') {
-                $tpl->assign('U_MODE_FLAT', UrlService::get()->duplicateIndexUrl(['flat' => ''], ['start', 'chronology_field']));
+                $tpl->assign('U_MODE_FLAT', $this->urlService->duplicateIndexUrl(['flat' => ''], ['start', 'chronology_field']));
             }
 
             if (!isset($page['chronology_field'])) {
@@ -155,17 +174,17 @@ final class GalleryController implements ControllerInterface
                     'chronology_view'  => 'list',
                 ];
                 if (Config::indexCreatedDateIcon()) {
-                    $tpl->assign('U_MODE_CREATED', UrlService::get()->duplicateIndexUrl($chronoParams, ['start', 'flat']));
+                    $tpl->assign('U_MODE_CREATED', $this->urlService->duplicateIndexUrl($chronoParams, ['start', 'flat']));
                 }
                 if (Config::indexPostedDateIcon()) {
                     $chronoParams['chronology_field'] = 'posted';
-                    $tpl->assign('U_MODE_POSTED', UrlService::get()->duplicateIndexUrl($chronoParams, ['start', 'flat']));
+                    $tpl->assign('U_MODE_POSTED', $this->urlService->duplicateIndexUrl($chronoParams, ['start', 'flat']));
                 }
             } else {
                 $chronoField = is_string($page['chronology_field']) && $page['chronology_field'] === 'created'
                     ? 'posted' : 'created';
                 if (Config::raw('index_' . $chronoField . '_date_icon')) {
-                    $url = UrlService::get()->duplicateIndexUrl(
+                    $url = $this->urlService->duplicateIndexUrl(
                         ['chronology_field' => $chronoField],
                         ['chronology_date', 'start', 'flat']
                     );
@@ -173,13 +192,13 @@ final class GalleryController implements ControllerInterface
                 }
             }
 
-            ServiceLocator::get(SearchFilterRenderer::class)->render();
+            $this->searchFilterRenderer->render();
 
             if ($section === 'categories' && $category !== null && !isset($page['combined_categories'])) {
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['cat_id' => $catId]),
+                    'SEARCH_IN_SET_URL'    => $this->urlService->addUrlParams($this->urlGenerator->searchPage(), ['cat_id' => $catId]),
                 ]);
             }
 
@@ -191,14 +210,14 @@ final class GalleryController implements ControllerInterface
                     : [];
                 $pageTags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
 
-                $tags        = ServiceLocator::get(TagService::class)->getCommonTags($items, Config::menubarTagCloudItemsNumber(), $pageTagIds);
-                $tags        = ServiceLocator::get(TagService::class)->addLevelToTags($tags);
+                $tags        = $this->tagService->getCommonTags($items, Config::menubarTagCloudItemsNumber(), $pageTagIds);
+                $tags        = $this->tagService->addLevelToTags($tags);
                 $relatedTags = [];
                 foreach ($tags as $tag) {
                     $tagArr = is_array($tag) ? $tag : [];
                     $relatedTags[] = array_merge($tagArr, [
-                        'U_ADD' => UrlService::get()->makeIndexUrl(['tags' => array_merge($pageTags, [$tag])]),
-                        'URL'   => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
+                        'U_ADD' => $this->urlService->makeIndexUrl(['tags' => array_merge($pageTags, [$tag])]),
+                        'URL'   => $this->urlService->makeIndexUrl(['tags' => [$tag]]),
                     ]);
                 }
                 usort(
@@ -208,23 +227,23 @@ final class GalleryController implements ControllerInterface
                     <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
                 );
 
-                ServiceLocator::get(SelectedTagsRenderer::class)->render();
+                $this->selectedTagsRenderer->render();
 
                 $tagIds = $bodyDataArr['tag_ids'];
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL'    => UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->searchPage(), ['tag_id' => implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds))]),
+                    'SEARCH_IN_SET_URL'    => $this->urlService->addUrlParams($this->urlGenerator->searchPage(), ['tag_id' => implode(',', array_map(static fn (mixed $id): int => is_scalar($id) ? (int) $id : 0, $tagIds))]),
                     'COMBINABLE_TAGS' => $relatedTags,
                 ]);
             }
 
-            if ($category !== null && PermissionService::get()->isAdmin() && Config::indexEditIcon()) {
-                $tpl->assign('U_EDIT', ServiceLocator::get(UrlGenerator::class)->admin('album-' . $catId));
+            if ($category !== null && $this->permissionService->isAdmin() && Config::indexEditIcon()) {
+                $tpl->assign('U_EDIT', $this->urlGenerator->admin('album-' . $catId));
             }
 
-            if (PermissionService::get()->isAdmin() && !empty($items) && Config::indexCaddieIcon()) {
-                $tpl->assign('U_CADDIE', UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['caddie' => 1]));
+            if ($this->permissionService->isAdmin() && !empty($items) && Config::indexCaddieIcon()) {
+                $tpl->assign('U_CADDIE', $this->urlService->addUrlParams($this->urlService->duplicateIndexUrl(), ['caddie' => 1]));
             }
 
             // Search results hints
@@ -235,13 +254,13 @@ final class GalleryController implements ControllerInterface
                     is_array($qd['matching_cats'] ?? null) ? $qd['matching_cats'] : []
                 );
                 if (count($cats) > 0) {
-                    usort($cats, static fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->nameCompare(
+                    usort($cats, fn (mixed $a, mixed $b): int => $this->htmlService->nameCompare(
                         is_array($a) ? $a : [],
                         is_array($b) ? $b : []
                     ));
                     $hints = [];
                     foreach ($cats as $cat) {
-                        $hints[] = new Html(ServiceLocator::get(HtmlService::class)->getCatDisplayName([$cat], ''));
+                        $hints[] = new Html($this->htmlService->getCatDisplayName([$cat], ''));
                     }
                     $tpl->assign('category_search_results', $hints);
                 }
@@ -250,7 +269,7 @@ final class GalleryController implements ControllerInterface
                     if (!is_array($tag)) {
                         continue;
                     }
-                    $tag['URL'] = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
+                    $tag['URL'] = $this->urlService->makeIndexUrl(['tags' => [$tag]]);
                     $tpl->append('tag_search_results', $tag);
                 }
                 if (empty($items)) {
@@ -266,15 +285,15 @@ final class GalleryController implements ControllerInterface
 
             // Image-order selector
             if (Config::indexSortOrderInput() && count($items) > 0 && $section !== 'most_visited' && $section !== 'best_rated') {
-                $preferredOrders = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
-                $rawOrder        = ServiceLocator::get(SessionService::class)->getSessionVar('image_order', 0);
+                $preferredOrders = $this->categoryService->getCategoryPreferredImageOrders();
+                $rawOrder        = $this->sessionService->getSessionVar('image_order', 0);
                 $orderIdx        = is_numeric($rawOrder) ? (int) $rawOrder : 0;
                 $firstOrder      = trim(substr(Config::orderBy(), 9));
                 if (($pos = strpos($firstOrder, ',')) !== false) {
                     $firstOrder = substr($firstOrder, 0, $pos);
                 }
                 $firstOrder    = trim($firstOrder);
-                $url           = UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['image_order' => '']);
+                $url           = $this->urlService->addUrlParams($this->urlService->duplicateIndexUrl(), ['image_order' => '']);
                 $tplOrders     = [];
                 $orderSelected = false;
                 foreach ($preferredOrders as $orderId => $order) {
@@ -316,14 +335,14 @@ final class GalleryController implements ControllerInterface
                 && ($section === 'recent_cats' || $section === 'categories')
                 && ($countCats === null || $countCats > 0)
             ) {
-                ServiceLocator::get(CategoryCatsRenderer::class)->render();
+                $this->categoryCatsRenderer->render();
             }
 
             if (!empty($items)) {
-                ServiceLocator::get(CategoryDefaultRenderer::class)->render();
+                $this->categoryDefaultRenderer->render();
 
                 if (Config::indexSizesIcon()) {
-                    $url        = UrlService::get()->addUrlParams(UrlService::get()->duplicateIndexUrl(), ['display' => '']);
+                    $url        = $this->urlService->addUrlParams($this->urlService->duplicateIndexUrl(), ['display' => '']);
                     $derivObj   = $tpl->getTemplateVars('derivative_params');
                     $selType    = is_object($derivObj) ? (is_scalar($derivObj->type ?? null) ? (string) $derivObj->type : '') : '';
                     $tpl->clearAssign('derivative_params');
@@ -343,8 +362,8 @@ final class GalleryController implements ControllerInterface
             if (!empty($page['cat_slideshow_url'])) {
                 $slideshowUrlRaw = $page['cat_slideshow_url'];
                 $slideshowUrl = is_string($slideshowUrlRaw) ? $slideshowUrlRaw : '';
-                if (StringUtil::get()->inputString('slideshow', null, $_GET) !== null) {
-                    Util::get()->redirect($slideshowUrl);
+                if ($this->stringUtil->inputString('slideshow', null, $_GET) !== null) {
+                    $this->util->redirect($slideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
                     $tpl->assign('U_SLIDESHOW', $slideshowUrl);
                 }
@@ -353,11 +372,11 @@ final class GalleryController implements ControllerInterface
             // Related tags (for non-tags sections)
             if (!empty($items) && ($bodyDataArr['section'] ?? '') !== 'tags') {
                 $selection  = array_slice($items, $start, $nbImagePage);
-                $commonTags = ServiceLocator::get(TagService::class)->addLevelToTags(ServiceLocator::get(TagService::class)->getCommonTags($selection, Config::contentTagCloudItemsNumber()));
+                $commonTags = $this->tagService->addLevelToTags($this->tagService->getCommonTags($selection, Config::contentTagCloudItemsNumber()));
                 $relTags    = [];
                 foreach ($commonTags as $tag) {
                     $relTags[] = array_merge(is_array($tag) ? $tag : [], [
-                        'URL' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
+                        'URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]]),
                     ]);
                 }
                 $tpl->assign([
@@ -369,11 +388,11 @@ final class GalleryController implements ControllerInterface
 
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_index');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->parseIndexButtons();
         $tpl->pparse('index.latte');
 
-        ServiceLocator::get(Util::class)->pwgLog();
+        $this->util->pwgLog();
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

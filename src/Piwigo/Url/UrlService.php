@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -20,9 +20,20 @@ use Piwigo\Users\PermissionService;
 
 final class UrlService
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly StringUtil $stringUtil,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly TagService $tagService,
+        private readonly PermissionService $permissionService,
+    ) {
+    }
+
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public static function getRootUrl(): string
@@ -175,12 +186,12 @@ final class UrlService
             case 'id-file':
                 $url .= is_scalar($params['image_id'] ?? null) ? (string) $params['image_id'] : '';
                 if (isset($params['image_file'])) {
-                    $url .= '-' . ServiceLocator::get(StringUtil::class)->str2url(ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
+                    $url .= '-' . $this->stringUtil->str2url($this->stringUtil->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
                 }
                 break;
             case 'file':
                 if (isset($params['image_file'])) {
-                    $fnameWoExt = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : '');
+                    $fnameWoExt = $this->stringUtil->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : '');
                     if (ord($fnameWoExt[0]) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
                         $url .= $fnameWoExt;
                         break;
@@ -270,7 +281,7 @@ final class UrlService
                             $sectionString .= is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
                                 $catNameRaw = $cat['name'] ?? null;
-                                $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($catNameRaw) ? $catNameRaw : '');
+                                $sectionString .= '-' . $this->stringUtil->str2url(is_string($catNameRaw) ? $catNameRaw : '');
                             }
                         } else {
                             $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
@@ -286,7 +297,7 @@ final class UrlService
                                 if (empty($category['permalink'])) {
                                     $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
                                     if (Config::categoryUrlStyle() == 'id-name') {
-                                        $sectionString .= '-' . ServiceLocator::get(StringUtil::class)->str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
+                                        $sectionString .= '-' . $this->stringUtil->str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
                                     }
                                 } else {
                                     $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';
@@ -410,7 +421,7 @@ final class UrlService
 
                     if (count($maybePermalinks)) {
                         $permaIndex = 0;
-                        $catId      = ServiceLocator::get(CategoryService::class)->getCatIdFromPermalinks($maybePermalinks, $permaIndex);
+                        $catId      = $this->categoryService->getCatIdFromPermalinks($maybePermalinks, $permaIndex);
                         if (isset($catId)) {
                             $nextToken += $permaIndex + 1;
 
@@ -424,16 +435,16 @@ final class UrlService
                                 $page['combined_categories'][] = $catId;
                             }
                         } else {
-                            ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Permalink for album not found'));
+                            $this->htmlService->pageNotFound(Lang::t('Permalink for album not found'));
                         }
                     }
                 }
             }
 
             if (isset($page['category'])) {
-                $result = ServiceLocator::get(CategoryService::class)->getCatInfo($page['category']);
+                $result = $this->categoryService->getCatInfo($page['category']);
                 if ($result === null || count($result) === 0) {
-                    ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
+                    $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -442,9 +453,9 @@ final class UrlService
                 $combinedCategories = [];
 
                 foreach ($page['combined_categories'] as $catId) {
-                    $result = ServiceLocator::get(CategoryService::class)->getCatInfo($catId);
+                    $result = $this->categoryService->getCatInfo($catId);
                     if ($result === null || count($result) === 0) {
-                        ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested album does not exist'));
+                        $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
                     }
 
                     $combinedCategories[] = $result;
@@ -479,12 +490,12 @@ final class UrlService
             $nextToken = $i;
 
             if (empty($requestedTagIds) && empty($requestedTagUrlNames)) {
-                ServiceLocator::get(HtmlService::class)->badRequest('at least one tag required');
+                $this->htmlService->badRequest('at least one tag required');
             }
 
-            $page['tags'] = ServiceLocator::get(TagService::class)->findTags($requestedTagIds, $requestedTagUrlNames);
+            $page['tags'] = $this->tagService->findTags($requestedTagIds, $requestedTagUrlNames);
             if (empty($page['tags'])) {
-                ServiceLocator::get(HtmlService::class)->pageNotFound(Lang::t('Requested tag does not exist'), ServiceLocator::get(UrlGenerator::class)->tagsPage());
+                $this->htmlService->pageNotFound(Lang::t('Requested tag does not exist'), Kernel::service(UrlGenerator::class)->tagsPage());
             }
         } elseif ('favorites' == ($tokens[$nextToken] ?? null)) {
             $page['section'] = 'favorites';
@@ -509,7 +520,7 @@ final class UrlService
             if (!isset($matches[1])) {
                 preg_match('/(\d+)/', $tokens[$nextToken] ?? '', $matches);
                 if (!isset($matches[1])) {
-                    ServiceLocator::get(HtmlService::class)->badRequest('search identifier is missing');
+                    $this->htmlService->badRequest('search identifier is missing');
                     return $page;
                 }
             }
@@ -525,7 +536,7 @@ final class UrlService
                 $page['list'][] = -1;
             } else {
                 if (!preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
-                    ServiceLocator::get(HtmlService::class)->badRequest('wrong format on list GET parameter');
+                    $this->htmlService->badRequest('wrong format on list GET parameter');
                 }
                 foreach (explode(',', $tokens[$nextToken]) as $imageId) {
                     $page['list'][] = $imageId;
@@ -718,7 +729,7 @@ final class UrlService
     /** @return array<int,true> */
     public function getUserFavorites(): array
     {
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             return [];
         }
 
@@ -730,7 +741,7 @@ SELECT
   WHERE user_id = ' . CurrentUser::get()->id . '
 ';
 
-        $raw    = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'fake_value', 'image_id');
+        $raw    = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'fake_value', 'image_id');
         $result = [];
         foreach ($raw as $imageId => $val) {
             $result[(int) $imageId] = true;

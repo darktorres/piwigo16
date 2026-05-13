@@ -154,7 +154,7 @@ return [
     SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log): SearchService => new SearchService($repo, $conn, $log)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
-    UrlService::class          => factory(static fn (): UrlService => new UrlService()),
+    UrlService::class          => factory(static fn (Connection $conn, StringUtil $s, CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm): UrlService => new UrlService($conn, $s, $cat, $h, $tag, $perm)),
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     SectionInitializer::class    => factory(static fn (): SectionInitializer => new SectionInitializer()),
     GeneralEndpoints::class          => factory(static fn (): GeneralEndpoints => new GeneralEndpoints()),

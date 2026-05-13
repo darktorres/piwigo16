@@ -33,7 +33,10 @@ final class UrlGeneratorTest extends TestCase
     protected function setUp(): void
     {
         $this->router = new Router(dirname(__DIR__, 3) . '/config/routes.php');
-        $this->urls   = new UrlService();
+        // UrlGenerator only calls UrlService methods that don't touch the injected
+        // deps (Connection/StringUtil/etc.) — skip the constructor to avoid
+        // mocking final classes the test never exercises.
+        $this->urls   = new \ReflectionClass(UrlService::class)->newInstanceWithoutConstructor();
         $this->gen    = new UrlGenerator($this->router, $this->urls);
         // Force a deterministic root URL (avoids filesystem path leaking into assertions)
         $GLOBALS['page'] = ['root_path' => '/'];

@@ -153,7 +153,7 @@ return [
     PluginService::class       => factory(static fn (PluginRepository $repo, StringUtil $s, Util $u): PluginService => new PluginService($repo, $s, $u)),
     SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, StringUtil $s, TagService $tag, UrlService $u, UserService $us): SearchService => new SearchService($repo, $conn, $log, $cat, $h, $perm, $pref, $s, $tag, $u, $us)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
-    TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
+    TagService::class          => factory(static fn (Connection $conn, HtmlService $h, TagRepository $repo): TagService => new TagService($conn, $h, $repo)),
     UrlService::class          => factory(static fn (Connection $conn, StringUtil $s, CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm): UrlService => new UrlService($conn, $s, $cat, $h, $tag, $perm)),
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     SectionInitializer::class    => factory(static fn (Connection $conn, CalendarService $cal, CategoryService $cat, HtmlService $h, PermissionService $perm, SearchService $sr, SessionService $sess, StringUtil $s, TagService $tag, UrlService $u, UserRepository $ur, UserService $us, Util $util): SectionInitializer => new SectionInitializer($conn, $cal, $cat, $h, $perm, $sr, $sess, $s, $tag, $u, $ur, $us, $util)),

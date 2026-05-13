@@ -19,7 +19,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -106,7 +105,7 @@ final readonly class UserService
             ];
 
             Dml::singleInsert(Tables::users(), $insert);
-            $userId = (int) DbConnection::get()->lastInsertId();
+            $userId = (int) $this->conn->lastInsertId();
 
             $inserts = [];
             foreach ($this->userRepo->findDefaultGroupIds() as $groupId) {
@@ -310,7 +309,7 @@ final readonly class UserService
                 $userdata['forbidden_categories'] = $udForbiddenCats;
 
                 $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
-                $forbiddenIds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+                $forbiddenIds = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
                 if (empty($forbiddenIds)) {
                     $forbiddenIds[] = 0;
                 }
@@ -387,8 +386,8 @@ SELECT DISTINCT f.image_id
   WHERE f.user_id = ' . $currentUser->id . '
   ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
 ;';
-        $authorizeds = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id');
-        $favorites   = array_column(DbConnection::get()->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
+        $authorizeds = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id');
+        $favorites   = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
 
         $toDeletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
         if (count($toDeletes) > 0) {
@@ -723,7 +722,7 @@ SELECT DISTINCT f.image_id
     /** @return list<array<mixed>>|false */
     public function getApiKey(string $userId): false|array
     {
-        $apiKeys = DbConnection::get()->executeQuery('SELECT * FROM `' . Tables::userAuthKeys() . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
+        $apiKeys = $this->conn->executeQuery('SELECT * FROM `' . Tables::userAuthKeys() . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
         if (count($apiKeys) === 0) {
             return false;
         }

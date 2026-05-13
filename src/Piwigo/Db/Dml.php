@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Db;
 
-use Piwigo\Core\ServiceLocator;
+use Doctrine\DBAL\Connection;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 
 final class Dml
@@ -26,7 +27,7 @@ final class Dml
             return;
         }
 
-        $conn = DbConnection::get();
+        $conn = Kernel::service(Connection::class);
 
         if (count($datas) < 10) {
             foreach ($datas as $data) {
@@ -89,7 +90,7 @@ final class Dml
                 $columns[] = $col;
             }
 
-            $tmp = $tablename . '_' . ServiceLocator::get(StringUtil::class)->microSeconds();
+            $tmp = $tablename . '_' . Kernel::service(StringUtil::class)->microSeconds();
             $conn->executeStatement(
                 'CREATE TABLE ' . $tmp . ' (' .
                 implode(",\n  ", $columns) . ',' .
@@ -124,7 +125,7 @@ final class Dml
 
         $is_first = true;
         $query = 'UPDATE ' . self::protectColumnName($tablename) . ' SET ';
-        $conn = DbConnection::get();
+        $conn = Kernel::service(Connection::class);
 
         foreach ($datas as $key => $value) {
             $separator = $is_first ? '' : ",\n    ";
@@ -171,7 +172,7 @@ final class Dml
         }
 
         $ignore = isset($options['ignore']) && $options['ignore'] ? 'IGNORE' : '';
-        $conn = DbConnection::get();
+        $conn = Kernel::service(Connection::class);
 
         $packetRow = $conn->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'")->fetchAssociative();
         $packetSize = (is_array($packetRow) && is_numeric($packetRow['Value'] ?? null) ? (int) $packetRow['Value'] : 1048576) - 2000;
@@ -225,7 +226,7 @@ final class Dml
         $cols = implode(',', array_map(self::protectColumnName(...), array_keys($data)));
         $query = "INSERT $ignore INTO " . self::protectColumnName($table_name) . " ($cols) VALUES (";
 
-        $conn = DbConnection::get();
+        $conn = Kernel::service(Connection::class);
         $is_first = true;
         foreach ($data as $value) {
             if (!$is_first) {

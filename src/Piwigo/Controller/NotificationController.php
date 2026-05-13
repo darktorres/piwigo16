@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
@@ -27,6 +26,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class NotificationController implements ControllerInterface
 {
+    public function __construct(
+        private readonly FeedRepository $feedRepository,
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly UrlGenerator $urlGenerator,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -41,10 +48,10 @@ final class NotificationController implements ControllerInterface
 
         $page['feed'] = $this->findAvailableFeedId();
 
-        ServiceLocator::get(FeedRepository::class)
+        $this->feedRepository
             ->insert($page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
 
-        $feed_url = ServiceLocator::get(UrlGenerator::class)->feed();
+        $feed_url = $this->urlGenerator->feed();
         $sep      = str_contains($feed_url, '?') ? '&' : '?';
         if (PermissionService::get()->isAGuest()) {
             $feed_image_only_url = $feed_url;
@@ -65,12 +72,12 @@ final class NotificationController implements ControllerInterface
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theNotificationPage', $hideMenuOn)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title);
         EventDispatcher::notify('loc_end_notification');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('notification.latte');
         PageTailRenderer::render();
 
@@ -79,7 +86,7 @@ final class NotificationController implements ControllerInterface
 
     private function findAvailableFeedId(): string
     {
-        $feedRepo = ServiceLocator::get(FeedRepository::class);
+        $feedRepo = $this->feedRepository;
         while (true) {
             $key = StringUtil::generateKey(50);
             if (!$feedRepo->existsById($key)) {

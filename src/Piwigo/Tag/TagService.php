@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -19,6 +18,8 @@ use Piwigo\Users\PermissionService;
 final readonly class TagService
 {
     public function __construct(
+        private Connection $conn,
+        private HtmlService $htmlService,
         private TagRepository $repo,
     ) {
     }
@@ -97,11 +98,11 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $cacheKey    = $persistentCache->makeKey('get_available_tags' . $userId . $cacheUpdate);
             $tagCounters = [];
             if (!$persistentCache->get($cacheKey, $tagCounters)) {
-                $tagCounters = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+                $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
                 $persistentCache->set($cacheKey, $tagCounters);
             }
         } else {
-            $tagCounters = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+            $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
         }
 
         if (!is_array($tagCounters) || empty($tagCounters)) {
@@ -135,7 +136,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]          = $row;
         }
-        usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
+        usort($tags, $this->htmlService->tagAlphaCompare(...));
         return $tags;
     }
 
@@ -225,7 +226,7 @@ SELECT id
         }
         $query .= "\n" . (($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy);
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -245,7 +246,7 @@ SELECT id
             $row['name'] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
             $tags[]      = $row;
         }
-        usort($tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
+        usort($tags, $this->htmlService->tagAlphaCompare(...));
         return $tags;
     }
 

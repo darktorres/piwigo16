@@ -90,13 +90,13 @@ final class Kernel
 
         return new MiddlewarePipeline(
             [
-                ServiceLocator::get(ExceptionHandlerMiddleware::class),
-                ServiceLocator::get(SessionMiddleware::class),
-                ServiceLocator::get(AuthMiddleware::class),
-                ServiceLocator::get(FilterMiddleware::class),
-                ServiceLocator::get(CsrfMiddleware::class),
-                ServiceLocator::get(RoutingMiddleware::class),
-                ServiceLocator::get(ControllerInvokerMiddleware::class),
+                self::service(ExceptionHandlerMiddleware::class),
+                self::service(SessionMiddleware::class),
+                self::service(AuthMiddleware::class),
+                self::service(FilterMiddleware::class),
+                self::service(CsrfMiddleware::class),
+                self::service(RoutingMiddleware::class),
+                self::service(ControllerInvokerMiddleware::class),
             ],
             $unreachable,
         )->handle($request);

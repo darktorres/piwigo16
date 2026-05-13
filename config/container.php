@@ -186,7 +186,7 @@ return [
     SelectedTagsRenderer::class      => factory(static fn (): SelectedTagsRenderer => new SelectedTagsRenderer()),
     NoPhotoYetRenderer::class        => factory(static fn (): NoPhotoYetRenderer => new NoPhotoYetRenderer()),
     PictureRateRenderer::class       => factory(static fn (): PictureRateRenderer => new PictureRateRenderer()),
-    PictureCommentRenderer::class    => factory(static fn (): PictureCommentRenderer => new PictureCommentRenderer()),
+    PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, Util $util): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $util)),
     PictureMetadataRenderer::class   => factory(static fn (): PictureMetadataRenderer => new PictureMetadataRenderer()),
     MetadataAdminService::class      => factory(static fn (): MetadataAdminService => new MetadataAdminService()),
     HistoryAdminService::class       => factory(static fn (): HistoryAdminService => new HistoryAdminService()),

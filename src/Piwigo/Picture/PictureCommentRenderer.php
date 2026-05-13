@@ -11,7 +11,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
@@ -25,6 +24,18 @@ use Piwigo\Users\PermissionService;
 
 final class PictureCommentRenderer
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CommentService $commentService,
+        private readonly DateService $dateService,
+        private readonly HtmlService $htmlService,
+        private readonly PermissionService $permissionService,
+        private readonly SessionService $sessionService,
+        private readonly UrlService $urlService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function render(?int $editComment = null): void
     {
         $template = TemplateRegistry::current();
@@ -47,7 +58,7 @@ final class PictureCommentRenderer
         $comment_action = null;
 
         if ($page['show_comments'] and isset($_POST['content'])) {
-            if (PermissionService::get()->isAGuest() and !Config::commentsForall()) {
+            if ($this->permissionService->isAGuest() and !Config::commentsForall()) {
                 throw new AuthException('Session expired');
             }
 
@@ -65,7 +76,7 @@ final class PictureCommentRenderer
             $post_key = $_POST['key'] ?? '';
             /** @var list<string> $commentErrors */
             $commentErrors = [];
-            $comment_action = ServiceLocator::get(CommentService::class)->insertUserComment($comm, is_string($post_key) ? $post_key : '', $commentErrors);
+            $comment_action = $this->commentService->insertUserComment($comm, is_string($post_key) ? $post_key : '', $commentErrors);
             foreach ($commentErrors as $err) {
                 PageState::current()->addError($err);
             }
@@ -78,7 +89,7 @@ final class PictureCommentRenderer
                     PageState::current()->addInfo(Lang::t('Your comment has been registered'));
                     break;
                 case 'reject':
-                    ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
+                    $this->htmlService->setStatusHeader(403);
                     PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                     break;
                 default:
@@ -87,12 +98,12 @@ final class PictureCommentRenderer
 
             EventDispatcher::notify('user_comment_insertion', array_merge($comm, ['action' => $comment_action]));
         } elseif (isset($_POST['content'])) {
-            ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
+            $this->htmlService->setStatusHeader(403);
             throw new AuthException('ugly spammer');
         }
 
         if ($page['show_comments']) {
-            if (!PermissionService::get()->isAdmin()) {
+            if (!$this->permissionService->isAdmin()) {
                 $validated_clause = '  AND validated = \'true\'';
             } else {
                 $validated_clause = '';
@@ -100,7 +111,7 @@ final class PictureCommentRenderer
 
             $pageImageId = $page['image_id'] ?? null;
             $imageId = is_numeric($pageImageId) ? (int) $pageImageId : 0;
-            $rowFetch = ServiceLocator::get(Connection::class)
+            $rowFetch = $this->conn
                 ->executeQuery(
                     'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
                     ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
@@ -115,8 +126,8 @@ final class PictureCommentRenderer
             $startOffset = (int) $page['start'];
             $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
-            $navigation_bar = ServiceLocator::get(Util::class)->createNavigationBar(
-                UrlService::get()->duplicatePictureUrl([], ['start']),
+            $navigation_bar = $this->util->createNavigationBar(
+                $this->urlService->duplicatePictureUrl([], ['start']),
                 $nb_comments,
                 $startOffset,
                 Config::nbCommentPage(),
@@ -132,13 +143,13 @@ final class PictureCommentRenderer
             if ($nb_comments > 0) {
                 $get_comments_order = $_GET['comments_order'] ?? null;
                 if (($get_comments_order !== null && $get_comments_order !== '') && in_array(strtoupper(is_string($get_comments_order) ? $get_comments_order : ''), ['ASC', 'DESC'])) {
-                    ServiceLocator::get(SessionService::class)->setSessionVar('comments_order', is_string($get_comments_order) ? $get_comments_order : '');
+                    $this->sessionService->setSessionVar('comments_order', is_string($get_comments_order) ? $get_comments_order : '');
                 }
-                $rawOrder       = ServiceLocator::get(SessionService::class)->getSessionVar('comments_order', Config::commentsOrder());
+                $rawOrder       = $this->sessionService->getSessionVar('comments_order', Config::commentsOrder());
                 $comments_order = is_string($rawOrder) ? $rawOrder : Config::commentsOrder();
 
                 $template->assign([
-                    'COMMENTS_ORDER_URL' => UrlService::get()->addUrlParams(UrlService::get()->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
+                    'COMMENTS_ORDER_URL' => $this->urlService->addUrlParams($this->urlService->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
                     'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
                 ]);
 
@@ -162,7 +173,7 @@ SELECT
   ORDER BY com.date ' . $comments_order . '
   LIMIT ' . Config::nbCommentPage() . ' OFFSET ' . $startOffset . '
 ;';
-                $commentRows = ServiceLocator::get(Connection::class)
+                $commentRows = $this->conn
                     ->executeQuery($query)
                     ->fetchAllAssociative();
 
@@ -182,40 +193,40 @@ SELECT
                     $tpl_comment = [
                         'ID' => $row['id'],
                         'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
-                        'DATE' => ServiceLocator::get(DateService::class)->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => new Html(is_string($renderedContent) ? $renderedContent : ''),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 
-                    if (PermissionService::get()->canManageComment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
-                        $tpl_comment['U_DELETE'] = UrlService::get()->addUrlParams($url_self, [
+                    if ($this->permissionService->canManageComment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                        $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
-                            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
+                            'pwg_token' => $this->util->getPwgToken(),
                         ]);
                     }
-                    if (PermissionService::get()->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
-                        $tpl_comment['U_EDIT'] = UrlService::get()->addUrlParams($url_self, [
+                    if ($this->permissionService->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                        $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'edit_comment',
                             'comment_to_edit' => $row['id'],
                         ]);
                         if ($editComment !== null && $row['id'] == $editComment) {
                             $tpl_comment['IN_EDIT'] = true;
-                            $key = ServiceLocator::get(Util::class)->getEphemeralKey(2, (string) $imageId);
+                            $key = $this->util->getEphemeralKey(2, (string) $imageId);
                             $tpl_comment['KEY'] = $key;
                             $tpl_comment['CONTENT'] = $row['content'];
-                            $tpl_comment['PWG_TOKEN'] = ServiceLocator::get(Util::class)->getPwgToken();
+                            $tpl_comment['PWG_TOKEN'] = $this->util->getPwgToken();
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
                     }
-                    if (PermissionService::get()->isAdmin()) {
+                    if ($this->permissionService->isAdmin()) {
                         $tpl_comment['EMAIL'] = $email;
 
                         if ($row['validated'] != 'true') {
-                            $tpl_comment['U_VALIDATE'] = UrlService::get()->addUrlParams($url_self, [
+                            $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],
-                                'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
+                                'pwg_token' => $this->util->getPwgToken(),
                             ]);
                         }
                     }
@@ -227,22 +238,22 @@ SELECT
             if ($editComment !== null) {
                 $show_add_comment_form = false;
             }
-            if (PermissionService::get()->isAGuest() and !Config::commentsForall()) {
+            if ($this->permissionService->isAGuest() and !Config::commentsForall()) {
                 $show_add_comment_form = false;
             }
 
             if ($show_add_comment_form) {
-                $key = ServiceLocator::get(Util::class)->getEphemeralKey(3, (string) $imageId);
+                $key = $this->util->getEphemeralKey(3, (string) $imageId);
 
                 $tpl_var = [
                     'F_ACTION' => $url_self,
                     'KEY' => $key,
                     'CONTENT' => '',
-                    'SHOW_AUTHOR' => !PermissionService::get()->isClassicUser(),
+                    'SHOW_AUTHOR' => !$this->permissionService->isClassicUser(),
                     'AUTHOR_MANDATORY' => Config::commentsAuthorMandatory(),
                     'AUTHOR' => '',
                     'WEBSITE_URL' => '',
-                    'SHOW_EMAIL' => !PermissionService::get()->isClassicUser() or empty(CurrentUser::get()->email),
+                    'SHOW_EMAIL' => !$this->permissionService->isClassicUser() or empty(CurrentUser::get()->email),
                     'EMAIL_MANDATORY' => Config::commentsEmailMandatory(),
                     'EMAIL' => '',
                     'SHOW_WEBSITE' => Config::commentsEnableWebsite(),

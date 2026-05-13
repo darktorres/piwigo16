@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -32,13 +31,27 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class RegisterController implements ControllerInterface
 {
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly HtmlService $htmlService,
+        private readonly LangService $langService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly PermissionService $permissionService,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Free);
+        $this->permissionService->checkStatus(AccessLevel::Free);
 
         if (!Config::allowUserRegistration()) {
-            ServiceLocator::get(HtmlService::class)->pageForbidden('User registration closed');
+            $this->htmlService->pageForbidden('User registration closed');
         }
 
         EventDispatcher::notify('loc_begin_register');
@@ -48,17 +61,17 @@ final class RegisterController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $post_login    = StringUtil::get()->inputString('login', null, $_POST);
-        $post_mail     = StringUtil::get()->inputString('mail_address', null, $_POST);
-        $post_key      = StringUtil::get()->inputString('key', null, $_POST) ?? '';
-        $post_send_mail = StringUtil::get()->inputString('send_password_by_mail', null, $_POST) !== null;
+        $post_login    = $this->stringUtil->inputString('login', null, $_POST);
+        $post_mail     = $this->stringUtil->inputString('mail_address', null, $_POST);
+        $post_key      = $this->stringUtil->inputString('key', null, $_POST) ?? '';
+        $post_send_mail = $this->stringUtil->inputString('send_password_by_mail', null, $_POST) !== null;
 
-        if (StringUtil::get()->inputString('submit', null, $_POST) !== null) {
+        if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
             /** @var string[] $pgErrors */
             $pgErrors = [];
 
-            if (!ServiceLocator::get(Util::class)->verifyEphemeralKey($post_key)) {
-                ServiceLocator::get(HtmlService::class)->setStatusHeader(403);
+            if (!$this->util->verifyEphemeralKey($post_key)) {
+                $this->htmlService->setStatusHeader(403);
                 $pgErrors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
@@ -71,25 +84,25 @@ final class RegisterController implements ControllerInterface
             }
 
             $post_password = is_string($rawRegisterPwd = $_POST['password'] ?? null) ? $rawRegisterPwd : '';
-            UserService::get()->registerUser($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
+            $this->userService->registerUser($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
             $page['errors'] = $pgErrors;
 
             if (count($pgErrors) == 0) {
-                if ($post_send_mail && ServiceLocator::get(StringUtil::class)->emailCheckFormat($post_mail ?? '')) {
+                if ($post_send_mail && $this->stringUtil->emailCheckFormat($post_mail ?? '')) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
                         $_SESSION['page_infos'] = [];
                     }
                     $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
                 }
-                $user_id = UserService::get()->getUserid($post_login ?? '');
+                $user_id = $this->userService->getUserid($post_login ?? '');
                 if ($user_id !== false) {
-                    AuthService::get()->logUser($user_id, false);
+                    $this->authService->logUser($user_id, false);
                 }
-                Util::get()->redirect(UrlService::get()->makeIndexUrl());
+                $this->util->redirect($this->urlService->makeIndexUrl());
             }
-            $registration_post_key = ServiceLocator::get(Util::class)->getEphemeralKey(2);
+            $registration_post_key = $this->util->getEphemeralKey(2);
         } else {
-            $registration_post_key = ServiceLocator::get(Util::class)->getEphemeralKey(6);
+            $registration_post_key = $this->util->getEphemeralKey(6);
         }
 
         $login = ($post_login !== null && $post_login !== '') ? htmlspecialchars(stripslashes($post_login)) : '';
@@ -97,33 +110,33 @@ final class RegisterController implements ControllerInterface
 
         $tpl = TemplateRegistry::current();
         $tpl->assign([
-            'U_HOME'                      => UrlService::get()->makeIndexUrl(),
+            'U_HOME'                      => $this->urlService->makeIndexUrl(),
             'F_KEY'                       => $registration_post_key,
-            'F_ACTION'                    => ServiceLocator::get(UrlGenerator::class)->register(),
+            'F_ACTION'                    => $this->urlGenerator->register(),
             'F_LOGIN'                     => $login,
             'F_EMAIL'                     => $email,
             'obligatory_user_mail_address' => Config::obligatoryUserMailAddress(),
-            'U_IDENTIFICATION'             => ServiceLocator::get(UrlGenerator::class)->identification(),
+            'U_IDENTIFICATION'             => $this->urlGenerator->identification(),
         ]);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theRegisterPage', $hideMenuOn)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
-        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
+        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+            if (!array_key_exists($cookie_lang, $this->util->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
+            $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
+        foreach ($this->util->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
@@ -141,7 +154,7 @@ final class RegisterController implements ControllerInterface
 
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_register');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->parse('register.latte');
         PageTailRenderer::render();
 

@@ -8,12 +8,11 @@ use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Doctrine\DBAL\Connection;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -42,6 +41,23 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class SectionInitializer
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly CalendarService $calendarService,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly PermissionService $permissionService,
+        private readonly SearchService $searchService,
+        private readonly SessionService $sessionService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagService $tagService,
+        private readonly UrlService $urlService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function initialize(ServerRequestInterface $request, string $scriptContext = 'index'): void
     {
         /** @var array<string,mixed> $page */
@@ -80,7 +96,7 @@ final class SectionInitializer
             if (is_numeric($token)) {
                 $page['image_id'] = $token;
                 if ((int) $token === 0) {
-                    ServiceLocator::get(HtmlService::class)->badRequest('invalid picture identifier');
+                    $this->htmlService->badRequest('invalid picture identifier');
                 }
             } else {
                 preg_match('/^(\d+-)?(.*)?$/', $token, $matches);
@@ -94,7 +110,7 @@ final class SectionInitializer
                     if (isset($matches[2]) && $matches[2] !== '') {
                         $page['image_file'] = $matches[2];
                     } else {
-                        ServiceLocator::get(HtmlService::class)->badRequest('picture identifier is missing');
+                        $this->htmlService->badRequest('picture identifier is missing');
                     }
                 }
             }
@@ -102,7 +118,7 @@ final class SectionInitializer
 
         // ── Parse section + well-known params from URL tokens ─────────────────
 
-        $urls = ServiceLocator::get(UrlService::class);
+        $urls = $this->urlService;
         $page = array_merge($page, $urls->parseSectionUrl($tokens, $nextToken));
 
         if (!isset($page['section'])) {
@@ -117,7 +133,7 @@ final class SectionInitializer
                         }
                     }
                     if (!empty($randomOptions)) {
-                        Util::get()->redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
+                        $this->util->redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
                     }
                 }
                 $page['is_homepage'] = true;
@@ -154,9 +170,9 @@ final class SectionInitializer
             Config::override('order_by', Config::orderByInsideCategory());
         }
 
-        $imageOrderRaw = ServiceLocator::get(SessionService::class)->getSessionVar('image_order', 0);
+        $imageOrderRaw = $this->sessionService->getSessionVar('image_order', 0);
         if (is_numeric($imageOrderRaw) && (int) $imageOrderRaw > 0) {
-            $orders          = ServiceLocator::get(CategoryService::class)->getCategoryPreferredImageOrders();
+            $orders          = $this->categoryService->getCategoryPreferredImageOrders();
             $imageOrderIdInt = (int) $imageOrderRaw;
             $ordersEntry = $orders[$imageOrderIdInt] ?? null;
             $orderEntry  = is_array($ordersEntry) ? $ordersEntry : [];
@@ -170,12 +186,12 @@ final class SectionInitializer
                 ));
                 $page['super_order_by'] = true;
             } else {
-                ServiceLocator::get(SessionService::class)->unsetSessionVar('image_order');
+                $this->sessionService->unsetSessionVar('image_order');
                 $page['super_order_by'] = false;
             }
         }
 
-        $forbidden = PermissionService::get()->getSqlConditionFandF(
+        $forbidden = $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -188,13 +204,13 @@ final class SectionInitializer
 
         if ($section === 'categories') {
             if (isset($page['combined_categories'])) {
-                $page['title'] = ServiceLocator::get(HtmlService::class)->getCombinedCategoriesContentTitle();
+                $page['title'] = $this->htmlService->getCombinedCategoriesContentTitle();
             } elseif ($category !== null) {
                 $catComment   = is_string($category['comment'] ?? null) ? $category['comment'] : '';
                 $upperNames   = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
                 $page = array_merge($page, [
                     'comment' => EventDispatcher::dispatch('render_category_description', $catComment, 'main_page_category_description'),
-                    'title'   => ServiceLocator::get(HtmlService::class)->getCatDisplayName($upperNames, ''),
+                    'title'   => $this->htmlService->getCatDisplayName($upperNames, ''),
                 ]);
             } else {
                 $page['title'] = '';
@@ -212,7 +228,7 @@ final class SectionInitializer
                         $catIds[] = (int) $combinedCat['id'];
                     }
                 }
-                $page['items'] = ServiceLocator::get(CategoryService::class)->getImageIdsForCategories($catIds);
+                $page['items'] = $this->categoryService->getImageIdsForCategories($catIds);
             } elseif (
                 $startcat === 0
                 && !isset($page['chronology_field'])
@@ -234,15 +250,15 @@ SELECT id
   FROM ' . Tables::categories() . '
   WHERE
     uppercats LIKE \'' . $catUppercats . ',%\' '
-                            . PermissionService::get()->getSqlConditionFandF(
+                            . $this->permissionService->getSqlConditionFandF(
                                 ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
                                 "\n  AND"
                             );
-                        $subcatIds   = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id');
+                        $subcatIds   = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
                         $subcatIds[] = $catId;
                         $subcatIdsStr = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $subcatIds);
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
-                        $forbidden   = PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+                        $forbidden   = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
@@ -268,7 +284,7 @@ SELECT DISTINCT(image_id)
 ' . $forbidden . '
   ' . Config::orderBy() . '
 ;';
-                    $page['items'] = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id');
+                    $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id');
                     if (isset($cacheKey)) {
                         PersistentCacheRegistry::current()->set($cacheKey, $page['items']);
                     }
@@ -289,7 +305,7 @@ SELECT DISTINCT(image_id)
             }
             $page['tag_ids'] = $tagIds;
 
-            $items = ServiceLocator::get(TagService::class)->getImageIdsForTags($tagIds);
+            $items = $this->tagService->getImageIdsForTags($tagIds);
             if (count($items) === 0) {
                 /** @var mixed $remoteAddrInfo */
                 $remoteAddrInfo = $_SERVER['REMOTE_ADDR'] ?? '';
@@ -298,17 +314,17 @@ SELECT DISTINCT(image_id)
                     . ' from the address : '
                     . (is_string($remoteAddrInfo) ? $remoteAddrInfo : '')
                 );
-                ServiceLocator::get(HtmlService::class)->accessDenied();
+                $this->htmlService->accessDenied();
             }
             $page = array_merge($page, [
-                'title' => ServiceLocator::get(HtmlService::class)->getTagsContentTitle(),
+                'title' => $this->htmlService->getTagsContentTitle(),
                 'items' => $items,
             ]);
         } elseif ($section === 'search') {
             $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
             $pageSearchRaw = $page['search'] ?? null;
             $pageSearch   = is_scalar($pageSearchRaw) ? (string) $pageSearchRaw : '';
-            $searchResult = ServiceLocator::get(SearchService::class)->getSearchResults($pageSearch, $superOrderBy);
+            $searchResult = $this->searchService->getSearchResults($pageSearch, $superOrderBy);
             if (isset($searchResult['qs'])) {
                 $page['qsearch_details'] = $searchResult['qs'];
             } elseif (isset($searchResult['search_details'])) {
@@ -316,18 +332,18 @@ SELECT DISTINCT(image_id)
             }
             $page = array_merge($page, [
                 'items' => $searchResult['items'],
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Search results') . '</a>',
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Search results') . '</a>',
             ]);
         } elseif ($section === 'favorites') {
-            UserService::get()->checkUserFavorites();
+            $this->userService->checkUserFavorites();
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Favorites') . '</a>',
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Favorites') . '</a>',
             ]);
             $action = $_GET['action'] ?? '';
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
-                ServiceLocator::get(UserRepository::class)->deleteAllFavoritesByUserId($userId);
-                Util::get()->redirect(UrlService::get()->makeIndexUrl(['section' => 'favorites']));
+                $this->userRepository->deleteAllFavoritesByUserId($userId);
+                $this->util->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
@@ -335,16 +351,16 @@ SELECT image_id
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $userId . '
-' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . '
+' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . '
   ' . Config::orderBy() . '
 ;';
                 $page = array_merge($page, [
-                    'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'image_id'),
+                    'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id'),
                 ]);
                 if (count($page['items']) > 0) {
                     TemplateRegistry::current()->assign('favorite', [
-                        'U_FAVORITE' => UrlService::get()->addUrlParams(
-                            UrlService::get()->makeIndexUrl(['section' => 'favorites']),
+                        'U_FAVORITE' => $this->urlService->addUrlParams(
+                            $this->urlService->makeIndexUrl(['section' => 'favorites']),
                             ['action' => 'remove_all_from_favorites']
                         ),
                     ]);
@@ -362,16 +378,16 @@ SELECT image_id
 SELECT DISTINCT(id)
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE ' . PermissionService::get()->getRecentPhotosSql('date_available') . '
+  WHERE ' . $this->permissionService->getRecentPhotosSql('date_available') . '
   ' . $forbidden . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',
-                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',
+                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'recent_cats') {
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent albums') . '</a>',
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent albums') . '</a>',
             ]);
         } elseif ($section === 'most_visited') {
             $page['super_order_by'] = true;
@@ -386,9 +402,9 @@ SELECT DISTINCT(id)
   LIMIT ' . Config::topNumber() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . Lang::t('Most visited') . '</a>',
-                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'best_rated') {
             $page['super_order_by'] = true;
@@ -403,9 +419,9 @@ SELECT DISTINCT(id)
   LIMIT ' . Config::topNumber() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">'
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . Lang::t('Best rated') . '</a>',
-                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         } elseif ($section === 'list') {
             $listIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $pageList);
@@ -418,8 +434,8 @@ SELECT DISTINCT(id)
   ' . Config::orderBy() . '
 ;';
             $page = array_merge($page, [
-                'title' => '<a href="' . UrlService::get()->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Random photos') . '</a>',
-                'items' => array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Random photos') . '</a>',
+                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
             ]);
         }
 
@@ -427,13 +443,13 @@ SELECT DISTINCT(id)
 
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            ServiceLocator::get(CalendarService::class)->initializeCalendar();
+            $this->calendarService->initializeCalendar();
         }
 
         // ── Title ─────────────────────────────────────────────────────────────
 
         if (isset($page['title'])) {
-            $page['section_title'] = '<a href="' . UrlService::get()->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
+            $page['section_title'] = '<a href="' . $this->urlService->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
             /** @var mixed $pageTitle */
             $pageTitle = $page['title'];
             if ($pageTitle !== '') {
@@ -482,7 +498,7 @@ SELECT DISTINCT(id)
             $needRedirect   = false;
 
             if ($catPermalink === '') {
-                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== ServiceLocator::get(StringUtil::class)->str2url($catName)) {
+                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== $this->stringUtil->str2url($catName)) {
                     $needRedirect = true;
                 }
             } elseif ($catPermalink !== $hitPermalink) {
@@ -491,13 +507,13 @@ SELECT DISTINCT(id)
 
             if ($needRedirect) {
                 $catId = is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
-                ServiceLocator::get(CategoryService::class)->checkRestrictions($catId);
-                $redirectUrl = $scriptContext === 'picture' ? UrlService::get()->duplicatePictureUrl() : UrlService::get()->duplicateIndexUrl();
+                $this->categoryService->checkRestrictions($catId);
+                $redirectUrl = $scriptContext === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
                 if (!headers_sent()) {
-                    ServiceLocator::get(HtmlService::class)->setStatusHeader(301);
-                    Util::get()->redirectHttp($redirectUrl);
+                    $this->htmlService->setStatusHeader(301);
+                    $this->util->redirectHttp($redirectUrl);
                 }
-                Util::get()->redirect($redirectUrl);
+                $this->util->redirect($redirectUrl);
             }
             unset($page['hit_by']);
         }

@@ -51,7 +51,8 @@ final class UpgradeController implements ControllerInterface
         Config::override('auto_migrate', false);
         Kernel::boot();
 
-        $languages = new Languages('utf-8');
+        $languages = Kernel::service(Languages::class);
+        $languages->getFsLanguages('utf-8');
         $get_language = isset($_GET['language']) && is_string($_GET['language']) ? $_GET['language'] : null;
         if ($get_language !== null) {
             $language = strip_tags($get_language);

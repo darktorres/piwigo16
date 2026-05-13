@@ -7,8 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
+use Piwigo\Admin\AdminService;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageRepository;
@@ -25,11 +25,17 @@ final class Languages
     public array $server_languages = [];
 
     /**
-     * Initialize $fs_languages and $db_languages
-    */
-    public function __construct(?string $target_charset = null)
-    {
-        $this->getFsLanguages($target_charset);
+     * Initialize $fs_languages and $db_languages. Callers that want a specific
+     * target charset call getFsLanguages($charset) afterward.
+     */
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly HtmlService $htmlService,
+        private readonly LanguageRepository $languageRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly UserService $userService,
+    ) {
+        $this->getFsLanguages();
     }
 
     /**
@@ -59,7 +65,7 @@ final class Languages
                 $langVersion = is_scalar($fsLangVersion) ? (string) $fsLangVersion : '';
                 $fsLangName = $this->fs_languages[$language_id]['name'] ?? null;
                 $langName = is_scalar($fsLangName) ? (string) $fsLangName : '';
-                ServiceLocator::get(LanguageRepository::class)->activate($language_id, $langVersion, $langName);
+                $this->languageRepository->activate($language_id, $langVersion, $langName);
                 break;
 
             case 'deactivate':
@@ -68,12 +74,12 @@ final class Languages
                     break;
                 }
 
-                if ($language_id == UserService::get()->getDefaultLanguage()) {
+                if ($language_id == $this->userService->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
 
-                ServiceLocator::get(LanguageRepository::class)->deactivate($language_id);
+                $this->languageRepository->deactivate($language_id);
                 break;
 
             case 'delete':
@@ -87,13 +93,13 @@ final class Languages
                 }
 
                 // Set default language to users who are using this language
-                ServiceLocator::get(LanguageRepository::class)->reassignUsers($language_id, UserService::get()->getDefaultLanguage());
+                $this->languageRepository->reassignUsers($language_id, $this->userService->getDefaultLanguage());
 
-                ServiceLocator::get(AdminService::class)->deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
+                $this->adminService->deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
                 break;
 
             case 'set_default':
-                ServiceLocator::get(LanguageRepository::class)->setDefaultForSystemUsers(
+                $this->languageRepository->setDefaultForSystemUsers(
                     $language_id,
                     [Config::defaultUserId(), Config::guestId()]
                 );
@@ -108,7 +114,7 @@ final class Languages
     public function getFsLanguages(?string $target_charset = null): void
     {
         if ($target_charset === null || $target_charset === '') {
-            $target_charset = ServiceLocator::get(StringUtil::class)->getPwgCharset();
+            $target_charset = $this->stringUtil->getPwgCharset();
         }
         $target_charset = strtolower($target_charset);
 
@@ -135,7 +141,7 @@ final class Languages
 
                     if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $language['name'] = ServiceLocator::get(StringUtil::class)->convertCharset($language['name'], 'utf-8', $target_charset);
+                        $language['name'] = $this->stringUtil->convertCharset($language['name'], 'utf-8', $target_charset);
                     }
 
                     // IMPORTANT SECURITY !
@@ -145,12 +151,12 @@ final class Languages
             }
         }
         closedir($dir);
-        uasort($this->fs_languages, ServiceLocator::get(HtmlService::class)->nameCompare(...));
+        uasort($this->fs_languages, $this->htmlService->nameCompare(...));
     }
 
     public function getDbLanguages(): void
     {
-        foreach (ServiceLocator::get(LanguageRepository::class)->findAllOrdered() as $row) {
+        foreach ($this->languageRepository->findAllOrdered() as $row) {
             $id = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $name = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
             if ($id !== '') {
@@ -174,7 +180,7 @@ final class Languages
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -223,7 +229,7 @@ final class Languages
             }
         }
 
-        if (ServiceLocator::get(AdminService::class)->fetchRemote($url, $result, $get_data) && is_string($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
             $pem_languages = StringUtil::safeUnserialize($result);
             if ($pem_languages === []) {
                 return false;
@@ -262,7 +268,7 @@ final class Languages
             $handle = Filesystem::tryFopen($archive, 'wb');
             $fh = $handle;
             /** @var resource|string $handle */
-            if (is_resource($fh) && ServiceLocator::get(AdminService::class)->fetchRemote($url, $handle, $get_data)) {
+            if (is_resource($fh) && $this->adminService->fetchRemote($url, $handle, $get_data)) {
                 fclose($fh);
                 $zip = new \PclZip($archive);
                 $listRaw = $zip->listContent();
@@ -348,7 +354,7 @@ final class Languages
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            ServiceLocator::get(AdminService::class)->deltree($path, PHPWG_ROOT_PATH.'language/trash');
+                                            $this->adminService->deltree($path, PHPWG_ROOT_PATH.'language/trash');
                                         }
                                     }
                                 }

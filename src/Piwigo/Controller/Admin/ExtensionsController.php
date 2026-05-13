@@ -809,7 +809,7 @@ final class ExtensionsController
         $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages';
         $base_url = $this->urlGenerator->admin($pageStr);
 
-        $languages = new Languages();
+        $languages = Kernel::service(Languages::class);
         $languages->getDbLanguages();
 
         $this->util->checkInputParameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
@@ -883,7 +883,7 @@ final class ExtensionsController
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
-        $languages = new Languages();
+        $languages = Kernel::service(Languages::class);
         $languages->getDbLanguages();
 
         $languages_dir = PHPWG_ROOT_PATH . 'language';

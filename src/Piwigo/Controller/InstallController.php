@@ -85,7 +85,8 @@ final class InstallController implements ControllerInterface
 
         Kernel::boot();
 
-        $languages = new Languages('utf-8');
+        $languages = Kernel::service(Languages::class);
+        $languages->getFsLanguages('utf-8');
 
         if (isset($_GET['language'])) {
             $language = strip_tags(is_string($rawLang = $_GET['language']) ? $rawLang : '');

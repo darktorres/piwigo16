@@ -145,7 +145,7 @@ final class ExtensionsEndpoints
             }
             $this->util->pwgActivity('system', ActivitySystem::Theme, 'update', $activityDetails);
         } elseif ($type === 'languages') {
-            $extension     = new Languages();
+            $extension     = Kernel::service(Languages::class);
             $upgradeStatus = $extension->extractLanguageFiles('upgrade', $revision, $extensionId);
             $extensionName = is_string($extension->fs_languages[$extensionId]['name'] ?? null) ? $extension->fs_languages[$extensionId]['name'] : '';
         }

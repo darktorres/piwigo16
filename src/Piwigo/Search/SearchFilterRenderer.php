@@ -10,12 +10,11 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
+use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -24,6 +23,19 @@ use Piwigo\Users\PermissionService;
 
 final class SearchFilterRenderer
 {
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly ConfigService $configService,
+        private readonly DateService $dateService,
+        private readonly HtmlService $htmlService,
+        private readonly LangService $langService,
+        private readonly PermissionService $permissionService,
+        private readonly SearchService $searchService,
+        private readonly TagService $tagService,
+        private readonly UrlService $urlService,
+    ) {
+    }
+
     public function render(): void
     {
         $template = TemplateRegistry::current();
@@ -36,7 +48,7 @@ final class SearchFilterRenderer
         $userCacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
         $persistent_cache = PersistentCacheRegistry::current();
 
-        $filters_views_raw = ServiceLocator::get(ConfigService::class)->confGetParam('filters_views', Config::defaultFiltersViews());
+        $filters_views_raw = $this->configService->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
         /** @var array<string, array<string,mixed>> $filters_views */
         $filters_views = StringUtil::safeUnserialize($filters_views_str);
@@ -53,8 +65,8 @@ final class SearchFilterRenderer
             foreach ($filters_views as $filt_name => $filt_conf) {
                 if (isset($filt_conf['access'])) {
                     $hasAccess = $filt_conf['access'] == 'everybody'
-                        || ($filt_conf['access'] == 'admins-only' && PermissionService::get()->isAdmin())
-                        || ($filt_conf['access'] == 'registered-users' && PermissionService::get()->isClassicUser());
+                        || ($filt_conf['access'] == 'admins-only' && $this->permissionService->isAdmin())
+                        || ($filt_conf['access'] == 'registered-users' && $this->permissionService->isClassicUser());
                     $display_filters[$filt_name]['access'] = $hasAccess;
                 }
             }
@@ -63,12 +75,12 @@ final class SearchFilterRenderer
             $searchRaw = $page['search'] ?? null;
             $searchKey = is_string($searchRaw) ? $searchRaw : '';
             /** @var array<string, mixed> $my_search */
-            $my_search = ServiceLocator::get(SearchService::class)->getSearchArray($searchKey);
+            $my_search = $this->searchService->getSearchArray($searchKey);
             /** @var array<string, mixed> $my_search_fields_tmp */
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
 
-            $search_details['forbidden'] = PermissionService::get()->getSqlConditionFandF(
+            $search_details['forbidden'] = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 "\n  AND"
             );
@@ -92,12 +104,12 @@ final class SearchFilterRenderer
             if (isset($my_search['fields']['tags'])) {
                 if ($display_filters['tags']['access']) {
                     $filter_tags = [];
-                    $other_filters_items = ServiceLocator::get(SearchService::class)->getItemsForFilter('tags');
+                    $other_filters_items = $this->searchService->getItemsForFilter('tags');
                     if (false === $other_filters_items) {
-                        $filter_tags = ServiceLocator::get(TagService::class)->getAvailableTags();
-                        usort($filter_tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                        $filter_tags = $this->tagService->getAvailableTags();
+                        usort($filter_tags, fn (mixed $a, mixed $b): int => $this->htmlService->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                     } else {
-                        $filter_tags = ServiceLocator::get(TagService::class)->getCommonTags($other_filters_items, 0);
+                        $filter_tags = $this->tagService->getCommonTags($other_filters_items, 0);
 
                         $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
                         $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
@@ -107,7 +119,7 @@ final class SearchFilterRenderer
                         );
 
                         if (count($missing_tag_ids) > 0) {
-                            $filter_tags = array_merge(ServiceLocator::get(TagService::class)->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                            $filter_tags = array_merge($this->tagService->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
                         }
                     }
 
@@ -129,12 +141,12 @@ final class SearchFilterRenderer
                 if (!$display_filters['expert']['access']) {
                     unset($my_search['fields']['expert']);
                 } else {
-                    LangService::get()->loadLanguage('help_quick_search.lang');
+                    $this->langService->loadLanguage('help_quick_search.lang');
                 }
             }
 
             if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('author');
+                $filter_clause = $this->searchService->getClauseForFilter('author');
 
                 $query = '
 SELECT
@@ -151,14 +163,14 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_author_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $db_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                         $persistent_cache->set($cache_key, $db_rows);
                         $filter_rows = $this->normalizeRows($db_rows);
                     } else {
                         $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     }
                 } else {
-                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                 }
 
                 $author_names = [];
@@ -178,7 +190,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_posted');
+                $filter_clause = $this->searchService->getClauseForFilter('date_posted');
                 $cache_key = $persistent_cache->makeKey('filter_date_posted' . $userId . $userCacheTime);
                 $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_posted = false;
@@ -194,7 +206,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
 ;';
-                    $thresholds = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
+                    $thresholds = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
 
                     $query = '
 SELECT
@@ -208,7 +220,7 @@ SELECT
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                         foreach ($thresholds as $threshold => $date_limit) {
                             if ($row['date'] > $date_limit) {
                                 $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
@@ -264,7 +276,7 @@ SELECT
                         if ($month_days !== null) {
                             foreach ($month_days as $ymd => $dayEntry) {
                                 $dayEntry = is_array($dayEntry) ? $dayEntry : [];
-                                $dayEntry['label'] = ServiceLocator::get(DateService::class)->formatDate((string) $ymd);
+                                $dayEntry['label'] = $this->dateService->formatDate((string) $ymd);
                                 $month_days[$ymd] = $dayEntry;
                             }
                             $months[$ym]['days'] = $month_days;
@@ -281,7 +293,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('date_created');
+                $filter_clause = $this->searchService->getClauseForFilter('date_created');
                 $cache_key = $persistent_cache->makeKey('filter_date_created' . $userId . $userCacheTime);
                 $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 $cache_hit_date_created = false;
@@ -297,7 +309,7 @@ SELECT
     SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m,
     SUBDATE(NOW(), INTERVAL 12 MONTH) AS 12m
 ;';
-                    $thresholds = DbConnection::get()->executeQuery($query)->fetchAllAssociative()[0];
+                    $thresholds = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
 
                     $query = '
 SELECT
@@ -311,7 +323,7 @@ SELECT
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                         if (!empty($row['date'])) {
                             foreach ($thresholds as $threshold => $date_limit) {
                                 if ($row['date'] > $date_limit) {
@@ -369,7 +381,7 @@ SELECT
                         if ($month_days !== null) {
                             foreach ($month_days as $ymd => $dayEntry) {
                                 $dayEntry = is_array($dayEntry) ? $dayEntry : [];
-                                $dayEntry['label'] = ServiceLocator::get(DateService::class)->formatDate((string) $ymd);
+                                $dayEntry['label'] = $this->dateService->formatDate((string) $ymd);
                                 $month_days[$ymd] = $dayEntry;
                             }
                             $months[$ym]['days'] = $month_days;
@@ -386,7 +398,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('added_by');
+                $filter_clause = $this->searchService->getClauseForFilter('added_by');
 
                 $query = '
 SELECT
@@ -403,14 +415,14 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_added_by_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $db_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                         $persistent_cache->set($cache_key, $db_rows);
                         $filter_rows = $this->normalizeRows($db_rows);
                     } else {
                         $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     }
                 } else {
-                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                 }
 
                 $added_by = $filter_rows;
@@ -428,7 +440,7 @@ SELECT
   FROM ' . Tables::users() . '
   WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $user_ids) . ')
 ;';
-                    $username_of = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+                    $username_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
 
                     foreach (array_keys($added_by) as $added_by_idx) {
                         $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
@@ -460,9 +472,9 @@ SELECT
     INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
   WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_words)) . ')
 ;';
-                    foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                         $uppercats_val = $row['uppercats'];
-                        $cat_display_name = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
+                        $cat_display_name = $this->htmlService->getCatDisplayNameCache(
                             is_scalar($uppercats_val) ? (string) $uppercats_val : '',
                             ''
                         );
@@ -482,7 +494,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('filetypes');
+                $filter_clause = $this->searchService->getClauseForFilter('filetypes');
 
                 $cache_key = $persistent_cache->makeKey('file_exts' . $userId . $userCacheTime);
                 $all_exts_raw = [];
@@ -497,7 +509,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $all_exts_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $all_exts_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
                     $persistent_cache->set($cache_key, $all_exts_raw);
                 }
                 $all_exts = is_array($all_exts_raw) ? $all_exts_raw : [];
@@ -513,7 +525,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $filtered_exts = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $filtered_exts = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
 
                     $exts = [];
                     foreach ($all_exts as $ext => $counter) {
@@ -531,7 +543,7 @@ SELECT
                 $template->assign('SHOW_FILTER_RATINGS', true);
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
-                    $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratings');
+                    $filter_clause = $this->searchService->getClauseForFilter('ratings');
                     $cache_key = $persistent_cache->makeKey('filter_ratings' . $userId . $userCacheTime);
                     $ratings_raw = null;
                     $cache_hit_ratings = false;
@@ -547,7 +559,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause;
 
-                        $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                        $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                         $ratings = array_fill(0, 6, 0);
 
                         foreach ($filter_rows as $row) {
@@ -581,7 +593,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('filesize');
+                $filter_clause = $this->searchService->getClauseForFilter('filesize');
                 $filesizes = [];
                 $filesize = [];
 
@@ -593,7 +605,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
 ;';
-                foreach (ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+                foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
                     $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                     $key_fs = sprintf('%.1f', $fs_val / 1024.0);
                     $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
@@ -623,7 +635,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('ratios');
+                $filter_clause = $this->searchService->getClauseForFilter('ratios');
                 $cache_key = $persistent_cache->makeKey('filter_ratios' . $userId . $userCacheTime);
                 $ratios_raw = null;
                 $cache_hit_ratios = false;
@@ -643,7 +655,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-                    $filter_rows = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
                     $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
                     foreach ($filter_rows as $row) {
@@ -674,7 +686,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('height');
+                $filter_clause = $this->searchService->getClauseForFilter('height');
 
                 $query = '
 SELECT
@@ -691,12 +703,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_height_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'height');
+                        $filter_rows_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
-                    $filter_rows = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'height');
+                    $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
                 }
 
                 $heights = $filter_rows;
@@ -715,7 +727,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
-                $filter_clause = ServiceLocator::get(SearchService::class)->getClauseForFilter('width');
+                $filter_clause = $this->searchService->getClauseForFilter('width');
 
                 $query = '
 SELECT
@@ -732,12 +744,12 @@ SELECT
                     $cache_key = $persistent_cache->makeKey('filter_width_rows' . $userId . $userCacheTime);
                     $filter_rows_raw = [];
                     if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'width');
+                        $filter_rows_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
                         $persistent_cache->set($cache_key, $filter_rows_raw);
                     }
                     $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
-                    $filter_rows = array_column(DbConnection::get()->executeQuery($query)->fetchAllAssociative(), 'width');
+                    $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
                 }
 
                 $widths = $filter_rows;
@@ -827,12 +839,12 @@ SELECT
     INNER JOIN ' . Tables::userCacheCategories() . ' ON c.id = cat_id and user_id = ' . $userId . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
-                        $cats = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
-                        usort($cats, fn (array $a, array $b): int => ServiceLocator::get(HtmlService::class)->nameCompare($a, $b));
+                        $cats = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        usort($cats, fn (array $a, array $b): int => $this->htmlService->nameCompare($a, $b));
                         $albums_found = [];
                         foreach ($cats as $cat) {
                             $single_link = false;
-                            $albums_found[] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(
+                            $albums_found[] = $this->htmlService->getCatDisplayNameCache(
                                 is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '',
                                 '',
                                 $single_link
@@ -850,14 +862,14 @@ SELECT
                     $tag_ids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingTagIds);
 
                     if (count($tag_ids) > 0) {
-                        $tags = ServiceLocator::get(TagService::class)->getAvailableTags($tag_ids);
-                        usort($tags, fn (mixed $a, mixed $b): int => ServiceLocator::get(HtmlService::class)->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
+                        $tags = $this->tagService->getAvailableTags($tag_ids);
+                        usort($tags, fn (mixed $a, mixed $b): int => $this->htmlService->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                         $tags_found = [];
                         foreach ($tags as $tag) {
                             if (!is_array($tag)) {
                                 continue;
                             }
-                            $url = UrlService::get()->makeIndexUrl(['tags' => [$tag]]);
+                            $url = $this->urlService->makeIndexUrl(['tags' => [$tag]]);
                             $tags_found[] = sprintf('<a href="%s">%s</a>', $url, is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '');
                         }
 

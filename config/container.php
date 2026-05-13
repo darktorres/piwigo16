@@ -180,7 +180,7 @@ return [
     SizesProcessor::class            => factory(static fn (): SizesProcessor => new SizesProcessor()),
     WatermarkProcessor::class        => factory(static fn (): WatermarkProcessor => new WatermarkProcessor()),
     MenubarRenderer::class           => factory(static fn (): MenubarRenderer => new MenubarRenderer()),
-    SearchFilterRenderer::class      => factory(static fn (): SearchFilterRenderer => new SearchFilterRenderer()),
+    SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u)),
     CategoryCatsRenderer::class      => factory(static fn (): CategoryCatsRenderer => new CategoryCatsRenderer()),
     CategoryDefaultRenderer::class   => factory(static fn (): CategoryDefaultRenderer => new CategoryDefaultRenderer()),
     SelectedTagsRenderer::class      => factory(static fn (): SelectedTagsRenderer => new SelectedTagsRenderer()),

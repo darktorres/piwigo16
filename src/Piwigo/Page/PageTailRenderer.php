@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
@@ -32,7 +31,7 @@ final class PageTailRenderer
         ]);
 
         if (!PermissionService::get()->isAGuest()) {
-            $template->assign('CONTACT_MAIL', ServiceLocator::get(Util::class)->getWebmasterMailAddress());
+            $template->assign('CONTACT_MAIL', Util::get()->getWebmasterMailAddress());
         }
 
         if (Config::updateNotifyCheckPeriod() > 0) {
@@ -40,15 +39,15 @@ final class PageTailRenderer
                 || strtotime((string) Config::updateNotifyLastCheck()) < strtotime(Config::updateNotifyCheckPeriod() . ' seconds ago');
 
             if ($check_for_updates) {
-                $exec_id = ServiceLocator::get(Util::class)->pwgUniqueExecBegins('check_for_updates');
+                $exec_id = Util::get()->pwgUniqueExecBegins('check_for_updates');
                 if ($exec_id !== false) {
                     Kernel::service(Updates::class)->notifyPiwigoNewVersions();
-                    ServiceLocator::get(Util::class)->pwgUniqueExecEnds('check_for_updates');
+                    Util::get()->pwgUniqueExecEnds('check_for_updates');
                 }
             }
         }
 
-        ServiceLocator::get(Util::class)->sendPiwigoInfos();
+        Util::get()->sendPiwigoInfos();
 
         $debug_vars = [];
 
@@ -69,12 +68,12 @@ final class PageTailRenderer
 
         $template->assign('debug', $debug_vars);
 
-        if (!empty(Config::mobilTheme()) && (ServiceLocator::get(Util::class)->getDevice() !== 'desktop' || ServiceLocator::get(Util::class)->mobileTheme())) {
+        if (!empty(Config::mobilTheme()) && (Util::get()->getDevice() !== 'desktop' || Util::get()->mobileTheme())) {
             /** @var mixed $requestUriRaw */
             $requestUriRaw = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign('TOGGLE_MOBILE_THEME_URL', UrlService::get()->addUrlParams(
                 htmlspecialchars(is_string($requestUriRaw) ? $requestUriRaw : ''),
-                ['mobile' => ServiceLocator::get(Util::class)->mobileTheme() ? 'false' : 'true']
+                ['mobile' => Util::get()->mobileTheme() ? 'false' : 'true']
             ));
         }
 

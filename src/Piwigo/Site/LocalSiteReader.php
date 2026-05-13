@@ -7,7 +7,7 @@ namespace Piwigo\Site;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Config\Config;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 
 // +-----------------------------------------------------------------------+
@@ -49,7 +49,7 @@ final class LocalSiteReader
     /** @return string[] */
     public function getFullDirectories(string $basedir): array
     {
-        return ServiceLocator::get(ImageAdminService::class)->getFsDirectories($basedir);
+        return Kernel::service(ImageAdminService::class)->getFsDirectories($basedir);
     }
 
     /**
@@ -66,8 +66,8 @@ final class LocalSiteReader
                 }
 
                 if (is_file($path.'/'.$node)) {
-                    $extension = strtolower(ServiceLocator::get(StringUtil::class)->getExtension($node));
-                    $filename_wo_ext = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($node);
+                    $extension = strtolower(Kernel::service(StringUtil::class)->getExtension($node));
+                    $filename_wo_ext = Kernel::service(StringUtil::class)->getFilenameWoExtension($node);
 
                     if (isset(Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
@@ -111,12 +111,12 @@ final class LocalSiteReader
     {
         $data = [];
         $filename = basename($file);
-        $extension = ServiceLocator::get(StringUtil::class)->getExtension($filename);
+        $extension = Kernel::service(StringUtil::class)->getExtension($filename);
 
         $representative_ext = null;
         if (! isset(Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
-            $filename_wo_ext = ServiceLocator::get(StringUtil::class)->getFilenameWoExtension($filename);
+            $filename_wo_ext = Kernel::service(StringUtil::class)->getFilenameWoExtension($filename);
             $representative_ext = $this->getRepresentativeExt($dirname, $filename_wo_ext);
         }
 
@@ -127,7 +127,7 @@ final class LocalSiteReader
     /** @return array<mixed> */
     public function getMetadataAttributes(): array
     {
-        return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadataAttributes();
+        return Kernel::service(MetadataAdminService::class)->getSyncMetadataAttributes();
     }
 
     /**
@@ -136,7 +136,7 @@ final class LocalSiteReader
      */
     public function getElementMetadata(array $infos): array|false
     {
-        return ServiceLocator::get(MetadataAdminService::class)->getSyncMetadata($infos);
+        return Kernel::service(MetadataAdminService::class)->getSyncMetadata($infos);
     }
 
     public function getRepresentativeExt(string $path, string $filename_wo_ext): ?string

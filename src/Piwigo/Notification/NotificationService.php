@@ -7,8 +7,6 @@ namespace Piwigo\Notification;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -23,6 +21,8 @@ final readonly class NotificationService
 {
     public function __construct(
         private Connection $conn,
+        private HtmlService $htmlService,
+        private UrlGenerator $urlGenerator,
     ) {
     }
 
@@ -247,14 +247,14 @@ final readonly class NotificationService
         }
 
         $nbComments = $this->nbNewComments($start, $end);
-        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', UrlService::get()->addUrlParams(ServiceLocator::get(UrlGenerator::class)->comments(), $addUrlParams), $addUrl);
+        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', UrlService::get()->addUrlParams($this->urlGenerator->comments(), $addUrlParams), $addUrl);
 
         if (PermissionService::get()->isAdmin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', ServiceLocator::get(UrlGenerator::class)->admin('comments'), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', $this->urlGenerator->admin('comments'), $addUrl);
 
             $nbUsers = $this->nbNewUsers($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUsers) ? (int) $nbUsers : 0, '%d new user', '%d new users', ServiceLocator::get(UrlGenerator::class)->admin('user_list'), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbUsers) ? (int) $nbUsers : 0, '%d new user', '%d new users', $this->urlGenerator->admin('user_list'), $addUrl);
         }
 
         /** @var string[] $newsArr */
@@ -288,7 +288,7 @@ SELECT
   ORDER BY date_available DESC
   LIMIT ' . $maxDates . '
 ;';
-        $dates = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+        $dates = $this->conn->executeQuery($query)->fetchAllAssociative();
 
         for ($i = 0; $i < count($dates); $i++) {
             $dateAvailable = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
@@ -302,7 +302,7 @@ SELECT DISTINCT i.*
   ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT ' . $maxElements . '
 ;';
-                $dates[$i]['elements'] = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['elements'] = $this->conn->executeQuery($query)->fetchAllAssociative();
             }
 
             if ($maxCats > 0) {
@@ -319,7 +319,7 @@ SELECT
   ORDER BY img_count DESC
   LIMIT ' . $maxCats . '
 ;';
-                $dates[$i]['categories'] = DbConnection::get()->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['categories'] = $this->conn->executeQuery($query)->fetchAllAssociative();
             }
         }
 
@@ -374,7 +374,7 @@ SELECT
         foreach ($categories as $cat) {
             $cat = is_array($cat) ? $cat : [];
             $description .= '<li>'
-              . ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $authKey)
+              . $this->htmlService->getCatDisplayNameCache(is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '', '', false, null, $authKey)
               . ' (' . Translator::get()->plural('%d new photo', '%d new photos', is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0) . ')'
               . '</li>';
         }

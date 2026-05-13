@@ -7,7 +7,6 @@ namespace Piwigo\Page;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Http\PathExtractor;
@@ -21,6 +20,13 @@ use Piwigo\Users\PermissionService;
 
 final class NoPhotoYetRenderer
 {
+    public function __construct(
+        private readonly ConfigService $configService,
+        private readonly ImageRepository $imageRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly UrlGenerator $urlGenerator,
+    ) {
+    }
     public function render(): void
     {
         $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
@@ -37,7 +43,7 @@ final class NoPhotoYetRenderer
             and (PermissionService::get()->isAGuest() or PermissionService::get()->isAdmin())
             and !isset($_SESSION['no_photo_yet'])
         ) {
-            $nb_photos = ServiceLocator::get(ImageRepository::class)->countAll();
+            $nb_photos = $this->imageRepository->countAll();
             if (0 == $nb_photos) {
                 $theme = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
                 $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
@@ -51,20 +57,20 @@ final class NoPhotoYetRenderer
                     }
 
                     if ('deactivate' == $_GET['no_photo_yet']) {
-                        ServiceLocator::get(ConfigService::class)->confUpdateParam('no_photo_yet', 'false');
+                        $this->configService->confUpdateParam('no_photo_yet', 'false');
                         Util::get()->redirect(UrlService::get()->makeIndexUrl());
                         exit();
                     }
                 }
 
-                header('Content-Type: text/html; charset=' . ServiceLocator::get(StringUtil::class)->getPwgCharset());
+                header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
 
                 if (PermissionService::get()->isAdmin()) {
                     $url = Config::noPhotoYetUrl();
                     if (str_starts_with($url, 'http')) {
                         // absolute URL set by admin — use as-is
                     } elseif ($url === '' || $url === 'admin.php?page=photos_add') {
-                        $url = ServiceLocator::get(UrlGenerator::class)->admin('photos_add');
+                        $url = $this->urlGenerator->admin('photos_add');
                     } else {
                         $url = UrlService::getRootUrl() . $url;
                     }
@@ -78,7 +84,7 @@ final class NoPhotoYetRenderer
                 } else {
                     $template->assign([
                         'step' => 1,
-                        'U_LOGIN' => ServiceLocator::get(UrlGenerator::class)->identification(),
+                        'U_LOGIN' => $this->urlGenerator->identification(),
                         'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=browse',
                     ]);
                 }
@@ -87,7 +93,7 @@ final class NoPhotoYetRenderer
                 $template->pparse('no_photo_yet.latte');
                 exit();
             } else {
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('no_photo_yet', 'false');
+                $this->configService->confUpdateParam('no_photo_yet', 'false');
             }
         }
     }

@@ -19,7 +19,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -46,6 +45,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class InstallController implements ControllerInterface
 {
+    public function __construct(
+        private readonly AdminService $adminService,
+        private readonly ConfigService $configService,
+        private readonly MailService $mailService,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -216,9 +223,9 @@ final class InstallController implements ControllerInterface
                     'comment' => 'a secret key specific to the gallery for internal use',
                 ]);
 
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
-                ServiceLocator::get(ConfigService::class)->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
+                $this->configService->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
+                $this->configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
+                $this->configService->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
 
                 $languages->performAction('activate', $language);
                 ConfigService::loadConfFromDb();
@@ -275,7 +282,7 @@ final class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            ServiceLocator::get(Util::class)->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
+            $this->util->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {
@@ -293,8 +300,8 @@ final class InstallController implements ControllerInterface
 
                 if ($is_newsletter_subscribe) {
                     $result = '';
-                    ServiceLocator::get(AdminService::class)->fetchRemote(
-                        ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
+                    $this->adminService->fetchRemote(
+                        $this->adminService->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
                         $result,
                         [],
                         ['origin' => 'installation']
@@ -318,7 +325,7 @@ final class InstallController implements ControllerInterface
                         LangService::get()->getL10nArgs('', ''),
                         LangService::get()->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
                     ];
-                    ServiceLocator::get(MailService::class)->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
+                    $this->mailService->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
                 }
             }
         }

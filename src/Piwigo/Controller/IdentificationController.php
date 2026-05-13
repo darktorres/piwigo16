@@ -8,7 +8,6 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -32,6 +31,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class IdentificationController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -49,7 +56,7 @@ final class IdentificationController implements ControllerInterface
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
-        ServiceLocator::get(Util::class)->checkInputParameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
+        $this->util->checkInputParameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
@@ -100,22 +107,22 @@ final class IdentificationController implements ControllerInterface
 
         $tpl->assign([
             'U_REDIRECT'           => $redirect_to,
-            'F_LOGIN_ACTION'       => ServiceLocator::get(UrlGenerator::class)->identification(),
+            'F_LOGIN_ACTION'       => $this->urlGenerator->identification(),
             'authorize_remembering' => Config::authorizeRemembering(),
         ]);
 
         if (!Config::galleryLocked() && Config::allowUserRegistration()) {
-            $tpl->assign('U_REGISTER', ServiceLocator::get(UrlGenerator::class)->register());
+            $tpl->assign('U_REGISTER', $this->urlGenerator->register());
         }
         if (!Config::galleryLocked()) {
-            $tpl->assign('U_LOST_PASSWORD', ServiceLocator::get(UrlGenerator::class)->password());
+            $tpl->assign('U_LOST_PASSWORD', $this->urlGenerator->password());
         }
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!Config::galleryLocked() && !in_array('theIdentificationPage', $hideMenuOn)) {
-            ServiceLocator::get(MenubarRenderer::class)->render();
+            $this->menubarRenderer->render();
         }
 
         $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
@@ -146,7 +153,7 @@ final class IdentificationController implements ControllerInterface
 
         PageHeaderRenderer::render();
         EventDispatcher::notify('loc_end_identification');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('identification.latte');
         PageTailRenderer::render();
 

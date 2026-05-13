@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -34,6 +33,16 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ProfileController implements ControllerInterface
 {
+    public function __construct(
+        private readonly HtmlService $htmlService,
+        private readonly MenubarRenderer $menubarRenderer,
+        private readonly ProfileService $profileService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -41,7 +50,7 @@ final class ProfileController implements ControllerInterface
         PermissionService::get()->checkStatus(AccessLevel::Classic);
 
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         /** @var array<string, mixed> $user */
@@ -53,7 +62,7 @@ final class ProfileController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_profile');
 
-        $default_user = ServiceLocator::get(UserRepository::class)
+        $default_user = $this->userRepository
             ->getDefaultUserInfo(Config::defaultUserId());
 
         $tpl = TemplateRegistry::current();
@@ -64,12 +73,12 @@ final class ProfileController implements ControllerInterface
         }
 
         $pgErrors = is_array($page['errors'] ?? null) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $page['errors']) : [];
-        ServiceLocator::get(ProfileService::class)->saveProfileFromPost($userdata, $pgErrors);
+        $this->profileService->saveProfileFromPost($userdata, $pgErrors);
         $page['errors'] = $pgErrors;
 
         $title = Lang::t('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
-        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(ServiceLocator::get(UrlGenerator::class)->profile(), UrlService::get()->makeIndexUrl(), $userdata);
+        $this->profileService->loadProfileInTemplate($this->urlGenerator->profile(), UrlService::get()->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
         $special_user = in_array($userdata_id, [Config::guestId(), Config::defaultUserId()]);
@@ -117,7 +126,7 @@ final class ProfileController implements ControllerInterface
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (!in_array('theProfilePage', $hideMenuOn)) {
             if (($themeconfArr['id'] ?? '') !== 'standard_pages') {
-                ServiceLocator::get(MenubarRenderer::class)->render();
+                $this->menubarRenderer->render();
             }
         }
 
@@ -151,7 +160,7 @@ final class ProfileController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         EventDispatcher::notify('loc_end_profile');
-        ServiceLocator::get(HtmlService::class)->flushPageMessages();
+        $this->htmlService->flushPageMessages();
         $tpl->pparse('profile.latte');
         PageTailRenderer::render();
 

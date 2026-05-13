@@ -151,7 +151,7 @@ return [
     HtmlService::class         => factory(static fn (): HtmlService => new HtmlService()),
     NotificationService::class => factory(static fn (Connection $conn): NotificationService => new NotificationService($conn)),
     PluginService::class       => factory(static fn (PluginRepository $repo, StringUtil $s, Util $u): PluginService => new PluginService($repo, $s, $u)),
-    SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log): SearchService => new SearchService($repo, $conn, $log)),
+    SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, StringUtil $s, TagService $tag, UrlService $u, UserService $us): SearchService => new SearchService($repo, $conn, $log, $cat, $h, $perm, $pref, $s, $tag, $u, $us)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (TagRepository $repo): TagService => new TagService($repo)),
     UrlService::class          => factory(static fn (Connection $conn, StringUtil $s, CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm): UrlService => new UrlService($conn, $s, $cat, $h, $tag, $perm)),

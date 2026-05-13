@@ -25,11 +25,9 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
@@ -72,6 +70,41 @@ final class MiscController
 
     private bool $mustRepost = false;
 
+    public function __construct(
+        private readonly Connection $conn,
+        private readonly AdminService $adminService,
+        private readonly AlbumsTabRenderer $albumsTabRenderer,
+        private readonly AuthService $authService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly CommentRepository $commentRepository,
+        private readonly ConfigService $configService,
+        private readonly DateService $dateService,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly LangService $langService,
+        private readonly MailService $mailService,
+        private readonly NotificationAdminService $notificationAdminService,
+        private readonly NotificationRepository $notificationRepository,
+        private readonly NotificationService $notificationService,
+        private readonly PermalinkRepository $permalinkRepository,
+        private readonly PermalinkService $permalinkService,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
+        private readonly ProfileService $profileService,
+        private readonly RateRepository $rateRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+        private readonly TagRepository $tagRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserRepository $userRepository,
+        private readonly UserService $userService,
+        private readonly Util $util,
+    ) {
+    }
+
     public function handle(string $page): void
     {
         if ($page === 'notification_by_mail') {
@@ -111,9 +144,9 @@ final class MiscController
 
         MailNotificationContext::init();
 
-        ServiceLocator::get(Util::class)->checkInputParameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
+        $this->util->checkInputParameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
-        $GLOBALS['base_url'] = $base_url = ServiceLocator::get(UrlGenerator::class)->admin();
+        $GLOBALS['base_url'] = $base_url = $this->urlGenerator->admin();
         $this->mustRepost = false;
 
         if (!isset($_GET['mode']) || !is_string($_GET['mode'])) {
@@ -122,7 +155,7 @@ final class MiscController
             $page['mode'] = $_GET['mode'];
         }
 
-        PermissionService::get()->checkStatus($this->getTabStatus($page['mode']));
+        $this->permissionService->checkStatus($this->getTabStatus($page['mode']));
 
         EventDispatcher::addListener('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
         EventDispatcher::notify('nbm_event_handler_added');
@@ -132,7 +165,7 @@ final class MiscController
         }
 
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         switch ($page['mode']) {
@@ -140,16 +173,16 @@ final class MiscController
                 if (isset($_POST['param_submit'])) {
                     $nbmSendMailAsRaw = $_POST['nbm_send_mail_as'] ?? null;
                     $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbmSendMailAsRaw) ? $nbmSendMailAsRaw : '');
-                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
-                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
-                    ServiceLocator::get(Util::class)->checkInputParameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
+                    $this->util->checkInputParameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
+                    $this->util->checkInputParameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
+                    $this->util->checkInputParameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
-                    foreach (ServiceLocator::get(Connection::class)->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
+                    foreach ($this->conn->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
                         $param = is_string($nbm_user['param'] ?? null) ? $nbm_user['param'] : '';
                         if (isset($_POST[$param])) {
                             /** @var string $rawParamVal */
                             $rawParamVal = $_POST[$param];
-                            ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $rawParamVal, true);
+                            $this->configService->confUpdateParam($param, $rawParamVal, true);
                             $updated_param_count++;
                         }
                     }
@@ -161,14 +194,14 @@ final class MiscController
                 if (isset($_POST['falsify']) && isset($_POST['cat_true'])) {
                     $rawCatTrue2 = $_POST['cat_true'];
                     $cat_true = is_array($rawCatTrue2) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatTrue2) : [];
-                    $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->unsubscribeNotificationByMail(true, $cat_true);
+                    $check_key_treated = $this->notificationAdminService->unsubscribeNotificationByMail(true, $cat_true);
                     if ($this->doTimeoutTreatment('cat_true', $check_key_treated)) {
                         $this->mustRepost = true;
                     }
                 } elseif (isset($_POST['trueify']) && isset($_POST['cat_false'])) {
                     $rawCatFalse2 = $_POST['cat_false'];
                     $cat_false = is_array($rawCatFalse2) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawCatFalse2) : [];
-                    $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->subscribeNotificationByMail(true, $cat_false);
+                    $check_key_treated = $this->notificationAdminService->subscribeNotificationByMail(true, $cat_false);
                     if ($this->doTimeoutTreatment('cat_false', $check_key_treated)) {
                         $this->mustRepost = true;
                     }
@@ -188,9 +221,9 @@ final class MiscController
                 break;
         }
 
-        $tpl->assign(['PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . UrlService::get()->getQueryStringDiff([])]);
+        $tpl->assign(['PWG_TOKEN' => $this->util->getPwgToken(), 'U_HELP' => $this->urlGenerator->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
 
-        if (PermissionService::get()->isAutorizeStatus(AccessLevel::Webmaster)) {
+        if ($this->permissionService->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
             $tabsheet->setId('nbm');
             $tabsheet->select($page['mode']);
@@ -216,7 +249,7 @@ final class MiscController
             case 'subscribe':
                 $tpl->assign($page['mode'], true);
                 $tpl->assign(['L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed')]);
-                $data_users = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('subscribe');
+                $data_users = $this->notificationAdminService->getUserNotifications('subscribe');
                 $opt_true = $opt_true_selected = $opt_false = $opt_false_selected = [];
                 $rawCatTruePost  = $_POST['cat_true']  ?? null;
                 $rawCatFalsePost = $_POST['cat_false'] ?? null;
@@ -260,7 +293,7 @@ final class MiscController
                 $tpl->assign($page['mode'], $tpl_var);
                 if (Config::authKeyDuration() > 0) {
                     $strMiscResult = strtotime('now -' . Config::authKeyDuration() . ' second');
-                    $tpl->assign('auth_key_duration', ServiceLocator::get(DateService::class)->timeSince($strMiscResult !== false ? $strMiscResult : null, 'second', null, false));
+                    $tpl->assign('auth_key_duration', $this->dateService->timeSince($strMiscResult !== false ? $strMiscResult : null, 'second', null, false));
                 }
                 break;
         }
@@ -277,37 +310,37 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        ServiceLocator::get(Util::class)->checkInputParameter('cat_id', $_POST, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         if (isset($_POST['set_permalink']) && $_POST['cat_id'] > 0) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
             $permalinkRaw = $_POST['permalink'] ?? null;
             $permalink  = is_string($permalinkRaw) ? $permalinkRaw : '';
             $rawPostCatId = $_POST['cat_id'];
             $postCatId  = is_string($rawPostCatId) ? $rawPostCatId : '';
             if (empty($permalink)) {
-                ServiceLocator::get(PermalinkService::class)->deleteCatPermalink($postCatId, isset($_POST['save']));
+                $this->permalinkService->deleteCatPermalink($postCatId, isset($_POST['save']));
             } else {
-                ServiceLocator::get(PermalinkService::class)->setCatPermalink($postCatId, $permalink, isset($_POST['save']));
+                $this->permalinkService->setCatPermalink($postCatId, $permalink, isset($_POST['save']));
             }
             $selected_cat = [(int) $postCatId];
         } elseif (isset($_GET['delete_permanent'])) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
             $rawDeletePermanent = $_GET['delete_permanent'];
-            $deleted = ServiceLocator::get(PermalinkRepository::class)->deleteOldPermalinkByValue(is_string($rawDeletePermanent) ? $rawDeletePermanent : '');
+            $deleted = $this->permalinkRepository->deleteOldPermalinkByValue(is_string($rawDeletePermanent) ? $rawDeletePermanent : '');
             if (!$deleted) {
                 PageState::current()->addError(Lang::t('Cannot delete the old permalink !'));
             }
         }
 
         $page['tab'] = 'permalinks';
-        ServiceLocator::get(AlbumsTabRenderer::class)->render();
+        $this->albumsTabRenderer->render();
 
         $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . Tables::categories();
-        ServiceLocator::get(CategoryService::class)->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
+        $this->categoryService->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
 
-        $pwg_token = ServiceLocator::get(Util::class)->getPwgToken();
+        $pwg_token = $this->util->getPwgToken();
 
         $sort_by = $this->parseSortVariables(['id', 'name', 'permalink'], 'name', 'psf', ['delete_permanent'], 'SORT_');
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
@@ -316,30 +349,30 @@ final class MiscController
             $permalinkQuery .= ' ORDER BY ' . $sortBy0;
         }
         $categories = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
-            $row['name'] = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
+        foreach ($this->conn->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
+            $row['name'] = $this->htmlService->getCatDisplayNameCache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
             $categories[] = $row;
         }
         if ($sort_by[0] == 'name') {
-            usort($categories, ServiceLocator::get(CategoryService::class)->globalRankCompare(...));
+            usort($categories, $this->categoryService->globalRankCompare(...));
         }
         $tpl->assign('permalinks', $categories);
 
         $sort_by = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
-        $url_del_base    = ServiceLocator::get(UrlGenerator::class)->admin('permalinks');
+        $url_del_base    = $this->urlGenerator->admin('permalinks');
         $sortByOld0      = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $oldPermalinkQuery = 'SELECT * FROM ' . Tables::oldPermalinks();
         if (count($sort_by) && $sortByOld0 !== '') {
             $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0;
         }
         $deleted_permalinks = [];
-        foreach (ServiceLocator::get(Connection::class)->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
-            $row['name']     = ServiceLocator::get(HtmlService::class)->getCatDisplayNameCache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
-            $row['U_DELETE'] = UrlService::get()->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
+        foreach ($this->conn->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
+            $row['name']     = $this->htmlService->getCatDisplayNameCache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
+            $row['U_DELETE'] = $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
             $deleted_permalinks[] = $row;
         }
 
-        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => ServiceLocator::get(UrlGenerator::class)->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => Lang::t('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => $this->urlGenerator->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => Lang::t('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'permalinks.latte');
     }
 
@@ -349,23 +382,23 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('tags');
         $tabsheet->select('');
         $tabsheet->assign();
 
         if (isset($_GET['action']) && 'delete_orphans' == $_GET['action']) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
-            ServiceLocator::get(TagAdminService::class)->deleteOrphanTags();
+            $this->util->checkPwgToken();
+            $this->tagAdminService->deleteOrphanTags();
             $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
-            Util::get()->redirect(ServiceLocator::get(UrlGenerator::class)->admin('tags'));
+            $this->util->redirect($this->urlGenerator->admin('tags'));
         }
 
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin('tags'), 'PWG_TOKEN' => ServiceLocator::get(Util::class)->getPwgToken(), 'BATCH_MANAGER_URL' => ServiceLocator::get(UrlGenerator::class)->admin('batch_manager')]);
+        $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('tags'), 'PWG_TOKEN' => $this->util->getPwgToken(), 'BATCH_MANAGER_URL' => $this->urlGenerator->admin('batch_manager')]);
 
         $warning_tags     = '';
-        $orphan_tags      = ServiceLocator::get(TagAdminService::class)->getOrphanTags();
+        $orphan_tags      = $this->tagAdminService->getOrphanTags();
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
             if (!is_array($tag)) {
@@ -377,7 +410,7 @@ final class MiscController
 
         $orphan_tag_names_array = '[]';
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = new Html(sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . ServiceLocator::get(UrlGenerator::class)->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken() . '">' . htmlspecialchars(Lang::t('Review')) . '</a>'));
+            $warning_tags = new Html(sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . $this->urlGenerator->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . $this->util->getPwgToken() . '">' . htmlspecialchars(Lang::t('Review')) . '</a>'));
             $orphan_tag_names_array = '["' . implode('" ,"', array_map(htmlentities(...), $orphan_tag_names, array_fill(0, count($orphan_tag_names), ENT_QUOTES))) . '"]';
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
@@ -391,7 +424,7 @@ final class MiscController
         $tpl->assign('message_tags', $message_tags);
 
         $per_page   = 100;
-        $_tagRepo   = ServiceLocator::get(TagRepository::class);
+        $_tagRepo   = $this->tagRepository;
         $tag_counters = $_tagRepo->getTagCounters();
         $all_tags   = [];
         foreach ($_tagRepo->findAll() as $tag) {
@@ -411,11 +444,11 @@ final class MiscController
             }
             $all_tags[] = $tag;
         }
-        usort($all_tags, ServiceLocator::get(HtmlService::class)->tagAlphaCompare(...));
+        usort($all_tags, $this->htmlService->tagAlphaCompare(...));
 
         $tpl->assign(['first_tags' => array_slice($all_tags, 0, $per_page), 'data' => $all_tags, 'total' => count($all_tags), 'per_page' => $per_page, 'ADMIN_PAGE_TITLE' => Lang::t('Tags')]);
         $tpl->assign('page_data_json', json_encode([
-            'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
+            'pwg_token' => $this->util->getPwgToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
             'str_already_exist' => Lang::t('Tag "%s" already exists'), 'str_and_others_tags' => Lang::t('and %s others'), 'str_clear_selection' => Lang::t('Clear Selection'), 'str_copy' => Lang::t(' (copy)'), 'str_delete' => Lang::t('Delete tag "%s"?'), 'str_delete_orphan_tags' => Lang::t('Delete orphan tags ?'), 'str_delete_tags' => Lang::t('Delete tags {%s}?'), 'str_delete_them' => Lang::t('Delete them'), 'str_keep_them' => Lang::t('Keep them'), 'str_merged_into' => Lang::t('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_no_photos' => Lang::t('no photo'), 'str_number_photos' => Lang::t('%d photos'), 'str_orphan_tags' => Lang::t('You have %s1 orphan : %s2'), 'str_other_copy' => Lang::t(' (copy %s)'), 'str_select_all_tag' => Lang::t('Select all %d tags'), 'str_selection_done' => Lang::t('The %d tags on this page are selected'), 'str_tag_created' => Lang::t('Tag "%s" created'), 'str_tag_deleted' => Lang::t('Tag "%s" succesfully deleted'), 'str_tag_found' => Lang::t('<b>%d</b> tag found'), 'str_tag_rename' => Lang::t('Rename "%s"'), 'str_tag_selected' => Lang::t('<b>%d</b> tag selected'), 'str_tags_deleted' => Lang::t('Tags {%s} succesfully deleted'), 'str_tags_found' => Lang::t('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_yes_rename_confirmation' => Lang::t('Yes, rename'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'tags.latte');
@@ -438,7 +471,7 @@ final class MiscController
 
         EventDispatcher::notify('loc_end_help');
 
-        $helpContent = LangService::get()->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]);
+        $helpContent = $this->langService->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]);
         $tpl->assign([
             'HELP_CONTENT'       => new Html(is_string($helpContent) ? $helpContent : ''),
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',
@@ -476,7 +509,7 @@ final class MiscController
         $rawHelpPage = $_GET['help'] ?? null;
         $helpPage = is_string($rawHelpPage) ? $rawHelpPage : '';
         if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
-            $loaded = LangService::get()->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
+            $loaded = $this->langService->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
             $help_content = is_string($loaded) ? $loaded : '';
             $help_content = EventDispatcher::dispatch('get_popup_help_content', $help_content, $_GET['help']);
         } else {
@@ -507,11 +540,11 @@ final class MiscController
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) {
-            PreferencesService::get()->userprefsUpdateParam('show_newsletter_subscription', 'false');
+            $this->preferencesService->userprefsUpdateParam('show_newsletter_subscription', 'false');
             exit();
         }
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('admin_home');
         $tabsheet->select('');
@@ -528,60 +561,60 @@ final class MiscController
 
         $nb_orphans = is_numeric($page['nb_orphans'] ?? null) ? (int) $page['nb_orphans'] : 0;
         if (is_numeric($page['nb_photos_total'] ?? null) && (int) $page['nb_photos_total'] >= 100000) {
-            $nb_orphans = ServiceLocator::get(ImageAdminService::class)->countOrphans();
+            $nb_orphans = $this->imageAdminService->countOrphans();
         }
 
         if ($nb_orphans > 0) {
-            $orphans_url = ServiceLocator::get(UrlGenerator::class)->admin('batch_manager') . '&amp;filter=prefilter-no_album';
+            $orphans_url = $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_album';
             $message     = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>' . Lang::t('Orphans') . '</a><span class="adminMenubarCounter">' . $nb_orphans . '</span>';
             PageState::current()->addWarning($message);
         }
 
-        $locked_album = ServiceLocator::get(CategoryRepository::class)->countHidden();
+        $locked_album = $this->categoryRepository->countHidden();
         if ($locked_album > 0) {
-            $locked_album_url = ServiceLocator::get(UrlGenerator::class)->admin('cat_options') . '&section=visible';
+            $locked_album_url = $this->urlGenerator->admin('cat_options') . '&section=visible';
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>' . Lang::t('Locked album') . '</a><span class="adminMenubarCounter">' . $locked_album . '</span>';
             PageState::current()->addWarning($message);
         }
 
-        ServiceLocator::get(ImageAdminService::class)->fsQuickCheck();
+        $this->imageAdminService->fsQuickCheck();
 
 
         $intro_newsletter_data = null;
-        if (Config::showNewsletterSubscription() && PreferencesService::get()->userprefsGetParam('show_newsletter_subscription', true)) {
-            $register_date = ServiceLocator::get(UserRepository::class)->findEarliestRegistrationDate();
-            $nb_cats       = ServiceLocator::get(CategoryRepository::class)->countAll();
-            $nb_images     = ServiceLocator::get(ImageRepository::class)->countAll();
+        if (Config::showNewsletterSubscription() && $this->preferencesService->userprefsGetParam('show_newsletter_subscription', true)) {
+            $register_date = $this->userRepository->findEarliestRegistrationDate();
+            $nb_cats       = $this->categoryRepository->countAll();
+            $nb_images     = $this->imageRepository->countAll();
             $uagent_obj    = new \uagent_info();
             if (!$uagent_obj->DetectIos() && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
                 $userLang  = is_string($user['language'] ?? null) ? $user['language'] : '';
                 $userEmail = is_string($user['email'] ?? null) ? $user['email'] : '';
-                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => ServiceLocator::get(AdminService::class)->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => ServiceLocator::get(AdminService::class)->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => Lang::t('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => Lang::t('Sign up to the newsletter'), 'str_see_previous' => Lang::t('See previous newsletters'), 'str_dismiss' => Lang::t('Understood, do not show again')];
+                $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => $this->adminService->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => $this->adminService->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => Lang::t('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => Lang::t('Sign up to the newsletter'), 'str_see_previous' => Lang::t('See previous newsletters'), 'str_dismiss' => Lang::t('Understood, do not show again')];
             }
         }
 
-        $stats      = ServiceLocator::get(AdminService::class)->getPwgGeneralStatitics();
+        $stats      = $this->adminService->getPwgGeneralStatitics();
         $du_decimals = 1;
         $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024.0 * 1024.0);
         if ($du_gb > 100) {
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => ServiceLocator::get(AdminService::class)->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => ServiceLocator::get(UrlGenerator::class)->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . ServiceLocator::get(Util::class)->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->util->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
-            $tpl->assign('NB_COMMENTS', ServiceLocator::get(CommentRepository::class)->countAll());
+            $tpl->assign('NB_COMMENTS', $this->commentRepository->countAll());
         } else {
             $tpl->assign('NB_COMMENTS', 0);
         }
 
         if (Config::showPiwigoLatestNews()) {
-            $latest_news = ServiceLocator::get(AdminService::class)->getPiwigoNews();
+            $latest_news = $this->adminService->getPiwigoNews();
             if (isset($latest_news['id']) && $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
                 $newsUrl     = $latest_news['url'] ?? null;
                 $newsPosted  = $latest_news['posted'] ?? null;
                 $newsSubject = $latest_news['subject'] ?? null;
-                PageState::current()->addMessage(new Html(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_string($newsUrl) ? $newsUrl : '', ServiceLocator::get(DateService::class)->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_string($newsPosted) ? $newsPosted : '') . ')', is_string($newsSubject) ? $newsSubject : '')));
+                PageState::current()->addMessage(new Html(sprintf('%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>', Lang::t('Latest Piwigo news'), is_string($newsUrl) ? $newsUrl : '', $this->dateService->timeSince(is_string($latest_news['posted_on']) || is_int($latest_news['posted_on']) ? $latest_news['posted_on'] : null, 'year') . ' (' . (is_string($newsPosted) ? $newsPosted : '') . ')', is_string($newsSubject) ? $newsSubject : '')));
             }
         }
 
@@ -606,8 +639,8 @@ final class MiscController
 
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
-            $start_time = StringUtil::get()->getMoment();
-            $activity_actions = DbConnection::get()->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
+            $start_time = $this->stringUtil->getMoment();
+            $activity_actions = $this->conn->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
                 $day_date = new \DateTime((is_string($action['activity_day'] ?? null) ? $action['activity_day'] : '') . ' 12:00:00');
@@ -620,10 +653,10 @@ final class MiscController
                 $day_nb = $day_date->format('N');
                 $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_string($action['object'] ?? null) ? $action['object'] : '')][ucfirst(is_string($action['action'] ?? null) ? $action['action'] : '')] = $action['activity_counter'];
                 $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + (is_numeric($action['activity_counter']) ? (int) $action['activity_counter'] : 0);
-                $activity_last_weeks[$week][$day_nb]['date']   = ServiceLocator::get(DateService::class)->formatDate($day_date->getTimestamp());
+                $activity_last_weeks[$week][$day_nb]['date']   = $this->dateService->formatDate($day_date->getTimestamp());
             }
 
-            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::get()->getElapsedTime($start_time, StringUtil::get()->getMoment()));
+            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . $this->stringUtil->getElapsedTime($start_time, $this->stringUtil->getMoment()));
             $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
         }
 
@@ -700,13 +733,13 @@ final class MiscController
 
         $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
         $data_storage = [];
-        foreach (array_column(DbConnection::get()->executeQuery("SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path,'.',-1) AS ext, SUM(filesize) AS filesize FROM `" . Tables::images() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
+        foreach (array_column($this->conn->executeQuery("SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path,'.',-1) AS ext, SUM(filesize) AS filesize FROM `" . Tables::images() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
             $type = in_array(strtolower((string) $ext), Config::pictureExtensions()) ? 'Photos' : (in_array(strtolower((string) $ext), $video_format) ? 'Videos' : 'Other');
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
             $data_storage[$type]['details'][strtoupper((string) $ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
         }
-        foreach (array_column(DbConnection::get()->executeQuery('SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize FROM `' . Tables::imageFormat() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
+        foreach (array_column($this->conn->executeQuery('SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize FROM `' . Tables::imageFormat() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
             $type = 'Formats';
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
@@ -754,11 +787,11 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('menus');
         $tabsheet->select('');
@@ -789,7 +822,7 @@ final class MiscController
             $idx++;
         }
 
-        if (isset($_POST['submit']) && PermissionService::get()->isWebmaster()) {
+        if (isset($_POST['submit']) && $this->permissionService->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide     = isset($_POST['hide_' . $id]);
                 $int_pos  = is_numeric($pos) ? (int) $pos : 0;
@@ -802,7 +835,7 @@ final class MiscController
             }
             $this->makeConsecutive($mb_conf);
             $mb_conf_db = $mb_conf;
-            ServiceLocator::get(ConfigService::class)->confUpdateParam('blk_' . $menu->getId(), serialize($mb_conf_db));
+            $this->configService->confUpdateParam('blk_' . $menu->getId(), serialize($mb_conf_db));
             $tpl->assign(['save_success' => Lang::t('Order of menubar items has been updated successfully.')]);
         }
 
@@ -812,9 +845,9 @@ final class MiscController
             $tpl->append('blocks', ['pos' => (is_numeric($pos) ? (int) $pos : 0) / 5, 'reg' => $reg_blocks[$id]]);
         }
 
-        $action = ServiceLocator::get(UrlGenerator::class)->admin('menubar');
+        $action = $this->urlGenerator->admin('menubar');
         $tpl->assign(['F_ACTION' => $action]);
-        $tpl->assign('isWebmaster', PermissionService::get()->isWebmaster() ? 1 : 0);
+        $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'menubar.latte');
     }
@@ -837,17 +870,17 @@ final class MiscController
         $tpl = TemplateRegistry::current();
 
         $tpl->assign([
-            'F_ACTION'          => ServiceLocator::get(UrlGenerator::class)->admin('comments'),
-            'PWG_TOKEN'         => ServiceLocator::get(Util::class)->getPwgToken(),
+            'F_ACTION'          => $this->urlGenerator->admin('comments'),
+            'PWG_TOKEN'         => $this->util->getPwgToken(),
             'COMMENTS_DISABLED' => !Config::activateComments(),
-            'U_CONFIGURATION'   => ServiceLocator::get(UrlGenerator::class)->admin('configuration') . '&section=comments',
+            'U_CONFIGURATION'   => $this->urlGenerator->admin('configuration') . '&section=comments',
             'page_data_json'    => json_encode([
-                'pwg_token' => ServiceLocator::get(Util::class)->getPwgToken(),
+                'pwg_token' => $this->util->getPwgToken(),
                 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_delete' => Lang::t('Are you sure you want to delete comment #%s?'), 'str_deletes' => Lang::t('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => Lang::t('No comments selected, no actions possible.'), 'str_an_error_has' => Lang::t('An error has occured'), 'str_comment_validated' => Lang::t('The comment has been validated.'), 'str_comments_validated' => Lang::t('The comments have been validated.'), 'str_and_others' => Lang::t('and %s others'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $GLOBALS['my_base_url'] = $my_base_url = ServiceLocator::get(UrlGenerator::class)->admin() . '&page=';
+        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('comments');
         $tabsheet->select('');
@@ -865,7 +898,7 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        ServiceLocator::get(Util::class)->checkInputParameter('display', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('display', $_GET, false, ValidationPattern::ID);
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
@@ -887,7 +920,7 @@ final class MiscController
 
         $page['cat_filter'] = '';
         if (isset($_GET['cat']) && is_numeric($_GET['cat'])) {
-            $cat_ids = ServiceLocator::get(CategoryService::class)->getSubcatIds([(int) $_GET['cat']]);
+            $cat_ids = $this->categoryService->getSubcatIds([(int) $_GET['cat']]);
             if (count($cat_ids) > 0) {
                 $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
             }
@@ -895,7 +928,7 @@ final class MiscController
 
         $userFields = Config::userFields();
         $users      = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findAllUserIdNameMap($userFields['id'], $userFields['username'], Tables::users()) as $id => $username) {
+        foreach ($this->userRepository->findAllUserIdNameMap($userFields['id'], $userFields['username'], Tables::users()) as $id => $username) {
             $users[$id] = stripslashes($username);
         }
 
@@ -904,14 +937,14 @@ final class MiscController
             $query .= ' JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
         }
         $query .= ' WHERE 1=1' . $page['user_filter'];
-        $nb_images_raw = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchOne();
+        $nb_images_raw = $this->conn->executeQuery($query)->fetchOne();
         $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
-        $nb_elements   = ServiceLocator::get(ImageRepository::class)->countRatings();
+        $nb_elements   = $this->imageRepository->countRatings();
 
-        $cache_keys  = ServiceLocator::get(AdminService::class)->getAdminClientCacheKeys(['categories']);
+        $cache_keys  = $this->adminService->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
 
-        $tpl->assign(['navbar' => ServiceLocator::get(Util::class)->createNavigationBar(ServiceLocator::get(UrlGenerator::class)->admin() . UrlService::get()->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
+        $tpl->assign(['navbar' => $this->util->createNavigationBar($this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => $this->urlGenerator->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
         $available_order_by = [[Lang::t('Rate date'), 'recently_rated DESC'], [Lang::t('Rating score'), 'score DESC'], [Lang::t('Average rate'), 'avg_rates DESC'], [Lang::t('Number of rates'), 'nb_rates DESC'], [Lang::t('Sum of rates'), 'sum_rates DESC'], [Lang::t('File name'), 'file DESC'], [Lang::t('Creation date'), 'date_creation DESC'], [Lang::t('Post date'), 'date_available DESC']];
         foreach ($available_order_by as $orderByEntry) {
@@ -930,13 +963,13 @@ final class MiscController
         }
         $query .= ' WHERE 1 = 1 ' . $page['user_filter'] . $page['cat_filter'] . ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id ORDER BY ' . $available_order_by[$order_by_index][1] . ' LIMIT ' . $elements_per_page . ' OFFSET ' . $start . ';';
 
-        $images = ServiceLocator::get(Connection::class)->executeQuery($query)->fetchAllAssociative();
+        $images = $this->conn->executeQuery($query)->fetchAllAssociative();
         $tpl->assign('images', []);
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumbUrl($image);
             $image_id_int  = is_numeric($image['id']) ? (int) $image['id'] : 0;
-            $image_url     = ServiceLocator::get(UrlGenerator::class)->admin('photo-' . $image_id_int);
-            $all_rates     = ServiceLocator::get(RateRepository::class)->findByElementId($image_id_int);
+            $image_url     = $this->urlGenerator->admin('photo-' . $image_id_int);
+            $all_rates     = $this->rateRepository->findByElementId($image_id_int);
             $tpl_image     = ['id' => $image['id'], 'U_THUMB' => $thumbnail_src, 'U_URL' => $image_url, 'SCORE_RATE' => $image['score'], 'AVG_RATE' => $image['avg_rates'], 'SUM_RATE' => $image['sum_rates'], 'NB_RATES' => is_numeric($image['nb_rates']) ? (int) $image['nb_rates'] : 0, 'NB_RATES_TOTAL' => count($all_rates), 'FILE' => $image['file'], 'rates' => []];
             foreach ($all_rates as $row) {
                 $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
@@ -972,8 +1005,8 @@ final class MiscController
 
         $userFields  = Config::userFields();
         $users_by_id = [];
-        foreach (ServiceLocator::get(UserRepository::class)->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !PermissionService::get()->isAutorizeStatus(AccessLevel::Classic, is_string($row['status'] ?? null) ? $row['status'] : '')];
+        foreach ($this->userRepository->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
+            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, is_string($row['status'] ?? null) ? $row['status'] : '')];
         }
 
         $by_user_rating_model = ['rates' => []];
@@ -983,7 +1016,7 @@ final class MiscController
 
         $image_ids     = [];
         $by_user_ratings = [];
-        foreach (ServiceLocator::get(RateRepository::class)->findAllOrderedByDate() as $row) {
+        foreach ($this->rateRepository->findAllOrderedByDate() as $row) {
             $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
             if (!isset($users_by_id[$user_id])) {
                 $users_by_id[$user_id] = ['name' => '???' . $user_id, 'anon' => false];
@@ -1008,18 +1041,18 @@ final class MiscController
         $image_urls = [];
         if (count($image_ids) > 0) {
             $params = ImageStdParams::getByType(DerivativeSize::Square->value);
-            foreach (ServiceLocator::get(ImageRepository::class)->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
+            foreach ($this->imageRepository->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
                 $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => UrlService::get()->makePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']])];
+                $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']])];
             }
         }
 
         $all_img_sum = [];
-        foreach (ServiceLocator::get(RateRepository::class)->findAverageByElement() as $row) {
+        foreach ($this->rateRepository->findAverageByElement() as $row) {
             $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
         }
 
-        $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column(DbConnection::get()->executeQuery('SELECT id FROM ' . Tables::images() . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
+        $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
 
         foreach ($by_user_ratings as $id => &$rating) {
             $c = $s = $ss = $consensus_dev = $consensus_dev_top = 0.0;
@@ -1071,8 +1104,8 @@ final class MiscController
         $order_by_index_clamped = max(0, min($order_by_index, count($available_order_by) - 1));
         uasort($by_user_ratings, $available_order_by[$order_by_index_clamped][1]);
 
-        $nb_elements = ServiceLocator::get(ImageRepository::class)->countRatings();
-        $tpl->assign(['F_ACTION' => ServiceLocator::get(UrlGenerator::class)->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
+        $nb_elements = $this->imageRepository->countRatings();
+        $tpl->assign(['F_ACTION' => $this->urlGenerator->admin(), 'F_MIN_RATES' => $filter_min_rates, 'CONSENSUS_TOP_NUMBER' => $consensus_top_number, 'available_rates' => Config::rateItems(), 'ratings' => $by_user_ratings, 'image_urls' => $image_urls, 'TN_WIDTH' => ImageStdParams::getByType(DerivativeSize::Square->value)->sizing->ideal_size[0], 'NB_ELEMENTS' => $nb_elements, 'ADMIN_PAGE_TITLE' => Lang::t('Rating'), 'page_data_json' => json_encode(['nb_elements' => $nb_elements, 'root_url' => UrlService::getRootUrl(), 'str_delete_ratings_confirm' => Lang::t('Are you sure you want to delete the ratings of the user "%s"?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'rating_user.latte');
     }
 
@@ -1084,22 +1117,22 @@ final class MiscController
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
 
-        ServiceLocator::get(Util::class)->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
+        $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 
         $userIdRaw = $_GET['user_id'] ?? null;
         $editUserId = is_numeric($userIdRaw) ? (int) $userIdRaw : 0;
-        $edit_user  = UserService::get()->buildUser($editUserId, false);
+        $edit_user  = $this->userService->buildUser($editUserId, false);
 
         if (!empty($_POST)) {
-            ServiceLocator::get(Util::class)->checkPwgToken();
+            $this->util->checkPwgToken();
         }
 
         $errors = [];
-        ServiceLocator::get(ProfileService::class)->saveProfileFromPost($edit_user, $errors);
+        $this->profileService->saveProfileFromPost($edit_user, $errors);
 
-        ServiceLocator::get(ProfileService::class)->loadProfileInTemplate(
-            ServiceLocator::get(UrlGenerator::class)->admin('profile') . '&user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
-            ServiceLocator::get(UrlGenerator::class)->admin('user_list'),
+        $this->profileService->loadProfileInTemplate(
+            $this->urlGenerator->admin('profile') . '&user_id=' . (is_scalar($edit_user['id'] ?? null) ? (string) $edit_user['id'] : ''),
+            $this->urlGenerator->admin('user_list'),
             $edit_user
         );
 
@@ -1121,7 +1154,7 @@ final class MiscController
                 $post_keyname_val = is_array($rawPostKeyname) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawPostKeyname) : [];
                 $post_count       = count($post_keyname_val);
                 $treated_count    = count($check_key_treated);
-                $time_refresh     = $treated_count !== 0 ? (int) ceil((StringUtil::get()->getMoment() - $ctx->startTime) * (float) $post_count / (float) $treated_count) : 0;
+                $time_refresh     = $treated_count !== 0 ? (int) ceil(($this->stringUtil->getMoment() - $ctx->startTime) * (float) $post_count / (float) $treated_count) : 0;
                 $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
                 $this->mustRepost = true;
                 PageState::current()->addError(Translator::get()->plural('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));
@@ -1143,7 +1176,7 @@ final class MiscController
     private function insertNewDataUserMailNotification(string $base_url): void
     {
         $ctx       = MailNotificationContext::current();
-        $notifRepo = ServiceLocator::get(NotificationRepository::class);
+        $notifRepo = $this->notificationRepository;
         $userFields = Config::userFields();
 
         $notifRepo->clearEmptyEmails($userFields['email'], Tables::users());
@@ -1153,7 +1186,7 @@ final class MiscController
             $inserts        = [];
             $check_key_list = [];
             foreach ($users_without_notif as $nbm_user) {
-                $nbm_user['check_key'] = ServiceLocator::get(NotificationAdminService::class)->findAvailableCheckKey();
+                $nbm_user['check_key'] = $this->notificationAdminService->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
                 $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
                 $mailAddressRaw = $nbm_user['mail_address'] ?? null;
@@ -1161,13 +1194,13 @@ final class MiscController
                 PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));
             }
             Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
-            $check_key_treated = ServiceLocator::get(NotificationAdminService::class)->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
+            $check_key_treated = $this->notificationAdminService->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
 
             if ($ctx->isSendmailTimeout) {
                 $untreated_keys = array_diff($check_key_list, $check_key_treated);
                 if (count($untreated_keys) != 0) {
-                    ServiceLocator::get(NotificationRepository::class)->deleteByCheckKeys(array_values($untreated_keys));
-                    Util::get()->redirect($base_url . UrlService::get()->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
+                    $this->notificationRepository->deleteByCheckKeys(array_values($untreated_keys));
+                    $this->util->redirect($base_url . $this->urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }
             }
         }
@@ -1197,7 +1230,7 @@ final class MiscController
         if (in_array($action, ['list_to_send', 'send'])) {
             $dbnow         = new \DateTimeImmutable()->format('Y-m-d H:i:s');
             $is_action_send = ($action == 'send');
-            $data_users    = ServiceLocator::get(NotificationAdminService::class)->getUserNotifications('send', $check_key_list);
+            $data_users    = $this->notificationAdminService->getUserNotifications('send', $check_key_list);
             $is_list_all_without_test = ($ctx->isSendmailTimeout || Config::nbmListAllEnabledUsersToSend());
 
             if (!$is_list_all_without_test || $is_action_send) {
@@ -1209,43 +1242,43 @@ final class MiscController
                     $customize_mail_content = EventDispatcher::dispatch('nbm_render_global_customize_mail_content', $customize_mail_content);
                     $msg_break_timeout = $is_action_send ? Lang::t('Time to send mail is limited. Others mails are skipped.') : Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
-                    ServiceLocator::get(NotificationAdminService::class)->beginUsersEnvNbm($is_action_send);
+                    $this->notificationAdminService->beginUsersEnvNbm($is_action_send);
                     foreach ($data_users as $nbm_user) {
-                        if (!$is_action_send && ServiceLocator::get(NotificationAdminService::class)->checkSendmailTimeout()) {
+                        if (!$is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
                             PageState::current()->addInfo($msg_break_timeout);
                             break;
                         }
-                        if ($is_action_send && ServiceLocator::get(NotificationAdminService::class)->checkSendmailTimeout()) {
+                        if ($is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
                             PageState::current()->addError($msg_break_timeout);
                             break;
                         }
 
-                        ServiceLocator::get(NotificationAdminService::class)->setUserOnEnvNbm($nbm_user, $is_action_send);
+                        $this->notificationAdminService->setUserOnEnvNbm($nbm_user, $is_action_send);
 
                         if ($is_action_send) {
                             $auth = null;
                             $url_params = [];
-                            $auth_key = AuthService::get()->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
+                            $auth_key = $this->authService->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
                             if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
                                 $auth = $auth_key['auth_key'];
                                 $url_params['auth'] = $auth;
                             }
 
-                            UrlService::get()->setMakeFullUrl();
+                            $this->urlService->setMakeFullUrl();
                             $return_list[] = (string) $nbm_user['check_key'];
                             $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
 
                             $news = [];
                             if (Config::nbmSendDetailedContent()) {
-                                $news = ServiceLocator::get(NotificationService::class)->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
+                                $news = $this->notificationService->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
                                 $exist_data = count($news) > 0;
                             } else {
-                                $exist_data = ServiceLocator::get(NotificationService::class)->newsExists($last_send, $dbnow);
+                                $exist_data = $this->notificationService->newsExists($last_send, $dbnow);
                             }
 
                             if ($exist_data) {
                                 $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('New photos added');
-                                ServiceLocator::get(NotificationAdminService::class)->assignVarsNbmMailContent($nbm_user);
+                                $this->notificationAdminService->assignVarsNbmMailContent($nbm_user);
                                 $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
 
                                 if (!is_null($nbm_user['last_send'])) {
@@ -1264,40 +1297,40 @@ final class MiscController
                                 }
 
                                 if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
-                                    $recent_post_dates = ServiceLocator::get(NotificationService::class)->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
+                                    $recent_post_dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
                                     foreach ($recent_post_dates as $date_detail) {
                                         $date_detail_arr = is_array($date_detail) ? $date_detail : [];
-                                        $nbmTpl->append('recent_posts', ['TITLE' => ServiceLocator::get(NotificationService::class)->getTitleRecentPostDate($date_detail_arr), 'HTML_DATA' => ServiceLocator::get(NotificationService::class)->getHtmlDescriptionRecentPostDate($date_detail_arr, is_string($auth) ? $auth : null)]);
+                                        $nbmTpl->append('recent_posts', ['TITLE' => $this->notificationService->getTitleRecentPostDate($date_detail_arr), 'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($date_detail_arr, is_string($auth) ? $auth : null)]);
                                     }
                                 }
 
-                                $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
+                                $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
 
                                 $nbmUsernameRaw    = $nbm_user['username']     ?? null;
                                 $nbmMailAddressRaw = $nbm_user['mail_address'] ?? null;
-                                $ret = ServiceLocator::get(MailService::class)->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
+                                $ret = $this->mailService->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
 
                                 if ($ret) {
-                                    ServiceLocator::get(NotificationAdminService::class)->incMailSentSuccess($nbm_user);
+                                    $this->notificationAdminService->incMailSentSuccess($nbm_user);
                                     $datas[] = ['user_id' => $nbm_user['user_id'], 'last_send' => $dbnow];
                                 } else {
-                                    ServiceLocator::get(NotificationAdminService::class)->incMailSentFailed($nbm_user);
+                                    $this->notificationAdminService->incMailSentFailed($nbm_user);
                                 }
-                                UrlService::get()->unsetMakeFullUrl();
+                                $this->urlService->unsetMakeFullUrl();
                             }
                         } else {
                             $last_send = isset($nbm_user['last_send']) ? (string) $nbm_user['last_send'] : null;
-                            if (ServiceLocator::get(NotificationService::class)->newsExists($last_send, $dbnow)) {
+                            if ($this->notificationService->newsExists($last_send, $dbnow)) {
                                 $return_list[] = $nbm_user;
                             }
                         }
-                        ServiceLocator::get(NotificationAdminService::class)->unsetUserOnEnvNbm();
+                        $this->notificationAdminService->unsetUserOnEnvNbm();
                     }
-                    ServiceLocator::get(NotificationAdminService::class)->endUsersEnvNbm();
+                    $this->notificationAdminService->endUsersEnvNbm();
 
                     if ($is_action_send) {
                         Dml::massUpdates(Tables::userMailNotification(), ['primary' => ['user_id'], 'update' => ['last_send']], $datas);
-                        ServiceLocator::get(NotificationAdminService::class)->displayCounterInfo();
+                        $this->notificationAdminService->displayCounterInfo();
                     }
                 } else {
                     if ($is_action_send) {
@@ -1356,7 +1389,7 @@ final class MiscController
             $disp = '↓';
             if ($field !== ($_GET[$get_param] ?? null)) {
                 if ($default_field != $field) {
-                    $url = UrlService::get()->addUrlParams($url, [$get_param => $field]);
+                    $url = $this->urlService->addUrlParams($url, [$get_param => $field]);
                 } elseif (!isset($_GET[$get_param])) {
                     $ret[] = $field;
                     $disp = '<em>' . $disp . '</em>';

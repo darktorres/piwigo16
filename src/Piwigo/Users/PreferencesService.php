@@ -4,21 +4,28 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Util;
 
-final class PreferencesService
+final readonly class PreferencesService
 {
+    public function __construct(
+        private Util $util,
+        private UserRepository $userRepository,
+    ) {
+    }
+
+    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
     public static function get(): self
     {
-        return ServiceLocator::get(self::class);
+        return Kernel::service(self::class);
     }
 
     public function getBrowserLanguage(): false|string
     {
         $raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
         return self::pickFromAcceptLanguage(
-            array_keys(Util::get()->getLanguages()),
+            array_keys($this->util->getLanguages()),
             is_string($raw) ? $raw : '',
         );
     }
@@ -86,8 +93,7 @@ final class PreferencesService
         $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $preferences = $user['preferences'] ?? [];
 
-        ServiceLocator::get(UserRepository::class)
-            ->updatePreferences(CurrentUser::get()->id, serialize($preferences));
+        $this->userRepository->updatePreferences(CurrentUser::get()->id, serialize($preferences));
     }
 
     public function userprefsUpdateParam(string $param, mixed $value): void

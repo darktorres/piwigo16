@@ -7,7 +7,7 @@ namespace Piwigo\Config;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
-use Piwigo\Core\ServiceLocator;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -27,11 +27,7 @@ final readonly class ConfigService
         $sql  = 'SELECT param, value FROM ' . Tables::config() .
             (($condition !== null && $condition !== '') ? ' WHERE ' . $condition : '');
 
-        if (ServiceLocator::has(Connection::class)) {
-            $conn = ServiceLocator::get(Connection::class);
-        } else {
-            $conn = DbConnection::build();
-        }
+        $conn = Kernel::isBooted() ? Kernel::service(Connection::class) : DbConnection::build();
 
         $rows = $conn->executeQuery($sql)->fetchAllAssociative();
 
@@ -56,7 +52,7 @@ final readonly class ConfigService
     public function pwgIsDbconfWriteable(): bool
     {
         [$param, $value] = ['pwg_is_dbconf_writeable_' . StringUtil::generateKey(12), date('c') . ' ' . StringUtil::generateKey(20)];
-        ServiceLocator::get(ConfigService::class)->confUpdateParam($param, $value);
+        $this->confUpdateParam($param, $value);
         $dbvalue = $this->conn->executeQuery(
             'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
             [$param]
@@ -64,7 +60,7 @@ final readonly class ConfigService
         if ($dbvalue !== $value) {
             return false;
         }
-        ServiceLocator::get(ConfigService::class)->confDeleteParam($param);
+        $this->confDeleteParam($param);
         return true;
     }
 
@@ -82,17 +78,10 @@ final readonly class ConfigService
             $dbValue = BoolUtil::toString(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
         }
 
-        if (ServiceLocator::has(Connection::class)) {
-            ServiceLocator::get(Connection::class)->executeStatement(
-                'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
-                [$param, $dbValue, $dbValue]
-            );
-        } else {
-            DbConnection::build()->executeStatement(
-                'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
-                [$param, $dbValue, $dbValue]
-            );
-        }
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
+            [$param, $dbValue, $dbValue]
+        );
 
         if ($updateGlobal) {
             Config::override($param, $value);
@@ -109,12 +98,7 @@ final readonly class ConfigService
             return;
         }
 
-        if (ServiceLocator::has(Connection::class)) {
-            $conn = ServiceLocator::get(Connection::class);
-        } else {
-            $conn = DbConnection::build();
-        }
-        $qb = $conn->createQueryBuilder()->delete(Tables::config());
+        $qb = $this->conn->createQueryBuilder()->delete(Tables::config());
         $qb->where($qb->expr()->in('param', ':params'))
            ->setParameter('params', $params, ArrayParameterType::STRING);
         $qb->executeStatement();

@@ -381,7 +381,7 @@ final readonly class ConfigurationController
                 break;
 
             case 'sizes':
-                if (!isset($page['sizes_loaded_in_tpl'])) {
+                if (!$this->sizesProcessor->isSizesLoadedInTpl()) {
                     $is_gd = (PwgImage::getLibrary() == 'gd');
                     $tpl->assign('is_gd', $is_gd);
                     $tpl->assign('sizes', [

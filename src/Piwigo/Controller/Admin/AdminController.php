@@ -16,6 +16,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -229,9 +230,10 @@ final readonly class AdminController implements ControllerInterface
 
         // ── Template init ─────────────────────────────────────────────────────
 
-        $title               = Lang::t('Piwigo Administration');
-        $page['page_banner'] = '<h1>' . Lang::t('Piwigo Administration') . '</h1>';
-        $page['body_id']     = 'theAdminPage';
+        $title = Lang::t('Piwigo Administration');
+        $ps = PageState::current();
+        $ps->pageBanner = '<h1>' . Lang::t('Piwigo Administration') . '</h1>';
+        $ps->bodyId     = 'theAdminPage';
 
         $tpl = TemplateRegistry::current();
 

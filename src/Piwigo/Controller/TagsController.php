@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -50,7 +51,7 @@ final readonly class TagsController implements ControllerInterface
         $page = &$GLOBALS['page'];
 
         $title = Lang::t('Tags');
-        $page['body_id'] = 'theTagsPage';
+        PageState::current()->bodyId = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
 

@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
@@ -238,7 +239,7 @@ final readonly class CommentsController implements ControllerInterface
         }
 
         $title = Lang::t('User comments');
-        $page['body_id'] = 'theCommentsPage';
+        PageState::current()->bodyId = 'theCommentsPage';
 
         $tpl = TemplateRegistry::current();
         $tpl->assign([

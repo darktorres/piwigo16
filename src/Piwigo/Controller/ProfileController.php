@@ -82,7 +82,7 @@ final readonly class ProfileController implements ControllerInterface
         PageState::current()->errors = array_values($pgErrors);
 
         $title = Lang::t('Your Gallery Customization');
-        $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['body_id' => 'theProfilePage']);
+        PageState::current()->bodyId = 'theProfilePage';
         $this->profileService->loadProfileInTemplate($this->urlGenerator->profile(), $this->urlService->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;

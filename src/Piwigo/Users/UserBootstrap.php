@@ -36,9 +36,6 @@ final class UserBootstrap
 
         /** @var array<string,mixed> $user */
         $user = &$GLOBALS['user'];
-        /** @var array<string,mixed> $page */
-        $page = &$GLOBALS['page'];
-
         // Start with guest
         $user['id'] = Config::guestId();
 
@@ -132,22 +129,22 @@ final class UserBootstrap
         }
 
         // Cache invalidation flag
-        $page['user_use_cache'] = true;
+        $useCache = true;
         if (defined('IN_ADMIN')) {
-            $page['user_use_cache'] = false;
+            $useCache = false;
         } else {
             $referer = $_SERVER['HTTP_REFERER'] ?? null;
             if (isset($_REQUEST['method'])
                 && is_string($referer)
                 && preg_match('/\/admin\.php\?page=/', $referer)
             ) {
-                $page['user_use_cache'] = false;
+                $useCache = false;
             }
         }
 
         // Build full user array from DB
         $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
-        $user   = Kernel::service(UserService::class)->buildUser($userId, $page['user_use_cache']);
+        $user   = Kernel::service(UserService::class)->buildUser($userId, $useCache);
 
         // Browser-language override for guests
         if (Config::browserLanguage() && (Kernel::service(PermissionService::class)->isAGuest() || Kernel::service(PermissionService::class)->isGeneric())) {

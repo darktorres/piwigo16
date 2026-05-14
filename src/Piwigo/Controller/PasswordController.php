@@ -143,7 +143,7 @@ final readonly class PasswordController implements ControllerInterface
             $tpl->assign('is_first_login', true);
         }
 
-        $page['body_id'] = 'thePasswordPage';
+        PageState::current()->bodyId = 'thePasswordPage';
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign([
             'title'          => $title,

@@ -8,6 +8,7 @@ use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
@@ -37,13 +38,11 @@ final readonly class AboutController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_about');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $title           = Lang::t('About Piwigo');
-        $page['body_id'] = 'theAboutPage';
+        $title = Lang::t('About Piwigo');
+        PageState::current()->bodyId = 'theAboutPage';
 
         $tpl = TemplateRegistry::current();
 

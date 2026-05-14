@@ -16,15 +16,18 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 
-final readonly class TagAdminService
+final class TagAdminService
 {
+    /** @var array<string, int|string> */
+    private array $tagCache = [];
+
     public function __construct(
-        private Connection $conn,
-        private HtmlService $htmlService,
-        private ImageAdminService $imageAdminService,
-        private TagRepository $tagRepository,
-        private UserAdminService $userAdminService,
-        private Util $util,
+        private readonly Connection $conn,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly TagRepository $tagRepository,
+        private readonly UserAdminService $userAdminService,
+        private readonly Util $util,
     ) {
     }
 
@@ -106,15 +109,10 @@ final readonly class TagAdminService
 
     public function tagIdFromTagName(string $tagName): int|string
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $tagName = trim($tagName);
-        $cache   = is_array($page['tag_id_from_tag_name_cache'] ?? null) ? $page['tag_id_from_tag_name_cache'] : [];
-        if (isset($cache[$tagName])) {
-            $cached = $cache[$tagName];
-            return is_int($cached) ? $cached : (is_scalar($cached) ? (string) $cached : '');
+        if (isset($this->tagCache[$tagName])) {
+            $cached = $this->tagCache[$tagName];
+            return is_int($cached) ? $cached : (string) $cached;
         }
         $tagRepo = $this->tagRepository;
         $foundId = $tagRepo->findIdByExactName($tagName);
@@ -132,21 +130,15 @@ final readonly class TagAdminService
                 }
                 if (count($existing) === 0) {
                     Dml::massInserts(Tables::tags(), ['name', 'url_name'], [['name' => $tagName, 'url_name' => $urlName]]);
-                    if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
-                        $page['tag_id_from_tag_name_cache'] = [];
-                    }
                     $newId = (int) $this->conn->lastInsertId();
-                    $page['tag_id_from_tag_name_cache'][$tagName] = $newId;
+                    $this->tagCache[$tagName] = $newId;
                     $this->userAdminService->invalidateUserCacheNbTags();
                     return $newId;
                 }
             }
         }
-        if (!isset($page['tag_id_from_tag_name_cache']) || !is_array($page['tag_id_from_tag_name_cache'])) {
-            $page['tag_id_from_tag_name_cache'] = [];
-        }
         $resolved = is_numeric($existing[0]) ? (int) $existing[0] : (is_scalar($existing[0]) ? (string) $existing[0] : '');
-        $page['tag_id_from_tag_name_cache'][$tagName] = $resolved;
+        $this->tagCache[$tagName] = $resolved;
         return $resolved;
     }
 

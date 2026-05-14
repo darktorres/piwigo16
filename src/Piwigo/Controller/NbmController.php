@@ -55,11 +55,8 @@ final readonly class NbmController implements ControllerInterface
             PageState::current()->addError(Lang::t('Unknown identifier'));
         }
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
-        $title           = Lang::t('Notification');
-        $page['body_id'] = 'theNBMPage';
+        $title = Lang::t('Notification');
+        PageState::current()->bodyId = 'theNBMPage';
 
         $tpl = TemplateRegistry::current();
 

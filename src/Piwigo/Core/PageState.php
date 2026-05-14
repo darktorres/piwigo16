@@ -48,6 +48,12 @@ final class PageState
     public int $countQueries = 0;
     public float $queriesTime = 0.0;
 
+    public string $bodyId = '';
+    public ?string $pageBanner = null;
+    /** @var array<string,int> */
+    public array $metaRobots = [];
+    public ?string $galleryTitle = null;
+
     private function __construct()
     {
     }

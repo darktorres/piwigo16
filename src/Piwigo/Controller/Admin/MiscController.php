@@ -492,16 +492,15 @@ final class MiscController
     private function popupHelp(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         defined('PWG_HELP') or define('PWG_HELP', true);
 
         if (!isset($_GET['output']) || 'content_only' != $_GET['output']) {
-            $page['body_id']    = 'thePopuphelpPage';
-            $title              = Lang::t('Piwigo Help');
-            $page['page_banner'] = '<h1>' . $title . '</h1>';
-            $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+            $title = Lang::t('Piwigo Help');
+            $ps = PageState::current();
+            $ps->bodyId     = 'thePopuphelpPage';
+            $ps->pageBanner = '<h1>' . $title . '</h1>';
+            $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             $tpl->assign(['U_RETURN' => '', 'USERNAME' => '', 'U_FAQ' => '', 'U_CHANGE_THEME' => '', 'U_LOGOUT' => '']);
             PageHeaderRenderer::render($title);
         }

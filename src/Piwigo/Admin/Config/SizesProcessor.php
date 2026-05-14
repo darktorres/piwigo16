@@ -20,14 +20,21 @@ use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 
-final readonly class SizesProcessor
+final class SizesProcessor
 {
+    private bool $sizesLoadedInTpl = false;
+
     public function __construct(
-        private ImageAdminService $imageAdminService,
-        private UploadService $uploadService,
-        private Util $util,
-        private PermissionService $permissionService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly UploadService $uploadService,
+        private readonly Util $util,
+        private readonly PermissionService $permissionService,
     ) {
+    }
+
+    public function isSizesLoadedInTpl(): bool
+    {
+        return $this->sizesLoadedInTpl;
     }
     public function process(): void
     {
@@ -245,7 +252,7 @@ final readonly class SizesProcessor
             $tpl->assign('ferrors', $errors);
             $rawResizeQuality = $_POST['resize_quality'] ?? '';
             $tpl->assign('resize_quality', is_scalar($rawResizeQuality) ? $rawResizeQuality : '');
-            $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['sizes_loaded_in_tpl' => true]);
+            $this->sizesLoadedInTpl = true;
         }
     }
 }

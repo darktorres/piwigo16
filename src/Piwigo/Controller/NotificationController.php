@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
@@ -42,29 +43,28 @@ final readonly class NotificationController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_notification');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
-        $page['feed'] = $this->findAvailableFeedId();
+        $feedId = $this->findAvailableFeedId();
 
         $this->feedRepository
-            ->insert($page['feed'], is_numeric($user['id']) ? (int) $user['id'] : 0);
+            ->insert($feedId, is_numeric($user['id']) ? (int) $user['id'] : 0);
 
         $feed_url = $this->urlGenerator->feed();
         $sep      = str_contains($feed_url, '?') ? '&' : '?';
         if ($this->permissionService->isAGuest()) {
             $feed_image_only_url = $feed_url;
-            $feed_url .= $sep . 'feed=' . $page['feed'];
+            $feed_url .= $sep . 'feed=' . $feedId;
         } else {
-            $feed_url .= $sep . 'feed=' . $page['feed'];
+            $feed_url .= $sep . 'feed=' . $feedId;
             $feed_image_only_url = $feed_url . '&image_only';
         }
 
         $title = Lang::t('Notification');
-        $page['body_id'] = 'theNotificationPage';
-        $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+        $ps = PageState::current();
+        $ps->bodyId     = 'theNotificationPage';
+        $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
 
         $tpl = TemplateRegistry::current();
         $tpl->assign(['U_FEED' => $feed_url, 'U_FEED_IMAGE_ONLY' => $feed_image_only_url]);

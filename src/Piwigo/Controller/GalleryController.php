@@ -106,9 +106,8 @@ final readonly class GalleryController implements ControllerInterface
 
         $display = $this->stringUtil->inputString('display', null, $_GET);
         if ($display !== null) {
-            $metaRobots             = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : [];
-            $metaRobots['noindex']  = 1;
-            $page['meta_robots']    = $metaRobots;
+            $ps = PageState::current();
+            $ps->metaRobots = array_merge($ps->metaRobots, ['noindex' => 1]);
             if (array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
                 $this->sessionService->setSessionVar('index_deriv', $display);
             }
@@ -158,7 +157,7 @@ final readonly class GalleryController implements ControllerInterface
         $this->menubarRenderer->render();
 
         if (empty($page['is_external'])) {
-            $page['body_id'] = 'theCategoryPage';
+            PageState::current()->bodyId = 'theCategoryPage';
 
             if (isset($page['flat']) || isset($page['chronology_field'])) {
                 $tpl->assign('U_MODE_NORMAL', $this->urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));

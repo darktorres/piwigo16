@@ -462,29 +462,30 @@ SELECT DISTINCT(id)
 
         // ── Meta robots ───────────────────────────────────────────────────────
 
-        $page['meta_robots'] = [];
+        $ps = PageState::current();
+        $ps->metaRobots = [];
         if (isset($page['chronology_field'])
             || (isset($page['flat']) && $category !== null)
             || $section === 'list'
             || $section === 'recent_pics') {
-            $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+            $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         } elseif ($section === 'tags') {
             $pageTagIdsRaw = $page['tag_ids'] ?? null;
             $tagIds = is_array($pageTagIdsRaw) ? $pageTagIdsRaw : [];
             if (count($tagIds) > 1) {
-                $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+                $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             }
         } elseif ($section === 'recent_cats') {
-            $page['meta_robots']['noindex'] = 1;
+            $ps->metaRobots = ['noindex' => 1];
         } elseif ($section === 'search') {
-            $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+            $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         } elseif ($section === 'categories' && isset($page['combined_categories'])) {
-            $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+            $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         }
 
         $filterEnabled = (bool) ($filter['enabled'] ?? false);
         if ($filterEnabled) {
-            $page['meta_robots']['noindex'] = 1;
+            $ps->metaRobots = array_merge($ps->metaRobots, ['noindex' => 1]);
         }
 
         // ── Permalink redirect ────────────────────────────────────────────────

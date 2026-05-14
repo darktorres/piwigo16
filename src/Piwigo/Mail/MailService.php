@@ -11,6 +11,7 @@ use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\StringUtil;
@@ -450,7 +451,6 @@ SELECT
      */
     public function pwgMail(string|array $to, array $args = [], array $tpl = []): bool
     {
-        $page     = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $langInfo = LanguageStack::info();
 
         if (empty($to) and empty($args['Cc']) and empty($args['Bcc'])) {
@@ -554,7 +554,7 @@ SELECT
 
                 $mailTpl->assign([
                     'GALLERY_URL'      => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $addUrlParams),
-                    'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
+                    'GALLERY_TITLE'    => PageState::current()->galleryTitle ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
                     'CONTENT_ENCODING' => $this->stringUtil->getPwgCharset(),

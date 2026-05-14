@@ -23,7 +23,6 @@ final class PageHeaderRenderer
     ): void {
         $template  = TemplateRegistry::current();
         $pageState = PageState::current();
-        $page      = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
         EventDispatcher::notify('loc_begin_page_header');
 
@@ -32,14 +31,14 @@ final class PageHeaderRenderer
             $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
         }
 
-        $pageBanner = $page['page_banner'] ?? Config::pageBanner();
+        $pageBannerRaw = $pageState->pageBanner ?? Config::pageBanner();
         $template->assign([
-            'GALLERY_TITLE'          => $page['gallery_title'] ?? Config::galleryTitle(),
+            'GALLERY_TITLE'          => $pageState->galleryTitle ?? Config::galleryTitle(),
             'PAGE_BANNER'            => new Html((string) EventDispatcher::dispatch(
                 'render_page_banner',
-                str_replace('%gallery_title%', Config::galleryTitle(), is_string($pageBanner) ? $pageBanner : '')
+                str_replace('%gallery_title%', Config::galleryTitle(), $pageBannerRaw)
             )),
-            'BODY_ID'                => $page['body_id'] ?? '',
+            'BODY_ID'                => $pageState->bodyId,
             'CONTENT_ENCODING'       => Kernel::service(StringUtil::class)->getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
             'U_HOME'                 => Kernel::service(UrlService::class)->getGalleryHomeUrl(),
@@ -49,20 +48,15 @@ final class PageHeaderRenderer
             'BODY_DATA'              => json_encode($pageState->bodyData),
         ]);
 
+        $metaRobots = $pageState->metaRobots;
         if (!Config::metaRef()) {
-            if (!isset($page['meta_robots']) || !is_array($page['meta_robots'])) {
-                $page['meta_robots'] = [];
-            }
-            $page['meta_robots']['noindex']  = 1;
-            $page['meta_robots']['nofollow'] = 1;
-            $GLOBALS['page'] = $page;
+            $metaRobots['noindex']  = 1;
+            $metaRobots['nofollow'] = 1;
         }
-
-        $metaRobots = is_array($page['meta_robots'] ?? null) ? $page['meta_robots'] : null;
-        if ($metaRobots !== null && !empty($metaRobots)) {
+        if (!empty($metaRobots)) {
             $template->append('head_elements', new Html('<meta name="robots" content="' . implode(',', array_keys($metaRobots)) . '">'));
         }
-        if (!is_array($metaRobots) || !isset($metaRobots['noindex'])) {
+        if (!isset($metaRobots['noindex'])) {
             $template->assign('meta_ref', 1);
         }
 

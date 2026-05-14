@@ -27,6 +27,8 @@ final class PwgImage
     public $image = null;
     public string $library = '';
     public static string $ext_imagick_version = '';
+    private static ?string $extImagickCommandCache = null;
+    private static ?bool $extImagickCache = null;
 
     public function __construct(public string $source_filepath, ?string $library = null)
     {
@@ -366,42 +368,30 @@ final class PwgImage
 
     public static function getExtImagickCommand(): string
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-
-        if (!isset($page['ext_imagick_command'])) {
-            // Probe magick (IM7) first, then convert (IM6); empty string means neither is available.
+        if (self::$extImagickCommandCache === null) {
             $find_cmd = PHP_OS_FAMILY === 'Windows' ? 'where' : 'command -v';
-            $page['ext_imagick_command'] = '';
+            self::$extImagickCommandCache = '';
             foreach (['magick', 'convert'] as $candidate) {
                 $retval = null;
                 $cmd_out = null;
                 exec($find_cmd.' '.Config::extImagickDir().$candidate.' 2>'.(PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null'), $cmd_out, $retval);
                 if (0 == $retval) {
-                    $page['ext_imagick_command'] = $candidate;
+                    self::$extImagickCommandCache = $candidate;
                     break;
                 }
             }
         }
-
-        return is_string($page['ext_imagick_command']) ? $page['ext_imagick_command'] : '';
+        return self::$extImagickCommandCache;
     }
 
     public static function isExtImagick(): bool
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-
-        if (isset($page['is_ext_imagick'])) {
-            return (bool) $page['is_ext_imagick'];
+        if (self::$extImagickCache !== null) {
+            return self::$extImagickCache;
         }
 
         if (!function_exists('exec') || self::getExtImagickCommand() === '') {
-            return $page['is_ext_imagick'] = false;
+            return self::$extImagickCache = false;
         }
 
         $returnarray = [];
@@ -410,9 +400,9 @@ final class PwgImage
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }
-            return $page['is_ext_imagick'] = true;
+            return self::$extImagickCache = true;
         }
-        return $page['is_ext_imagick'] = false;
+        return self::$extImagickCache = false;
     }
 
     public static function isGd(): bool

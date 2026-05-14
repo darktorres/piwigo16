@@ -29,20 +29,22 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 
-final readonly class ImageAdminService
+final class ImageAdminService
 {
+    private bool $fsQuickCheckCalled = false;
+
     public function __construct(
-        private Connection $conn,
-        private CategoryAdminService $categoryAdminService,
-        private CategoryRepository $categoryRepository,
-        private CommentRepository $commentRepository,
-        private ConfigService $configService,
-        private ImageRepository $imageRepository,
-        private StringUtil $stringUtil,
-        private TagRepository $tagRepository,
-        private UrlGenerator $urlGenerator,
-        private UserRepository $userRepository,
-        private Util $util,
+        private readonly Connection $conn,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CommentRepository $commentRepository,
+        private readonly ConfigService $configService,
+        private readonly ImageRepository $imageRepository,
+        private readonly StringUtil $stringUtil,
+        private readonly TagRepository $tagRepository,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UserRepository $userRepository,
+        private readonly Util $util,
     ) {
     }
 
@@ -370,17 +372,13 @@ final readonly class ImageAdminService
 
     public function fsQuickCheck(): void
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         if (Config::fsQuickCheckPeriod() === 0) {
             return;
         }
-        if (isset($page['fs_quick_check_already_called'])) {
+        if ($this->fsQuickCheckCalled) {
             return;
         }
-        $page['fs_quick_check_already_called'] = true;
+        $this->fsQuickCheckCalled = true;
         $this->configService->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $issue1827Ids = array_column($this->conn->executeQuery(

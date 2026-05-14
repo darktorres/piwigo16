@@ -398,8 +398,8 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $get_slideshow        = $this->stringUtil->inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
-            $page['slideshow']    = true;
-            $page['meta_robots']  = ['noindex' => 1, 'nofollow' => 1];
+            $page['slideshow']   = true;
+            PageState::current()->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             $slideshow_params     = $this->pictureService->decodeSlideshowParams($get_slideshow);
             $slideshow_url_params['slideshow'] = $this->pictureService->encodeSlideshowParams($slideshow_params);
 
@@ -431,11 +431,12 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $picture['current']
         );
 
+        $ps = PageState::current();
         if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
-            $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+            $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         }
 
-        $page['body_id'] = 'thePicturePage';
+        $ps->bodyId = 'thePicturePage';
 
         /** @var array<string, array<string, mixed>> $picture */
         $picture    = EventDispatcher::dispatch('picture_pictures_data', $picture);

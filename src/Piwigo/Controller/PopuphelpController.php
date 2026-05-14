@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Latte\Runtime\Html;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Exception\AuthException;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
@@ -35,13 +36,11 @@ final readonly class PopuphelpController implements ControllerInterface
             define('PWG_HELP', true);
         }
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
-        $title               = Lang::t('Piwigo Help');
-        $page['body_id']     = 'thePopuphelpPage';
-        $page['page_banner'] = '';
-        $page['meta_robots'] = ['noindex' => 1, 'nofollow' => 1];
+        $title = Lang::t('Piwigo Help');
+        $ps = PageState::current();
+        $ps->bodyId     = 'thePopuphelpPage';
+        $ps->pageBanner = '';
+        $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
 
         $getPage  = $_GET['page'] ?? null;
         $rawPage  = is_string($getPage) ? $getPage : null;

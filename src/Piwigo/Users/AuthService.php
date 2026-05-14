@@ -283,10 +283,6 @@ final readonly class AuthService
 
     public function authKeyLogin(string $authKey, bool $connectionByHeader = false): bool
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $user = &$GLOBALS['user'];
         if (!is_array($user)) {
             $user = [];
@@ -371,7 +367,7 @@ SELECT
 
         $this->logUser(is_numeric($user['id']) ? (int) $user['id'] : 0, false);
         EventDispatcher::notify('login_success', $key['username']);
-        $page['auth_key_id'] = $key['auth_key_id'];
+        $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['auth_key_id' => $key['auth_key_id']]);
 
         return true;
     }

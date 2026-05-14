@@ -26,7 +26,6 @@ final class KernelBootTest extends TestCase
     protected function tearDown(): void
     {
         Kernel::reset();
-        // Clean up $GLOBALS side-effects from PageState/Lang/CurrentUser bridges.
         unset($GLOBALS['page'], $GLOBALS['lang'], $GLOBALS['user']);
     }
 
@@ -62,38 +61,23 @@ final class KernelBootTest extends TestCase
         self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
     }
 
-    public function test_PageState_addError_visible_via_page_global_after_boot(): void
+    public function test_PageState_addError_works_after_boot(): void
     {
         $this->simulateGlobals();
         Kernel::boot();
 
         PageState::current()->addError('typed error');
 
-        $page = $GLOBALS['page'];
-        self::assertIsArray($page);
-        self::assertIsArray($page['errors']);
-        self::assertContains('typed error', $page['errors']);
+        self::assertContains('typed error', PageState::current()->errors);
     }
 
-    public function test_page_global_push_visible_via_PageState_after_boot(): void
+    public function test_page_global_is_empty_array_after_boot(): void
     {
         $this->simulateGlobals();
         Kernel::boot();
 
-        $pageRef = &$GLOBALS['page'];
-        self::assertIsArray($pageRef);
-        self::assertIsArray($pageRef['errors']);
-        $pageRef['errors'][] = 'global error';
-
-        self::assertContains('global error', PageState::current()->errors);
-    }
-
-    public function test_existing_page_errors_preserved_after_boot(): void
-    {
-        $this->simulateGlobals(['page' => ['errors' => ['pre-boot error'], 'warnings' => [], 'messages' => [], 'infos' => [], 'body_classes' => [], 'body_data' => [], 'execution_uuid' => 'abc']]);
-        Kernel::boot();
-
-        self::assertContains('pre-boot error', PageState::current()->errors);
+        // attachGlobals() resets $GLOBALS['page'] to [] — the reference bridge is gone.
+        self::assertSame([], $GLOBALS['page']);
     }
 
     public function test_CurrentUser_get_returns_user_after_boot(): void
@@ -204,16 +188,13 @@ final class KernelBootTest extends TestCase
     // ---- helpers ---------------------------------------------------------
 
     /**
-     * @param array{conf?: array<string, mixed>, page?: array<string, mixed>, lang?: array<string, mixed>, user?: array<string, mixed>} $overrides
+     * @param array{conf?: array<string, mixed>, lang?: array<string, mixed>, user?: array<string, mixed>} $overrides
      */
     private function simulateGlobals(array $overrides = []): void
     {
-        // Config is the source of truth — seed it directly via loadArray.
-        // PageState / Lang / CurrentUser are still bridge-based, so we
-        // populate their respective $GLOBALS slots directly.
         $confSeed = $overrides['conf'] ?? ['upload_dir' => './upload'];
         Config::loadArray($confSeed);
-        $GLOBALS['page'] = $overrides['page'] ?? ['errors' => [], 'warnings' => [], 'messages' => [], 'infos' => [], 'body_classes' => [], 'body_data' => [], 'execution_uuid' => 'test-uuid'];
+        $GLOBALS['page'] = [];
         $GLOBALS['lang'] = $overrides['lang'] ?? [];
         $GLOBALS['user'] = $overrides['user'] ?? ['id' => 2, 'username' => 'guest', 'email' => '', 'language' => 'en_US', 'theme' => 'elegant', 'status' => 'guest', 'enabled_high' => false];
     }

@@ -42,13 +42,11 @@ final class PageState
     public array $bodyData = [];
     public string $executionUuid = '';
 
-    // Runtime-attached keys (optional; bridged in attachGlobals)
     public bool $authKeyInvalid = false;
     /** @var array<string,mixed>|null */
     public ?array $notifyApiKeyExpiration = null;
     public int $countQueries = 0;
     public float $queriesTime = 0.0;
-    public float $upgradeStart = 0.0;
 
     private function __construct()
     {

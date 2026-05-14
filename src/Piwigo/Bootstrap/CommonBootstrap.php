@@ -44,12 +44,6 @@ use Piwigo\Users\UserService;
 
 final class CommonBootstrap
 {
-    /** Returns a global by key as mixed, preventing PHPStan type narrowing from earlier assignments. */
-    private static function readGlobal(string $key): mixed
-    {
-        return $GLOBALS[$key] ?? null;
-    }
-
     private static function sanitizeMysqlKv(mixed &$v, string $k): void
     {
         $v = addslashes(is_scalar($v) ? (string) $v : '');
@@ -173,9 +167,8 @@ final class CommonBootstrap
 
         Kernel::service(Util::class)->checkLounge();
 
-        $user_globals  = self::readGlobal('user');
-        $user_language = is_array($user_globals) && is_scalar($user_globals['language'] ?? null)
-            ? (string) $user_globals['language']
+        $user_language = is_scalar(CurrentUser::get()->rawAttributes['language'] ?? null)
+            ? (string) CurrentUser::get()->rawAttributes['language']
             : '';
         if (in_array(substr($user_language, 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'])) {
             define('PHPWG_DOMAIN', substr($user_language, 0, 2) . '.piwigo.org');
@@ -223,25 +216,22 @@ final class CommonBootstrap
             );
         }
 
-        $user_arr  = self::readGlobal('user');
         $notify_exp = PageState::current()->notifyApiKeyExpiration;
         if (is_array($notify_exp)) {
-            $notify_username_raw = is_array($user_arr) ? ($user_arr['username'] ?? '') : '';
-            $notify_email_raw    = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
-            $notify_days_left    = $notify_exp['days_left'];
+            $user_attr   = CurrentUser::get()->rawAttributes;
+            $notify_days_left = $notify_exp['days_left'];
             $is_mail_send = Kernel::service(UserService::class)->notificationApiKeyExpiration(
-                is_string($notify_username_raw) ? $notify_username_raw : '',
-                is_string($notify_email_raw) ? $notify_email_raw : '',
+                is_scalar($user_attr['username'] ?? null) ? (string) $user_attr['username'] : '',
+                is_scalar($user_attr['email'] ?? null) ? (string) $user_attr['email'] : '',
                 is_numeric($notify_days_left) ? (int) $notify_days_left : 0
             );
 
             if ($is_mail_send) {
-                $notify_user_id_raw = is_array($user_arr) ? ($user_arr['id'] ?? 0) : 0;
                 Dml::singleUpdate(
                     Tables::userAuthKeys(),
                     ['last_notified_on' => $notify_exp['dbnow']],
                     [
-                        'user_id'  => is_numeric($notify_user_id_raw) ? (int) $notify_user_id_raw : 0,
+                        'user_id'  => CurrentUser::get()->id,
                         'auth_key' => $notify_exp['auth_key'],
                     ],
                 );
@@ -254,8 +244,7 @@ final class CommonBootstrap
             $admin_theme_raw = Kernel::service(PreferencesService::class)->userprefsGetParam('admin_theme', 'dark');
             $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
         } else {
-            $user_arr_theme = self::readGlobal('user');
-            $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
+            $theme_raw = CurrentUser::get()->rawAttributes['theme'] ?? '';
             $theme     = is_string($theme_raw) ? $theme_raw : '';
             if (StringUtil::scriptBasename() != 'ws' and Kernel::service(Util::class)->mobileTheme()) {
                 $theme = Config::mobilTheme();
@@ -268,8 +257,7 @@ final class CommonBootstrap
             Kernel::service(NoPhotoYetRenderer::class)->render();
         }
 
-        $user_arr_gs        = self::readGlobal('user');
-        $internal_status_gs = is_array($user_arr_gs) ? ($user_arr_gs['internal_status'] ?? null) : null;
+        $internal_status_gs = CurrentUser::get()->rawAttributes['internal_status'] ?? null;
         if (is_array($internal_status_gs)
             && isset($internal_status_gs['guest_must_be_guest'])
             && $internal_status_gs['guest_must_be_guest'] === true) {

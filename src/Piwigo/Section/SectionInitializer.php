@@ -61,8 +61,8 @@ final readonly class SectionInitializer
 
     public function initialize(ServerRequestInterface $request, string $scriptContext = 'index'): void
     {
-        /** @var array<string,mixed> $page */
-        $page = &$GLOBALS['page'];
+        $page = [];
+        $GLOBALS['page'] = &$page;  // sub-calls that do &$GLOBALS['page'] write into the same local array
         /** @var array<string,mixed> $user */
         $user = &$GLOBALS['user'];
         /** @var array<string,mixed> $filter */

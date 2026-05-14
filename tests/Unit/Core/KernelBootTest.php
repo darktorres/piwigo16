@@ -76,7 +76,7 @@ final class KernelBootTest extends TestCase
         $this->simulateGlobals();
         Kernel::boot();
 
-        // attachGlobals() initialises the PageState singleton; $GLOBALS['page'] is no longer reset.
+        // Kernel::boot() initialises the PageState singleton via PageState::current().
         self::assertInstanceOf(\Piwigo\Core\PageState::class, \Piwigo\Core\PageState::current());
     }
 

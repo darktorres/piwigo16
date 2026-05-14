@@ -38,10 +38,6 @@ final readonly class CategoryDefaultRenderer
     public function render(): void
     {
         $template = TemplateRegistry::current();
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
 
@@ -70,13 +66,13 @@ final readonly class CategoryDefaultRenderer
 
         if (count($pictures) > 0) {
             $row = reset($pictures);
-            $page['cat_slideshow_url'] = $this->urlService->addUrlParams(
+            $template->assign('CAT_SLIDESHOW_URL', $this->urlService->addUrlParams(
                 $this->urlService->duplicatePictureUrl(
                     ['image_id' => $row['id'], 'image_file' => $row['file']],
                     ['start']
                 ),
                 ['slideshow' => ($_GET['slideshow'] ?? '')]
-            );
+            ));
 
             if (Config::activateComments() and $user['show_nb_comments']) {
                 $query = '

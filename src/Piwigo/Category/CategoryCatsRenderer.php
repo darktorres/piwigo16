@@ -42,10 +42,6 @@ final readonly class CategoryCatsRenderer
     {
         $template = TemplateRegistry::current();
         $logger = LoggerRegistry::current();
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $ctx = SectionContextRegistry::current();
         $currentUser = CurrentUser::get();
         $user = $currentUser->rawAttributes;
@@ -95,7 +91,7 @@ SELECT SQL_CALC_FOUND_ROWS
 
         $conn = $this->conn;
         $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
-        $page['total_categories'] = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $totalCategories = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
         $categories = [];
         $category_ids = [];
@@ -317,11 +313,12 @@ SELECT *
 
             $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
 
-            $page['cats_navigation_bar'] = [];
-            if ($page['total_categories'] > Config::nbCategoriesPage()) {
-                $page['cats_navigation_bar'] = $this->util->createNavigationBar(
+            $catsNavigationBar = [];
+            $totalCats = is_numeric($totalCategories) ? (int) $totalCategories : 0;
+            if ($totalCats > Config::nbCategoriesPage()) {
+                $catsNavigationBar = $this->util->createNavigationBar(
                     $this->urlService->duplicateIndexUrl([], ['startcat']),
-                    is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
+                    $totalCats,
                     $ctx->startcat,
                     Config::nbCategoriesPage(),
                     true,
@@ -329,7 +326,7 @@ SELECT *
                 );
             }
 
-            $template->assign('cats_navbar', $page['cats_navigation_bar']);
+            $template->assign('cats_navbar', $catsNavigationBar);
         }
 
         $this->util->pwgDebug('end CategoryCatsRenderer');

@@ -72,9 +72,7 @@ final readonly class GalleryController implements ControllerInterface
 
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-        $ctx  = SectionContextRegistry::current();
+        $ctx = SectionContextRegistry::current();
 
         // Extract commonly-used typed locals from SectionContext
         $items       = $ctx->items;
@@ -118,9 +116,9 @@ final readonly class GalleryController implements ControllerInterface
         $tpl = TemplateRegistry::current();
 
         // Navigation bar
-        $page['navigation_bar'] = [];
+        $navigationBar = [];
         if (count($items) > $nbImagePage) {
-            $page['navigation_bar'] = $this->util->createNavigationBar(
+            $navigationBar = $this->util->createNavigationBar(
                 $this->urlService->duplicateIndexUrl([], ['start']),
                 count($items),
                 $start,
@@ -129,7 +127,7 @@ final readonly class GalleryController implements ControllerInterface
                 'start'
             );
         }
-        $tpl->assign('thumb_navbar', $page['navigation_bar']);
+        $tpl->assign('thumb_navbar', $navigationBar);
 
         // Caddie filling
         if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
@@ -357,13 +355,12 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Slideshow
-            if (!empty($page['cat_slideshow_url'])) {
-                $slideshowUrlRaw = $page['cat_slideshow_url'];
-                $slideshowUrl = is_string($slideshowUrlRaw) ? $slideshowUrlRaw : '';
+            $catSlideshowUrl = is_string($tpl->getTemplateVars('CAT_SLIDESHOW_URL') ?? null) ? $tpl->getTemplateVars('CAT_SLIDESHOW_URL') : '';
+            if ($catSlideshowUrl !== '') {
                 if ($this->stringUtil->inputString('slideshow', null, $_GET) !== null) {
-                    $this->util->redirect($slideshowUrl);
+                    $this->util->redirect($catSlideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
-                    $tpl->assign('U_SLIDESHOW', $slideshowUrl);
+                    $tpl->assign('U_SLIDESHOW', $catSlideshowUrl);
                 }
             }
 

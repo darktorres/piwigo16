@@ -7,20 +7,14 @@ namespace Piwigo\Core;
 use Latte\Runtime\Html;
 
 /**
- * Typed DTO wrapping the $page global array.
- *
- * Wave A reference bridge: after attachGlobals(), the well-known $GLOBALS['page']
- * keys (errors, warnings, messages, infos, body_classes, body_data, execution_uuid)
- * are PHP references to the corresponding properties of this singleton. Code that
- * writes $page['errors'][] = 'msg' pushes into self::$instance->errors and vice
- * versa — no data divergence between the global and the typed reader.
+ * Singleton holding typed per-request UI state: errors, warnings, infos,
+ * messages, body classes/data, and display metadata (bodyId, pageBanner, etc.).
  *
  * Entries may be plain `string` (auto-escape applies — safe for Lang::t output)
- * or `Latte\Runtime\Html` (already-trusted HTML — links, icons, formatted text).
- * Callers that splice HTML into a message must wrap it with `new Html(...)` or
- * use `addInfoHtml`/`addErrorHtml`/`addMessageHtml`/`addWarningHtml`. The
- * `admin.latte`/`infos_errors.latte` foreach prints do bare `{$x}` — Html
- * passes through, plain strings get auto-escaped as expected.
+ * or `Latte\Runtime\Html` (already-trusted HTML). Callers that splice HTML into
+ * a message must wrap it with `new Html(...)`. The `admin.latte` / `infos_errors.latte`
+ * foreach prints do bare `{$x}` — Html passes through, plain strings get
+ * auto-escaped as expected.
  */
 final class PageState
 {
@@ -56,12 +50,6 @@ final class PageState
 
     private function __construct()
     {
-    }
-
-    /** Called by Kernel::boot() to initialise the singleton. */
-    public static function attachGlobals(): void
-    {
-        self::$instance ??= new self();
     }
 
     /** Returns the current singleton, creating an empty one if boot hasn't run yet. */

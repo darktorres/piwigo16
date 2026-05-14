@@ -48,7 +48,7 @@ final class Kernel
         }
         self::$booted = true;
 
-        PageState::attachGlobals();
+        PageState::current();  // initialise singleton
         Lang::attachGlobals();
         CurrentUser::attachGlobals();
 

@@ -11,6 +11,7 @@ use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
@@ -25,7 +26,6 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 
 final readonly class MailService
@@ -38,7 +38,6 @@ final readonly class MailService
         private LangService $langService,
         private AuthService $authService,
         private UrlService $urlService,
-        private PermissionService $permissionService,
     ) {
     }
 
@@ -675,8 +674,8 @@ SELECT
 
         if ($preResult !== false) {
             $ret = $mail->send();
-            if (!$ret and (ini_get('display_errors') === false || ini_get('display_errors') === '' or $this->permissionService->isAdmin())) {
-                trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
+            if (!$ret) {
+                LoggerRegistry::current()->warning('Mailer Error: ' . $mail->ErrorInfo);
             }
             if (Config::debugMail()) {
                 $this->pwgSendMailTest($ret, $mail, $args);

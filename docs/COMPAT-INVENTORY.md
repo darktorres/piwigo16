@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed + §7 trigger_error → exceptions + §8 picture-page GLOBALS gaps closed).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed + §7 all trigger_error eliminated + §8 picture-page GLOBALS gaps closed).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -284,23 +284,27 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 
 | File | Line | Condition signalled | Severity |
 |------|------|---------------------|----------|
-| `Category/CategoryService.php` | 231 | `get_subcat_ids` called with non-numeric ID | `E_USER_WARNING` |
-| `Html/HtmlService.php` | 44 | `get_cat_display_name` called with wrong category type | `E_USER_WARNING` |
-| `Admin/Users/UserAdminService.php` | 128 | Group delete called when group does not exist | `E_USER_WARNING` |
-| `Admin/Image/ImageAdminService.php` | 91 | File cannot be removed from disk | `E_USER_WARNING` |
-| `Ws/Method/ImagesEndpoints.php` | 1155 | File cannot be removed from disk | `E_USER_WARNING` |
-| `Admin/Image/ImageExtImagick.php` | 211 | ImageMagick stderr line forwarded as warning | `E_USER_WARNING` |
-| `Ws/Protocol/PwgRestEncoder.php` | 146 | Encoder receives unexpected PHP type | `E_USER_WARNING` |
-| `Url/UrlService.php` | 268, 273 | Category array missing `name` or `permalink` key | `E_USER_WARNING` |
-| `Mail/MailService.php` | 679 | PHPMailer send failure | `E_USER_WARNING` |
-| `Admin/Category/CategoryAdminService.php` | 227, 250 | `set_cat_visible` / `set_cat_status` invalid param | `E_USER_WARNING` |
-| `Picture/PictureCommentRenderer.php` | 94 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/CommentsController.php` | 226 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/PictureController.php` | 259 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/Admin/AlbumController.php` | 607, 1017 | Missing `cat_id` param — programming error | ~~`E_USER_ERROR`~~ → `throw new \InvalidArgumentException` (2026-05-14) |
-| `Template/ScriptLoader.php` | 59, 86, 88, 130, 204 | Script/footer ordering violation — programming error | ~~`E_USER_WARNING`~~ → `throw new \LogicException` (2026-05-14) |
+All `trigger_error` calls have now been replaced (2026-05-14):
 
-The `AlbumController` and `ScriptLoader` cases have been converted to thrown exceptions (2026-05-14). The remainder are reasonable runtime warnings with no action required.
+| File | Replacement |
+|------|-------------|
+| `Category/CategoryService.php:232` | `throw new \InvalidArgumentException` — non-numeric ID passed to `get_subcat_ids` |
+| `Html/HtmlService.php:44` | `throw new \InvalidArgumentException` — wrong type in category array |
+| `Admin/Users/UserAdminService.php:128` | `throw new \InvalidArgumentException` — empty group list; `deleteGroups()` return type narrowed from `false\|array` to `array` |
+| `Admin/Image/ImageAdminService.php:89` | `throw new \RuntimeException` — `unlink()` failure; `$ok` flag removed, derivatives always deleted on success |
+| `Ws/Method/ImagesEndpoints.php:1153` | `throw new \RuntimeException` — `unlink()` failure |
+| `Admin/Image/ImageExtImagick.php:211` | Removed — stdout already captured in the `$logger->error()` call above; no separate trigger needed |
+| `Ws/Protocol/PwgRestEncoder.php:146` | `throw new \LogicException` — unexpected PHP type in encoder |
+| `Url/UrlService.php:268, 273` | `throw new \InvalidArgumentException` — category array missing `name` / `permalink` |
+| `Mail/MailService.php:679` | `LoggerRegistry::current()->warning()` — PHPMailer send failure is a runtime infrastructure event, not a programming error; `$permissionService` constructor param removed (was only used for the dropped display_errors guard) |
+| `Admin/Category/CategoryAdminService.php:227, 250` | `throw new \InvalidArgumentException` — invalid `set_cat_visible` / `set_cat_status` param |
+| `Picture/PictureCommentRenderer.php:94` | `throw new \LogicException` — unknown comment action |
+| `Controller/CommentsController.php:226` | `throw new \LogicException` — unknown comment action |
+| `Controller/PictureController.php:259` | `throw new \LogicException` — unknown comment action |
+| `Controller/Admin/AlbumController.php:607, 1017` | `throw new \InvalidArgumentException` — missing `cat_id` param (converted earlier) |
+| `Template/ScriptLoader.php:59, 86, 88, 130, 204` | `throw new \LogicException` — ordering violations (converted earlier) |
+
+No `trigger_error` calls remain in production `src/` (verified 2026-05-14).
 
 ---
 

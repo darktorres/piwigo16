@@ -83,22 +83,15 @@ final class ImageAdminService
                     $files[] = $this->stringUtil->originalToFormat($files[0], $fmtExt);
                 }
             }
-            $ok = true;
             if (!Config::has('never_delete_originals')) {
                 foreach ($files as $path) {
                     if (is_file($path) && !unlink($path)) {
-                        $ok = false;
-                        trigger_error('"' . $path . '" cannot be removed', E_USER_WARNING);
-                        break;
+                        throw new \RuntimeException('"' . $path . '" cannot be removed');
                     }
                 }
             }
-            if ($ok) {
-                $this->deleteElementDerivatives($row);
-                $newIds[] = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            } else {
-                break;
-            }
+            $this->deleteElementDerivatives($row);
+            $newIds[] = is_numeric($row['id']) ? (int) $row['id'] : 0;
         }
         return $newIds;
     }

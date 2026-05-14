@@ -224,8 +224,7 @@ SELECT DISTINCT id
             $categories = [$categories];
         }
         if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
-            trigger_error('set_cat_visible invalid param', E_USER_WARNING);
-            return;
+            throw new \InvalidArgumentException('set_cat_visible invalid param');
         }
         $catRepo = $this->categoryRepository;
         if ($value) {
@@ -247,8 +246,7 @@ SELECT DISTINCT id
             $categories = [$categories];
         }
         if (!in_array($value, ['public', 'private'])) {
-            trigger_error('set_cat_status invalid param ' . $value, E_USER_WARNING);
-            return;
+            throw new \InvalidArgumentException('set_cat_status invalid param: ' . $value);
         }
         $catRepo = $this->categoryRepository;
         if ($value === 'public') {

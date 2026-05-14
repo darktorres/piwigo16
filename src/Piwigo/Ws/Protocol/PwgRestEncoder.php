@@ -143,7 +143,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             default:
-                trigger_error('Invalid type '. gettype($data), E_USER_WARNING);
+                throw new \LogicException('Invalid type ' . gettype($data));
         }
     }
 }

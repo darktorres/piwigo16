@@ -223,7 +223,7 @@ final readonly class CommentsController implements ControllerInterface
                                 $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
                                 break;
                             default:
-                                trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
+                                throw new \LogicException('Invalid comment action: ' . $comment_action);
                         }
                     }
                     $edit_comment = $comment_id;

@@ -117,16 +117,15 @@ final readonly class UserAdminService
 
     /**
      * @param int[]|int $groupIds
-     * @return array<int|string, mixed>|false
+     * @return array<int|string, mixed>
      */
-    public function deleteGroups(array|int $groupIds): false|array
+    public function deleteGroups(array|int $groupIds): array
     {
         if (!is_array($groupIds)) {
             $groupIds = [$groupIds];
         }
         if (count($groupIds) === 0) {
-            trigger_error('There is no group to delete', E_USER_WARNING);
-            return false;
+            throw new \InvalidArgumentException('There is no group to delete');
         }
         if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
             foreach ($groupIds as $groupId) {

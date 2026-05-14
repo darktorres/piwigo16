@@ -1151,9 +1151,7 @@ final readonly class ImagesEndpoints
             }
             foreach ($files as $path) {
                 if (is_file($path) && !unlink($path)) {
-                    $ok = false;
-                    trigger_error('"' . $path . '" cannot be removed', E_USER_WARNING);
-                    break;
+                    throw new \RuntimeException('"' . $path . '" cannot be removed');
                 }
             }
         }

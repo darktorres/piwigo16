@@ -228,7 +228,9 @@ SELECT DISTINCT(id)
   FROM ' . Tables::categories() . '
   WHERE ';
         foreach ($ids as $num => $categoryId) {
-            is_numeric($categoryId) or trigger_error('get_subcat_ids expecting numeric, not ' . gettype($categoryId), E_USER_WARNING);
+            if (!is_numeric($categoryId)) {
+                throw new \InvalidArgumentException('get_subcat_ids expecting numeric, not ' . gettype($categoryId));
+            }
             if ($num > 0) {
                 $query .= '
     OR ';

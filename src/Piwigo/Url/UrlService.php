@@ -265,21 +265,18 @@ final readonly class UrlService
                         $sectionString .= '/categories';
                     } else {
                         $cat = is_array($params['category']) ? $params['category'] : [];
-                        isset($cat['name']) or trigger_error(
-                            'make_section_in_url category name not set',
-                            E_USER_WARNING
-                        );
-
-                        array_key_exists('permalink', $cat) or trigger_error(
-                            'make_section_in_url category permalink not set',
-                            E_USER_WARNING
-                        );
+                        if (!isset($cat['name'])) {
+                            throw new \InvalidArgumentException('make_section_in_url category name not set');
+                        }
+                        if (!array_key_exists('permalink', $cat)) {
+                            throw new \InvalidArgumentException('make_section_in_url category permalink not set');
+                        }
 
                         $sectionString .= '/category/';
                         if (!isset($cat['permalink']) || $cat['permalink'] === '') {
                             $sectionString .= is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
-                                $catNameRaw = $cat['name'] ?? null;
+                                $catNameRaw = $cat['name'];
                                 $sectionString .= '-' . $this->stringUtil->str2url(is_string($catNameRaw) ? $catNameRaw : '');
                             }
                         } else {

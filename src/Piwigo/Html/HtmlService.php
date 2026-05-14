@@ -41,8 +41,7 @@ final readonly class HtmlService
 
         foreach ($catInformations as $cat) {
             if (!is_array($cat)) {
-                trigger_error('get_cat_display_name wrong type for category ', E_USER_WARNING);
-                continue;
+                throw new \InvalidArgumentException('get_cat_display_name wrong type for category');
             }
 
             $cat['name'] = EventDispatcher::dispatch(

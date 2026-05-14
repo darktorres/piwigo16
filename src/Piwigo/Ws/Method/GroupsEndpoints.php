@@ -79,7 +79,7 @@ final readonly class GroupsEndpoints
         }
         $groupIdInt = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
         $deleteResult = $this->userAdminService->deleteGroups($groupIdInt);
-        $groupnames = array_values($deleteResult !== false ? $deleteResult : []);
+        $groupnames = array_values($deleteResult);
         $this->userAdminService->invalidateUserCache();
         return new PwgNamedArray($groupnames, 'group_deleted');
     }

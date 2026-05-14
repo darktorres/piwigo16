@@ -34,23 +34,25 @@ final class UserBootstrap
         }
         self::$bootstrapped = true;
 
-        /** @var array<string,mixed> $user */
-        $user = &$GLOBALS['user'];
-        // Start with guest
-        $user['id'] = Config::guestId();
+        // Accumulate the user ID through auth methods
+        $userId = Config::guestId();
 
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_string($_GET['act']) && $_GET['act'] === 'logout') {
                 Kernel::service(AuthService::class)->logoutUser();
                 Kernel::service(Util::class)->redirect(Kernel::service(UrlService::class)->getGalleryHomeUrl());
-            } elseif (!empty($_SESSION['pwg_uid'])) {
-                $user['id'] = $_SESSION['pwg_uid'];
+            } elseif (!empty($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid'])) {
+                $userId = (int) $_SESSION['pwg_uid'];
             }
         }
 
         // Auto-login via remember-me cookie
-        if ($user['id'] == Config::guestId()) {
-            Kernel::service(AuthService::class)->autoLogin();
+        if ($userId == Config::guestId()) {
+            if (Kernel::service(AuthService::class)->autoLogin()) {
+                $userId = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid'])
+                    ? (int) $_SESSION['pwg_uid']
+                    : $userId;
+            }
         }
 
         // Apache authentication overrides session
@@ -64,18 +66,23 @@ final class UserBootstrap
             }
             if (isset($remoteUser)) {
                 $remoteUserStr = is_scalar($remoteUser) ? (string) $remoteUser : '';
-                $userId = Kernel::service(UserService::class)->getUserid($remoteUserStr);
-                if ($userId === false || $userId === 0) {
-                    $userId = Kernel::service(UserService::class)->registerUser($remoteUserStr, '', '', false);
+                $apacheUserId = Kernel::service(UserService::class)->getUserid($remoteUserStr);
+                if ($apacheUserId === false || $apacheUserId === 0) {
+                    $apacheUserId = Kernel::service(UserService::class)->registerUser($remoteUserStr, '', '', false);
                 }
-                $user['id'] = $userId;
+                $userId = is_numeric($apacheUserId) ? (int) $apacheUserId : $userId;
             }
         }
 
-        // Auth-key login (e.g. email confirmation links)
+        // Auth-key login — authKeyLogin() calls CurrentUser::setRawAttributes() internally
         if (isset($_GET['auth'])) {
             $rawAuth = $_GET['auth'];
             Kernel::service(AuthService::class)->authKeyLogin(is_string($rawAuth) ? $rawAuth : '');
+            // Read back the user ID that authKeyLogin() resolved
+            if (CurrentUser::isInitialized()) {
+                $resolvedId = CurrentUser::get()->rawAttributes['id'] ?? $userId;
+                $userId = is_numeric($resolvedId) ? (int) $resolvedId : $userId;
+            }
         }
 
         // HTTP API key (only relevant when IN_WS is defined by WsController)
@@ -94,6 +101,10 @@ final class UserBootstrap
                     PwgServerRegistry::current()->sendResponse(new PwgError(401, 'Invalid api_key'));
                 }
                 exit;
+            }
+            if (CurrentUser::isInitialized()) {
+                $resolvedId = CurrentUser::get()->rawAttributes['id'] ?? $userId;
+                $userId = is_numeric($resolvedId) ? (int) $resolvedId : $userId;
             }
             define('PWG_API_KEY_REQUEST', true);
             $_POST['pwg_token'] = $_GET['pwg_token'] = Kernel::service(Util::class)->getPwgToken();
@@ -143,21 +154,22 @@ final class UserBootstrap
         }
 
         // Build full user array from DB
-        $userId = is_numeric($user['id']) ? (int) $user['id'] : 0;
-        $user   = Kernel::service(UserService::class)->buildUser($userId, $useCache);
+        $builtUser = Kernel::service(UserService::class)->buildUser($userId, $useCache);
 
-        // Browser-language override for guests
-        if (Config::browserLanguage() && (Kernel::service(PermissionService::class)->isAGuest() || Kernel::service(PermissionService::class)->isGeneric())) {
-            $language = Kernel::service(PreferencesService::class)->getBrowserLanguage();
-            if ($language !== false && $language !== '') {
-                $user['language'] = $language;
+        // Browser-language override for guests (read status from built array to avoid circular dep)
+        if (Config::browserLanguage()) {
+            $status = is_string($builtUser['status'] ?? null) ? $builtUser['status'] : '';
+            if (in_array($status, ['guest', 'generic'], true)) {
+                $language = Kernel::service(PreferencesService::class)->getBrowserLanguage();
+                if ($language !== false && $language !== '') {
+                    $builtUser['language'] = $language;
+                }
             }
         }
 
-        EventDispatcher::notify('user_init', $user);
+        CurrentUser::set(User::fromUserArray($builtUser));
 
-        // Re-attach CurrentUser after UserService::get()->buildUser() populated $GLOBALS['user']
-        CurrentUser::attachGlobals();
+        EventDispatcher::notify('user_init', CurrentUser::get()->rawAttributes);
     }
 
     public static function reset(): void

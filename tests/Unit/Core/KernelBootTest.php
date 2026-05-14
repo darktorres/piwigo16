@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -80,26 +81,28 @@ final class KernelBootTest extends TestCase
         self::assertInstanceOf(\Piwigo\Core\PageState::class, \Piwigo\Core\PageState::current());
     }
 
-    public function test_CurrentUser_get_returns_user_after_boot(): void
+    public function test_CurrentUser_get_returns_guest_after_boot_alone(): void
     {
-        $this->simulateGlobals(['user' => ['id' => 5, 'username' => 'alice', 'email' => 'alice@example.com', 'language' => 'en_US', 'theme' => 'elegant', 'status' => 'webmaster', 'enabled_high' => true]]);
+        // Kernel::boot() calls attachGlobals() which creates a default guest User.
+        // The real user is set by UserBootstrap::bootstrap() (AuthMiddleware), not by boot().
+        $this->simulateGlobals();
         Kernel::boot();
 
         $user = CurrentUser::get();
-        self::assertSame(5, $user->id);
-        self::assertSame('alice', $user->username);
-        self::assertSame('alice@example.com', $user->email);
+        self::assertSame('guest', $user->status);
     }
 
-    /** Step 3 exit signal: CurrentUser::get()->username === $user['username'] after boot. */
-    public function test_CurrentUser_username_equals_global_user_username_after_boot(): void
+    public function test_CurrentUser_set_allows_overriding_user_after_boot(): void
     {
-        $this->simulateGlobals(['user' => ['id' => 7, 'username' => 'bob', 'email' => '', 'language' => 'fr_FR', 'theme' => 'elegant', 'status' => 'normal', 'enabled_high' => false]]);
+        $this->simulateGlobals();
         Kernel::boot();
 
-        $user = $GLOBALS['user'];
-        self::assertIsArray($user);
-        self::assertSame($user['username'], CurrentUser::get()->username);
+        $alice = User::fromUserArray(['id' => 5, 'username' => 'alice', 'email' => 'alice@example.com',
+            'language' => 'en_US', 'theme' => 'elegant', 'status' => 'webmaster', 'enabled_high' => true]);
+        CurrentUser::set($alice);
+
+        self::assertSame(5, CurrentUser::get()->id);
+        self::assertSame('alice', CurrentUser::get()->username);
     }
 
     public function test_Lang_t_reads_from_globals_after_boot(): void

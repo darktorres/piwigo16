@@ -50,26 +50,21 @@ final class CurrentUserTest extends TestCase
         self::assertFalse(CurrentUser::isInitialized());
     }
 
-    public function testAttachGlobalsWrapsUserArray(): void
+    public function testAttachGlobalsCreatesDefaultGuest(): void
     {
-        $GLOBALS['user'] = [
-            'id'       => 5,
-            'username' => 'bob',
-            'email'    => 'bob@example.com',
-            'language' => 'de_DE',
-            'theme'    => 'modus',
-            'status'   => 'normal',
-        ];
+        // attachGlobals() no longer reads $GLOBALS['user'] — it creates a default guest.
+        // The real user is set by UserBootstrap via CurrentUser::set().
         CurrentUser::attachGlobals();
         self::assertTrue(CurrentUser::isInitialized());
-        self::assertSame('bob', CurrentUser::get()->username);
-        self::assertSame(5, CurrentUser::get()->id);
+        self::assertSame('guest', CurrentUser::get()->status);
     }
 
-    public function testAttachGlobalsMissingUserArrayGivesGuest(): void
+    public function testAttachGlobalsIsIdempotent(): void
     {
-        unset($GLOBALS['user']);
+        // calling twice does not override an already-set instance
         CurrentUser::attachGlobals();
-        self::assertSame('guest', CurrentUser::get()->status);
+        $first = CurrentUser::get();
+        CurrentUser::attachGlobals();
+        self::assertSame($first, CurrentUser::get());
     }
 }

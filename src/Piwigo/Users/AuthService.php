@@ -283,10 +283,7 @@ final readonly class AuthService
 
     public function authKeyLogin(string $authKey, bool $connectionByHeader = false): bool
     {
-        $user = &$GLOBALS['user'];
-        if (!is_array($user)) {
-            $user = [];
-        }
+        $user = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $validKey  = false;
         $secretKey = null;
         if (preg_match('/^[a-z0-9]{30}$/i', $authKey)) {

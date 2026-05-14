@@ -6,7 +6,6 @@ namespace Piwigo\Picture;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Template\TemplateRegistry;
 
@@ -18,10 +17,7 @@ final readonly class PictureMetadataRenderer
     }
     public function render(): void
     {
-        $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
-        $current = is_array($picture['current'] ?? null) ? $picture['current'] : [];
-        $srcImageRaw = $current['src_image'] ?? null;
-        $srcImage = $srcImageRaw instanceof SrcImage ? $srcImageRaw : null;
+        $srcImage = PictureContextRegistry::current()->srcImage;
 
         if (Config::showExif() and function_exists('exif_read_data') and $srcImage !== null) {
             $exif_mapping = [];

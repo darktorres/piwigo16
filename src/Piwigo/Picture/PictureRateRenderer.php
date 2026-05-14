@@ -29,20 +29,18 @@ final readonly class PictureRateRenderer
         }
 
         $template = TemplateRegistry::current();
-        $ctx = SectionContextRegistry::current();
-        $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
-        $url_self = is_scalar($GLOBALS['url_self'] ?? null) ? (string) $GLOBALS['url_self'] : '';
-        $current = is_array($picture['current'] ?? null) ? $picture['current'] : [];
+        $ctx      = SectionContextRegistry::current();
+        $picCtx   = PictureContextRegistry::current();
+        $url_self = $this->urlService->duplicatePictureUrl();
 
         $rate_summary = [
             'count' => 0,
-            'score' => $current['rating_score'] ?? null,
+            'score' => $picCtx->ratingScore,
             'average' => null,
         ];
-        if (null !== $rate_summary['score']) {
+        if ($picCtx->ratingScore !== null) {
             [$rate_summary['count'], $rate_summary['average']] =
-                $this->rateRepository
-                    ->findCountAndAvgByElementId(is_numeric($current['id'] ?? null) ? (int) $current['id'] : 0);
+                $this->rateRepository->findCountAndAvgByElementId($picCtx->currentItem);
         }
         $template->assign('rate_summary', $rate_summary);
 

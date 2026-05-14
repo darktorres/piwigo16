@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed + §7 AlbumController/ScriptLoader trigger_error → exceptions).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed + §7 trigger_error → exceptions + §8 picture-page GLOBALS gaps closed).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -317,9 +317,9 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign) | Admin header notification strings. No bridge. |
 | `$GLOBALS['header_msgs']` | `CommonBootstrap` | `CommonBootstrap` (template assign) | Guest/lock status warnings. Set and consumed within the same bootstrap method. No bridge. |
 | `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Sync error list (not UI page errors). No bridge. |
-| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). Renderers always get `''`. Pre-existing gap — renderers should be updated to use `UrlService::duplicatePictureUrl()`. |
-| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | `PictureController` builds a local but never writes the global. Renderer always gets `[]`. Pre-existing gap. |
-| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | `PictureController` builds a local `$picture` array but never writes the global. All three renderers get `[]`. Pre-existing gap — renderers should use `PictureContextRegistry` once picture data is added there. |
+| `$GLOBALS['url_self']` | ~~Nothing in src/~~ | ~~`PictureCommentRenderer`, `PictureRateRenderer`~~ | **Fixed 2026-05-14**: renderers now call `$this->urlService->duplicatePictureUrl()` directly. |
+| `$GLOBALS['related_categories']` | ~~Nothing in src/~~ | ~~`PictureCommentRenderer`~~ | **Fixed 2026-05-14**: added `relatedCategories: list<array<string,mixed>>` to `PictureContext`; `PictureController` populates it; renderer reads from `PictureContextRegistry::current()`. |
+| `$GLOBALS['picture']` | ~~Nothing in src/~~ | ~~`PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer`~~ | **Fixed 2026-05-14**: added `ratingScore: ?float` and `srcImage: ?SrcImage` to `PictureContext`; `PictureController` populates both; renderers read from `PictureContextRegistry::current()`. Dead `$picture` read in `PictureCommentRenderer` removed. |
 | `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization. |
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |

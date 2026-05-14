@@ -467,15 +467,18 @@ SELECT *
         }
 
         PictureContextRegistry::set(new PictureContext(
-            currentItem:  $imageId,
-            nextItem:     $nextItem,
-            previousItem: $previousItem,
-            firstItem:    $firstItem,
-            lastItem:     $lastItem,
-            currentRank:  $currentRank,
-            lastRank:     $lastRank,
-            rankOf:       $rankOf,
-            slideshow:    $slideshowActive,
+            currentItem:       $imageId,
+            nextItem:          $nextItem,
+            previousItem:      $previousItem,
+            firstItem:         $firstItem,
+            lastItem:          $lastItem,
+            currentRank:       $currentRank,
+            lastRank:          $lastRank,
+            rankOf:            $rankOf,
+            slideshow:         $slideshowActive,
+            ratingScore:       is_numeric($currentPic['rating_score'] ?? null) ? (float) $currentPic['rating_score'] : null,
+            srcImage:          ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null,
+            relatedCategories: $related_categories,
         ));
 
         // Slideshow controls

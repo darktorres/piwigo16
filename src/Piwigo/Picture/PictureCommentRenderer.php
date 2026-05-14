@@ -39,15 +39,15 @@ final readonly class PictureCommentRenderer
 
     public function render(?int $editComment = null): void
     {
-        $template = TemplateRegistry::current();
-        $imageId  = PictureContextRegistry::current()->currentItem;
-        $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
-        $related_categories = is_array($GLOBALS['related_categories'] ?? null) ? $GLOBALS['related_categories'] : [];
-        $url_self = is_scalar($GLOBALS['url_self'] ?? null) ? (string) $GLOBALS['url_self'] : '';
+        $template           = TemplateRegistry::current();
+        $picCtx             = PictureContextRegistry::current();
+        $imageId            = $picCtx->currentItem;
+        $related_categories = $picCtx->relatedCategories;
+        $url_self           = $this->urlService->duplicatePictureUrl();
 
         $showComments = false;
         foreach ($related_categories as $category) {
-            if (is_array($category) && ($category['commentable'] ?? '') == 'true') {
+            if (($category['commentable'] ?? '') == 'true') {
                 $showComments = true;
                 break;
             }

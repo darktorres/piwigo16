@@ -134,7 +134,7 @@ final class UpgradeService
 
     public static function checkUpgradeAccessRights(): void
     {
-        $current_release = is_string($GLOBALS['current_release'] ?? null) ? $GLOBALS['current_release'] : '';
+        $current_release = Config::piwigoInstalledVersion() ?? '';
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             session_start();
             $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';

@@ -124,14 +124,9 @@ final class PhotoController
         $rawImageIdStr = $_GET['image_id'] ?? null;
         $image_id_str = is_string($rawImageIdStr) ? $rawImageIdStr : '';
         $this->adminPhotoBaseUrl = $this->urlGenerator->admin('photo-' . $image_id_str);
-        $GLOBALS['admin_photo_base_url'] = $this->adminPhotoBaseUrl;
 
         $this->imageInfo = $this->imageAdminService->getImageInfos($image_id_str, true);
 
-        if (isset($_GET['cat_id'])) {
-            $GLOBALS['category'] = $this->categoryRepository
-                ->findCategoryById(is_scalar($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0);
-        }
 
         $rawTab = $_GET['tab'] ?? null;
         $tab    = is_string($rawTab) ? $rawTab : 'properties';
@@ -571,7 +566,6 @@ SELECT id
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
 
         $upload_form_config = $this->uploadService->getUploadFormConfig();
-        $GLOBALS['upload_form_config'] = $upload_form_config;
 
         $rawSection = $_GET['section'] ?? null;
         $tab = is_string($rawSection) ? $rawSection : 'direct';

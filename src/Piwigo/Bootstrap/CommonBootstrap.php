@@ -130,14 +130,13 @@ final class CommonBootstrap
             MigrationRunner::migrate();
         }
 
-        $GLOBALS['logger'] = new Logger([
+        LoggerRegistry::set(new Logger([
             'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
             'severity'    => Config::logLevel(),
             'filename'    => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
             'globPattern' => 'log_*.txt',
             'archiveDays' => Config::logArchiveDays(),
-        ]);
-        LoggerRegistry::set($GLOBALS['logger']);
+        ]));
 
         if (!Config::checkUpgradeFeed()) {
             if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != AppInfo::branchFromVersion(AppInfo::VERSION)) {

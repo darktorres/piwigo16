@@ -23,7 +23,7 @@ final class CoreTabsRegistrar
         $manager_link         = is_string($GLOBALS['manager_link'] ?? null) ? $GLOBALS['manager_link'] : '';
         $link_start           = is_string($GLOBALS['link_start'] ?? null) ? $GLOBALS['link_start'] : '';
         $conf_link            = is_string($GLOBALS['conf_link'] ?? null) ? $GLOBALS['conf_link'] : '';
-        $help_link            = is_string($GLOBALS['help_link'] ?? null) ? $GLOBALS['help_link'] : '';
+        $help_link            = '';
         $base_url             = is_string($GLOBALS['base_url'] ?? null) ? $GLOBALS['base_url'] : '';
 
         switch ($tab_id) {

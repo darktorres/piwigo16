@@ -20,7 +20,6 @@ final class LoggerRegistry
     public static function set(LoggerInterface $logger): void
     {
         self::$instance = $logger;
-        $GLOBALS['logger'] = $logger;
     }
 
     public static function isInitialized(): bool

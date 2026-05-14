@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14. All eight sections fully resolved — no compat shims, bridges, or trigger_error calls remain in production src/.
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14. All eight sections fully resolved. Five previously uncatalogued dead-channel globals fixed (logger mirror, help_link, current_release, category, upload_form_config). Five working CoreTabsRegistrar channels added to §8.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -323,8 +323,17 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |
 | `$GLOBALS['admin_album_base_url']` | `AlbumController` | `CoreTabsRegistrar` | Admin album URL prefix, set before tab rendering. |
+| `$GLOBALS['link_start']`, `$GLOBALS['conf_link']` | `AdminController` | `CoreTabsRegistrar` | Admin page/configuration URL prefixes, set before tab rendering. |
+| `$GLOBALS['manager_link']` | `BatchManagerController` | `CoreTabsRegistrar` | Batch manager URL prefix, set before tab rendering. |
+| `$GLOBALS['base_url']` | `MiscController` | `CoreTabsRegistrar` | Admin base URL for the misc page's tabs. |
+| `$GLOBALS['admin_photo_base_url']` | `PhotoController` | `CoreTabsRegistrar` | Photo admin URL prefix, set before tab rendering. |
 | `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained: set and consumed within the same controller. |
 | `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by old `include/` DB layer. Now always 0. |
 | `$GLOBALS['page']['search']` + `['nb_lines']` + `['start']` | `GeneralEndpoints::historySearch()` | `MaintenanceController::history()` | WS history search state: AJAX call sets search rules + result count, page re-render reads them to build the nav bar and prefill the form. Survives the §1.1 migration because both sides still use `$GLOBALS['page']` explicitly. |
 | `$GLOBALS['page']['auth_key_id']` | `AuthService::authKeyLogin()` | `Util::pwgLog()` | API-key request ID passed to the history log. Pre-existing gap — not part of the Wave A §1.1 migration groups. |
 | `$GLOBALS['page']['username']` | `PasswordService` | `PasswordService` | Temporary username stored mid-password-reset flow. Self-contained within that service. |
+| `$GLOBALS['logger']` | ~~`CommonBootstrap`, `LoggerRegistry::set()`~~ | *Nothing in src/* | **Fixed 2026-05-14**: dead write removed from both sites; `LoggerRegistry::set()` no longer mirrors to GLOBALS; `CommonBootstrap` constructs and registers the logger in one step. |
+| `$GLOBALS['help_link']` | *Nothing in src/* | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: dead read replaced with `''`; help tab URLs were always broken (empty prefix). |
+| `$GLOBALS['current_release']` | *Nothing in src/* | ~~`UpgradeService`~~ | **Fixed 2026-05-14**: dead read replaced with `Config::piwigoInstalledVersion() ?? ''`, which is the typed equivalent (the upgrade version stored in conf table). |
+| `$GLOBALS['category']` | ~~`PhotoController`~~ | *Nothing in src/* | **Fixed 2026-05-14**: dead write removed; the DB query that populated it was also eliminated. |
+| `$GLOBALS['upload_form_config']` | ~~`PhotoController`~~ | *Nothing in src/* | **Fixed 2026-05-14**: dead write removed; `$upload_form_config` is still used locally in the same method. |

@@ -83,8 +83,6 @@ final readonly class AdminController implements ControllerInterface
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         EventDispatcher::addListener('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
 
@@ -303,9 +301,7 @@ final readonly class AdminController implements ControllerInterface
 
         if (in_array($adminPage, ['site_update', 'batch_manager'], true)) {
             $nb_no_md5sum = count($this->imageAdminService->getPhotosNoMd5sum());
-            if ($nb_no_md5sum > 0) {
-                $page['no_md5sum_number'] = $nb_no_md5sum;
-            }
+            $tpl->assign('NB_NO_MD5SUM', $nb_no_md5sum > 0 ? $nb_no_md5sum : '');
         }
 
         $nbPhotosTotal = $this->imageRepository->countAll();

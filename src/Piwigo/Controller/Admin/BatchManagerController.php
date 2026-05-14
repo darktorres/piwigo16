@@ -855,7 +855,7 @@ final class BatchManagerController
 
         $base_url = $this->urlGenerator->admin();
 
-        $this->filterResolver->render($collection, $base_url);
+        $this->filterResolver->render($collection, $base_url, $this->catElementsId, $this->pageStart);
 
         $catElementsId = $this->catElementsId;
         $pageStart     = $this->pageStart;
@@ -1045,7 +1045,7 @@ final class BatchManagerController
             'PWG_TOKEN'       => $this->util->getPwgToken(),
         ]);
 
-        $this->filterResolver->render($collection, $base_url);
+        $this->filterResolver->render($collection, $base_url, $this->catElementsId, $this->pageStart);
 
         $tpl->assign('page_data_json', json_encode([
             'str_are_you_sure' => Lang::t('Are you sure?'),

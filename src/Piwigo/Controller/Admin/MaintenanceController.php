@@ -1119,8 +1119,6 @@ final class MaintenanceController
     {
         $tpl    = TemplateRegistry::current();
         $logger = LoggerRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
 
@@ -1155,7 +1153,7 @@ final class MaintenanceController
             $site_reader = new LocalSiteReader($site_url_str);
         }
 
-        if (isset($page['no_md5sum_number'])) {
+        if (count($this->imageAdminService->getPhotosNoMd5sum()) > 0) {
             $tpl->assign(['save_error' => new Html('<a href="' . $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);
         }
 

@@ -28,13 +28,12 @@ final readonly class FilterResolver
     ) {
     }
     /**
-     * @param array<mixed> $collection
+     * @param array<mixed>  $collection
+     * @param list<string>  $catElementsId
      */
-    public function render(array $collection, string $baseUrl): void
+    public function render(array $collection, string $baseUrl, array $catElementsId = [], int $start = 0): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
 
         $prefilters = [
             ['ID' => 'caddie', 'NAME' => Lang::t('Caddie')],
@@ -57,9 +56,6 @@ final readonly class FilterResolver
         usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 
         $bulk_manager_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
-        /** @var array<mixed> $catElementsId */
-        $catElementsId = is_array($page['cat_elements_id'] ?? null) ? $page['cat_elements_id'] : [];
-        $start = is_int($page['start'] ?? null) ? $page['start'] : 0;
 
         $tpl->assign([
             'conf_checksum_compute_blocksize' => Config::checksumComputeBlocksize(),
@@ -73,12 +69,6 @@ final readonly class FilterResolver
             'F_ACTION' => $baseUrl . $this->urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
         ]);
-
-        if (isset($page['no_md5sum_number'])) {
-            $tpl->assign(['NB_NO_MD5SUM' => $page['no_md5sum_number']]);
-        } else {
-            $tpl->assign('NB_NO_MD5SUM', '');
-        }
 
         $level_options = [];
         foreach (Config::availablePermissionLevels() as $level) {
@@ -123,7 +113,7 @@ SELECT
     DISTINCT(category_id) AS id
   FROM ' . Tables::imageCategory() . ' AS ic
     JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')
+  WHERE ic.image_id IN (' . implode(',', $catElementsId) . ')
     AND (
       ic.category_id != i.storage_category_id
       OR i.storage_category_id IS NULL

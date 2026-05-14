@@ -151,15 +151,13 @@ No remaining `$GLOBALS['template']` reads or writes in `src/` (verified 2026-05-
 
 **Removal condition:** All in-tree reads of `$GLOBALS['pwg_loaded_plugins']` migrated to `LoadedPluginRegistry::all/get()`.
 
-**Status: ❌ NOT MET — but simplified (2026-05-14).** All plugins removed from `plugins/` (only a redirect stub remains). `PluginService::loadPlugin()` finds no `main.inc.php` files; `LoadedPluginRegistry::all()` always returns `[]`. Three controllers still read the global directly:
+**Status: ✅ REMOVED (2026-05-14).** Bridge removed; three controller reads migrated:
+- `LoadedPluginRegistry`: `$GLOBALS['pwg_loaded_plugins'] = &self::$plugins` removed from `init()` and `reset()`; `$plugins` made private.
+- `MiscController`: `count($GLOBALS['pwg_loaded_plugins'])` → `count(LoadedPluginRegistry::all())`
+- `BatchManagerController`: `array_keys(...)` → `array_keys(LoadedPluginRegistry::all())`
+- `ExtensionsController`: `isset($pwg_loaded_plugins[$id])` → `LoadedPluginRegistry::isLoaded($id)`
 
-```
-src/Piwigo/Controller/Admin/MiscController.php:539–540     (count — always 0)
-src/Piwigo/Controller/Admin/ExtensionsController.php:442–444  (active check — always false)
-src/Piwigo/Controller/Admin/BatchManagerController.php:976–977  (list — always [])
-```
-
-With no plugins ever loading, the entire plugin stack (`PluginService::loadPlugins()`, `LoadedPluginRegistry::init()`, the bridge, and these three reads) could be removed together rather than migrated piecemeal.
+`PluginService::loadPlugins()` is still called from `CommonBootstrap` but is a no-op (plugins/ has no `main.inc.php` files). No `$GLOBALS['pwg_loaded_plugins']` remains in `src/`.
 
 ---
 

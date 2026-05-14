@@ -307,4 +307,8 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | Same as above — `PictureController` builds a local `$related_categories` but never writes to the global. Renderer always gets `[]`. |
 | `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | Same as above — `PictureController` builds a local `$picture` array but never writes to the global. All three renderers read `[]`. Pre-existing rewrite gap. |
 | `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization: the method both writes and reads this cache. Never initialised externally. |
+| `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for parsed `themeconf.inc.php` files. Method both writes and reads it. |
+| `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix, set at boot via `Config::dbPrefix()`. Pre-boot config value, not a bridge. |
+| `$GLOBALS['admin_album_base_url']` | `AlbumController` | `CoreTabsRegistrar` | Admin album URL prefix, set before tab rendering. Ad-hoc, not a bridge. |
+| `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained: set and consumed within the same controller. |
 | `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by the old `include/` DB layer. Now always 0. |

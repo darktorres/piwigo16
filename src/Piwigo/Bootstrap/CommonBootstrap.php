@@ -77,7 +77,6 @@ final class CommonBootstrap
             return;
         }
 
-        $GLOBALS['page'] = [];
         $GLOBALS['user']         = [];
         $GLOBALS['lang']         = [];
         $GLOBALS['header_msgs']  = [];

@@ -9,6 +9,7 @@ use Gettext\Loader\PoLoader;
 use Gettext\Translation;
 use Gettext\Translations;
 use Gettext\Translator as GettextTranslator;
+use Piwigo\Core\Lang;
 
 /**
  * Piwigo translation service backed by gettext PO files.
@@ -17,8 +18,8 @@ use Gettext\Translator as GettextTranslator;
  * and uses gettext/gettext's PoLoader to parse PO files.
  *
  * Multiple load() calls accumulate translations (common + admin + upgrade etc.).
- * The $GLOBALS['lang'] array is kept in sync for plugin/theme code that reads
- * it directly.
+ * Translations are stored in Lang::$data via Lang::setString(); day/month arrays
+ * are stored in Lang::$days/$months via Lang::setDays()/setMonths().
  */
 final class Translator
 {
@@ -131,13 +132,12 @@ final class Translator
     {
         $val = $this->inner->gettext($key);
 
-        // gettext() returns the original when not found — fall back to $lang global
-        // which may have been populated by PHP lang files (e.g. from plugins)
+        // gettext() returns the original when not found — fall back to Lang::$data
+        // which may have been populated by PHP lang files loaded before PO translation.
         if ($val === $key) {
-            $raw    = $GLOBALS['lang'] ?? [];
-            $global = is_array($raw) ? $raw : [];
-            if (isset($global[$key]) && is_string($global[$key])) {
-                $val = $global[$key];
+            $raw = Lang::getRaw($key);
+            if ($raw !== null) {
+                $val = $raw;
             }
         }
 
@@ -161,12 +161,6 @@ final class Translator
 
     private function mirrorToGlobal(Translations $translations): void
     {
-        $ref = &$GLOBALS['lang'];
-        if (!is_array($ref)) {
-            $GLOBALS['lang'] = [];
-            $ref             = &$GLOBALS['lang'];
-        }
-
         foreach ($translations->getTranslations() as $entry) {
             if (!($entry instanceof Translation)) {
                 continue;
@@ -179,7 +173,7 @@ final class Translator
 
             $str = $entry->getTranslation();
             if ($str !== null && $str !== '') {
-                $ref[$original] = $str;
+                Lang::setString($original, $str);
             }
 
             $pluralOriginal = $entry->getPlural();
@@ -187,36 +181,35 @@ final class Translator
 
             if ($pluralOriginal !== null && $pluralOriginal !== '') {
                 if (isset($pluralForms[0]) && is_string($pluralForms[0]) && $pluralForms[0] !== '') {
-                    $ref[$original] = $pluralForms[0];
+                    Lang::setString($original, $pluralForms[0]);
                 }
                 if (isset($pluralForms[1]) && is_string($pluralForms[1]) && $pluralForms[1] !== '') {
-                    $ref[$pluralOriginal] = $pluralForms[1];
+                    Lang::setString($pluralOriginal, $pluralForms[1]);
                 }
             }
         }
 
-        // Rebuild the $lang['day'] and $lang['month'] arrays that legacy callers
-        // (Lang::day(), Lang::month(), admin/stats.php, etc.) read directly.
+        // Populate Lang::$days and Lang::$months from piwigo_day_N / piwigo_month_N keys.
         $days = [];
         for ($i = 0; $i < 7; $i++) {
-            $key = 'piwigo_day_' . $i;
-            if (isset($ref[$key]) && is_string($ref[$key]) && $ref[$key] !== '') {
-                $days[$i] = $ref[$key];
+            $val = Lang::getRaw('piwigo_day_' . $i);
+            if ($val !== null && $val !== '') {
+                $days[$i] = $val;
             }
         }
         if (!empty($days)) {
-            $ref['day'] = $days;
+            Lang::setDays($days);
         }
 
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
-            $key = 'piwigo_month_' . $m;
-            if (isset($ref[$key]) && is_string($ref[$key]) && $ref[$key] !== '') {
-                $months[$m] = $ref[$key];
+            $val = Lang::getRaw('piwigo_month_' . $m);
+            if ($val !== null && $val !== '') {
+                $months[$m] = $val;
             }
         }
         if (!empty($months)) {
-            $ref['month'] = $months;
+            Lang::setMonths($months);
         }
     }
 }

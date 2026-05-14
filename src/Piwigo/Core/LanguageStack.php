@@ -9,10 +9,8 @@ namespace Piwigo\Core;
  * $lang_info and $language_files globals, replacing those three global declarations
  * across functions_mail.inc.php, functions.inc.php, and functions_notification_by_mail.inc.php.
  *
- * Design: no reference bridge for $lang/$lang_info. All reads go through $GLOBALS
- * directly so that the existing Lang::attachGlobals() reference bridge (which binds
- * $GLOBALS['lang'] to Lang::$data) stays intact. Mutations use in-place array
- * modification (not assignment) to preserve that reference bridge after Kernel::boot().
+ * Design: all reads go through Lang static methods; mutations call Lang::setString(),
+ * Lang::bulkSet(), Lang::setDays(), Lang::setMonths(). No $GLOBALS['lang'] bridge.
  *
  * Stack state ($stack, $saved, $switchInitialized) lives in static properties since
  * it does not need a global bridge — only switch_lang_to/back read it.
@@ -43,48 +41,54 @@ final class LanguageStack
     // $lang accessors
     // -------------------------------------------------------------------------
 
-    /** @return array<mixed> */
+    /** @return array<string,mixed> */
     public static function lang(): array
     {
-        $raw = $GLOBALS['lang'] ?? [];
-        return is_array($raw) ? $raw : [];
+        return Lang::all();
     }
 
     /**
-     * Replace the entire $lang array in-place, preserving any reference bridge
-     * (e.g. the one set by Lang::attachGlobals() to Lang::$data).
+     * Replace the entire lang data set.
      *
      * @param array<mixed> $lang
      */
     public static function setLang(array $lang): void
     {
-        $ref = &$GLOBALS['lang'];
-        if (!is_array($ref)) {
-            $GLOBALS['lang'] = $lang;
-            return;
-        }
-        foreach (array_keys($ref) as $k) {
-            unset($ref[$k]);
-        }
-        foreach ($lang as $k => $v) {
-            $ref[$k] = $v;
-        }
+        /** @var array<string,mixed> $typedLang */
+        $typedLang = $lang;
+        Lang::bulkSet($typedLang);
     }
 
     /**
-     * Merge $additions into the current $lang in-place.
+     * Merge $additions into the current lang data.
      *
      * @param array<string, mixed> $additions
      */
     public static function mergeLang(array $additions): void
     {
-        $ref = &$GLOBALS['lang'];
-        if (!is_array($ref)) {
-            $GLOBALS['lang'] = $additions;
-            return;
-        }
+        $days = is_array($additions['day'] ?? null) ? $additions['day'] : null;
+        $months = is_array($additions['month'] ?? null) ? $additions['month'] : null;
         foreach ($additions as $k => $v) {
-            $ref[$k] = $v;
+            if ($k === 'day' || $k === 'month') {
+                continue;
+            }
+            if (is_string($v)) {
+                Lang::setString($k, $v);
+            }
+        }
+        if ($days !== null) {
+            $daysOut = [];
+            foreach ($days as $k => $v) {
+                $daysOut[(int) $k] = is_scalar($v) ? (string) $v : '';
+            }
+            Lang::setDays($daysOut);
+        }
+        if ($months !== null) {
+            $monthsOut = [];
+            foreach ($months as $k => $v) {
+                $monthsOut[(int) $k] = is_scalar($v) ? (string) $v : '';
+            }
+            Lang::setMonths($monthsOut);
         }
     }
 

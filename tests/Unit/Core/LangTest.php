@@ -57,24 +57,22 @@ final class LangTest extends TestCase
     }
 
     /**
-     * Step 4 exit signal: Lang::t('guest') returns same value pre- and post-conversion.
-     * Before attachGlobals() Lang falls back to $GLOBALS['lang']; after, it reads
-     * self::$data which IS $GLOBALS['lang'] via reference.
+     * Bridge removal: $GLOBALS['lang'] is no longer a fallback for Lang::t().
+     * Before attachGlobals() / loadArray() populate Lang::$data, t() returns
+     * the key itself (same as a missing gettext entry).
      */
-    public function test_t_falls_back_to_globals_lang_before_attach(): void
+    public function test_t_returns_key_before_data_loaded(): void
     {
+        // $GLOBALS['lang'] set but not yet snapshotted into Lang::$data
         $GLOBALS['lang'] = ['guest' => 'Guest'];
-        // self::$data is still [] — attachGlobals() not called
 
-        self::assertSame('Guest', Lang::t('guest'));
+        self::assertSame('guest', Lang::t('guest'));
     }
 
-    public function test_t_after_attach_equals_value_from_globals_fallback(): void
+    public function test_t_returns_translation_after_attachGlobals_snapshot(): void
     {
         $GLOBALS['lang'] = ['guest' => 'Guest'];
-
-        // Simulate attachGlobals() — copies globals into self::$data and rebinds
-        Lang::loadArray($GLOBALS['lang']);
+        Lang::attachGlobals();
 
         self::assertSame('Guest', Lang::t('guest'));
     }

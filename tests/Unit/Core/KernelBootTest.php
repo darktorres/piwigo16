@@ -110,15 +110,15 @@ final class KernelBootTest extends TestCase
         self::assertSame('Guest', Lang::t('guest'));
     }
 
-    public function test_lang_global_write_after_boot_visible_via_Lang(): void
+    public function test_lang_pre_boot_data_snapshotted_by_attachGlobals(): void
     {
+        // Data in $GLOBALS['lang'] before boot is captured by attachGlobals() into Lang::$data
         $this->simulateGlobals(['lang' => ['key' => 'Value']]);
         Kernel::boot();
 
-        $langRef = &$GLOBALS['lang'];
-        self::assertIsArray($langRef);
-        $langRef['new_key'] = 'New Value';
-        self::assertSame('New Value', Lang::t('new_key'));
+        self::assertSame('Value', Lang::t('key'));
+        // After attachGlobals(), $GLOBALS['lang'] is unset — the bridge is removed.
+        self::assertArrayNotHasKey('lang', $GLOBALS);
     }
 
     public function test_container_has_PageState_after_boot(): void

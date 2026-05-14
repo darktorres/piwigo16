@@ -20,15 +20,20 @@ These classes maintain a bidirectional PHP-reference link between a typed single
 
 **Removal condition:** All reads/writes of bridged keys (`errors`, `body_classes`, `body_data`, etc.) in `src/` migrated to `PageState::current()->…`. Ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, etc.) are NOT bridged and do not block removal.
 
-**Status: ✅ REMOVED (2026-05-14).** All 13 reference assignments stripped from `attachGlobals()`; the method now only initialises the singleton and resets `$GLOBALS['page'] = []`. Bridged-key callers migrated:
+**Status: ✅ REMOVED (2026-05-14).** All 13 reference assignments stripped from `attachGlobals()`; the method now only initialises the singleton and resets `$GLOBALS['page'] = []`. All bridged-key callers migrated (found and fixed across two passes):
 
 | Bridged key | Callers migrated |
 |---|---|
 | `errors` | IdentificationController, RegisterController, GeneralEndpoints, SizesProcessor, ConfigurationController, ProfileController, MaintenanceController, MiscController (profile), Updates, ExtensionsController |
 | `body_classes` / `body_data` | SectionInitializer (write), GalleryController (read) |
 | `keyed_errors` | IdentificationController, RegisterController |
+| `auth_key_invalid` | AuthService (write) → `PageState::current()->authKeyInvalid`; CommonBootstrap already read from PageState |
+| `execution_uuid` | CommonBootstrap (write before boot) → `PageState::current()->executionUuid`; Logger.php reads from PageState |
+| `notify_api_key_expiration` | AuthService (write) + CommonBootstrap (read + reset) → both through `PageState::current()->notifyApiKeyExpiration` |
 
-Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys and are tracked separately (not part of this bridge).
+Pre-boot `$GLOBALS['page']` initialisation in CommonBootstrap cleaned up (was setting bridged keys that `attachGlobals()` immediately wiped).
+
+Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, etc.) that were never part of the bridge and are tracked separately.
 
 ---
 

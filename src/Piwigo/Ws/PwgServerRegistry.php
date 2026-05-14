@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-/**
- * Static accessor for the active PwgServer singleton.
- *
- * Mirrors LoggerRegistry / TemplateRegistry: include/ws_init.inc.php constructs
- * the PwgServer instance and calls PwgServerRegistry::set() so that
- * $GLOBALS['service'] and PwgServerRegistry::current() return the same
- * instance.
- */
+/** Static accessor for the active PwgServer singleton. */
 final class PwgServerRegistry
 {
     private static ?PwgServer $instance = null;
@@ -19,7 +12,6 @@ final class PwgServerRegistry
     public static function set(PwgServer $service): void
     {
         self::$instance = $service;
-        $GLOBALS['service'] = $service;
     }
 
     public static function isInitialized(): bool

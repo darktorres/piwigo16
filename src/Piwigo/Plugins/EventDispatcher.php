@@ -126,6 +126,5 @@ final class EventDispatcher
     public static function reset(): void
     {
         self::$handlers = [];
-        $GLOBALS['pwg_event_handlers'] = &self::$handlers;
     }
 }

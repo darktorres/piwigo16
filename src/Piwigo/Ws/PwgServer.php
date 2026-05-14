@@ -500,7 +500,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
 
         $server = Kernel::service(self::class);
         PwgServerRegistry::set($server);
-        $GLOBALS['service'] = $server;
 
         switch ($requestFormat) {
             case 'rest':

@@ -13,6 +13,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\PwgServerRegistry;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.
@@ -92,9 +93,8 @@ final class UserBootstrap
             $authenticated = Kernel::service(AuthService::class)->authKeyLogin($authHeader, true);
             if (!$authenticated) {
                 PwgServer::boot();
-                $serviceRaw = $GLOBALS['service'] ?? null;
-                if ($serviceRaw instanceof PwgServer) {
-                    $serviceRaw->sendResponse(new PwgError(401, 'Invalid api_key'));
+                if (PwgServerRegistry::isInitialized()) {
+                    PwgServerRegistry::current()->sendResponse(new PwgError(401, 'Invalid api_key'));
                 }
                 exit;
             }
@@ -120,11 +120,11 @@ final class UserBootstrap
                 'username' => $_POST['username'],
                 'password' => $_POST['password'],
             ];
-            $serviceRaw = $GLOBALS['service'] ?? null;
-            if ($serviceRaw instanceof PwgServer) {
-                $login = Kernel::service(GeneralEndpoints::class)->sessionLogin($credentials, $serviceRaw);
+            if (PwgServerRegistry::isInitialized()) {
+                $srv   = PwgServerRegistry::current();
+                $login = Kernel::service(GeneralEndpoints::class)->sessionLogin($credentials, $srv);
                 if (true !== $login) {
-                    $serviceRaw->sendResponse($login);
+                    $srv->sendResponse($login);
                     exit();
                 }
             }

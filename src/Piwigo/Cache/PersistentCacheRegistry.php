@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Cache;
 
-/**
- * Static accessor for the active PersistentCache singleton.
- *
- * Mirrors LoggerRegistry / TemplateRegistry: include/common.inc.php constructs
- * the PersistentFileCache instance and calls PersistentCacheRegistry::set() so
- * that $GLOBALS['persistent_cache'] and PersistentCacheRegistry::current()
- * return the same instance.
- */
+/** Static accessor for the active PersistentCache singleton. */
 final class PersistentCacheRegistry
 {
     private static ?PersistentCache $instance = null;
@@ -19,7 +12,6 @@ final class PersistentCacheRegistry
     public static function set(PersistentCache $cache): void
     {
         self::$instance = $cache;
-        $GLOBALS['persistent_cache'] = $cache;
     }
 
     public static function isInitialized(): bool

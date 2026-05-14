@@ -303,16 +303,12 @@ final readonly class ConfigurationController
                     $order_by     = explode(', ', $order_by_str);
                 }
 
-                /** @var array<string, mixed> $lang */
-                $lang    = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
-                $langDay = is_array($lang['day'] ?? null) ? $lang['day'] : [];
-
                 $tpl->assign('main', [
                     'CONF_GALLERY_TITLE'                    => htmlspecialchars(Config::galleryTitle()),
                     'CONF_PAGE_BANNER'                      => htmlspecialchars(Config::pageBanner()),
                     'week_starts_on_options'                => [
-                        'sunday' => is_scalar($langDay[0] ?? null) ? (string) $langDay[0] : 'Sunday',
-                        'monday' => is_scalar($langDay[1] ?? null) ? (string) $langDay[1] : 'Monday',
+                        'sunday' => Lang::day(0) ?: 'Sunday',
+                        'monday' => Lang::day(1) ?: 'Monday',
                     ],
                     'week_starts_on_options_selected'       => Config::weekStartsOn(),
                     'mail_theme'                            => Config::mailTheme(),

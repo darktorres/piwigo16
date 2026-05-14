@@ -25,15 +25,12 @@ final class CalendarWeekly extends CalendarBase
     public function initialize(mixed $inner_sql): void
     {
         parent::initialize($inner_sql);
-        $lang = &$GLOBALS['lang'];
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = Lang::t('Week %d', $i);
-            //$week_no_labels[$i] = $i;
         }
 
-        $langArr = is_array($lang) ? $lang : [];
-        $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
+        $dayLabels = Lang::days();
         $this->calendar_levels = [
           [
               'sql' => SqlExpr::year($this->date_field),

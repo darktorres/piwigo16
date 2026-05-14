@@ -531,17 +531,14 @@ SELECT id
         $image   = $images[0];
         $formats = $this->conn->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
 
-        /** @var array<string, mixed> $lang */
-        $lang = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
-
         foreach ($formats as &$format) {
             $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
             $extRaw = $format['ext'] ?? null;
             $extStr = is_string($extRaw) ? $extRaw : '';
             $format['label']        = strtoupper($extStr);
             $lang_key = 'format ' . strtoupper($extStr);
-            if (isset($lang[$lang_key]) && is_string($lang[$lang_key])) {
-                $format['label'] = $lang[$lang_key];
+            if (Lang::has($lang_key)) {
+                $format['label'] = Lang::t($lang_key);
             }
             $format['filesize'] = round((is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0) / 1024.0, 2);
         }

@@ -708,13 +708,11 @@ final class MiscController
         $tpl->assign('ACTIVITY_CHART_DATA', $chart_data);
         $tpl->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
-        /** @var array<string, mixed> $lang */
-        $lang      = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
-        $day_names = is_array($lang['day'] ?? null) ? $lang['day'] : [];
+        $day_names  = Lang::days();
         $day_labels = [];
         for ($i = 0; $i <= 6; $i++) {
-            $name       = $day_names[($i + 1) % 7] ?? '';
-            $day_labels[] = mb_substr(is_string($name) ? $name : '', 0, 3);
+            $name         = (string) ($day_names[($i + 1) % 7] ?? '');
+            $day_labels[] = mb_substr($name, 0, 3);
         }
         $tpl->assign('DAY_LABELS', $day_labels);
 

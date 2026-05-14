@@ -7,6 +7,7 @@ namespace Piwigo\Calendar;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
@@ -34,10 +35,8 @@ final class CalendarMonthly extends CalendarBase
     public function initialize(mixed $inner_sql): void
     {
         parent::initialize($inner_sql);
-        $lang = &$GLOBALS['lang'];
-        $langArr = is_array($lang) ? $lang : [];
-        $monthLabels = is_array($langArr['month'] ?? null) ? $langArr['month'] : null;
-        $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : null;
+        $monthLabels = Lang::months() ?: null;
+        $dayLabels   = Lang::days() ?: null;
         $this->calendar_levels = [
           [
               'sql' => SqlExpr::year($this->date_field),
@@ -256,9 +255,7 @@ final class CalendarMonthly extends CalendarBase
             return false;
         }
 
-        $lang = &$GLOBALS['lang'];
-        $langArr = is_array($lang) ? $lang : [];
-        $monthLabels = is_array($langArr['month'] ?? null) ? $langArr['month'] : null;
+        $monthLabels = Lang::months() ?: null;
 
         foreach ($items as $year => $year_data) {
             $chronology_date = [ $year ];
@@ -328,9 +325,7 @@ final class CalendarMonthly extends CalendarBase
             }
             return false;
         }
-        $lang = &$GLOBALS['lang'];
-        $langArr = is_array($lang) ? $lang : [];
-        $monthLabels = is_array($langArr['month'] ?? null) ? $langArr['month'] : [];
+        $monthLabels = Lang::months();
 
         foreach ($items as $month => $month_data) {
             $cyearRaw = $chronologyDate[CYEAR];
@@ -368,8 +363,6 @@ final class CalendarMonthly extends CalendarBase
     protected function buildMonthCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
-        $lang = &$GLOBALS['lang'];
-        $langArr = is_array($lang) ? $lang : [];
 
         $query = 'SELECT '.SqlExpr::dayOfMonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
@@ -430,8 +423,7 @@ final class CalendarMonthly extends CalendarBase
                 $first_day_dow += 7;
             }
             //first_day_dow = week day corresponding to the first day of this month
-            $dayLabels = is_array($langArr['day'] ?? null) ? $langArr['day'] : [];
-            $wday_labels = $dayLabels;
+            $wday_labels = Lang::days();
 
             if ('monday' == Config::weekStartsOn()) {
                 if ($first_day_dow == 0) {

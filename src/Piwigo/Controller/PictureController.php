@@ -98,8 +98,6 @@ final readonly class PictureController implements ControllerInterface
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
-        /** @var array<string, mixed> $lang */
-        $lang = &$GLOBALS['lang'];
         $ctx  = SectionContextRegistry::current();
 
         // Typed locals extracted from SectionContext after SectionInitializer has populated it
@@ -457,8 +455,8 @@ SELECT *
                     $extStr           = is_scalar($fmtExtRaw) ? (string) $fmtExtRaw : '';
                     $format['label']  = strtoupper($extStr);
                     $lang_key         = 'format ' . strtoupper($extStr);
-                    if (isset($lang[$lang_key])) {
-                        $format['label'] = $lang[$lang_key];
+                    if (Lang::has($lang_key)) {
+                        $format['label'] = Lang::t($lang_key);
                     }
                     $fsRaw                = $format['filesize'] ?? 0;
                     $format['filesize']   = sprintf('%.1fMB', (is_numeric($fsRaw) ? (float) $fsRaw : 0.0) / 1024.0);

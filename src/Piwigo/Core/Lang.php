@@ -45,6 +45,24 @@ final class Lang
         return isset(self::$data[$key]);
     }
 
+    /** @return array<array-key, string> Month names keyed 1–12. */
+    public static function months(): array
+    {
+        $raw = $GLOBALS['lang'] ?? [];
+        $lang = is_array($raw) ? $raw : [];
+        $months = $lang['month'] ?? [];
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($months) ? $months : []);
+    }
+
+    /** @return array<array-key, string> Day names keyed 0 (Sunday) – 6 (Saturday). */
+    public static function days(): array
+    {
+        $raw = $GLOBALS['lang'] ?? [];
+        $lang = is_array($raw) ? $raw : [];
+        $days = $lang['day'] ?? [];
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', is_array($days) ? $days : []);
+    }
+
     /** Day name by day-of-week index (0 = Sunday). */
     public static function day(int $dow): string
     {

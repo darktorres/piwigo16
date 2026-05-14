@@ -986,9 +986,7 @@ final class MaintenanceController
             $last_years = $this->setMissingValues('year', $this->getLast(60, 'year'), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
         }
 
-        /** @var array<string, mixed> $lang */
-        $lang     = is_array($GLOBALS['lang']) ? $GLOBALS['lang'] : [];
-        $langMonth = is_array($lang['month'] ?? null) ? $lang['month'] : [];
+        $langMonth = Lang::months();
         ksort($langMonth);
 
         $tpl->assign([

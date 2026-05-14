@@ -391,9 +391,7 @@ SELECT
         $title = Translator::get()->plural('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0);
 
         if (preg_match('/^\d+-(\d+)-(\d+) /', is_scalar($dateDetail['date_available'] ?? null) ? (string) $dateDetail['date_available'] : '', $matches)) {
-            $lang      = is_array($GLOBALS['lang'] ?? null) ? $GLOBALS['lang'] : [];
-            $months    = is_array($lang['month'] ?? null) ? $lang['month'] : [];
-            $monthName = is_string($months[(int) $matches[1]] ?? null) ? $months[(int) $matches[1]] : '';
+            $monthName = Lang::month((int) $matches[1]);
             $title    .= ' (' . $monthName . ' ' . $matches[2] . ')';
         }
 

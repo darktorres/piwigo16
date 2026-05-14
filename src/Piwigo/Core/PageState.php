@@ -58,11 +58,10 @@ final class PageState
     {
     }
 
-    /** Called by Kernel::boot() to initialise the singleton and reset $GLOBALS['page']. */
+    /** Called by Kernel::boot() to initialise the singleton. */
     public static function attachGlobals(): void
     {
         self::$instance ??= new self();
-        $GLOBALS['page'] = [];
     }
 
     /** Returns the current singleton, creating an empty one if boot hasn't run yet. */

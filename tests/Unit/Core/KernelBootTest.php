@@ -71,13 +71,13 @@ final class KernelBootTest extends TestCase
         self::assertContains('typed error', PageState::current()->errors);
     }
 
-    public function test_page_global_is_empty_array_after_boot(): void
+    public function test_PageState_is_initialised_after_boot(): void
     {
         $this->simulateGlobals();
         Kernel::boot();
 
-        // attachGlobals() resets $GLOBALS['page'] to [] — the reference bridge is gone.
-        self::assertSame([], $GLOBALS['page']);
+        // attachGlobals() initialises the PageState singleton; $GLOBALS['page'] is no longer reset.
+        self::assertInstanceOf(\Piwigo\Core\PageState::class, \Piwigo\Core\PageState::current());
     }
 
     public function test_CurrentUser_get_returns_user_after_boot(): void

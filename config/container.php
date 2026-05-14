@@ -236,7 +236,7 @@ return [
     PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, Util $util): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $util)),
     PictureMetadataRenderer::class   => factory(static fn (MetadataService $m): PictureMetadataRenderer => new PictureMetadataRenderer($m)),
     MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, StringUtil $s, TagAdminService $tA): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $s, $tA)),
-    HistoryAdminService::class       => factory(static fn (Connection $conn, ConfigService $cfg, HistoryRepository $hR, StringUtil $s): HistoryAdminService => new HistoryAdminService($conn, $cfg, $hR, $s)),
+    HistoryAdminService::class       => factory(static fn (Connection $conn, HistoryRepository $hR, StringUtil $s): HistoryAdminService => new HistoryAdminService($conn, $hR, $s)),
     WsHelper::class                  => factory(static fn (StringUtil $s, PermissionService $perm, UrlService $us): WsHelper => new WsHelper($s, $perm, $us)),
     StringUtil::class          => factory(static fn (): StringUtil => new StringUtil()),
     DateService::class         => factory(static fn (): DateService => new DateService()),

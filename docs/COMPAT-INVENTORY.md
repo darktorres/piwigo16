@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache removed).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -261,20 +261,13 @@ No `$GLOBALS['user']` remains anywhere in production `src/`.
 
 ## 5. One-Time DB Migration Guard
 
-**Files:** `src/Piwigo/History/HistoryRepository.php`, `src/Piwigo/Admin/History/HistoryAdminService.php`
+**Status: ✅ REMOVED (2026-05-14).** Replaced the runtime lazy-guard with a proper Doctrine migration.
 
-Piwigo 2.x stored a `summarized` column in the `history` table. The column is unused in 16.x. `HistoryAdminService::historyRemoveSummarizedColumn()` drops it lazily on the first autopurge run where the table is small enough, then sets `Config('history_summarized_dropped') = true` so the check is skipped on all subsequent runs.
-
-```
-HistoryRepository::summarizedColumnExists()           — schema introspection
-HistoryRepository::dropSummarizedColumn()             — ALTER TABLE … DROP COLUMN
-HistoryAdminService::historyRemoveSummarizedColumn()  — guard + orchestrator (called at :447, :499)
-Config::historySummarizedDropped()                    — the skip flag
-```
-
-**Removal condition:** All production installs confirmed to have the column gone. Remove `summarizedColumnExists`, `dropSummarizedColumn`, `historyRemoveSummarizedColumn`, the `history_summarized_dropped` Config entry, and `Config::historySummarizedDropped()`.
-
-**Status: ❌ NOT MET / UNDETERMINABLE FROM CODE.** Verified 2026-05-14. Guard still active; called from `HistoryAdminService.php:447` and `:499`. No Doctrine migration for the column drop. Whether any given production install still has the column can only be known at runtime. **Alternative path:** write a Doctrine migration that drops the column unconditionally (with IF EXISTS guard), which gives a versioned, auditable removal date.
+- `Version20260514000001` drops `summarized` from the history table via schema introspection (skips silently if column is absent — handles fresh 16.x installs).
+- `HistoryAdminService::historyRemoveSummarizedColumn()` and its two call-sites deleted.
+- `HistoryRepository::summarizedColumnExists()` and `dropSummarizedColumn()` deleted.
+- `Config::historySummarizedDropped()` and the `history_summarized_dropped` SCHEMA entry deleted.
+- `HistoryAdminService::$configService` constructor param removed (was only used by the guard).
 
 ---
 

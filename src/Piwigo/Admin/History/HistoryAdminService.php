@@ -7,7 +7,6 @@ namespace Piwigo\Admin\History;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
@@ -19,7 +18,6 @@ final readonly class HistoryAdminService
 {
     public function __construct(
         private Connection $conn,
-        private ConfigService $configService,
         private HistoryRepository $historyRepository,
         private StringUtil $stringUtil,
     ) {
@@ -441,7 +439,6 @@ SELECT *
         $count = $histRepo->countAll();
 
         if ($count <= Config::historyAutopurgeKeepLines()) {
-            $this->historyRemoveSummarizedColumn();
             return;
         }
 
@@ -493,26 +490,5 @@ SELECT
         $logger->debug(__FUNCTION__ . ', ' . join('/', $search_min));
 
         $histRepo->deleteBeforeId($history_id_delete_before);
-        $this->historyRemoveSummarizedColumn();
-    }
-
-    public function historyRemoveSummarizedColumn(): void
-    {
-        if (Config::has('history_summarized_dropped') && Config::historySummarizedDropped()) {
-            return;
-        }
-
-        $histRepo = $this->historyRepository;
-        $count = $histRepo->countAll();
-
-        if ($count > Config::historyAutopurgeKeepLines() + Config::historyAutopurgeBlocksize()) {
-            return;
-        }
-
-        if ($histRepo->summarizedColumnExists()) {
-            $histRepo->dropSummarizedColumn();
-        }
-
-        $this->configService->confUpdateParam('history_summarized_dropped', true);
     }
 }

@@ -280,7 +280,6 @@ final class CommonBootstrap
             }
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
         }
-        $GLOBALS['template'] = $template;
         TemplateRegistry::set($template);
 
         if (!Config::has('no_photo_yet')) {

@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -203,7 +204,7 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Tag-related context (tags page only)
-            $bodyDataArr = is_array($page['body_data'] ?? null) ? $page['body_data'] : [];
+            $bodyDataArr = PageState::current()->bodyData;
             if (is_array($bodyDataArr['tag_ids'] ?? null)) {
                 $pageTagIds = is_array($page['tag_ids'] ?? null)
                     ? array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $page['tag_ids'])

@@ -79,7 +79,6 @@ final readonly class AdminController implements ControllerInterface
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
         $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
-        $GLOBALS['template'] = $adminTpl;
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];

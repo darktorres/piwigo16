@@ -212,9 +212,7 @@ final readonly class Util
 
     public function getThemeconf(string $key): mixed
     {
-        /** @var Template $template */
-        $template = $GLOBALS['template'];
-        return $template->getThemeconf($key);
+        return TemplateRegistry::current()->getThemeconf($key);
     }
 
     public function getFilterPageValue(string $valueName): mixed

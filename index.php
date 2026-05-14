@@ -6,6 +6,7 @@ use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Controller\ImageDerivativeController;
+use Piwigo\Db\DbConnection;
 use Piwigo\Controller\InstallController;
 use Piwigo\Controller\UpgradeController;
 use Piwigo\Controller\UpgradeFeedController;
@@ -41,7 +42,7 @@ if (str_starts_with($_qs, 'i/')) {
         'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
     ]);
     LoggerRegistry::set($logger);
-    (new ImageDerivativeController())(RequestFactory::fromGlobals());
+    (new ImageDerivativeController(DbConnection::build()))(RequestFactory::fromGlobals());
     exit;
 }
 

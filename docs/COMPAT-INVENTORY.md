@@ -18,9 +18,9 @@ These classes maintain a bidirectional PHP-reference link between a typed single
 
 `PageState::attachGlobals()` previously read pre-boot values from `$GLOBALS['page']` and wired 13 PHP reference bridges (errors, warnings, messages, infos, body_classes, body_data, …) so that legacy `$page['errors'][] = '…'` writes propagated automatically to the typed singleton and vice versa.
 
-**Removal condition:** All reads/writes of bridged keys (`errors`, `body_classes`, `body_data`, etc.) in `src/` migrated to `PageState::current()->…`. Ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, etc.) are NOT bridged and do not block removal.
+**Removal condition:** All reads/writes of `$GLOBALS['page']` in `src/` migrated to typed equivalents (`PageState::current()->…` for page state, or a typed request-context object for section/items/category/etc.).
 
-**Status: ✅ REMOVED (2026-05-14).** All 13 reference assignments stripped from `attachGlobals()`; the method now only initialises the singleton and resets `$GLOBALS['page'] = []`. All bridged-key callers migrated (found and fixed across two passes):
+**Status: ❌ NOT MET.** The reference bridge was removed (2026-05-14) and all 13 bridged-key callers were migrated. But `$GLOBALS['page']` is still accessed in **55 files** for ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, `start`, `nb_image_page`, `title`, `root_path`, etc.). These never had a typed home and need a `PageContext` / `RequestContext` object to complete the migration. Bridge removal progress:
 
 | Bridged key | Callers migrated |
 |---|---|
@@ -39,7 +39,7 @@ Additional cleanup from second-pass verification:
 - `PageState::$countQueries` / `$queriesTime`: retained — still read by `PageTailRenderer` debug overlay and `Util.php`, but never written (always 0 — pre-existing gap since the `include/` files that incremented them were removed).
 - `KernelBootTest`: three tests that validated the bridge round-trip and pre-boot preservation were removed; replaced with tests for actual current behaviour.
 
-Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, `auth_key_id`, etc.) that were never part of the bridge and are tracked separately.
+**Remaining work:** 55 files still read/write `$GLOBALS['page']` for ad-hoc request-context keys. These need a typed `PageContext` / `RequestContext` object — at which point `$GLOBALS['page']` can be removed entirely and `PageState::attachGlobals()` can be deleted.
 
 ---
 

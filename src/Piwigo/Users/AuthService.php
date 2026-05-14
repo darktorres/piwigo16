@@ -190,7 +190,7 @@ final readonly class AuthService
             return true;
         }
 
-        $this->sessionService->sessionGc();
+        $this->sessionService->gc(0);
 
         $userFound = $this->findUserByUsernameOrEmail($username);
         $fakeUser  = $this->generateFakeUser();

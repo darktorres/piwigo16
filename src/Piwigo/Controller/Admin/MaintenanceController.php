@@ -242,7 +242,7 @@ final class MaintenanceController
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge history summary'), Lang::t('action successfully performed.')));
                 break;
             case 'sessions':
-                $this->sessionService->sessionGc();
+                $this->sessionService->gc(0);
                 $userRepo    = $this->userRepository;
                 $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();
@@ -484,7 +484,7 @@ final class MaintenanceController
             case 'history_summary': $this->historyRepository->deleteAllSummary();
                 break;
             case 'sessions':
-                $this->sessionService->sessionGc();
+                $this->sessionService->gc(0);
                 $userRepo    = $this->userRepository;
                 $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();

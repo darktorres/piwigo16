@@ -6,13 +6,14 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Util;
-use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
 
 /**
  * Installs Piwigo's session handler before session_start().
  *
- * Honors the session_save_handler config (default 'db' → PwgSession,
+ * Honors the session_save_handler config (default 'db' → SessionService,
  * 'files' → save_path under _data/sessions/). Without this, PHP falls
  * through to its SAPI default (commonly /var/lib/php/sessions on
  * Debian/Ubuntu, which the distro restricts so its own GC can't open
@@ -23,7 +24,7 @@ final class SessionBootstrap
     public static function bootstrap(): void
     {
         if (Config::sessionSaveHandler() === 'db') {
-            session_set_save_handler(new PwgSession());
+            session_set_save_handler(Kernel::service(SessionService::class));
         } else {
             $session_dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'sessions';
             if (!is_dir($session_dir) && !Util::mkgetdir($session_dir, MKGETDIR_RECURSIVE) && !is_dir($session_dir)) {

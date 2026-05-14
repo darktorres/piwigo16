@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Session;
 
 use PHPUnit\Framework\TestCase;
-use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
 
 /**
- * Unit tests for PwgSession.
+ * Structural tests for SessionService as a SessionHandlerInterface implementor.
  *
- * PwgSession is a thin SessionHandlerInterface adapter that delegates every
- * method to pwg_session_* free functions defined in functions_sessions.inc.php.
- * These functions require a live DB, so we verify structural contracts only:
- * the class implements the interface correctly and its method signatures match.
+ * SessionService now implements SessionHandlerInterface directly — no adapter needed.
+ * DB-dependent behaviour is tested in the integration suite; here we verify only
+ * structural contracts: correct interface, correct method signatures.
  */
 final class PwgSessionTest extends TestCase
 {
     public function test_implements_session_handler_interface(): void
     {
-        $session = new PwgSession();
-        self::assertInstanceOf(\SessionHandlerInterface::class, $session);
+        $interfaces = class_implements(SessionService::class);
+        self::assertContains(\SessionHandlerInterface::class, $interfaces !== false ? $interfaces : []);
     }
 
     public function test_has_all_session_handler_methods(): void
@@ -28,15 +27,15 @@ final class PwgSessionTest extends TestCase
         $required = ['open', 'close', 'read', 'write', 'destroy', 'gc'];
         foreach ($required as $method) {
             self::assertTrue(
-                method_exists(PwgSession::class, $method),
-                "PwgSession must implement SessionHandlerInterface::$method()"
+                method_exists(SessionService::class, $method),
+                "SessionService must implement SessionHandlerInterface::$method()"
             );
         }
     }
 
     public function test_gc_return_type_is_int(): void
     {
-        $ref = new \ReflectionMethod(PwgSession::class, 'gc');
+        $ref = new \ReflectionMethod(SessionService::class, 'gc');
         $returnType = $ref->getReturnType();
         self::assertNotNull($returnType);
         self::assertSame('int', (string) $returnType);
@@ -44,7 +43,7 @@ final class PwgSessionTest extends TestCase
 
     public function test_read_return_type_is_string(): void
     {
-        $ref = new \ReflectionMethod(PwgSession::class, 'read');
+        $ref = new \ReflectionMethod(SessionService::class, 'read');
         $returnType = $ref->getReturnType();
         self::assertNotNull($returnType);
         self::assertSame('string', (string) $returnType);

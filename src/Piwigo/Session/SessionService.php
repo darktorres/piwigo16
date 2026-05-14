@@ -6,10 +6,10 @@ namespace Piwigo\Session;
 
 use Piwigo\Config\Config;
 
-final readonly class SessionService
+final class SessionService implements \SessionHandlerInterface
 {
     public function __construct(
-        private SessionRepository $repo,
+        private readonly SessionRepository $repo,
     ) {
     }
 
@@ -19,12 +19,14 @@ final readonly class SessionService
         return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
     }
 
-    public function sessionOpen(string $path, string $name): bool
+    #[\Override]
+    public function open(string $path, string $name): bool
     {
         return true;
     }
 
-    public function sessionClose(): bool
+    #[\Override]
+    public function close(): bool
     {
         return true;
     }
@@ -47,30 +49,34 @@ final readonly class SessionService
         return '';
     }
 
-    public function sessionRead(string $sessionId): string
+    #[\Override]
+    public function read(string $id): string
     {
-        return $this->repo->read($this->getRemoteAddrSessionHash() . $sessionId);
+        return $this->repo->read($this->getRemoteAddrSessionHash() . $id);
     }
 
-    public function sessionWrite(string $sessionId, string $data): bool
+    #[\Override]
+    public function write(string $id, string $data): bool
     {
         if (defined('PWG_API_KEY_REQUEST')) {
             return true;
         }
-        $this->repo->write($this->getRemoteAddrSessionHash() . $sessionId, $data);
+        $this->repo->write($this->getRemoteAddrSessionHash() . $id, $data);
         return true;
     }
 
-    public function sessionDestroy(string $sessionId): bool
+    #[\Override]
+    public function destroy(string $id): bool
     {
-        $this->repo->destroy($this->getRemoteAddrSessionHash() . $sessionId);
+        $this->repo->destroy($this->getRemoteAddrSessionHash() . $id);
         return true;
     }
 
-    public function sessionGc(): bool
+    #[\Override]
+    public function gc(int $max_lifetime): int
     {
         $this->repo->gc(Config::sessionLength());
-        return true;
+        return 1;
     }
 
     public function setSessionVar(string $var, mixed $value): bool

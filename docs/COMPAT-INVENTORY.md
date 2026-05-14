@@ -212,7 +212,14 @@ Not a PHP-reference bridge (the global is a plain array), but maintains bidirect
 | `CurrentUser::setRawAttributes()` | WRITE | Updates global for NBM user swap; largely dead after caller migration |
 | `CommonBootstrap:81` | INIT | `$GLOBALS['user'] = []` — safe to remove once build phase migrated |
 
-**Bridge removal path:** `UserBootstrap::bootstrap()` needs to build the user without using `$GLOBALS['user']` as the accumulator — then `attachGlobals()` can read its return value directly instead of reading the global. This would allow removing the entire `$GLOBALS['user']` pattern.
+**Bridge fully removed (follow-up 2026-05-14):**
+- `UserBootstrap::bootstrap()` now accumulates a local `$userId` int; calls `buildUser($userId)` then `CurrentUser::set(User::fromUserArray($builtUser))` — no `$GLOBALS['user']` writes.
+- `AuthService::authKeyLogin()` now reads from `CurrentUser::get()->rawAttributes` instead of `&$GLOBALS['user']`; still calls `CurrentUser::setRawAttributes()` after key resolution.
+- `CurrentUser::attachGlobals()` no longer reads `$GLOBALS['user']` — creates default guest User (`??=` so idempotent). Called by `Kernel::boot()`.
+- `CurrentUser::setLanguage()` and `setRawAttributes()`: `$GLOBALS['user']` writes removed (dead code).
+- `CommonBootstrap`: `$GLOBALS['user'] = []` init removed.
+
+No `$GLOBALS['user']` remains anywhere in production `src/`.
 
 ---
 

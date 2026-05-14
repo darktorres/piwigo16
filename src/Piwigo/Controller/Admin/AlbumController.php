@@ -604,7 +604,7 @@ final class AlbumController
         EventDispatcher::notify('loc_begin_cat_modify');
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
-            trigger_error('missing cat_id param', E_USER_ERROR);
+            throw new \InvalidArgumentException('missing cat_id param');
         }
 
         $category = $this->albumCategory;
@@ -1014,7 +1014,7 @@ final class AlbumController
         ];
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
-            trigger_error('missing cat_id param', E_USER_ERROR);
+            throw new \InvalidArgumentException('missing cat_id param');
         }
 
         $categoryId  = (string) $_GET['cat_id'];

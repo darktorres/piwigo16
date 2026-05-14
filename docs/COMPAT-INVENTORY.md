@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache + §5 one-time DB guard removed + §7 AlbumController/ScriptLoader trigger_error → exceptions).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -296,10 +296,10 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 | `Picture/PictureCommentRenderer.php` | 94 | Unknown comment action | `E_USER_WARNING` |
 | `Controller/CommentsController.php` | 226 | Unknown comment action | `E_USER_WARNING` |
 | `Controller/PictureController.php` | 259 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/Admin/AlbumController.php` | 607, 1017 | Missing `cat_id` param — programming error | `E_USER_ERROR` |
-| `Template/ScriptLoader.php` | 58, 84, 86, 128, 202 | Script/footer ordering violation — programming error | `E_USER_WARNING` |
+| `Controller/Admin/AlbumController.php` | 607, 1017 | Missing `cat_id` param — programming error | ~~`E_USER_ERROR`~~ → `throw new \InvalidArgumentException` (2026-05-14) |
+| `Template/ScriptLoader.php` | 58, 84, 86, 128, 202 | Script/footer ordering violation — programming error | ~~`E_USER_WARNING`~~ → `throw new \LogicException` (2026-05-14) |
 
-The `AlbumController` (`E_USER_ERROR`) and `ScriptLoader` cases are programming errors, not runtime conditions; they should be converted to thrown exceptions. The remainder are reasonable runtime warnings.
+The `AlbumController` and `ScriptLoader` cases have been converted to thrown exceptions (2026-05-14). The remainder are reasonable runtime warnings with no action required.
 
 ---
 

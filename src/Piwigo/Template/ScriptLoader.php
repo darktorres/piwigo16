@@ -55,7 +55,9 @@ final class ScriptLoader
     /** @param string[] $require */
     public function addInline(string $code, array $require): void
     {
-        !$this->did_footer || trigger_error('Attempt to add inline script but the footer has been written', E_USER_WARNING);
+        if ($this->did_footer) {
+            throw new \LogicException('Attempt to add inline script but the footer has been written');
+        }
         if (!empty($require)) {
             foreach ($require as $id) {
                 if (!isset($this->registered_scripts[$id])) {
@@ -81,9 +83,9 @@ final class ScriptLoader
     public function add(string $id, int|string $load_mode, array $require, ?string $path, string|int $version = 0): void
     {
         if ($this->did_head && $load_mode == 0) {
-            trigger_error("Attempt to add script $id but the head has been written", E_USER_WARNING);
+            throw new \LogicException("Attempt to add script $id but the head has been written");
         } elseif ($this->did_footer) {
-            trigger_error("Attempt to add script $id but the footer has been written", E_USER_WARNING);
+            throw new \LogicException("Attempt to add script $id but the footer has been written");
         }
         if (($manifest = self::manifest()) !== null) {
             $entry = $manifest[$id] ?? null;
@@ -125,7 +127,7 @@ final class ScriptLoader
             if (!empty($script->path)) {
                 $this->head_done_scripts[$id] = $script;
             } else {
-                trigger_error("Script $id has an undefined path", E_USER_WARNING);
+                throw new \LogicException("Script $id has an undefined path");
             }
         }
         $this->did_head = true;
@@ -199,8 +201,7 @@ final class ScriptLoader
     private function computeScriptTopologicalOrder(string $script_id, int $recursion_limiter = 0): int
     {
         if (!isset($this->registered_scripts[$script_id])) {
-            trigger_error("Undefined script $script_id is required by someone", E_USER_WARNING);
-            return 0;
+            throw new \LogicException("Undefined script $script_id is required by someone");
         }
         $recursion_limiter < 5 or HtmlService::fatalError('combined script circular dependency');
         $script = $this->registered_scripts[$script_id];

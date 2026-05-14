@@ -170,56 +170,6 @@ final readonly class ImageAdminService
         return $dirs;
     }
 
-    /** @return array{elements: list<string>, thumbnails: list<string>, representatives: list<string>} */
-    private function getFsInternal(string $path, bool $recursive = true): array
-    {
-        if (!Config::has('flip_picture_ext')) {
-            Config::override('flip_picture_ext', array_flip(Config::pictureExtensions()));
-        }
-        if (!Config::has('flip_file_ext')) {
-            Config::override('flip_file_ext', array_flip(Config::fileExtensions()));
-        }
-        $fs = ['elements' => [], 'thumbnails' => [], 'representatives' => []];
-        $subdirs = [];
-        if (is_dir($path)) {
-            $contents = opendir($path);
-            if ($contents !== false) {
-                while (($node = readdir($contents)) !== false) {
-                    if ($node === '.' || $node === '..') {
-                        continue;
-                    }
-                    if (is_file($path . '/' . $node)) {
-                        $ext        = $this->stringUtil->getExtension($node);
-                        $flipPicExt = Config::flipPictureExt();
-                        $flipFileExt = Config::flipFileExt();
-                        if (isset($flipPicExt[$ext])) {
-                            $base = basename($path);
-                            if ($base === 'thumbnail') {
-                                $fs['thumbnails'][] = $path . '/' . $node;
-                            } elseif ($base === 'pwg_representative') {
-                                $fs['representatives'][] = $path . '/' . $node;
-                            } else {
-                                $fs['elements'][] = $path . '/' . $node;
-                            }
-                        } elseif (isset($flipFileExt[$ext])) {
-                            $fs['elements'][] = $path . '/' . $node;
-                        }
-                    } elseif (is_dir($path . '/' . $node) && $node !== 'pwg_high' && $recursive) {
-                        $subdirs[] = $node;
-                    }
-                }
-                closedir($contents);
-            }
-            foreach ($subdirs as $subdir) {
-                $tmpFs = $this->getFsInternal($path . '/' . $subdir);
-                $fs['elements']        = array_merge($fs['elements'], $tmpFs['elements']);
-                $fs['thumbnails']      = array_merge($fs['thumbnails'], $tmpFs['thumbnails']);
-                $fs['representatives'] = array_merge($fs['representatives'], $tmpFs['representatives']);
-            }
-        }
-        return $fs;
-    }
-
     /** @param array<mixed> $infos */
     public function deleteElementDerivatives(array $infos, string|int $type = 'all'): void
     {

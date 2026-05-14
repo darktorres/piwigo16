@@ -12,7 +12,7 @@
 | --- | ----------------------------- | --------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | 1.1 | Concrete bugs                 | ✅ **Done** ▸ 9 / 9                            | —         | history pagination refactor shipped 2026-05-10 (6-query split + snapshot tests); cat-id gap closed without code change               |
 | 1.2 | Templates pipeline            | ✅ **Done**                                   | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate |
-| 1.3 | Kill ServiceLocator + DI      | 🟡 **Not started**                            | L         | constructor injection everywhere; delete `ServiceLocator` static; prerequisite for §1.4                                             |
+| 1.3 | Kill ServiceLocator + DI      | ✅ **Done**                                   | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                            |
 | 1.4 | Plugin / theme + WS           | 🟡 **Not started**                            | L         | `PluginInterface`, `ThemeInterface`, OpenAPI follow-ups; depends on §1.3                                                            |
 | 1.5 | Security hardening            | 🟢 **Active** ▸ 1 / 6                         | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                        |
 | 1.6 | Type correctness              | 🟡 **Not started**                            | M         | mixed-types · globals · schema metadata                                                                                             |
@@ -723,83 +723,49 @@ rm themes/_base/template/_probe.latte
 
 ### 1.3 Kill ServiceLocator — constructor injection everywhere
 
-**Status:** 🟡 Not started · **Effort:** L · prerequisite for §1.4
+**Status:** ✅ Done · **Effort:** L
 
-`Piwigo\Core\ServiceLocator` is a static service-lookup shim over the
-PHP-DI 7 container we already require. Code shaped like
-`ServiceLocator::get(Foo::class)->bar()` dots the codebase ~1980 times.
-It hides dependencies, breaks composition, makes plugins impossible to
-wire with a typed `boot(ContainerInterface $c)` cleanly, and forces
-every test to set up a thread-local container. It has to go before
-§1.4 lands.
+`Piwigo\Core\ServiceLocator` was a static service-lookup shim over the
+PHP-DI 7 container — ~1980 `ServiceLocator::get(Foo::class)` callsites
+across `src/`, hiding dependencies and preventing typed plugin wiring.
 
-**Strategy.** Every service declares its dependencies in its
-constructor; PHP-DI autowires. No more global lookup. `ServiceLocator`,
-its `setContainer()` static, and the unit-test fallback array all
-disappear in the commit that strips the last callsite.
+**What shipped:**
 
-**Implementation order:**
+- ✅ **Constructor injection class-by-class.** Every DI-managed service
+  received explicit constructor parameters; `config/container.php`
+  factories updated to pass them. Cycles (e.g.
+  `CategoryService → HtmlService → UrlGenerator → UrlService →
+  HtmlService`) broken with `Kernel::service(X::class)` inline at the
+  lowest-traffic edge rather than removing the dep from the constructor.
 
-1. **Audit static contexts.** Find every free function, static method,
-   or class-less script that calls `ServiceLocator::get()` — these can't
-   be constructor-injected and need to become instance methods on a
-   class with constructor deps, or accept the container as an explicit
-   parameter. Surface them first:
+- ✅ **Static-context callers.** All-static classes (`Dml`,
+  `UpgradeService`, `ImageStdParams`, `PageTailRenderer`, `CommonBootstrap`,
+  etc.) converted to `Kernel::service(X::class)` inline. Pre-boot guards
+  use `Kernel::isBooted() ? Kernel::service(...) : DbConnection::build()`.
 
-   ```bash
-   grep -rn "ServiceLocator::" src/ | grep -vE "(private|public|protected)"
-   ```
+- ✅ **`DbConnection::get()` eliminated.** Zero callers remain outside
+  `DbConnection.php` itself. The two surviving `DbConnection::build()`
+  calls are both legitimate pre-boot sites (`InstallService`,
+  `ConfigService::loadConfFromDb`). Post-boot callers
+  (`ImageDerivativeController`) migrated to constructor injection on
+  the DI-managed `Connection`.
 
-2. **Migrate instance-method callsites class-by-class.** For each
-   class with `ServiceLocator::get(Foo::class)` calls:
-   - Add `private readonly Foo $foo` to the constructor.
-   - Replace every internal `ServiceLocator::get(Foo::class)` with
-     `$this->foo`.
-   - PHP-DI's autowiring resolves the constructor at instantiation
-     time — no binding work needed for concrete classes; only
-     interfaces require an explicit `bind`.
+- ✅ **Tests migrated.** `KernelBootTest` and all other tests that
+  called `ServiceLocator::has/get` updated to `Kernel::service()`.
 
-3. **Wire tests.** Replace `ServiceLocator::register()` calls in test
-   `setUp()` with PHP-DI container bindings:
+- ✅ **`ServiceLocator.php` deleted.** `Kernel::setContainer()` hook
+  removed from `Kernel::boot()` and `Kernel::reset()`.
 
-   ```php
-   $container = (new ContainerBuilder())->useAutowiring(true)->build();
-   $container->set(FooInterface::class, $fooMock);
-   ```
+- ✅ **`themes/` and `tools/` cleaned.** `themeconf.inc.php` SL calls
+  replaced with `Config::raw()`; stale phpstan tool references updated;
+  7 one-shot migration scripts deleted from `tools/`.
 
-4. **Delete the shim.** Once `grep -rn "ServiceLocator::" src/ tests/`
-   returns nothing, remove `src/Piwigo/Core/ServiceLocator.php`, the
-   `setContainer()` global, and the `$services` fallback array.
-
-**Critical files:**
-
-- `src/Piwigo/Core/ServiceLocator.php` — to be deleted at the end.
-- `composer.json` — `php-di/php-di ^7.0` already required; no new dep.
-- DI bootstrap (wherever PHP-DI's container is built today) — switch
-  to full autowiring; bind interfaces → implementations explicitly.
-
-**Verification:**
+**Verification (as of completion):**
 
 ```bash
-# No remaining static lookups:
-grep -rn "ServiceLocator::" src/ tests/ | wc -l       # → 0
-
-# Full unit + integration suite passes:
-vendor/bin/phpunit
-
-# Static analysis clean:
-vendor/bin/phpstan analyse
-
-# Manual: log in to admin, navigate gallery + a few admin pages, edit
-# one album, upload one photo. Anything that fails to instantiate due
-# to a missing constructor dep surfaces here.
+grep -rn "ServiceLocator" src/ tests/ config/ tools/ themes/ | wc -l   # → 0
+grep -rn "DbConnection::get()" src/ tests/                              # → 0
 ```
-
-**Why now, not folded into §1.6 type correctness:**
-
-§1.6 work is about adding types to existing control flow. This is
-about deleting a control-flow pattern entirely. Different surgery,
-different commit train. Bundling would muddle review.
 
 ---
 

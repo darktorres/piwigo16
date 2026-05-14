@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Util;
-use Piwigo\Db\DbConnection;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeSize;
@@ -33,6 +33,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class ImageDerivativeController implements ControllerInterface
 {
+    public function __construct(private readonly Connection $conn) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -45,10 +47,9 @@ final class ImageDerivativeController implements ControllerInterface
             $timing[$k] = '';
         }
 
-        $conn          = DbConnection::build();
         $prefixeTable  = Config::dbPrefix();
 
-        foreach ($conn->executeQuery(
+        foreach ($this->conn->executeQuery(
             'SELECT param, value FROM ' . $prefixeTable . "config WHERE param IN ('derivatives', 'disabled_derivatives')"
         )->fetchAllAssociative() as $row) {
             if (is_string($row['param'] ?? null)) {

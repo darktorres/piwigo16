@@ -14,7 +14,6 @@ use Piwigo\Admin\Themes;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;

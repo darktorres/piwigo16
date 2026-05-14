@@ -13,7 +13,6 @@ use Doctrine\Migrations\Tools\Console\ConsoleRunner;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\ServiceLocator;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Job\MessengerFactory;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
@@ -47,7 +46,7 @@ if (isset($argv[1]) && $argv[1] === 'messenger:consume') {
     Kernel::boot();
     ImageStdParams::load_from_db();
 
-    $dbalConn  = ServiceLocator::get(\Doctrine\DBAL\Connection::class);
+    $dbalConn  = Kernel::service(\Doctrine\DBAL\Connection::class);
     $bus       = MessengerFactory::build($dbalConn);
     $queueName = $transportName === 'failed' ? 'piwigo_failed' : 'piwigo_async';
     $transport = MessengerFactory::buildTransport($queueName, $dbalConn);

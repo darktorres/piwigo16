@@ -35,7 +35,7 @@ Tasks pulled out of phases otherwise marked Done. Grouped by source phase. Most 
 
 ### From #12 — DI container
 
-- [ ] Opportunistically migrate remaining services from `ServiceLocator::get()` to constructor injection as files are touched.
+- [x] Migrate all services from `ServiceLocator::get()` to constructor injection — completed in §1.3 (ServiceLocator deleted).
 
 ### From #16 — Flysystem
 
@@ -2439,10 +2439,10 @@ Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeSc
 
    ```php
    // Before:
-   $this->assertSame(Config::instance(), ServiceLocator::get(Config::class));
+   $this->assertSame(Config::galleryTitle(), Kernel::service(ConfigService::class)->getGalleryTitle());
 
    // After:
-   expect(ServiceLocator::get(Config::class))->toBe(Config::instance());
+   expect(Kernel::service(ConfigService::class)->getGalleryTitle())->toBe(Config::galleryTitle());
    ```
 
    No deadline — new tests written from this point forward use Pest syntax; old tests migrate as they're edited.
@@ -2492,7 +2492,7 @@ Raise PHPUnit unit-test coverage from the current level to ≥40% of `src/` stat
 
 1. **Establish a coverage baseline.** Run `vendor/bin/phpunit --testsuite Unit --coverage-html coverage/` and open `coverage/index.html`. Record which namespaces are below 20% — those drive priority.
 
-2. **Core typed services.** `Piwigo\Config\Config`, `Piwigo\Core\PageState`, `Piwigo\Core\Lang`, `Piwigo\Users\CurrentUser`, `Piwigo\Core\Kernel`, `Piwigo\Core\ServiceLocator`. These are the highest-leverage tests: they underpin every other component. Target: 90%+ coverage on each.
+2. **Core typed services.** `Piwigo\Config\Config`, `Piwigo\Core\PageState`, `Piwigo\Core\Lang`, `Piwigo\Users\CurrentUser`, `Piwigo\Core\Kernel`. These are the highest-leverage tests: they underpin every other component. Target: 90%+ coverage on each.
 
 3. **`src/Piwigo/Ws/` — encoders and server.** `PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`, `PwgServer::register()` / `::verifyParams()`. Pure logic with no DB dependency. Target: 85%+.
 

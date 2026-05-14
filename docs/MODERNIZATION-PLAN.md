@@ -48,7 +48,7 @@ populated $GLOBALS['user']…"
 | `is_admin`             | `fn (string $s = '') => PermissionService::get()->isAdmin($s)`       |
 | `is_classic_user`      | `fn (string $s = '') => PermissionService::get()->isClassicUser($s)` |
 | `get_device`           | `fn () => Util::get()->getDevice()`                                  |
-| `get_gallery_home_url` | `fn (...) => ServiceLocator::get(UrlGenerator::class)->gallery()`    |
+| `get_gallery_home_url` | `fn (...) => Kernel::service(UrlGenerator::class)->gallery()`        |
 | `url_is_remote`        | `UrlService::urlIsRemote(...)`                                       |
 
 Built-in PHP functions (`sprintf`, `json_encode`, `trim`, `htmlspecialchars`, …)

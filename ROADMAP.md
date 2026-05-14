@@ -1754,8 +1754,9 @@ build the asset-resolution order.
 ##### Side-effect code → `Theme::boot()`
 
 Today, `themes/standard_pages/themeconf.inc.php` runs `$this->assign(...)`
-and `ServiceLocator::get(ConfigService::class)->confGetParam(...)` at
-file-include time. That code moves into `boot()` where it has DI access:
+and `Config::raw(...)` at file-include time (ServiceLocator calls were
+removed in §1.3, but side-effects still fire at include scope). That
+code moves into `boot()` where it has DI access:
 
 ```php
 final class Theme implements ThemeInterface
@@ -2797,7 +2798,7 @@ Record namespaces below 20% — those drive priority.
 ##### Priority order
 
 1. **Core typed services** (`Config`, `PageState`, `Lang`, `CurrentUser`,
-   `Kernel`, `ServiceLocator`). Highest leverage — they underpin every
+   `Kernel`). Highest leverage — they underpin every
    other component. Target 90%+ each.
 2. **WS encoders** (`PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`,
    `PwgServer::register/verifyParams`). Pure logic, no DB. Target 85%+.

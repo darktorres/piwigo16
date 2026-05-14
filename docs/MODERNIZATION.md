@@ -299,8 +299,8 @@ will fatal at runtime — switch to the `ConfigService` form.
 Only `mysqli` is supported. The legacy free functions (`pwg_query()`,
 `pwg_db_fetch_assoc()`, `pwg_db_real_escape_string()`, `pwg_db_num_rows()`,
 `query2array()`, `mass_inserts()`, `mass_updates()`) have all been removed; use
-`Piwigo\Db\DbConnection::get()` and Doctrine DBAL APIs instead, or the helpers
-in `Piwigo\Db\Dml`.
+constructor-injected `Doctrine\DBAL\Connection` and Doctrine DBAL APIs instead,
+or the helpers in `Piwigo\Db\Dml`.
 
 ### Class names
 

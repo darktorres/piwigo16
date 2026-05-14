@@ -63,7 +63,8 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
     $GLOBALS['prefixeTable'] = Config::dbPrefix();
-    (new UpgradeFeedController())(RequestFactory::fromGlobals());
+    Kernel::boot();
+    Kernel::service(UpgradeFeedController::class)(RequestFactory::fromGlobals());
     exit;
 }
 
@@ -77,7 +78,8 @@ if (str_starts_with($_qs, 'upgrade')) {
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
-    (new UpgradeController())(RequestFactory::fromGlobals());
+    Kernel::boot();
+    Kernel::service(UpgradeController::class)(RequestFactory::fromGlobals());
     exit;
 }
 

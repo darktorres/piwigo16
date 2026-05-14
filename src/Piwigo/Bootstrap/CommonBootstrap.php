@@ -123,6 +123,11 @@ final class CommonBootstrap
         $persistent_cache = new PersistentFileCache($pool);
         PersistentCacheRegistry::set($persistent_cache);
 
+        // Boot the DI container now — env credentials are loaded. The container is
+        // lazy (PHP-DI instantiates nothing until first get() call), so booting here
+        // does NOT require Config::$data to be populated.
+        Kernel::boot();
+
         try {
             Kernel::service(Connection::class);
         } catch (\Exception $e) {
@@ -132,11 +137,6 @@ final class CommonBootstrap
         if (!Config::has('webmaster_id')) {
             Config::override('webmaster_id', 1);
         }
-
-        // Boot the DI container now — env credentials are loaded and the DB connection
-        // is verified. The container is lazy (PHP-DI instantiates nothing until first
-        // get() call), so booting here does NOT require Config::$data to be populated.
-        Kernel::boot();
 
         // Load application config from the DB. Container is available, so this can
         // go through the typed service path.

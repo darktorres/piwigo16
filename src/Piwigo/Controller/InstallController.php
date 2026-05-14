@@ -83,10 +83,6 @@ final class InstallController implements ControllerInterface
         }
 
         Kernel::boot();
-        $configService = Kernel::service(ConfigService::class);
-        $adminService  = Kernel::service(AdminService::class);
-        $mailService   = Kernel::service(MailService::class);
-        $util          = Kernel::service(Util::class);
 
         $languages = Kernel::service(Languages::class);
         $languages->getFsLanguages('utf-8');
@@ -209,6 +205,11 @@ final class InstallController implements ControllerInterface
                 Config::override('db_password', $dbpasswd);
                 Config::override('db_base', $dbname);
                 Config::override('db_prefix', $prefixeTable);
+
+                $configService = Kernel::service(ConfigService::class);
+                $adminService  = Kernel::service(AdminService::class);
+                $mailService   = Kernel::service(MailService::class);
+                $util          = Kernel::service(Util::class);
 
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');

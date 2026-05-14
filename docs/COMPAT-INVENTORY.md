@@ -115,7 +115,14 @@ New methods added: `Lang::months(): array<array-key,string>` and `Lang::days(): 
 
 No `$GLOBALS['lang']` reads remain outside the bridge infrastructure itself (`Lang.php`, `LanguageStack.php`, `Translator.php`, `CommonBootstrap.php`).
 
-**Remaining bridge work:** `Lang::day()`, `Lang::month()`, `Lang::months()`, `Lang::days()` still read `$GLOBALS['lang']` internally to access the nested `day`/`month` sub-arrays. Since `Lang::$data` is typed as `array<string,string>` and the day/month entries are nested arrays, removing the bridge requires storing them as separate `Lang::$days` / `Lang::$months` properties and having `Translator::mirrorToGlobal()` populate them — a follow-up refactor. `Lang::attachGlobals()` is still called by `Kernel::boot()`.
+**Bridge fully removed (follow-up 2026-05-14):**
+- `Lang::$days` / `Lang::$months` added as typed static properties.
+- `Translator::mirrorToGlobal()` now calls `Lang::setString()` / `Lang::setDays()` / `Lang::setMonths()` — no `$GLOBALS['lang']` writes.
+- `Translator::translate()` fallback uses `Lang::getRaw()` instead of `$GLOBALS['lang']`.
+- `LanguageStack` uses `Lang::all()` / `Lang::bulkSet()` / `Lang::setString()` — no `$GLOBALS['lang']` reads.
+- `Lang::attachGlobals()` now snapshots any pre-boot `$GLOBALS['lang']` into static properties, then calls `unset($GLOBALS['lang'])` — no reference bridge created.
+
+`Lang::attachGlobals()` is still called by `Kernel::boot()` for the pre-boot snapshot, but it could be inlined into Kernel if desired. No `$GLOBALS['lang']` remains in production code after boot.
 
 ---
 

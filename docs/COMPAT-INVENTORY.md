@@ -115,7 +115,7 @@ Each is a simple `$pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] 
 
 **Removal condition:** No in-tree `src/` code writes `$pwg_event_handlers` directly outside `EventDispatcher.php`.
 
-**Status: ✅ REMOVED (2026-05-14).** `$GLOBALS['pwg_event_handlers'] = &self::$handlers` deleted from `EventDispatcher::init()`. `init()` now only resets `self::$handlers = []`. No remaining `$pwg_event_handlers` references in production `src/` code (verified 2026-05-14; only references are in `tools/phpstan-bootstrap.php` and `tools/phpstan/NoGlobalInSrcRule.php`, both non-production).
+**Status: ✅ REMOVED.** First pass removed the bridge from `EventDispatcher::init()`. Third-pass census found it was also present in `EventDispatcher::reset()` — removed there too. No remaining `$pwg_event_handlers` references in production `src/` (tools/phpstan-bootstrap.php and NoGlobalInSrcRule.php are non-production).
 
 ---
 
@@ -285,3 +285,24 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 | `Template/ScriptLoader.php` | 58, 84, 86, 128, 202 | Script/footer ordering violation — programming error | `E_USER_WARNING` |
 
 The `AlbumController` (`E_USER_ERROR`) and `ScriptLoader` cases are programming errors, not runtime conditions; they should be converted to thrown exceptions. The remainder are reasonable runtime warnings.
+
+---
+
+## 8. Ad-hoc `$GLOBALS` Communication Channels
+
+These globals are used as request-scoped data channels between unrelated classes but are NOT reference bridges — nothing syncs them to a typed singleton. They are catalogued here for completeness. Verified 2026-05-14.
+
+| Global | Writer(s) | Reader(s) | Notes |
+|--------|-----------|-----------|-------|
+| `$GLOBALS['filter']` | `CommonBootstrap`, `FilterMiddleware` | `CategoryService`, `FilterService`, `SectionInitializer`, `MenubarRenderer`, `PermissionService`, `CalendarService` | Request-scoped filter state (recent-photos mode). No bridge. |
+| `$GLOBALS['lang_info']` | `LanguageStack` | `AdminService`, `Template` | Language metadata (code, direction, name). Written and read only within the language subsystem. No bridge. |
+| `$GLOBALS['picture']` | `PictureController` (via include chain) | `PictureMetadataRenderer`, `PictureCommentRenderer`, `PictureRateRenderer` | Current picture data array. No bridge. |
+| `$GLOBALS['my_base_url']` | `AlbumsTabRenderer`, `UserTabRenderer`, `MaintenanceController`, `MiscController` | `CoreTabsRegistrar` and tabsheet code | Admin page base URL, set before tabsheet render. No bridge. |
+| `$GLOBALS['debug']` | `Util::pwgLog()` | `PageTailRenderer` | Accumulated debug HTML. No bridge. |
+| `$GLOBALS['t2']` | `CommonBootstrap` | `PageTailRenderer`, `Util::pwgLog()` | Request start microtime. No bridge. |
+| `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign) | Admin header notification strings. No bridge. |
+| `$GLOBALS['header_msgs']` | `CommonBootstrap` | `CommonBootstrap` (template assign) | Guest/lock status warnings. Set and consumed within the same bootstrap method. No bridge. |
+| `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Sync error list (not UI page errors). No bridge. |
+| `$GLOBALS['url_self']` | Unknown (legacy) | `PictureCommentRenderer`, `PictureRateRenderer` | Current page URL. Not bridged; likely set by a controller. |
+| `$GLOBALS['related_categories']` | Unknown (legacy) | `PictureCommentRenderer` | Related categories for picture page. Not bridged. |
+| `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by the old `include/` DB layer. Now always 0. |

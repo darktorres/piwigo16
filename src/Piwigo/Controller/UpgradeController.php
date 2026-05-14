@@ -70,7 +70,7 @@ final class UpgradeController implements ControllerInterface
             $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
             $matched       = PreferencesService::pickFromAcceptLanguage(
                 array_keys($languages->fs_languages),
-                is_string($rawAcceptLang) ? $rawAcceptLang : '',
+                $rawAcceptLang,
             );
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }

@@ -121,7 +121,7 @@ final class HistorySearchTest extends IntegrationTestCase
         rsort($sorted, SORT_STRING);
         self::assertSame($sorted, $times, 'lines must be sorted by (date, time) DESC');
         self::assertSame('09:11:00', $times[0]);
-        self::assertSame('09:00:00', $times[count($times) - 1]);
+        self::assertSame('09:00:00', end($times));
     }
 
     public function test_history_search_pagination_returns_distinct_pages(): void

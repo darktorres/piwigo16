@@ -19,7 +19,7 @@ final readonly class PreferencesService
         $raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
         return self::pickFromAcceptLanguage(
             array_keys($this->util->getLanguages()),
-            is_string($raw) ? $raw : '',
+            $raw,
         );
     }
 

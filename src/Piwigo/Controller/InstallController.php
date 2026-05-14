@@ -102,7 +102,7 @@ final class InstallController implements ControllerInterface
             $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
             $matched       = PreferencesService::pickFromAcceptLanguage(
                 array_keys($fsLanguages),
-                is_string($rawAcceptLang) ? $rawAcceptLang : '',
+                $rawAcceptLang,
             );
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }
@@ -213,9 +213,6 @@ final class InstallController implements ControllerInterface
                 Config::override('db_prefix', $prefixeTable);
 
                 $configService = Kernel::service(ConfigService::class);
-                $adminService  = Kernel::service(AdminService::class);
-                $mailService   = Kernel::service(MailService::class);
-                $util          = Kernel::service(Util::class);
 
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
                 InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
@@ -285,7 +282,7 @@ final class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            $util->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
+            Kernel::service(Util::class)->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {
@@ -303,8 +300,8 @@ final class InstallController implements ControllerInterface
 
                 if ($is_newsletter_subscribe) {
                     $result = '';
-                    $adminService->fetchRemote(
-                        $adminService->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
+                    Kernel::service(AdminService::class)->fetchRemote(
+                        Kernel::service(AdminService::class)->getNewsletterSubscribeBaseUrl($language) . $admin_mail,
                         $result,
                         [],
                         ['origin' => 'installation']
@@ -328,7 +325,7 @@ final class InstallController implements ControllerInterface
                         Kernel::service(LangService::class)->getL10nArgs('', ''),
                         Kernel::service(LangService::class)->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
                     ];
-                    $mailService->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => Kernel::service(LangService::class)->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
+                    Kernel::service(MailService::class)->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => Kernel::service(LangService::class)->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
                 }
             }
         }
@@ -371,7 +368,8 @@ final class InstallController implements ControllerInterface
                 continue;
             }
             $language = ['name' => $file, 'code' => $file, 'version' => '0', 'uri' => '', 'author' => ''];
-            $po       = implode('', file($path . '/common.po') ?: []);
+            $poLines  = file($path . '/common.po');
+            $po       = implode('', $poLines !== false ? $poLines : []);
             if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $po, $val)) {
                 $language['name'] = trim($val[1]);
             }

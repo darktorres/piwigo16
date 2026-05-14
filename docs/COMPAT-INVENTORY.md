@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Updated: 2026-05-14.
+Updated: 2026-05-14. Removal-condition status verified against current codebase.
 
 ---
 
@@ -26,6 +26,33 @@ $GLOBALS['page']['body_classes'] = &$inst->bodyClasses;
 
 **Removal condition:** All reads/writes of `$page['…']` in `include/`, plugins, and templates migrated to `PageState::current()->…`.
 
+**Status: ❌ NOT MET.** No legacy `include/` or `admin/` directory exists, but many `src/` files still read `$GLOBALS['page']` directly instead of `PageState::current()`. Confirmed callers (grep, 2026-05-14):
+
+```
+src/Piwigo/Core/Util.php:503
+src/Piwigo/Admin/History/HistoryAdminService.php:31
+src/Piwigo/Section/SectionInitializer.php:64
+src/Piwigo/Category/CategoryDefaultRenderer.php:40
+src/Piwigo/Admin/Integrity/C13yInternal.php:154
+src/Piwigo/Ws/Method/GeneralEndpoints.php:505, 533
+src/Piwigo/Users/UserService.php:801
+src/Piwigo/Calendar/CalendarService.php:39
+src/Piwigo/Controller/PopuphelpController.php:39
+src/Piwigo/Controller/IdentificationController.php:67
+src/Piwigo/Controller/Admin/MiscController.php:143, 311, 496, 536, 899, 1118
+src/Piwigo/Picture/PictureCommentRenderer.php:42
+src/Piwigo/Picture/PictureRateRenderer.php:31
+src/Piwigo/Admin/Updates.php:548
+src/Piwigo/Admin/AdminService.php:200
+src/Piwigo/Admin/Album/AlbumsTabRenderer.php:22
+src/Piwigo/Admin/Tag/TagAdminService.php:109
+src/Piwigo/Admin/Image/PwgImage.php:369, 394
+src/Piwigo/Admin/Image/ImageAdminService.php:373
+src/Piwigo/Admin/Users/UserTabRenderer.php:20
+src/Piwigo/Admin/BatchManager/FilterResolver.php:37
+src/Piwigo/Controller/Admin/BatchManagerController.php:101
+```
+
 ---
 
 ### 1.2 `Lang` / `Translator` — `$GLOBALS['lang']`
@@ -37,6 +64,19 @@ $GLOBALS['page']['body_classes'] = &$inst->bodyClasses;
 `Translator` also rebuilds `$lang['day']` and `$lang['month']` sub-arrays for callers like `Lang::day()`, `admin/stats.php`.
 
 **Removal condition:** All direct `$lang[…]` reads migrated to `Lang::t()` / `Lang::day()` / `Lang::month()`.
+
+**Status: ❌ NOT MET.** Many `src/` files still read `$GLOBALS['lang']` directly. Confirmed callers (grep, 2026-05-14):
+
+```
+src/Piwigo/Calendar/CalendarWeekly.php:27
+src/Piwigo/Calendar/CalendarMonthly.php:36, 264, 337, 378
+src/Piwigo/Controller/Admin/PhotoController.php:542, 550–551
+src/Piwigo/Controller/Admin/MaintenanceController.php:998–999
+src/Piwigo/Controller/Admin/ConfigurationController.php:311–312
+src/Piwigo/Controller/Admin/MiscController.php:725–726
+src/Piwigo/Notification/NotificationService.php:394–395
+src/Piwigo/Controller/PictureController.php:101, 475–476
+```
 
 ---
 
@@ -50,6 +90,8 @@ Local-scope Template instances (e.g. MailService mail templates) are intentional
 
 **Removal condition:** All global `$template` reads and constructions migrated to `TemplateRegistry::current()`.
 
+**Status: ❌ NOT MET.** Within `src/`, all in-tree Template constructions already call `TemplateRegistry::set()` and all readers use `TemplateRegistry::current()`. However, `TemplateRegistry::set()` still writes to `$GLOBALS['template']` because external plugins (not in this repo) are expected to read the global directly. The bridge must stay until there is a guarantee that no active plugin reads `$GLOBALS['template']` directly. This cannot be confirmed from the in-tree code alone.
+
 ---
 
 ### 1.4 `LoadedPluginRegistry` — `$GLOBALS['pwg_loaded_plugins']`
@@ -60,6 +102,16 @@ Local-scope Template instances (e.g. MailService mail templates) are intentional
 
 **Removal condition:** No plugin or un-migrated include reads `$pwg_loaded_plugins` directly.
 
+**Status: ❌ NOT MET.** Three `src/` controllers still read `$GLOBALS['pwg_loaded_plugins']` directly instead of using `LoadedPluginRegistry::all()`. Confirmed callers (grep, 2026-05-14):
+
+```
+src/Piwigo/Controller/Admin/MiscController.php:540
+src/Piwigo/Controller/Admin/ExtensionsController.php:443
+src/Piwigo/Controller/Admin/BatchManagerController.php:977
+```
+
+These should be migrated to `LoadedPluginRegistry::all()` before the bridge can be removed.
+
 ---
 
 ### 1.5 `EventDispatcher` — `$GLOBALS['pwg_event_handlers']`
@@ -69,6 +121,8 @@ Local-scope Template instances (e.g. MailService mail templates) are intentional
 `EventDispatcher::init()` wires `$GLOBALS['pwg_event_handlers']` as a reference to `self::$handlers`. Legacy plugins that write `$pwg_event_handlers[…]` directly still register their listeners.
 
 **Removal condition:** No plugin or un-migrated include writes `$pwg_event_handlers` directly.
+
+**Status: ⚠️ IN-TREE MET, EXTERNALLY UNKNOWN.** No in-tree `src/` production file writes `$pwg_event_handlers` directly outside of `EventDispatcher.php`. The only in-tree references are `tools/phpstan-bootstrap.php` (a static analysis stub) and `tools/phpstan/NoGlobalInSrcRule.php` (a PHPStan rule). External plugins (not in this repo) are the remaining risk and cannot be verified from code alone.
 
 ---
 
@@ -83,6 +137,32 @@ Not a PHP-reference bridge (the global is a plain array and can't be cleanly ref
 - `setRawAttributes()` — replaces both the typed entity and `$GLOBALS['user']` wholesale (used by NBM when sending as a different recipient).
 
 **Removal condition:** All direct `$user[…]` reads migrated to `CurrentUser::get()->…`.
+
+**Status: ❌ NOT MET.** The most widely un-migrated bridge. Confirmed callers of `$GLOBALS['user']` in `src/` (grep, 2026-05-14):
+
+```
+src/Piwigo/Page/NoPhotoYetRenderer.php:35
+src/Piwigo/Core/Util.php:502
+src/Piwigo/Admin/Users/UserAdminService.php:183–184, 191
+src/Piwigo/Section/SectionInitializer.php:66
+src/Piwigo/Users/AuthService.php:289
+src/Piwigo/Ws/Method/ImagesEndpoints.php:1027
+src/Piwigo/Controller/FeedController.php:54
+src/Piwigo/Controller/Admin/PhotoController.php:168, 619
+src/Piwigo/Ws/WsMethodRegistrar.php:39
+src/Piwigo/Controller/Admin/BatchManagerController.php:101, 629, 975
+src/Piwigo/Bootstrap/CommonBootstrap.php:90, 233
+src/Piwigo/Auth/PasswordService.php:136, 160
+src/Piwigo/Lang/LangService.php:90
+src/Piwigo/Admin/Notification/NotificationAdminService.php:78
+src/Piwigo/Controller/Admin/AlbumController.php:158
+src/Piwigo/Controller/InstallController.php:292
+src/Piwigo/Controller/Admin/AdminController.php:85
+src/Piwigo/Controller/AboutController.php:43
+src/Piwigo/Controller/RegisterController.php:62
+src/Piwigo/Controller/ActionController.php:82–83, 102
+src/Piwigo/Controller/PictureController.php:99
+```
 
 ---
 
@@ -103,6 +183,8 @@ This adapter exists because PHP requires a `SessionHandlerInterface` object, but
 
 **Note:** The `#[Override]` attribute on each method and the comment `// see https://php.watch/versions/8.4/…` flag a PHP 8.4 deprecation of the older `session_set_save_handler` signature — the current code uses the object form that remains valid.
 
+**Status: ❌ NOT MET.** `SessionService` is declared `final readonly class SessionService` and does not implement `SessionHandlerInterface`. Making it do so would require removing `readonly` (the interface methods must mutate state) and wiring it as the handler object directly. `PwgSession` is the only way to bridge the gap today.
+
 ---
 
 ## 3. Legacy Cache API (`PersistentCache` / `PersistentFileCache`)
@@ -113,11 +195,22 @@ This adapter exists because PHP requires a `SessionHandlerInterface` object, but
 
 `PersistentCacheRegistry::current()` returns the active instance, set by `CommonBootstrap` on every request.
 
-**Active callers:**
-- `CommonBootstrap` — constructs and registers `PersistentFileCache`
-- `TagService` — uses `PersistentCacheRegistry::current()` to cache the full tag list
-
 **Removal path:** Replace `PersistentCache::get/set/purge` call-sites with direct PSR-6 / `CacheFactory` usage, then delete `PersistentCache`, `PersistentFileCache`, and `PersistentCacheRegistry`.
+
+**Status: ❌ NOT MET.** 10 active call-sites remain (grep, 2026-05-14):
+
+```
+src/Piwigo/Bootstrap/CommonBootstrap.php:123–124          (constructs + registers)
+src/Piwigo/Tag/TagService.php:65, 68, 86, 96             (tag list cache)
+src/Piwigo/Admin/Users/UserAdminService.php:165           (user cache purge)
+src/Piwigo/Search/SearchFilterRenderer.php:48             (filter cache)
+src/Piwigo/Section/SectionInitializer.php:265, 276, 289  (section items cache)
+src/Piwigo/Ws/Method/GeneralEndpoints.php:99              (WS tag cache)
+src/Piwigo/Calendar/CalendarService.php:35                (calendar cache)
+src/Piwigo/Search/SearchService.php:859                   (search cache)
+src/Piwigo/Notification/NotificationService.php:269       (notification cache)
+src/Piwigo/Controller/Admin/MaintenanceController.php:291, 522  (purge)
+```
 
 ---
 
@@ -134,9 +227,17 @@ Three API methods accept legacy parameters that should no longer be used:
 | `pwg.images.add` (lines 387–389) | `thumbnail_sum`, `high_sum` | Accepted but explicitly documented as "don't use" |
 | `pwg.images.checkFiles` (lines 732–737) | `thumbnail_sum`, `high_sum` | Same |
 
-These are consumed by the corresponding endpoint handlers in `ImagesEndpoints.php`. The compat values are silently ignored or mapped to `"file"` internally.
-
 **Removal condition:** Confirm no active third-party client (Piwigo.app, DigiKam, etc.) sends these values, then drop the optional params and any handling branches in `ImagesEndpoints.php`.
+
+**Status: ❌ NOT MET.** The compat params are not silently ignored — they drive real behavior branches (grep on `ImagesEndpoints.php`, 2026-05-14):
+
+- `type=thumb` in `addFile` (line 637–638): calls `removeChunks` and returns `true` early — distinct behavior from `type=file`.
+- `type=high` in `addFile` (line 641): sets `$originalType = 'high'` which changes which chunk set is merged.
+- `high_sum` in `add` (line 690): sets `$originalType = 'high'` and removes file chunks — distinct upload path.
+- `thumbnail_sum` in `checkFiles` (line 1194): always returns `'equals'` for thumbnail (effectively a no-op, but still a live branch).
+- `high_sum` in `checkFiles` (line 1198): sets `$compareType = 'high'`, changing which file is checksummed.
+
+These cannot be removed without knowing whether Piwigo.app, DigiKam, or any other client still sends `type=high/thumb` or `high_sum`/`thumbnail_sum`.
 
 ---
 
@@ -155,6 +256,8 @@ Config::historySummarizedDropped()           — the skip flag
 
 **Removal condition:** All production installs are confirmed to have the column gone (i.e. every install that could have had the column has run autopurge at least once post-16.x). At that point: remove `summarizedColumnExists`, `dropSummarizedColumn`, `historyRemoveSummarizedColumn`, the `history_summarized_dropped` Config entry, and `Config::historySummarizedDropped()`.
 
+**Status: ❌ NOT MET / UNDETERMINABLE FROM CODE.** The guard is still active and called from two places (`HistoryAdminService.php:447` and `:499`). There is no Doctrine migration for the column drop — the guard is the only mechanism. Whether a given production install still has the column can only be known at runtime. There is no in-tree signal that all installs have passed through the guard.
+
 ---
 
 ## 6. Plugin Config Legacy Storage Format
@@ -166,6 +269,8 @@ The bundled `nbc_ThemeChanger` plugin stores its selected-themes list as a semic
 The "backward compatibility" here is with existing database rows written by older Piwigo installs that used the same plugin. Changing to a serialized array would require a data migration.
 
 **Removal condition:** A migration script converts the stored value to the new format (e.g. JSON) and updates `Config::themesRaw/themes/setThemes` accordingly.
+
+**Status: ❌ NOT MET.** No migration script exists. `src/Piwigo/Migrations/` contains only `MigrationRunner.php` — no migration files at all. The semicolon format is still the live storage format.
 
 ---
 

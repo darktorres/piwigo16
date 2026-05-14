@@ -228,7 +228,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                 );
             }
 
-            if ('categories' == ($page['section'] ?? null) && !isset($page['category'])
+            if ('categories' == $ctx->section && $ctx->category === null
               && (count($chronologyDateList) == 0
                     or ($chronologyDateList[0] == 'any' && count($chronologyDateList) == 1))
             ) {

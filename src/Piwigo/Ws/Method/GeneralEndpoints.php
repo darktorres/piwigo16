@@ -588,8 +588,12 @@ final readonly class GeneralEndpoints
         $searchRepo = $this->searchRepository;
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
-        $page['search'] = unserialize(is_string($serializedRules) ? $serializedRules : '');
-        $search = is_array($page['search'] ?? null) ? $page['search'] : [];
+        $searchRules = unserialize(is_string($serializedRules) ? $serializedRules : '');
+        if (!is_array($GLOBALS['page'])) {
+            $GLOBALS['page'] = [];
+        }
+        $GLOBALS['page']['search'] = $searchRules;
+        $search = is_array($searchRules) ? $searchRules : [];
         $historyService = $this->historyAdminService;
         $search         = $historyService->prepareSearch($search);
 

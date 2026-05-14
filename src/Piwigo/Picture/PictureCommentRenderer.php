@@ -18,6 +18,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -43,6 +44,9 @@ final readonly class PictureCommentRenderer
         if (!is_array($page)) {
             $page = [];
         }
+        $imageId = SectionContextRegistry::current()->imageId !== null
+            ? (int) SectionContextRegistry::current()->imageId
+            : 0;
         $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
         $related_categories = is_array($GLOBALS['related_categories'] ?? null) ? $GLOBALS['related_categories'] : [];
         $url_self = is_scalar($GLOBALS['url_self'] ?? null) ? (string) $GLOBALS['url_self'] : '';
@@ -70,7 +74,7 @@ final readonly class PictureCommentRenderer
                 'content' => ($_POST['content'] === '' || !is_string($_POST['content'])) ? '' : trim($_POST['content']),
                 'website_url' => ($postWebsite === null || $postWebsite === '' || !is_string($postWebsite)) ? '' : trim($postWebsite),
                 'email' => ($postEmail === null || $postEmail === '' || !is_string($postEmail)) ? '' : trim($postEmail),
-                'image_id' => $page['image_id'] ?? null,
+                'image_id' => $imageId,
             ];
 
             $post_key = $_POST['key'] ?? '';
@@ -109,8 +113,6 @@ final readonly class PictureCommentRenderer
                 $validated_clause = '';
             }
 
-            $pageImageId = $page['image_id'] ?? null;
-            $imageId = is_numeric($pageImageId) ? (int) $pageImageId : 0;
             $rowFetch = $this->conn
                 ->executeQuery(
                     'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
@@ -120,10 +122,7 @@ final readonly class PictureCommentRenderer
                 ->fetchAssociative();
             $row = $rowFetch !== false ? $rowFetch : [];
 
-            if (!isset($page['start']) || !is_numeric($page['start'])) {
-                $page['start'] = 0;
-            }
-            $startOffset = (int) $page['start'];
+            $startOffset = SectionContextRegistry::current()->start;
             $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
             $navigation_bar = $this->util->createNavigationBar(

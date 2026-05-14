@@ -95,15 +95,15 @@ No remaining `$GLOBALS['template']` reads or writes in `src/` (verified 2026-05-
 
 **Removal condition:** All in-tree reads of `$GLOBALS['pwg_loaded_plugins']` migrated to `LoadedPluginRegistry::all/get()`.
 
-**Status: ❌ NOT MET.** Verified 2026-05-14. Three controllers still read the global directly:
+**Status: ❌ NOT MET — but simplified (2026-05-14).** All plugins removed from `plugins/` (only a redirect stub remains). `PluginService::loadPlugin()` finds no `main.inc.php` files; `LoadedPluginRegistry::all()` always returns `[]`. Three controllers still read the global directly:
 
 ```
-src/Piwigo/Controller/Admin/MiscController.php:539–540     (count for dashboard)
-src/Piwigo/Controller/Admin/ExtensionsController.php:442–444  (check if plugin active)
-src/Piwigo/Controller/Admin/BatchManagerController.php:976–977  (list active plugins)
+src/Piwigo/Controller/Admin/MiscController.php:539–540     (count — always 0)
+src/Piwigo/Controller/Admin/ExtensionsController.php:442–444  (active check — always false)
+src/Piwigo/Controller/Admin/BatchManagerController.php:976–977  (list — always [])
 ```
 
-Each is a simple `$pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? … : []` read; migrate to `LoadedPluginRegistry::all()` and the bridge can be removed.
+With no plugins ever loading, the entire plugin stack (`PluginService::loadPlugins()`, `LoadedPluginRegistry::init()`, the bridge, and these three reads) could be removed together rather than migrated piecemeal.
 
 ---
 
@@ -252,13 +252,7 @@ Config::historySummarizedDropped()                    — the skip flag
 
 ## 6. Plugin Config Legacy Storage Format
 
-**File:** `src/Piwigo/Plugins/NbcThemeChanger/Config.php`
-
-The bundled `nbc_ThemeChanger` plugin stores its selected-themes list as a semicolon-separated string in `piwigo_config` (`nbc_ThemeChanger` key) because that was the pre-16.x format. The typed `Config::themes()` accessor decodes it on read; `Config::setThemes()` encodes it back on write.
-
-**Removal condition:** A Doctrine migration converts existing rows to a new format (e.g. JSON array) and updates `Config::themesRaw/themes/setThemes` accordingly.
-
-**Status: ❌ NOT MET.** Verified 2026-05-14. `src/Piwigo/Migrations/` contains only `MigrationRunner.php` — no migration files exist. Semicolon format is still the live storage format.
+**Status: ✅ MOOT (2026-05-14).** All plugins removed — `plugins/` contains only a redirect stub. The four bundled plugin typed-config facades (`NbcThemeChanger`, `LocalFilesEditor`, `PiwigoOpenstreetmap`, `PiwigoVideojs`) in `src/Piwigo/Plugins/` have been deleted along with their test (`LocalFilesEditorConfigTest`). The `nbc_ThemeChanger` config row may still exist in existing databases but the code that reads or writes it is gone — no migration needed.
 
 ---
 

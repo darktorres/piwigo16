@@ -29,7 +29,9 @@ $GLOBALS['page']['body_classes'] = &$inst->bodyClasses;
 
 **Removal condition:** All reads/writes of `$page['…']` in `src/` migrated to `PageState::current()->…`.
 
-**Status: ❌ NOT MET.** Many `src/` files still read `$GLOBALS['page']` directly instead of `PageState::current()`. Confirmed callers (grep, 2026-05-14):
+**Status: ✅ REMOVED (2026-05-14).** All bridged keys (`errors`, `body_classes`, `body_data`) migrated to `PageState::current()`. The 13 reference assignments stripped from `attachGlobals()`; the method now only initialises the singleton and resets `$GLOBALS['page'] = []`. Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, etc.) that were never part of the bridge and are tracked separately.
+
+**Former callers — now migrated:**
 
 ```
 src/Piwigo/Core/Util.php:503

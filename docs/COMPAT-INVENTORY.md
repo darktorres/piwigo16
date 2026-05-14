@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14.
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (§1.1 complete).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -16,30 +16,80 @@ These classes maintain a bidirectional PHP-reference link between a typed single
 
 **File:** `src/Piwigo/Core/PageState.php`
 
-`PageState::attachGlobals()` previously read pre-boot values from `$GLOBALS['page']` and wired 13 PHP reference bridges (errors, warnings, messages, infos, body_classes, body_data, …) so that legacy `$page['errors'][] = '…'` writes propagated automatically to the typed singleton and vice versa.
+`PageState::attachGlobals()` previously read pre-boot values from `$GLOBALS['page']` and wired 13 PHP reference bridges (errors, warnings, messages, infos, body_classes, body_data, …). The bridge was removed in May 2026. The subsequent migration replaced all ad-hoc `$GLOBALS['page']` reads with typed value objects.
 
-**Removal condition:** All reads/writes of `$GLOBALS['page']` in `src/` migrated to typed equivalents (`PageState::current()->…` for page state, or a typed request-context object for section/items/category/etc.).
+**Removal condition (original):** All reads/writes of `$GLOBALS['page']` in `src/` migrated to typed equivalents.
 
-**Status: ❌ NOT MET.** The reference bridge was removed (2026-05-14) and all 13 bridged-key callers were migrated. But `$GLOBALS['page']` is still accessed in **55 files** for ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, `start`, `nb_image_page`, `title`, `root_path`, etc.). These never had a typed home and need a `PageContext` / `RequestContext` object to complete the migration. Bridge removal progress:
+**Status: ✅ COMPLETE.** All six migration groups delivered:
 
-| Bridged key | Callers migrated |
-|---|---|
-| `errors` | IdentificationController, RegisterController, GeneralEndpoints, SizesProcessor, ConfigurationController, ProfileController, MaintenanceController, MiscController (profile), Updates, ExtensionsController |
-| `body_classes` / `body_data` | SectionInitializer (write), GalleryController (read) |
-| `keyed_errors` | IdentificationController, RegisterController |
-| `auth_key_invalid` | AuthService (write) → `PageState::current()->authKeyInvalid`; CommonBootstrap already read from PageState |
-| `execution_uuid` | CommonBootstrap (write before boot) → `PageState::current()->executionUuid`; Logger.php reads from PageState |
-| `notify_api_key_expiration` | AuthService (write) + CommonBootstrap (read + reset) → both through `PageState::current()->notifyApiKeyExpiration` |
+#### Group 1 — per-request service caches → service instance state
+Five keys moved out of `$page` into owning class fields:
+- `ext_imagick_command` / `is_ext_imagick` → `PwgImage::$extImagickCommandCache` / `$extImagickCache`
+- `fs_quick_check_already_called` → `ImageAdminService::$fsQuickCheckCalled`
+- `tag_id_from_tag_name_cache` → `TagAdminService::$tagCache`
+- `user_use_cache` → local var in `UserBootstrap::bootstrap()`
+- `sizes_loaded_in_tpl` → `SizesProcessor::$sizesLoadedInTpl`
 
-Pre-boot `$GLOBALS['page']` initialisation in CommonBootstrap cleaned up (was setting bridged keys that `attachGlobals()` immediately wiped).
+#### Group 4 — display/template metadata → `PageState` typed properties
+Four new typed properties added to `PageState`: `$bodyId`, `$pageBanner`, `$metaRobots`, `$galleryTitle`.
+All controller writes (`$page['body_id']` etc.) and `PageHeaderRenderer`/`MailService` reads migrated.
 
-Additional cleanup from second-pass verification:
-- `AuthService`: dead `$page = &$GLOBALS['page']` alias removed; `auth_key_id` ad-hoc key write fixed to use `$GLOBALS['page']` directly.
-- `PageState::$upgradeStart`: dead property removed (never written post-include/ removal, never read).
-- `PageState::$countQueries` / `$queriesTime`: retained — still read by `PageTailRenderer` debug overlay and `Util.php`, but never written (always 0 — pre-existing gap since the `include/` files that incremented them were removed).
-- `KernelBootTest`: three tests that validated the bridge round-trip and pre-boot preservation were removed; replaced with tests for actual current behaviour.
+#### Group 5 — admin page state → local variables
+~50 keys (`tab`, `page`, `action`, `mode`, `section`, `cat_elements_id`, `user_filter`, etc.) across
+17 admin controllers/services inlined as plain local variables or typed instance fields.
+Tab renderers (`AlbumsTabRenderer`, `UserTabRenderer`) and `HistoryAdminService::historyTabsheet()`
+received explicit string parameters instead of reading from `$GLOBALS['page']`.
 
-**Remaining work:** 55 files still read/write `$GLOBALS['page']` for ad-hoc request-context keys. These need a typed `PageContext` / `RequestContext` object — at which point `$GLOBALS['page']` can be removed entirely and `PageState::attachGlobals()` can be deleted.
+#### Group 2 — gallery section/navigation context → `SectionContext` VO
+**New VO:** `src/Piwigo/Section/SectionContext.php` (31 readonly properties: section, items, category,
+tags, chronologyField, etc.) + `SectionContextRegistry`.
+
+`SectionInitializer::initialize()` builds and registers a `SectionContext` at the end of every
+request. All ~30 external readers migrated:
+`GalleryController`, `PictureController`, `CalendarService`, `CalendarBase`, `CalendarMonthly`,
+`CalendarWeekly`, `CategoryCatsRenderer`, `CategoryDefaultRenderer`, `CategoryService`,
+`MenubarRenderer`, `SearchFilterRenderer`, `SearchService`, `HtmlService`, `Util::pwgLog`,
+`UserService`, `PictureCommentRenderer`, `PictureRateRenderer`, `SelectedTagsRenderer`,
+`UrlService::paramsForDuplication` + `getRootUrl`, `GeneralEndpoints::historyLog`.
+
+`SectionContext.toUrlParams()` converts the VO back to the snake_case array that `UrlService` URL
+builders expect. `UrlService::getRootUrl()` checks `$GLOBALS['page']['root_path']` first so that
+the `setMakeFullUrl()`/`unsetMakeFullUrl()` push/pop mechanism (for absolute email URLs) still works.
+
+`$GLOBALS['page'] = []` initialization removed from `PageState::attachGlobals()`.
+
+#### Group 3 — picture page navigation → `PictureContext` VO
+**New VO:** `src/Piwigo/Picture/PictureContext.php` (9 readonly properties: currentItem,
+nextItem, previousItem, firstItem, lastItem, currentRank, lastRank, rankOf, slideshow) +
+`PictureContextRegistry`.
+
+`PictureController::__invoke()` builds and registers a `PictureContext` after resolving the
+navigation state. `PictureCommentRenderer` migrated: uses `PictureContextRegistry::current()->currentItem`
+(resolved ID, correct even for filename-based URLs) and a local `$showComments` variable.
+All `$GLOBALS['page']` reads/writes removed from both files.
+
+#### SectionInitializer internal cleanup
+`$page = &$GLOBALS['page']` replaced with `$page = []; $GLOBALS['page'] = &$page` — local array
+aliased to the global so that CalendarService and SearchService sub-calls (which do
+`&$GLOBALS['page']`) automatically write into the same local array. Zero signature changes.
+
+#### PageState::attachGlobals() deleted
+`Kernel::boot()` now calls `PageState::current()` directly. The method has been removed.
+
+---
+
+**Remaining `$GLOBALS['page']` accesses (all legitimate, not external readers):**
+
+| Location | Keys | Nature |
+|---|---|---|
+| `SectionInitializer::initialize()` | all section keys | Local array aliased to global; sub-calls write through the alias; NOT an external reader |
+| `CalendarService::initializeCalendar()` | `items`, `comment`, `chronology_*` | Within SectionInitializer call stack; writes feed the SectionContext snapshot |
+| `SearchService` methods | `search_details`, `use_regexp_ICU`, `search_id` | Within SectionInitializer call stack; mutable search cache |
+| `SearchFilterRenderer::render()` | `search_details` (ref) | Reference write-back to mutable search state |
+| `CalendarBase`/`CalendarMonthly` render methods | `chronology_date` (write) | Rendering-time dead writes; calendar URL builders always override explicitly |
+| `UrlService::setMakeFullUrl` / `unsetMakeFullUrl` | `root_path`, `save_root_path` | Preserved push/pop mechanism for absolute URLs in emails; `getRootUrl()` checks this first |
+| `MaintenanceController::history()` | `search`, `search_id`, `nb_lines`, `start` | WS search state set by `GeneralEndpoints::historySearch()` for the admin history page; catalogued in §8 |
+| `GeneralEndpoints::historySearch()` | `search`, `nb_lines`, `start` | Writer for the above channel |
 
 ---
 
@@ -284,25 +334,25 @@ The `AlbumController` (`E_USER_ERROR`) and `ScriptLoader` cases are programming 
 
 ## 8. Ad-hoc `$GLOBALS` Communication Channels
 
-These globals are used as request-scoped data channels between unrelated classes but are NOT reference bridges — nothing syncs them to a typed singleton. They are catalogued here for completeness. Verified 2026-05-14.
+These globals are used as request-scoped data channels between unrelated classes but are NOT reference bridges — nothing syncs them to a typed singleton. They are catalogued here for completeness. Verified 2026-05-14; updated 2026-05-14.
 
 | Global | Writer(s) | Reader(s) | Notes |
 |--------|-----------|-----------|-------|
 | `$GLOBALS['filter']` | `CommonBootstrap`, `FilterMiddleware` | `CategoryService`, `FilterService`, `SectionInitializer`, `MenubarRenderer`, `PermissionService`, `CalendarService` | Request-scoped filter state (recent-photos mode). No bridge. |
 | `$GLOBALS['lang_info']` | `LanguageStack` | `AdminService`, `Template` | Language metadata (code, direction, name). Written and read only within the language subsystem. No bridge. |
-| `$GLOBALS['picture']` | `PictureController` (via include chain) | `PictureMetadataRenderer`, `PictureCommentRenderer`, `PictureRateRenderer` | Current picture data array. No bridge. |
 | `$GLOBALS['my_base_url']` | `AlbumsTabRenderer`, `UserTabRenderer`, `MaintenanceController`, `MiscController` | `CoreTabsRegistrar` and tabsheet code | Admin page base URL, set before tabsheet render. No bridge. |
 | `$GLOBALS['debug']` | `Util::pwgLog()` | `PageTailRenderer` | Accumulated debug HTML. No bridge. |
 | `$GLOBALS['t2']` | `CommonBootstrap` | `PageTailRenderer`, `Util::pwgLog()` | Request start microtime. No bridge. |
 | `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign) | Admin header notification strings. No bridge. |
 | `$GLOBALS['header_msgs']` | `CommonBootstrap` | `CommonBootstrap` (template assign) | Guest/lock status warnings. Set and consumed within the same bootstrap method. No bridge. |
 | `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Sync error list (not UI page errors). No bridge. |
-| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). `PictureController` never writes it. Renderers always get `''`. Pre-existing rewrite gap — not a bridge issue. |
-| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | Same as above — `PictureController` builds a local `$related_categories` but never writes to the global. Renderer always gets `[]`. |
-| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | Same as above — `PictureController` builds a local `$picture` array but never writes to the global. All three renderers read `[]`. Pre-existing rewrite gap. |
-| `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization: the method both writes and reads this cache. Never initialised externally. |
-| `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for parsed `themeconf.inc.php` files. Method both writes and reads it. |
-| `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix, set at boot via `Config::dbPrefix()`. Pre-boot config value, not a bridge. |
-| `$GLOBALS['admin_album_base_url']` | `AlbumController` | `CoreTabsRegistrar` | Admin album URL prefix, set before tab rendering. Ad-hoc, not a bridge. |
+| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). `PictureController` never writes it. Renderers always get `''`. Pre-existing rewrite gap. |
+| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | `PictureController` builds a local `$related_categories` but never writes the global. Renderer always gets `[]`. Pre-existing rewrite gap. |
+| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | `PictureController` builds a local `$picture` array but never writes the global. All three renderers get `[]`. Pre-existing rewrite gap. |
+| `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization. |
+| `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
+| `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |
+| `$GLOBALS['admin_album_base_url']` | `AlbumController` | `CoreTabsRegistrar` | Admin album URL prefix, set before tab rendering. |
 | `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained: set and consumed within the same controller. |
-| `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by the old `include/` DB layer. Now always 0. |
+| `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by old `include/` DB layer. Now always 0. |
+| `$GLOBALS['page']['search']` + `['nb_lines']` + `['start']` | `GeneralEndpoints::historySearch()` | `MaintenanceController::history()` | WS history search state: AJAX call sets search rules + result count, page re-render reads them to build the nav bar and prefill the form. Survives the §1.1 migration because both sides still use `$GLOBALS['page']` explicitly. |

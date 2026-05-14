@@ -12,6 +12,7 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -48,7 +49,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         /** @var array<string,mixed> $filter */
         $filter = &$GLOBALS['filter'];
         /** @var array<string,mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         /** @var array<mixed> $header_notes */
         $header_notes = &$GLOBALS['header_notes'];
 

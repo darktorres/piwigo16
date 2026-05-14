@@ -30,6 +30,7 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
@@ -82,7 +83,7 @@ final readonly class AdminController implements ControllerInterface
         TemplateRegistry::set($adminTpl);
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         EventDispatcher::addListener('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
 

@@ -22,6 +22,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -64,7 +65,7 @@ final readonly class SectionInitializer
         $page = [];
         $GLOBALS['page'] = &$page;  // sub-calls that do &$GLOBALS['page'] write into the same local array
         /** @var array<string,mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         /** @var array<string,mixed> $filter */
         $filter = &$GLOBALS['filter'];
 

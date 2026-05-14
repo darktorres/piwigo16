@@ -1008,9 +1008,8 @@ final readonly class ImagesEndpoints
             Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         }
         $this->userAdminService->invalidateUserCache();
-        $userRef = &$GLOBALS['user'];
-        if (is_array($userRef) && !empty($params['level']) && $params['level'] > ($userRef['level'] ?? 0)) {
-            $userRef['level'] = $params['level'];
+        if (CurrentUser::isInitialized() && !empty($params['level']) && $params['level'] > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
+            CurrentUser::get()->rawAttributes['level'] = $params['level'];
         }
         $now = time();
         $globBufferResult = glob(Config::uploadDir() . '/buffer/' . '*.chunk');

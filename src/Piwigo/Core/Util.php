@@ -498,7 +498,7 @@ final readonly class Util
 
     public function pwgLog(int|string|null $imageId = null, ?string $imageType = null, ?string $formatId = null): bool
     {
-        $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user = CurrentUser::get()->rawAttributes;
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $ctx  = SectionContextRegistry::current();
 

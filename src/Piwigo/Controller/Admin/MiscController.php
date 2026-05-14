@@ -54,6 +54,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\ProfileService;
@@ -451,7 +452,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $selected = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'add_photos';
 
@@ -523,7 +524,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
 

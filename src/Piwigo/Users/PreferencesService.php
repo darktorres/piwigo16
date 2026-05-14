@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Piwigo\Core\Util;
+use Piwigo\Users\CurrentUser;
 
 final readonly class PreferencesService
 {
@@ -83,7 +84,7 @@ final readonly class PreferencesService
 
     public function userprefsSave(): void
     {
-        $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user        = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $preferences = $user['preferences'] ?? [];
 
         $this->userRepository->updatePreferences(CurrentUser::get()->id, serialize($preferences));
@@ -91,22 +92,18 @@ final readonly class PreferencesService
 
     public function userprefsUpdateParam(string $param, mixed $value): void
     {
-        $user = &$GLOBALS['user'];
-        if (!is_array($user)) {
-            $user = [];
-        }
         if ('true' == $value) {
             $value = true;
         } elseif ('false' == $value) {
             $value = false;
         }
 
-        if (!isset($user['preferences']) || !is_array($user['preferences'])) {
-            $user['preferences'] = [];
+        if (CurrentUser::isInitialized()) {
+            if (!isset(CurrentUser::get()->rawAttributes['preferences']) || !is_array(CurrentUser::get()->rawAttributes['preferences'])) {
+                CurrentUser::get()->rawAttributes['preferences'] = [];
+            }
+            CurrentUser::get()->rawAttributes['preferences'][$param] = $value;
         }
-
-        $paramKey = $param;
-        $user['preferences'][$paramKey] = $value;
         $this->userprefsSave();
     }
 
@@ -117,21 +114,18 @@ final readonly class PreferencesService
      */
     public function userprefsDeleteParam(array|string $params): void
     {
-        $user = &$GLOBALS['user'];
-        if (!is_array($user)) {
-            $user = [];
-        }
         if (!is_array($params)) {
             $params = [$params];
         }
 
-        if (!isset($user['preferences']) || !is_array($user['preferences'])) {
-            $user['preferences'] = [];
-        }
-        foreach ($params as $param) {
-            $paramKey = $param;
-            if ($paramKey !== '' && isset($user['preferences'][$paramKey])) {
-                unset($user['preferences'][$paramKey]);
+        if (CurrentUser::isInitialized()) {
+            if (!isset(CurrentUser::get()->rawAttributes['preferences']) || !is_array(CurrentUser::get()->rawAttributes['preferences'])) {
+                CurrentUser::get()->rawAttributes['preferences'] = [];
+            }
+            foreach ($params as $param) {
+                if ($param !== '' && isset(CurrentUser::get()->rawAttributes['preferences'][$param])) {
+                    unset(CurrentUser::get()->rawAttributes['preferences'][$param]);
+                }
             }
         }
 
@@ -145,7 +139,7 @@ final readonly class PreferencesService
      */
     public function userprefsGetParam(string $param, array|string|int|bool|null $defaultValue = null): mixed
     {
-        $user        = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user        = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $preferences = is_array($user['preferences'] ?? null) ? $user['preferences'] : [];
 
         $key = $param;

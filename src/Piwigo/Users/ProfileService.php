@@ -18,6 +18,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 
 final readonly class ProfileService
 {
@@ -181,7 +182,7 @@ final readonly class ProfileService
     public function loadProfileInTemplate(string $url_action, string $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
         $tpl  = TemplateRegistry::current();
-        $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
 
         $tplPrefix = $template_prefixe ?? '';
         $tpl->assign('radio_options', ['true' => Lang::t('Yes'), 'false' => Lang::t('No')]);

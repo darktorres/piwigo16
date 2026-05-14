@@ -41,6 +41,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
 
 final class AlbumController
 {
@@ -146,7 +147,7 @@ final class AlbumController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         $albums_counter = $this->categoryRepository->countAll();
 
         $this->util->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);

@@ -20,6 +20,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -57,7 +58,7 @@ final readonly class PasswordController implements ControllerInterface
         $this->util->checkInputParameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $action     = null;
         $username   = null;

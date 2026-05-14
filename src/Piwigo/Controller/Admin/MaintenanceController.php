@@ -56,6 +56,7 @@ use Piwigo\Site\SiteRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -960,7 +961,7 @@ final class MaintenanceController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $this->historyAdminService->historySummarize();
 
@@ -1118,7 +1119,7 @@ final class MaintenanceController
         $tpl    = TemplateRegistry::current();
         $logger = LoggerRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         if (!Config::enableSynchronization()) {
             throw new ConfigException('synchronization is disabled');

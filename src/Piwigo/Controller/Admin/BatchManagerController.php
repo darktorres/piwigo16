@@ -41,6 +41,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
 final class BatchManagerController
@@ -102,7 +103,7 @@ final class BatchManagerController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         $this->util->checkInputParameter('selection', $_POST, true, ValidationPattern::ID);
         $this->util->checkInputParameter('display', $_REQUEST, false, '/^(\d+|all)$/');
 
@@ -631,7 +632,7 @@ final class BatchManagerController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         $duplicates_on_fields = [];
         $associated_categories = [];
         if (!empty($_POST)) {
@@ -974,7 +975,7 @@ final class BatchManagerController
         $associated_categories = [];
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         /** @var array<string, mixed> $pwg_loaded_plugins */
         $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
         EventDispatcher::notify('loc_begin_element_set_unit');

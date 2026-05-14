@@ -17,6 +17,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -180,15 +181,15 @@ final readonly class UserAdminService
 
     public function invalidateUserCacheNbTags(): void
     {
-        if (isset($GLOBALS['user']) && is_array($GLOBALS['user'])) {
-            unset($GLOBALS['user']['nb_available_tags']);
+        if (CurrentUser::isInitialized()) {
+            unset(CurrentUser::get()->rawAttributes['nb_available_tags']);
         }
         $this->userRepository->clearNbAvailableTags();
     }
 
     public function catAdminAccess(int $categoryId): bool
     {
-        $user      = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user      = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';
         return !in_array($categoryId, explode(',', $forbidden));
     }

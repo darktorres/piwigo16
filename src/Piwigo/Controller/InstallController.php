@@ -30,6 +30,7 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -289,7 +290,7 @@ final class InstallController implements ControllerInterface
                 SessionBootstrap::bootstrap();
 
                 $user = Kernel::service(UserService::class)->buildUser(1, false);
-                $GLOBALS['user'] = $user;
+                CurrentUser::setRawAttributes($user);
                 Kernel::service(AuthService::class)->logUser(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
                 $_SESSION['connected_with'] = 'pwg_ui';
 

@@ -39,6 +39,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
@@ -220,7 +221,9 @@ final class CommonBootstrap
         Kernel::service(LangService::class)->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         if (Kernel::service(PermissionService::class)->isAGuest()) {
-            $GLOBALS['user']['username'] = Lang::t('guest');
+            $guestName = Lang::t('guest');
+            CurrentUser::get()->username = $guestName;
+            CurrentUser::get()->rawAttributes['username'] = $guestName;
         }
 
         if (PageState::current()->authKeyInvalid) {

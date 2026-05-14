@@ -27,10 +27,7 @@ final readonly class TagService
 
     public function getNbAvailableTags(): int
     {
-        $user = &$GLOBALS['user'];
-        if (!is_array($user)) {
-            $user = [];
-        }
+        $user = CurrentUser::get()->rawAttributes;
         if (!isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
             Dml::singleUpdate(

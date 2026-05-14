@@ -18,6 +18,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Psr\Http\Message\ResponseInterface;
@@ -50,7 +51,7 @@ final readonly class SearchController implements ControllerInterface
         EventDispatcher::notify('loc_begin_search');
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $search = ['mode' => 'AND', 'fields' => []];
 

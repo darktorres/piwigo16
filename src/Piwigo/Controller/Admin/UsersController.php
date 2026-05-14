@@ -27,6 +27,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
@@ -75,7 +76,7 @@ final readonly class UsersController
     {
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
-        $user = $GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
         $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 

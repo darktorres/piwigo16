@@ -245,7 +245,7 @@ final readonly class CommentService
      */
     public function deleteUserComment(int|array $commentId): bool
     {
-        $globalUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $globalUser = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $authorId   = $this->permissionService->isAdmin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : 0);
         $affected   = $this->repo->delete($commentId, $authorId);
 
@@ -282,7 +282,7 @@ final readonly class CommentService
             $commentAction = 'moderate';
         }
 
-        $globalUser    = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $globalUser = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $commentAction = (string) EventDispatcher::dispatch(
             'user_comment_check',
             $commentAction,
@@ -394,8 +394,8 @@ final readonly class CommentService
 
     public function invalidateUserCacheNbComments(): void
     {
-        if (isset($GLOBALS['user']) && is_array($GLOBALS['user'])) {
-            unset($GLOBALS['user']['nb_available_comments']);
+        if (CurrentUser::isInitialized()) {
+            unset(CurrentUser::get()->rawAttributes['nb_available_comments']);
         }
 
         $this->repo->clearNbAvailableCommentsCache();

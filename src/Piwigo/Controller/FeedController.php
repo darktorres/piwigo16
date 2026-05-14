@@ -17,6 +17,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -51,7 +52,7 @@ final readonly class FeedController implements ControllerInterface
         $image_only = $this->stringUtil->inputString('image_only', null, $_GET) !== null;
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $feed_row = [];
         if ($feed_id !== null && $feed_id !== '') {

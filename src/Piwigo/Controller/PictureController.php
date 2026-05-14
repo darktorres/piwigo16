@@ -44,6 +44,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -97,7 +98,7 @@ final readonly class PictureController implements ControllerInterface
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
         $ctx  = SectionContextRegistry::current();
 
         // Typed locals extracted from SectionContext after SectionInitializer has populated it

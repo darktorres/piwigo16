@@ -133,7 +133,7 @@ final readonly class PasswordService
                 unset($_SESSION['reset_password_code']);
                 if (isset($state['user_id']) && $state['user_id'] !== 0) {
                     $state_user_id = $state['user_id'];
-                    $save_user     = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+                    $save_user     = CurrentUser::get()->rawAttributes;
                     CurrentUser::setRawAttributes($this->userService->buildUser($state_user_id, false));
                     $this->preferencesService->userprefsUpdateParam('reset_password_forbidden_until', time() + 60 * 60);
                     CurrentUser::setRawAttributes($save_user);
@@ -157,7 +157,7 @@ final readonly class PasswordService
             return false;
         }
 
-        $save_user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $save_user = CurrentUser::get()->rawAttributes;
         $temp_user = $this->userService->buildUser($user_id, false);
         CurrentUser::setRawAttributes($temp_user);
         $this->preferencesService->userprefsDeleteParam('reset_password_forbidden_until');

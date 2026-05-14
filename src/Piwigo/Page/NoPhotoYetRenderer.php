@@ -16,6 +16,7 @@ use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
 final readonly class NoPhotoYetRenderer
@@ -32,7 +33,7 @@ final readonly class NoPhotoYetRenderer
     }
     public function render(): void
     {
-        $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user = CurrentUser::get()->rawAttributes;
         $_no_photo_yet_route = PathExtractor::fromServer($_SERVER);
 
         /** @psalm-suppress RedundantCondition — IN_ADMIN is runtime-set; stub value misleads Psalm */

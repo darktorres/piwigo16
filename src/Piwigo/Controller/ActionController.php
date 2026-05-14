@@ -19,6 +19,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -79,8 +80,9 @@ final readonly class ActionController implements ControllerInterface
         $get_pwg_token     = $this->stringUtil->inputString('pwg_token', null, $_GET);
         if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->util->getPwgToken() == $get_pwg_token) {
             $is_admin_download = true;
-            if (is_array($GLOBALS['user'] ?? null)) {
-                $GLOBALS['user']['enabled_high'] = true;
+            if (CurrentUser::isInitialized()) {
+                CurrentUser::get()->enabledHigh = true;
+                CurrentUser::get()->rawAttributes['enabled_high'] = true;
             }
         }
 
@@ -99,7 +101,7 @@ SELECT id FROM ' . Tables::categories() . '
         $file = '';
         switch ($get_part) {
             case 'e':
-                $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+                $user = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
                 if ($src_image->isOriginal() && ($user['enabled_high'] ?? false) === false) {
                     $deriv = new DerivativeImage(DerivativeSize::TwoXLarge->value, $src_image);
                     if (!$deriv->sameAsSource()) {

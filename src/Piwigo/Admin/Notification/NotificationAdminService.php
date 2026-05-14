@@ -75,7 +75,7 @@ final readonly class NotificationAdminService
     public function beginUsersEnvNbm(bool $isToSendMail = false): void
     {
         $ctx          = MailNotificationContext::current();
-        $ctx->saveUser = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $ctx->saveUser = CurrentUser::get()->rawAttributes;
         $this->mailService->switchLangTo(CurrentUser::get()->language);
         $ctx->isToSendMail = $isToSendMail;
         if ($isToSendMail) {

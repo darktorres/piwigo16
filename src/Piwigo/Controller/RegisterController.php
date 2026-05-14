@@ -21,6 +21,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
@@ -58,7 +59,7 @@ final readonly class RegisterController implements ControllerInterface
         EventDispatcher::notify('loc_begin_register');
 
         /** @var array<string, mixed> $user */
-        $user = &$GLOBALS['user'];
+        $user = CurrentUser::get()->rawAttributes;
 
         $post_login    = $this->stringUtil->inputString('login', null, $_POST);
         $post_mail     = $this->stringUtil->inputString('mail_address', null, $_POST);

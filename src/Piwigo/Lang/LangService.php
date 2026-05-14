@@ -85,9 +85,7 @@ final class LangService
     /** @param array<mixed> $options */
     public function loadLanguage(string $filename, string $dirname = '', array $options = []): string|bool
     {
-        $user = CurrentUser::isInitialized()
-            ? CurrentUser::get()->rawAttributes
-            : (is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : []);
+        $user = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
 
         if (!empty($dirname) && !empty($filename) && empty($options['return'])
             && !LanguageStack::hasPluginFile($dirname, $filename)) {

@@ -7,6 +7,7 @@ namespace Piwigo\Ws;
 use Piwigo\Config\Config;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\CommentsEndpoints;
@@ -36,7 +37,7 @@ final readonly class WsMethodRegistrar
 
     public function register(PwgServer $server): void
     {
-        $user    = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
+        $user = CurrentUser::get()->rawAttributes;
         $filterParams = [
             ParamDefinition::optional(name: 'f_min_rate', type: WS_TYPE_FLOAT),
             ParamDefinition::optional(name: 'f_max_rate', type: WS_TYPE_FLOAT),

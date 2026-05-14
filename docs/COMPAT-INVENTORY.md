@@ -68,14 +68,15 @@ the `setMakeFullUrl()`/`unsetMakeFullUrl()` push/pop mechanism (for absolute ema
 `$GLOBALS['page'] = []` initialization removed from `PageState::attachGlobals()`.
 
 #### Group 3 — picture page navigation → `PictureContext` VO
-**New VO:** `src/Piwigo/Picture/PictureContext.php` (9 readonly properties: currentItem,
-nextItem, previousItem, firstItem, lastItem, currentRank, lastRank, rankOf, slideshow) +
-`PictureContextRegistry`.
+**New VO:** `src/Piwigo/Picture/PictureContext.php` (12 readonly properties: currentItem,
+nextItem, previousItem, firstItem, lastItem, currentRank, lastRank, rankOf, slideshow,
+ratingScore, srcImage, relatedCategories) + `PictureContextRegistry`.
 
 `PictureController::__invoke()` builds and registers a `PictureContext` after resolving the
-navigation state. `PictureCommentRenderer` migrated: uses `PictureContextRegistry::current()->currentItem`
-(resolved ID, correct even for filename-based URLs) and a local `$showComments` variable.
-All `$GLOBALS['page']` reads/writes removed from both files.
+navigation state. All `$GLOBALS['page']` reads/writes removed from both files.
+`ratingScore`, `srcImage`, and `relatedCategories` were added in the §8 gap-closure pass
+(2026-05-14) to give picture-page renderers typed access to data that was previously
+piped through broken `$GLOBALS['picture']` / `$GLOBALS['related_categories']` channels.
 
 #### SectionInitializer internal cleanup
 `$page = &$GLOBALS['page']` replaced with `$page = []; $GLOBALS['page'] = &$page` — local array
@@ -106,9 +107,9 @@ aliased to the global so that CalendarService and SearchService sub-calls (which
 
 **Files:** `src/Piwigo/Core/Lang.php`, `src/Piwigo/Lang/Translator.php`
 
-`Lang::attachGlobals()` wires `$GLOBALS['lang']` as a PHP reference to `Lang::$data`.
-`Translator::mirrorToGlobal()` (called on every `load()`) additionally copies every PO translation into `$GLOBALS['lang']` so legacy `$lang['key']` reads stay current.
-`Translator` also rebuilds `$lang['day']` and `$lang['month']` sub-arrays for callers like `Lang::day()`, `admin/stats.php`.
+`Lang::attachGlobals()` previously wired `$GLOBALS['lang']` as a PHP reference to `Lang::$data`.
+`Translator::mirrorToGlobal()` additionally copied every PO translation into `$GLOBALS['lang']` for legacy callers.
+Both behaviours have been removed — see the "Bridge fully removed" block below.
 
 **Removal condition:** All direct `$GLOBALS['lang']` reads in `src/` migrated to `Lang::t()` / `Lang::day()` / `Lang::month()`.
 
@@ -285,7 +286,7 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 |------|------|---------------------|----------|
 | `Category/CategoryService.php` | 231 | `get_subcat_ids` called with non-numeric ID | `E_USER_WARNING` |
 | `Html/HtmlService.php` | 44 | `get_cat_display_name` called with wrong category type | `E_USER_WARNING` |
-| `Admin/Users/UserAdminService.php` | 127 | Group delete called when group does not exist | `E_USER_WARNING` |
+| `Admin/Users/UserAdminService.php` | 128 | Group delete called when group does not exist | `E_USER_WARNING` |
 | `Admin/Image/ImageAdminService.php` | 91 | File cannot be removed from disk | `E_USER_WARNING` |
 | `Ws/Method/ImagesEndpoints.php` | 1155 | File cannot be removed from disk | `E_USER_WARNING` |
 | `Admin/Image/ImageExtImagick.php` | 211 | ImageMagick stderr line forwarded as warning | `E_USER_WARNING` |
@@ -297,7 +298,7 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 | `Controller/CommentsController.php` | 226 | Unknown comment action | `E_USER_WARNING` |
 | `Controller/PictureController.php` | 259 | Unknown comment action | `E_USER_WARNING` |
 | `Controller/Admin/AlbumController.php` | 607, 1017 | Missing `cat_id` param — programming error | ~~`E_USER_ERROR`~~ → `throw new \InvalidArgumentException` (2026-05-14) |
-| `Template/ScriptLoader.php` | 58, 84, 86, 128, 202 | Script/footer ordering violation — programming error | ~~`E_USER_WARNING`~~ → `throw new \LogicException` (2026-05-14) |
+| `Template/ScriptLoader.php` | 59, 86, 88, 130, 204 | Script/footer ordering violation — programming error | ~~`E_USER_WARNING`~~ → `throw new \LogicException` (2026-05-14) |
 
 The `AlbumController` and `ScriptLoader` cases have been converted to thrown exceptions (2026-05-14). The remainder are reasonable runtime warnings with no action required.
 

@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -56,8 +57,6 @@ final readonly class RegisterController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_register');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
@@ -67,7 +66,6 @@ final readonly class RegisterController implements ControllerInterface
         $post_send_mail = $this->stringUtil->inputString('send_password_by_mail', null, $_POST) !== null;
 
         if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
-            /** @var string[] $pgErrors */
             $pgErrors = [];
 
             if (!$this->util->verifyEphemeralKey($post_key)) {
@@ -85,7 +83,9 @@ final readonly class RegisterController implements ControllerInterface
 
             $post_password = is_string($rawRegisterPwd = $_POST['password'] ?? null) ? $rawRegisterPwd : '';
             $this->userService->registerUser($post_login ?? '', $post_password, $post_mail ?? '', true, $pgErrors, $post_send_mail);
-            $page['errors'] = $pgErrors;
+            foreach ($pgErrors as $k => $v) {
+                PageState::current()->keyedErrors[(string) $k] = $v;
+            }
 
             if (count($pgErrors) == 0) {
                 if ($post_send_mail && $this->stringUtil->emailCheckFormat($post_mail ?? '')) {

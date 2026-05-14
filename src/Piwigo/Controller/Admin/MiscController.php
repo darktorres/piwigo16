@@ -1136,8 +1136,9 @@ final class MiscController
             $edit_user
         );
 
-        $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $page['errors'] = array_merge($pageErrors, $errors);
+        foreach ($errors as $err) {
+            PageState::current()->addError($err);
+        }
 
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'profile.latte');
     }

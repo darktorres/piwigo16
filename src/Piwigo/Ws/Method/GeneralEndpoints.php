@@ -18,6 +18,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -538,7 +539,7 @@ final readonly class GeneralEndpoints
         }
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
         $displayThumbnails = ['no_display_thumbnail' => Lang::t('No display'), 'display_thumbnail_classic' => Lang::t('Classic display'), 'display_thumbnail_hoverbox' => Lang::t('Hoverbox display')];
-        $page['errors'] = [];
+        PageState::current()->errors = [];
         $search         = ['fields' => []];
         if (!empty($param['start'])) {
             $this->util->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');

@@ -246,8 +246,7 @@ final readonly class ConfigurationController
                     break;
             }
 
-            $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            if (!in_array($section, ['sizes', 'watermark']) && count($pageErrors) == 0 && $this->permissionService->isWebmaster()) {
+            if (!in_array($section, ['sizes', 'watermark']) && count(PageState::current()->errors) == 0 && $this->permissionService->isWebmaster()) {
                 foreach ($this->conn->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
                     $row_param = is_scalar($row_param) ? (string) $row_param : '';
                     if (isset($_POST[$row_param])) {
@@ -363,8 +362,9 @@ final readonly class ConfigurationController
                     $edit_user = $this->userService->buildUser(Config::guestId(), false);
                     PageState::current()->addInfo(Lang::t('Information data registered in database'));
                 }
-                $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $page['errors'] = array_merge($pageErrors2, $errors);
+                foreach ($errors as $err) {
+                    PageState::current()->addError($err);
+                }
 
                 $this->profileService->loadProfileInTemplate($action, '', $edit_user, 'GUEST_');
                 $tpl->assign('default', []);

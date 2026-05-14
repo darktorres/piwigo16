@@ -570,9 +570,7 @@ final class Updates
             $obsolete_list = PHPWG_ROOT_PATH.'install/obsolete.list';
         }
 
-        $pageErrRaw = $page['errors'] ?? null;
-        $pageErrors = is_array($pageErrRaw) ? $pageErrRaw : (is_scalar($pageErrRaw) ? [$pageErrRaw] : []);
-        if (empty($pageErrors)) {
+        if (empty(PageState::current()->errors)) {
             $path = PHPWG_ROOT_PATH.Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
             Util::mkgetdir($path);

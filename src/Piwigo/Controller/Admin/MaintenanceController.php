@@ -1059,14 +1059,12 @@ final class MaintenanceController
                 PageState::current()->addError(Lang::t('This site already exists') . ' [' . $url . ']');
             }
 
-            $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            if (count($pageErrors) == 0) {
+            if (count(PageState::current()->errors) == 0) {
                 if (!file_exists($url)) {
                     PageState::current()->addError(Lang::t('Directory does not exist') . ' [' . $url . ']');
                 }
             }
-            $pageErrors2 = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-            if (count($pageErrors2) == 0) {
+            if (count(PageState::current()->errors) == 0) {
                 $siteRepo->insert($url);
                 PageState::current()->addInfo($url . ' ' . Lang::t('created'));
             }

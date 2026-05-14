@@ -151,8 +151,6 @@ final class C13yInternal
      */
     public function c13yCorrectionUser(int $id, string $action): bool
     {
-        $page = &$GLOBALS['page'];
-
         $result = false;
 
         if (!empty($id)) {

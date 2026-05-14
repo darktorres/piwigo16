@@ -9,6 +9,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Image\DerivativeEncoding;
@@ -49,13 +50,11 @@ final readonly class SizesProcessor
             $updates[$field] = $_POST[$field] ?? null;
         }
 
-        /** @var array<string, mixed> $page */
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        /** @var string[] $pageErrors */
-        $pageErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-        $this->uploadService->saveUploadFormConfig($updates, $pageErrors, $errors);
-        $page['errors'] = $pageErrors;
-        $GLOBALS['page'] = $page;
+        $uploadErrors = [];
+        $this->uploadService->saveUploadFormConfig($updates, $uploadErrors, $errors);
+        foreach ($uploadErrors as $err) {
+            PageState::current()->addError($err);
+        }
 
         $rq_raw = $_POST['resize_quality'] ?? null;
         $rq = is_numeric($rq_raw) ? (int) $rq_raw : null;
@@ -246,7 +245,7 @@ final readonly class SizesProcessor
             $tpl->assign('ferrors', $errors);
             $rawResizeQuality = $_POST['resize_quality'] ?? '';
             $tpl->assign('resize_quality', is_scalar($rawResizeQuality) ? $rawResizeQuality : '');
-            $GLOBALS['page']['sizes_loaded_in_tpl'] = true;
+            $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['sizes_loaded_in_tpl' => true]);
         }
     }
 }

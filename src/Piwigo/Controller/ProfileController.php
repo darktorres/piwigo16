@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -59,9 +60,6 @@ final readonly class ProfileController implements ControllerInterface
 
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         $userdata = $user;
 
         EventDispatcher::notify('loc_begin_profile');
@@ -76,12 +74,15 @@ final readonly class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user ?? []);
         }
 
-        $pgErrors = is_array($page['errors'] ?? null) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $page['errors']) : [];
+        $pgErrors = [];
+        foreach (PageState::current()->errors as $v) {
+            $pgErrors[] = is_string($v) ? $v : (string) $v;
+        }
         $this->profileService->saveProfileFromPost($userdata, $pgErrors);
-        $page['errors'] = $pgErrors;
+        PageState::current()->errors = array_values($pgErrors);
 
         $title = Lang::t('Your Gallery Customization');
-        $page['body_id'] = 'theProfilePage';
+        $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['body_id' => 'theProfilePage']);
         $this->profileService->loadProfileInTemplate($this->urlGenerator->profile(), $this->urlService->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;

@@ -496,6 +496,12 @@ $btraceMsg
                 $template->assign($mode, $current);
             }
         }
+        $keyedErrors = $page->keyedErrors;
+        if ($keyedErrors !== []) {
+            $page->keyedErrors = [];
+            $existing = $template->getTemplateVars('errors');
+            $template->assign('errors', array_merge(is_array($existing) ? $existing : [], $keyedErrors));
+        }
     }
 
     public function pwgNl2br(string $string): string

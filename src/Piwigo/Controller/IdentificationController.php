@@ -8,6 +8,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
@@ -63,25 +64,18 @@ final readonly class IdentificationController implements ControllerInterface
         }
         $this->util->checkInputParameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         $redirect_to = '';
         $get_redirect = $this->stringUtil->inputString('redirect', null, $_GET);
         if ($get_redirect !== null && $get_redirect !== '') {
             $redirect_to = urldecode($get_redirect);
             if (Config::guestAccess() && $this->stringUtil->inputString('hide_redirect_error', null, $_GET) === null) {
-                $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $pgErrors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
-                $page['errors'] = $pgErrors;
+                PageState::current()->keyedErrors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
             }
         }
 
         if ($this->stringUtil->inputString('login', null, $_POST) !== null) {
             if (!isset($_COOKIE[session_name()])) {
-                $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                $pgErrors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
-                $page['errors'] = $pgErrors;
+                PageState::current()->keyedErrors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
             } else {
                 $username = $this->stringUtil->inputString('username', null, $_POST) ?? '';
                 if (Config::insensitiveCaseLogon() == true) {
@@ -99,9 +93,7 @@ final readonly class IdentificationController implements ControllerInterface
                         : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath() ?? '')) . $redirect_to
                     );
                 } else {
-                    $pgErrors = is_array($page['errors'] ?? null) ? $page['errors'] : [];
-                    $pgErrors['login_form_error'] = Lang::t('Invalid username or password!');
-                    $page['errors'] = $pgErrors;
+                    PageState::current()->keyedErrors['login_form_error'] = Lang::t('Invalid username or password!');
                 }
             }
         }

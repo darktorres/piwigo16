@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
@@ -520,10 +521,8 @@ SELECT DISTINCT(id)
 
         // ── Body classes and data ─────────────────────────────────────────────
 
-        $bodyClassesRaw = $page['body_classes'] ?? null;
-        $bodyClasses = is_array($bodyClassesRaw) ? $bodyClassesRaw : [];
-        $bodyDataRaw = $page['body_data'] ?? null;
-        $bodyData    = is_array($bodyDataRaw) ? $bodyDataRaw : [];
+        $bodyClasses = PageState::current()->bodyClasses;
+        $bodyData    = PageState::current()->bodyData;
 
         $bodyClasses[] = 'section-' . $section;
         $bodyData['section'] = $section;
@@ -573,8 +572,8 @@ SELECT DISTINCT(id)
             $bodyData['image_id'] = $imageId;
         }
 
-        $page['body_classes'] = $bodyClasses;
-        $page['body_data']    = $bodyData;
+        PageState::current()->bodyClasses = $bodyClasses;
+        PageState::current()->bodyData    = $bodyData;
 
         EventDispatcher::notify('loc_end_section_init');
     }

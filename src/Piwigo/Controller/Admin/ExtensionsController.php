@@ -507,8 +507,8 @@ final readonly class ExtensionsController
         if (isset($_GET['action']) && isset($_GET['theme'])) {
             $get_action = is_string($_GET['action']) ? $_GET['action'] : '';
             $get_theme  = is_string($_GET['theme']) ? $_GET['theme'] : '';
-            $page['errors'] = $themes->performAction($get_action, $get_theme);
-            if (empty($page['errors'])) {
+            PageState::current()->errors = array_values(array_filter($themes->performAction($get_action, $get_theme), is_string(...)));
+            if (empty(PageState::current()->errors)) {
                 if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') {
                     $tpl->deleteCompiledTemplates();
                 }
@@ -817,8 +817,8 @@ final readonly class ExtensionsController
         $this->util->checkInputParameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
         if (isset($_GET['action']) && isset($_GET['language']) && $this->permissionService->isWebmaster()) {
-            $page['errors'] = $languages->performAction(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : '');
-            if (empty($page['errors'])) {
+            PageState::current()->errors = array_values(array_filter($languages->performAction(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : ''), is_string(...)));
+            if (empty(PageState::current()->errors)) {
                 $this->util->redirect($base_url);
             }
         }

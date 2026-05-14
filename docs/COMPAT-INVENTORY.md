@@ -33,7 +33,13 @@ These classes maintain a bidirectional PHP-reference link between a typed single
 
 Pre-boot `$GLOBALS['page']` initialisation in CommonBootstrap cleaned up (was setting bridged keys that `attachGlobals()` immediately wiped).
 
-Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, etc.) that were never part of the bridge and are tracked separately.
+Additional cleanup from second-pass verification:
+- `AuthService`: dead `$page = &$GLOBALS['page']` alias removed; `auth_key_id` ad-hoc key write fixed to use `$GLOBALS['page']` directly.
+- `PageState::$upgradeStart`: dead property removed (never written post-include/ removal, never read).
+- `PageState::$countQueries` / `$queriesTime`: retained — still read by `PageTailRenderer` debug overlay and `Util.php`, but never written (always 0 — pre-existing gap since the `include/` files that incremented them were removed).
+- `KernelBootTest`: three tests that validated the bridge round-trip and pre-boot preservation were removed; replaced with tests for actual current behaviour.
+
+Remaining `$GLOBALS['page']` accesses in `src/` are ad-hoc request-context keys (`section`, `items`, `category`, `image_id`, `auth_key_id`, etc.) that were never part of the bridge and are tracked separately.
 
 ---
 

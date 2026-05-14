@@ -30,6 +30,8 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureContentRenderer;
+use Piwigo\Picture\PictureContext;
+use Piwigo\Picture\PictureContextRegistry;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
@@ -94,8 +96,6 @@ final readonly class PictureController implements ControllerInterface
         $this->userService->saveEditContext();
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
         /** @var array<string, mixed> $lang */
@@ -112,9 +112,9 @@ final readonly class PictureController implements ControllerInterface
             $this->categoryService->checkRestrictions($catId);
         }
 
-        $page['rank_of'] = array_flip($items);
+        $rankOf = array_flip($items);
 
-        if (!isset($page['rank_of'][$imageId])) {
+        if (!isset($rankOf[$imageId])) {
             $imageRepo = $this->imageRepository;
             if ($imageId > 0) {
                 $row = $imageRepo->findById($imageId);
@@ -132,11 +132,9 @@ final readonly class PictureController implements ControllerInterface
                 $this->htmlService->accessDenied();
             }
             $resolvedImageFile = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-            $page['image_id']   = $row['id'];
-            $page['image_file'] = $row['file'];
             $imageId = is_scalar($row['id'] ?? null) ? (int) $row['id'] : 0;
 
-            if (!isset($page['rank_of'][$imageId])) {
+            if (!isset($rankOf[$imageId])) {
                 $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
                 $visibleImages   = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
                 if ($visibleImages !== '' && !in_array($imageId, explode(',', $visibleImages))) {
@@ -156,9 +154,8 @@ SELECT id
                         $this->htmlService->accessDenied();
                     } else {
                         if ($ctx->section === 'best_rated') {
-                            $page['rank_of'][$imageId] = count($items);
-                            $items[]                   = $imageId;
-                            $page['items']             = $items;
+                            $rankOf[$imageId] = count($items);
+                            $items[]          = $imageId;
                         } else {
                             $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
                             $this->htmlService->setStatusHeader($ctx->section === 'recent_pics' ? 301 : 302);
@@ -184,31 +181,16 @@ SELECT id
 
         $tpl = TemplateRegistry::current();
 
-        // Refresh typed locals in case image_id or items was updated in the block above
-        $pageItems   = $page['items'] ?? null;
-        $items       = is_array($pageItems)
-            ? array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $pageItems)
-            : $items;
-        $imageId     = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : $imageId;
         $nbImagePage = $ctx->nbImagePage;
 
-        $page['first_rank']   = 0;
-        $page['last_rank']    = count($items) - 1;
-        $page['current_rank'] = $page['rank_of'][$imageId];
-        $page['current_item'] = $imageId;
+        $currentRank  = max(0, $rankOf[$imageId] ?? 0);
+        $firstRank    = 0;
+        $lastRank     = count($items) - 1;
 
-        $currentRank = max(0, (int) $page['current_rank']);
-        $firstRank   = 0;
-        $lastRank    = count($items) - 1;
-
-        if ($currentRank != $firstRank) {
-            $page['previous_item'] = $items[$currentRank - 1];
-            $page['first_item']    = $items[$firstRank];
-        }
-        if ($currentRank != $lastRank) {
-            $page['next_item'] = $items[min($currentRank + 1, $lastRank)];
-            $page['last_item'] = $items[$lastRank];
-        }
+        $previousItem = $currentRank !== $firstRank ? $items[$currentRank - 1] : null;
+        $firstItem    = $currentRank !== $firstRank ? $items[$firstRank]       : null;
+        $nextItem     = $currentRank !== $lastRank  ? $items[min($currentRank + 1, $lastRank)] : null;
+        $lastItem     = $currentRank !== $lastRank  ? $items[$lastRank]        : null;
 
         $url_up = $this->urlService->duplicateIndexUrl(
             ['start' => (int) floor($currentRank / $nbImagePage) * $nbImagePage],
@@ -334,23 +316,23 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         // Load prev/current/next picture data
         $picture = [];
         $ids     = [$imageId];
-        if (isset($page['previous_item'])) {
-            $ids[] = $page['previous_item'];
-            $ids[] = $page['first_item'];
+        if ($previousItem !== null) {
+            $ids[] = $previousItem;
+            $ids[] = $firstItem;
         }
-        if (isset($page['next_item'])) {
-            $ids[] = $page['next_item'];
-            $ids[] = $page['last_item'];
+        if ($nextItem !== null) {
+            $ids[] = $nextItem;
+            $ids[] = $lastItem;
         }
 
         foreach ($this->imageRepository->findByIds(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $ids)) as $row) {
-            if (isset($page['previous_item']) && $row['id'] == $page['previous_item']) {
+            if ($previousItem !== null && $row['id'] == $previousItem) {
                 $i = 'previous';
-            } elseif (isset($page['next_item']) && $row['id'] == $page['next_item']) {
+            } elseif ($nextItem !== null && $row['id'] == $nextItem) {
                 $i = 'next';
-            } elseif (isset($page['first_item']) && $row['id'] == $page['first_item']) {
+            } elseif ($firstItem !== null && $row['id'] == $firstItem) {
                 $i = 'first';
-            } elseif (isset($page['last_item']) && $row['id'] == $page['last_item']) {
+            } elseif ($lastItem !== null && $row['id'] == $lastItem) {
                 $i = 'last';
             } else {
                 $i = 'current';
@@ -383,10 +365,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $row['TITLE_ESC'] = str_replace('"', '&quot;', $row['TITLE']);
             $picture[$i]      = $row;
 
-            if ('previous' == $i && $page['previous_item'] == $page['first_item']) {
+            if ('previous' == $i && $previousItem === $firstItem) {
                 $picture['first'] = $row;
             }
-            if ('next' == $i && $page['next_item'] == $page['last_item']) {
+            if ('next' == $i && $nextItem === $lastItem) {
                 $picture['last'] = $row;
             }
         }
@@ -400,16 +382,16 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $get_slideshow        = $this->stringUtil->inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
-            $page['slideshow']   = true;
+            $slideshowActive  = true;
             PageState::current()->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             $slideshow_params     = $this->pictureService->decodeSlideshowParams($get_slideshow);
             $slideshow_url_params['slideshow'] = $this->pictureService->encodeSlideshowParams($slideshow_params);
 
             if ($slideshow_params['play']) {
                 $id_pict_redirect = '';
-                if (isset($page['next_item'])) {
+                if ($nextItem !== null) {
                     $id_pict_redirect = 'next';
-                } elseif ($slideshow_params['repeat'] && isset($page['first_item'])) {
+                } elseif ($slideshow_params['repeat'] && $firstItem !== null) {
                     $id_pict_redirect = 'first';
                 }
                 if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
@@ -418,7 +400,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
                 }
             }
         } else {
-            $page['slideshow'] = false;
+            $slideshowActive = false;
         }
 
         $title    = $picture['current']['TITLE'];
@@ -485,8 +467,20 @@ SELECT *
             }
         }
 
+        PictureContextRegistry::set(new PictureContext(
+            currentItem:  $imageId,
+            nextItem:     $nextItem,
+            previousItem: $previousItem,
+            firstItem:    $firstItem,
+            lastItem:     $lastItem,
+            currentRank:  $currentRank,
+            lastRank:     $lastRank,
+            rankOf:       $rankOf,
+            slideshow:    $slideshowActive,
+        ));
+
         // Slideshow controls
-        if ($page['slideshow'] === true) {
+        if ($slideshowActive) {
             $tpl_slideshow = [];
             $currentUrl    = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
@@ -649,16 +643,13 @@ SELECT *
         $themeconfArr = is_array($themeconf) ? $themeconf : [];
         $hideMenuOn   = is_array($themeconfArr['hide_menu_on'] ?? null) ? $themeconfArr['hide_menu_on'] : [];
         if (Config::pictureMenu() && !in_array('thePicturePage', $hideMenuOn)) {
-            if (!isset($page['start'])) {
-                $page['start'] = 0;
-            }
             $this->menubarRenderer->render();
         }
 
         PageHeaderRenderer::render($title, isset($refresh) && is_int($refresh) ? $refresh : null, $url_link ?? null);
         EventDispatcher::notify('loc_end_picture');
         $this->htmlService->flushPageMessages();
-        if ($page['slideshow'] === true && Config::lightSlideshow()) {
+        if ($slideshowActive && Config::lightSlideshow()) {
             $tpl->pparse('slideshow.latte');
         } else {
             $tpl->parsePictureButtons();

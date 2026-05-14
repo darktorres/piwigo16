@@ -17,8 +17,8 @@ use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -40,28 +40,22 @@ final readonly class PictureCommentRenderer
     public function render(?int $editComment = null): void
     {
         $template = TemplateRegistry::current();
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-        $imageId = SectionContextRegistry::current()->imageId !== null
-            ? (int) SectionContextRegistry::current()->imageId
-            : 0;
+        $imageId  = PictureContextRegistry::current()->currentItem;
         $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
         $related_categories = is_array($GLOBALS['related_categories'] ?? null) ? $GLOBALS['related_categories'] : [];
         $url_self = is_scalar($GLOBALS['url_self'] ?? null) ? (string) $GLOBALS['url_self'] : '';
 
-        $page['show_comments'] = false;
+        $showComments = false;
         foreach ($related_categories as $category) {
             if (is_array($category) && ($category['commentable'] ?? '') == 'true') {
-                $page['show_comments'] = true;
+                $showComments = true;
                 break;
             }
         }
 
         $comment_action = null;
 
-        if ($page['show_comments'] and isset($_POST['content'])) {
+        if ($showComments and isset($_POST['content'])) {
             if ($this->permissionService->isAGuest() and !Config::commentsForall()) {
                 throw new AuthException('Session expired');
             }
@@ -106,7 +100,7 @@ final readonly class PictureCommentRenderer
             throw new AuthException('ugly spammer');
         }
 
-        if ($page['show_comments']) {
+        if ($showComments) {
             if (!$this->permissionService->isAdmin()) {
                 $validated_clause = '  AND validated = \'true\'';
             } else {
@@ -157,7 +151,7 @@ SELECT
     com.id,
     com.author,
     com.author_id,
-    u.' . Config::userFields()['email'] . ' AS user_email,
+    u.' . (string) Config::userFields()['email'] . ' AS user_email,
     com.date,
     com.image_id,
     com.website_url,

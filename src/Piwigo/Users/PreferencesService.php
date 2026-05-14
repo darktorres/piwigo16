@@ -16,10 +16,10 @@ final readonly class PreferencesService
 
     public function getBrowserLanguage(): false|string
     {
-        $raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+        $raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
         return self::pickFromAcceptLanguage(
             array_keys($this->util->getLanguages()),
-            $raw,
+            is_string($raw) ? $raw : '',
         );
     }
 

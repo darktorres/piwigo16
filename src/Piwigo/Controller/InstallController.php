@@ -99,10 +99,10 @@ final class InstallController implements ControllerInterface
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
-            $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+            $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
             $matched       = PreferencesService::pickFromAcceptLanguage(
                 array_keys($fsLanguages),
-                $rawAcceptLang,
+                is_string($rawAcceptLang) ? $rawAcceptLang : '',
             );
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }

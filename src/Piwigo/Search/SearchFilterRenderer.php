@@ -18,6 +18,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 
 final readonly class SearchFilterRenderer
@@ -42,6 +43,7 @@ final readonly class SearchFilterRenderer
         if (!is_array($page)) {
             $page = [];
         }
+        $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
         $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
         $userCacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
@@ -54,9 +56,9 @@ final readonly class SearchFilterRenderer
 
         $template->assign('display_filter', $filters_views);
 
-        if ('search' == $page['section'] and isset($page['search_details'])) {
+        if ('search' == $ctx->section and $ctx->searchDetails !== []) {
             /** @var array<string, mixed> $search_details */
-            $search_details = $page['search_details'];
+            $search_details = $ctx->searchDetails;
             $page['search_details'] = &$search_details;
             /** @var array<string, array<string, bool>> $display_filters */
             $display_filters = $filters_views;
@@ -70,9 +72,8 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            /** @psalm-var mixed $searchRaw */
-            $searchRaw = $page['search'] ?? null;
-            $searchKey = is_string($searchRaw) ? $searchRaw : '';
+            $searchKey = $ctx->search ?? '';
+            $searchRaw = $ctx->search;
             /** @var array<string, mixed> $my_search */
             $my_search = $this->searchService->getSearchArray($searchKey);
             /** @var array<string, mixed> $my_search_fields_tmp */
@@ -86,12 +87,11 @@ final readonly class SearchFilterRenderer
 
             if ($search_details['has_filters_filled']) {
                 $search_items = [-1];
-                $pageItemsRaw = $page['items'] ?? null;
-                $pageItems = is_array($pageItemsRaw) ? $pageItemsRaw : [];
+                $pageItems = $ctx->items;
                 if (count($pageItems) > 0) {
                     $search_items = $pageItems;
                 }
-                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $search_items)) . ')';
+                $search_items_clause = 'image_id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $search_items)) . ')';
             } else {
                 $search_items_clause = '1=1';
             }
@@ -825,7 +825,7 @@ SELECT
                 JSON_HEX_TAG | JSON_UNESCAPED_UNICODE
             ));
 
-            if (0 == $page['start'] and !isset($page['chronology_field'])) {
+            if (0 == $ctx->start and $ctx->chronologyField === '') {
                 $matchingCatIdsRaw = $search_details['matching_cat_ids'] ?? null;
                 $matchingCatIds = is_array($matchingCatIdsRaw) ? $matchingCatIdsRaw : null;
                 if ($matchingCatIds !== null) {

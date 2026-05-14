@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
@@ -49,9 +50,8 @@ abstract class CalendarBase
      */
     public function initialize(mixed $inner_sql): void
     {
-        $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyField = $pageArr['chronology_field'] ?? '';
+        $ctx = SectionContextRegistry::current();
+        $chronologyField = $ctx->chronologyField;
         if ($chronologyField === 'posted') {
             $this->date_field = 'date_available';
         } else {
@@ -65,15 +65,13 @@ abstract class CalendarBase
      */
     public function getDisplayName(): string
     {
-        $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
         $res = '';
 
         for ($i = 0; $i < count($chronologyDate); $i++) {
             $res .= Config::levelSeparator();
             $component = $chronologyDate[$i];
-            $componentTyped = is_int($component) ? $component : (is_string($component) ? $component : '');
+            $componentTyped = $component;
             if (isset($chronologyDate[$i + 1])) {
                 $sliced = array_slice($chronologyDate, 0, $i + 1);
                 $url = Kernel::service(UrlService::class)->duplicateIndexUrl(
@@ -217,7 +215,6 @@ abstract class CalendarBase
     {
         $template = TemplateRegistry::current();
         $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
 
         $level_data = $this->calendar_levels[$level] ?? [];
         $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
@@ -231,7 +228,7 @@ $this->getDateWhere($level).'
 
         $level_items = array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
 
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
 
         if (count($level_items) == 1 and
              count($chronologyDate) < count($this->calendar_levels) - 1) {
@@ -280,10 +277,8 @@ $this->getDateWhere($level).'
     protected function buildNextPrev(): void
     {
         $template = TemplateRegistry::current();
-        $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
 
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
 
         $prev = $next = null;
         if (count($chronologyDate) === 0) {
@@ -309,7 +304,7 @@ GROUP BY period';
 
         $stringDate = [];
         foreach ($chronologyDate as $d) {
-            $stringDate[] = is_string($d) ? $d : (is_int($d) ? (string) $d : '');
+            $stringDate[] = (string) $d;
         }
         $current = implode('-', $stringDate);
         $upper_items = array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'period');

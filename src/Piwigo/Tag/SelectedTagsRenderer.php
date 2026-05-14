@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
@@ -18,9 +19,7 @@ final readonly class SelectedTagsRenderer
     public function render(): void
     {
         $template = TemplateRegistry::current();
-        $pageRaw = $GLOBALS['page'] ?? [];
-        $pageTagsRaw = is_array($pageRaw) ? ($pageRaw['tags'] ?? []) : [];
-        $pageTags = is_array($pageTagsRaw) ? $pageTagsRaw : [];
+        $pageTags = SectionContextRegistry::current()->tags;
 
         $selected_related_tags_info = [];
 

@@ -27,6 +27,7 @@ use Piwigo\Language\LanguageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -499,6 +500,7 @@ final readonly class Util
     {
         $user = is_array($GLOBALS['user'] ?? null) ? $GLOBALS['user'] : [];
         $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $ctx  = SectionContextRegistry::current();
 
         if ($imageId !== null) {
             $imageId = (int) $imageId;
@@ -518,10 +520,9 @@ final readonly class Util
         }
 
         $tagsString  = null;
-        $pageSection = is_scalar($page['section'] ?? null) ? (string) $page['section'] : '';
+        $pageSection = $ctx->section;
         if ($pageSection === 'tags') {
-            $tagIds     = is_array($page['tag_ids'] ?? null) ? $page['tag_ids'] : [];
-            $tagsString = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tagIds));
+            $tagsString = implode(',', array_map(static fn (int $v): string => (string) $v, $ctx->tagIds));
             if (strlen($tagsString) > 50) {
                 $tagsString  = substr($tagsString, 0, 50);
                 $commaPos    = strrpos($tagsString, ',');
@@ -561,9 +562,9 @@ final readonly class Util
             }
         }
 
-        $category   = is_array($page['category'] ?? null) ? $page['category'] : null;
+        $category   = $ctx->category;
         $categoryId = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : 'NULL';
-        $searchId   = is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : 'NULL';
+        $searchId   = $ctx->searchId ?? 'NULL';
         $authKeyId  = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
 
         $historyId = $this->historyRepository->insertLog(

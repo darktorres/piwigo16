@@ -18,6 +18,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -66,6 +67,7 @@ final readonly class CategoryService
         if (!is_array($page)) {
             $page = [];
         }
+        $ctx         = SectionContextRegistry::current();
         $currentUser = CurrentUser::get();
         $userExpand  = $currentUser->rawAttributes['expand'] ?? false;
 
@@ -79,7 +81,7 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
         if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter['enabled']) {
             $where = '
 (id_uppercat is NULL';
-            $category = is_array($page['category'] ?? null) ? $page['category'] : null;
+            $category = $ctx->category;
             if ($category !== null) {
                 $uppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
                 $where .= ' OR id_uppercat IN (' . $uppercats . ')';
@@ -97,7 +99,7 @@ WHERE ' . $where . '
 ;';
 
         $cats             = [];
-        $selectedCategory = is_array($page['category'] ?? null) ? $page['category'] : null;
+        $selectedCategory = $ctx->category;
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
             $row           = array_merge($row, [
@@ -553,7 +555,7 @@ SELECT
      */
     public function getRelatedCategoriesMenu(array $items, array $excludedCatIds = []): array
     {
-        $page       = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $ctx = SectionContextRegistry::current();
         $commonCats = $this->getCommonCategories($items, Config::relatedAlbumsDisplayLimit(), $excludedCatIds);
 
         if (count($commonCats) == 0) {
@@ -593,13 +595,11 @@ SELECT
                 $cats[$idx]['count_images'] = $commonCats[$catIdKey]['counter'];
 
                 $urlParams = [];
-                if (isset($page['category'])) {
-                    $urlParams['category'] = $page['category'];
+                if ($ctx->category !== null) {
+                    $urlParams['category'] = $ctx->category;
                     $urlParams['combined_categories'] = [$cat];
-                    $combinedRaw = $page['combined_categories'] ?? null;
-                    $combined = is_array($combinedRaw) ? $combinedRaw : null;
-                    if ($combined !== null) {
-                        $urlParams['combined_categories'] = array_merge($combined, [$cat]);
+                    if ($ctx->combinedCategories !== null) {
+                        $urlParams['combined_categories'] = array_merge($ctx->combinedCategories, [$cat]);
                     }
                 } else {
                     $urlParams['category'] = $cat;

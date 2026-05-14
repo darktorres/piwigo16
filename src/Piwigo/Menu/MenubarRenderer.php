@@ -15,6 +15,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 
 final readonly class MenubarRenderer
@@ -33,7 +34,7 @@ final readonly class MenubarRenderer
     {
         $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
         $template = TemplateRegistry::current();
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
 
         $menu = new BlockManager('menubar');
@@ -43,8 +44,8 @@ final readonly class MenubarRenderer
         }
         $menu->prepareDisplay();
 
-        if (($page['section'] ?? null) == 'search' && isset($page['qsearch_details']) && is_array($page['qsearch_details'])) {
-            $qsearchQ = is_scalar($page['qsearch_details']['q'] ?? null) ? (string) $page['qsearch_details']['q'] : '';
+        if ($ctx->section === 'search' && $ctx->qsearchDetails !== []) {
+            $qsearchQ = is_scalar($ctx->qsearchDetails['q'] ?? null) ? (string) $ctx->qsearchDetails['q'] : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearchQ));
         }
 
@@ -98,16 +99,16 @@ final readonly class MenubarRenderer
         }
 
         $block = $menu->getBlock('mbRelatedCategories');
-        $items = is_array($page['items'] ?? null) ? $page['items'] : [];
+        $items = $ctx->items;
         if ($items !== [] and count($items) < Config::relatedAlbumsMaximumItemsToCompute() and $block != null) {
             /** @var list<int> $exclude_cat_ids */
             $exclude_cat_ids = [];
-            $category = is_array($page['category'] ?? null) ? $page['category'] : null;
+            $category = $ctx->category;
             if ($category !== null) {
                 if (isset($category['id']) && is_numeric($category['id'])) {
                     $exclude_cat_ids[] = (int) $category['id'];
                 }
-                $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
+                $combined = $ctx->combinedCategories ?? [];
                 foreach ($combined as $cat) {
                     if (is_array($cat) && isset($cat['id']) && is_numeric($cat['id'])) {
                         $exclude_cat_ids[] = (int) $cat['id'];

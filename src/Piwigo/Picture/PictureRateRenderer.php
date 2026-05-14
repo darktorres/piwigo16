@@ -7,6 +7,7 @@ namespace Piwigo\Picture;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -28,7 +29,7 @@ final readonly class PictureRateRenderer
         }
 
         $template = TemplateRegistry::current();
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $ctx = SectionContextRegistry::current();
         $picture = is_array($GLOBALS['picture'] ?? null) ? $GLOBALS['picture'] : [];
         $url_self = is_scalar($GLOBALS['url_self'] ?? null) ? (string) $GLOBALS['url_self'] : '';
         $current = is_array($picture['current'] ?? null) ? $picture['current'] : [];
@@ -47,7 +48,7 @@ final readonly class PictureRateRenderer
 
         if (Config::rateAnonymous() or $this->permissionService->isAutorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
-                $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
+                $imageId = is_numeric($ctx->imageId) ? (int) $ctx->imageId : 0;
                 $anonId = null;
                 if (!$this->permissionService->isAutorizeStatus(AccessLevel::Classic)) {
                     /** @var mixed $remoteAddrRaw */

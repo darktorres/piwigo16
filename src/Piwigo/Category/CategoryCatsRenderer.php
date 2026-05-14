@@ -18,6 +18,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -45,6 +46,7 @@ final readonly class CategoryCatsRenderer
         if (!is_array($page)) {
             $page = [];
         }
+        $ctx = SectionContextRegistry::current();
         $currentUser = CurrentUser::get();
         $user = $currentUser->rawAttributes;
 
@@ -65,12 +67,12 @@ SELECT SQL_CALC_FOUND_ROWS
   WHERE count_images > 0
 ';
 
-        if ('recent_cats' == $page['section']) {
+        if ('recent_cats' == $ctx->section) {
             $query .= '
   AND ' . $this->permissionService->getRecentPhotosSql('date_last');
         } else {
             $query .= '
-  AND id_uppercat ' . (!isset($page['category']) || !is_array($page['category']) ? 'is NULL' : '= ' . (is_scalar($page['category']['id'] ?? null) ? (string) $page['category']['id'] : ''));
+  AND id_uppercat ' . ($ctx->category === null ? 'is NULL' : '= ' . (is_scalar($ctx->category['id'] ?? null) ? (string) $ctx->category['id'] : ''));
         }
 
         $query .= '
@@ -79,14 +81,14 @@ SELECT SQL_CALC_FOUND_ROWS
 -- after conditions
 ';
 
-        if ('recent_cats' != $page['section']) {
+        if ('recent_cats' != $ctx->section) {
             $query .= '
   ORDER BY `rank`';
         }
 
         $nb_cats_page = Config::nbCategoriesPage();
         $query .= '
-  LIMIT ' . $nb_cats_page . ' OFFSET ' . (is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0) . '
+  LIMIT ' . $nb_cats_page . ' OFFSET ' . $ctx->startcat . '
 ;';
 
         $query = EventDispatcher::dispatch('loc_begin_index_category_thumbnails_query', $query);
@@ -162,7 +164,7 @@ SELECT
             }
         }
 
-        if ('recent_cats' == $page['section']) {
+        if ('recent_cats' == $ctx->section) {
             usort($categories, $this->categoryService->globalRankCompare(...));
         }
 
@@ -246,7 +248,7 @@ SELECT *
                     'subcatify_category_name'
                 );
 
-                if ($page['section'] == 'recent_cats') {
+                if ($ctx->section == 'recent_cats') {
                     $uppercatsRaw = $category['uppercats'] ?? null;
                     $name = $this->htmlService->getCatDisplayNameCache(is_scalar($uppercatsRaw) ? (string) $uppercatsRaw : '', null);
                 } else {
@@ -320,7 +322,7 @@ SELECT *
                 $page['cats_navigation_bar'] = $this->util->createNavigationBar(
                     $this->urlService->duplicateIndexUrl([], ['startcat']),
                     is_numeric($page['total_categories']) ? (int) $page['total_categories'] : 0,
-                    is_numeric($page['startcat']) ? (int) $page['startcat'] : 0,
+                    $ctx->startcat,
                     Config::nbCategoriesPage(),
                     true,
                     'startcat'

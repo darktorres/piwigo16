@@ -13,6 +13,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
@@ -62,12 +63,9 @@ final class CalendarMonthly extends CalendarBase
     public function generateCategoryContent(): bool
     {
         $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyDate = is_array($pageArr['chronology_view'] ?? null) ? [] :
-            (is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : []);
-        // Re-read chronology_view separately
-        $view_type = $pageArr['chronology_view'] ?? '';
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $ctx = SectionContextRegistry::current();
+        $view_type = $ctx->chronologyView;
+        $chronologyDate = $ctx->chronologyDate;
 
         if ($view_type == CAL_VIEW_CALENDAR) {
             $template = TemplateRegistry::current();
@@ -136,9 +134,7 @@ final class CalendarMonthly extends CalendarBase
     #[\Override]
     public function getDateWhere(int $max_levels = 3): string
     {
-        $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $date = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $date = SectionContextRegistry::current()->chronologyDate;
 
         while (count($date) > $max_levels) {
             array_pop($date);
@@ -150,7 +146,7 @@ final class CalendarMonthly extends CalendarBase
         $cday = $date[CDAY] ?? null;
 
         if (isset($cyear) && $cyear !== 'any') {
-            $yearStr = is_int($cyear) ? (string) $cyear : (is_string($cyear) ? $cyear : '');
+            $yearStr = (string) $cyear;
             $b = $yearStr . '-';
             $e = $yearStr . '-';
             if (isset($cmonth) && $cmonth !== 'any') {
@@ -223,8 +219,7 @@ final class CalendarMonthly extends CalendarBase
     protected function buildGlobalCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
 
         assert(count($chronologyDate) == 0);
         $query = '
@@ -300,8 +295,7 @@ final class CalendarMonthly extends CalendarBase
     protected function buildYearCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
 
         assert(count($chronologyDate) == 1);
         $query = 'SELECT '.SqlExpr::dateMMDD($this->date_field).' as period,
@@ -339,7 +333,7 @@ final class CalendarMonthly extends CalendarBase
         $monthLabels = is_array($langArr['month'] ?? null) ? $langArr['month'] : [];
 
         foreach ($items as $month => $month_data) {
-            $cyearRaw = $chronologyDate[CYEAR] ?? '';
+            $cyearRaw = $chronologyDate[CYEAR];
             $chronology_date = [ $cyearRaw, $month ];
             $url = Kernel::service(UrlService::class)->duplicateIndexUrl(['chronology_date' => $chronology_date]);
 
@@ -374,7 +368,6 @@ final class CalendarMonthly extends CalendarBase
     protected function buildMonthCalendar(array &$tpl_var): bool
     {
         $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
         $lang = &$GLOBALS['lang'];
         $langArr = is_array($lang) ? $lang : [];
 

@@ -7,6 +7,7 @@ namespace Piwigo\Calendar;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Section\SectionContextRegistry;
 
 /**
  * @package functions\calendar
@@ -69,10 +70,7 @@ final class CalendarWeekly extends CalendarBase
     #[\Override]
     public function generateCategoryContent(): bool
     {
-        $page = &$GLOBALS['page'];
-        $pageArr = is_array($page) ? $page : [];
-
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
         if (count($chronologyDate) == 0) {
             $this->buildNavBar(CYEAR); // years
         }
@@ -94,27 +92,25 @@ final class CalendarWeekly extends CalendarBase
     #[\Override]
     public function getDateWhere(int $max_levels = 3): string
     {
-        $page = &$GLOBALS['page'];
-        $pageArr2 = is_array($page) ? $page : [];
-        $date = is_array($pageArr2['chronology_date'] ?? null) ? $pageArr2['chronology_date'] : [];
+        $date = SectionContextRegistry::current()->chronologyDate;
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
         if (isset($date[CYEAR]) and $date[CYEAR] !== 'any') {
-            $y = is_scalar($date[CYEAR]) ? (string)$date[CYEAR] : '';
+            $y = (string) $date[CYEAR];
             $res = " AND $this->date_field BETWEEN '$y-01-01' AND '$y-12-31 23:59:59'";
         }
 
         if (isset($date[CWEEK]) and $date[CWEEK] !== 'any') {
             $cweekLevel = is_array($this->calendar_levels[CWEEK] ?? null) ? $this->calendar_levels[CWEEK] : [];
             $cweekSql = is_string($cweekLevel['sql'] ?? null) ? $cweekLevel['sql'] : '';
-            $res .= ' AND '.$cweekSql.'='.(is_scalar($date[CWEEK]) ? (string)$date[CWEEK] : '');
+            $res .= ' AND '.$cweekSql.'='.((string) $date[CWEEK]);
         }
         if (isset($date[CDAY]) and $date[CDAY] !== 'any') {
             $cdayLevel = is_array($this->calendar_levels[CDAY] ?? null) ? $this->calendar_levels[CDAY] : [];
             $cdaySql = is_string($cdayLevel['sql'] ?? null) ? $cdayLevel['sql'] : '';
-            $res .= ' AND '.$cdaySql.'='.(is_scalar($date[CDAY]) ? (string)$date[CDAY] : '');
+            $res .= ' AND '.$cdaySql.'='.((string) $date[CDAY]);
         }
         if (empty($res)) {
             $res = ' AND '.$this->date_field.' IS NOT NULL';

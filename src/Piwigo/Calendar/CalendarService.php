@@ -17,6 +17,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 
 final readonly class CalendarService
@@ -40,17 +41,17 @@ final readonly class CalendarService
         if (!is_array($page)) {
             $page = [];
         }
+        $ctx = SectionContextRegistry::current();
 
         $innerSql = ' FROM ' . Tables::images();
 
-        if (($page['section'] ?? null) == 'categories') {
+        if ($ctx->section == 'categories') {
             $page['items'] = [];
             $innerSql .= '
 INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
-            if (isset($page['category'])) {
-                /** @phpstan-ignore-next-line offsetAccess.nonOffsetAccessible */
-                $categoryIdRaw = $page['category']['id'] ?? null;
+            if ($ctx->category !== null) {
+                $categoryIdRaw = $ctx->category['id'] ?? null;
                 $subIds = array_diff(
                     $this->categoryService->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
                     explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
@@ -101,8 +102,7 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         $views = [CAL_VIEW_LIST, CAL_VIEW_CALENDAR];
 
-        $chronologyFieldRaw = $page['chronology_field'] ?? null;
-        $chronologyField = is_scalar($chronologyFieldRaw) ? (string) $chronologyFieldRaw : '';
+        $chronologyField = $ctx->chronologyField;
         isset($fields[$chronologyField]) or HtmlService::fatalError('bad chronology field');
 
         $chronologyStyleRaw = $page['chronology_style'] ?? null;
@@ -213,7 +213,7 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         if ($mustShowList) {
             $chronologyDateList = $page['chronology_date'];
-            if (isset($page['super_order_by'])) {
+            if ($ctx->superOrderBy) {
                 $orderBy = Config::orderBy();
             } else {
                 if (count($chronologyDateList) == 0 or in_array('any', $chronologyDateList)) {

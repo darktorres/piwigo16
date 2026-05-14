@@ -27,6 +27,7 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -798,14 +799,14 @@ SELECT DISTINCT f.image_id
 
     public function saveEditContext(): void
     {
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        if (!$this->permissionService->isAdmin() or !isset($page['section_url']) or !isset($page['image_id'])) {
+        $ctx = SectionContextRegistry::current();
+        if (!$this->permissionService->isAdmin() or $ctx->sectionUrl === '' or $ctx->imageId === null) {
             return;
         }
         $_SESSION['edit_context'] ??= [];
         $existingContext          = is_array($_SESSION['edit_context']) ? $_SESSION['edit_context'] : [];
-        $imageId                  = is_string($page['image_id']) ? $page['image_id'] : '';
-        $sectionUrl               = is_string($page['section_url']) ? $page['section_url'] : '';
+        $imageId                  = $ctx->imageId;
+        $sectionUrl               = $ctx->sectionUrl;
         $_SESSION['edit_context'] = array_slice([$imageId => $sectionUrl] + $existingContext, 0, 10, true);
     }
 

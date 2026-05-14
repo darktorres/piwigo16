@@ -18,6 +18,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -305,8 +306,7 @@ $btraceMsg
 
     public function getTagsContentTitle(): string
     {
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        $tags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
+        $tags = SectionContextRegistry::current()->tags;
         $title = '<a href="' . Kernel::service(UrlGenerator::class)->tagsPage() . '" title="' . Lang::t('display available tags') . '">'
           . Lang::t(count($tags) > 1 ? 'Tags' : 'Tag')
           . '</a> ';
@@ -316,12 +316,12 @@ $btraceMsg
 
     public function getCombinedCategoriesContentTitle(): string
     {
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $ctx = SectionContextRegistry::current();
 
         $title    = Lang::t('Albums') . ' ';
         $isFirst  = true;
-        $combined = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : [];
-        $allCategories = array_merge([$page['category'] ?? []], $combined);
+        $combined = $ctx->combinedCategories ?? [];
+        $allCategories = array_merge([$ctx->category ?? []], $combined);
         foreach ($allCategories as $idx => $category) {
             $title  .= $isFirst ? '' : ' + ';
             $isFirst = false;

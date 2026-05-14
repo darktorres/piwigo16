@@ -23,6 +23,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
 
@@ -74,7 +75,7 @@ final readonly class SearchService
             if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($searches[0]['search_uuid'])) {
                 HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
-            if (isset($page['section']) and 'search' == $page['section']) {
+            if ('search' == SectionContextRegistry::current()->section) {
                 $page['search_id'] = $searches[0]['id'];
             }
             return $searches[0];

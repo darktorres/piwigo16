@@ -15,6 +15,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -41,27 +42,25 @@ final readonly class CategoryDefaultRenderer
         if (!is_array($page)) {
             $page = [];
         }
+        $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
 
         $pictures = [];
 
-        $pageItems = is_array($page['items'] ?? null) ? $page['items'] : [];
-        $pageStart = is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0;
-        $pageNbImagePage = is_numeric($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : null;
-        $selection = array_values(array_filter(
-            EventDispatcher::dispatch(
-                'loc_index_thumbnails_selection',
-                array_slice($pageItems, $pageStart, $pageNbImagePage)
-            ),
-            fn (mixed $v): bool => is_int($v) || is_string($v)
-        ));
+        $pageItems = $ctx->items;
+        $pageStart = $ctx->start;
+        $pageNbImagePage = $ctx->nbImagePage;
+        $selection = EventDispatcher::dispatch(
+            'loc_index_thumbnails_selection',
+            array_slice($pageItems, $pageStart, $pageNbImagePage)
+        );
 
         if (count($selection) > 0) {
             $rank_of = array_flip($selection);
 
             foreach ($this->imageRepository
                 ->findByIds(array_map(intval(...), $selection)) as $row) {
-                $row['rank'] = $rank_of[ is_numeric($row['id']) ? (int)$row['id'] : 0 ];
+                $row['rank'] = $rank_of[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''];
                 $pictures[] = $row;
             }
 
@@ -131,7 +130,7 @@ SELECT image_id, COUNT(*) AS nb_comments
                 $tpl_var['NB_HITS'] = $row['hit'];
             }
 
-            switch ($page['section']) {
+            switch ($ctx->section) {
                 case 'best_rated':
                     $ratingScoreRaw = $row['rating_score'] ?? null;
                     $name = '(' . (is_string($ratingScoreRaw) ? $ratingScoreRaw : '') . ') ' . $name;

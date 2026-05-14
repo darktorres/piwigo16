@@ -179,52 +179,40 @@ With no plugins ever loading, the entire plugin stack (`PluginService::loadPlugi
 
 **File:** `src/Piwigo/Users/CurrentUser.php`
 
-Not a PHP-reference bridge (the global is a plain array and can't be cleanly reference-bridged to a typed object), but maintains bidirectional sync via explicit methods:
+Not a PHP-reference bridge (the global is a plain array), but maintains bidirectional sync via explicit methods:
 
 - `attachGlobals()` — builds the typed `User` from `$GLOBALS['user']` at boot.
 - `setLanguage()` — updates both `User::$language` and `$GLOBALS['user']['language']`.
-- `setRawAttributes()` — replaces both the typed entity and `$GLOBALS['user']` wholesale (used by NBM when sending as a different recipient).
+- `setRawAttributes()` — replaces both the typed entity and `$GLOBALS['user']` wholesale (NBM).
 
 **Removal condition:** All direct `$GLOBALS['user']` reads in `src/` migrated to `CurrentUser::get()->…`.
 
-**Status: ❌ NOT MET.** The most widely un-migrated global. Verified 2026-05-14. Active callers (43 lines across 30+ files):
+**Status: ✅ CALLER READS MET (2026-05-14).** All 30+ external caller files migrated:
 
-```
-src/Piwigo/Bootstrap/CommonBootstrap.php:90, 233           (init + guest username)
-src/Piwigo/Http/Middleware/FilterMiddleware.php:51          (filter state)
-src/Piwigo/Users/AuthService.php:289                        (login flow)
-src/Piwigo/Users/PreferencesService.php:86, 94, 120, 148   (pref read/write)
-src/Piwigo/Users/ProfileService.php:184                     (profile load)
-src/Piwigo/Lang/LangService.php:90                          (user language)
-src/Piwigo/Comment/CommentService.php:248, 285, 397–398     (comment ops)
-src/Piwigo/Tag/TagService.php:30                            (tag cloud)
-src/Piwigo/Page/NoPhotoYetRenderer.php:35                   (guest check)
-src/Piwigo/Core/Util.php:502                                (log)
-src/Piwigo/Admin/Users/UserAdminService.php:183–184, 191   (cache invalidate)
-src/Piwigo/Admin/Notification/NotificationAdminService.php:78  (NBM context)
-src/Piwigo/Ws/Method/ImagesEndpoints.php:1011              (enable_high write)
-src/Piwigo/Ws/WsMethodRegistrar.php:39                      (ws user context)
-src/Piwigo/Section/SectionInitializer.php:67               (nb_image_page)
-src/Piwigo/Controller/Admin/AdminController.php:85          (admin layout)
-src/Piwigo/Controller/Admin/AlbumController.php:158         (user id)
-src/Piwigo/Controller/Admin/BatchManagerController.php:101, 629, 975
-src/Piwigo/Controller/Admin/MaintenanceController.php:971, 1136
-src/Piwigo/Controller/Admin/MiscController.php:463, 538
-src/Piwigo/Controller/Admin/PhotoController.php:168, 619
-src/Piwigo/Controller/Admin/UsersController.php:80
-src/Piwigo/Controller/AboutController.php:43
-src/Piwigo/Controller/ActionController.php:82–83, 102
-src/Piwigo/Controller/FeedController.php:54
-src/Piwigo/Controller/IdentificationController.php:102
-src/Piwigo/Controller/InstallController.php:292             (post-install user init)
-src/Piwigo/Controller/NotificationController.php:48
-src/Piwigo/Controller/PasswordController.php:62
-src/Piwigo/Controller/PictureController.php:99
-src/Piwigo/Controller/ProfileController.php:62
-src/Piwigo/Controller/RegisterController.php:61
-src/Piwigo/Controller/SearchController.php:53
-src/Piwigo/Auth/PasswordService.php:136, 160
-```
+- **Pure-read controllers/services** (`$user = CurrentUser::get()->rawAttributes`): AboutController,
+  FeedController, IdentificationController, NotificationController, PasswordController,
+  ProfileController, RegisterController, SearchController, PictureController, AdminController,
+  AlbumController, BatchManagerController (3×), MaintenanceController (2×), MiscController (2×),
+  PhotoController (2×), UsersController, FilterMiddleware, SectionInitializer, TagService,
+  NoPhotoYetRenderer, Util::pwgLog, WsMethodRegistrar, NotificationAdminService, ProfileService
+- **Write/mutate cases**: ActionController (enabledHigh), UserAdminService (nb_available_tags unset),
+  CommentService (nb_available_comments unset), PreferencesService (rawAttributes['preferences']),
+  CommonBootstrap (guest username on typed User + rawAttributes), InstallController
+  (→ CurrentUser::setRawAttributes()), PasswordService/NotificationAdminService (save/restore)
+- **LangService**: simplified guard (CurrentUser::isInitialized() fallback)
+
+**Remaining `$GLOBALS['user']` access (all bridge infrastructure):**
+
+| Location | Type | Note |
+|---|---|---|
+| `UserBootstrap::bootstrap()` | WRITE (build phase) | Builds user before CurrentUser exists; calls attachGlobals() at end |
+| `AuthService::authKeyLogin()` | WRITE (build phase) | Modifies user during auth; runs before attachGlobals() |
+| `CurrentUser::attachGlobals()` | READ | Snapshots global into User entity at boot |
+| `CurrentUser::setLanguage()` | WRITE | Updates global for compat during lang switch; now largely dead |
+| `CurrentUser::setRawAttributes()` | WRITE | Updates global for NBM user swap; largely dead after caller migration |
+| `CommonBootstrap:81` | INIT | `$GLOBALS['user'] = []` — safe to remove once build phase migrated |
+
+**Bridge removal path:** `UserBootstrap::bootstrap()` needs to build the user without using `$GLOBALS['user']` as the accumulator — then `attachGlobals()` can read its return value directly instead of reading the global. This would allow removing the entire `$GLOBALS['user']` pattern.
 
 ---
 

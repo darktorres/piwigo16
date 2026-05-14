@@ -109,7 +109,7 @@ SELECT *
   FROM ' . $prefixeTable . 'images
   WHERE path=\'' . addslashes($ctx->srcLocation) . '\'
 ;';
-                $rowResult = $conn->executeQuery($query)->fetchAssociative();
+                $rowResult = $this->conn->executeQuery($query)->fetchAssociative();
                 $row = $rowResult !== false ? $rowResult : null;
                 if ($row !== null) {
                     if (isset($row['width'])) {
@@ -121,7 +121,7 @@ SELECT *
                     $ctx->coi = is_string($row['coi'] ?? null) ? $row['coi'] : null;
                     if (!isset($row['rotation'])) {
                         $ctx->rotationAngle = PwgImage::getRotationAngle($ctx->srcPath);
-                        $conn->update(
+                        $this->conn->update(
                             $prefixeTable . 'images',
                             ['rotation' => PwgImage::getRotationCodeFromAngle($ctx->rotationAngle ?? 0)],
                             ['id' => $row['id']]
@@ -141,7 +141,7 @@ SELECT *
         } else {
             $ctx->rotationAngle = 0;
         }
-        $conn->close();
+        $this->conn->close();
 
         if (!DerivativePipeline::trySwitchSource($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
             $sharpen = 0.0;

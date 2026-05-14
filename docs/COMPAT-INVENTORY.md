@@ -3,6 +3,9 @@
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
 Updated: 2026-05-14. Removal-condition status verified against current codebase.
 
+**Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
+External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
+
 ---
 
 ## 1. Wave A Reference Bridges
@@ -24,9 +27,9 @@ $GLOBALS['page']['body_classes'] = &$inst->bodyClasses;
 … (13 keys total)
 ```
 
-**Removal condition:** All reads/writes of `$page['…']` in `include/`, plugins, and templates migrated to `PageState::current()->…`.
+**Removal condition:** All reads/writes of `$page['…']` in `src/` migrated to `PageState::current()->…`.
 
-**Status: ❌ NOT MET.** No legacy `include/` or `admin/` directory exists, but many `src/` files still read `$GLOBALS['page']` directly instead of `PageState::current()`. Confirmed callers (grep, 2026-05-14):
+**Status: ❌ NOT MET.** Many `src/` files still read `$GLOBALS['page']` directly instead of `PageState::current()`. Confirmed callers (grep, 2026-05-14):
 
 ```
 src/Piwigo/Core/Util.php:503
@@ -63,7 +66,7 @@ src/Piwigo/Controller/Admin/BatchManagerController.php:101
 `Translator::mirrorToGlobal()` (called on every `load()`) additionally copies every PO translation into `$GLOBALS['lang']` so legacy `$lang['key']` reads stay current.
 `Translator` also rebuilds `$lang['day']` and `$lang['month']` sub-arrays for callers like `Lang::day()`, `admin/stats.php`.
 
-**Removal condition:** All direct `$lang[…]` reads migrated to `Lang::t()` / `Lang::day()` / `Lang::month()`.
+**Removal condition:** All direct `$lang[…]` reads in `src/` migrated to `Lang::t()` / `Lang::day()` / `Lang::month()`.
 
 **Status: ❌ NOT MET.** Many `src/` files still read `$GLOBALS['lang']` directly. Confirmed callers (grep, 2026-05-14):
 
@@ -88,9 +91,9 @@ src/Piwigo/Controller/PictureController.php:101, 475–476
 
 Local-scope Template instances (e.g. MailService mail templates) are intentionally NOT registered.
 
-**Removal condition:** All global `$template` reads and constructions migrated to `TemplateRegistry::current()`.
+**Removal condition:** All global `$template` reads and constructions in `src/` migrated to `TemplateRegistry::current()`.
 
-**Status: ❌ NOT MET.** Within `src/`, all in-tree Template constructions already call `TemplateRegistry::set()` and all readers use `TemplateRegistry::current()`. However, `TemplateRegistry::set()` still writes to `$GLOBALS['template']` because external plugins (not in this repo) are expected to read the global directly. The bridge must stay until there is a guarantee that no active plugin reads `$GLOBALS['template']` directly. This cannot be confirmed from the in-tree code alone.
+**Status: ✅ MET.** All in-tree Template constructions already call `TemplateRegistry::set()` and all in-tree readers use `TemplateRegistry::current()`. External plugins are not a blocker (they will be rewritten). The `$GLOBALS['template']` write in `TemplateRegistry::set()` can be removed.
 
 ---
 
@@ -100,9 +103,9 @@ Local-scope Template instances (e.g. MailService mail templates) are intentional
 
 `LoadedPluginRegistry::init()` wires `$GLOBALS['pwg_loaded_plugins']` as a reference to `self::$plugins`. Legacy plugin code that reads the global directly sees live data.
 
-**Removal condition:** No plugin or un-migrated include reads `$pwg_loaded_plugins` directly.
+**Removal condition:** All in-tree reads of `$pwg_loaded_plugins` migrated to `LoadedPluginRegistry::all/get()`.
 
-**Status: ❌ NOT MET.** Three `src/` controllers still read `$GLOBALS['pwg_loaded_plugins']` directly instead of using `LoadedPluginRegistry::all()`. Confirmed callers (grep, 2026-05-14):
+**Status: ❌ NOT MET.** Three `src/` controllers still read `$GLOBALS['pwg_loaded_plugins']` directly. Confirmed callers (grep, 2026-05-14):
 
 ```
 src/Piwigo/Controller/Admin/MiscController.php:540
@@ -110,7 +113,7 @@ src/Piwigo/Controller/Admin/ExtensionsController.php:443
 src/Piwigo/Controller/Admin/BatchManagerController.php:977
 ```
 
-These should be migrated to `LoadedPluginRegistry::all()` before the bridge can be removed.
+Migrate each to `LoadedPluginRegistry::all()` and the bridge can be removed.
 
 ---
 
@@ -120,9 +123,9 @@ These should be migrated to `LoadedPluginRegistry::all()` before the bridge can 
 
 `EventDispatcher::init()` wires `$GLOBALS['pwg_event_handlers']` as a reference to `self::$handlers`. Legacy plugins that write `$pwg_event_handlers[…]` directly still register their listeners.
 
-**Removal condition:** No plugin or un-migrated include writes `$pwg_event_handlers` directly.
+**Removal condition:** No in-tree `src/` code writes `$pwg_event_handlers` directly outside `EventDispatcher.php`.
 
-**Status: ⚠️ IN-TREE MET, EXTERNALLY UNKNOWN.** No in-tree `src/` production file writes `$pwg_event_handlers` directly outside of `EventDispatcher.php`. The only in-tree references are `tools/phpstan-bootstrap.php` (a static analysis stub) and `tools/phpstan/NoGlobalInSrcRule.php` (a PHPStan rule). External plugins (not in this repo) are the remaining risk and cannot be verified from code alone.
+**Status: ✅ MET.** No in-tree production file writes `$pwg_event_handlers` directly. The only references are `tools/phpstan-bootstrap.php` (static analysis stub) and `tools/phpstan/NoGlobalInSrcRule.php` (PHPStan rule). External plugins are not a blocker. The `$GLOBALS['pwg_event_handlers']` wire-up in `EventDispatcher::init()` can be removed.
 
 ---
 
@@ -136,7 +139,7 @@ Not a PHP-reference bridge (the global is a plain array and can't be cleanly ref
 - `setLanguage()` — updates both `$this->user->language` and `$GLOBALS['user']['language']`.
 - `setRawAttributes()` — replaces both the typed entity and `$GLOBALS['user']` wholesale (used by NBM when sending as a different recipient).
 
-**Removal condition:** All direct `$user[…]` reads migrated to `CurrentUser::get()->…`.
+**Removal condition:** All direct `$GLOBALS['user']` reads in `src/` migrated to `CurrentUser::get()->…`.
 
 **Status: ❌ NOT MET.** The most widely un-migrated bridge. Confirmed callers of `$GLOBALS['user']` in `src/` (grep, 2026-05-14):
 

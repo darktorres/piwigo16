@@ -34,6 +34,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Search\SearchService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
@@ -976,8 +977,7 @@ final class BatchManagerController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        /** @var array<string, mixed> $pwg_loaded_plugins */
-        $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
+        $pwg_loaded_plugins = LoadedPluginRegistry::all();
         EventDispatcher::notify('loc_begin_element_set_unit');
 
         if (isset($_POST['submit'])) {

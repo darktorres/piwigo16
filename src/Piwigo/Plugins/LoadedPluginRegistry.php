@@ -4,24 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Plugins;
 
-/**
- * Static registry for loaded plugins, replacing the $pwg_loaded_plugins global.
- *
- * After init(), $GLOBALS['pwg_loaded_plugins'] references the same storage as
- * self::$plugins, so legacy plugin code that reads the global directly still works.
- */
+/** Static registry for loaded plugins. */
 final class LoadedPluginRegistry
 {
-    /**
-     * @var array<string, array<string, mixed>>
-     * Public only for the $GLOBALS reference bridge — use the typed methods.
-     */
-    public static array $plugins = [];
+    /** @var array<string, array<string, mixed>> */
+    private static array $plugins = [];
 
     public static function init(): void
     {
         self::$plugins = [];
-        $GLOBALS['pwg_loaded_plugins'] = &self::$plugins;
     }
 
     /** @param array<string, mixed> $plugin */
@@ -70,6 +61,5 @@ final class LoadedPluginRegistry
     public static function reset(): void
     {
         self::$plugins = [];
-        $GLOBALS['pwg_loaded_plugins'] = &self::$plugins;
     }
 }

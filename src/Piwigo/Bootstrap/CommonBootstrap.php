@@ -160,7 +160,7 @@ final class CommonBootstrap
         UserBootstrap::bootstrap();
         EventDispatcher::init();
         EventDispatcher::addListener('try_log_user', Kernel::service(AuthService::class)->pwgLogin(...));
-        Kernel::service(PluginService::class)->loadPlugins();
+        Kernel::service(PluginService::class)->loadPlugins(); // no-op: plugins/ has no main.inc.php files
 
         if (!Config::has('piwigo_installed_version')) {
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);

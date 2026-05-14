@@ -30,6 +30,7 @@ use Piwigo\Exception\ValidationException;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -426,9 +427,7 @@ final readonly class ExtensionsController
             throw new ValidationException('Invalid plugin identifier');
         }
 
-        /** @var array<string, mixed> $pwg_loaded_plugins */
-        $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
-        if (!isset($pwg_loaded_plugins[$plugin_id])) {
+        if (!LoadedPluginRegistry::isLoaded($plugin_id)) {
             throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 

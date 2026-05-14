@@ -48,6 +48,7 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -525,8 +526,7 @@ final class MiscController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        /** @var array<string, mixed> $pwg_loaded_plugins */
-        $pwg_loaded_plugins = is_array($GLOBALS['pwg_loaded_plugins'] ?? null) ? $GLOBALS['pwg_loaded_plugins'] : [];
+        $pwg_loaded_plugins = LoadedPluginRegistry::all();
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) {
             $this->preferencesService->userprefsUpdateParam('show_newsletter_subscription', 'false');

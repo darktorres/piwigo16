@@ -1019,10 +1019,10 @@ final readonly class TemplateAssigned
 }
 ```
 
-4. Migrate the ~217 `Piwigo\Plugins\EventDispatcher::dispatch()` /
+1. Migrate the ~217 `Piwigo\Plugins\EventDispatcher::dispatch()` /
    `::notify()` callsites to dispatch typed event objects through the
    new instance dispatcher.
-5. Once the last callsite is gone, delete
+2. Once the last callsite is gone, delete
    `Piwigo\Plugins\EventDispatcher` and the
    `$GLOBALS['pwg_event_handlers']` bridge with it.
 
@@ -1183,7 +1183,7 @@ autocomplete and pre-commit validation:
 
 `PluginRegistry::load()` rejects a manifest with structured errors:
 
-```
+```text
 plugins/foo/plugin.json: validation failed
   /minPiwigo  required property missing
   /autoload/psr-4  must be object, got array
@@ -1897,7 +1897,7 @@ final class ImagesEndpoints
 }
 ```
 
-2. Teach `SpecBuilder` to walk registered endpoint classes via
+1. Teach `SpecBuilder` to walk registered endpoint classes via
    reflection, read the attribute, and emit richer OpenAPI metadata
    than what `MethodDefinition` carries today.
 
@@ -2677,6 +2677,7 @@ etc.). No transitional helper API.
 #### Verification
 
 Per phase:
+
 - PHPStan/Psalm baseline diff per DTO or per repository; removed
   baseline lines are direct evidence.
 - Snapshot test of one full request path through the new boundary

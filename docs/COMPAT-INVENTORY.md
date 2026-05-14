@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (§1.1 complete).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (all Wave A bridges complete).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -10,7 +10,16 @@ External plugin compatibility is NOT a blocker. Only in-tree `src/` callers bloc
 
 ## 1. Wave A Reference Bridges
 
-These classes maintain a bidirectional PHP-reference link between a typed singleton and a `$GLOBALS` key so that legacy procedural code (plugins, un-migrated `include/` files) continues to work without modification. Each bridge is wired in `Kernel::boot()` via `attachGlobals()`.
+These classes previously maintained a bidirectional PHP-reference link between a typed singleton and a `$GLOBALS` key. **All six Wave A bridges are now fully resolved** — bridges removed, callers migrated to typed APIs, no `$GLOBALS` reads/writes remain in production `src/` for any of these keys.
+
+| § | Global | Status |
+|---|---|---|
+| 1.1 | `$GLOBALS['page']` | ✅ Complete — SectionContext + PictureContext VOs, PageState typed props |
+| 1.2 | `$GLOBALS['lang']` | ✅ Complete — Lang static properties, bridge removed |
+| 1.3 | `$GLOBALS['template']` | ✅ Removed |
+| 1.4 | `$GLOBALS['pwg_loaded_plugins']` | ✅ Removed — 3 callers migrated to LoadedPluginRegistry |
+| 1.5 | `$GLOBALS['pwg_event_handlers']` | ✅ Removed |
+| 1.6 | `$GLOBALS['user']` | ✅ Complete — CurrentUser typed entity, bridge removed |
 
 ### 1.1 `PageState` — `$GLOBALS['page']`
 
@@ -199,17 +208,6 @@ Not a PHP-reference bridge (the global is a plain array), but maintains bidirect
   (→ CurrentUser::setRawAttributes()), PasswordService/NotificationAdminService (save/restore)
 - **LangService**: simplified guard (CurrentUser::isInitialized() fallback)
 
-**Remaining `$GLOBALS['user']` access (all bridge infrastructure):**
-
-| Location | Type | Note |
-|---|---|---|
-| `UserBootstrap::bootstrap()` | WRITE (build phase) | Builds user before CurrentUser exists; calls attachGlobals() at end |
-| `AuthService::authKeyLogin()` | WRITE (build phase) | Modifies user during auth; runs before attachGlobals() |
-| `CurrentUser::attachGlobals()` | READ | Snapshots global into User entity at boot |
-| `CurrentUser::setLanguage()` | WRITE | Updates global for compat during lang switch; now largely dead |
-| `CurrentUser::setRawAttributes()` | WRITE | Updates global for NBM user swap; largely dead after caller migration |
-| `CommonBootstrap:81` | INIT | `$GLOBALS['user'] = []` — safe to remove once build phase migrated |
-
 **Bridge fully removed (follow-up 2026-05-14):**
 - `UserBootstrap::bootstrap()` now accumulates a local `$userId` int; calls `buildUser($userId)` then `CurrentUser::set(User::fromUserArray($builtUser))` — no `$GLOBALS['user']` writes.
 - `AuthService::authKeyLogin()` now reads from `CurrentUser::get()->rawAttributes` instead of `&$GLOBALS['user']`; still calls `CurrentUser::setRawAttributes()` after key resolution.
@@ -311,20 +309,20 @@ Not deprecation shims — these are programmer-error and runtime-validation guar
 
 | File | Line | Condition signalled | Severity |
 |------|------|---------------------|----------|
-| `Category/CategoryService.php` | 239 | `get_subcat_ids` called with non-numeric ID | `E_USER_WARNING` |
-| `Html/HtmlService.php` | 43 | `get_cat_display_name` called with wrong category type | `E_USER_WARNING` |
-| `Admin/Users/UserAdminService.php` | 126 | Group delete called when group does not exist | `E_USER_WARNING` |
-| `Admin/Image/ImageAdminService.php` | 89 | File cannot be removed from disk | `E_USER_WARNING` |
-| `Ws/Method/ImagesEndpoints.php` | 1156 | File cannot be removed from disk | `E_USER_WARNING` |
+| `Category/CategoryService.php` | 231 | `get_subcat_ids` called with non-numeric ID | `E_USER_WARNING` |
+| `Html/HtmlService.php` | 44 | `get_cat_display_name` called with wrong category type | `E_USER_WARNING` |
+| `Admin/Users/UserAdminService.php` | 127 | Group delete called when group does not exist | `E_USER_WARNING` |
+| `Admin/Image/ImageAdminService.php` | 91 | File cannot be removed from disk | `E_USER_WARNING` |
+| `Ws/Method/ImagesEndpoints.php` | 1155 | File cannot be removed from disk | `E_USER_WARNING` |
 | `Admin/Image/ImageExtImagick.php` | 211 | ImageMagick stderr line forwarded as warning | `E_USER_WARNING` |
 | `Ws/Protocol/PwgRestEncoder.php` | 146 | Encoder receives unexpected PHP type | `E_USER_WARNING` |
-| `Url/UrlService.php` | 263, 268 | Category array missing `name` or `permalink` key | `E_USER_WARNING` |
+| `Url/UrlService.php` | 268, 273 | Category array missing `name` or `permalink` key | `E_USER_WARNING` |
 | `Mail/MailService.php` | 679 | PHPMailer send failure | `E_USER_WARNING` |
 | `Admin/Category/CategoryAdminService.php` | 227, 250 | `set_cat_visible` / `set_cat_status` invalid param | `E_USER_WARNING` |
-| `Picture/PictureCommentRenderer.php` | 96 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/CommentsController.php` | 229 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/PictureController.php` | 276 | Unknown comment action | `E_USER_WARNING` |
-| `Controller/Admin/AlbumController.php` | 621, 1035 | Missing `cat_id` param — programming error | `E_USER_ERROR` |
+| `Picture/PictureCommentRenderer.php` | 94 | Unknown comment action | `E_USER_WARNING` |
+| `Controller/CommentsController.php` | 226 | Unknown comment action | `E_USER_WARNING` |
+| `Controller/PictureController.php` | 259 | Unknown comment action | `E_USER_WARNING` |
+| `Controller/Admin/AlbumController.php` | 607, 1017 | Missing `cat_id` param — programming error | `E_USER_ERROR` |
 | `Template/ScriptLoader.php` | 58, 84, 86, 128, 202 | Script/footer ordering violation — programming error | `E_USER_WARNING` |
 
 The `AlbumController` (`E_USER_ERROR`) and `ScriptLoader` cases are programming errors, not runtime conditions; they should be converted to thrown exceptions. The remainder are reasonable runtime warnings.
@@ -333,7 +331,7 @@ The `AlbumController` (`E_USER_ERROR`) and `ScriptLoader` cases are programming 
 
 ## 8. Ad-hoc `$GLOBALS` Communication Channels
 
-These globals are used as request-scoped data channels between unrelated classes but are NOT reference bridges — nothing syncs them to a typed singleton. They are catalogued here for completeness. Verified 2026-05-14; updated 2026-05-14.
+These globals are used as request-scoped data channels between unrelated classes but are NOT reference bridges — nothing syncs them to a typed singleton. They are catalogued here for completeness. Last updated: 2026-05-14.
 
 | Global | Writer(s) | Reader(s) | Notes |
 |--------|-----------|-----------|-------|
@@ -345,9 +343,9 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign) | Admin header notification strings. No bridge. |
 | `$GLOBALS['header_msgs']` | `CommonBootstrap` | `CommonBootstrap` (template assign) | Guest/lock status warnings. Set and consumed within the same bootstrap method. No bridge. |
 | `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Sync error list (not UI page errors). No bridge. |
-| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). `PictureController` never writes it. Renderers always get `''`. Pre-existing rewrite gap. |
-| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | `PictureController` builds a local `$related_categories` but never writes the global. Renderer always gets `[]`. Pre-existing rewrite gap. |
-| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | `PictureController` builds a local `$picture` array but never writes the global. All three renderers get `[]`. Pre-existing rewrite gap. |
+| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). Renderers always get `''`. Pre-existing gap — renderers should be updated to use `UrlService::duplicatePictureUrl()`. |
+| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | `PictureController` builds a local but never writes the global. Renderer always gets `[]`. Pre-existing gap. |
+| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | `PictureController` builds a local `$picture` array but never writes the global. All three renderers get `[]`. Pre-existing gap — renderers should use `PictureContextRegistry` once picture data is added there. |
 | `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization. |
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |

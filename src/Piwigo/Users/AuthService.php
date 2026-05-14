@@ -11,6 +11,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -327,7 +328,7 @@ SELECT
         $key = $keys[0];
 
         if (strtotime(is_string($key['expired_on'] ?? null) ? $key['expired_on'] : '') < strtotime(is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '')) {
-            $page['auth_key_invalid'] = true;
+            PageState::current()->authKeyInvalid = true;
             return false;
         }
 
@@ -349,7 +350,7 @@ SELECT
             if ($daysLeft <= 7 and !empty($key['email']) and
                 (null === $lastNotifiedOnRaw or
                  strtotime(is_string($lastNotifiedOnRaw) ? $lastNotifiedOnRaw : '') < strtotime(is_string($ago48hRaw) ? $ago48hRaw : ''))) {
-                $page['notify_api_key_expiration'] = [
+                PageState::current()->notifyApiKeyExpiration = [
                     'days_left' => $daysLeft,
                     'dbnow'     => $key['dbnow'],
                     'auth_key'  => $key['auth_key'],

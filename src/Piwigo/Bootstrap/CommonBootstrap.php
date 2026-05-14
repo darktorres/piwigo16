@@ -77,16 +77,7 @@ final class CommonBootstrap
             return;
         }
 
-        $GLOBALS['page'] = [
-            'infos'                    => [],
-            'errors'                   => [],
-            'warnings'                 => [],
-            'messages'                 => [],
-            'body_classes'             => [],
-            'body_data'                => [],
-            'auth_key_invalid'         => false,
-            'notify_api_key_expiration' => null,
-        ];
+        $GLOBALS['page'] = [];
         $GLOBALS['user']         = [];
         $GLOBALS['lang']         = [];
         $GLOBALS['header_msgs']  = [];
@@ -117,7 +108,7 @@ final class CommonBootstrap
             ini_set('session.gc_probability', (string) min(Config::sessionGcProbability(), 100));
         }
 
-        $GLOBALS['page']['execution_uuid'] = StringUtil::generateKey(10);
+        PageState::current()->executionUuid = StringUtil::generateKey(10);
 
         $pool             = CacheFactory::create();
         $persistent_cache = new PersistentFileCache($pool);
@@ -241,8 +232,7 @@ final class CommonBootstrap
         }
 
         $user_arr  = self::readGlobal('user');
-        $page_arr  = self::readGlobal('page');
-        $notify_exp = is_array($page_arr) ? $page_arr['notify_api_key_expiration'] : null;
+        $notify_exp = PageState::current()->notifyApiKeyExpiration;
         if (is_array($notify_exp)) {
             $notify_username_raw = is_array($user_arr) ? ($user_arr['username'] ?? '') : '';
             $notify_email_raw    = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
@@ -265,7 +255,7 @@ final class CommonBootstrap
                 );
             }
 
-            unset($GLOBALS['page']['notify_api_key_expiration']);
+            PageState::current()->notifyApiKeyExpiration = null;
         }
 
         if (defined('IN_ADMIN')) {

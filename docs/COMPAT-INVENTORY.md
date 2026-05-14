@@ -93,7 +93,7 @@ Local-scope Template instances (e.g. MailService mail templates) are intentional
 
 **Removal condition:** All global `$template` reads and constructions in `src/` migrated to `TemplateRegistry::current()`.
 
-**Status: ✅ MET.** All in-tree Template constructions already call `TemplateRegistry::set()` and all in-tree readers use `TemplateRegistry::current()`. External plugins are not a blocker (they will be rewritten). The `$GLOBALS['template']` write in `TemplateRegistry::set()` can be removed.
+**Status: ✅ REMOVED (2026-05-14).** `$GLOBALS['template'] = $template` deleted from `TemplateRegistry::set()`. Docblock updated.
 
 ---
 
@@ -125,7 +125,7 @@ Migrate each to `LoadedPluginRegistry::all()` and the bridge can be removed.
 
 **Removal condition:** No in-tree `src/` code writes `$pwg_event_handlers` directly outside `EventDispatcher.php`.
 
-**Status: ✅ MET.** No in-tree production file writes `$pwg_event_handlers` directly. The only references are `tools/phpstan-bootstrap.php` (static analysis stub) and `tools/phpstan/NoGlobalInSrcRule.php` (PHPStan rule). External plugins are not a blocker. The `$GLOBALS['pwg_event_handlers']` wire-up in `EventDispatcher::init()` can be removed.
+**Status: ✅ REMOVED (2026-05-14).** `$GLOBALS['pwg_event_handlers'] = &self::$handlers` deleted from `EventDispatcher::init()`. `$handlers` visibility comment and class docblock updated. `init()` now just resets `self::$handlers = []`.
 
 ---
 

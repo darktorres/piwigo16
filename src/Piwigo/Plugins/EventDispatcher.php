@@ -8,24 +8,18 @@ use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Menu\BlockManager;
 
 /**
- * Static event dispatcher replacing the $pwg_event_handlers global.
- *
- * After init(), $GLOBALS['pwg_event_handlers'] references the same storage as
- * self::$handlers, so legacy plugin code that writes to the global directly still works.
+ * Static event dispatcher.
  */
 final class EventDispatcher
 {
     public const int NEUTRAL_PRIORITY = 50;
 
-    /**
-     * @var array<string, array<int, list<array{function: mixed, include_path: string|null}>>>
-     * Public only for the $GLOBALS reference bridge — use the typed methods.
-     */
+    /** @var array<string, array<int, list<array{function: mixed, include_path: string|null}>>> */
     public static array $handlers = [];
 
     public static function init(): void
     {
-        $GLOBALS['pwg_event_handlers'] = &self::$handlers;
+        self::$handlers = [];
     }
 
     /**

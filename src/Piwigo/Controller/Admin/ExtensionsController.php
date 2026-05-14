@@ -57,6 +57,7 @@ final class ExtensionsController
         private readonly DateService $dateService,
         private readonly LanguageRepository $languageRepository,
         private readonly PermissionService $permissionService,
+        private readonly Plugins $plugins,
         private readonly PluginRepository $pluginRepository,
         private readonly PreferencesService $preferencesService,
         private readonly SessionService $sessionService,
@@ -159,7 +160,7 @@ final class ExtensionsController
         $pwg_token = $this->util->getPwgToken();
         $action_url = $base_url . '&plugin=' . '%s' . '&pwg_token=' . $pwg_token;
 
-        $plugins = new Plugins();
+        $plugins = $this->plugins;
 
         if (isset($_GET['incompatible_plugins'])) {
             $incompatible_plugins_raw = $plugins->getIncompatiblePlugins();
@@ -315,7 +316,7 @@ final class ExtensionsController
         $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
-        $plugins = new Plugins();
+        $plugins = $this->plugins;
 
         if (isset($_GET['revision']) && isset($_GET['extension'])) {
             if (!$this->permissionService->isWebmaster()) {

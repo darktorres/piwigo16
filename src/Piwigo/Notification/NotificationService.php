@@ -23,12 +23,14 @@ final readonly class NotificationService
         private Connection $conn,
         private HtmlService $htmlService,
         private UrlGenerator $urlGenerator,
+        private PermissionService $permissionService,
+        private UrlService $urlService,
     ) {
     }
 
     public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): string
     {
-        return PermissionService::get()->getSqlConditionFandF(
+        return $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'ic.category_id',
                 'visible_categories'   => 'ic.category_id',
@@ -211,8 +213,8 @@ final readonly class NotificationService
             ($this->nbNewComments($start, $end) > 0) or
             ($this->nbNewElements($start, $end) > 0) or
             ($this->nbUpdatedCategories($start, $end) > 0) or
-            ((PermissionService::get()->isAdmin()) and ($this->nbUnvalidatedComments($start, $end) > 0)) or
-            ((PermissionService::get()->isAdmin()) and ($this->nbNewUsers($start, $end) > 0)));
+            (($this->permissionService->isAdmin()) and ($this->nbUnvalidatedComments($start, $end) > 0)) or
+            (($this->permissionService->isAdmin()) and ($this->nbNewUsers($start, $end) > 0)));
     }
 
     /**
@@ -240,16 +242,16 @@ final readonly class NotificationService
 
         if (!$excludeImgCats) {
             $nbElements = $this->nbNewElements($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbElements) ? (int) $nbElements : 0, '%d new photo', '%d new photos', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbElements) ? (int) $nbElements : 0, '%d new photo', '%d new photos', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams), $addUrl);
 
             $nbCats = $this->nbUpdatedCategories($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbCats) ? (int) $nbCats : 0, '%d album updated', '%d albums updated', UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_cats']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, is_numeric($nbCats) ? (int) $nbCats : 0, '%d album updated', '%d albums updated', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_cats']), $addUrlParams), $addUrl);
         }
 
         $nbComments = $this->nbNewComments($start, $end);
-        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', UrlService::get()->addUrlParams($this->urlGenerator->comments(), $addUrlParams), $addUrl);
+        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', $this->urlService->addUrlParams($this->urlGenerator->comments(), $addUrlParams), $addUrl);
 
-        if (PermissionService::get()->isAdmin()) {
+        if ($this->permissionService->isAdmin()) {
             $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
             $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', $this->urlGenerator->admin('comments'), $addUrl);
 
@@ -351,7 +353,7 @@ SELECT
         $description  = '<ul>';
         $description .= '<li>'
           . Translator::get()->plural('%d new photo', '%d new photos', is_numeric($dateDetail['nb_elements'] ?? null) ? (int) $dateDetail['nb_elements'] : 0)
-          . ' (<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams) . '">' . Lang::t('Recent photos') . '</a>)'
+          . ' (<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams) . '">' . Lang::t('Recent photos') . '</a>)'
           . '</li><br>';
 
         $elements = is_array($dateDetail['elements'] ?? null) ? $dateDetail['elements'] : [];
@@ -360,7 +362,7 @@ SELECT
             $tnSrcRaw = DerivativeImage::thumbUrl($element);
             $tnSrc    = is_string($tnSrcRaw) ? $tnSrcRaw : '';
             $description .= '<a href="'
-              . UrlService::get()->addUrlParams(UrlService::get()->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file']]), $addUrlParams)
+              . $this->urlService->addUrlParams($this->urlService->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file']]), $addUrlParams)
               . '"><img src="' . $tnSrc . '"></a>';
         }
         $description .= '...<br>';

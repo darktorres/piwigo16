@@ -25,13 +25,15 @@ final class AboutController implements ControllerInterface
     public function __construct(
         private readonly HtmlService $htmlService,
         private readonly MenubarRenderer $menubarRenderer,
+        private readonly PermissionService $permissionService,
+        private readonly LangService $langService,
     ) {
     }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_about');
 
@@ -45,11 +47,11 @@ final class AboutController implements ControllerInterface
 
         $tpl = TemplateRegistry::current();
 
-        $aboutMessage = LangService::get()->loadLanguage('about.html', '', ['return' => true]);
+        $aboutMessage = $this->langService->loadLanguage('about.html', '', ['return' => true]);
         $tpl->assign('ABOUT_MESSAGE', new Html(is_string($aboutMessage) ? $aboutMessage : ''));
 
         $theme      = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
-        $themeAbout = LangService::get()->loadLanguage('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
+        $themeAbout = $this->langService->loadLanguage('about.html', Config::themesPath() . $theme . '/', ['return' => true]);
         if ($themeAbout !== false) {
             $tpl->assign('THEME_ABOUT', new Html(is_string($themeAbout) ? $themeAbout : ''));
         }

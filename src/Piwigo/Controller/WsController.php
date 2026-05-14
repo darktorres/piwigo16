@@ -31,6 +31,7 @@ final class WsController implements ControllerInterface
     public function __construct(
         private readonly HtmlService $htmlService,
         private readonly UrlGenerator $urlGenerator,
+        private readonly PermissionService $permissionService,
     ) {
     }
 
@@ -41,7 +42,7 @@ final class WsController implements ControllerInterface
             define('IN_WS', true);
         }
 
-        PermissionService::get()->checkStatus(AccessLevel::Free);
+        $this->permissionService->checkStatus(AccessLevel::Free);
 
         if (!Config::allowWebServices()) {
             $this->htmlService->pageForbidden('Web services are disabled');

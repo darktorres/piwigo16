@@ -25,6 +25,9 @@ final class NoPhotoYetRenderer
         private readonly ImageRepository $imageRepository,
         private readonly StringUtil $stringUtil,
         private readonly UrlGenerator $urlGenerator,
+        private readonly Util $util,
+        private readonly UrlService $urlService,
+        private readonly PermissionService $permissionService,
     ) {
     }
     public function render(): void
@@ -40,7 +43,7 @@ final class NoPhotoYetRenderer
             and StringUtil::scriptBasename() != 'ws'
             and !str_starts_with($_no_photo_yet_route, '/ws')
             and StringUtil::scriptBasename() != 'popuphelp'
-            and (PermissionService::get()->isAGuest() or PermissionService::get()->isAdmin())
+            and ($this->permissionService->isAGuest() or $this->permissionService->isAdmin())
             and !isset($_SESSION['no_photo_yet'])
         ) {
             $nb_photos = $this->imageRepository->countAll();
@@ -52,20 +55,20 @@ final class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ('browse' == $_GET['no_photo_yet']) {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        Util::get()->redirect(UrlService::get()->makeIndexUrl());
+                        $this->util->redirect($this->urlService->makeIndexUrl());
                         exit();
                     }
 
                     if ('deactivate' == $_GET['no_photo_yet']) {
                         $this->configService->confUpdateParam('no_photo_yet', 'false');
-                        Util::get()->redirect(UrlService::get()->makeIndexUrl());
+                        $this->util->redirect($this->urlService->makeIndexUrl());
                         exit();
                     }
                 }
 
                 header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
 
-                if (PermissionService::get()->isAdmin()) {
+                if ($this->permissionService->isAdmin()) {
                     $url = Config::noPhotoYetUrl();
                     if (str_starts_with($url, 'http')) {
                         // absolute URL set by admin — use as-is

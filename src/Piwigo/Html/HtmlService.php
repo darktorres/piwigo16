@@ -59,7 +59,7 @@ final class HtmlService
             if (!isset($url)) {
                 $output .= $cat['name'];
             } elseif ($url == '') {
-                $output .= '<a href="' . UrlService::get()->makeIndexUrl(['category' => $cat]) . '">';
+                $output .= '<a href="' . Kernel::service(UrlService::class)->makeIndexUrl(['category' => $cat]) . '">';
                 $output .= $cat['name'] . '</a>';
             } else {
                 $catIdRaw = $cat['id'] ?? null;
@@ -96,7 +96,7 @@ SELECT id, name, permalink
         if ($singleLink) {
             $uppercatsArray = explode(',', $uppercats);
             $lastCat = array_pop($uppercatsArray);
-            $singleUrl      = UrlService::get()->addUrlParams(UrlService::getRootUrl() . ($url ?? '') . $lastCat, $addUrlParamsArr);
+            $singleUrl      = Kernel::service(UrlService::class)->addUrlParams(UrlService::getRootUrl() . ($url ?? '') . $lastCat, $addUrlParamsArr);
             $output .= '<a href="' . $singleUrl . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -127,7 +127,7 @@ SELECT id, name, permalink
                 $output .= $catName;
             } elseif ($url == '') {
                 $output .= '
-<a href="' . UrlService::get()->addUrlParams(UrlService::get()->makeIndexUrl(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
+<a href="' . Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlService::class)->makeIndexUrl(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
             } else {
                 $output .= '
 <a href="' . PHPWG_ROOT_PATH . $url . $categoryId . '">' . $catName . '</a>';
@@ -203,7 +203,7 @@ SELECT id, name, permalink
 
     public function accessDenied(): void
     {
-        if (CurrentUser::isInitialized() and !PermissionService::get()->isAGuest()) {
+        if (CurrentUser::isInitialized() and !Kernel::service(PermissionService::class)->isAGuest()) {
             $this->setStatusHeader(401);
 
             echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -212,7 +212,7 @@ SELECT id, name, permalink
   <div style="text-align:center;">
     <img src="themes/_base/icon/warning-triangle.svg" alt="warning-triangle" >
     <p style="max-width: 400px; margin-top 20px;">' . Lang::t('You are not authorized to access the requested page') . '</p>
-    <a href="' . UrlService::get()->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::t('Home') . '</a>
+    <a href="' . Kernel::service(UrlService::class)->makeIndexUrl() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . Lang::t('Home') . '</a>
   </div>
 </div>';
             exit();
@@ -221,14 +221,14 @@ SELECT id, name, permalink
         /** @var mixed $rawRequestUri */
         $rawRequestUri = $_SERVER['REQUEST_URI'] ?? '';
         $requestUri    = is_string($rawRequestUri) ? $rawRequestUri : '';
-        Util::get()->redirectHttp(UrlService::get()->addUrlParams(Kernel::service(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
+        Kernel::service(Util::class)->redirectHttp(Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg): void
     {
         $this->setStatusHeader(403);
-        $redirectUrl = UrlService::get()->makeIndexUrl();
-        Util::get()->redirectHtml(
+        $redirectUrl = Kernel::service(UrlService::class)->makeIndexUrl();
+        Kernel::service(Util::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Forbidden') . '</h1><br>' . $msg . '</div>',
@@ -239,8 +239,8 @@ SELECT id, name, permalink
     public function badRequest(string $msg): void
     {
         $this->setStatusHeader(400);
-        $redirectUrl = UrlService::get()->makeIndexUrl();
-        Util::get()->redirectHtml(
+        $redirectUrl = Kernel::service(UrlService::class)->makeIndexUrl();
+        Kernel::service(Util::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Bad request') . '</h1><br>' . $msg . '</div>',
@@ -251,8 +251,8 @@ SELECT id, name, permalink
     public function pageNotFound(?string $msg, ?string $alternateUrl = null): void
     {
         $this->setStatusHeader(404);
-        $redirectUrl = $alternateUrl ?? UrlService::get()->makeIndexUrl();
-        Util::get()->redirectHtml(
+        $redirectUrl = $alternateUrl ?? Kernel::service(UrlService::class)->makeIndexUrl();
+        Kernel::service(Util::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>' . ($msg ?? '') . '</div>',
@@ -337,7 +337,7 @@ $btraceMsg
                 if (count($otherCats) > 0) {
                     $params['combined_categories'] = $otherCats;
                 }
-                $removeUrl = UrlService::get()->makeIndexUrl($params);
+                $removeUrl = Kernel::service(UrlService::class)->makeIndexUrl($params);
 
                 $title .=
                   '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="'
@@ -456,7 +456,7 @@ $btraceMsg
 
     public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string
     {
-        return UrlService::get()->getActionUrl($srcImage->id, $srcImage->isOriginal() ? 'e' : 'r', false);
+        return Kernel::service(UrlService::class)->getActionUrl($srcImage->id, $srcImage->isOriginal() ? 'e' : 'r', false);
     }
 
     /** @param array<string, mixed> $infos */
@@ -468,7 +468,7 @@ $btraceMsg
                 return $url;
             }
         }
-        return UrlService::get()->getActionUrl(is_int($infos['id'] ?? null) || is_string($infos['id'] ?? null) ? $infos['id'] : 0, 'e', false);
+        return Kernel::service(UrlService::class)->getActionUrl(is_int($infos['id'] ?? null) || is_string($infos['id'] ?? null) ? $infos['id'] : 0, 'e', false);
     }
 
     public function flushPageMessages(): void

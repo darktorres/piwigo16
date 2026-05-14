@@ -258,7 +258,7 @@ final class PiwigoExtension extends Extension
 
     public static function getDevice(): string
     {
-        return Util::get()->getDevice();
+        return Kernel::service(Util::class)->getDevice();
     }
 
     public static function getGalleryHomeUrl(): string

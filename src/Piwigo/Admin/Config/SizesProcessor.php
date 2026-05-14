@@ -25,11 +25,12 @@ final class SizesProcessor
         private readonly ImageAdminService $imageAdminService,
         private readonly UploadService $uploadService,
         private readonly Util $util,
+        private readonly PermissionService $permissionService,
     ) {
     }
     public function process(): void
     {
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return;
         }
 

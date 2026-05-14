@@ -27,18 +27,20 @@ final class NbmController implements ControllerInterface
         private readonly HtmlService $htmlService,
         private readonly MenubarRenderer $menubarRenderer,
         private readonly NotificationAdminService $notificationAdminService,
+        private readonly PermissionService $permissionService,
+        private readonly LangService $langService,
     ) {
     }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Free);
+        $this->permissionService->checkStatus(AccessLevel::Free);
 
         MailNotificationContext::init();
-        LangService::get()->loadLanguage('admin.lang');
+        $this->langService->loadLanguage('admin.lang');
         EventDispatcher::notify('loading_lang');
-        LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         $rawSubscribe   = $_GET['subscribe']   ?? null;
         $rawUnsubscribe = $_GET['unsubscribe'] ?? null;

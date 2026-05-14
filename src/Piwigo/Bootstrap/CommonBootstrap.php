@@ -159,7 +159,7 @@ final class CommonBootstrap
 
         if (!Config::checkUpgradeFeed()) {
             if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != AppInfo::branchFromVersion(AppInfo::VERSION)) {
-                Util::get()->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
+                Kernel::service(Util::class)->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
             }
         }
 
@@ -169,13 +169,13 @@ final class CommonBootstrap
         session_start();
         UserBootstrap::bootstrap();
         EventDispatcher::init();
-        EventDispatcher::addListener('try_log_user', AuthService::get()->pwgLogin(...));
+        EventDispatcher::addListener('try_log_user', Kernel::service(AuthService::class)->pwgLogin(...));
         Kernel::service(PluginService::class)->loadPlugins();
 
         if (!Config::has('piwigo_installed_version')) {
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
-            Util::get()->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
+            Kernel::service(Util::class)->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
@@ -190,7 +190,7 @@ final class CommonBootstrap
             Config::override('order_by_inside_category', Config::orderByInsideCategoryCustom());
         }
 
-        Util::get()->checkLounge();
+        Kernel::service(Util::class)->checkLounge();
 
         $user_globals  = self::readGlobal('user');
         $user_language = is_array($user_globals) && is_scalar($user_globals['language'] ?? null)
@@ -221,15 +221,15 @@ final class CommonBootstrap
             define('PEM_URL', $pem_scheme . '://' . $pem_host . '/piwigo16-ext');
         }
 
-        LangService::get()->loadLanguage('common.lang');
-        if (PermissionService::get()->isAdmin() || defined('IN_ADMIN')) {
-            LangService::get()->loadLanguage('admin.lang');
-            LangService::get()->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
+        Kernel::service(LangService::class)->loadLanguage('common.lang');
+        if (Kernel::service(PermissionService::class)->isAdmin() || defined('IN_ADMIN')) {
+            Kernel::service(LangService::class)->loadLanguage('admin.lang');
+            Kernel::service(LangService::class)->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
         EventDispatcher::notify('loading_lang');
-        LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        Kernel::service(LangService::class)->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
-        if (PermissionService::get()->isAGuest()) {
+        if (Kernel::service(PermissionService::class)->isAGuest()) {
             $GLOBALS['user']['username'] = Lang::t('guest');
         }
 
@@ -247,7 +247,7 @@ final class CommonBootstrap
             $notify_username_raw = is_array($user_arr) ? ($user_arr['username'] ?? '') : '';
             $notify_email_raw    = is_array($user_arr) ? ($user_arr['email'] ?? '') : '';
             $notify_days_left    = $notify_exp['days_left'];
-            $is_mail_send = UserService::get()->notificationApiKeyExpiration(
+            $is_mail_send = Kernel::service(UserService::class)->notificationApiKeyExpiration(
                 is_string($notify_username_raw) ? $notify_username_raw : '',
                 is_string($notify_email_raw) ? $notify_email_raw : '',
                 is_numeric($notify_days_left) ? (int) $notify_days_left : 0
@@ -269,13 +269,13 @@ final class CommonBootstrap
         }
 
         if (defined('IN_ADMIN')) {
-            $admin_theme_raw = PreferencesService::get()->userprefsGetParam('admin_theme', 'dark');
+            $admin_theme_raw = Kernel::service(PreferencesService::class)->userprefsGetParam('admin_theme', 'dark');
             $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
         } else {
             $user_arr_theme = self::readGlobal('user');
             $theme_raw = is_array($user_arr_theme) ? ($user_arr_theme['theme'] ?? '') : '';
             $theme     = is_string($theme_raw) ? $theme_raw : '';
-            if (StringUtil::scriptBasename() != 'ws' and Util::get()->mobileTheme()) {
+            if (StringUtil::scriptBasename() != 'ws' and Kernel::service(Util::class)->mobileTheme()) {
                 $theme = Config::mobilTheme();
             }
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
@@ -298,12 +298,12 @@ final class CommonBootstrap
         if (Config::galleryLocked()) {
             $GLOBALS['header_msgs'][] = Lang::t('The gallery is locked for maintenance. Please, come back later.');
 
-            if (StringUtil::scriptBasename() != 'identification' and !PermissionService::get()->isAdmin()) {
+            if (StringUtil::scriptBasename() != 'identification' and !Kernel::service(PermissionService::class)->isAdmin()) {
                 Kernel::service(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
                 if (!headers_sent()) {
                     header('Retry-After: 900');
                 }
-                header('Content-Type: text/html; charset=' . StringUtil::get()->getPwgCharset());
+                header('Content-Type: text/html; charset=' . Kernel::service(StringUtil::class)->getPwgCharset());
                 echo '<a href="' . Kernel::service(UrlGenerator::class)->identification() . '">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512);
                 exit();

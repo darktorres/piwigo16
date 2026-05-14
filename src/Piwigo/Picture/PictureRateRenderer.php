@@ -16,6 +16,8 @@ final class PictureRateRenderer
 {
     public function __construct(
         private readonly RateRepository $rateRepository,
+        private readonly PermissionService $permissionService,
+        private readonly UrlService $urlService,
     ) {
     }
 
@@ -43,11 +45,11 @@ final class PictureRateRenderer
         }
         $template->assign('rate_summary', $rate_summary);
 
-        if (Config::rateAnonymous() or PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
+        if (Config::rateAnonymous() or $this->permissionService->isAutorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $imageId = is_numeric($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
                 $anonId = null;
-                if (!PermissionService::get()->isAutorizeStatus(AccessLevel::Classic)) {
+                if (!$this->permissionService->isAutorizeStatus(AccessLevel::Classic)) {
                     /** @var mixed $remoteAddrRaw */
                     $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
                     $ip_components = explode('.', is_string($remoteAddrRaw) ? $remoteAddrRaw : '');
@@ -63,7 +65,7 @@ final class PictureRateRenderer
             }
 
             $template->assign('rating', [
-                'F_ACTION' => UrlService::get()->addUrlParams($url_self, ['action' => 'rate']),
+                'F_ACTION' => $this->urlService->addUrlParams($url_self, ['action' => 'rate']),
                 'USER_RATE' => $user_rate ?? null,
                 'marks' => Config::rateItems(),
             ]);

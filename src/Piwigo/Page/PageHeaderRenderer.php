@@ -40,9 +40,9 @@ final class PageHeaderRenderer
                 str_replace('%gallery_title%', Config::galleryTitle(), is_string($pageBanner) ? $pageBanner : '')
             )),
             'BODY_ID'                => $page['body_id'] ?? '',
-            'CONTENT_ENCODING'       => StringUtil::get()->getPwgCharset(),
+            'CONTENT_ENCODING'       => Kernel::service(StringUtil::class)->getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
-            'U_HOME'                 => UrlService::get()->getGalleryHomeUrl(),
+            'U_HOME'                 => Kernel::service(UrlService::class)->getGalleryHomeUrl(),
             'LEVEL_SEPARATOR'        => Config::levelSeparator(),
             'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
             'BODY_CLASSES'           => $pageState->bodyClasses,
@@ -72,7 +72,7 @@ final class PageHeaderRenderer
 
         EventDispatcher::notify('loc_end_page_header');
 
-        header('Content-Type: text/html; charset=' . StringUtil::get()->getPwgCharset());
+        header('Content-Type: text/html; charset=' . Kernel::service(StringUtil::class)->getPwgCharset());
         $template->parse('header.latte');
 
         EventDispatcher::notify('loc_after_page_header');

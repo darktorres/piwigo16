@@ -28,6 +28,7 @@ final readonly class CategoryService
         private CategoryRepository $catRepo,
         private Connection $conn,
         private FilterService $filterService,
+        private PermissionService $permissionService,
     ) {
     }
 
@@ -86,7 +87,7 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
             $where .= ')';
         } else {
             $where = '
-  ' . PermissionService::get()->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
+  ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
         }
 
         $where = EventDispatcher::dispatch('get_categories_menu_sql_where', $where, $userExpand, $filter['enabled']);
@@ -108,7 +109,7 @@ WHERE ' . $where . '
                     false,
                     ' / '
                 ),
-                'URL'         => UrlService::get()->makeIndexUrl(['category' => $row]),
+                'URL'         => Kernel::service(UrlService::class)->makeIndexUrl(['category' => $row]),
                 'LEVEL'       => substr_count(is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '', '.') + 1,
                 'SELECTED'    => ($selectedCategory !== null && $selectedCategory['id'] == $row['id']) ? true : false,
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
@@ -186,7 +187,7 @@ WHERE ' . $where . '
             [Lang::t('Rating score, low &rarr; high'),  'rating_score ASC',     Config::rateEnabled()],
             [Lang::t('Visits, high &rarr; low'),        'hit DESC',             true],
             [Lang::t('Visits, low &rarr; high'),        'hit ASC',              true],
-            [Lang::t('Permissions'),                    'level DESC',           PermissionService::get()->isAdmin()],
+            [Lang::t('Permissions'),                    'level DESC',           $this->permissionService->isAdmin()],
         ]);
         return $result;
     }
@@ -329,7 +330,7 @@ SELECT image_id
     c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0);
             }
             $query .= '
-    ' . PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
+    ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
   ORDER BY ' . Dml::RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
@@ -485,7 +486,7 @@ SELECT id
   WHERE category_id IN (' . implode(',', $catIds) . ')';
 
         if ($usePermissions) {
-            $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
+            $query .= $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
         }
 
         $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
@@ -520,7 +521,7 @@ SELECT
     INNER JOIN ' . Tables::categories() . ' c ON category_id = id
   WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $items)) . ')';
 
-        $query .= PermissionService::get()->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
+        $query .= $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
 
         if (!empty($excludedCatIds)) {
             $query .= '
@@ -604,7 +605,7 @@ SELECT
                     $urlParams['category'] = $cat;
                 }
 
-                $cats[$idx]['url'] = UrlService::get()->makeIndexUrl($urlParams);
+                $cats[$idx]['url'] = Kernel::service(UrlService::class)->makeIndexUrl($urlParams);
             }
 
             if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {

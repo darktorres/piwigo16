@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Util;
 
 final readonly class PreferencesService
@@ -13,12 +12,6 @@ final readonly class PreferencesService
         private Util $util,
         private UserRepository $userRepository,
     ) {
-    }
-
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
     }
 
     public function getBrowserLanguage(): false|string

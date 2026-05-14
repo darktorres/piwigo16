@@ -20,6 +20,7 @@ final readonly class RateService
         private RateRepository $rateRepo,
         private ImageRepository $imageRepo,
         private CookieService $cookies,
+        private PermissionService $permissionService,
     ) {
     }
 
@@ -35,7 +36,7 @@ final readonly class RateService
             return false;
         }
 
-        $userAnonymous = PermissionService::get()->isAutorizeStatus(AccessLevel::Classic) ? false : true;
+        $userAnonymous = $this->permissionService->isAutorizeStatus(AccessLevel::Classic) ? false : true;
 
         if ($userAnonymous and !Config::rateAnonymous()) {
             return false;

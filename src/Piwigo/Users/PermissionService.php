@@ -7,7 +7,6 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\Kernel;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -18,12 +17,6 @@ final readonly class PermissionService
         private Connection $conn,
         private HtmlService $htmlService,
     ) {
-    }
-
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
     }
 
     public function getUserStatus(string $userStatus = ''): string

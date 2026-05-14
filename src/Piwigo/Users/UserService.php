@@ -14,7 +14,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
@@ -57,12 +56,6 @@ final readonly class UserService
         private PreferencesService $preferencesService,
         private PermissionService $permissionService,
     ) {
-    }
-
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
     }
 
     /** @param string[] $errors */

@@ -37,6 +37,7 @@ final class UpgradeController implements ControllerInterface
         private readonly ConfigService $configService,
         private readonly Connection $conn,
         private readonly StringUtil $stringUtil,
+        private readonly LangService $langService,
     ) {
     }
 
@@ -102,10 +103,10 @@ final class UpgradeController implements ControllerInterface
         // Fork policy — see CommonBootstrap.php for the rationale.
         define('PHPWG_URL', '');
 
-        LangService::get()->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        LangService::get()->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        LangService::get()->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
-        LangService::get()->loadLanguage('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        $this->langService->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        $this->langService->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        $this->langService->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
+        $this->langService->loadLanguage('upgrade.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
 
         UpgradeService::upgradeDbConnect();
 

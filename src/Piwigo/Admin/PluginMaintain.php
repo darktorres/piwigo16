@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\Kernel;
 use Piwigo\Users\PermissionService;
 
 /**
@@ -56,7 +57,7 @@ final class PluginMaintain
      */
     public function autoUpdate(): void
     {
-        if (PermissionService::get()->isAdmin() && !defined('IN_WS')) {
+        if (Kernel::service(PermissionService::class)->isAdmin() && !defined('IN_WS')) {
             trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
         }
     }

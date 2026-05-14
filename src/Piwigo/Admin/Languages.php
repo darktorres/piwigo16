@@ -111,12 +111,13 @@ final class Languages
     /**
     *  Get languages defined in the language directory
     */
-    public function getFsLanguages(?string $target_charset = null): void
+    public function getFsLanguages(string $target_charset = ''): void
     {
-        if ($target_charset === null || $target_charset === '') {
-            $target_charset = $this->stringUtil->getPwgCharset();
-        }
-        $target_charset = strtolower($target_charset);
+        $charset = strtolower(
+            $target_charset !== ''
+                ? $target_charset
+                : $this->stringUtil->getPwgCharset()
+        );
 
         $dir = opendir(PHPWG_ROOT_PATH.'language');
         if ($dir === false) {
@@ -141,7 +142,7 @@ final class Languages
 
                     if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $language['name'] = $this->stringUtil->convertCharset($language['name'], 'utf-8', $target_charset);
+                        $language['name'] = $this->stringUtil->convertCharset($language['name'], 'utf-8', $charset);
                     }
 
                     // IMPORTANT SECURITY !

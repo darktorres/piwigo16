@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Plugins\EventDispatcher;
 
@@ -73,7 +74,7 @@ final class PwgImage
     /** @return array<mixed> */
     public function pwgResize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false): array
     {
-        $starttime = StringUtil::get()->getMoment();
+        $starttime = Kernel::service(StringUtil::class)->getMoment();
 
         if ($this->image === null) {
             throw new \LogicException('Image library not initialized');
@@ -282,7 +283,7 @@ final class PwgImage
 
         $rotation = 0;
 
-        $exif = StringUtil::get()->pwgSafeExifReadData($source_filepath);
+        $exif = Kernel::service(StringUtil::class)->pwgSafeExifReadData($source_filepath);
 
         if (isset($exif['Orientation']) and is_scalar($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
             $orientation = $matches[1];
@@ -353,7 +354,7 @@ final class PwgImage
           'width'       => $width,
           'height'      => $height,
           'size'        => (int) floor((int) filesize($destination_filepath) / 1024).' KB',
-          'time'        => $time !== null ? number_format((StringUtil::get()->getMoment() - $time) * 1000.0, 2, '.', ' ').' ms' : null,
+          'time'        => $time !== null ? number_format((Kernel::service(StringUtil::class)->getMoment() - $time) * 1000.0, 2, '.', ' ').' ms' : null,
           'library'     => $this->library,
         ];
     }

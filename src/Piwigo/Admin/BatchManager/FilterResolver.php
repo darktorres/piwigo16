@@ -23,6 +23,8 @@ final class FilterResolver
         private readonly HtmlService $htmlService,
         private readonly TagAdminService $tagAdminService,
         private readonly Util $util,
+        private readonly LangService $langService,
+        private readonly UrlService $urlService,
     ) {
     }
     /**
@@ -67,8 +69,8 @@ final class FilterResolver
             'all_elements' => $catElementsId,
             'START' => $start,
             'PWG_TOKEN' => $this->util->getPwgToken(),
-            'U_DISPLAY' => $baseUrl . UrlService::get()->getQueryStringDiff(['display']),
-            'F_ACTION' => $baseUrl . UrlService::get()->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
+            'U_DISPLAY' => $baseUrl . $this->urlService->getQueryStringDiff(['display']),
+            'F_ACTION' => $baseUrl . $this->urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
         ]);
 
@@ -131,6 +133,6 @@ SELECT
         }
         $tpl->assign('associated_categories', $associated_categories);
 
-        LangService::get()->loadLanguage('help_quick_search.lang');
+        $this->langService->loadLanguage('help_quick_search.lang');
     }
 }

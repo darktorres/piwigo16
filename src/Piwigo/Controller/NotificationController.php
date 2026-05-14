@@ -31,13 +31,14 @@ final class NotificationController implements ControllerInterface
         private readonly HtmlService $htmlService,
         private readonly MenubarRenderer $menubarRenderer,
         private readonly UrlGenerator $urlGenerator,
+        private readonly PermissionService $permissionService,
     ) {
     }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_notification');
 
@@ -53,7 +54,7 @@ final class NotificationController implements ControllerInterface
 
         $feed_url = $this->urlGenerator->feed();
         $sep      = str_contains($feed_url, '?') ? '&' : '?';
-        if (PermissionService::get()->isAGuest()) {
+        if ($this->permissionService->isAGuest()) {
             $feed_image_only_url = $feed_url;
             $feed_url .= $sep . 'feed=' . $page['feed'];
         } else {

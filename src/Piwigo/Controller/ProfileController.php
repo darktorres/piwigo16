@@ -40,6 +40,10 @@ final class ProfileController implements ControllerInterface
         private readonly UrlGenerator $urlGenerator,
         private readonly UserRepository $userRepository,
         private readonly Util $util,
+        private readonly StringUtil $stringUtil,
+        private readonly PermissionService $permissionService,
+        private readonly LangService $langService,
+        private readonly UrlService $urlService,
     ) {
     }
 
@@ -47,7 +51,7 @@ final class ProfileController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        PermissionService::get()->checkStatus(AccessLevel::Classic);
+        $this->permissionService->checkStatus(AccessLevel::Classic);
 
         if (!empty($_POST)) {
             $this->util->checkPwgToken();
@@ -68,7 +72,7 @@ final class ProfileController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->assign('DEFAULT_USER_VALUES', $default_user);
 
-        if (StringUtil::get()->inputString('reset_to_default', null, $_POST) !== null) {
+        if ($this->stringUtil->inputString('reset_to_default', null, $_POST) !== null) {
             $userdata = array_merge($userdata, $default_user ?? []);
         }
 
@@ -78,7 +82,7 @@ final class ProfileController implements ControllerInterface
 
         $title = Lang::t('Your Gallery Customization');
         $page['body_id'] = 'theProfilePage';
-        $this->profileService->loadProfileInTemplate($this->urlGenerator->profile(), UrlService::get()->makeIndexUrl(), $userdata);
+        $this->profileService->loadProfileInTemplate($this->urlGenerator->profile(), $this->urlService->makeIndexUrl(), $userdata);
 
         $userdata_id = is_scalar($userdata['id'] ?? null) ? $userdata['id'] : null;
         $special_user = in_array($userdata_id, [Config::guestId(), Config::defaultUserId()]);
@@ -132,18 +136,18 @@ final class ProfileController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
 
-        $cookie_lang = StringUtil::get()->inputString('lang', null, $_COOKIE);
+        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, Util::get()->getLanguages())) {
+            if (!array_key_exists($cookie_lang, $this->util->getLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
             Dml::singleUpdate(Tables::userInfos(), ['language' => $cookie_lang], ['user_id' => $user['id']]);
-            LangService::get()->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
+            $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
         $language_options = [];
-        foreach (Util::get()->getLanguages() as $language_code => $language_name) {
+        foreach ($this->util->getLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';

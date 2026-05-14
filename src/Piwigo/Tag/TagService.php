@@ -21,6 +21,7 @@ final readonly class TagService
         private Connection $conn,
         private HtmlService $htmlService,
         private TagRepository $repo,
+        private PermissionService $permissionService,
     ) {
     }
 
@@ -72,7 +73,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
     INNER JOIN ' . Tables::imageTag() . ' it
     ON ic.image_id=it.image_id
   WHERE 1=1
-  ' . PermissionService::get()->getSqlConditionFandF(
+  ' . $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -207,7 +208,7 @@ SELECT id
     WHERE tag_id IN (' . implode(',', $tagIds) . ')';
 
         if ($usePermissions) {
-            $query .= PermissionService::get()->getSqlConditionFandF(
+            $query .= $this->permissionService->getSqlConditionFandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories'   => 'category_id',

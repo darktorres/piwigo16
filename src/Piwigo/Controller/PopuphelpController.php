@@ -20,10 +20,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class PopuphelpController implements ControllerInterface
 {
+    public function __construct(
+        private readonly PermissionService $permissionService,
+        private readonly LangService $langService,
+    ) {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         if (!defined('PWG_HELP')) {
             define('PWG_HELP', true);
@@ -43,7 +49,7 @@ final class PopuphelpController implements ControllerInterface
             throw new AuthException('Hacking attempt!');
         }
 
-        $loaded = LangService::get()->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
+        $loaded = $this->langService->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
         $helpContent = is_string($loaded) ? $loaded : '';
         $helpContent = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
 

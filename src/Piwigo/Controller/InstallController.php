@@ -135,9 +135,9 @@ final class InstallController implements ControllerInterface
         // Fork policy — see CommonBootstrap.php for the rationale.
         define('PHPWG_URL', '');
 
-        LangService::get()->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
-        LangService::get()->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
-        LangService::get()->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        Kernel::service(LangService::class)->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        Kernel::service(LangService::class)->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
+        Kernel::service(LangService::class)->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
 
         header('Content-Type: text/html; charset=UTF-8');
 
@@ -176,7 +176,7 @@ final class InstallController implements ControllerInterface
             if (($_POST['admin_mail'] ?? '') === '') {
                 $errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             } elseif (!$dbConnectFailed) {
-                $error_mail_address = AuthService::get()->validateMailAddress(null, $admin_mail);
+                $error_mail_address = Kernel::service(AuthService::class)->validateMailAddress(null, $admin_mail);
                 if ($error_mail_address !== null && $error_mail_address !== '') {
                     $errors[] = $error_mail_address;
                 }
@@ -242,7 +242,7 @@ final class InstallController implements ControllerInterface
                     ['id' => 2, 'username' => 'guest'],
                 ];
                 Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
-                UserService::get()->createUserInfos([1, 2], ['language' => $language]);
+                Kernel::service(UserService::class)->createUserInfos([1, 2], ['language' => $language]);
 
                 define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
                 $datas = [];
@@ -291,9 +291,9 @@ final class InstallController implements ControllerInterface
             {
                 SessionBootstrap::bootstrap();
 
-                $user = UserService::get()->buildUser(1, false);
+                $user = Kernel::service(UserService::class)->buildUser(1, false);
                 $GLOBALS['user'] = $user;
-                AuthService::get()->logUser(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
+                Kernel::service(AuthService::class)->logUser(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
                 $_SESSION['connected_with'] = 'pwg_ui';
 
                 if (!is_array($user['preferences'] ?? null)) {
@@ -312,23 +312,23 @@ final class InstallController implements ControllerInterface
                     $user['preferences']['show_newsletter_subscription'] = false;
                 }
 
-                PreferencesService::get()->userprefsSave();
+                Kernel::service(PreferencesService::class)->userprefsSave();
 
                 if (isset($_POST['send_credentials_by_mail'])) {
                     $keyargs_content = [
-                        LangService::get()->getL10nArgs('Hello %s,', $admin_name),
-                        LangService::get()->getL10nArgs('Welcome to your new installation of Piwigo!', ''),
-                        LangService::get()->getL10nArgs('', ''),
-                        LangService::get()->getL10nArgs('Here are your connection settings', ''),
-                        LangService::get()->getL10nArgs('', ''),
-                        LangService::get()->getL10nArgs('Link: %s', UrlService::getAbsoluteRootUrl()),
-                        LangService::get()->getL10nArgs('Username: %s', $admin_name),
-                        LangService::get()->getL10nArgs('Password: ********** (no copy by email)', ''),
-                        LangService::get()->getL10nArgs('Email: %s', $admin_mail),
-                        LangService::get()->getL10nArgs('', ''),
-                        LangService::get()->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                        Kernel::service(LangService::class)->getL10nArgs('Hello %s,', $admin_name),
+                        Kernel::service(LangService::class)->getL10nArgs('Welcome to your new installation of Piwigo!', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('Here are your connection settings', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('Link: %s', UrlService::getAbsoluteRootUrl()),
+                        Kernel::service(LangService::class)->getL10nArgs('Username: %s', $admin_name),
+                        Kernel::service(LangService::class)->getL10nArgs('Password: ********** (no copy by email)', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('Email: %s', $admin_mail),
+                        Kernel::service(LangService::class)->getL10nArgs('', ''),
+                        Kernel::service(LangService::class)->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
                     ];
-                    $mailService->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => LangService::get()->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
+                    $mailService->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => Kernel::service(LangService::class)->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
                 }
             }
         }

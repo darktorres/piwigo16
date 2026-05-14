@@ -90,7 +90,7 @@ final class Template
             $dir = PHPWG_ROOT_PATH.Config::dataLocation();
             Util::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
             if (!is_writable($dir)) {
-                LangService::get()->loadLanguage('admin.lang');
+                Kernel::service(LangService::class)->loadLanguage('admin.lang');
                 HtmlService::fatalError(
                     Lang::t(
                         'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',

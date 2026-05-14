@@ -36,13 +36,16 @@ final class SearchController implements ControllerInterface
         private readonly SearchService $searchService,
         private readonly TagService $tagService,
         private readonly Util $util,
+        private readonly StringUtil $stringUtil,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
     ) {
     }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        PermissionService::get()->checkStatus(AccessLevel::Guest);
+        $this->permissionService->checkStatus(AccessLevel::Guest);
 
         EventDispatcher::notify('loc_begin_search');
 
@@ -78,15 +81,15 @@ final class SearchController implements ControllerInterface
             }
         }
 
-        if (PermissionService::get()->isAGuest() || PermissionService::get()->isGeneric() || $filters_conf['last_filters_conf'] == false) {
+        if ($this->permissionService->isAGuest() || $this->permissionService->isGeneric() || $filters_conf['last_filters_conf'] == false) {
             $fields = $default_fields;
         } else {
-            $fields_raw = PreferencesService::get()->userprefsGetParam('gallery_search_filters', $default_fields);
+            $fields_raw = $this->preferencesService->userprefsGetParam('gallery_search_filters', $default_fields);
             $fields     = is_array($fields_raw) ? $fields_raw : $default_fields;
         }
 
         $words = [];
-        $q     = StringUtil::get()->inputString('q', null, $_GET);
+        $q     = $this->stringUtil->inputString('q', null, $_GET);
         if ($q !== null && $q !== '') {
             $words = $this->searchService->splitAllwords($q);
         }
@@ -100,7 +103,7 @@ final class SearchController implements ControllerInterface
         }
 
         $cat_ids  = [];
-        $cat_id   = StringUtil::get()->inputInt('cat_id', null, $_GET);
+        $cat_id   = $this->stringUtil->inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
             $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
@@ -122,7 +125,7 @@ SELECT *
 
         if (count($this->tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
-            $tag_id  = StringUtil::get()->inputString('tag_id', null, $_GET);
+            $tag_id  = $this->stringUtil->inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
                 $this->util->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);
@@ -137,7 +140,7 @@ SELECT *
 SELECT id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . PermissionService::get()->getSqlConditionFandF(
+  ' . $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 ' WHERE '
             ) . '
@@ -167,7 +170,7 @@ SELECT id
         }
 
         [$search_uuid, $search_url] = $this->searchService->saveSearch($search);
-        Util::get()->redirect(is_scalar($search_url) ? (string) $search_url : '');
+        $this->util->redirect(is_scalar($search_url) ? (string) $search_url : '');
 
         return ResponseFactory::create(200); // unreachable after redirect
     }

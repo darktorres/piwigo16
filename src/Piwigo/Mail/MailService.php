@@ -10,6 +10,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\StringUtil;
@@ -33,6 +34,10 @@ final readonly class MailService
         private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private Util $util,
+        private LangService $langService,
+        private AuthService $authService,
+        private UrlService $urlService,
+        private PermissionService $permissionService,
     ) {
     }
 
@@ -186,19 +191,19 @@ final readonly class MailService
             LanguageStack::setLang([]);
             LanguageStack::setInfo([]);
 
-            LangService::get()->loadLanguage('common.lang', '', ['language' => $language]);
-            LangService::get()->loadLanguage('admin.lang', '', ['language' => $language]);
+            $this->langService->loadLanguage('common.lang', '', ['language' => $language]);
+            $this->langService->loadLanguage('admin.lang', '', ['language' => $language]);
 
             $pluginFiles = LanguageStack::pluginFiles();
             foreach ($pluginFiles as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
-                    LangService::get()->loadLanguage($filename, $dirname, $options);
+                    $this->langService->loadLanguage($filename, $dirname, $options);
                 }
             }
 
             EventDispatcher::notify('loading_lang');
-            LangService::get()->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
+            $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
             Translator::saveForLanguage($language);
@@ -229,13 +234,13 @@ final readonly class MailService
         }
 
         if (is_array($subject) or is_array($content)) {
-            $this->switchLangTo(UserService::get()->getDefaultLanguage());
+            $this->switchLangTo(Kernel::service(UserService::class)->getDefaultLanguage());
 
             if (is_array($subject)) {
-                $subject = LangService::get()->l10nArgs($subject);
+                $subject = $this->langService->l10nArgs($subject);
             }
             if (is_array($content)) {
-                $content = LangService::get()->l10nArgs($content);
+                $content = $this->langService->l10nArgs($content);
             }
 
             $this->switchLangBack();
@@ -318,7 +323,7 @@ SELECT
             return true;
         }
 
-        $this->switchLangTo(UserService::get()->getDefaultLanguage());
+        $this->switchLangTo(Kernel::service(UserService::class)->getDefaultLanguage());
         $return = $this->pwgMail($admins, $args, $tpl);
         $this->switchLangBack();
 
@@ -385,21 +390,21 @@ SELECT
 
             foreach ($users as $u) {
                 $userId  = is_numeric($u['user_id'] ?? null) ? (int) $u['user_id'] : 0;
-                $authkey = AuthService::get()->createUserAuthKey($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
+                $authkey = $this->authService->createUserAuthKey($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
 
                 $userTpl = $tpl;
 
                 if ($authkey !== false) {
                     $authKeyStr = is_scalar($authkey['auth_key'] ?? null) ? (string) $authkey['auth_key'] : '';
                     $assign     = is_array($userTpl['assign'] ?? null) ? $userTpl['assign'] : [];
-                    $assign['LINK']     = UrlService::get()->addUrlParams(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authKeyStr]);
+                    $assign['LINK']     = $this->urlService->addUrlParams(is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '', ['auth' => $authKeyStr]);
                     $userTpl['assign']  = $assign;
 
                     $tplAssign = is_array($tpl['assign'] ?? null) ? $tpl['assign'] : [];
                     $tplImg    = is_array($tplAssign['IMG'] ?? null) ? $tplAssign['IMG'] : [];
                     if (isset($tplImg['link'])) {
                         $imgArr = is_array($userTpl['assign']['IMG'] ?? null) ? $userTpl['assign']['IMG'] : [];
-                        $imgArr['link']        = UrlService::get()->addUrlParams(is_string($tplImg['link']) ? $tplImg['link'] : '', ['auth' => $authKeyStr]);
+                        $imgArr['link']        = $this->urlService->addUrlParams(is_string($tplImg['link']) ? $tplImg['link'] : '', ['auth' => $authKeyStr]);
                         $userTpl['assign']['IMG'] = $imgArr;
                     }
                 }
@@ -461,7 +466,7 @@ SELECT
         $mail->WordWrap = 76;
         $mail->CharSet  = 'UTF-8';
 
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
 
         if (empty($args['from'])) {
             $from = ['email' => $this->getMailSenderEmail(), 'name' => $this->getMailSenderName()];
@@ -548,7 +553,7 @@ SELECT
                 }
 
                 $mailTpl->assign([
-                    'GALLERY_URL'      => UrlService::get()->addUrlParams(UrlService::get()->getGalleryHomeUrl(), $addUrlParams),
+                    'GALLERY_URL'      => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $addUrlParams),
                     'GALLERY_TITLE'    => $page['gallery_title'] ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
@@ -619,7 +624,7 @@ SELECT
             $contents[$contentType] .= $template->parse('footer.latte', true) ?? '';
         }
 
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
 
         $htmlContent  = is_string($contents['text/html'] ?? null) ? $contents['text/html'] : null;
         $plainContent = $contents['text/plain'];
@@ -670,7 +675,7 @@ SELECT
 
         if ($preResult !== false) {
             $ret = $mail->send();
-            if (!$ret and (ini_get('display_errors') === false || ini_get('display_errors') === '' or PermissionService::get()->isAdmin())) {
+            if (!$ret and (ini_get('display_errors') === false || ini_get('display_errors') === '' or $this->permissionService->isAdmin())) {
                 trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
             }
             if (Config::debugMail()) {
@@ -683,7 +688,7 @@ SELECT
 
     public function pwgSendMail(mixed $result, string $to, string $subject, string $content, string $headers): bool|int
     {
-        if (PermissionService::get()->isAdmin()) {
+        if ($this->permissionService->isAdmin()) {
             trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
         }
 
@@ -735,7 +740,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): array
     {
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
         $message  = Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
@@ -747,7 +752,7 @@ SELECT
         $message .= ' ';
         $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
 
@@ -761,7 +766,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): array
     {
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
 
         $message  = '<p style="margin: 20px 0">';
         $message .= Lang::t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
@@ -773,7 +778,7 @@ SELECT
         $message .= ' ';
         $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
 
         $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
         $subject = Lang::t('Welcome to %s', $galleryTitle);
@@ -788,13 +793,13 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateCodeVerificationMail(string $code): array
     {
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
         $message  = '<p style="margin: 20px 0">';
         $message .= Lang::t('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
         $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
 
         $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('Your verification code');
         return [
@@ -807,7 +812,7 @@ SELECT
     /** @return array<mixed> */
     public function pwgGenerateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
     {
-        UrlService::get()->setMakeFullUrl();
+        $this->urlService->setMakeFullUrl();
         $profileUrl = $this->urlGenerator->profile();
 
         $message  = '<p style="margin-top: 20px;">' . Lang::t('Hello %s,', $username) . '</p>';
@@ -821,7 +826,7 @@ SELECT
             $message .= Lang::t('If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.', $nbOfApikeys, $profileUrl);
             $message .= '</p>';
         }
-        UrlService::get()->unsetMakeFullUrl();
+        $this->urlService->unsetMakeFullUrl();
 
         $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('Your password has been reset');
         return [

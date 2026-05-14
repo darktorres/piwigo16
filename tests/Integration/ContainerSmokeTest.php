@@ -52,8 +52,15 @@ final class ContainerSmokeTest extends IntegrationTestCase
         $container   = Kernel::container();
         $definitions = require PHPWG_ROOT_PATH . 'config/container.php';
 
+        if (!is_array($definitions)) {
+            self::fail('config/container.php did not return an array');
+        }
+
         $failures = [];
-        foreach (array_keys($definitions) as $id) {
+        foreach ($definitions as $id => $definition) {
+            if (!is_string($id)) {
+                continue;
+            }
             try {
                 $container->get($id);
             } catch (\Throwable $e) {
@@ -61,14 +68,14 @@ final class ContainerSmokeTest extends IntegrationTestCase
             }
         }
 
+        $lines = [];
+        foreach ($failures as $serviceId => $err) {
+            $lines[] = "  [$serviceId]\n    $err";
+        }
         $count = count($failures);
         self::assertSame([], $failures,
             "$count container " . ($count === 1 ? 'entry' : 'entries') . " failed to resolve:\n"
-            . implode("\n", array_map(
-                static fn (string $id, string $err): string => "  [$id]\n    $err",
-                array_keys($failures),
-                array_values($failures),
-            ))
+            . implode("\n", $lines)
         );
     }
 }

@@ -22,11 +22,12 @@ final class WatermarkProcessor
         private readonly ImageAdminService $imageAdminService,
         private readonly StringUtil $stringUtil,
         private readonly Util $util,
+        private readonly PermissionService $permissionService,
     ) {
     }
     public function process(): void
     {
-        if (!PermissionService::get()->isWebmaster()) {
+        if (!$this->permissionService->isWebmaster()) {
             return;
         }
 

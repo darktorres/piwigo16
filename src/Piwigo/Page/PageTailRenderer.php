@@ -30,8 +30,8 @@ final class PageTailRenderer
             'PHPWG_URL'  => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
         ]);
 
-        if (!PermissionService::get()->isAGuest()) {
-            $template->assign('CONTACT_MAIL', Util::get()->getWebmasterMailAddress());
+        if (!Kernel::service(PermissionService::class)->isAGuest()) {
+            $template->assign('CONTACT_MAIL', Kernel::service(Util::class)->getWebmasterMailAddress());
         }
 
         if (Config::updateNotifyCheckPeriod() > 0) {
@@ -39,15 +39,15 @@ final class PageTailRenderer
                 || strtotime((string) Config::updateNotifyLastCheck()) < strtotime(Config::updateNotifyCheckPeriod() . ' seconds ago');
 
             if ($check_for_updates) {
-                $exec_id = Util::get()->pwgUniqueExecBegins('check_for_updates');
+                $exec_id = Kernel::service(Util::class)->pwgUniqueExecBegins('check_for_updates');
                 if ($exec_id !== false) {
                     Kernel::service(Updates::class)->notifyPiwigoNewVersions();
-                    Util::get()->pwgUniqueExecEnds('check_for_updates');
+                    Kernel::service(Util::class)->pwgUniqueExecEnds('check_for_updates');
                 }
             }
         }
 
-        Util::get()->sendPiwigoInfos();
+        Kernel::service(Util::class)->sendPiwigoInfos();
 
         $debug_vars = [];
 
@@ -60,7 +60,7 @@ final class PageTailRenderer
             $pageState  = PageState::current();
             $t2         = is_float($GLOBALS['t2'] ?? null) ? $GLOBALS['t2'] : microtime(true);
             $debug_vars += [
-                'TIME'       => StringUtil::get()->getElapsedTime($t2, StringUtil::get()->getMoment()),
+                'TIME'       => Kernel::service(StringUtil::class)->getElapsedTime($t2, Kernel::service(StringUtil::class)->getMoment()),
                 'NB_QUERIES' => $pageState->countQueries,
                 'SQL_TIME'   => number_format($pageState->queriesTime, 3, '.', ' ') . ' s',
             ];
@@ -68,12 +68,12 @@ final class PageTailRenderer
 
         $template->assign('debug', $debug_vars);
 
-        if (!empty(Config::mobilTheme()) && (Util::get()->getDevice() !== 'desktop' || Util::get()->mobileTheme())) {
+        if (!empty(Config::mobilTheme()) && (Kernel::service(Util::class)->getDevice() !== 'desktop' || Kernel::service(Util::class)->mobileTheme())) {
             /** @var mixed $requestUriRaw */
             $requestUriRaw = $_SERVER['REQUEST_URI'] ?? '';
-            $template->assign('TOGGLE_MOBILE_THEME_URL', UrlService::get()->addUrlParams(
+            $template->assign('TOGGLE_MOBILE_THEME_URL', Kernel::service(UrlService::class)->addUrlParams(
                 htmlspecialchars(is_string($requestUriRaw) ? $requestUriRaw : ''),
-                ['mobile' => Util::get()->mobileTheme() ? 'false' : 'true']
+                ['mobile' => Kernel::service(Util::class)->mobileTheme() ? 'false' : 'true']
             ));
         }
 

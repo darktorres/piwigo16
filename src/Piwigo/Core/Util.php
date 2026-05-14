@@ -45,12 +45,6 @@ defined('MKGETDIR_DEFAULT') or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | M
 
 final readonly class Util
 {
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
-    }
-
     public function __construct(
         private Connection $conn,
         private LoggerInterface $log,

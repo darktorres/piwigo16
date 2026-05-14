@@ -76,7 +76,7 @@ abstract class CalendarBase
             $componentTyped = is_int($component) ? $component : (is_string($component) ? $component : '');
             if (isset($chronologyDate[$i + 1])) {
                 $sliced = array_slice($chronologyDate, 0, $i + 1);
-                $url = UrlService::get()->duplicateIndexUrl(
+                $url = Kernel::service(UrlService::class)->duplicateIndexUrl(
                     [ 'chronology_date' => $sliced ],
                     [ 'start' ]
                 );
@@ -176,7 +176,7 @@ abstract class CalendarBase
                   'LABEL' => $label,
                 ];
             } else {
-                $url = UrlService::get()->duplicateIndexUrl(
+                $url = Kernel::service(UrlService::class)->duplicateIndexUrl(
                     ['chronology_date' => array_merge($date_components, [$item])],
                     [ 'start' ]
                 );
@@ -194,7 +194,7 @@ abstract class CalendarBase
 
         if (Config::calendarShowAny() and $show_any and count($items) > 1 and
               count($date_components) < count($this->calendar_levels) - 1) {
-            $url = UrlService::get()->duplicateIndexUrl(
+            $url = Kernel::service(UrlService::class)->duplicateIndexUrl(
                 ['chronology_date' => array_merge($date_components, ['any'])],
                 [ 'start' ]
             );
@@ -332,7 +332,7 @@ GROUP BY period';
             $tpl_var['previous'] =
               [
                 'LABEL' => $this->getDateNiceName($prev),
-                'URL' => UrlService::get()->duplicateIndexUrl(
+                'URL' => Kernel::service(UrlService::class)->duplicateIndexUrl(
                     ['chronology_date' => $chronology_date],
                     ['start']
                 ),
@@ -345,7 +345,7 @@ GROUP BY period';
             $tpl_var['next'] =
               [
                 'LABEL' => $this->getDateNiceName($next),
-                'URL' => UrlService::get()->duplicateIndexUrl(
+                'URL' => Kernel::service(UrlService::class)->duplicateIndexUrl(
                     ['chronology_date' => $chronology_date],
                     ['start']
                 ),

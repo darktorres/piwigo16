@@ -10,7 +10,6 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
@@ -35,12 +34,6 @@ final readonly class AuthService
         private UrlService $urlService,
         private DateService $dateService,
     ) {
-    }
-
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
     }
 
     public function validateMailAddress(?int $userId, ?string $mailAddress): string|null

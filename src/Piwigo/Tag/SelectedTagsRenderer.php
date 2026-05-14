@@ -10,6 +10,11 @@ use Piwigo\Url\UrlService;
 
 final class SelectedTagsRenderer
 {
+    public function __construct(
+        private readonly UrlService $urlService,
+    ) {
+    }
+
     public function render(): void
     {
         $template = TemplateRegistry::current();
@@ -30,8 +35,8 @@ final class SelectedTagsRenderer
             $selected_related_tags_info[$key] = [
                 'tag_name' => EventDispatcher::dispatch('render_tag_name', $tagName, $tag),
                 'item_count' => '',
-                'index_url' => UrlService::get()->makeIndexUrl(['tags' => [$tag]]),
-                'remove_url' => UrlService::get()->makeIndexUrl(['tags' => $other_tags]),
+                'index_url' => $this->urlService->makeIndexUrl(['tags' => [$tag]]),
+                'remove_url' => $this->urlService->makeIndexUrl(['tags' => $other_tags]),
             ];
         }
 

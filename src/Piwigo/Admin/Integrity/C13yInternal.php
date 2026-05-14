@@ -171,7 +171,7 @@ final class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (!$name_ok) {
-                            $name_ok = (UserService::get()->getUserid($name) === false);
+                            $name_ok = (Kernel::service(UserService::class)->getUserid($name) === false);
                             if (!$name_ok) {
                                 $name .= StringUtil::generateKey(1);
                             }
@@ -186,7 +186,7 @@ final class C13yInternal
                           ];
                         Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
 
-                        UserService::get()->createUserInfos($id);
+                        Kernel::service(UserService::class)->createUserInfos($id);
 
                         PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, (string) $password));
 

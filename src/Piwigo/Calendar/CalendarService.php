@@ -25,6 +25,8 @@ final class CalendarService
         private readonly CategoryService $categoryService,
         private readonly Connection $conn,
         private readonly Util $util,
+        private readonly PermissionService $permissionService,
+        private readonly UrlService $urlService,
     ) {
     }
     public function initializeCalendar(): void
@@ -60,10 +62,10 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
                 $innerSql .= '
 WHERE category_id IN (' . implode(',', $subIds) . ')';
                 $innerSql .= '
-    ' . PermissionService::get()->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
+    ' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
             } else {
                 $innerSql .= '
-    ' . PermissionService::get()->getSqlConditionFandF(
+    ' . $this->permissionService->getSqlConditionFandF(
                     ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                     'WHERE',
                     true
@@ -185,7 +187,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                         } else {
                             $chronologyDate = $chronologyDateAll;
                         }
-                        $url = UrlService::get()->duplicateIndexUrl([
+                        $url = $this->urlService->duplicateIndexUrl([
                             'chronology_style' => $style,
                             'chronology_view'  => $view,
                             'chronology_date'  => $chronologyDate,
@@ -203,7 +205,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                     }
                 }
             }
-            $url           = UrlService::get()->duplicateIndexUrl([], ['start', 'chronology_date']);
+            $url           = $this->urlService->duplicateIndexUrl([], ['start', 'chronology_date']);
             $calendarTitle = '<a href="' . $url . '">' . $fields[$chronologyField]['label'] . '</a>';
             $calendarTitle .= $calendar->getDisplayName();
             $template->assign('chronology', ['TITLE' => new Html($calendarTitle)]);

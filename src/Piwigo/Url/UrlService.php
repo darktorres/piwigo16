@@ -30,12 +30,6 @@ final class UrlService
     ) {
     }
 
-    /** @deprecated use constructor injection; will be removed when last caller is migrated. */
-    public static function get(): self
-    {
-        return Kernel::service(self::class);
-    }
-
     public static function getRootUrl(): string
     {
         $page     = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];

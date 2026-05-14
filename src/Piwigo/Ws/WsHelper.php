@@ -17,6 +17,8 @@ final class WsHelper
 {
     public function __construct(
         private readonly StringUtil $stringUtil,
+        private readonly PermissionService $permissionService,
+        private readonly UrlService $urlService,
     ) {
     }
     /** @param array<mixed> $params */
@@ -26,7 +28,7 @@ final class WsHelper
             return $res;
         }
 
-        if (!PermissionService::get()->isAutorizeStatus(AccessLevel::Guest) &&
+        if (!$this->permissionService->isAutorizeStatus(AccessLevel::Guest) &&
             !str_starts_with($methodName, 'pwg.session.')) {
             return new PwgError(401, 'Access denied');
         }
@@ -132,7 +134,7 @@ final class WsHelper
     {
         $ret = [];
 
-        $ret['page_url'] = UrlService::get()->makePictureUrl([
+        $ret['page_url'] = $this->urlService->makePictureUrl([
             'image_id' => $image_row['id'],
             'image_file' => $image_row['file'],
         ]);
@@ -146,13 +148,13 @@ final class WsHelper
                 $provide_download_url = true;
             }
         } else {
-            $ret['element_url'] = UrlService::get()->getElementUrl($image_row);
+            $ret['element_url'] = $this->urlService->getElementUrl($image_row);
             $provide_download_url = true;
         }
 
         $ret['download_url'] = null;
         if ($provide_download_url) {
-            $ret['download_url'] = UrlService::get()->getActionUrl(is_int($image_row['id']) || is_string($image_row['id']) ? $image_row['id'] : 0, 'e', true);
+            $ret['download_url'] = $this->urlService->getActionUrl(is_int($image_row['id']) || is_string($image_row['id']) ? $image_row['id'] : 0, 'e', true);
         }
 
         $derivatives = DerivativeImage::getAll($src_image);

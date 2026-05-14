@@ -303,6 +303,8 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign) | Admin header notification strings. No bridge. |
 | `$GLOBALS['header_msgs']` | `CommonBootstrap` | `CommonBootstrap` (template assign) | Guest/lock status warnings. Set and consumed within the same bootstrap method. No bridge. |
 | `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Sync error list (not UI page errors). No bridge. |
-| `$GLOBALS['url_self']` | Unknown (legacy) | `PictureCommentRenderer`, `PictureRateRenderer` | Current page URL. Not bridged; likely set by a controller. |
-| `$GLOBALS['related_categories']` | Unknown (legacy) | `PictureCommentRenderer` | Related categories for picture page. Not bridged. |
+| `$GLOBALS['url_self']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer` | Was set by `include/picture.php` (removed). `PictureController` never writes it. Renderers always get `''`. Pre-existing rewrite gap — not a bridge issue. |
+| `$GLOBALS['related_categories']` | **Nothing in src/** | `PictureCommentRenderer` | Same as above — `PictureController` builds a local `$related_categories` but never writes to the global. Renderer always gets `[]`. |
+| `$GLOBALS['picture']` | **Nothing in src/** | `PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer` | Same as above — `PictureController` builds a local `$picture` array but never writes to the global. All three renderers read `[]`. Pre-existing rewrite gap. |
+| `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization: the method both writes and reads this cache. Never initialised externally. |
 | `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by the old `include/` DB layer. Now always 0. |

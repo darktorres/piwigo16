@@ -38,7 +38,7 @@ new ResponseEmitter()->emit(
 1. `PageState::attachGlobals()` — binds `$GLOBALS['page']` keys by reference
 2. `Lang::attachGlobals()` — binds `$GLOBALS['lang']`
 3. `CurrentUser::attachGlobals()` — binds `$GLOBALS['user']` keys
-4. `Container::build()` + `ServiceLocator::setContainer()` — wires the PHP-DI container
+4. `Container::build()` — wires the PHP-DI container; `Kernel::service(X::class)` resolves services post-boot
 5. `LoggerRegistry::set(new NullLogger())` if not yet initialised (the install/upgrade fast paths skip `CommonBootstrap`)
 6. `StorageRegistry` is eagerly resolved from the container so procedural upload code can call `StorageRegistry::disk()` without going through the container
 
@@ -82,7 +82,7 @@ Config::uploadFormMaxFileSize()      // int
 Config::isFormatsEnabled()           // bool
 Config::raw('blk_' . $id)            // mixed — escape hatch for parametric keys only
 Config::override('key', $value)      // per-request, not persisted
-ServiceLocator::get(ConfigService::class)
+Kernel::service(ConfigService::class)
     ->confUpdateParam('key', $value) // DB-persisted
 ```
 
@@ -109,19 +109,24 @@ Same pattern — typed facades with reference bridges to `$GLOBALS['user']` and
 `$GLOBALS['lang']`. `Lang::t($key, ...$args)` is the static translation entry point;
 `LangService::l10n()` is the request-scoped service used by templates.
 
-### ServiceLocator
+### Kernel::service()
 
-Thin shim over the PHP-DI container. After `Kernel::boot()`, every call delegates to
-PHP-DI:
+`ServiceLocator` was deleted in §1.3. Post-boot service resolution goes through
+`Kernel::service(X::class)`, which delegates to the PHP-DI container. New code always
+uses constructor injection instead; `Kernel::service()` is reserved for static-context
+call-sites (all-static classes, cycle-breaking edges) where a constructor parameter is
+not practical.
 
 ```php
-$config  = ServiceLocator::get(ConfigService::class);
-$urls    = ServiceLocator::get(UrlGenerator::class);
-$storage = ServiceLocator::get(StorageRegistry::class);
-```
+// constructor injection — preferred for DI-managed classes
+public function __construct(
+    private readonly ConfigService $config,
+    private readonly UrlGenerator $urls,
+) {}
 
-Before boot (e.g. in isolated unit tests), an internal map acts as a fallback so tests
-can seed entries via `ServiceLocator::register()` without booting the full container.
+// Kernel::service() — only for static contexts or cycle-breaking
+Kernel::service(ConfigService::class)->confUpdateParam('key', $value);
+```
 
 ---
 
@@ -200,7 +205,7 @@ object, with parameters declared as `ParamDefinition` instances:
 ```php
 $server->register(new MethodDefinition(
     name:         'pwg.my.method',
-    callback:     ServiceLocator::get(MyEndpoints::class)->myMethod(...),
+    callback:     $this->myEndpoints->myMethod(...),
     description:  'Description shown in the API browser',
     params:       [
         ParamDefinition::required(name: 'photo_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
@@ -284,7 +289,7 @@ The `$GLOBALS['conf']` reference bridge has been **retired**. Plugins that read 
 | `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`                                              |
 | `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                                                   |
 | `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request)                                    |
-| `conf_update_param(...)`  | `\Piwigo\Core\ServiceLocator::get(\Piwigo\Config\ConfigService::class)->confUpdateParam(...)` |
+| `conf_update_param(...)`  | `\Piwigo\Core\Kernel::service(\Piwigo\Config\ConfigService::class)->confUpdateParam(...)`     |
 
 The free function `conf_update_param()` no longer exists. Plugins that still call it
 will fatal at runtime — switch to the `ConfigService` form.

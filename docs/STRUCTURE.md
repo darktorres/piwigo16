@@ -109,7 +109,7 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 | `Comment`         | `CommentRepository`, `CommentService`                                                                                                                                                                                                                             |
 | `Config`          | `Config` (typed accessor facade), `ConfigLoader`, `ConfigService`, `ConfigStorage`, `TestMode`, `UnknownConfigKeyException`                                                                                                                                       |
 | `Controller`      | See above                                                                                                                                                                                                                                                         |
-| `Core`            | `Kernel`, `ServiceLocator`, `PageState`, `Lang`, `LanguageStack`, `Util`, `BoolUtil`, `StringUtil`, `Filesystem`, `Logger`, `LoggerRegistry`, `InstallSentinel`, `AppInfo`, `DateService`, `ActivitySystem`, `AccessLevel`, `ErrorCollector`, `ValidationPattern` |
+| `Core`            | `Kernel`, `PageState`, `Lang`, `LanguageStack`, `Util`, `BoolUtil`, `StringUtil`, `Filesystem`, `Logger`, `LoggerRegistry`, `InstallSentinel`, `AppInfo`, `DateService`, `ActivitySystem`, `AccessLevel`, `ErrorCollector`, `ValidationPattern` |
 | `Db`              | `DbConnection`, `Dml`, `DbInfo`, `SchemaHelper`, `SqlExpr`, `QueryHelper`, `Tables`, `AbstractRepository`                                                                                                                                                         |
 | `Exception`       | `AuthException`, `ConfigException`, `DbException`, `HttpException`, `NotFoundException`, `PiwigoException`, `ValidationException`                                                                                                                                 |
 | `Feed`            | `FeedHelper`, `FeedRepository`, `PiwigoFeedCreator`                                                                                                                                                                                                               |
@@ -281,7 +281,7 @@ tests/e2e/              Playwright end-to-end tests
   config/               Playwright fixtures and test configuration
   helpers/              Page-object helpers (admin-login, debug-helpers,
                         page-monitor, strict-assertions, test-data, upload-photo, url)
-bootstrap.php           PHPUnit bootstrap (env, autoload, ServiceLocator setup)
+bootstrap.php           PHPUnit bootstrap (env, autoload, DI bootstrap)
 ```
 
 ---
